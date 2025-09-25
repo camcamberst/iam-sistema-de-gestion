@@ -1,93 +1,132 @@
-import { NextResponse } from "next/server";
-import { getCurrentUser, hasRoleAtLeast } from "@/lib/auth";
-import { DEFAULT_GROUPS, DEFAULT_ROLES } from "@/lib/constants";
-import { supabaseAdmin, APP_USERS_TABLE, GROUPS_TABLE, USER_GROUPS_TABLE } from "@/lib/supabaseAdmin";
+import { NextResponse } from 'next/server';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
+import { Database } from '../../../types';
 
 export async function GET() {
-  const user = getCurrentUser();
-  if (!user || !hasRoleAtLeast(user.role, "admin")) {
-    return NextResponse.json({ success: false, error: "No autorizado" }, { status: 403 });
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient<Database>({ cookies: () => cookieStore });
+
+  try {
+    console.log("🔍 API /api/users: Fetching users...");
+    
+    // Fetch users from the 'users' table
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, email, name, role, created_at');
+
+    if (usersError) {
+      console.error("❌ API /api/users: Error fetching users:", usersError);
+      return NextResponse.json({ error: usersError.message }, { status: 500 });
+    }
+
+    console.log("✅ API /api/users: Users fetched successfully:", users);
+
+    // Fetch groups for each user separately
+    const usersWithGroups = await Promise.all((users || []).map(async (user) => {
+      const { data: userGroups, error: userGroupsError } = await supabase
+        .from('user_groups')
+        .select('groups(name)')
+        .eq('user_id', user.id);
+
+      if (userGroupsError) {
+        console.error(`❌ API /api/users: Error fetching groups for user ${user.id}:`, userGroupsError);
+        return { ...user, groups: [] };
+      }
+
+      const groups = userGroups
+        .map(ug => (ug.groups && typeof ug.groups === 'object' && 'name' in ug.groups) ? ug.groups.name : null)
+        .filter(Boolean);
+
+      return { ...user, groups };
+    }));
+
+    console.log("✅ API /api/users: Users with groups:", usersWithGroups);
+    return NextResponse.json(usersWithGroups, { status: 200 });
+
+  } catch (error: any) {
+    console.error("❌ API /api/users: General API Error:", error);
+    return NextResponse.json({ error: error.message || "Error interno del servidor" }, { status: 500 });
   }
-  // Obtener usuarios desde tabla app_users y sus grupos
-  const { data: users, error } = await supabaseAdmin.from(APP_USERS_TABLE).select("id,email,name,role,is_active,created_at,last_login, user_groups: user_groups(group:groups(name))");
-  if (error) return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  const mapped = (users || []).map((u: any) => ({
-    id: u.id,
-    email: u.email,
-    name: u.name,
-    role: u.role,
-    groups: (u.user_groups || []).map((ug: any) => ug.group?.name).filter(Boolean),
-    isActive: u.is_active,
-    createdAt: u.created_at,
-    lastLogin: u.last_login
-  }));
-  return NextResponse.json({ success: true, users: mapped, count: mapped.length });
 }
 
-export async function POST(req: Request) {
+export async function POST(request: Request) {
+  const { full_name, email, password, role, groups: groupIds } = await request.json();
+  const cookieStore = cookies();
+  const supabase = createRouteHandlerClient<Database>({ cookies: () => cookieStore });
+
   try {
-    const user = getCurrentUser();
-    if (!user || !hasRoleAtLeast(user.role, "admin")) {
-      return NextResponse.json({ success: false, error: "No autorizado" }, { status: 403 });
-    }
-    const body = await req.json();
-    const { email, name, role, groups } = body || {};
+    console.log("🔍 API /api/users POST: Creating user...", { full_name, email, role, groupIds });
+    
+    // 1. Create user in Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { full_name, role },
+    });
 
-    // Validaciones básicas
-    if (!email || !name || !role) {
-      return NextResponse.json({ success: false, error: "email, name y role son requeridos" }, { status: 400 });
-    }
-    if (!DEFAULT_ROLES.includes(role)) {
-      return NextResponse.json({ success: false, error: "Rol inválido" }, { status: 400 });
-    }
-    if (groups && (!Array.isArray(groups) || groups.some((g: string) => !DEFAULT_GROUPS.includes(g)))) {
-      return NextResponse.json({ success: false, error: "Grupo inválido" }, { status: 400 });
+    if (authError) {
+      console.error("❌ API /api/users POST: Supabase Auth Error:", authError);
+      return NextResponse.json({ error: authError.message }, { status: 400 });
     }
 
-    // Reglas por rol creador
-    if (user.role === "admin") {
-      // Admin solo puede crear modelos
-      if (role !== "modelo") {
-        return NextResponse.json({ success: false, error: "Admin solo puede crear modelos" }, { status: 403 });
+    const userId = authData.user?.id;
+
+    if (!userId) {
+      return NextResponse.json({ error: "User ID not returned after creation." }, { status: 500 });
+    }
+
+    console.log("✅ API /api/users POST: User created in Auth:", userId);
+
+    // 2. Create user in public.users table
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({
+        id: userId,
+        email,
+        name: full_name,
+        role: role
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error("❌ API /api/users POST: Error creating user in public.users:", userError);
+      // Optionally delete the user from auth if profile creation fails
+      await supabase.auth.admin.deleteUser(userId);
+      return NextResponse.json({ error: userError.message }, { status: 500 });
+    }
+
+    console.log("✅ API /api/users POST: User created in public.users:", userData);
+
+    // 3. Assign groups if not Super Admin
+    if (role !== 'super_admin' && groupIds && groupIds.length > 0) {
+      const userGroupInserts = groupIds.map((groupId: string) => ({
+        user_id: userId,
+        group_id: groupId,
+        is_manager: role === 'admin', // Admins are managers of their groups
+      }));
+
+      const { error: userGroupError } = await supabase
+        .from('user_groups')
+        .insert(userGroupInserts);
+
+      if (userGroupError) {
+        console.error("❌ API /api/users POST: Supabase User Group Error:", userGroupError);
+        // Optionally delete the user from auth if group assignment fails
+        await supabase.auth.admin.deleteUser(userId);
+        return NextResponse.json({ error: userGroupError.message }, { status: 500 });
       }
-      // Grupos del nuevo modelo deben ser subconjunto de los del admin
-      const creatorGroups = new Set(user.groups || []);
-      const requestedGroups: string[] = Array.isArray(groups) ? groups : [];
-      const invalid = requestedGroups.filter(g => !creatorGroups.has(g));
-      if (invalid.length > 0) {
-        return NextResponse.json({ success: false, error: "Grupo fuera de alcance del admin" }, { status: 403 });
-      }
+
+      console.log("✅ API /api/users POST: Groups assigned successfully");
     }
 
-    // super_admin puede crear cualquier rol y asignar cualquier grupo
+    return NextResponse.json({ message: "Usuario creado exitosamente", userId }, { status: 201 });
 
-    // Crear usuario en Auth (opcional: si aún no existe)
-    // Nota: en proyectos reales, usa supabase-admin auth api (invite o create user)
-
-    // Crear perfil en app_users
-    const { data: created, error: errUser } = await supabaseAdmin.from(APP_USERS_TABLE).insert({ email, name, role, is_active: true }).select().single();
-    if (errUser) return NextResponse.json({ success: false, error: errUser.message }, { status: 500 });
-
-    const newUserId = created.id;
-    const groupNames: string[] = Array.isArray(groups) ? groups : [];
-
-    if (groupNames.length > 0) {
-      // Obtener IDs de grupos por nombre
-      const { data: groupRows, error: errGroups } = await supabaseAdmin.from(GROUPS_TABLE).select("id,name").in("name", groupNames);
-      if (errGroups) return NextResponse.json({ success: false, error: errGroups.message }, { status: 500 });
-      const groupIds = (groupRows || []).map((g: any) => g.id);
-      if (groupIds.length !== groupNames.length) {
-        return NextResponse.json({ success: false, error: "Grupo no encontrado en catálogo" }, { status: 400 });
-      }
-      // Insertar relaciones user_groups
-      const payload = groupIds.map((gid: string) => ({ user_id: newUserId, group_id: gid }));
-      const { error: errLink } = await supabaseAdmin.from(USER_GROUPS_TABLE).insert(payload);
-      if (errLink) return NextResponse.json({ success: false, error: errLink.message }, { status: 500 });
-    }
-
-    return NextResponse.json({ success: true, user: { id: newUserId, email, name, role, groups: groupNames } });
   } catch (error: any) {
-    return NextResponse.json({ success: false, error: error.message || "Error" }, { status: 500 });
+    console.error("❌ API /api/users POST: General API Error:", error);
+    return NextResponse.json({ error: error.message || "Error interno del servidor" }, { status: 500 });
   }
 }
 
