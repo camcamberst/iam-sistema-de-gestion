@@ -1,0 +1,39 @@
+# AIM_Vercel_Starter
+
+Estructura inicial para comenzar la migración a Next.js (Vercel) usando Supabase, basada en el "Sistema de Gestión AIM".
+
+## Contenido
+
+- app/(auth)/login/page.tsx — Pantalla de Login (UI base, estilo limpio)
+- app/dashboard/page.tsx — Dashboard placeholder
+- app/admin/users/page.tsx — Gestión de usuarios (placeholder)
+- app/api/auth/login/route.ts — Endpoint de login (placeholder)
+- app/api/auth/session/route.ts — Endpoint de sesión (placeholder)
+- app/api/users/route.ts — Listado/creación usuarios (placeholder)
+- app/api/users/[id]/route.ts — Actualización/eliminación usuarios (placeholder)
+- lib/supabaseClient.ts — Cliente de Supabase (SDK)
+- lib/auth.ts — Helpers de autenticación
+- lib/constants.ts — Constantes de roles y grupos
+- .env.example — Variables de entorno requeridas
+
+## Dónde pegar estos archivos
+
+1) En tu proyecto Next.js (creado con `create-next-app`):
+   - Copia la carpeta `app/` dentro de la raíz del proyecto (si ya tienes `app/`, fusiona contenidos por ruta correspondiente).
+   - Copia la carpeta `lib/` dentro de la raíz del proyecto (si ya existe, fusiona y no sobreescribas utilidades diferentes sin revisar).
+   - Copia el archivo `.env.example` a la raíz y crea tu `.env.local` con los mismos nombres de variables.
+
+2) En Vercel:
+   - Configura las variables `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en Project Settings → Environment Variables.
+
+3) Ejecuta localmente:
+   - Instala dependencias de Supabase: `npm i @supabase/supabase-js`
+   - Levanta el proyecto: `npm run dev`
+
+Nota: Los endpoints API incluidos son placeholders y deben conectarse a tu modelo real (Supabase Auth/DB). Mantén la marca "Sistema de Gestión AIM" en UI y títulos.
+
+
+
+
+
+

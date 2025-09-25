@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --aim-bg: 16 18 27;
+  --aim-card: 255 255 255 / 0.06;
+  --aim-border: 255 255 255 / 0.12;
+}
+
+html, body {
+  height: 100%;
+}
+
+body {
+  background: radial-gradient(1200px 800px at 10% -10%, rgba(255,255,255,0.08), transparent),
+    linear-gradient(180deg, rgb(var(--aim-bg)), rgb(var(--aim-bg)));
+  color: #eaeaf0;
+  margin: 0;
+  font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto;
+}
+
+.aim-sidebar {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 300px;
+  backdrop-filter: blur(14px);
+  background: color-mix(in oklab, white 6%, transparent);
+  border-right: 1px solid color-mix(in oklab, white 12%, transparent);
+  box-shadow: 0 10px 30px rgba(0,0,0,.25);
+}
+
+.aim-sidebar .brand {
+  padding: 22px 20px;
+  font-weight: 700;
+  letter-spacing: .4px;
+}
+
+.aim-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px;
+}
+
+.aim-link {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  color: #eaeaf0;
+  text-decoration: none;
+  transition: .3s transform, .3s background-color;
+}
+
+.aim-link:hover {
+  transform: translateY(-1px);
+  background: rgba(255,255,255,.06);
+}
+
+.aim-link.active {
+  background: rgba(255,255,255,.10);
+}
+
+.aim-content {
+  margin-left: 300px;
+  padding: 28px;
+}
+
+.aim-section-title {
+  font-size: 14px;
+  opacity: .65;
+  margin: 10px 12px;
+}

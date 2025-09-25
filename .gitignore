@@ -1,0 +1,28 @@
+# Next.js
+.next/
+out/
+
+# Node.js
+node_modules/
+
+# Environment variables
+.env.local
+.env.development.local
+.env.production.local
+
+# Supabase
+supabase/
+.supabase/
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Misc
+.DS_Store
+*.pem
+
+# Vercel
+.vercel/

@@ -1,0 +1,960 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Gestión AIM - v3.0</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .login-container {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.9rem;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e5e9;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .error-message {
+            color: #e74c3c;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(231, 76, 60, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .success-message {
+            color: #27ae60;
+            margin-top: 15px;
+            padding: 10px;
+            background: rgba(39, 174, 96, 0.1);
+            border-radius: 8px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            margin-top: 15px;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .app-container {
+            display: none;
+            width: 100%;
+            height: 100vh;
+            background: #f8f9fa;
+        }
+
+        .header {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+        }
+
+        .main-content {
+            padding: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .admin-panel {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+        }
+
+        .admin-title {
+            font-size: 1.5rem;
+            color: #333;
+            margin: 0;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        .users-table th,
+        .users-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #e1e5e9;
+        }
+
+        .users-table th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .users-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .role-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .role-super_admin {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .role-admin {
+            background: #3498db;
+            color: white;
+        }
+
+        .role-modelo {
+            background: #27ae60;
+            color: white;
+        }
+
+        .group-tag {
+            display: inline-block;
+            background: #ecf0f1;
+            color: #2c3e50;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 0.7rem;
+            margin: 1px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            margin: 2px;
+        }
+
+        .btn-edit {
+            background: #3498db;
+            color: white;
+        }
+
+        .btn-delete {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .btn-edit:hover,
+        .btn-delete:hover {
+            opacity: 0.8;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 30px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 1.3rem;
+            color: #333;
+            margin: 0;
+        }
+
+        .close {
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e5e9;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .checkbox-item input[type="checkbox"] {
+            width: auto;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 30px;
+        }
+
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .btn-secondary:hover {
+            background: #7f8c8d;
+        }
+
+        .welcome-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            margin-bottom: 30px;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .welcome-subtitle {
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn {
+            background: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .logout-btn:hover {
+            background: #c0392b;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <!-- VISTA DE LOGIN -->
+    <div id="loginView" class="login-container">
+        <div class="logo">🎯</div>
+        <h1>INICIAR SESIÓN</h1>
+        <p class="subtitle">Sistema de Gestión AIM - Versión 3.0</p>
+        
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="email">EMAIL</label>
+                <input type="email" id="email" name="email" value="prueba@firestore.com" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">CONTRASEÑA</label>
+                <input type="password" id="password" name="password" value="prueba123" required>
+            </div>
+            
+            <button type="submit" class="login-btn">INICIAR SESIÓN</button>
+        </form>
+        
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- VISTA PRINCIPAL -->
+    <div id="appView" class="app-container">
+        <div class="header">
+            <h1>Sistema de Gestión AIM v3.0</h1>
+            <div class="user-info">
+                <div class="user-avatar" id="userAvatar">A</div>
+                <div>
+                    <div id="userName">Super Administrador</div>
+                    <div id="userRole" style="font-size: 0.8rem; color: #666;">super_admin</div>
+                </div>
+                <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+            </div>
+        </div>
+        
+        <div class="main-content">
+            <div class="welcome-card">
+                <h2 class="welcome-title">¡Bienvenido al Sistema de Gestión AIM!</h2>
+                <p class="welcome-subtitle">Versión 3.0 - Arquitectura 100% Firebase</p>
+                
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalUsers">0</div>
+                        <div class="stat-label">Usuarios Activos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalEarnings">$0</div>
+                        <div class="stat-label">Ganancias Totales</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="totalAdvances">0</div>
+                        <div class="stat-label">Anticipos Pendientes</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="systemStatus">✅</div>
+                        <div class="stat-label">Estado del Sistema</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Panel de Administración de Usuarios -->
+            <div class="admin-panel" id="adminPanel" style="display: none;">
+                <div class="admin-header">
+                    <h3 class="admin-title">Gestión de Usuarios</h3>
+                    <button class="btn-primary" onclick="showCreateUserModal()">+ Nuevo Usuario</button>
+                </div>
+                
+                <div id="usersTableContainer">
+                    <table class="users-table" id="usersTable">
+                        <thead>
+                            <tr>
+                                <th>Nombre</th>
+                                <th>Email</th>
+                                <th>Rol</th>
+                                <th>Grupos</th>
+                                <th>Estado</th>
+                                <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Los usuarios se cargarán dinámicamente -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para Crear/Editar Usuario -->
+    <div id="userModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title" id="modalTitle">Nuevo Usuario</h3>
+                <span class="close" onclick="closeUserModal()">&times;</span>
+            </div>
+            
+            <form id="userForm">
+                <div class="form-group">
+                    <label for="userName">Nombre Completo</label>
+                    <input type="text" id="userName" name="name" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userEmail">Email</label>
+                    <input type="email" id="userEmail" name="email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userRole">Rol</label>
+                    <select id="userRole" name="role" required>
+                        <option value="">Seleccionar rol</option>
+                        <option value="super_admin">Super Administrador</option>
+                        <option value="admin">Administrador</option>
+                        <option value="modelo">Modelo</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>Grupos de Trabajo</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupCabecera" name="groups" value="Cabecera">
+                            <label for="groupCabecera">Cabecera</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupDiamante" name="groups" value="Diamante">
+                            <label for="groupDiamante">Diamante</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupSedeMP" name="groups" value="Sede MP">
+                            <label for="groupSedeMP">Sede MP</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupVictoria" name="groups" value="Victoria">
+                            <label for="groupVictoria">Victoria</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupTerrazas" name="groups" value="Terrazas">
+                            <label for="groupTerrazas">Terrazas</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupSatelite" name="groups" value="Satélite">
+                            <label for="groupSatelite">Satélite</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="groupOtros" name="groups" value="Otros">
+                            <label for="groupOtros">Otros</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="userPassword">Contraseña</label>
+                    <input type="password" id="userPassword" name="password" placeholder="Dejar vacío para mantener actual">
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" onclick="closeUserModal()">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="submitButton">Crear Usuario</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Variables globales
+        let currentUser = null;
+        let currentToken = null;
+
+        // Inicialización
+        document.addEventListener('DOMContentLoaded', function() {
+            // Verificar si hay sesión guardada
+            const savedToken = sessionStorage.getItem('AIM_TOKEN');
+            const savedUser = sessionStorage.getItem('AIM_USER');
+            
+            if (savedToken && savedUser) {
+                currentToken = savedToken;
+                currentUser = JSON.parse(savedUser);
+                showAppView();
+            }
+            
+            // Configurar formulario de login
+            document.getElementById('loginForm').addEventListener('submit', handleLogin);
+        });
+
+        // Manejar login
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            showLoading(true);
+            hideMessages();
+            
+            // Llamar a la función de login expuesta para frontend
+            google.script.run
+                .withSuccessHandler(handleLoginSuccess)
+                .withFailureHandler(handleLoginError)
+                .doLogin(email, password);
+        }
+
+        // Manejar éxito del login
+        function handleLoginSuccess(result) {
+            showLoading(false);
+            
+            // Validar que result no sea null o undefined
+            if (!result) {
+                console.error('❌ [FRONTEND] Respuesta nula del servidor');
+                showError('Error del servidor: Respuesta nula');
+                return;
+            }
+            
+            if (result.success) {
+                currentUser = result.user;
+                currentToken = result.token;
+                
+                // Guardar en sessionStorage
+                sessionStorage.setItem('AIM_TOKEN', currentToken);
+                sessionStorage.setItem('AIM_USER', JSON.stringify(currentUser));
+                
+                showAppView();
+                showSuccess('Login exitoso');
+            } else {
+                showError(result.error || 'Error de autenticación');
+            }
+        }
+
+        // Manejar error del login
+        function handleLoginError(error) {
+            showLoading(false);
+            showError('Error de conexión: ' + error.message);
+        }
+
+        // Mostrar vista de la aplicación
+        function showAppView() {
+            document.getElementById('loginView').style.display = 'none';
+            document.getElementById('appView').style.display = 'block';
+            
+            // Actualizar información del usuario
+            if (currentUser) {
+                document.getElementById('userName').textContent = currentUser.name;
+                document.getElementById('userRole').textContent = currentUser.role;
+                document.getElementById('userAvatar').textContent = currentUser.name.charAt(0).toUpperCase();
+            }
+            
+            // Cargar datos del dashboard
+            loadDashboard();
+        }
+
+        // Cargar dashboard
+        function loadDashboard() {
+            // Cargar usuarios
+            loadUsers();
+            
+            // Cargar otras estadísticas
+            loadStats();
+            
+            // Mostrar panel de administración si es admin
+            if (currentUser && (currentUser.role === 'super_admin' || currentUser.role === 'admin')) {
+                document.getElementById('adminPanel').style.display = 'block';
+                loadUsersTable();
+            }
+        }
+
+        // Cargar usuarios
+        function loadUsers() {
+            if (!currentToken) return;
+            
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result.success) {
+                        document.getElementById('totalUsers').textContent = result.count;
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Error cargando usuarios:', error);
+                })
+                .doGetUsers(currentToken);
+        }
+
+        // Cargar estadísticas
+        function loadStats() {
+            // Simular carga de estadísticas
+            document.getElementById('totalEarnings').textContent = '$1,000';
+            document.getElementById('totalAdvances').textContent = '0';
+            document.getElementById('systemStatus').textContent = '✅';
+        }
+
+        // Cerrar sesión
+        function logout() {
+            currentUser = null;
+            currentToken = null;
+            
+            // Limpiar sessionStorage
+            sessionStorage.removeItem('AIM_TOKEN');
+            sessionStorage.removeItem('AIM_USER');
+            
+            // Mostrar vista de login
+            document.getElementById('appView').style.display = 'none';
+            document.getElementById('loginView').style.display = 'block';
+            
+            // Limpiar formulario
+            document.getElementById('email').value = 'admin@aim.com';
+            document.getElementById('password').value = 'admin123';
+            
+            hideMessages();
+        }
+
+        // Utilidades de UI
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        function showError(message) {
+            const errorDiv = document.getElementById('errorMessage');
+            errorDiv.textContent = message;
+            errorDiv.style.display = 'block';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        function showSuccess(message) {
+            const successDiv = document.getElementById('successMessage');
+            successDiv.textContent = message;
+            successDiv.style.display = 'block';
+            document.getElementById('errorMessage').style.display = 'none';
+        }
+
+        function hideMessages() {
+            document.getElementById('errorMessage').style.display = 'none';
+            document.getElementById('successMessage').style.display = 'none';
+        }
+
+        // ============================================================================
+        // GESTIÓN DE USUARIOS
+        // ============================================================================
+
+        // Cargar tabla de usuarios
+        function loadUsersTable() {
+            if (!currentToken) return;
+            
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    if (result.success) {
+                        displayUsersTable(result.users);
+                    } else {
+                        console.error('Error cargando usuarios:', result.error);
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    console.error('Error cargando usuarios:', error);
+                })
+                .doGetUsers(currentToken);
+        }
+
+        // Mostrar tabla de usuarios
+        function displayUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = '';
+            
+            users.forEach(user => {
+                const row = document.createElement('tr');
+                
+                // Grupos como tags
+                const groupsHtml = user.groups.map(group => 
+                    `<span class="group-tag">${group}</span>`
+                ).join('');
+                
+                // Badge de rol
+                const roleClass = `role-${user.role}`;
+                const roleText = user.role === 'super_admin' ? 'Super Admin' : 
+                               user.role === 'admin' ? 'Admin' : 'Modelo';
+                
+                row.innerHTML = `
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td><span class="role-badge ${roleClass}">${roleText}</span></td>
+                    <td>${groupsHtml}</td>
+                    <td>${user.isActive ? 'Activo' : 'Inactivo'}</td>
+                    <td>
+                        <button class="btn-sm btn-edit" onclick="editUser('${user.id}')">Editar</button>
+                        <button class="btn-sm btn-delete" onclick="deleteUser('${user.id}')">Eliminar</button>
+                    </td>
+                `;
+                
+                tbody.appendChild(row);
+            });
+        }
+
+        // Mostrar modal de crear usuario
+        function showCreateUserModal() {
+            document.getElementById('modalTitle').textContent = 'Nuevo Usuario';
+            document.getElementById('submitButton').textContent = 'Crear Usuario';
+            document.getElementById('userForm').reset();
+            document.getElementById('userModal').style.display = 'block';
+        }
+
+        // Editar usuario
+        function editUser(userId) {
+            // Buscar usuario en la tabla actual
+            const users = Array.from(document.querySelectorAll('#usersTableBody tr')).map(row => {
+                const cells = row.querySelectorAll('td');
+                return {
+                    id: userId,
+                    name: cells[0].textContent,
+                    email: cells[1].textContent,
+                    role: cells[2].querySelector('.role-badge').textContent.toLowerCase().replace(' ', '_'),
+                    groups: Array.from(cells[3].querySelectorAll('.group-tag')).map(tag => tag.textContent),
+                    isActive: cells[4].textContent === 'Activo'
+                };
+            }).find(user => user.id === userId);
+            
+            if (users) {
+                document.getElementById('modalTitle').textContent = 'Editar Usuario';
+                document.getElementById('submitButton').textContent = 'Actualizar Usuario';
+                
+                // Llenar formulario
+                document.getElementById('userName').value = users.name;
+                document.getElementById('userEmail').value = users.email;
+                document.getElementById('userRole').value = users.role;
+                
+                // Marcar grupos
+                users.groups.forEach(group => {
+                    const checkbox = document.querySelector(`input[value="${group}"]`);
+                    if (checkbox) checkbox.checked = true;
+                });
+                
+                document.getElementById('userModal').style.display = 'block';
+            }
+        }
+
+        // Eliminar usuario
+        function deleteUser(userId) {
+            if (confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        if (result.success) {
+                            showSuccess('Usuario eliminado exitosamente');
+                            loadUsersTable();
+                        } else {
+                            showError(result.error);
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        showError('Error eliminando usuario: ' + error.message);
+                    })
+                    .doDeleteUser(currentToken, userId);
+            }
+        }
+
+        // Cerrar modal
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+        }
+
+        // Manejar envío del formulario
+        document.getElementById('userForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const userData = {
+                name: formData.get('name'),
+                email: formData.get('email'),
+                role: formData.get('role'),
+                groups: formData.getAll('groups'),
+                password: formData.get('password')
+            };
+            
+            // Determinar si es creación o edición
+            const isEdit = document.getElementById('modalTitle').textContent === 'Editar Usuario';
+            
+            if (isEdit) {
+                // TODO: Implementar edición
+                showError('Función de edición en desarrollo');
+            } else {
+                // Crear usuario
+                google.script.run
+                    .withSuccessHandler(function(result) {
+                        if (result.success) {
+                            showSuccess('Usuario creado exitosamente');
+                            closeUserModal();
+                            loadUsersTable();
+                        } else {
+                            showError(result.error);
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        showError('Error creando usuario: ' + error.message);
+                    })
+                    .doCreateUser(currentToken, userData);
+            }
+        });
+    </script>
+</body>
+</html>
