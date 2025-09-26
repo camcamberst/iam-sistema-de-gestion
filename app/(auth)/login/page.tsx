@@ -1,7 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { supabase } from '../../../lib/supabase';
+import { modernLogin, type AuthUser } from '../../../lib/auth-modern';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -17,56 +17,62 @@ export default function LoginPage() {
     setError('');
 
     try {
-      console.log('🔍 Intentando login con:', { email, password: '***' });
+      console.log('🔐 [LOGIN] Iniciando autenticación moderna:', { email, password: '***' });
       
-      // Autenticación real con Supabase
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: email.toLowerCase().trim(),
-        password: password,
-      });
+      // 🚀 LOGIN MODERNO CON SUPABASE AUTH
+      const response = await modernLogin({ email, password });
 
-      console.log('📝 Respuesta de Supabase:', { data, error });
-
-      if (error) {
-        console.error('❌ Error de autenticación:', error);
-        setError(`Error: ${error.message}`);
+      if (!response.success) {
+        setError(response.error || 'Error al iniciar sesión');
         return;
       }
 
-      if (data.user) {
-        console.log('✅ Usuario autenticado:', data.user.id);
-        
-        // Obtener información del usuario desde la tabla users
-        const { data: userData, error: userError } = await supabase
-          .from('users')
-          .select('role, name')
-          .eq('id', data.user.id)
-          .single();
+      if (!response.user) {
+        setError('Usuario no encontrado');
+        return;
+      }
 
-        console.log('📝 Datos del usuario:', { userData, userError });
+      const user: AuthUser = response.user;
+      console.log('✅ [LOGIN] Usuario autenticado exitosamente:', {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        groups: user.groups.length
+      });
 
-        if (userError) {
-          console.error('❌ Error obteniendo datos del usuario:', userError);
-          setError('Error al obtener información del usuario.');
-          return;
-        }
+      // Guardar en localStorage con datos completos
+      localStorage.setItem('user', JSON.stringify({
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role,
+        organization_id: user.organization_id,
+        groups: user.groups,
+        is_active: user.is_active,
+        last_login: user.last_login
+      }));
 
-        console.log('🚀 Redirigiendo según rol:', userData.role);
+      console.log('🚀 [LOGIN] Redirigiendo según rol:', user.role);
 
-        // Redirigir según el rol
-        if (userData.role === 'super_admin') {
+      // Redirigir según el rol con lógica moderna
+      switch (user.role) {
+        case 'super_admin':
+        case 'admin':
           router.push('/admin/dashboard');
-        } else if (userData.role === 'admin') {
-          router.push('/admin/dashboard');
-        } else if (userData.role === 'modelo') {
+          break;
+        case 'modelo':
           router.push('/modelo/dashboard');
-        } else {
-          router.push('/admin/dashboard'); // Default
-        }
+          break;
+        case 'chatter':
+          router.push('/chatter/dashboard');
+          break;
+        default:
+          router.push('/admin/dashboard');
       }
     } catch (err) {
-      console.error('❌ Error general:', err);
-      setError('Error al iniciar sesión.');
+      console.error('❌ [LOGIN] Error general:', err);
+      setError('Error interno del servidor');
     } finally {
       setLoading(false);
     }
