@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener grupos de la organización
+    // Obtener grupos de la organización (consulta simplificada)
     const { data: groups, error } = await supabase
       .from('groups')
       .select(`
@@ -33,16 +33,7 @@ export async function GET(request: NextRequest) {
         name,
         description,
         is_active,
-        created_at,
-        user_groups!inner(
-          user_id,
-          is_manager,
-          user_profiles!inner(
-            id,
-            name,
-            role
-          )
-        )
+        created_at
       `)
       .eq('organization_id', currentUser.organization_id)
       .eq('is_active', true)
@@ -56,20 +47,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Formatear respuesta
-    const formattedGroups = groups?.map(group => ({
-      id: group.id,
-      name: group.name,
-      description: group.description,
-      is_active: group.is_active,
-      created_at: group.created_at,
-      members: group.user_groups.map((ug: any) => ({
-        user_id: ug.user_id,
-        name: ug.user_profiles.name,
-        role: ug.user_profiles.role,
-        is_manager: ug.is_manager
-      }))
-    })) || [];
+    // Obtener miembros por separado para cada grupo
+    const formattedGroups = await Promise.all(
+      (groups || []).map(async (group) => {
+        // Obtener miembros del grupo
+        const { data: groupMembers } = await supabase
+          .from('user_groups')
+          .select(`
+            user_id,
+            is_manager,
+            user_profiles!inner(
+              id,
+              name,
+              role
+            )
+          `)
+          .eq('group_id', group.id);
+
+        return {
+          id: group.id,
+          name: group.name,
+          description: group.description,
+          is_active: group.is_active,
+          created_at: group.created_at,
+          members: groupMembers?.map((gm: any) => ({
+            user_id: gm.user_id,
+            name: gm.user_profiles.name,
+            role: gm.user_profiles.role,
+            is_manager: gm.is_manager
+          })) || []
+        };
+      })
+    );
 
     console.log('✅ [API] Grupos obtenidos:', formattedGroups.length);
 

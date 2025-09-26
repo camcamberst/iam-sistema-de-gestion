@@ -33,23 +33,16 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener usuarios de la organización
+    // Obtener usuarios de la organización (consulta simplificada)
     const { data: users, error } = await supabase
       .from('user_profiles')
       .select(`
         id,
         name,
-        email:auth.users!inner(email),
         role,
         is_active,
         last_login,
-        created_at,
-        user_groups!inner(
-          groups!inner(
-            id,
-            name
-          )
-        )
+        created_at
       `)
       .eq('organization_id', currentUser.organization_id)
       .order('created_at', { ascending: false });
@@ -62,20 +55,38 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Formatear respuesta
-    const formattedUsers = users?.map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      is_active: user.is_active,
-      last_login: user.last_login,
-      created_at: user.created_at,
-      groups: user.user_groups.map((ug: any) => ({
-        id: ug.groups.id,
-        name: ug.groups.name
-      }))
-    })) || [];
+    // Obtener grupos por separado para cada usuario
+    const formattedUsers = await Promise.all(
+      (users || []).map(async (user) => {
+        // Obtener grupos del usuario
+        const { data: userGroups } = await supabase
+          .from('user_groups')
+          .select(`
+            groups!inner(
+              id,
+              name
+            )
+          `)
+          .eq('user_id', user.id);
+
+        // Obtener email del usuario desde auth.users
+        const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: authUser?.user?.email || '',
+          role: user.role,
+          is_active: user.is_active,
+          last_login: user.last_login,
+          created_at: user.created_at,
+          groups: userGroups?.map((ug: any) => ({
+            id: ug.groups.id,
+            name: ug.groups.name
+          })) || []
+        };
+      })
+    );
 
     console.log('✅ [API] Usuarios obtenidos:', formattedUsers.length);
 
