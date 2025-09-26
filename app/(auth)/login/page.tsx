@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '../../../lib/supabase';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -14,20 +15,41 @@ export default function LoginPage() {
     setLoading(true);
     setError('');
 
-    // Placeholder for actual Supabase authentication
-    // In a real app, you'd use supabase.auth.signInWithPassword
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Autenticación real con Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
 
-      if (email === 'superadmin@example.com' && password === 'password') {
-        router.push('/admin/dashboard'); // Redirect Super Admin
-      } else if (email === 'admin@example.com' && password === 'password') {
-        router.push('/admin/dashboard'); // Redirect Admin
-      } else if (email === 'modelo@example.com' && password === 'password') {
-        router.push('/modelo/dashboard'); // Redirect Modelo
-      } else {
+      if (error) {
         setError('Credenciales inválidas.');
+        return;
+      }
+
+      if (data.user) {
+        // Obtener información del usuario desde la tabla users
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('role')
+          .eq('id', data.user.id)
+          .single();
+
+        if (userError) {
+          setError('Error al obtener información del usuario.');
+          return;
+        }
+
+        // Redirigir según el rol
+        if (userData.role === 'super_admin') {
+          router.push('/admin/dashboard');
+        } else if (userData.role === 'admin') {
+          router.push('/admin/dashboard');
+        } else if (userData.role === 'modelo') {
+          router.push('/modelo/dashboard');
+        } else {
+          router.push('/admin/dashboard'); // Default
+        }
       }
     } catch (err) {
       setError('Error al iniciar sesión.');
