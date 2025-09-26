@@ -277,35 +277,35 @@ export function getMonitoringDashboard(): {
  * 🔐 Logging de autenticación
  */
 export function logAuth(action: string, user_id?: string, metadata?: Record<string, any>): void {
-  info(`Auth: ${action}`, { ...metadata, module: 'auth' }, user_id, action);
+  log(LogLevel.INFO, `Auth: ${action}`, { ...metadata, module: 'auth' }, user_id, action);
 }
 
 /**
  * 👥 Logging de usuarios
  */
 export function logUser(action: string, user_id?: string, metadata?: Record<string, any>): void {
-  info(`User: ${action}`, { ...metadata, module: 'user' }, user_id, action);
+  log(LogLevel.INFO, `User: ${action}`, { ...metadata, module: 'user' }, user_id, action);
 }
 
 /**
  * 🏢 Logging de grupos
  */
 export function logGroup(action: string, user_id?: string, metadata?: Record<string, any>): void {
-  info(`Group: ${action}`, { ...metadata, module: 'group' }, user_id, action);
+  log(LogLevel.INFO, `Group: ${action}`, { ...metadata, module: 'group' }, user_id, action);
 }
 
 /**
  * 🗄️ Logging de base de datos
  */
 export function logDatabase(action: string, user_id?: string, metadata?: Record<string, any>): void {
-  info(`Database: ${action}`, { ...metadata, module: 'database' }, user_id, action);
+  log(LogLevel.INFO, `Database: ${action}`, { ...metadata, module: 'database' }, user_id, action);
 }
 
 /**
  * 🌐 Logging de API
  */
 export function logAPI(action: string, user_id?: string, metadata?: Record<string, any>): void {
-  info(`API: ${action}`, { ...metadata, module: 'api' }, user_id, action);
+  log(LogLevel.INFO, `API: ${action}`, { ...metadata, module: 'api' }, user_id, action);
 }
 
 // =====================================================
