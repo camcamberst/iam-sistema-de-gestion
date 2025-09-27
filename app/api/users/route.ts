@@ -7,6 +7,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
 import { getCurrentUser, hasPermission } from '../../../lib/auth-modern';
+import { createAuditLog } from '../../../lib/security/audit';
+import { securityMiddleware } from '../../../lib/security/middleware';
 
 // =====================================================
 // 📋 GET - Obtener usuarios
@@ -89,6 +91,16 @@ export async function GET(request: NextRequest) {
     );
 
     console.log('✅ [API] Usuarios obtenidos:', formattedUsers.length);
+
+    // Crear log de auditoría
+    await createAuditLog({
+      user_id: currentUser.id,
+      action: 'admin.users.read',
+      severity: 'low',
+      description: 'Lista de usuarios obtenida',
+      organization_id: currentUser.organization_id,
+      success: true
+    });
 
     return NextResponse.json({
       success: true,
@@ -201,6 +213,21 @@ export async function POST(request: NextRequest) {
       email,
       name,
       role
+    });
+
+    // Crear log de auditoría
+    await createAuditLog({
+      user_id: currentUser.id,
+      action: 'user.create',
+      severity: 'medium',
+      description: `Usuario creado: ${name} (${email})`,
+      organization_id: currentUser.organization_id,
+      success: true,
+      metadata: {
+        created_user_id: authData.user!.id,
+        created_user_role: role,
+        assigned_groups: group_ids || []
+      }
     });
 
     return NextResponse.json({
