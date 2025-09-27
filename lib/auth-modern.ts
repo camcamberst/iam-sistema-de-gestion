@@ -246,10 +246,6 @@ export function hasPermission(user: AuthUser, permission: string): boolean {
     return true;
   }
 
-  // Chatter tiene permisos de chatter
-  if (user.role === 'chatter' && permission.startsWith('chatter.')) {
-    return true;
-  }
 
   return false;
 }
