@@ -314,9 +314,75 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
     group_ids: [] as string[]
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [validation, setValidation] = useState({
+    name: { isValid: true, errors: [] as string[] },
+    email: { isValid: true, errors: [] as string[] },
+    password: { isValid: true, errors: [] as string[], warnings: [] as string[] },
+    role: { isValid: true, errors: [] as string[] }
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Validación en tiempo real
+  const validateField = async (field: string, value: string) => {
+    const { validateName, validateEmail, validatePassword, validateRole } = await import('../../../lib/validation');
+    
+    let result;
+    switch (field) {
+      case 'name':
+        result = validateName(value);
+        break;
+      case 'email':
+        result = validateEmail(value);
+        break;
+      case 'password':
+        result = validatePassword(value);
+        break;
+      case 'role':
+        result = validateRole(value);
+        break;
+      default:
+        return;
+    }
+
+    setValidation(prev => ({
+      ...prev,
+      [field]: result
+    }));
+  };
+
+  const handleFieldChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (value.trim()) {
+      validateField(field, value);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    setIsSubmitting(true);
+
+    // Validar todos los campos
+    const { validateUser } = await import('../../../lib/validation');
+    const userValidation = validateUser(formData);
+
+    if (!userValidation.isValid) {
+      setValidation(prev => ({
+        ...prev,
+        name: { isValid: true, errors: [] },
+        email: { isValid: true, errors: [] },
+        password: { isValid: true, errors: [], warnings: [] },
+        role: { isValid: true, errors: [] }
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+
+    try {
+      await onSubmit(formData);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -326,36 +392,84 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
         
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Nombre</label>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              Nombre <span className="text-red-400">*</span>
+            </label>
             <input
               type="text"
               value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              onChange={(e) => handleFieldChange('name', e.target.value)}
+              className={`w-full bg-gray-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                validation.name.errors.length > 0 
+                  ? 'border-red-500 focus:ring-red-500' 
+                  : 'border-gray-600 focus:border-blue-500'
+              }`}
               required
             />
+            {validation.name.errors.length > 0 && (
+              <div className="mt-1 text-red-400 text-sm">
+                {validation.name.errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Email</label>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              Email <span className="text-red-400">*</span>
+            </label>
             <input
               type="email"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              onChange={(e) => handleFieldChange('email', e.target.value)}
+              className={`w-full bg-gray-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                validation.email.errors.length > 0 
+                  ? 'border-red-500 focus:ring-red-500' 
+                  : 'border-gray-600 focus:border-blue-500'
+              }`}
               required
             />
+            {validation.email.errors.length > 0 && (
+              <div className="mt-1 text-red-400 text-sm">
+                {validation.email.errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Contraseña</label>
+            <label className="block text-gray-300 text-sm font-medium mb-2">
+              Contraseña <span className="text-red-400">*</span>
+            </label>
             <input
               type="password"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              onChange={(e) => handleFieldChange('password', e.target.value)}
+              className={`w-full bg-gray-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                validation.password.errors.length > 0 
+                  ? 'border-red-500 focus:ring-red-500' 
+                  : validation.password.warnings && validation.password.warnings.length > 0
+                    ? 'border-yellow-500 focus:ring-yellow-500'
+                    : 'border-gray-600 focus:border-blue-500'
+              }`}
               required
             />
+            {validation.password.errors.length > 0 && (
+              <div className="mt-1 text-red-400 text-sm">
+                {validation.password.errors.map((error, index) => (
+                  <div key={index}>{error}</div>
+                ))}
+              </div>
+            )}
+            {validation.password.warnings && validation.password.warnings.length > 0 && (
+              <div className="mt-1 text-yellow-400 text-sm">
+                {validation.password.warnings.map((warning, index) => (
+                  <div key={index}>{warning}</div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div>
@@ -404,15 +518,27 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={isSubmitting}
+              className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+              disabled={isSubmitting || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
             >
-              Crear Usuario
+              {isSubmitting ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Creando...</span>
+                </>
+              ) : (
+                <span>Crear Usuario</span>
+              )}
             </button>
           </div>
         </form>
