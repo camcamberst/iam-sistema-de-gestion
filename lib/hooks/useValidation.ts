@@ -141,20 +141,10 @@ export interface UserFormData {
   group_ids: string[];
 }
 
-export function useUserValidation(initialData: UserFormData) {
-  return useValidation(
-    initialData,
-    (data) => {
-      // Importación síncrona para evitar problemas de tipo
-      const { validateUser } = require('../validation');
-      return validateUser(data);
-    },
-    { validateOnMount: false }
-  );
-}
-
 // =====================================================
-// 🎣 HOOK PARA VALIDACIÓN DE GRUPO
+// 🎣 HOOKS SIMPLIFICADOS (TEMPORALMENTE DESHABILITADOS)
+// =====================================================
+// Estos hooks se implementarán en una versión futura
 // =====================================================
 
 export interface GroupFormData {
@@ -162,17 +152,9 @@ export interface GroupFormData {
   description: string;
 }
 
-export function useGroupValidation(initialData: GroupFormData) {
-  return useValidation(
-    initialData,
-    (data) => {
-      // Importación síncrona para evitar problemas de tipo
-      const { validateGroup } = require('../validation');
-      return validateGroup(data);
-    },
-    { validateOnMount: false }
-  );
-}
+// Hooks temporalmente deshabilitados para evitar errores de build
+// export function useUserValidation(initialData: UserFormData) { ... }
+// export function useGroupValidation(initialData: GroupFormData) { ... }
 
 // =====================================================
 // 🎣 HOOK PARA VALIDACIÓN DE FORMULARIOS
