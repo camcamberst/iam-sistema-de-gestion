@@ -35,18 +35,18 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener usuarios de la organización (consulta simplificada)
+    // Obtener usuarios de la tabla 'users' (no 'user_profiles')
     const { data: users, error } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select(`
         id,
         name,
+        email,
         role,
         is_active,
         last_login,
         created_at
       `)
-      .eq('organization_id', currentUser.organization_id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -71,13 +71,10 @@ export async function GET(request: NextRequest) {
           `)
           .eq('user_id', user.id);
 
-        // Obtener email del usuario desde auth.users
-        const { data: authUser } = await supabase.auth.admin.getUserById(user.id);
-
         return {
           id: user.id,
           name: user.name,
-          email: authUser?.user?.email || '',
+          email: user.email,
           role: user.role,
           is_active: user.is_active,
           last_login: user.last_login,
@@ -171,13 +168,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear perfil en user_profiles
+    // Crear perfil en tabla 'users' (no 'user_profiles')
     const { error: profileError } = await supabase
-      .from('user_profiles')
+      .from('users')
       .insert({
         id: authData.user!.id,
-        organization_id: currentUser.organization_id,
         name,
+        email,
         role,
         is_active: true
       });
