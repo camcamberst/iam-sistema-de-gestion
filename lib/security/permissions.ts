@@ -186,7 +186,7 @@ export function canAccessResource(
   // Verificar acceso a usuario específico
   if (userId && action !== 'create') {
     // Los usuarios solo pueden modificar su propio perfil (excepto super_admin y admin)
-    if (userRole === 'modelo' || userRole === 'chatter') {
+    if (userRole === 'modelo') {
       // Esta verificación se haría con el ID del usuario autenticado
       // return userId === authenticatedUserId;
     }
