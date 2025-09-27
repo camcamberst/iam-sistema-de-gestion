@@ -102,9 +102,17 @@ export default function UsersListPage() {
     }
 
     try {
-      // TODO: Implementar API de eliminación
-      console.log('Eliminando usuario:', userId);
-      loadData(); // Recargar datos
+      const response = await fetch(`/api/users?id=${userId}`, {
+        method: 'DELETE',
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        loadData(); // Recargar datos
+      } else {
+        setError('Error eliminando usuario: ' + result.error);
+      }
     } catch (err) {
       console.error('❌ Error eliminando usuario:', err);
       setError('Error eliminando usuario');
@@ -286,12 +294,29 @@ export default function UsersListPage() {
               setShowEditModal(false);
               setSelectedUser(null);
             }}
-            onSubmit={(userData) => {
-              // TODO: Implementar actualización
-              console.log('Actualizando usuario:', userData);
-              setShowEditModal(false);
-              setSelectedUser(null);
-              loadData();
+            onSubmit={async (userData) => {
+              try {
+                const response = await fetch('/api/users', {
+                  method: 'PUT',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify(userData),
+                });
+
+                const result = await response.json();
+                
+                if (result.success) {
+                  setShowEditModal(false);
+                  setSelectedUser(null);
+                  loadData();
+                } else {
+                  setError('Error actualizando usuario: ' + result.error);
+                }
+              } catch (err) {
+                console.error('❌ Error actualizando usuario:', err);
+                setError('Error actualizando usuario');
+              }
             }}
           />
         )}
@@ -481,6 +506,7 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
             >
               <option value="modelo">Modelo</option>
               <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
             </select>
           </div>
 
@@ -603,6 +629,7 @@ function EditUserModal({ user, groups, onClose, onSubmit }: {
             >
               <option value="modelo">Modelo</option>
               <option value="admin">Admin</option>
+              <option value="super_admin">Super Admin</option>
             </select>
           </div>
 

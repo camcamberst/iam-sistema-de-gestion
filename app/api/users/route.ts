@@ -251,16 +251,213 @@ export async function POST(request: NextRequest) {
 // 🚫 MÉTODOS NO PERMITIDOS
 // =====================================================
 
-export async function PUT() {
-  return NextResponse.json(
-    { error: 'Método no permitido' },
-    { status: 405 }
-  );
+export async function PUT(request: NextRequest) {
+  try {
+    console.log('✏️ [API] Editando usuario');
+    
+    // Verificar autenticación
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: 'No autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Verificar permisos
+    if (!hasPermission(currentUser, 'admin.users.update')) {
+      return NextResponse.json(
+        { success: false, error: 'Sin permisos para editar usuarios' },
+        { status: 403 }
+      );
+    }
+
+    const body = await request.json();
+    const { id, name, email, role, is_active, group_ids } = body;
+
+    // Validar datos
+    if (!id || !name || !email || !role) {
+      return NextResponse.json(
+        { success: false, error: 'Datos requeridos faltantes' },
+        { status: 400 }
+      );
+    }
+
+    // Actualizar usuario en tabla users
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        name,
+        email,
+        role,
+        is_active: is_active !== undefined ? is_active : true
+      })
+      .eq('id', id);
+
+    if (updateError) {
+      console.error('❌ [API] Error actualizando usuario:', updateError);
+      return NextResponse.json(
+        { success: false, error: 'Error actualizando usuario' },
+        { status: 500 }
+      );
+    }
+
+    // Actualizar grupos si se proporcionaron
+    if (group_ids !== undefined) {
+      // Eliminar grupos existentes
+      await supabase
+        .from('user_groups')
+        .delete()
+        .eq('user_id', id);
+
+      // Agregar nuevos grupos
+      if (group_ids.length > 0) {
+        const userGroups = group_ids.map((groupId: string) => ({
+          user_id: id,
+          group_id: groupId,
+          is_manager: false
+        }));
+
+        const { error: groupsError } = await supabase
+          .from('user_groups')
+          .insert(userGroups);
+
+        if (groupsError) {
+          console.error('❌ [API] Error actualizando grupos:', groupsError);
+          // No fallar la actualización del usuario por esto
+        }
+      }
+    }
+
+    console.log('✅ [API] Usuario actualizado exitosamente:', { id, name, email, role });
+
+    // Crear log de auditoría
+    await createAuditLog({
+      user_id: currentUser.id,
+      action: 'admin.users.update',
+      severity: 'medium',
+      description: `Usuario actualizado: ${name} (${email})`,
+      organization_id: currentUser.organization_id,
+      success: true,
+      metadata: {
+        updated_user_id: id,
+        updated_user_role: role,
+        assigned_groups: group_ids || []
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id,
+        name,
+        email,
+        role,
+        is_active: is_active !== undefined ? is_active : true
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error general:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
 }
 
-export async function DELETE() {
-  return NextResponse.json(
-    { error: 'Método no permitido' },
-    { status: 405 }
-  );
+export async function DELETE(request: NextRequest) {
+  try {
+    console.log('🗑️ [API] Eliminando usuario');
+    
+    // Verificar autenticación
+    const currentUser = await getCurrentUser();
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: 'No autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Verificar permisos
+    if (!hasPermission(currentUser, 'admin.users.delete')) {
+      return NextResponse.json(
+        { success: false, error: 'Sin permisos para eliminar usuarios' },
+        { status: 403 }
+      );
+    }
+
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('id');
+
+    if (!userId) {
+      return NextResponse.json(
+        { success: false, error: 'ID de usuario requerido' },
+        { status: 400 }
+      );
+    }
+
+    // Obtener información del usuario antes de eliminarlo
+    const { data: userData } = await supabase
+      .from('users')
+      .select('name, email, role')
+      .eq('id', userId)
+      .single();
+
+    // Eliminar grupos del usuario
+    await supabase
+      .from('user_groups')
+      .delete()
+      .eq('user_id', userId);
+
+    // Eliminar usuario de tabla users
+    const { error: deleteError } = await supabase
+      .from('users')
+      .delete()
+      .eq('id', userId);
+
+    if (deleteError) {
+      console.error('❌ [API] Error eliminando usuario:', deleteError);
+      return NextResponse.json(
+        { success: false, error: 'Error eliminando usuario' },
+        { status: 500 }
+      );
+    }
+
+    // Eliminar usuario de auth.users (requiere admin)
+    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
+    
+    if (authDeleteError) {
+      console.error('❌ [API] Error eliminando usuario de Auth:', authDeleteError);
+      // No fallar la eliminación por esto, el usuario ya fue eliminado de la tabla users
+    }
+
+    console.log('✅ [API] Usuario eliminado exitosamente:', userId);
+
+    // Crear log de auditoría
+    await createAuditLog({
+      user_id: currentUser.id,
+      action: 'admin.users.delete',
+      severity: 'high',
+      description: `Usuario eliminado: ${userData?.name} (${userData?.email})`,
+      organization_id: currentUser.organization_id,
+      success: true,
+      metadata: {
+        deleted_user_id: userId,
+        deleted_user_role: userData?.role
+      }
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: 'Usuario eliminado exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error general:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
 }
