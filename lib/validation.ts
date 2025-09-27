@@ -164,7 +164,7 @@ export function validateRole(role: string): ValidationResult {
     return { isValid: false, errors };
   }
 
-  const validRoles = ['super_admin', 'admin', 'modelo', 'chatter'];
+  const validRoles = ['super_admin', 'admin', 'modelo'];
   if (!validRoles.includes(role)) {
     errors.push(`El rol debe ser uno de: ${validRoles.join(', ')}`);
   }

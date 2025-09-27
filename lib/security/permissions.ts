@@ -54,13 +54,8 @@ export type Permission =
   | 'modelo.sessions.read'
   | 'modelo.sessions.create'
   
-  // Chatters
-  | 'chatter.profile.read'
-  | 'chatter.profile.update'
-  | 'chatter.sessions.read'
-  | 'chatter.sessions.create';
 
-export type Role = 'super_admin' | 'admin' | 'modelo' | 'chatter';
+export type Role = 'super_admin' | 'admin' | 'modelo';
 
 export interface PermissionMatrix {
   [key: string]: Permission[];
@@ -105,11 +100,7 @@ export const PERMISSION_MATRIX: PermissionMatrix = {
     'modelo.profile.read',
     'modelo.profile.update',
     'modelo.sessions.read',
-    'modelo.sessions.create',
-    'chatter.profile.read',
-    'chatter.profile.update',
-    'chatter.sessions.read',
-    'chatter.sessions.create'
+    'modelo.sessions.create'
   ],
   
   admin: [
@@ -130,9 +121,7 @@ export const PERMISSION_MATRIX: PermissionMatrix = {
     'admin.reports.export',
     'admin.audit.read',
     'modelo.profile.read',
-    'modelo.sessions.read',
-    'chatter.profile.read',
-    'chatter.sessions.read'
+    'modelo.sessions.read'
   ],
   
   modelo: [
@@ -140,13 +129,6 @@ export const PERMISSION_MATRIX: PermissionMatrix = {
     'modelo.profile.update',
     'modelo.sessions.read',
     'modelo.sessions.create'
-  ],
-  
-  chatter: [
-    'chatter.profile.read',
-    'chatter.profile.update',
-    'chatter.sessions.read',
-    'chatter.sessions.create'
   ]
 };
 
@@ -292,10 +274,9 @@ export function createPermissionAudit(
 
 export function getRoleHierarchy(): Record<Role, number> {
   return {
-    super_admin: 4,
-    admin: 3,
-    modelo: 2,
-    chatter: 1
+    super_admin: 3,
+    admin: 2,
+    modelo: 1
   };
 }
 

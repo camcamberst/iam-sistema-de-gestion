@@ -480,7 +480,6 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="modelo">Modelo</option>
-              <option value="chatter">Chatter</option>
               <option value="admin">Admin</option>
             </select>
           </div>
@@ -603,7 +602,6 @@ function EditUserModal({ user, groups, onClose, onSubmit }: {
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="modelo">Modelo</option>
-              <option value="chatter">Chatter</option>
               <option value="admin">Admin</option>
             </select>
           </div>
