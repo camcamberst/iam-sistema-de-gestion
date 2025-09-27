@@ -71,10 +71,11 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
 
     // 2. Obtener perfil completo del usuario
     const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select(`
         id,
         name,
+        email,
         role,
         is_active,
         last_login,
@@ -115,7 +116,7 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
 
     // 3. Actualizar último login
     await supabase
-      .from('user_profiles')
+      .from('users')
       .update({ last_login: new Date().toISOString() })
       .eq('id', authData.user.id);
 
@@ -182,10 +183,11 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
     }
 
     const { data: profileData, error: profileError } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select(`
         id,
         name,
+        email,
         role,
         is_active,
         last_login,
@@ -298,7 +300,7 @@ export async function getUserStats(userId: string): Promise<{
 }> {
   try {
     const { data, error } = await supabase
-      .from('user_profiles')
+      .from('users')
       .select(`
         is_active,
         user_groups!inner(
