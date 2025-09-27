@@ -144,8 +144,9 @@ export interface UserFormData {
 export function useUserValidation(initialData: UserFormData) {
   return useValidation(
     initialData,
-    async (data) => {
-      const { validateUser } = await import('../validation');
+    (data) => {
+      // Importación síncrona para evitar problemas de tipo
+      const { validateUser } = require('../validation');
       return validateUser(data);
     },
     { validateOnMount: false }
@@ -164,8 +165,9 @@ export interface GroupFormData {
 export function useGroupValidation(initialData: GroupFormData) {
   return useValidation(
     initialData,
-    async (data) => {
-      const { validateGroup } = await import('../validation');
+    (data) => {
+      // Importación síncrona para evitar problemas de tipo
+      const { validateGroup } = require('../validation');
       return validateGroup(data);
     },
     { validateOnMount: false }
