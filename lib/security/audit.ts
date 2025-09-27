@@ -21,6 +21,10 @@ export type AuditAction =
   | 'user.activate'
   | 'user.deactivate'
   | 'user.role_change'
+  | 'admin.users.read'
+  | 'admin.users.create'
+  | 'admin.users.update'
+  | 'admin.users.delete'
   
   // Grupos
   | 'group.create'
@@ -28,6 +32,10 @@ export type AuditAction =
   | 'group.delete'
   | 'group.assign_user'
   | 'group.remove_user'
+  | 'admin.groups.read'
+  | 'admin.groups.create'
+  | 'admin.groups.update'
+  | 'admin.groups.delete'
   
   // Permisos
   | 'permission.grant'
