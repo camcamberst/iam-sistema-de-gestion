@@ -64,9 +64,6 @@ export default function LoginPage() {
         case 'modelo':
           router.push('/modelo/dashboard');
           break;
-        case 'chatter':
-          router.push('/chatter/dashboard');
-          break;
         default:
           router.push('/admin/dashboard');
       }
