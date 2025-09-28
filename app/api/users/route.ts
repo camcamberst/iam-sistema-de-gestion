@@ -5,7 +5,7 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '../../../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import { requireAuth } from '../../../lib/auth-server';
 import { createAuditLog } from '../../../lib/security/audit';
 
