@@ -20,21 +20,22 @@ const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
 });
 
 /**
- * 🔐 Obtener usuario autenticado desde headers
+ * 🔐 Obtener usuario autenticado desde cookies (Supabase SSR)
  */
 export async function getServerUser(request: NextRequest): Promise<AuthUser | null> {
   try {
-    // Obtener token de autorización del header
-    const authHeader = request.headers.get('authorization');
-    const token = authHeader?.replace('Bearer ', '');
+    // Obtener token de cookies de Supabase
+    const cookieStore = request.cookies;
+    const accessToken = cookieStore.get('sb-access-token')?.value;
+    const refreshToken = cookieStore.get('sb-refresh-token')?.value;
     
-    if (!token) {
-      console.log('❌ [SERVER AUTH] No token provided');
+    if (!accessToken) {
+      console.log('❌ [SERVER AUTH] No access token in cookies');
       return null;
     }
 
     // Verificar token con Supabase
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(token);
+    const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken);
     
     if (error || !user) {
       console.log('❌ [SERVER AUTH] Invalid token:', error?.message);
