@@ -18,22 +18,33 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
     // 🔍 DEBUG: Log all headers
     console.log('🔍 [SERVER AUTH DEBUG] All headers:', Object.fromEntries(request.headers.entries()));
     
-    // Obtener usuario desde headers del middleware
-    const userId = request.headers.get('x-user-id');
-    const userEmail = request.headers.get('x-user-email');
+    // Obtener token del Authorization header
+    const authHeader = request.headers.get('authorization');
+    const accessToken = authHeader?.replace('Bearer ', '');
     
-    console.log('🔍 [SERVER AUTH DEBUG] User from middleware:', { userId, userEmail });
+    console.log('🔍 [SERVER AUTH DEBUG] Auth header:', authHeader);
+    console.log('🔍 [SERVER AUTH DEBUG] Access token:', accessToken ? 'Present' : 'Missing');
     
-    if (!userId || !userEmail) {
-      console.log('❌ [SERVER AUTH] No user from middleware');
+    if (!accessToken) {
+      console.log('❌ [SERVER AUTH] No access token provided');
       return null;
     }
 
-    // Crear cliente Supabase para obtener perfil
+    // Crear cliente Supabase para verificar token
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
+
+    // Verificar token con Supabase
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
+    
+    if (authError || !user) {
+      console.log('❌ [SERVER AUTH] Invalid token:', authError?.message);
+      return null;
+    }
+    
+    console.log('✅ [SERVER AUTH] Token valid, user:', user.id);
 
     // Obtener perfil del usuario desde public.users
     const { data: profileData, error: profileError } = await supabase
@@ -55,7 +66,7 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
           )
         )
       `)
-      .eq('id', userId)
+      .eq('id', user.id)
       .single();
 
     if (profileError || !profileData) {
@@ -70,7 +81,7 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
 
     return {
       id: profileData.id,
-      email: userEmail,
+      email: user.email || profileData.email,
       name: profileData.name,
       role: profileData.role,
       organization_id: profileData.organization_id,
