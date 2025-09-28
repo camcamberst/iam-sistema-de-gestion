@@ -1,177 +1,114 @@
 // =====================================================
-// 👥 API ULTRA SIMPLE DE USUARIOS - SIN AUTENTICACIÓN
+// 👥 API ULTRA SIMPLE DE USUARIOS - VERSIÓN MÍNIMA
 // =====================================================
-// Endpoint sin autenticación para testing y desarrollo
+// Solo operaciones básicas sin complejidades
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // =====================================================
-// 📋 GET - Obtener usuarios (SIN AUTENTICACIÓN)
+// 📋 GET - Obtener usuarios (VERSIÓN MÍNIMA)
 // =====================================================
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('👥 [API] Obteniendo lista de usuarios (SIN AUTH)');
+    console.log('👥 [API] Obteniendo usuarios (VERSIÓN MÍNIMA)');
     
-    // Crear cliente Supabase directo
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Obtener usuarios de la tabla 'users'
-    const { data: users, error: usersError } = await supabase
+    // Obtener usuarios básicos
+    const { data: users, error } = await supabase
       .from('users')
-      .select(`
-        id,
-        name,
-        email,
-        role,
-        is_active,
-        last_login,
-        created_at
-      `)
+      .select('id, name, email, role, is_active, created_at')
       .order('created_at', { ascending: false });
 
-    if (usersError) {
-      console.error('❌ [API] Error obteniendo usuarios:', usersError);
+    if (error) {
+      console.error('❌ [API] Error:', error);
       return NextResponse.json(
         { success: false, error: 'Error obteniendo usuarios' },
         { status: 500 }
       );
     }
 
-    // Obtener grupos por separado para cada usuario
-    const formattedUsers = await Promise.all(
-      (users || []).map(async (u) => {
-        const { data: userGroups } = await supabase
-          .from('user_groups')
-          .select(`
-            groups!inner(
-              id,
-              name
-            )
-          `)
-          .eq('user_id', u.id);
-
-        return {
-          id: u.id,
-          name: u.name,
-          email: u.email,
-          role: u.role,
-          is_active: u.is_active,
-          last_login: u.last_login,
-          created_at: u.created_at,
-          groups: userGroups?.map((ug: any) => ({
-            id: ug.groups.id,
-            name: ug.groups.name,
-          })) || [],
-        };
-      })
-    );
-
-    console.log('✅ [API] Usuarios obtenidos:', formattedUsers.length);
+    console.log('✅ [API] Usuarios obtenidos:', users?.length || 0);
 
     return NextResponse.json({
       success: true,
-      users: formattedUsers
+      users: users || []
     });
 
   } catch (error) {
     console.error('❌ [API] Error general:', error);
     return NextResponse.json(
-      { success: false, error: 'Error interno del servidor' },
+      { success: false, error: 'Error interno' },
       { status: 500 }
     );
   }
 }
 
 // =====================================================
-// ➕ POST - Crear usuario (SIN AUTENTICACIÓN)
+// ➕ POST - Crear usuario (VERSIÓN MÍNIMA)
 // =====================================================
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('➕ [API] Creando nuevo usuario (SIN AUTH)');
+    console.log('➕ [API] Creando usuario (VERSIÓN MÍNIMA)');
     
-    // Crear cliente Supabase admin
-    const supabaseAdmin = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     const body = await request.json();
-    const { email, password, name, role, group_ids } = body;
+    const { email, password, name, role } = body;
 
-    // Validar datos
+    // Validación básica
     if (!email || !password || !name || !role) {
       return NextResponse.json(
-        { success: false, error: 'Datos requeridos faltantes' },
+        { success: false, error: 'Datos faltantes' },
         { status: 400 }
       );
     }
 
-    // Crear usuario en Supabase Auth
-    const { data: authData, error: authCreateError } = await supabaseAdmin.auth.admin.createUser({
+    // 1. Crear usuario en Auth
+    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true,
-      user_metadata: {
-        name,
-        role,
-        organization_id: null // Sin organización específica
-      }
+      email_confirm: true
     });
 
-    if (authCreateError || !authData.user) {
-      console.error('❌ [API] Error creando usuario en Auth:', authCreateError);
+    if (authError || !authData.user) {
+      console.error('❌ [API] Error Auth:', authError);
       return NextResponse.json(
-        { success: false, error: 'Error creando usuario' },
+        { success: false, error: 'Error creando usuario en Auth' },
         { status: 500 }
       );
     }
 
-    // Crear perfil en tabla 'users'
-    const { error: profileError } = await supabaseAdmin
+    // 2. Crear perfil básico
+    const { error: profileError } = await supabase
       .from('users')
       .insert({
         id: authData.user.id,
         name,
         email,
         role,
-        is_active: true,
-        organization_id: null
+        is_active: true
       });
 
     if (profileError) {
-      console.error('❌ [API] Error creando perfil:', profileError);
+      console.error('❌ [API] Error perfil:', profileError);
       return NextResponse.json(
         { success: false, error: 'Error creando perfil' },
         { status: 500 }
       );
     }
 
-    // Asignar grupos si se proporcionaron
-    if (group_ids && group_ids.length > 0) {
-      const userGroups = group_ids.map((groupId: string) => ({
-        user_id: authData.user!.id,
-        group_id: groupId,
-        is_manager: false
-      }));
-
-      const { error: groupsError } = await supabaseAdmin
-        .from('user_groups')
-        .insert(userGroups);
-
-      if (groupsError) {
-        console.error('❌ [API] Error asignando grupos:', groupsError);
-        // No fallar la creación del usuario por esto
-      }
-    }
-
-    console.log('✅ [API] Usuario creado exitosamente:', authData.user.id);
+    console.log('✅ [API] Usuario creado:', authData.user.id);
 
     return NextResponse.json({
       success: true,
@@ -180,47 +117,43 @@ export async function POST(request: NextRequest) {
         name,
         email,
         role,
-        is_active: true,
-        groups: group_ids
+        is_active: true
       }
     });
 
   } catch (error) {
     console.error('❌ [API] Error general:', error);
     return NextResponse.json(
-      { success: false, error: 'Error interno del servidor' },
+      { success: false, error: 'Error interno' },
       { status: 500 }
     );
   }
 }
 
 // =====================================================
-// ✏️ PUT - Editar usuario (SIN AUTENTICACIÓN)
+// ✏️ PUT - Editar usuario (VERSIÓN MÍNIMA)
 // =====================================================
 
 export async function PUT(request: NextRequest) {
   try {
-    console.log('✏️ [API] Editando usuario (SIN AUTH)');
+    console.log('✏️ [API] Editando usuario (VERSIÓN MÍNIMA)');
     
-    // Crear cliente Supabase admin
-    const supabaseAdmin = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
     const body = await request.json();
-    const { id, name, email, role, is_active, group_ids } = body;
+    const { id, name, email, role, is_active } = body;
 
-    // Validar datos
     if (!id || !name || !email || !role) {
       return NextResponse.json(
-        { success: false, error: 'Datos requeridos faltantes' },
+        { success: false, error: 'Datos faltantes' },
         { status: 400 }
       );
     }
 
-    // Actualizar usuario en tabla users
-    const { error: updateError } = await supabaseAdmin
+    const { error } = await supabase
       .from('users')
       .update({
         name,
@@ -230,74 +163,39 @@ export async function PUT(request: NextRequest) {
       })
       .eq('id', id);
 
-    if (updateError) {
-      console.error('❌ [API] Error actualizando usuario:', updateError);
+    if (error) {
+      console.error('❌ [API] Error actualizando:', error);
       return NextResponse.json(
         { success: false, error: 'Error actualizando usuario' },
         { status: 500 }
       );
     }
 
-    // Actualizar grupos si se proporcionaron
-    if (group_ids !== undefined) {
-      // Eliminar grupos existentes
-      await supabaseAdmin
-        .from('user_groups')
-        .delete()
-        .eq('user_id', id);
-
-      // Agregar nuevos grupos
-      if (group_ids.length > 0) {
-        const userGroups = group_ids.map((groupId: string) => ({
-          user_id: id,
-          group_id: groupId,
-          is_manager: false
-        }));
-
-        const { error: groupsError } = await supabaseAdmin
-          .from('user_groups')
-          .insert(userGroups);
-
-        if (groupsError) {
-          console.error('❌ [API] Error actualizando grupos:', groupsError);
-          // No fallar la actualización del usuario por esto
-        }
-      }
-    }
-
-    console.log('✅ [API] Usuario actualizado exitosamente:', id);
+    console.log('✅ [API] Usuario actualizado:', id);
 
     return NextResponse.json({
       success: true,
-      user: {
-        id,
-        name,
-        email,
-        role,
-        is_active,
-        groups: group_ids
-      }
+      user: { id, name, email, role, is_active }
     });
 
   } catch (error) {
     console.error('❌ [API] Error general:', error);
     return NextResponse.json(
-      { success: false, error: 'Error interno del servidor' },
+      { success: false, error: 'Error interno' },
       { status: 500 }
     );
   }
 }
 
 // =====================================================
-// 🗑️ DELETE - Eliminar usuario (SIN AUTENTICACIÓN)
+// 🗑️ DELETE - Eliminar usuario (VERSIÓN MÍNIMA)
 // =====================================================
 
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🗑️ [API] Eliminando usuario (SIN AUTH)');
+    console.log('🗑️ [API] Eliminando usuario (VERSIÓN MÍNIMA)');
     
-    // Crear cliente Supabase admin
-    const supabaseAdmin = createClient(
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
@@ -307,61 +205,36 @@ export async function DELETE(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json(
-        { success: false, error: 'ID de usuario requerido' },
+        { success: false, error: 'ID requerido' },
         { status: 400 }
       );
     }
 
-    // Obtener información del usuario antes de eliminarlo
-    const { data: userData } = await supabaseAdmin
-      .from('users')
-      .select('name, email, role')
-      .eq('id', userId)
-      .single();
-
-    if (!userData) {
-      return NextResponse.json(
-        { success: false, error: 'Usuario no encontrado' },
-        { status: 404 }
-      );
-    }
-
-    // Eliminar grupos del usuario
-    await supabaseAdmin
-      .from('user_groups')
-      .delete()
-      .eq('user_id', userId);
-
-    // Eliminar usuario de tabla users
-    const { error: deleteError } = await supabaseAdmin
+    // Eliminar de tabla users
+    const { error: deleteError } = await supabase
       .from('users')
       .delete()
       .eq('id', userId);
 
     if (deleteError) {
-      console.error('❌ [API] Error eliminando usuario:', deleteError);
+      console.error('❌ [API] Error eliminando:', deleteError);
       return NextResponse.json(
         { success: false, error: 'Error eliminando usuario' },
         { status: 500 }
       );
     }
 
-    // Eliminar usuario de auth.users (requiere admin)
-    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
-    
-    if (authDeleteError) {
-      console.error('❌ [API] Error eliminando usuario de Auth:', authDeleteError);
-      // No fallar la eliminación por esto, el usuario ya fue eliminado de la tabla users
-    }
+    // Eliminar de Auth
+    await supabase.auth.admin.deleteUser(userId);
 
-    console.log('✅ [API] Usuario eliminado exitosamente:', userId);
+    console.log('✅ [API] Usuario eliminado:', userId);
 
     return NextResponse.json({ success: true });
 
   } catch (error) {
     console.error('❌ [API] Error general:', error);
     return NextResponse.json(
-      { success: false, error: 'Error interno del servidor' },
+      { success: false, error: 'Error interno' },
       { status: 500 }
     );
   }
