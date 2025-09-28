@@ -36,9 +36,15 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ [API] Usuarios obtenidos:', users?.length || 0);
 
+    // Agregar campo 'groups' vacío para compatibilidad con interfaz
+    const usersWithGroups = (users || []).map(user => ({
+      ...user,
+      groups: [] // Campo requerido por la interfaz
+    }));
+
     return NextResponse.json({
       success: true,
-      users: users || []
+      users: usersWithGroups
     });
 
   } catch (error) {
@@ -117,7 +123,8 @@ export async function POST(request: NextRequest) {
         name,
         email,
         role,
-        is_active: true
+        is_active: true,
+        groups: [] // Campo requerido por la interfaz
       }
     });
 
@@ -175,7 +182,14 @@ export async function PUT(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      user: { id, name, email, role, is_active }
+      user: { 
+        id, 
+        name, 
+        email, 
+        role, 
+        is_active,
+        groups: [] // Campo requerido por la interfaz
+      }
     });
 
   } catch (error) {
