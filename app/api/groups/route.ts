@@ -6,7 +6,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
-import { getCurrentUser, hasPermission } from '../../../lib/auth-modern';
+import { requireAuth } from '../../../lib/auth-server';
 
 // =====================================================
 // 📋 GET - Obtener grupos
@@ -16,14 +16,12 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🏢 [API] Obteniendo lista de grupos');
     
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.groups.read');
+    if ('error' in authResult) {
+      return authResult.error;
     }
+    const currentUser = authResult.user;
 
     // Obtener grupos de la organización (consulta simplificada)
     const { data: groups, error } = await supabase
@@ -104,14 +102,12 @@ export async function POST(request: NextRequest) {
   try {
     console.log('➕ [API] Creando nuevo grupo');
     
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.groups.read');
+    if ('error' in authResult) {
+      return authResult.error;
     }
+    const currentUser = authResult.user;
 
     // Verificar permisos
     if (!hasPermission(currentUser, 'admin.groups.create')) {

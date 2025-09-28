@@ -1,6 +1,7 @@
 "use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getUsers, getGroups, createUser, updateUser, deleteUser } from '../../../lib/api-client';
 
 interface User {
   id: string;
@@ -40,14 +41,11 @@ export default function UsersListPage() {
     try {
       setLoading(true);
       
-      // Cargar usuarios y grupos en paralelo
-      const [usersResponse, groupsResponse] = await Promise.all([
-        fetch('/api/users'),
-        fetch('/api/groups')
+      // Cargar usuarios y grupos con cliente autenticado
+      const [usersData, groupsData] = await Promise.all([
+        getUsers(),
+        getGroups()
       ]);
-
-      const usersData = await usersResponse.json();
-      const groupsData = await groupsResponse.json();
 
       if (usersData.success) {
         setUsers(usersData.users);

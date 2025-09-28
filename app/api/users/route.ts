@@ -6,9 +6,8 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
-import { getCurrentUser, hasPermission } from '../../../lib/auth-modern';
+import { requireAuth } from '../../../lib/auth-server';
 import { createAuditLog } from '../../../lib/security/audit';
-import { securityMiddleware } from '../../../lib/security/middleware';
 
 // =====================================================
 // 📋 GET - Obtener usuarios
@@ -18,22 +17,12 @@ export async function GET(request: NextRequest) {
   try {
     console.log('👥 [API] Obteniendo lista de usuarios');
     
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.users.read');
+    if ('error' in authResult) {
+      return authResult.error;
     }
-
-    // Verificar permisos
-    if (!hasPermission(currentUser, 'admin.users.read')) {
-      return NextResponse.json(
-        { success: false, error: 'Sin permisos' },
-        { status: 403 }
-      );
-    }
+    const currentUser = authResult.user;
 
     // Obtener usuarios de la tabla 'users' (no 'user_profiles')
     const { data: users, error } = await supabase
@@ -121,22 +110,12 @@ export async function POST(request: NextRequest) {
   try {
     console.log('➕ [API] Creando nuevo usuario');
     
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.users.create');
+    if ('error' in authResult) {
+      return authResult.error;
     }
-
-    // Verificar permisos
-    if (!hasPermission(currentUser, 'admin.users.create')) {
-      return NextResponse.json(
-        { success: false, error: 'Sin permisos para crear usuarios' },
-        { status: 403 }
-      );
-    }
+    const currentUser = authResult.user;
 
     const body = await request.json();
     const { email, password, name, role, group_ids } = body;
@@ -255,22 +234,12 @@ export async function PUT(request: NextRequest) {
   try {
     console.log('✏️ [API] Editando usuario');
     
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.users.update');
+    if ('error' in authResult) {
+      return authResult.error;
     }
-
-    // Verificar permisos
-    if (!hasPermission(currentUser, 'admin.users.update')) {
-      return NextResponse.json(
-        { success: false, error: 'Sin permisos para editar usuarios' },
-        { status: 403 }
-      );
-    }
+    const currentUser = authResult.user;
 
     const body = await request.json();
     const { id, name, email, role, is_active, group_ids } = body;
@@ -370,22 +339,12 @@ export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ [API] Eliminando usuario');
     
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.users.delete');
+    if ('error' in authResult) {
+      return authResult.error;
     }
-
-    // Verificar permisos
-    if (!hasPermission(currentUser, 'admin.users.delete')) {
-      return NextResponse.json(
-        { success: false, error: 'Sin permisos para eliminar usuarios' },
-        { status: 403 }
-      );
-    }
+    const currentUser = authResult.user;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('id');
