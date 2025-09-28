@@ -179,8 +179,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Crear cliente Supabase para operaciones admin
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Crear usuario en Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+    const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email,
       password,
       email_confirm: true,
@@ -199,7 +205,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear perfil en tabla 'users' (no 'user_profiles')
-    const { error: profileError } = await supabase
+    const { error: profileError } = await supabaseAdmin
       .from('users')
       .insert({
         id: authData.user!.id,
@@ -225,7 +231,7 @@ export async function POST(request: NextRequest) {
         is_manager: false
       }));
 
-      const { error: groupsError } = await supabase
+      const { error: groupsError } = await supabaseAdmin
         .from('user_groups')
         .insert(userGroups);
 
