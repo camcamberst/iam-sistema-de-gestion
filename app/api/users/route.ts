@@ -36,11 +36,28 @@ export async function GET(request: NextRequest) {
 
     console.log('✅ [API] Usuarios obtenidos:', users?.length || 0);
 
-    // Agregar campo 'groups' vacío para compatibilidad con interfaz
-    const usersWithGroups = (users || []).map(user => ({
-      ...user,
-      groups: [] // Campo requerido por la interfaz
-    }));
+    // Obtener grupos para cada usuario
+    const usersWithGroups = await Promise.all(
+      (users || []).map(async (user) => {
+        const { data: userGroups } = await supabase
+          .from('user_groups')
+          .select(`
+            groups!inner(
+              id,
+              name
+            )
+          `)
+          .eq('user_id', user.id);
+
+        return {
+          ...user,
+          groups: userGroups?.map((ug: any) => ({
+            id: ug.groups.id,
+            name: ug.groups.name
+          })) || []
+        };
+      })
+    );
 
     return NextResponse.json({
       success: true,
@@ -70,7 +87,7 @@ export async function POST(request: NextRequest) {
     );
 
     const body = await request.json();
-    const { email, password, name, role } = body;
+    const { email, password, name, role, group_ids } = body;
 
     // Validación básica
     if (!email || !password || !name || !role) {
@@ -114,6 +131,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 3. Asignar grupos si se proporcionaron
+    let assignedGroups = [];
+    if (group_ids && group_ids.length > 0) {
+      const userGroups = group_ids.map((groupId: string) => ({
+        user_id: authData.user.id,
+        group_id: groupId,
+        is_manager: false
+      }));
+
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('user_groups')
+        .insert(userGroups)
+        .select(`
+          groups!inner(
+            id,
+            name
+          )
+        `);
+
+      if (groupsError) {
+        console.error('❌ [API] Error asignando grupos:', groupsError);
+        // No fallar la creación del usuario por esto
+      } else {
+        assignedGroups = groupsData?.map((ug: any) => ({
+          id: ug.groups.id,
+          name: ug.groups.name
+        })) || [];
+      }
+    }
+
     console.log('✅ [API] Usuario creado:', authData.user.id);
 
     return NextResponse.json({
@@ -124,7 +171,7 @@ export async function POST(request: NextRequest) {
         email,
         role,
         is_active: true,
-        groups: [] // Campo requerido por la interfaz
+        groups: assignedGroups // Grupos reales asignados
       }
     });
 
