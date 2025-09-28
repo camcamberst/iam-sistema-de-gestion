@@ -18,32 +18,34 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
     // 🔍 DEBUG: Log all headers
     console.log('🔍 [SERVER AUTH DEBUG] All headers:', Object.fromEntries(request.headers.entries()));
     
-    // Obtener token de autorización del header
-    const authHeader = request.headers.get('authorization');
-    console.log('🔍 [SERVER AUTH DEBUG] Auth header:', authHeader);
-    
-    const accessToken = authHeader?.replace('Bearer ', '');
-    console.log('🔍 [SERVER AUTH DEBUG] Access token:', accessToken ? 'Present' : 'Missing');
-    
-    if (!accessToken) {
-      console.log('❌ [SERVER AUTH] No access token provided');
-      return null;
-    }
-
-    // Crear cliente Supabase con token
-    const supabase = createClient(
+    // Crear cliente Supabase SSR
+    const cookieStore = cookies();
+    const supabase = createServerClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set(name, value, options);
+          },
+          remove(name: string, options: any) {
+            cookieStore.set(name, '', options);
+          },
+        },
+      }
     );
 
-    // Verificar token y obtener usuario
-    console.log('🔍 [SERVER AUTH DEBUG] Verifying token with Supabase...');
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    // Obtener usuario autenticado usando SSR
+    console.log('🔍 [SERVER AUTH DEBUG] Getting user with SSR...');
+    const { data: { user }, error } = await supabase.auth.getUser();
     
-    console.log('🔍 [SERVER AUTH DEBUG] Supabase response:', { user: user?.id, error: error?.message });
+    console.log('🔍 [SERVER AUTH DEBUG] SSR response:', { user: user?.id, error: error?.message });
     
     if (error || !user) {
-      console.log('❌ [SERVER AUTH] Invalid token:', error?.message);
+      console.log('❌ [SERVER AUTH] No authenticated user:', error?.message);
       return null;
     }
 
