@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
           .select(`
             user_id,
             is_manager,
-            user_profiles!inner(
+            users!inner(
               id,
               name,
               role
@@ -71,8 +71,8 @@ export async function GET(request: NextRequest) {
           created_at: group.created_at,
           members: groupMembers?.map((gm: any) => ({
             user_id: gm.user_id,
-            name: gm.user_profiles.name,
-            role: gm.user_profiles.role,
+            name: gm.users.name,
+            role: gm.users.role,
             is_manager: gm.is_manager
           })) || []
         };
