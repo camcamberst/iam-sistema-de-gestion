@@ -15,9 +15,15 @@ import { createClient } from '@supabase/supabase-js';
  */
 export async function getServerUser(request: NextRequest): Promise<AuthUser | null> {
   try {
+    // 🔍 DEBUG: Log all headers
+    console.log('🔍 [SERVER AUTH DEBUG] All headers:', Object.fromEntries(request.headers.entries()));
+    
     // Obtener token de autorización del header
     const authHeader = request.headers.get('authorization');
+    console.log('🔍 [SERVER AUTH DEBUG] Auth header:', authHeader);
+    
     const accessToken = authHeader?.replace('Bearer ', '');
+    console.log('🔍 [SERVER AUTH DEBUG] Access token:', accessToken ? 'Present' : 'Missing');
     
     if (!accessToken) {
       console.log('❌ [SERVER AUTH] No access token provided');
@@ -31,7 +37,10 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
     );
 
     // Verificar token y obtener usuario
+    console.log('🔍 [SERVER AUTH DEBUG] Verifying token with Supabase...');
     const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    
+    console.log('🔍 [SERVER AUTH DEBUG] Supabase response:', { user: user?.id, error: error?.message });
     
     if (error || !user) {
       console.log('❌ [SERVER AUTH] Invalid token:', error?.message);

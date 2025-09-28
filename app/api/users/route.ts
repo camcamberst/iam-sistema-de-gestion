@@ -16,13 +16,21 @@ import { createAuditLog } from '../../../lib/security/audit';
 export async function GET(request: NextRequest) {
   try {
     console.log('👥 [API] Obteniendo lista de usuarios');
+    console.log('🔍 [API DEBUG] Request URL:', request.url);
+    console.log('🔍 [API DEBUG] Request method:', request.method);
+    console.log('🔍 [API DEBUG] Request headers:', Object.fromEntries(request.headers.entries()));
     
     // Verificar autenticación con middleware server-side
+    console.log('🔍 [API DEBUG] Calling requireAuth...');
     const authResult = await requireAuth(request, 'admin.users.read');
+    console.log('🔍 [API DEBUG] Auth result:', authResult);
+    
     if ('error' in authResult) {
+      console.log('❌ [API DEBUG] Auth failed:', authResult.error);
       return authResult.error;
     }
     const currentUser = authResult.user;
+    console.log('✅ [API DEBUG] Auth successful, user:', currentUser.id);
 
     // Obtener usuarios de la tabla 'users' (no 'user_profiles')
     const { data: users, error } = await supabase
