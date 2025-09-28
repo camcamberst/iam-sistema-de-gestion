@@ -132,7 +132,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 3. Asignar grupos si se proporcionaron
-    let assignedGroups = [];
+    let assignedGroups: Array<{ id: string; name: string }> = [];
     if (group_ids && group_ids.length > 0) {
       const userGroups = group_ids.map((groupId: string) => ({
         user_id: authData.user.id,
