@@ -3,19 +3,17 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCurrentUser } from '../../../lib/auth-modern';
+import { requireAuth } from '../../../lib/auth-server';
 import { getAuditLogs, getAuditStats, detectAnomalies } from '../../../lib/security/audit';
 
 export async function GET(request: NextRequest) {
   try {
-    // Verificar autenticación
-    const currentUser = await getCurrentUser();
-    if (!currentUser) {
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.audit.read');
+    if ('error' in authResult) {
+      return authResult.error;
     }
+    const currentUser = authResult.user;
 
     // Verificar permisos
     if (currentUser.role !== 'super_admin' && currentUser.role !== 'admin') {
