@@ -7,6 +7,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '../../../lib/supabase';
 import { requireAuth } from '../../../lib/auth-server';
+import { hasPermission } from '../../../lib/auth-modern';
 
 // =====================================================
 // 📋 GET - Obtener grupos
