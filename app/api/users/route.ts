@@ -45,10 +45,10 @@ export async function GET(request: NextRequest) {
     }
     
     // Verificar token
-    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
+    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
     
-    if (error || !user) {
-      console.log('❌ [API DEBUG] Invalid token:', error?.message);
+    if (authError || !user) {
+      console.log('❌ [API DEBUG] Invalid token:', authError?.message);
       return NextResponse.json(
         { success: false, error: 'No autenticado' },
         { status: 401 }
