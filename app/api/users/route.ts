@@ -309,8 +309,14 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // Crear cliente Supabase para operaciones admin
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Actualizar usuario en tabla users
-    const { error: updateError } = await supabase
+    const { error: updateError } = await supabaseAdmin
       .from('users')
       .update({
         name,
@@ -331,7 +337,7 @@ export async function PUT(request: NextRequest) {
     // Actualizar grupos si se proporcionaron
     if (group_ids !== undefined) {
       // Eliminar grupos existentes
-      await supabase
+      await supabaseAdmin
         .from('user_groups')
         .delete()
         .eq('user_id', id);
@@ -344,7 +350,7 @@ export async function PUT(request: NextRequest) {
           is_manager: false
         }));
 
-        const { error: groupsError } = await supabase
+        const { error: groupsError } = await supabaseAdmin
           .from('user_groups')
           .insert(userGroups);
 
