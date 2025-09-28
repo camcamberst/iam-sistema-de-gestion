@@ -131,11 +131,11 @@ export async function GET(request: NextRequest) {
 
     // Crear log de auditoría
     await createAuditLog({
-      user_id: currentUser.id,
+      user_id: user.id,
       action: 'admin.users.read',
       severity: 'low',
       description: 'Lista de usuarios obtenida',
-      organization_id: currentUser.organization_id,
+      organization_id: currentUserProfile.organization_id,
       success: true
     });
 
