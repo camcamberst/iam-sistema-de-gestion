@@ -121,7 +121,7 @@ export async function POST(request: NextRequest) {
       user_metadata: {
         name,
         role,
-        organization_id: 'default-org' // Usar organización por defecto
+        organization_id: null // Sin organización específica
       }
     });
 
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
         email,
         role,
         is_active: true,
-        organization_id: 'default-org'
+        organization_id: null
       });
 
     if (profileError) {
