@@ -18,36 +18,22 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
     // 🔍 DEBUG: Log all headers
     console.log('🔍 [SERVER AUTH DEBUG] All headers:', Object.fromEntries(request.headers.entries()));
     
-    // Crear cliente Supabase SSR
-    const cookieStore = cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: any) {
-            cookieStore.set(name, value, options);
-          },
-          remove(name: string, options: any) {
-            cookieStore.set(name, '', options);
-          },
-        },
-      }
-    );
-
-    // Obtener usuario autenticado usando SSR
-    console.log('🔍 [SERVER AUTH DEBUG] Getting user with SSR...');
-    const { data: { user }, error } = await supabase.auth.getUser();
+    // Obtener usuario desde headers del middleware
+    const userId = request.headers.get('x-user-id');
+    const userEmail = request.headers.get('x-user-email');
     
-    console.log('🔍 [SERVER AUTH DEBUG] SSR response:', { user: user?.id, error: error?.message });
+    console.log('🔍 [SERVER AUTH DEBUG] User from middleware:', { userId, userEmail });
     
-    if (error || !user) {
-      console.log('❌ [SERVER AUTH] No authenticated user:', error?.message);
+    if (!userId || !userEmail) {
+      console.log('❌ [SERVER AUTH] No user from middleware');
       return null;
     }
+
+    // Crear cliente Supabase para obtener perfil
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    );
 
     // Obtener perfil del usuario desde public.users
     const { data: profileData, error: profileError } = await supabase
@@ -69,7 +55,7 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
           )
         )
       `)
-      .eq('id', user.id)
+      .eq('id', userId)
       .single();
 
     if (profileError || !profileData) {
@@ -84,7 +70,7 @@ export async function getServerUser(request: NextRequest): Promise<AuthUser | nu
 
     return {
       id: profileData.id,
-      email: user.email!,
+      email: userEmail,
       name: profileData.name,
       role: profileData.role,
       organization_id: profileData.organization_id,
