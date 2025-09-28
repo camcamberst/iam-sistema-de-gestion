@@ -16,65 +16,21 @@ import { createAuditLog } from '../../../lib/security/audit';
 export async function GET(request: NextRequest) {
   try {
     console.log('👥 [API] Obteniendo lista de usuarios');
-    console.log('🔍 [API DEBUG] Request URL:', request.url);
-    console.log('🔍 [API DEBUG] Request method:', request.method);
-    console.log('🔍 [API DEBUG] Request headers:', Object.fromEntries(request.headers.entries()));
     
-    // 🔧 BYPASS TEMPORAL: Usar autenticación directa sin middleware
-    console.log('🔍 [API DEBUG] Using direct authentication...');
-    
-    // Crear cliente Supabase directo
+    // Verificar autenticación con middleware server-side
+    const authResult = await requireAuth(request, 'admin.users.read');
+    if ('error' in authResult) {
+      return authResult.error;
+    }
+    const currentUser = authResult.user;
+
+    // Crear cliente Supabase para operaciones
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
-    
-    // Obtener usuario desde token en header
-    const authHeader = request.headers.get('authorization');
-    const accessToken = authHeader?.replace('Bearer ', '');
-    
-    console.log('🔍 [API DEBUG] Auth header:', authHeader);
-    console.log('🔍 [API DEBUG] Access token:', accessToken ? 'Present' : 'Missing');
-    
-    if (!accessToken) {
-      console.log('❌ [API DEBUG] No access token provided');
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
-    }
-    
-    // Verificar token
-    const { data: { user }, error: authError } = await supabase.auth.getUser(accessToken);
-    
-    if (authError || !user) {
-      console.log('❌ [API DEBUG] Invalid token:', authError?.message);
-      return NextResponse.json(
-        { success: false, error: 'No autenticado' },
-        { status: 401 }
-      );
-    }
-    
-    console.log('✅ [API DEBUG] Auth successful, user:', user.id);
 
-    // Obtener perfil del usuario actual
-    const { data: currentUserProfile } = await supabase
-      .from('users')
-      .select('organization_id')
-      .eq('id', user.id)
-      .single();
-    
-    if (!currentUserProfile) {
-      console.log('❌ [API DEBUG] Current user profile not found');
-      return NextResponse.json(
-        { success: false, error: 'Perfil de usuario no encontrado' },
-        { status: 404 }
-      );
-    }
-    
-    console.log('✅ [API DEBUG] Current user organization:', currentUserProfile.organization_id);
-
-    // Obtener usuarios de la tabla 'users' (no 'user_profiles')
+    // Obtener usuarios de la tabla 'users'
     const { data: users, error } = await supabase
       .from('users')
       .select(`
@@ -86,7 +42,7 @@ export async function GET(request: NextRequest) {
         last_login,
         created_at
       `)
-      .eq('organization_id', currentUserProfile.organization_id)
+      .eq('organization_id', currentUser.organization_id)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -99,7 +55,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener grupos por separado para cada usuario
     const formattedUsers = await Promise.all(
-      (users || []).map(async (user) => {
+      (users || []).map(async (u) => {
         // Obtener grupos del usuario
         const { data: userGroups } = await supabase
           .from('user_groups')
@@ -109,20 +65,20 @@ export async function GET(request: NextRequest) {
               name
             )
           `)
-          .eq('user_id', user.id);
+          .eq('user_id', u.id);
 
         return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          is_active: user.is_active,
-          last_login: user.last_login,
-          created_at: user.created_at,
+          id: u.id,
+          name: u.name,
+          email: u.email,
+          role: u.role,
+          is_active: u.is_active,
+          last_login: u.last_login,
+          created_at: u.created_at,
           groups: userGroups?.map((ug: any) => ({
             id: ug.groups.id,
-            name: ug.groups.name
-          })) || []
+            name: ug.groups.name,
+          })) || [],
         };
       })
     );
@@ -131,11 +87,11 @@ export async function GET(request: NextRequest) {
 
     // Crear log de auditoría
     await createAuditLog({
-      user_id: user.id,
+      user_id: currentUser.id,
       action: 'admin.users.read',
       severity: 'low',
       description: 'Lista de usuarios obtenida',
-      organization_id: currentUserProfile.organization_id,
+      organization_id: currentUser.organization_id,
       success: true
     });
 
@@ -196,7 +152,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    if (authError) {
+    if (authError || !authData.user) {
       console.error('❌ [API] Error creando usuario en Auth:', authError);
       return NextResponse.json(
         { success: false, error: 'Error creando usuario' },
@@ -212,7 +168,8 @@ export async function POST(request: NextRequest) {
         name,
         email,
         role,
-        is_active: true
+        is_active: true,
+        organization_id: currentUser.organization_id
       });
 
     if (profileError) {
@@ -241,34 +198,24 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log('✅ [API] Usuario creado exitosamente:', {
-      id: authData.user!.id,
-      email,
-      name,
-      role
-    });
+    console.log('✅ [API] Usuario creado exitosamente:', authData.user.id);
 
     // Crear log de auditoría
     await createAuditLog({
       user_id: currentUser.id,
-      action: 'user.create',
+      action: 'admin.users.create',
       severity: 'medium',
       description: `Usuario creado: ${name} (${email})`,
       organization_id: currentUser.organization_id,
-      success: true,
-      metadata: {
-        created_user_id: authData.user!.id,
-        created_user_role: role,
-        assigned_groups: group_ids || []
-      }
+      success: true
     });
 
     return NextResponse.json({
       success: true,
       user: {
-        id: authData.user!.id,
-        email,
+        id: authData.user.id,
         name,
+        email,
         role,
         is_active: true
       }
@@ -361,7 +308,7 @@ export async function PUT(request: NextRequest) {
       }
     }
 
-    console.log('✅ [API] Usuario actualizado exitosamente:', { id, name, email, role });
+    console.log('✅ [API] Usuario actualizado exitosamente:', id);
 
     // Crear log de auditoría
     await createAuditLog({
@@ -370,12 +317,7 @@ export async function PUT(request: NextRequest) {
       severity: 'medium',
       description: `Usuario actualizado: ${name} (${email})`,
       organization_id: currentUser.organization_id,
-      success: true,
-      metadata: {
-        updated_user_id: id,
-        updated_user_role: role,
-        assigned_groups: group_ids || []
-      }
+      success: true
     });
 
     return NextResponse.json({
@@ -469,11 +411,7 @@ export async function DELETE(request: NextRequest) {
       severity: 'high',
       description: `Usuario eliminado: ${userData?.name} (${userData?.email})`,
       organization_id: currentUser.organization_id,
-      success: true,
-      metadata: {
-        deleted_user_id: userId,
-        deleted_user_role: userData?.role
-      }
+      success: true
     });
 
     return NextResponse.json({
