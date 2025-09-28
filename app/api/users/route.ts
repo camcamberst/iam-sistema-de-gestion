@@ -419,21 +419,27 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Crear cliente Supabase para operaciones admin
+    const supabaseAdmin = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
+
     // Obtener información del usuario antes de eliminarlo
-    const { data: userData } = await supabase
+    const { data: userData } = await supabaseAdmin
       .from('users')
       .select('name, email, role')
       .eq('id', userId)
       .single();
 
     // Eliminar grupos del usuario
-    await supabase
+    await supabaseAdmin
       .from('user_groups')
       .delete()
       .eq('user_id', userId);
 
     // Eliminar usuario de tabla users
-    const { error: deleteError } = await supabase
+    const { error: deleteError } = await supabaseAdmin
       .from('users')
       .delete()
       .eq('id', userId);
@@ -447,7 +453,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Eliminar usuario de auth.users (requiere admin)
-    const { error: authDeleteError } = await supabase.auth.admin.deleteUser(userId);
+    const { error: authDeleteError } = await supabaseAdmin.auth.admin.deleteUser(userId);
     
     if (authDeleteError) {
       console.error('❌ [API] Error eliminando usuario de Auth:', authDeleteError);
