@@ -8,37 +8,33 @@ import { NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { AuthUser } from './auth-modern';
+import { createClient } from '@supabase/supabase-js';
 
 /**
  * 🔐 Obtener usuario autenticado usando Supabase SSR
  */
 export async function getServerUser(request: NextRequest): Promise<AuthUser | null> {
   try {
-    // Crear cliente Supabase SSR
-    const cookieStore = cookies();
-    const supabase = createServerClient(
+    // Obtener token de autorización del header
+    const authHeader = request.headers.get('authorization');
+    const accessToken = authHeader?.replace('Bearer ', '');
+    
+    if (!accessToken) {
+      console.log('❌ [SERVER AUTH] No access token provided');
+      return null;
+    }
+
+    // Crear cliente Supabase con token
+    const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          get(name: string) {
-            return cookieStore.get(name)?.value;
-          },
-          set(name: string, value: string, options: any) {
-            cookieStore.set(name, value, options);
-          },
-          remove(name: string, options: any) {
-            cookieStore.set(name, '', options);
-          },
-        },
-      }
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     );
 
-    // Obtener usuario autenticado
-    const { data: { user }, error } = await supabase.auth.getUser();
+    // Verificar token y obtener usuario
+    const { data: { user }, error } = await supabase.auth.getUser(accessToken);
     
     if (error || !user) {
-      console.log('❌ [SERVER AUTH] No authenticated user:', error?.message);
+      console.log('❌ [SERVER AUTH] Invalid token:', error?.message);
       return null;
     }
 
