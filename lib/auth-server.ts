@@ -5,45 +5,45 @@
 // =====================================================
 
 import { NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 import { AuthUser } from './auth-modern';
 
-// Cliente de Supabase para server-side
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey, {
-  auth: {
-    autoRefreshToken: false,
-    persistSession: false
-  }
-});
-
 /**
- * 🔐 Obtener usuario autenticado desde cookies (Supabase SSR)
+ * 🔐 Obtener usuario autenticado usando Supabase SSR
  */
 export async function getServerUser(request: NextRequest): Promise<AuthUser | null> {
   try {
-    // Obtener token de cookies de Supabase
-    const cookieStore = request.cookies;
-    const accessToken = cookieStore.get('sb-access-token')?.value;
-    const refreshToken = cookieStore.get('sb-refresh-token')?.value;
-    
-    if (!accessToken) {
-      console.log('❌ [SERVER AUTH] No access token in cookies');
-      return null;
-    }
+    // Crear cliente Supabase SSR
+    const cookieStore = cookies();
+    const supabase = createServerClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      {
+        cookies: {
+          get(name: string) {
+            return cookieStore.get(name)?.value;
+          },
+          set(name: string, value: string, options: any) {
+            cookieStore.set(name, value, options);
+          },
+          remove(name: string, options: any) {
+            cookieStore.set(name, '', options);
+          },
+        },
+      }
+    );
 
-    // Verificar token con Supabase
-    const { data: { user }, error } = await supabaseAdmin.auth.getUser(accessToken);
+    // Obtener usuario autenticado
+    const { data: { user }, error } = await supabase.auth.getUser();
     
     if (error || !user) {
-      console.log('❌ [SERVER AUTH] Invalid token:', error?.message);
+      console.log('❌ [SERVER AUTH] No authenticated user:', error?.message);
       return null;
     }
 
     // Obtener perfil del usuario desde public.users
-    const { data: profileData, error: profileError } = await supabaseAdmin
+    const { data: profileData, error: profileError } = await supabase
       .from('users')
       .select(`
         id,
