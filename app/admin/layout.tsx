@@ -77,7 +77,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         href: '/admin/calculadora',
         subItems: [
           { label: 'Panel Calculadora', href: '/admin/calculadora' },
-          { label: 'Definir RATES', href: '/admin/rates' }
+          { label: 'Definir RATES', href: '/admin/rates' },
+          { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
+          { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view' }
         ]
       },
       {
