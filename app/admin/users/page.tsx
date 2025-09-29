@@ -127,7 +127,7 @@ export default function UsersListPage() {
   };
 
   // Search filters configuration
-  const searchFilters = [
+  const searchFiltersConfig = [
     {
       id: 'role',
       label: 'Rol',
@@ -280,6 +280,15 @@ export default function UsersListPage() {
         </div>
 
         {/* Error Message */}
+        {/* Search and Filters */}
+        <div className="mb-6">
+          <AppleSearchBar
+            onSearch={handleSearch}
+            placeholder="Buscar por nombre o email..."
+            filters={searchFiltersConfig}
+          />
+        </div>
+
         {error && (
           <div className="bg-red-900 border border-red-600 text-red-100 px-4 py-3 rounded-lg mb-6">
             {error}
@@ -318,7 +327,7 @@ export default function UsersListPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map((user, index) => (
+                    {filteredUsers.map((user, index) => (
                       <tr key={user.id} className="border-b border-aim-border hover:bg-gray-800/50">
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-3">
