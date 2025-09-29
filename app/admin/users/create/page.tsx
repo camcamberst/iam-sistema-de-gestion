@@ -14,6 +14,7 @@ export default function CreateUserPage() {
   const [submitting, setSubmitting] = useState(false);
   const [groups, setGroups] = useState<Array<{id:string; name:string}>>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
+  const [openGroups, setOpenGroups] = useState(false);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -78,42 +79,98 @@ export default function CreateUserPage() {
         </select>
         <div>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Grupos</div>
-          <div style={{
-            maxHeight: 180,
-            overflowY: 'auto',
-            border: '1px solid #e5e7eb',
-            borderRadius: 8,
-            padding: 12,
-            background: '#f9fafb'
-          }}>
-            {loadingGroups ? (
-              <div style={{ color: '#6b7280', fontSize: 14 }}>Cargando grupos…</div>
-            ) : (
-              groups.map(g => {
-                const isChecked = form.groups.includes(g.id);
-                const isDisabled = form.role === 'modelo' && form.groups.length > 0 && !isChecked;
-                return (
-                  <label key={g.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: 8, borderRadius: 8, cursor: isDisabled ? 'not-allowed' : 'pointer', background: isDisabled ? '#f3f4f6' : 'transparent' }}>
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      disabled={isDisabled}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setForm({ ...form, groups: [...form.groups, g.id] });
-                        } else {
-                          setForm({ ...form, groups: form.groups.filter(id => id !== g.id) });
-                        }
-                      }}
-                      style={{ width: 16, height: 16 }}
-                    />
-                    <span style={{ color: isDisabled ? '#9ca3af' : '#374151', fontSize: 14, fontWeight: 500 }}>
-                      {g.name}
-                      {isDisabled && <span style={{ marginLeft: 6, fontSize: 12, color: '#9ca3af' }}>(deshabilitado)</span>}
-                    </span>
-                  </label>
-                );
-              })
+          {/* Dropdown de grupos */}
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setOpenGroups(v => !v)}
+              style={{
+                width: '100%',
+                textAlign: 'left',
+                border: '1px solid #d1d5db',
+                borderRadius: 8,
+                padding: '10px 12px',
+                background: '#ffffff',
+                color: '#111827',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between'
+              }}
+            >
+              <span style={{ color: form.groups.length ? '#111827' : '#9ca3af' }}>
+                {form.groups.length
+                  ? groups.filter(g => form.groups.includes(g.id)).map(g => g.name).join(', ')
+                  : (form.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos')}
+              </span>
+              <span>▾</span>
+            </button>
+
+            {openGroups && (
+              <div
+                style={{
+                  position: 'absolute',
+                  zIndex: 50,
+                  width: '100%',
+                  marginTop: 6,
+                  background: '#ffffff',
+                  border: '1px solid #e5e7eb',
+                  borderRadius: 8,
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.08)',
+                  maxHeight: 220,
+                  overflowY: 'auto'
+                }}
+              >
+                {loadingGroups ? (
+                  <div style={{ padding: 12, color: '#6b7280', fontSize: 14 }}>Cargando grupos…</div>
+                ) : (
+                  groups.map(g => {
+                    const isSelected = form.groups.includes(g.id);
+                    const isSingleRole = form.role === 'modelo';
+                    const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        disabled={isDisabled}
+                        onClick={() => {
+                          if (isSingleRole) {
+                            setForm({ ...form, groups: isSelected ? [] : [g.id] });
+                            setOpenGroups(false);
+                          } else {
+                            setForm({
+                              ...form,
+                              groups: isSelected
+                                ? form.groups.filter(id => id !== g.id)
+                                : [...form.groups, g.id]
+                            });
+                          }
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          width: '100%',
+                          padding: 10,
+                          background: isSelected ? '#f3f4f6' : '#ffffff',
+                          color: isDisabled ? '#9ca3af' : '#374151',
+                          cursor: isDisabled ? 'not-allowed' : 'pointer',
+                          border: 'none',
+                          borderBottom: '1px solid #f3f4f6'
+                        }}
+                      >
+                        <span style={{
+                          width: 14,
+                          height: 14,
+                          borderRadius: 3,
+                          border: '1px solid #d1d5db',
+                          background: isSelected ? '#0071e3' : '#ffffff'
+                        }} />
+                        <span style={{ fontSize: 14, fontWeight: 500 }}>{g.name}</span>
+                      </button>
+                    );
+                  })
+                )}
+              </div>
             )}
           </div>
         </div>
