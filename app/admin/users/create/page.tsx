@@ -15,6 +15,7 @@ export default function CreateUserPage() {
   const [groups, setGroups] = useState<Array<{id:string; name:string}>>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
+  const [openRole, setOpenRole] = useState(false);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -49,34 +50,77 @@ export default function CreateUserPage() {
     <div>
       <h1>Crear Usuario</h1>
       <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
-        <input 
-          placeholder="Nombre" 
-          value={form.name} 
-          onChange={e=>setForm({...form, name:e.target.value})} 
-          required 
+        <input
+          placeholder="Nombre"
+          value={form.name}
+          onChange={e=>setForm({...form, name:e.target.value})}
+          required
+          style={{
+            width:'100%',
+            border:'1px solid #d1d5db',
+            borderRadius:12,
+            padding:'10px 12px',
+            color:'#111827'
+          }}
         />
-        <input 
-          placeholder="Email" 
-          type="email" 
-          value={form.email} 
-          onChange={e=>setForm({...form, email:e.target.value})} 
-          required 
+        <input
+          placeholder="Correo electrónico"
+          type="email"
+          value={form.email}
+          onChange={e=>setForm({...form, email:e.target.value})}
+          required
+          style={{
+            width:'100%',
+            border:'1px solid #d1d5db',
+            borderRadius:12,
+            padding:'10px 12px',
+            color:'#111827'
+          }}
         />
-        <input 
-          placeholder="Contraseña" 
-          type="password" 
-          value={form.password} 
-          onChange={e=>setForm({...form, password:e.target.value})} 
-          required 
+        <input
+          placeholder="Contraseña"
+          type="password"
+          value={form.password}
+          onChange={e=>setForm({...form, password:e.target.value})}
+          required
+          style={{
+            width:'100%',
+            border:'1px solid #d1d5db',
+            borderRadius:12,
+            padding:'10px 12px',
+            color:'#111827'
+          }}
         />
-        <select 
-          value={form.role} 
-          onChange={e=>setForm({...form, role:e.target.value})}
-        >
-          <option value="modelo">modelo</option>
-          <option value="admin">admin</option>
-          <option value="super_admin">super_admin</option>
-        </select>
+        {/* Rol - Dropdown Apple-like */}
+        <div>
+          <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Rol</div>
+          <div style={{ position:'relative' }}>
+            <button
+              type="button"
+              onClick={()=> setOpenRole(v=>!v)}
+              style={{
+                width:'100%', textAlign:'left', border:'1px solid #d1d5db', borderRadius:12,
+                padding:'10px 12px', background:'#ffffff', color:'#111827', display:'flex', alignItems:'center', justifyContent:'space-between'
+              }}
+            >
+              <span style={{ textTransform:'capitalize' }}>{form.role.replace('_',' ')}</span>
+              <span>▾</span>
+            </button>
+            {openRole && (
+              <div className="apple-scroll" style={{
+                position:'absolute', zIndex:50, width:'100%', marginTop:6, background:'#ffffff',
+                border:'1px solid #e5e7eb', borderRadius:12, boxShadow:'0 10px 25px rgba(0,0,0,0.08)'
+              }}>
+                {['modelo','admin','super_admin'].map(r => (
+                  <button key={r} type="button"
+                    onClick={()=> { setForm({ ...form, role:r as any }); setOpenRole(false); }}
+                    style={{ display:'block', width:'100%', textAlign:'left', padding:10, background: form.role===r? '#f3f4f6':'#ffffff', border:'none', cursor:'pointer' }}
+                  >{r.replace('_',' ')}</button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
         <div>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Grupos</div>
           {/* Dropdown de grupos */}
