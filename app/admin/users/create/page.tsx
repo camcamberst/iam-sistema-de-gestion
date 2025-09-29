@@ -69,65 +69,14 @@ export default function CreateUserPage() {
           onChange={e=>setForm({...form, password:e.target.value})} 
           required 
         />
-        <div>
-          <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Rol</div>
-          <div style={{ position: 'relative', filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.08))' }}>
-            <button
-              type="button"
-              onClick={() => setOpenGroups(false)}
-              style={{
-                width: '100%',
-                textAlign: 'left',
-                border: '1px solid #d1d5db',
-                borderRadius: 12,
-                padding: '10px 12px',
-                background: '#ffffff',
-                color: '#111827',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between'
-              }}
-              onMouseDown={(e)=>{
-                const menu = document.getElementById('role-dropdown');
-                if (menu) (menu as any).style.display = (menu as any).style.display === 'block' ? 'none' : 'block';
-              }}
-            >
-              <span>{form.role.replace('_',' ')}</span>
-              <span>▾</span>
-            </button>
-            <div
-              id="role-dropdown"
-              style={{
-                position: 'absolute',
-                zIndex: 40,
-                width: '100%',
-                marginTop: 6,
-                background: '#ffffff',
-                border: '1px solid #e5e7eb',
-                borderRadius: 12,
-                boxShadow: '0 10px 25px rgba(0,0,0,0.08)'
-              }}
-            >
-              {['modelo','admin','super_admin'].map(r => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => {
-                    setForm({ ...form, role: r as any, groups: r==='modelo' ? (form.groups.slice(0,1)) : form.groups });
-                    const menu = document.getElementById('role-dropdown');
-                    if (menu) (menu as any).style.display = 'none';
-                  }}
-                  style={{
-                    display:'block', width:'100%', textAlign:'left', padding:10,
-                    background: form.role===r? '#f3f4f6':'#ffffff', border:'none', cursor:'pointer'
-                  }}
-                >
-                  {r.replace('_',' ')}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <select 
+          value={form.role} 
+          onChange={e=>setForm({...form, role:e.target.value})}
+        >
+          <option value="modelo">modelo</option>
+          <option value="admin">admin</option>
+          <option value="super_admin">super_admin</option>
+        </select>
         <div>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Grupos</div>
           {/* Dropdown de grupos */}
