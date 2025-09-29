@@ -107,6 +107,7 @@ export default function CreateUserPage() {
 
             {openGroups && (
               <div
+                className="apple-scroll"
                 style={{
                   position: 'absolute',
                   zIndex: 50,
