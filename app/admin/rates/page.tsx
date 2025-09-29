@@ -47,63 +47,87 @@ export default function RatesPage() {
 	// 🔐 VALIDACIÓN DE AUTENTICACIÓN Y ROLES
 	// ===========================================
 	useEffect(() => {
+		let isMounted = true;
+		
 		async function checkAuth() {
 			try {
+				console.log('🔍 Iniciando verificación de autenticación...');
 				setAuthLoading(true);
 				
 				// Verificar autenticación
-				const { data: auth } = await supabase.auth.getUser();
-				if (!auth?.user?.id) {
-					router.push('/');
+				const { data: auth, error: authError } = await supabase.auth.getUser();
+				console.log('🔐 Auth result:', { auth, authError });
+				
+				if (authError || !auth?.user?.id) {
+					console.log('❌ No autenticado, redirigiendo...');
+					if (isMounted) router.push('/');
 					return;
 				}
 
 				// Obtener información del usuario
-				const { data: userRow } = await supabase
+				const { data: userRow, error: userError } = await supabase
 					.from('users')
 					.select('id,name,email,role')
 					.eq('id', auth.user.id)
 					.single();
 
-				if (!userRow) {
-					router.push('/');
+				console.log('👤 User data:', { userRow, userError });
+
+				if (userError || !userRow) {
+					console.log('❌ Usuario no encontrado, redirigiendo...');
+					if (isMounted) router.push('/');
 					return;
 				}
 
 				// Verificar que sea admin o super_admin
 				if (userRow.role !== 'super_admin' && userRow.role !== 'admin') {
-					router.push('/admin/dashboard');
+					console.log('❌ Rol no autorizado:', userRow.role);
+					if (isMounted) router.push('/admin/dashboard');
 					return;
 				}
 
 				// Obtener grupos si es admin
 				let groups: string[] = [];
 				if (userRow.role === 'admin') {
-					const { data: ug } = await supabase
+					const { data: ug, error: groupsError } = await supabase
 						.from('user_groups')
 						.select('groups(name)')
 						.eq('user_id', auth.user.id);
+					
+					console.log('👥 Groups data:', { ug, groupsError });
 					groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
 				}
 
-				setUserInfo({
+				const userInfoData = {
 					id: userRow.id,
 					name: userRow.name,
 					email: userRow.email,
 					role: userRow.role as 'super_admin' | 'admin' | 'modelo',
 					groups
-				});
+				};
+
+				console.log('✅ Usuario autorizado:', userInfoData);
+
+				if (isMounted) {
+					setUserInfo(userInfoData);
+				}
 
 			} catch (err) {
-				console.error('Error de autenticación:', err);
-				router.push('/');
+				console.error('❌ Error de autenticación:', err);
+				if (isMounted) router.push('/');
 			} finally {
-				setAuthLoading(false);
+				if (isMounted) {
+					setAuthLoading(false);
+				}
 			}
 		}
 
 		checkAuth();
-	}, [router, supabase]);
+
+		return () => {
+			isMounted = false;
+		};
+	}, []); // Remover dependencias para evitar loops
 
 	const [form, setForm] = useState({
 		scope: "global",
