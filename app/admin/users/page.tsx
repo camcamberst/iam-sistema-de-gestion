@@ -696,7 +696,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
 
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-3">Grupos</label>
-            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
               {groups.map((group) => {
                 const isChecked = formData.group_ids.includes(group.id);
                 const isDisabled = formData.role === 'modelo' && 
@@ -704,44 +704,38 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                                  !isChecked;
                 
                 return (
-                  <label 
+                  <div 
                     key={group.id} 
-                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 ${
                       isDisabled 
                         ? 'opacity-50 bg-gray-100 cursor-not-allowed' 
-                        : 'hover:bg-gray-100 cursor-pointer'
+                        : 'hover:bg-gray-100'
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      disabled={isDisabled}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            group_ids: [...formData.group_ids, group.id]
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            group_ids: formData.group_ids.filter(id => id !== group.id)
-                          });
-                        }
-                      }}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <span className={`text-sm font-medium ${
-                      isDisabled 
-                        ? 'text-gray-400' 
-                        : 'text-gray-700'
+                    <span className={`text-[13px] font-medium ${
+                      isDisabled ? 'text-gray-400' : 'text-gray-700'
                     }`}>
                       {group.name}
-                      {isDisabled && (
-                        <span className="text-xs text-gray-400 ml-2">(deshabilitado)</span>
-                      )}
                     </span>
-                  </label>
+                    <button
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => {
+                        if (!isChecked) {
+                          setFormData({ ...formData, group_ids: [...formData.group_ids, group.id] });
+                        } else {
+                          setFormData({ ...formData, group_ids: formData.group_ids.filter(id => id !== group.id) });
+                        }
+                      }}
+                      className="relative w-9 h-5 rounded-full transition-colors duration-200"
+                      style={{ background: isChecked ? '#111827' : '#e5e7eb' }}
+                    >
+                      <span
+                        className="absolute top-[2px] rounded-full bg-white shadow"
+                        style={{ left: isChecked ? 18 : 2, width: 16, height: 16 }}
+                      />
+                    </button>
+                  </div>
                 );
               })}
             </div>
