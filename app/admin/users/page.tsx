@@ -2,6 +2,16 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUsers, getGroups, createUser, updateUser, deleteUser } from '../../../lib/api-client';
+import { 
+  canAssignRole, 
+  canAssignGroups, 
+  validateGroupRestrictions, 
+  canEditUser, 
+  canDeleteUser,
+  getAvailableGroups,
+  getDefaultGroups,
+  type CurrentUser 
+} from '../../../lib/hierarchy';
 
 interface User {
   id: string;
@@ -31,6 +41,7 @@ export default function UsersListPage() {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -49,6 +60,16 @@ export default function UsersListPage() {
 
       if (usersData.success) {
         setUsers(usersData.users);
+        
+        // Obtener usuario actual para jerarquía
+        const currentUserData = usersData.users.find((u: any) => u.id === 'current-user-id'); // TODO: Obtener del contexto de auth
+        if (currentUserData) {
+          setCurrentUser({
+            id: currentUserData.id,
+            role: currentUserData.role,
+            groups: currentUserData.groups
+          });
+        }
       } else {
         setError('Error cargando usuarios: ' + usersData.error);
       }
@@ -90,11 +111,30 @@ export default function UsersListPage() {
   };
 
   const handleEditUser = (user: User) => {
+    // Verificar permisos de jerarquía
+    if (!currentUser || !canEditUser(currentUser, user)) {
+      setError('No tienes permisos para editar este usuario');
+      return;
+    }
+    
     setSelectedUser(user);
     setShowEditModal(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
+    // Encontrar el usuario a eliminar
+    const userToDelete = users.find(u => u.id === userId);
+    if (!userToDelete) {
+      setError('Usuario no encontrado');
+      return;
+    }
+
+    // Verificar permisos de jerarquía
+    if (!currentUser || !canDeleteUser(currentUser, userToDelete)) {
+      setError('No tienes permisos para eliminar este usuario');
+      return;
+    }
+
     if (!confirm('¿Estás seguro de que quieres eliminar este usuario?')) {
       return;
     }
@@ -280,6 +320,7 @@ export default function UsersListPage() {
             groups={groups}
             onClose={() => setShowCreateModal(false)}
             onSubmit={handleCreateUser}
+            currentUser={currentUser}
           />
         )}
 
@@ -288,6 +329,7 @@ export default function UsersListPage() {
           <EditUserModal
             user={selectedUser}
             groups={groups}
+            currentUser={currentUser}
             onClose={() => {
               setShowEditModal(false);
               setSelectedUser(null);
@@ -324,17 +366,18 @@ export default function UsersListPage() {
 }
 
 // Componente para crear usuario
-function CreateUserModal({ groups, onClose, onSubmit }: {
+function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
   groups: Group[];
   onClose: () => void;
   onSubmit: (userData: any) => void;
+  currentUser: CurrentUser | null;
 }) {
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     role: 'modelo',
-    group_ids: [] as string[]
+    group_ids: getDefaultGroups('modelo', groups)
   });
 
   const [validation, setValidation] = useState({
@@ -396,6 +439,47 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
         email: { isValid: true, errors: [] },
         password: { isValid: true, errors: [], warnings: [] },
         role: { isValid: true, errors: [] }
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Validar jerarquía
+    if (!currentUser) {
+      setValidation(prev => ({
+        ...prev,
+        name: { isValid: false, errors: ['Usuario no autenticado'] }
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Verificar si puede asignar el rol
+    if (!canAssignRole(currentUser, formData.role)) {
+      setValidation(prev => ({
+        ...prev,
+        name: { isValid: false, errors: ['No tienes permisos para asignar este rol'] }
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Verificar si puede asignar los grupos
+    if (!canAssignGroups(currentUser, formData.group_ids)) {
+      setValidation(prev => ({
+        ...prev,
+        name: { isValid: false, errors: ['No tienes permisos para asignar estos grupos'] }
+      }));
+      setIsSubmitting(false);
+      return;
+    }
+    
+    // Validar restricciones de grupos según rol
+    const groupValidation = validateGroupRestrictions(formData.role, formData.group_ids);
+    if (!groupValidation.valid) {
+      setValidation(prev => ({
+        ...prev,
+        name: { isValid: false, errors: [groupValidation.error || 'Error de validación'] }
       }));
       setIsSubmitting(false);
       return;
@@ -571,11 +655,12 @@ function CreateUserModal({ groups, onClose, onSubmit }: {
 }
 
 // Componente para editar usuario
-function EditUserModal({ user, groups, onClose, onSubmit }: {
+function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
   user: User;
   groups: Group[];
   onClose: () => void;
   onSubmit: (userData: any) => void;
+  currentUser: CurrentUser | null;
 }) {
   const [formData, setFormData] = useState({
     id: user.id, // ✅ AGREGAR ID DEL USUARIO
