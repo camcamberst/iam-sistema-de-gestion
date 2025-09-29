@@ -20,10 +20,24 @@ export async function GET() {
       if (usdCopResponse.ok) {
         const html = await usdCopResponse.text();
         
-        // Extraer TRM del día (formato: $3,908.12)
-        const trmMatch = html.match(/TRM \$([0-9,]+\.?[0-9]*)/);
-        if (trmMatch) {
-          const trmValue = parseFloat(trmMatch[1].replace(/,/g, ''));
+        // Extraer TRM del día (formato: $3,908.12) - múltiples patrones
+        const trmPatterns = [
+          /TRM \$([0-9,]+\.?[0-9]*)/,
+          /\$([0-9,]+\.?[0-9]*)\s*COP/,
+          /([0-9,]+\.?[0-9]*)\s*pesos/,
+          /USD\s*=\s*\$([0-9,]+\.?[0-9]*)/i
+        ];
+        
+        let trmValue = null;
+        for (const pattern of trmPatterns) {
+          const match = html.match(pattern);
+          if (match) {
+            trmValue = parseFloat(match[1].replace(/,/g, ''));
+            break;
+          }
+        }
+        
+        if (trmValue) {
           referenceRates.push({
             kind: 'USD_COP',
             source: 'TRM Colombia',
@@ -34,10 +48,23 @@ export async function GET() {
           });
         }
 
-        // Extraer Dólar SPOT
-        const spotMatch = html.match(/SPOT \$([0-9,]+\.?[0-9]*)/);
-        if (spotMatch) {
-          const spotValue = parseFloat(spotMatch[1].replace(/,/g, ''));
+        // Extraer Dólar SPOT - múltiples patrones
+        const spotPatterns = [
+          /SPOT \$([0-9,]+\.?[0-9]*)/,
+          /Dólar SPOT.*?\$([0-9,]+\.?[0-9]*)/,
+          /SPOT.*?([0-9,]+\.?[0-9]*)/i
+        ];
+        
+        let spotValue = null;
+        for (const pattern of spotPatterns) {
+          const match = html.match(pattern);
+          if (match) {
+            spotValue = parseFloat(match[1].replace(/,/g, ''));
+            break;
+          }
+        }
+        
+        if (spotValue) {
           referenceRates.push({
             kind: 'USD_COP',
             source: 'Dólar SPOT',
@@ -50,6 +77,15 @@ export async function GET() {
       }
     } catch (error) {
       console.error('Error fetching USD→COP rates:', error);
+      // Agregar tasa de fallback para USD→COP
+      referenceRates.push({
+        kind: 'USD_COP',
+        source: 'Fallback',
+        value: 3800,
+        url: 'https://dolar.wilkinsonpc.com.co/',
+        lastUpdated: new Date().toISOString(),
+        description: 'Tasa de referencia (fallback)'
+      });
     }
 
     // 2. EUR → USD desde ECB (European Central Bank)
