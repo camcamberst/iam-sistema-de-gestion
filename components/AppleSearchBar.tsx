@@ -94,17 +94,14 @@ export default function AppleSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="apple-input pl-12 pr-4"
+            className="apple-input pl-12 pr-4 text-[14px]"
           />
         </div>
 
         {/* Search Button */}
-        <button
-          onClick={handleSearch}
-          className="apple-button px-6 py-3"
-        >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        <button onClick={handleSearch} className="apple-button px-4 py-2 rounded-lg">
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+            <path d="M12.9 14.32a8 8 0 111.414-1.414l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" />
           </svg>
         </button>
 
@@ -112,16 +109,11 @@ export default function AppleSearchBar({
         {filters.length > 0 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`apple-button-secondary px-4 py-3 ${
-              hasActiveFilters ? 'bg-blue-500/20 border-blue-500/50' : ''
-            }`}
+            className={`px-4 py-2 rounded-lg border ${isExpanded ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+              <path d="M3 5a1 1 0 000 2h14a1 1 0 100-2H3zm2 6a1 1 0 011-1h10a1 1 0 110 2H6a1 1 0 01-1-1zm3 5a1 1 0 011-1h4a1 1 0 110 2H9a1 1 0 01-1-1z" />
             </svg>
-            {hasActiveFilters && (
-              <span className="absolute -top-2 -right-2 w-3 h-3 bg-red-500 rounded-full" />
-            )}
           </button>
         )}
 

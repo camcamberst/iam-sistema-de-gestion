@@ -270,10 +270,10 @@ export default function UsersListPage() {
 
           <button
             onClick={() => setShowCreateModal(true)}
-            className="apple-button shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2"
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition-all duration-200 flex items-center space-x-2"
           >
-            <span>+</span>
-            <span>Nuevo Usuario</span>
+            <span className="text-sm">+</span>
+            <span className="text-sm font-medium">Nuevo Usuario</span>
           </button>
         </div>
 
