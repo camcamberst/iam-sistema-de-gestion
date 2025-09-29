@@ -12,7 +12,7 @@ let mockRates = [
     source: 'system',
     author_id: 'system',
     valid_from: new Date('2024-01-01T00:00:00Z'),
-    valid_to: null,
+    valid_to: null as string | null,
     period_base: true,
     created_at: new Date('2024-01-01T00:00:00Z')
   },
@@ -26,7 +26,7 @@ let mockRates = [
     source: 'ECB',
     author_id: 'system',
     valid_from: new Date('2024-01-01T00:00:00Z'),
-    valid_to: null,
+    valid_to: null as string | null,
     period_base: true,
     created_at: new Date('2024-01-01T00:00:00Z')
   },
@@ -40,7 +40,7 @@ let mockRates = [
     source: 'OXR',
     author_id: 'system',
     valid_from: new Date('2024-01-01T00:00:00Z'),
-    valid_to: null,
+    valid_to: null as string | null,
     period_base: true,
     created_at: new Date('2024-01-01T00:00:00Z')
   }
