@@ -1,4 +1,74 @@
 "use client";
+
+import Link from "next/link";
+import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+
+export default function AdminDashboard() {
+  const [stats, setStats] = useState({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+  );
+
+  useEffect(() => {
+    const load = async () => {
+      const { data } = await supabase.from('users').select('role');
+      if (!data) return;
+      const total = data.length;
+      const super_admin = data.filter(u => u.role === 'super_admin').length;
+      const admin = data.filter(u => u.role === 'admin').length;
+      const modelo = data.filter(u => u.role === 'modelo').length;
+      setStats({ total, super_admin, admin, modelo });
+    };
+    load();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <h1 className="text-3xl font-semibold text-gray-900 mb-6">Dashboard</h1>
+
+        {/* Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div className="apple-card">
+            <div className="text-sm text-gray-500">Usuarios</div>
+            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.total}</div>
+          </div>
+          <div className="apple-card">
+            <div className="text-sm text-gray-500">Super Admin</div>
+            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.super_admin}</div>
+          </div>
+          <div className="apple-card">
+            <div className="text-sm text-gray-500">Admin</div>
+            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.admin}</div>
+          </div>
+          <div className="apple-card">
+            <div className="text-sm text-gray-500">Modelos</div>
+            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.modelo}</div>
+          </div>
+        </div>
+
+        {/* Quick actions */}
+        <div className="apple-card">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900">Accesos rápidos</h2>
+              <p className="text-sm text-gray-500">Tareas frecuentes del sistema</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <Link href="/admin/users" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Usuarios</Link>
+              <Link href="/admin/groups" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Grupos</Link>
+              <Link href="/admin/users/create" className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black">+ Nuevo Usuario</Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+"use client";
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
