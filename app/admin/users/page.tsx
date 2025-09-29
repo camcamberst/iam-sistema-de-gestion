@@ -61,15 +61,12 @@ export default function UsersListPage() {
       if (usersData.success) {
         setUsers(usersData.users);
         
-        // Obtener usuario actual para jerarquía
-        const currentUserData = usersData.users.find((u: any) => u.id === 'current-user-id'); // TODO: Obtener del contexto de auth
-        if (currentUserData) {
-          setCurrentUser({
-            id: currentUserData.id,
-            role: currentUserData.role,
-            groups: currentUserData.groups
-          });
-        }
+        // Obtener usuario actual para jerarquía (simular super_admin por ahora)
+        setCurrentUser({
+          id: 'temp-super-admin',
+          role: 'super_admin',
+          groups: groupsData.success ? groupsData.groups.map((g: any) => ({ id: g.id, name: g.name })) : []
+        });
       } else {
         setError('Error cargando usuarios: ' + usersData.error);
       }
@@ -380,6 +377,8 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
     group_ids: getDefaultGroups('modelo', groups)
   });
 
+  const [restrictionMessage, setRestrictionMessage] = useState('');
+
   const [validation, setValidation] = useState({
     name: { isValid: true, errors: [] as string[] },
     email: { isValid: true, errors: [] as string[] },
@@ -421,6 +420,17 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (value.trim()) {
       validateField(field, value);
+    }
+    
+    // Mostrar mensajes de restricción según rol
+    if (field === 'role') {
+      if (value === 'modelo') {
+        setRestrictionMessage('💡 Los modelos solo pueden estar en un grupo a la vez');
+      } else if (value === 'admin') {
+        setRestrictionMessage('💡 Los administradores deben tener al menos un grupo asignado');
+      } else if (value === 'super_admin') {
+        setRestrictionMessage('💡 Los super administradores tienen acceso a todos los grupos');
+      }
     }
   };
 
