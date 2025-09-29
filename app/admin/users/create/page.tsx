@@ -71,7 +71,7 @@ export default function CreateUserPage() {
         />
         <div>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Rol</div>
-          <div style={{ position: 'relative' }}>
+          <div style={{ position: 'relative', filter: 'drop-shadow(0 10px 25px rgba(0,0,0,0.08))' }}>
             <button
               type="button"
               onClick={() => setOpenGroups(false)}
@@ -79,7 +79,7 @@ export default function CreateUserPage() {
                 width: '100%',
                 textAlign: 'left',
                 border: '1px solid #d1d5db',
-                borderRadius: 8,
+                borderRadius: 12,
                 padding: '10px 12px',
                 background: '#ffffff',
                 color: '#111827',
@@ -104,7 +104,7 @@ export default function CreateUserPage() {
                 marginTop: 6,
                 background: '#ffffff',
                 border: '1px solid #e5e7eb',
-                borderRadius: 8,
+                borderRadius: 12,
                 boxShadow: '0 10px 25px rgba(0,0,0,0.08)'
               }}
             >
