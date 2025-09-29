@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function CreateUserPage() {
@@ -16,6 +16,7 @@ export default function CreateUserPage() {
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
   const [openRole, setOpenRole] = useState(false);
+  const roleDropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -30,6 +31,26 @@ export default function CreateUserPage() {
     };
     loadGroups();
   }, []);
+
+  // Cerrar dropdown de Rol al hacer clic fuera o con Escape
+  useEffect(() => {
+    function handleClickOutside(ev: MouseEvent) {
+      if (!openRole) return;
+      const target = ev.target as Node;
+      if (roleDropdownRef.current && !roleDropdownRef.current.contains(target)) {
+        setOpenRole(false);
+      }
+    }
+    function handleKey(ev: KeyboardEvent) {
+      if (openRole && ev.key === 'Escape') setOpenRole(false);
+    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKey);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKey);
+    };
+  }, [openRole]);
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -92,7 +113,7 @@ export default function CreateUserPage() {
           }}
         />
         {/* Rol - Dropdown Apple-like */}
-        <div>
+        <div ref={roleDropdownRef}>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Rol</div>
           <div style={{ position:'relative' }}>
             <button
