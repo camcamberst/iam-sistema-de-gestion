@@ -346,67 +346,69 @@ export default function RatesPage() {
 				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
 			</div>
 
-			<ActiveRatesPanel />
+			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+				<ActiveRatesPanel />
 
-			<div className="apple-card">
-				<div className="flex items-center justify-between mb-3">
-					<h2 className="text-base font-medium">Tasas vigentes</h2>
-					{loading && <span className="text-xs text-gray-500">Cargando…</span>}
-				</div>
-				<div className="overflow-x-auto apple-scroll">
-					<table className="min-w-full text-xs">
-						<thead className="text-left text-gray-500">
-							<tr>
-								<th className="py-1.5 pr-3 text-xs">Divisa</th>
-								<th className="py-1.5 pr-3 text-xs">Aplicar a</th>
-								<th className="py-1.5 pr-3 text-xs">Valor</th>
-								<th className="py-1.5 pr-3 text-xs">Fuente</th>
-								<th className="py-1.5 pr-3 text-xs">Actualizado</th>
-							</tr>
-						</thead>
-						<tbody>
-							{rates
-								.filter(rate => {
-									// Solo mostrar tasas activas (sin valid_to o valid_to en el futuro)
-									const now = new Date();
-									const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
-									return !validTo || validTo > now;
-								})
-								.sort((a, b) => {
-									// Ordenar por kind primero, luego por fecha
-									if (a.kind !== b.kind) {
-										return a.kind.localeCompare(b.kind);
-									}
-									return new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime();
-								})
-								.map((r) => (
-								<tr key={r.id} className="border-t border-gray-100">
-									<td className="py-1.5 pr-3 font-medium text-xs">{r.kind}</td>
-									<td className="py-1.5 pr-3 text-xs">{r.scope}</td>
-									<td className="py-1.5 pr-3 text-xs font-medium">{r.value_effective}</td>
-									<td className="py-1.5 pr-3 text-xs">{r.source}</td>
-									<td className="py-1.5 pr-3 text-xs text-gray-500">
-										{new Date(r.valid_from).toLocaleString('es-ES', {
-											day: '2-digit',
-											month: '2-digit',
-											year: 'numeric',
-											hour: '2-digit',
-											minute: '2-digit'
-										})}
-									</td>
+				<div className="apple-card">
+					<div className="flex items-center justify-between mb-3">
+						<h2 className="text-sm font-medium">Tasas vigentes</h2>
+						{loading && <span className="text-xs text-gray-500">Cargando…</span>}
+					</div>
+					<div className="overflow-x-auto apple-scroll">
+						<table className="min-w-full text-xs">
+							<thead className="text-left text-gray-500">
+								<tr>
+									<th className="py-1.5 pr-3 text-xs">Divisa</th>
+									<th className="py-1.5 pr-3 text-xs">Aplicar a</th>
+									<th className="py-1.5 pr-3 text-xs">Valor</th>
+									<th className="py-1.5 pr-3 text-xs">Fuente</th>
+									<th className="py-1.5 pr-3 text-xs">Actualizado</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
-					{rates.filter(rate => {
-						const now = new Date();
-						const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
-						return !validTo || validTo > now;
-					}).length === 0 && (
-						<div className="text-center py-6 text-gray-500 text-xs">
-							No hay tasas activas
-						</div>
-					)}
+							</thead>
+							<tbody>
+								{rates
+									.filter(rate => {
+										// Solo mostrar tasas activas (sin valid_to o valid_to en el futuro)
+										const now = new Date();
+										const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
+										return !validTo || validTo > now;
+									})
+									.sort((a, b) => {
+										// Ordenar por kind primero, luego por fecha
+										if (a.kind !== b.kind) {
+											return a.kind.localeCompare(b.kind);
+										}
+										return new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime();
+									})
+									.map((r) => (
+									<tr key={r.id} className="border-t border-gray-100">
+										<td className="py-1.5 pr-3 font-medium text-xs">{r.kind}</td>
+										<td className="py-1.5 pr-3 text-xs">{r.scope}</td>
+										<td className="py-1.5 pr-3 text-xs font-medium">{r.value_effective}</td>
+										<td className="py-1.5 pr-3 text-xs">{r.source}</td>
+										<td className="py-1.5 pr-3 text-xs text-gray-500">
+											{new Date(r.valid_from).toLocaleString('es-ES', {
+												day: '2-digit',
+												month: '2-digit',
+												year: 'numeric',
+												hour: '2-digit',
+												minute: '2-digit'
+											})}
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+						{rates.filter(rate => {
+							const now = new Date();
+							const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
+							return !validTo || validTo > now;
+						}).length === 0 && (
+							<div className="text-center py-6 text-gray-500 text-xs">
+								No hay tasas activas
+							</div>
+						)}
+					</div>
 				</div>
 			</div>
 		</div>
