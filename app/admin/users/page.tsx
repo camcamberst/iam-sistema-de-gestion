@@ -588,27 +588,28 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-aim-card border border-aim-border rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-white mb-4">Crear Nuevo Usuario</h2>
+      <div className="bg-white border border-gray-200 rounded-xl shadow-xl p-6 w-full max-w-lg">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Crear Nuevo Usuario</h2>
         
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">
-              Nombre <span className="text-red-400">*</span>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Nombre <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleFieldChange('name', e.target.value)}
-              className={`w-full bg-gray-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              className={`w-full border rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 validation.name.errors.length > 0 
                   ? 'border-red-500 focus:ring-red-500' 
-                  : 'border-gray-600 focus:border-blue-500'
+                  : 'border-gray-300 focus:border-blue-500'
               }`}
+              placeholder="Ingresa el nombre completo"
               required
             />
             {validation.name.errors.length > 0 && (
-              <div className="mt-1 text-red-400 text-sm">
+              <div className="mt-1 text-red-500 text-sm">
                 {validation.name.errors.map((error, index) => (
                   <div key={index}>{error}</div>
                 ))}
@@ -617,22 +618,23 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">
-              Email <span className="text-red-400">*</span>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Email <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleFieldChange('email', e.target.value)}
-              className={`w-full bg-gray-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              className={`w-full border rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 validation.email.errors.length > 0 
                   ? 'border-red-500 focus:ring-red-500' 
-                  : 'border-gray-600 focus:border-blue-500'
+                  : 'border-gray-300 focus:border-blue-500'
               }`}
+              placeholder="usuario@ejemplo.com"
               required
             />
             {validation.email.errors.length > 0 && (
-              <div className="mt-1 text-red-400 text-sm">
+              <div className="mt-1 text-red-500 text-sm">
                 {validation.email.errors.map((error, index) => (
                   <div key={index}>{error}</div>
                 ))}
@@ -641,31 +643,32 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">
-              Contraseña <span className="text-red-400">*</span>
+            <label className="block text-gray-700 text-sm font-medium mb-2">
+              Contraseña <span className="text-red-500">*</span>
             </label>
             <input
               type="password"
               value={formData.password}
               onChange={(e) => handleFieldChange('password', e.target.value)}
-              className={`w-full bg-gray-800 border rounded-lg px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              className={`w-full border rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 validation.password.errors.length > 0 
                   ? 'border-red-500 focus:ring-red-500' 
                   : validation.password.warnings && validation.password.warnings.length > 0
-                    ? 'border-yellow-500 focus:ring-yellow-500'
-                    : 'border-gray-600 focus:border-blue-500'
+                    ? 'border-amber-500 focus:ring-amber-500'
+                    : 'border-gray-300 focus:border-blue-500'
               }`}
+              placeholder="Mínimo 8 caracteres"
               required
             />
             {validation.password.errors.length > 0 && (
-              <div className="mt-1 text-red-400 text-sm">
+              <div className="mt-1 text-red-500 text-sm">
                 {validation.password.errors.map((error, index) => (
                   <div key={index}>{error}</div>
                 ))}
               </div>
             )}
             {validation.password.warnings && validation.password.warnings.length > 0 && (
-              <div className="mt-1 text-yellow-400 text-sm">
+              <div className="mt-1 text-amber-600 text-sm">
                 {validation.password.warnings.map((warning, index) => (
                   <div key={index}>{warning}</div>
                 ))}
@@ -674,11 +677,11 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Rol</label>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'super_admin' | 'admin' | 'modelo' })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             >
               <option value="modelo">Modelo</option>
               <option value="admin">Admin</option>
@@ -687,8 +690,8 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Grupos</label>
-            <div className="space-y-2">
+            <label className="block text-gray-700 text-sm font-medium mb-3">Grupos</label>
+            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
               {groups.map((group) => {
                 const isChecked = formData.group_ids.includes(group.id);
                 const isDisabled = formData.role === 'modelo' && 
@@ -696,7 +699,14 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                                  !isChecked;
                 
                 return (
-                  <label key={group.id} className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50' : ''}`}>
+                  <label 
+                    key={group.id} 
+                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                      isDisabled 
+                        ? 'opacity-50 bg-gray-100 cursor-not-allowed' 
+                        : 'hover:bg-gray-100 cursor-pointer'
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={isChecked}
@@ -714,31 +724,42 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                           });
                         }
                       }}
-                      className="rounded"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                     />
-                    <span className={`text-white ${isDisabled ? 'text-gray-400' : ''}`}>
+                    <span className={`text-sm font-medium ${
+                      isDisabled 
+                        ? 'text-gray-400' 
+                        : 'text-gray-700'
+                    }`}>
                       {group.name}
-                      {isDisabled && <span className="text-xs text-gray-500 ml-1">(deshabilitado)</span>}
+                      {isDisabled && (
+                        <span className="text-xs text-gray-400 ml-2">(deshabilitado)</span>
+                      )}
                     </span>
                   </label>
                 );
               })}
             </div>
+            {restrictionMessage && (
+              <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                {restrictionMessage}
+              </div>
+            )}
           </div>
 
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-3 pt-6">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 py-3 px-4 rounded-lg transition-colors font-medium"
             >
               Cancelar
             </button>
             <button
               type="submit"
               disabled={isSubmitting || !validation.name.isValid || !validation.email.isValid || !validation.password.isValid}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-2 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2 font-medium"
             >
               {isSubmitting ? (
                 <>
@@ -810,11 +831,11 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Rol</label>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
             <select
               value={formData.role}
               onChange={(e) => setFormData({ ...formData, role: e.target.value as 'super_admin' | 'admin' | 'modelo' })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             >
               <option value="modelo">Modelo</option>
               <option value="admin">Admin</option>
@@ -835,8 +856,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Grupos</label>
-            <div className="space-y-2">
+            <label className="block text-gray-700 text-sm font-medium mb-3">Grupos</label>
+            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
               {groups.map((group) => {
                 const isChecked = formData.group_ids.includes(group.id);
                 const isDisabled = formData.role === 'modelo' && 
@@ -844,7 +865,14 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                                  !isChecked;
                 
                 return (
-                  <label key={group.id} className={`flex items-center space-x-2 ${isDisabled ? 'opacity-50' : ''}`}>
+                  <label 
+                    key={group.id} 
+                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                      isDisabled 
+                        ? 'opacity-50 bg-gray-100 cursor-not-allowed' 
+                        : 'hover:bg-gray-100 cursor-pointer'
+                    }`}
+                  >
                     <input
                       type="checkbox"
                       checked={isChecked}
@@ -862,16 +890,27 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                           });
                         }
                       }}
-                      className="rounded"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
                     />
-                    <span className={`text-white ${isDisabled ? 'text-gray-400' : ''}`}>
+                    <span className={`text-sm font-medium ${
+                      isDisabled 
+                        ? 'text-gray-400' 
+                        : 'text-gray-700'
+                    }`}>
                       {group.name}
-                      {isDisabled && <span className="text-xs text-gray-500 ml-1">(deshabilitado)</span>}
+                      {isDisabled && (
+                        <span className="text-xs text-gray-400 ml-2">(deshabilitado)</span>
+                      )}
                     </span>
                   </label>
                 );
               })}
             </div>
+            {restrictionMessage && (
+              <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                {restrictionMessage}
+              </div>
+            )}
           </div>
 
           <div className="flex space-x-3 pt-4">
