@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
+import ModelCalculator from "../../../components/ModelCalculator";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -159,14 +160,20 @@ export default function AdminDashboard() {
         )}
 
         {user?.role === 'modelo' && (
-          <div className="apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-1">Mi perfil</h2>
-            <p className="text-sm text-gray-500">Revisa tu información</p>
-            <div className="mt-4 text-sm text-gray-700">Email: {user.email}</div>
-            <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
-            <div className="mt-4">
-              <Link href="/admin/users" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Ver usuarios de mi grupo</Link>
+          <div className="space-y-6">
+            {/* Panel de perfil */}
+            <div className="apple-card">
+              <h2 className="text-lg font-semibold text-gray-900 mb-1">Mi perfil</h2>
+              <p className="text-sm text-gray-500">Revisa tu información</p>
+              <div className="mt-4 text-sm text-gray-700">Email: {user.email}</div>
+              <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
+              <div className="mt-4">
+                <Link href="/admin/users" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Ver usuarios de mi grupo</Link>
+              </div>
             </div>
+
+            {/* Calculadora para modelos */}
+            <ModelCalculator />
           </div>
         )}
       </div>
