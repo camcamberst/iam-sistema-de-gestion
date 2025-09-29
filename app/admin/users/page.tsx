@@ -294,8 +294,8 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200">
-          <div className="p-6 apple-scroll overflow-auto max-h-[70vh]">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 apple-scroll overflow-auto max-h-[70vh] pb-0">
+          <div className="p-6 pb-4">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Usuarios del Sistema ({users.length})
             </h2>
