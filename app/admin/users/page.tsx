@@ -17,7 +17,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: string;
+  role: 'super_admin' | 'admin' | 'modelo';
   is_active: boolean;
   last_login?: string;
   created_at: string;
