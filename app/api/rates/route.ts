@@ -75,6 +75,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // ===========================================
+    // 🔐 VALIDACIÓN DE JERARQUÍA (TEMPORAL)
+    // ===========================================
+    // TODO: Implementar autenticación real y validación de roles
+    // Por ahora, permitir solo scopes válidos
+    const validScopes = ['global'];
+    if (scope.startsWith('group:')) {
+      validScopes.push(scope);
+    }
+    
+    if (!validScopes.includes(scope)) {
+      return NextResponse.json(
+        { success: false, error: 'Scope no válido para tu rol' },
+        { status: 403 }
+      );
+    }
+
     // Insertar en Supabase
     const { data: newRate, error } = await supabase
       .from('rates')

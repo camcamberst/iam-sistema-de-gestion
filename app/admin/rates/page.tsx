@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
+import { canEditUser, canDeleteUser, getAvailableGroups } from "../../../lib/hierarchy";
 
 type RateKind = "USD_COP" | "EUR_USD" | "GBP_USD";
 
@@ -111,13 +112,32 @@ export default function RatesPage() {
 		source: "manual",
 	});
 
+	const [availableScopes, setAvailableScopes] = useState<Array<{value: string, label: string}>>([]);
+
 	async function loadRates() {
 		if (!userInfo) return; // Solo cargar si el usuario está autenticado
 		
 		try {
 			setLoading(true);
 			setError(null);
-			const res = await fetch("/api/rates?scope=global&activeOnly=true");
+			
+			// Construir parámetros según jerarquía
+			const params = new URLSearchParams();
+			params.append('activeOnly', 'true');
+			
+			// Super Admin puede ver todos los scopes
+			if (userInfo.role === 'super_admin') {
+				// No agregar filtro de scope para super admin
+			} else if (userInfo.role === 'admin') {
+				// Admin solo puede ver rates de sus grupos
+				if (userInfo.groups && userInfo.groups.length > 0) {
+					userInfo.groups.forEach(group => {
+						params.append('scope', `group:${group}`);
+					});
+				}
+			}
+			
+			const res = await fetch(`/api/rates?${params.toString()}`);
 			const data = await res.json();
 			if (!data.success) throw new Error(data.error || "Error al cargar tasas");
 			setRates(data.data);
@@ -130,6 +150,43 @@ export default function RatesPage() {
 
 	useEffect(() => {
 		if (userInfo) {
+			// ===========================================
+			// 🏗️ APLICAR LÍMITES DE JERARQUÍA
+			// ===========================================
+			const scopes = [];
+			
+			if (userInfo.role === 'super_admin') {
+				// Super Admin: puede gestionar RATES globales y por grupo
+				scopes.push({ value: 'global', label: 'Global (todos los grupos)' });
+				
+				// Agregar opciones por grupo si el admin tiene grupos
+				if (userInfo.groups && userInfo.groups.length > 0) {
+					userInfo.groups.forEach(group => {
+						scopes.push({ 
+							value: `group:${group}`, 
+							label: `Grupo: ${group}` 
+						});
+					});
+				}
+			} else if (userInfo.role === 'admin') {
+				// Admin: solo puede gestionar RATES de sus grupos
+				if (userInfo.groups && userInfo.groups.length > 0) {
+					userInfo.groups.forEach(group => {
+						scopes.push({ 
+							value: `group:${group}`, 
+							label: `Grupo: ${group}` 
+						});
+					});
+				}
+			}
+			
+			setAvailableScopes(scopes);
+			
+			// Establecer scope por defecto según jerarquía
+			if (scopes.length > 0) {
+				setForm(prev => ({ ...prev, scope: scopes[0].value }));
+			}
+			
 			loadRates();
 		}
 	}, [userInfo]);
@@ -200,7 +257,15 @@ export default function RatesPage() {
 	return (
 		<div className="p-6 space-y-6">
 			<div className="flex items-center justify-between">
-				<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
+				<div>
+					<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
+					<p className="text-sm text-gray-500 mt-1">
+						{userInfo.role === 'super_admin' 
+							? 'Puedes gestionar RATES globales y por grupo'
+							: 'Solo puedes gestionar RATES de tus grupos asignados'
+						}
+					</p>
+				</div>
 				<div className="text-sm text-gray-500">
 					Acceso: <span className="font-medium text-blue-600">
 						{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
@@ -218,7 +283,11 @@ export default function RatesPage() {
 							value={form.scope}
 							onChange={(e) => setForm({ ...form, scope: e.target.value })}
 						>
-							<option value="global">Global</option>
+							{availableScopes.map(scope => (
+								<option key={scope.value} value={scope.value}>
+									{scope.label}
+								</option>
+							))}
 						</select>
 					</div>
 					<div>
