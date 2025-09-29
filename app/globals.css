@@ -2,56 +2,254 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Glassmorphism utilities */
-.backdrop-blur-glass {
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+/* ===========================================
+   🍎 APPLE-STYLE DESIGN SYSTEM
+   =========================================== */
+
+/* CSS Variables - Apple Color Palette */
+:root {
+  /* Apple Gray Scale */
+  --apple-gray-50: #f9fafb;
+  --apple-gray-100: #f3f4f6;
+  --apple-gray-200: #e5e7eb;
+  --apple-gray-300: #d1d5db;
+  --apple-gray-400: #9ca3af;
+  --apple-gray-500: #6b7280;
+  --apple-gray-600: #4b5563;
+  --apple-gray-700: #374151;
+  --apple-gray-800: #1f2937;
+  --apple-gray-900: #111827;
+
+  /* Apple Accent Colors */
+  --apple-blue: #007aff;
+  --apple-blue-light: #5ac8fa;
+  --apple-purple: #af52de;
+  --apple-pink: #ff2d92;
+  --apple-orange: #ff9500;
+  --apple-green: #34c759;
+  --apple-red: #ff3b30;
+  --apple-yellow: #ffcc00;
+
+  /* Apple Glass Effects */
+  --apple-glass-bg: rgba(255, 255, 255, 0.1);
+  --apple-glass-border: rgba(255, 255, 255, 0.2);
+  --apple-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  
+  /* Apple Dark Mode */
+  --apple-dark-bg: #000000;
+  --apple-dark-surface: #1c1c1e;
+  --apple-dark-surface-2: #2c2c2e;
+  --apple-dark-surface-3: #3a3a3c;
+  --apple-dark-text: #ffffff;
+  --apple-dark-text-secondary: #8e8e93;
 }
 
-/* Custom scrollbar */
+/* ===========================================
+   🎨 APPLE-STYLE COMPONENTS
+   =========================================== */
+
+/* Glassmorphism Effects */
+.apple-glass {
+  background: var(--apple-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--apple-glass-border);
+  box-shadow: var(--apple-glass-shadow);
+}
+
+.apple-glass-dark {
+  background: rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Apple Buttons */
+.apple-button {
+  @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 ease-out;
+  background: linear-gradient(135deg, var(--apple-blue), var(--apple-blue-light));
+  color: white;
+  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3);
+}
+
+.apple-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 30px rgba(0, 122, 255, 0.4);
+}
+
+.apple-button-secondary {
+  @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 ease-out;
+  background: var(--apple-glass-bg);
+  color: var(--apple-dark-text);
+  border: 1px solid var(--apple-glass-border);
+}
+
+.apple-button-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+}
+
+/* Apple Cards */
+.apple-card {
+  @apply rounded-2xl p-6 transition-all duration-300 ease-out;
+  background: var(--apple-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--apple-glass-border);
+  box-shadow: var(--apple-glass-shadow);
+}
+
+.apple-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Apple Inputs */
+.apple-input {
+  @apply w-full px-4 py-3 rounded-xl border-0 transition-all duration-300 ease-out;
+  background: var(--apple-glass-bg);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--apple-glass-border);
+  color: var(--apple-dark-text);
+}
+
+.apple-input:focus {
+  outline: none;
+  border-color: var(--apple-blue);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
+  background: rgba(255, 255, 255, 0.15);
+}
+
+/* Apple Sidebar */
+.apple-sidebar {
+  @apply fixed right-0 top-0 h-full w-80 z-50 transition-all duration-300 ease-out;
+  background: var(--apple-glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid var(--apple-glass-border);
+  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
+}
+
+/* ===========================================
+   🎭 APPLE-STYLE ANIMATIONS
+   =========================================== */
+
+/* Smooth Transitions */
+* {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Apple Fade In */
+@keyframes appleFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.apple-fade-in {
+  animation: appleFadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Apple Slide In */
+@keyframes appleSlideIn {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.apple-slide-in {
+  animation: appleSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Apple Bounce */
+@keyframes appleBounce {
+  0%, 20%, 53%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40%, 43% {
+    transform: translateY(-8px);
+  }
+  70% {
+    transform: translateY(-4px);
+  }
+  90% {
+    transform: translateY(-2px);
+  }
+}
+
+.apple-bounce {
+  animation: appleBounce 1s ease-in-out;
+}
+
+/* ===========================================
+   📱 APPLE-STYLE RESPONSIVE
+   =========================================== */
+
+/* Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: rgba(55, 65, 81, 0.3);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(156, 163, 175, 0.5);
-  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(156, 163, 175, 0.7);
+  background: rgba(255, 255, 255, 0.5);
 }
 
-/* Smooth transitions */
-* {
-  transition: all 0.2s ease-in-out;
-}
-
-/* Focus styles */
+/* Focus Styles */
 input:focus,
 select:focus,
-button:focus {
+button:focus,
+textarea:focus {
   outline: none;
-  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.3);
 }
 
-/* Custom animations */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Selection */
+::selection {
+  background: rgba(0, 122, 255, 0.3);
+  color: white;
 }
 
-.animate-fade-in {
-  animation: fadeIn 0.3s ease-out;
+/* ===========================================
+   🌟 APPLE-STYLE UTILITIES
+   =========================================== */
+
+.apple-text-gradient {
+  background: linear-gradient(135deg, var(--apple-blue), var(--apple-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.apple-shadow-soft {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+}
+
+.apple-shadow-medium {
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.apple-shadow-strong {
+  box-shadow: 0 16px 48px rgba(0, 0, 0, 0.2);
 }

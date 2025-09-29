@@ -12,6 +12,7 @@ import {
   getDefaultGroups,
   type CurrentUser 
 } from '../../../lib/hierarchy';
+import AppleSearchBar from '../../../components/AppleSearchBar';
 
 interface User {
   id: string;
@@ -35,6 +36,7 @@ interface Group {
 
 export default function UsersListPage() {
   const [users, setUsers] = useState<User[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -42,6 +44,8 @@ export default function UsersListPage() {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
   const router = useRouter();
 
   useEffect(() => {
@@ -60,6 +64,7 @@ export default function UsersListPage() {
 
       if (usersData.success) {
         setUsers(usersData.users);
+        setFilteredUsers(usersData.users);
         
         // Obtener usuario actual para jerarquía (simular super_admin por ahora)
         setCurrentUser({
@@ -82,6 +87,76 @@ export default function UsersListPage() {
       setLoading(false);
     }
   };
+
+  // ===========================================
+  // 🔍 SEARCH AND FILTER FUNCTIONS
+  // ===========================================
+  const handleSearch = (query: string, filters: Record<string, string>) => {
+    setSearchQuery(query);
+    setSearchFilters(filters);
+    
+    let filtered = users;
+
+    // Text search
+    if (query.trim()) {
+      filtered = filtered.filter(user => 
+        user.name.toLowerCase().includes(query.toLowerCase()) ||
+        user.email.toLowerCase().includes(query.toLowerCase())
+      );
+    }
+
+    // Role filter
+    if (filters.role) {
+      filtered = filtered.filter(user => user.role === filters.role);
+    }
+
+    // Group filter
+    if (filters.group) {
+      filtered = filtered.filter(user => 
+        user.groups.some(group => group.id === filters.group)
+      );
+    }
+
+    // Status filter
+    if (filters.status) {
+      const isActive = filters.status === 'active';
+      filtered = filtered.filter(user => user.is_active === isActive);
+    }
+
+    setFilteredUsers(filtered);
+  };
+
+  // Search filters configuration
+  const searchFilters = [
+    {
+      id: 'role',
+      label: 'Rol',
+      value: searchFilters.role || '',
+      options: [
+        { label: 'Super Admin', value: 'super_admin' },
+        { label: 'Admin', value: 'admin' },
+        { label: 'Modelo', value: 'modelo' }
+      ]
+    },
+    {
+      id: 'group',
+      label: 'Grupo',
+      value: searchFilters.group || '',
+      options: groups.map(group => ({
+        label: group.name,
+        value: group.id
+      }))
+    },
+    {
+      id: 'status',
+      label: 'Estado',
+      value: searchFilters.status || '',
+      options: [
+        { label: 'Activo', value: 'active' },
+        { label: 'Inactivo', value: 'inactive' }
+      ]
+    }
+  ];
 
   const handleCreateUser = async (userData: any) => {
     try {
