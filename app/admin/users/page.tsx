@@ -312,7 +312,7 @@ export default function UsersListPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-sm">
+                <table className="min-w-full text-left text-[13px]">
                   <thead className="border-b border-gray-200">
                     <tr>
                       <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
@@ -325,22 +325,22 @@ export default function UsersListPage() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredUsers.map((user, index) => (
-                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                        <td className="px-6 py-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-semibold">
+                    {filteredUsers.map((user) => (
+                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors h-14">
+                        <td className="px-6 py-2">
+                          <div className="flex items-center space-x-3 overflow-hidden">
+                            <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center text-white text-[12px] font-semibold flex-none">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
-                            <div>
-                              <div className="text-gray-900 font-medium">{user.name}</div>
-                              <div className="text-gray-500 text-xs">ID: {user.id.slice(0, 8)}...</div>
+                            <div className="min-w-0">
+                              <div className="text-gray-900 font-medium truncate" title={user.name}>{user.name}</div>
+                              <div className="text-gray-400 text-[11px] truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-gray-800">{user.email}</td>
+                        <td className="px-6 py-2 text-gray-800 truncate max-w-[220px]" title={user.email}>{user.email}</td>
                         <td className="px-6 py-4">
-                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                          <span className={`px-2 py-[2px] rounded-full text-[11px] font-medium whitespace-nowrap ${
                             user.role === 'super_admin'
                               ? 'bg-gray-900 text-white'
                               : user.role === 'admin'
@@ -352,19 +352,22 @@ export default function UsersListPage() {
                         </td>
                         <td className="px-6 py-4">
                           {user.groups.length > 0 ? (
-                            <div className="flex flex-wrap gap-1">
-                              {user.groups.map((group) => (
-                                <span key={group.id} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
+                            <div className="flex items-center gap-1 overflow-hidden">
+                              {user.groups.slice(0,2).map((group) => (
+                                <span key={group.id} className="bg-gray-100 text-gray-700 px-2 py-[2px] rounded text-[11px] whitespace-nowrap">
                                   {group.name}
                                 </span>
                               ))}
+                              {user.groups.length > 2 && (
+                                <span className="text-gray-500 text-[11px] whitespace-nowrap">+{user.groups.length - 2}</span>
+                              )}
                             </div>
                           ) : (
-                            <span className="text-gray-400 text-sm">Sin grupos</span>
+                            <span className="text-gray-400 text-[12px]">Sin grupos</span>
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+                          <span className={`px-2 py-[2px] rounded-full text-[11px] font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
@@ -378,13 +381,13 @@ export default function UsersListPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="apple-button-secondary px-3 py-1 text-sm"
+                              className="apple-button-secondary px-3 py-[6px] text-[12px]"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
-                              className="px-3 py-1 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50 transition-colors"
+                              className="px-3 py-[6px] text-[12px] text-red-600 border border-red-300 rounded hover:bg-red-50 transition-colors"
                             >
                               Eliminar
                             </button>
