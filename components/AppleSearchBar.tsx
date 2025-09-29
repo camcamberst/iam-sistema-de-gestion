@@ -64,14 +64,14 @@ export default function AppleSearchBar({
   // 🎨 RENDER FUNCTIONS
   // ===========================================
   const renderFilter = (filter: SearchFilter) => (
-    <div key={filter.id} className="space-y-1">
+    <div key={filter.id} className="space-y-1 min-w-0">
       <label className="text-gray-500 text-xs font-medium">
         {filter.label}
       </label>
       <select
         value={selectedFilters[filter.id] || ''}
         onChange={(e) => handleFilterChange(filter.id, e.target.value)}
-        className="apple-input text-sm h-9 px-3"
+        className="apple-input text-sm h-9 px-3 pr-8 leading-tight w-full"
       >
         <option value="">Todos</option>
         {filter.options.map((option) => (
@@ -102,12 +102,12 @@ export default function AppleSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="apple-input pl-9 pr-3 text-sm h-9"
+            className="apple-input pl-9 pr-3 text-sm h-9 leading-tight"
           />
         </div>
 
         {/* Search Button */}
-        <button onClick={handleSearch} title="Buscar" className="apple-button px-3 py-2 rounded-md text-sm">
+        <button onClick={handleSearch} title="Buscar" className="apple-button px-2.5 py-1.5 rounded-md text-xs">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M12.9 14.32a8 8 0 111.414-1.414l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" />
           </svg>
@@ -117,7 +117,7 @@ export default function AppleSearchBar({
         {filters.length > 0 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-3 py-2 rounded-md text-sm border ${isExpanded ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+            className={`px-2.5 py-1.5 rounded-md text-xs border ${isExpanded ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             title={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -130,7 +130,7 @@ export default function AppleSearchBar({
         {(query || hasActiveFilters) && (
           <button
             onClick={clearFilters}
-            className="apple-button-secondary px-3 py-2 text-sm text-red-500 hover:text-red-400 rounded-md"
+            className="apple-button-secondary px-2.5 py-1.5 text-xs text-red-500 hover:text-red-400 rounded-md"
             title="Limpiar búsqueda y filtros"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -142,21 +142,21 @@ export default function AppleSearchBar({
 
       {/* Filters Panel */}
       {filters.length > 0 && isExpanded && (
-        <div className="mt-4 pt-4 border-t border-white/10 apple-slide-in">
+        <div className="mt-3 pt-3 border-t border-white/10 apple-slide-in">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
             {filters.map(renderFilter)}
           </div>
           
-          <div className="flex items-center justify-end space-x-2 mt-4">
+          <div className="flex items-center justify-end space-x-2 mt-3">
             <button
               onClick={() => setIsExpanded(false)}
-              className="apple-button-secondary px-3 py-2 text-sm rounded-md"
+              className="apple-button-secondary px-2.5 py-1.5 text-xs rounded-md"
             >
               Cerrar
             </button>
             <button
               onClick={handleSearch}
-              className="apple-button px-4 py-2 text-sm rounded-md"
+              className="apple-button px-3 py-1.5 text-xs rounded-md"
             >
               Aplicar Filtros
             </button>
