@@ -149,23 +149,43 @@ export default function CreateUserPage() {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 10,
+                          gap: 12,
                           width: '100%',
                           padding: 10,
-                          background: isSelected ? '#f3f4f6' : '#ffffff',
+                          background: '#ffffff',
                           color: isDisabled ? '#9ca3af' : '#374151',
                           cursor: isDisabled ? 'not-allowed' : 'pointer',
                           border: 'none',
                           borderBottom: '1px solid #f3f4f6'
                         }}
                       >
-                        <span style={{
-                          width: 14,
-                          height: 14,
-                          borderRadius: 3,
-                          border: '1px solid #d1d5db',
-                          background: isSelected ? '#0071e3' : '#ffffff'
-                        }} />
+                        {/* Apple Switch */}
+                        <span
+                          aria-hidden
+                          style={{
+                            position: 'relative',
+                            width: 38,
+                            height: 22,
+                            borderRadius: 9999,
+                            background: isSelected ? '#0071e3' : '#e5e7eb',
+                            transition: 'background 180ms ease',
+                            flex: '0 0 auto'
+                          }}
+                        >
+                          <span
+                            style={{
+                              position: 'absolute',
+                              top: 2,
+                              left: isSelected ? 18 : 2,
+                              width: 18,
+                              height: 18,
+                              borderRadius: '9999px',
+                              background: '#ffffff',
+                              boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                              transition: 'left 180ms ease'
+                            }}
+                          />
+                        </span>
                         <span style={{ fontSize: 14, fontWeight: 500 }}>{g.name}</span>
                       </button>
                     );
