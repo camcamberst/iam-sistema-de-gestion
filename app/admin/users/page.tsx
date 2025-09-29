@@ -578,6 +578,7 @@ function EditUserModal({ user, groups, onClose, onSubmit }: {
   onSubmit: (userData: any) => void;
 }) {
   const [formData, setFormData] = useState({
+    id: user.id, // ✅ AGREGAR ID DEL USUARIO
     name: user.name,
     email: user.email,
     role: user.role,
