@@ -303,7 +303,7 @@ export default function RatesPage() {
 					<div>
 						<label className="block text-xs text-gray-500 mb-1">Aplicar a</label>
 						<select
-							className="apple-input text-sm h-9"
+							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
 							value={form.scope}
 							onChange={(e) => setForm({ ...form, scope: e.target.value })}
 						>
@@ -317,7 +317,7 @@ export default function RatesPage() {
 					<div>
 						<label className="block text-xs text-gray-500 mb-1">Divisa</label>
 						<select
-							className="apple-input text-sm h-9"
+							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
 							value={form.kind}
 							onChange={(e) => setForm({ ...form, kind: e.target.value as RateKind })}
 						>
@@ -331,15 +331,15 @@ export default function RatesPage() {
 						<input
 							type="number"
 							step="any"
-							className="apple-input text-sm h-9"
+							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
 							value={form.value_effective}
 							onChange={(e) => setForm({ ...form, value_effective: e.target.value })}
 							required
 						/>
 					</div>
 					<div className="flex gap-2">
-						<button type="submit" className="apple-button text-sm py-2 px-3 h-9">Guardar</button>
-						<button type="button" className="apple-button-secondary text-sm py-2 px-3 h-9" onClick={loadRates}>Refrescar</button>
+						<button type="submit" className="apple-button text-sm py-2.5 px-4 h-10 min-w-[80px]">Guardar</button>
+						<button type="button" className="apple-button-secondary text-sm py-2.5 px-4 h-10 min-w-[80px]" onClick={loadRates}>Refrescar</button>
 					</div>
 				</form>
 				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
@@ -364,13 +364,18 @@ export default function RatesPage() {
 						<tbody>
 							{rates
 								.filter(rate => {
-									// Solo mostrar tasas de las últimas 24 horas
-									const rateDate = new Date(rate.valid_from);
+									// Solo mostrar tasas activas (sin valid_to o valid_to en el futuro)
 									const now = new Date();
-									const diffHours = (now.getTime() - rateDate.getTime()) / (1000 * 60 * 60);
-									return diffHours <= 24;
+									const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
+									return !validTo || validTo > now;
 								})
-								.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())
+								.sort((a, b) => {
+									// Ordenar por kind primero, luego por fecha
+									if (a.kind !== b.kind) {
+										return a.kind.localeCompare(b.kind);
+									}
+									return new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime();
+								})
 								.map((r) => (
 								<tr key={r.id} className="border-t border-gray-100">
 									<td className="py-1.5 pr-3 font-medium text-xs">{r.kind}</td>
@@ -391,13 +396,12 @@ export default function RatesPage() {
 						</tbody>
 					</table>
 					{rates.filter(rate => {
-						const rateDate = new Date(rate.valid_from);
 						const now = new Date();
-						const diffHours = (now.getTime() - rateDate.getTime()) / (1000 * 60 * 60);
-						return diffHours <= 24;
+						const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
+						return !validTo || validTo > now;
 					}).length === 0 && (
 						<div className="text-center py-6 text-gray-500 text-xs">
-							No hay tasas recientes
+							No hay tasas activas
 						</div>
 					)}
 				</div>
