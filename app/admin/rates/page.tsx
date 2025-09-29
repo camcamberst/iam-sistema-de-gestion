@@ -39,6 +39,7 @@ export default function RatesPage() {
 	const [error, setError] = useState<string | null>(null);
 	const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
 	const [authLoading, setAuthLoading] = useState(true);
+	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
 	const supabase = createClient(
 		process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -242,6 +243,9 @@ export default function RatesPage() {
 			// Recargar datos automáticamente
 			await loadRates();
 			
+			// Forzar actualización del ActiveRatesPanel
+			setRefreshTrigger(prev => prev + 1);
+			
 			// Mostrar mensaje de éxito temporal
 			setError(null);
 		} catch (err: any) {
@@ -366,7 +370,7 @@ export default function RatesPage() {
 			</div>
 
 			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				<ActiveRatesPanel />
+				<ActiveRatesPanel refreshTrigger={refreshTrigger} />
 				<ReferenceRatesPanel />
 			</div>
 		</div>

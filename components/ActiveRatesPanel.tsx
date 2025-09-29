@@ -14,9 +14,10 @@ interface ActiveRate {
 interface ActiveRatesPanelProps {
   compact?: boolean;
   showTitle?: boolean;
+  refreshTrigger?: number; // Para forzar actualización desde el componente padre
 }
 
-export default function ActiveRatesPanel({ compact = false, showTitle = true }: ActiveRatesPanelProps) {
+export default function ActiveRatesPanel({ compact = false, showTitle = true, refreshTrigger }: ActiveRatesPanelProps) {
   const [rates, setRates] = useState<ActiveRate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -71,6 +72,13 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
   useEffect(() => {
     loadActiveRates();
   }, []);
+
+  // Actualizar cuando cambie el refreshTrigger
+  useEffect(() => {
+    if (refreshTrigger !== undefined) {
+      loadActiveRates();
+    }
+  }, [refreshTrigger]);
 
   const getKindLabel = (kind: string) => {
     switch (kind) {
