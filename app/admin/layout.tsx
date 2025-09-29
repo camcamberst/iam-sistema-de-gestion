@@ -203,11 +203,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </div>
                         </div>
                         <div className="text-xs text-gray-500">ID: {userInfo.id}</div>
+                        <div className="text-xs text-gray-500">Rol: {String(userInfo.role).replace('_',' ')}</div>
                         {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                           <div className="text-xs text-gray-500">Grupos: {userInfo.groups.join(', ')}</div>
                         )}
                         <div className="pt-2">
-                          <button className="px-3 py-2 text-[12px] rounded-md border border-red-200 text-red-600 hover:bg-red-50">Cerrar Sesión</button>
+                          <button
+                            onClick={async () => {
+                              await supabase.auth.signOut();
+                              setUserInfo(null);
+                              location.href = '/';
+                            }}
+                            className="px-3 py-1.5 text-[12px] rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100"
+                          >
+                            Cerrar sesión
+                          </button>
                         </div>
                       </div>
                     ) : (
