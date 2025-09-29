@@ -296,7 +296,7 @@ export default function UsersListPage() {
         {/* Users Table */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200">
           <div className="p-6">
-            <h2 className="text-xl font-semibold text-white mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Usuarios del Sistema ({users.length})
             </h2>
             
@@ -313,34 +313,40 @@ export default function UsersListPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left text-sm">
-                  <thead className="border-b border-aim-border">
+                  <thead className="border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Usuario</th>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Email</th>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Rol</th>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Grupos</th>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Estado</th>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Último Login</th>
-                      <th className="px-6 py-4 text-gray-300 font-medium">Acciones</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Email</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Rol</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Grupos</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Estado</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Último Login</th>
+                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
                     {filteredUsers.map((user, index) => (
-                      <tr key={user.id} className="border-b border-aim-border hover:bg-gray-800/50">
+                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            <div className="w-9 h-9 bg-gray-900 rounded-full flex items-center justify-center text-white font-semibold">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div className="text-white font-medium">{user.name}</div>
-                              <div className="text-gray-400 text-sm">ID: {user.id.slice(0, 8)}...</div>
+                              <div className="text-gray-900 font-medium">{user.name}</div>
+                              <div className="text-gray-500 text-xs">ID: {user.id.slice(0, 8)}...</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-4 text-white">{user.email}</td>
+                        <td className="px-6 py-4 text-gray-800">{user.email}</td>
                         <td className="px-6 py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-medium ${getRoleColor(user.role)}`}>
+                          <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${
+                            user.role === 'super_admin'
+                              ? 'bg-gray-900 text-white'
+                              : user.role === 'admin'
+                                ? 'bg-blue-100 text-blue-800'
+                                : 'bg-green-100 text-green-800'
+                          }`}>
                             {user.role.replace('_', ' ').toUpperCase()}
                           </span>
                         </td>
@@ -348,7 +354,7 @@ export default function UsersListPage() {
                           {user.groups.length > 0 ? (
                             <div className="flex flex-wrap gap-1">
                               {user.groups.map((group) => (
-                                <span key={group.id} className="bg-gray-700 text-gray-200 px-2 py-1 rounded text-xs">
+                                <span key={group.id} className="bg-gray-100 text-gray-800 px-2 py-1 rounded text-xs">
                                   {group.name}
                                 </span>
                               ))}
@@ -358,11 +364,11 @@ export default function UsersListPage() {
                           )}
                         </td>
                         <td className="px-6 py-4">
-                          <span className={getStatusColor(user.is_active)}>
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
-                        <td className="px-6 py-4 text-gray-400">
+                        <td className="px-6 py-4 text-gray-500">
                           {user.last_login ? 
                             new Date(user.last_login).toLocaleDateString() : 
                             'Nunca'
@@ -372,13 +378,13 @@ export default function UsersListPage() {
                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                              className="apple-button-secondary px-3 py-1 text-sm"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
-                              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm transition-colors"
+                              className="px-3 py-1 text-sm text-red-600 border border-red-300 rounded hover:bg-red-50 transition-colors"
                             >
                               Eliminar
                             </button>
