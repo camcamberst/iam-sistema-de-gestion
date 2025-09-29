@@ -117,7 +117,7 @@ export default function AppleSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="apple-input pl-10 pr-3 text-sm py-2.5 leading-normal"
+            className="apple-input pl-11 pr-3 text-sm py-2.5 leading-normal"
           />
         </div>
 
