@@ -3,12 +3,12 @@
 @tailwind utilities;
 
 /* ===========================================
-   🍎 APPLE-STYLE DESIGN SYSTEM
+   🍎 APPLE.COM STYLE DESIGN SYSTEM
    =========================================== */
 
-/* CSS Variables - Apple Color Palette */
+/* CSS Variables - Apple.com Color Palette */
 :root {
-  /* Apple Gray Scale */
+  /* Apple.com Gray Scale */
   --apple-gray-50: #f9fafb;
   --apple-gray-100: #f3f4f6;
   --apple-gray-200: #e5e7eb;
@@ -20,116 +20,91 @@
   --apple-gray-800: #1f2937;
   --apple-gray-900: #111827;
 
-  /* Apple Accent Colors */
-  --apple-blue: #007aff;
-  --apple-blue-light: #5ac8fa;
-  --apple-purple: #af52de;
-  --apple-pink: #ff2d92;
-  --apple-orange: #ff9500;
-  --apple-green: #34c759;
-  --apple-red: #ff3b30;
-  --apple-yellow: #ffcc00;
-
-  /* Apple Glass Effects */
-  --apple-glass-bg: rgba(255, 255, 255, 0.1);
-  --apple-glass-border: rgba(255, 255, 255, 0.2);
-  --apple-glass-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  
-  /* Apple Dark Mode */
-  --apple-dark-bg: #000000;
-  --apple-dark-surface: #1c1c1e;
-  --apple-dark-surface-2: #2c2c2e;
-  --apple-dark-surface-3: #3a3a3c;
-  --apple-dark-text: #ffffff;
-  --apple-dark-text-secondary: #8e8e93;
+  /* Apple.com Accent Colors */
+  --apple-blue: #0071e3;
+  --apple-blue-hover: #0077ed;
+  --apple-gray: #86868b;
+  --apple-black: #1d1d1f;
+  --apple-white: #ffffff;
 }
 
 /* ===========================================
-   🎨 APPLE-STYLE COMPONENTS
+   🎨 APPLE.COM STYLE COMPONENTS
    =========================================== */
 
-/* Glassmorphism Effects */
-.apple-glass {
-  background: var(--apple-glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--apple-glass-border);
-  box-shadow: var(--apple-glass-shadow);
-}
-
-.apple-glass-dark {
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-}
-
-/* Apple Buttons */
+/* Apple.com Buttons */
 .apple-button {
-  @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 ease-out;
-  background: linear-gradient(135deg, var(--apple-blue), var(--apple-blue-light));
+  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 ease-out;
+  background: var(--apple-blue);
   color: white;
-  box-shadow: 0 4px 20px rgba(0, 122, 255, 0.3);
+  border: none;
 }
 
 .apple-button:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 30px rgba(0, 122, 255, 0.4);
+  background: var(--apple-blue-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 113, 227, 0.3);
 }
 
 .apple-button-secondary {
-  @apply px-6 py-3 rounded-xl font-medium transition-all duration-300 ease-out;
-  background: var(--apple-glass-bg);
-  color: var(--apple-dark-text);
-  border: 1px solid var(--apple-glass-border);
+  @apply px-6 py-3 rounded-lg font-medium transition-all duration-200 ease-out;
+  background: transparent;
+  color: var(--apple-blue);
+  border: 1px solid var(--apple-blue);
 }
 
 .apple-button-secondary:hover {
-  background: rgba(255, 255, 255, 0.2);
-  transform: translateY(-1px);
+  background: var(--apple-blue);
+  color: white;
 }
 
-/* Apple Cards */
+/* Apple.com Cards */
 .apple-card {
-  @apply rounded-2xl p-6 transition-all duration-300 ease-out;
-  background: var(--apple-glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--apple-glass-border);
-  box-shadow: var(--apple-glass-shadow);
+  @apply rounded-lg p-6 transition-all duration-200 ease-out;
+  background: white;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .apple-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
 }
 
-/* Apple Inputs */
+/* Apple.com Inputs */
 .apple-input {
-  @apply w-full px-4 py-3 rounded-xl border-0 transition-all duration-300 ease-out;
-  background: var(--apple-glass-bg);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid var(--apple-glass-border);
-  color: var(--apple-dark-text);
+  @apply w-full px-4 py-3 rounded-lg border transition-all duration-200 ease-out;
+  background: white;
+  border-color: #d1d5db;
+  color: var(--apple-black);
 }
 
 .apple-input:focus {
   outline: none;
   border-color: var(--apple-blue);
-  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.2);
-  background: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
 }
 
-/* Apple Sidebar */
-.apple-sidebar {
-  @apply fixed right-0 top-0 h-full w-80 z-50 transition-all duration-300 ease-out;
-  background: var(--apple-glass-bg);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-left: 1px solid var(--apple-glass-border);
-  box-shadow: -8px 0 32px rgba(0, 0, 0, 0.1);
+/* Apple.com Navigation */
+.apple-nav-item {
+  @apply text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200;
+}
+
+.apple-nav-item.active {
+  @apply text-gray-900;
+}
+
+/* Apple.com Dropdown */
+.apple-dropdown {
+  @apply absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50;
+}
+
+.apple-dropdown-item {
+  @apply block px-4 py-3 text-sm transition-colors duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-900;
+}
+
+.apple-dropdown-item.active {
+  @apply bg-gray-50 text-gray-900 font-medium;
 }
 
 /* ===========================================
