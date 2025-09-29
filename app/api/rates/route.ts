@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
         adjustment: adjustment || 0,
         value_effective,
         source: source || 'manual',
-        author_id: author_id || null,
+        author_id: null, // TODO: implementar autenticación real
         period_base: false
       })
       .select()
