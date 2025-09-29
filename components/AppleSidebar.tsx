@@ -52,6 +52,19 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
       ]
     },
     {
+      id: 'calculator',
+      title: 'Gestionar Calculadora',
+      icon: '🧮',
+      subItems: [
+        {
+          id: 'calculator-home',
+          title: 'Panel Calculadora',
+          icon: '🧰',
+          href: '/admin/calculadora'
+        }
+      ]
+    },
+    {
       id: 'groups',
       title: 'Gestión de Grupos',
       icon: '🏢',

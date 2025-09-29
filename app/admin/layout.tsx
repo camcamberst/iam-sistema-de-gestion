@@ -71,6 +71,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       ]
     },
     {
+      id: 'calculator',
+      label: 'Gestionar Calculadora',
+      href: '/admin/calculadora',
+      subItems: [
+        { label: 'Panel Calculadora', href: '/admin/calculadora' }
+      ]
+    },
+    {
       id: 'groups',
       label: 'Gestión de Grupos',
       href: '/admin/groups',
