@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -107,6 +108,23 @@ export default function AdminDashboard() {
             <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.modelo}</div>
           </div>
         </div>
+
+        {/* Panel de Tasas Activas para Super Admin y Admin */}
+        {(user?.role === 'super_admin' || user?.role === 'admin') && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <ActiveRatesPanel compact={true} />
+            <div className="apple-card">
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Calculadora</h3>
+              <p className="text-xs text-gray-500 mb-3">Gestiona las tasas de cambio para la calculadora</p>
+              <Link 
+                href="/admin/rates" 
+                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800"
+              >
+                Ver todas las tasas →
+              </Link>
+            </div>
+          </div>
+        )}
 
         {/* Quick actions según rol */}
         {user?.role === 'super_admin' && (

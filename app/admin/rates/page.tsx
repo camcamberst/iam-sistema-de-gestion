@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
 import { useRouter } from "next/navigation";
 import { canEditUser, canDeleteUser, getAvailableGroups } from "../../../lib/hierarchy";
+import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 
 type RateKind = "USD_COP" | "EUR_USD" | "GBP_USD";
 
@@ -344,6 +345,8 @@ export default function RatesPage() {
 				</form>
 				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
 			</div>
+
+			<ActiveRatesPanel />
 
 			<div className="apple-card">
 				<div className="flex items-center justify-between mb-3">
