@@ -818,10 +818,10 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-5 w-full max-w-md">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-5 w-full max-w-md max-h-[60vh] flex flex-col">
         <h2 className="text-lg font-semibold text-gray-900 mb-4">Editar Usuario</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit} className="space-y-6 flex-1 overflow-y-auto">
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-2">Nombre</label>
             <input
