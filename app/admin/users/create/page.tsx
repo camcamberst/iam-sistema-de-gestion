@@ -149,9 +149,9 @@ export default function CreateUserPage() {
                         style={{
                           display: 'flex',
                           alignItems: 'center',
-                          gap: 12,
+                          gap: 10,
                           width: '100%',
-                          padding: 10,
+                          padding: 8,
                           background: '#ffffff',
                           color: isDisabled ? '#9ca3af' : '#374151',
                           cursor: isDisabled ? 'not-allowed' : 'pointer',
@@ -164,10 +164,10 @@ export default function CreateUserPage() {
                           aria-hidden
                           style={{
                             position: 'relative',
-                            width: 38,
-                            height: 22,
+                            width: 34,
+                            height: 20,
                             borderRadius: 9999,
-                            background: isSelected ? '#0071e3' : '#e5e7eb',
+                            background: isSelected ? '#111827' : '#e5e7eb',
                             transition: 'background 180ms ease',
                             flex: '0 0 auto'
                           }}
@@ -176,9 +176,9 @@ export default function CreateUserPage() {
                             style={{
                               position: 'absolute',
                               top: 2,
-                              left: isSelected ? 18 : 2,
-                              width: 18,
-                              height: 18,
+                              left: isSelected ? 16 : 2,
+                              width: 16,
+                              height: 16,
                               borderRadius: '9999px',
                               background: '#ffffff',
                               boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
