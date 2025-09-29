@@ -583,7 +583,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
             <label className="block text-gray-300 text-sm font-medium mb-2">Rol</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'super_admin' | 'admin' | 'modelo' })}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="modelo">Modelo</option>
@@ -708,7 +708,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
             <label className="block text-gray-300 text-sm font-medium mb-2">Rol</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value })}
+              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'super_admin' | 'admin' | 'modelo' })}
               className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
             >
               <option value="modelo">Modelo</option>
