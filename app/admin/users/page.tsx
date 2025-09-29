@@ -680,7 +680,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
             <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
             <select
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'super_admin' | 'admin' | 'modelo' })}
+              onChange={(e) => handleRoleChange(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             >
               <option value="modelo">Modelo</option>
@@ -797,9 +797,24 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
     group_ids: user.groups.map(g => g.id)
   });
 
+  const [restrictionMessage, setRestrictionMessage] = useState('');
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
+  };
+
+  // Mostrar mensajes de restricción según rol
+  const handleRoleChange = (role: string) => {
+    setFormData(prev => ({ ...prev, role: role as 'super_admin' | 'admin' | 'modelo' }));
+    
+    if (role === 'modelo') {
+      setRestrictionMessage('💡 Los modelos solo pueden estar en un grupo a la vez');
+    } else if (role === 'admin') {
+      setRestrictionMessage('💡 Los administradores deben tener al menos un grupo asignado');
+    } else if (role === 'super_admin') {
+      setRestrictionMessage('💡 Los super administradores tienen acceso a todos los grupos');
+    }
   };
 
   return (
