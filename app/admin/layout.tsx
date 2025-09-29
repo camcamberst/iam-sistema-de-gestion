@@ -1,12 +1,61 @@
 "use client";
 
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { createClient } from "@supabase/supabase-js";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  const [showUserPanel, setShowUserPanel] = useState(false);
+  const [loadingUser, setLoadingUser] = useState(false);
+  const [userInfo, setUserInfo] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    role: 'super_admin' | 'admin' | 'modelo' | string;
+    groups: string[];
+  } | null>(null);
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+  );
+
+  const loadUser = async () => {
+    try {
+      setLoadingUser(true);
+      const { data: auth } = await supabase.auth.getUser();
+      const uid = auth?.user?.id;
+      if (!uid) {
+        setUserInfo(null);
+        return;
+      }
+      const { data: userRow } = await supabase
+        .from('users')
+        .select('id,name,email,role')
+        .eq('id', uid)
+        .single();
+      let groups: string[] = [];
+      if (userRow && userRow.role !== 'super_admin') {
+        const { data: ug } = await supabase
+          .from('user_groups')
+          .select('groups(name)')
+          .eq('user_id', uid);
+        groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
+      }
+      setUserInfo({
+        id: userRow?.id || uid,
+        name: userRow?.name || auth.user?.email?.split('@')[0] || 'Usuario',
+        email: userRow?.email || auth.user?.email || '',
+        role: (userRow?.role as any) || 'modelo',
+        groups,
+      });
+    } finally {
+      setLoadingUser(false);
+    }
+  };
 
   // ===========================================
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
@@ -122,19 +171,50 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </button>
               {/* User Button */}
               <div className="relative">
-                <button className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 p-2 rounded-lg border border-gray-200 hover:bg-gray-50">
-                  <div className="w-6 h-6 bg-gray-900 text-white rounded-full flex items-center justify-center text-xs font-semibold">U</div>
+                <button
+                  onClick={() => {
+                    setShowUserPanel((v) => !v);
+                    if (!userInfo && !loadingUser) loadUser();
+                  }}
+                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 p-2 rounded-lg border border-gray-200 hover:bg-gray-50"
+                >
+                  <div className="w-6 h-6 rounded-full bg-gray-900 text-white flex items-center justify-center">
+                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                      <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" />
+                    </svg>
+                  </div>
                   <span className="hidden sm:block text-sm">Cuenta</span>
                 </button>
-                {/* Dropdown panel (placeholder; wiring to auth pending) */}
-                {/*
-                <div className="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-lg p-4">
-                  <div className="text-sm text-gray-900 font-medium">Nombre Apellido</div>
-                  <div className="text-xs text-gray-500">correo@dominio.com</div>
-                  <div className="text-xs text-gray-500 mt-1">ID: xxxxxxxx-xxxx</div>
-                  <div className="text-xs text-gray-500 mt-1">Grupos: Cabecera, Diamante</div>
-                </div>
-                */}
+                {showUserPanel && (
+                  <div className="absolute right-0 mt-2 w-80 bg-white border border-gray-200 rounded-xl shadow-lg p-4 z-50">
+                    {loadingUser ? (
+                      <div className="text-sm text-gray-500">Cargando…</div>
+                    ) : userInfo ? (
+                      <div className="space-y-2">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-8 h-8 rounded-full bg-gray-900 text-white flex items-center justify-center">
+                            <svg className="w-5 h-5" viewBox="0 0 20 20" fill="currentColor">
+                              <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" />
+                            </svg>
+                          </div>
+                          <div>
+                            <div className="text-sm font-medium text-gray-900">{userInfo.name}</div>
+                            <div className="text-xs text-gray-500">{userInfo.email}</div>
+                          </div>
+                        </div>
+                        <div className="text-xs text-gray-500">ID: {userInfo.id}</div>
+                        {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
+                          <div className="text-xs text-gray-500">Grupos: {userInfo.groups.join(', ')}</div>
+                        )}
+                        <div className="pt-2">
+                          <button className="px-3 py-2 text-[12px] rounded-md border border-red-200 text-red-600 hover:bg-red-50">Cerrar Sesión</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-sm text-gray-500">No autenticado</div>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
