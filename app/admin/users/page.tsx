@@ -680,7 +680,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
             <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
             <select
               value={formData.role}
-              onChange={(e) => handleRoleChange(e.target.value)}
+              onChange={(e) => handleFieldChange('role', e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
             >
               <option value="modelo">Modelo</option>
