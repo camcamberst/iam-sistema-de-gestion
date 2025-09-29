@@ -37,11 +37,23 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
       const now = new Date();
       const calculatorRates = ['USD_COP', 'EUR_USD', 'GBP_USD'];
       
+      // Filtrar solo tasas activas y obtener la más reciente de cada tipo
       const activeRates = data.data
         .filter((rate: any) => {
           const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
           return (!validTo || validTo > now) && calculatorRates.includes(rate.kind);
         })
+        .sort((a: any, b: any) => {
+          // Ordenar por fecha de creación (más reciente primero)
+          return new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime();
+        })
+        .reduce((acc: any[], rate: any) => {
+          // Solo mantener la primera (más reciente) de cada tipo
+          if (!acc.find(r => r.kind === rate.kind)) {
+            acc.push(rate);
+          }
+          return acc;
+        }, [])
         .sort((a: any, b: any) => {
           // Ordenar por prioridad: USD_COP, EUR_USD, GBP_USD
           const order = { 'USD_COP': 1, 'EUR_USD': 2, 'GBP_USD': 3 };

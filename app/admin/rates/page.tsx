@@ -235,8 +235,15 @@ export default function RatesPage() {
 			});
 			const data = await res.json();
 			if (!data.success) throw new Error(data.error || "Error al crear tasa");
+			
+			// Limpiar formulario
 			setForm({ ...form, value_effective: "" });
+			
+			// Recargar datos automáticamente
 			await loadRates();
+			
+			// Mostrar mensaje de éxito temporal
+			setError(null);
 		} catch (err: any) {
 			setError(err.message || "Error inesperado");
 		} finally {
