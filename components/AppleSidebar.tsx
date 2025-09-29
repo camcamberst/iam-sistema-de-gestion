@@ -61,6 +61,12 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
           title: 'Panel Calculadora',
           icon: '🧰',
           href: '/admin/calculadora'
+        },
+        {
+          id: 'define-rates',
+          title: 'Definir RATES',
+          icon: '💱',
+          href: '/admin/rates'
         }
       ]
     },
