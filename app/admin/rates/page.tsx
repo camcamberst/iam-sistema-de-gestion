@@ -153,7 +153,7 @@ export default function RatesPage() {
 			// ===========================================
 			// 🏗️ APLICAR LÍMITES DE JERARQUÍA
 			// ===========================================
-			const scopes = [];
+			const scopes: Array<{value: string, label: string}> = [];
 			
 			if (userInfo.role === 'super_admin') {
 				// Super Admin: puede gestionar RATES globales y por grupo
