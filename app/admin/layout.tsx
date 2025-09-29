@@ -60,53 +60,62 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // ===========================================
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
   // ===========================================
-  const menuItems = [
-    {
-      id: 'users',
-      label: 'Gestión de Usuarios',
-      href: '/admin/users',
-      subItems: [
-        { label: 'Consultar Usuarios', href: '/admin/users' },
-        { label: 'Crear Usuario', href: '/admin/users/create' }
-      ]
-    },
-    {
-      id: 'calculator',
-      label: 'Gestionar Calculadora',
-      href: '/admin/calculadora',
-      subItems: [
-        { label: 'Panel Calculadora', href: '/admin/calculadora' },
-        { label: 'Definir RATES', href: '/admin/rates' }
-      ]
-    },
-    {
-      id: 'groups',
-      label: 'Gestión de Grupos',
-      href: '/admin/groups',
-      subItems: [
-        { label: 'Consultar Grupos', href: '/admin/groups' },
-        { label: 'Crear Grupo', href: '/admin/groups/create' }
-      ]
-    },
-    {
-      id: 'reports',
-      label: 'Reportes',
-      href: '/admin/reports',
-      subItems: [
-        { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
-        { label: 'Estadísticas', href: '/admin/reports/stats' }
-      ]
-    },
-    {
-      id: 'settings',
-      label: 'Configuración',
-      href: '/admin/settings',
-      subItems: [
-        { label: 'Configuración General', href: '/admin/settings/general' },
-        { label: 'Permisos', href: '/admin/settings/permissions' }
-      ]
-    }
-  ];
+  const getMenuItems = () => {
+    const baseItems = [
+      {
+        id: 'users',
+        label: 'Gestión de Usuarios',
+        href: '/admin/users',
+        subItems: [
+          { label: 'Consultar Usuarios', href: '/admin/users' },
+          { label: 'Crear Usuario', href: '/admin/users/create' }
+        ]
+      },
+      {
+        id: 'calculator',
+        label: 'Gestionar Calculadora',
+        href: '/admin/calculadora',
+        subItems: [
+          { label: 'Panel Calculadora', href: '/admin/calculadora' },
+          // Solo mostrar "Definir RATES" para admin y super_admin
+          ...(userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin') 
+            ? [{ label: 'Definir RATES', href: '/admin/rates' }] 
+            : [])
+        ]
+      },
+      {
+        id: 'groups',
+        label: 'Gestión de Grupos',
+        href: '/admin/groups',
+        subItems: [
+          { label: 'Consultar Grupos', href: '/admin/groups' },
+          { label: 'Crear Grupo', href: '/admin/groups/create' }
+        ]
+      },
+      {
+        id: 'reports',
+        label: 'Reportes',
+        href: '/admin/reports',
+        subItems: [
+          { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
+          { label: 'Estadísticas', href: '/admin/reports/stats' }
+        ]
+      },
+      {
+        id: 'settings',
+        label: 'Configuración',
+        href: '/admin/settings',
+        subItems: [
+          { label: 'Configuración General', href: '/admin/settings/general' },
+          { label: 'Permisos', href: '/admin/settings/permissions' }
+        ]
+      }
+    ];
+
+    return baseItems;
+  };
+
+  const menuItems = getMenuItems();
 
   const isActive = (href: string) => pathname === href;
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);

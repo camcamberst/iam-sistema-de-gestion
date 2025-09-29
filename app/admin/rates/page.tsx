@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { createClient } from "@supabase/supabase-js";
+import { useRouter } from "next/navigation";
 
 type RateKind = "USD_COP" | "EUR_USD" | "GBP_USD";
 
@@ -19,10 +21,88 @@ interface RateItem {
 	created_at: string;
 }
 
+interface UserInfo {
+	id: string;
+	name: string;
+	email: string;
+	role: 'super_admin' | 'admin' | 'modelo';
+	groups: string[];
+}
+
 export default function RatesPage() {
+	const router = useRouter();
 	const [rates, setRates] = useState<RateItem[]>([]);
 	const [loading, setLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+	const [authLoading, setAuthLoading] = useState(true);
+
+	const supabase = createClient(
+		process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+	);
+
+	// ===========================================
+	// 🔐 VALIDACIÓN DE AUTENTICACIÓN Y ROLES
+	// ===========================================
+	useEffect(() => {
+		async function checkAuth() {
+			try {
+				setAuthLoading(true);
+				
+				// Verificar autenticación
+				const { data: auth } = await supabase.auth.getUser();
+				if (!auth?.user?.id) {
+					router.push('/');
+					return;
+				}
+
+				// Obtener información del usuario
+				const { data: userRow } = await supabase
+					.from('users')
+					.select('id,name,email,role')
+					.eq('id', auth.user.id)
+					.single();
+
+				if (!userRow) {
+					router.push('/');
+					return;
+				}
+
+				// Verificar que sea admin o super_admin
+				if (userRow.role !== 'super_admin' && userRow.role !== 'admin') {
+					router.push('/admin/dashboard');
+					return;
+				}
+
+				// Obtener grupos si es admin
+				let groups: string[] = [];
+				if (userRow.role === 'admin') {
+					const { data: ug } = await supabase
+						.from('user_groups')
+						.select('groups(name)')
+						.eq('user_id', auth.user.id);
+					groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
+				}
+
+				setUserInfo({
+					id: userRow.id,
+					name: userRow.name,
+					email: userRow.email,
+					role: userRow.role as 'super_admin' | 'admin' | 'modelo',
+					groups
+				});
+
+			} catch (err) {
+				console.error('Error de autenticación:', err);
+				router.push('/');
+			} finally {
+				setAuthLoading(false);
+			}
+		}
+
+		checkAuth();
+	}, [router, supabase]);
 
 	const [form, setForm] = useState({
 		scope: "global",
@@ -32,6 +112,8 @@ export default function RatesPage() {
 	});
 
 	async function loadRates() {
+		if (!userInfo) return; // Solo cargar si el usuario está autenticado
+		
 		try {
 			setLoading(true);
 			setError(null);
@@ -47,8 +129,10 @@ export default function RatesPage() {
 	}
 
 	useEffect(() => {
-		loadRates();
-	}, []);
+		if (userInfo) {
+			loadRates();
+		}
+	}, [userInfo]);
 
 	async function onCreate(e: React.FormEvent) {
 		e.preventDefault();
@@ -77,9 +161,52 @@ export default function RatesPage() {
 		}
 	}
 
+	// ===========================================
+	// 🚫 PANTALLAS DE ESTADO
+	// ===========================================
+	if (authLoading) {
+		return (
+			<div className="p-6 space-y-6">
+				<div className="apple-card text-center py-12">
+					<div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+					<p className="text-gray-600">Verificando permisos...</p>
+				</div>
+			</div>
+		);
+	}
+
+	if (!userInfo) {
+		return (
+			<div className="p-6 space-y-6">
+				<div className="apple-card text-center py-12">
+					<div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+						<span className="text-red-600 text-2xl">🚫</span>
+					</div>
+					<h2 className="text-xl font-semibold text-gray-900 mb-2">Acceso Denegado</h2>
+					<p className="text-gray-600 mb-4">
+						No tienes permisos para acceder a esta función.
+					</p>
+					<button 
+						onClick={() => router.push('/admin/dashboard')}
+						className="apple-button"
+					>
+						Volver al Dashboard
+					</button>
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="p-6 space-y-6">
-			<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
+			<div className="flex items-center justify-between">
+				<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
+				<div className="text-sm text-gray-500">
+					Acceso: <span className="font-medium text-blue-600">
+						{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+					</span>
+				</div>
+			</div>
 
 			<div className="apple-card">
 				<h2 className="text-lg font-medium mb-4">Crear override manual</h2>
