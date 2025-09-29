@@ -301,11 +301,11 @@ export default function RatesPage() {
 
 			<div className="apple-card">
 				<h2 className="text-base font-medium mb-3">Establecer rates manual</h2>
-				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
+				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 					<div>
-						<label className="block text-xs text-gray-500 mb-1">Aplicar a</label>
+						<label className="block text-xs text-gray-500 mb-2">Aplicar a</label>
 						<select
-							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
+							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
 							value={form.scope}
 							onChange={(e) => setForm({ ...form, scope: e.target.value })}
 						>
@@ -317,31 +317,42 @@ export default function RatesPage() {
 						</select>
 					</div>
 					<div>
-						<label className="block text-xs text-gray-500 mb-1">Divisa</label>
+						<label className="block text-xs text-gray-500 mb-2">Divisa</label>
 						<select
-							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
+							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
 							value={form.kind}
 							onChange={(e) => setForm({ ...form, kind: e.target.value as RateKind })}
 						>
-							<option value="USD_COP">USD→COP</option>
-							<option value="EUR_USD">EUR→USD</option>
-							<option value="GBP_USD">GBP→USD</option>
+							<option value="USD_COP">USD → COP</option>
+							<option value="EUR_USD">EUR → USD</option>
+							<option value="GBP_USD">GBP → USD</option>
 						</select>
 					</div>
 					<div>
-						<label className="block text-xs text-gray-500 mb-1">Valor</label>
+						<label className="block text-xs text-gray-500 mb-2">Valor</label>
 						<input
 							type="number"
 							step="any"
-							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
+							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
 							value={form.value_effective}
 							onChange={(e) => setForm({ ...form, value_effective: e.target.value })}
 							required
 						/>
 					</div>
-					<div className="flex gap-2">
-						<button type="submit" className="apple-button text-sm py-2.5 px-4 h-10 min-w-[80px]">Guardar</button>
-						<button type="button" className="apple-button-secondary text-sm py-2.5 px-4 h-10 min-w-[80px]" onClick={loadRates}>Refrescar</button>
+					<div className="flex gap-3">
+						<button 
+							type="submit" 
+							className="flex-1 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+						>
+							Guardar
+						</button>
+						<button 
+							type="button" 
+							className="flex-1 px-6 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
+							onClick={loadRates}
+						>
+							Refrescar
+						</button>
 					</div>
 				</form>
 				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
