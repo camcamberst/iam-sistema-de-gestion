@@ -45,6 +45,21 @@ export default function AppleSearchBar({
     return () => clearTimeout(t);
   }, [query, selectedFilters]);
 
+  // Atajos: Enter (buscar), Esc (cerrar panel)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSearch();
+      }
+      if (e.key === 'Escape') {
+        setIsExpanded(false);
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [query, selectedFilters, isExpanded]);
+
   const handleFilterChange = (filterId: string, value: string) => {
     setSelectedFilters(prev => ({
       ...prev,
