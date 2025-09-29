@@ -259,20 +259,18 @@ export default function UsersListPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{
-      background: 'radial-gradient(1200px 800px at 10% -10%, rgba(255,255,255,0.08), transparent), linear-gradient(180deg, rgb(16 18 27), rgb(16 18 27))'
-    }}>
-      <div className="p-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-8">
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">Gestión de Usuarios</h1>
-            <p className="text-gray-400">Administra usuarios del sistema</p>
+            <h1 className="text-3xl font-semibold text-gray-900 mb-1">Gestión de Usuarios</h1>
+            <p className="text-gray-500">Administra usuarios del sistema</p>
           </div>
-          
+
           <button
             onClick={() => setShowCreateModal(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors flex items-center space-x-2"
+            className="apple-button shadow-sm hover:shadow-md transition-all duration-200 flex items-center space-x-2"
           >
             <span>+</span>
             <span>Nuevo Usuario</span>
@@ -290,13 +288,13 @@ export default function UsersListPage() {
         </div>
 
         {error && (
-          <div className="bg-red-900 border border-red-600 text-red-100 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
             {error}
           </div>
         )}
 
         {/* Users Table */}
-        <div className="bg-aim-card border border-aim-border rounded-xl shadow-lg backdrop-blur-glass">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200">
           <div className="p-6">
             <h2 className="text-xl font-semibold text-white mb-4">
               Usuarios del Sistema ({users.length})
