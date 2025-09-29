@@ -298,12 +298,12 @@ export default function RatesPage() {
 			</div>
 
 			<div className="apple-card">
-				<h2 className="text-lg font-medium mb-4">Crear override manual</h2>
-				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+				<h2 className="text-base font-medium mb-3">Establecer rates manual</h2>
+				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-3 items-end">
 					<div>
-						<label className="block text-xs text-gray-500 mb-1">Scope</label>
+						<label className="block text-xs text-gray-500 mb-1">Aplicar a</label>
 						<select
-							className="apple-input"
+							className="apple-input text-sm h-9"
 							value={form.scope}
 							onChange={(e) => setForm({ ...form, scope: e.target.value })}
 						>
@@ -315,9 +315,9 @@ export default function RatesPage() {
 						</select>
 					</div>
 					<div>
-						<label className="block text-xs text-gray-500 mb-1">Kind</label>
+						<label className="block text-xs text-gray-500 mb-1">Divisa</label>
 						<select
-							className="apple-input"
+							className="apple-input text-sm h-9"
 							value={form.kind}
 							onChange={(e) => setForm({ ...form, kind: e.target.value as RateKind })}
 						>
@@ -327,52 +327,79 @@ export default function RatesPage() {
 						</select>
 					</div>
 					<div>
-						<label className="block text-xs text-gray-500 mb-1">Valor efectivo</label>
+						<label className="block text-xs text-gray-500 mb-1">Valor</label>
 						<input
 							type="number"
 							step="any"
-							className="apple-input"
+							className="apple-input text-sm h-9"
 							value={form.value_effective}
 							onChange={(e) => setForm({ ...form, value_effective: e.target.value })}
 							required
 						/>
 					</div>
 					<div className="flex gap-2">
-						<button type="submit" className="apple-button">Guardar</button>
-						<button type="button" className="apple-button-secondary" onClick={loadRates}>Refrescar</button>
+						<button type="submit" className="apple-button text-sm py-2 px-3 h-9">Guardar</button>
+						<button type="button" className="apple-button-secondary text-sm py-2 px-3 h-9" onClick={loadRates}>Refrescar</button>
 					</div>
 				</form>
-				{error && <p className="text-red-600 text-sm mt-3">{error}</p>}
+				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
 			</div>
 
 			<div className="apple-card">
 				<div className="flex items-center justify-between mb-3">
-					<h2 className="text-lg font-medium">Tasas vigentes (mock)</h2>
-					{loading && <span className="text-sm text-gray-500">Cargando…</span>}
+					<h2 className="text-base font-medium">Tasas vigentes</h2>
+					{loading && <span className="text-xs text-gray-500">Cargando…</span>}
 				</div>
 				<div className="overflow-x-auto apple-scroll">
-					<table className="min-w-full text-sm">
+					<table className="min-w-full text-xs">
 						<thead className="text-left text-gray-500">
 							<tr>
-								<th className="py-2 pr-4">Kind</th>
-								<th className="py-2 pr-4">Scope</th>
-								<th className="py-2 pr-4">Valor efectivo</th>
-								<th className="py-2 pr-4">Fuente</th>
-								<th className="py-2 pr-4">Desde</th>
+								<th className="py-1.5 pr-3 text-xs">Divisa</th>
+								<th className="py-1.5 pr-3 text-xs">Aplicar a</th>
+								<th className="py-1.5 pr-3 text-xs">Valor</th>
+								<th className="py-1.5 pr-3 text-xs">Fuente</th>
+								<th className="py-1.5 pr-3 text-xs">Actualizado</th>
 							</tr>
 						</thead>
 						<tbody>
-							{rates.map((r) => (
-								<tr key={r.id} className="border-t border-gray-200">
-									<td className="py-2 pr-4 font-medium">{r.kind}</td>
-									<td className="py-2 pr-4">{r.scope}</td>
-									<td className="py-2 pr-4">{r.value_effective}</td>
-									<td className="py-2 pr-4">{r.source}</td>
-									<td className="py-2 pr-4">{new Date(r.valid_from).toLocaleString()}</td>
+							{rates
+								.filter(rate => {
+									// Solo mostrar tasas de las últimas 24 horas
+									const rateDate = new Date(rate.valid_from);
+									const now = new Date();
+									const diffHours = (now.getTime() - rateDate.getTime()) / (1000 * 60 * 60);
+									return diffHours <= 24;
+								})
+								.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())
+								.map((r) => (
+								<tr key={r.id} className="border-t border-gray-100">
+									<td className="py-1.5 pr-3 font-medium text-xs">{r.kind}</td>
+									<td className="py-1.5 pr-3 text-xs">{r.scope}</td>
+									<td className="py-1.5 pr-3 text-xs font-medium">{r.value_effective}</td>
+									<td className="py-1.5 pr-3 text-xs">{r.source}</td>
+									<td className="py-1.5 pr-3 text-xs text-gray-500">
+										{new Date(r.valid_from).toLocaleString('es-ES', {
+											day: '2-digit',
+											month: '2-digit',
+											year: 'numeric',
+											hour: '2-digit',
+											minute: '2-digit'
+										})}
+									</td>
 								</tr>
 							))}
 						</tbody>
 					</table>
+					{rates.filter(rate => {
+						const rateDate = new Date(rate.valid_from);
+						const now = new Date();
+						const diffHours = (now.getTime() - rateDate.getTime()) / (1000 * 60 * 60);
+						return diffHours <= 24;
+					}).length === 0 && (
+						<div className="text-center py-6 text-gray-500 text-xs">
+							No hay tasas recientes
+						</div>
+					)}
 				</div>
 			</div>
 		</div>
