@@ -35,7 +35,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const selected = options.find(o => o.value === value);
 
   return (
-    <div className={`min-w-0 ${className}`} ref={ref}>
+    <div className={`relative min-w-0 ${className}`} ref={ref}>
       {label && <div className="text-gray-500 text-xs font-medium mb-1">{label}</div>}
       <button
         type="button"
@@ -46,7 +46,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         <svg className="w-4 h-4 text-gray-400 ml-2 flex-none" viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.855a.75.75 0 111.08 1.04l-4.24 4.41a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"/></svg>
       </button>
       {open && (
-        <div className="apple-scroll absolute z-50 mt-2 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-56 overflow-auto">
+        <div className="apple-scroll absolute z-50 mt-2 left-0 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-56 overflow-auto">
           {options.map(opt => (
             <button
               key={opt.value}
