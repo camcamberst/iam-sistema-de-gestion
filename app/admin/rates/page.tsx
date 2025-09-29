@@ -305,7 +305,7 @@ export default function RatesPage() {
 					<div>
 						<label className="block text-xs text-gray-500 mb-1">Aplicar a</label>
 						<select
-							className="apple-input text-sm py-2 px-3 h-9 leading-tight"
+							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
 							value={form.scope}
 							onChange={(e) => setForm({ ...form, scope: e.target.value })}
 						>
@@ -319,7 +319,7 @@ export default function RatesPage() {
 					<div>
 						<label className="block text-xs text-gray-500 mb-1">Divisa</label>
 						<select
-							className="apple-input text-sm py-2 px-3 h-9 leading-tight"
+							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
 							value={form.kind}
 							onChange={(e) => setForm({ ...form, kind: e.target.value as RateKind })}
 						>
@@ -333,15 +333,15 @@ export default function RatesPage() {
 						<input
 							type="number"
 							step="any"
-							className="apple-input text-sm py-2 px-3 h-9 leading-tight"
+							className="apple-input text-sm py-2.5 px-3 h-10 leading-normal"
 							value={form.value_effective}
 							onChange={(e) => setForm({ ...form, value_effective: e.target.value })}
 							required
 						/>
 					</div>
 					<div className="flex gap-2">
-						<button type="submit" className="apple-button text-sm py-2 px-3 h-9 min-w-[70px]">Guardar</button>
-						<button type="button" className="apple-button-secondary text-sm py-2 px-3 h-9 min-w-[70px]" onClick={loadRates}>Refrescar</button>
+						<button type="submit" className="apple-button text-sm py-2.5 px-4 h-10 min-w-[80px]">Guardar</button>
+						<button type="button" className="apple-button-secondary text-sm py-2.5 px-4 h-10 min-w-[80px]" onClick={loadRates}>Refrescar</button>
 					</div>
 				</form>
 				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
