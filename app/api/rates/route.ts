@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST /api/rates - Crear nueva tasa (override manual)
+// POST /api/rates - Crear nueva tasa (override manual) con Supabase
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -75,23 +75,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear nueva tasa
-    const newRate = {
-      id: (mockRates.length + 1).toString(),
-      scope,
-      kind,
-      value_raw: value_raw || value_effective,
-      adjustment: adjustment || 0,
-      value_effective,
-      source: source || 'manual',
-      author_id: author_id || 'admin',
-      valid_from: new Date(),
-      valid_to: null,
-      period_base: false,
-      created_at: new Date()
-    };
+    // Insertar en Supabase
+    const { data: newRate, error } = await supabase
+      .from('rates')
+      .insert({
+        scope,
+        kind,
+        value_raw: value_raw || value_effective,
+        adjustment: adjustment || 0,
+        value_effective,
+        source: source || 'manual',
+        author_id: author_id || null,
+        period_base: false
+      })
+      .select()
+      .single();
 
-    mockRates.push(newRate);
+    if (error) {
+      throw new Error(`Error de Supabase: ${error.message}`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -99,6 +101,7 @@ export async function POST(request: NextRequest) {
       message: 'Tasa creada exitosamente'
     });
   } catch (error: any) {
+    console.error('Error en POST /api/rates:', error);
     return NextResponse.json(
       { success: false, error: error?.message ?? 'Error al crear tasa' },
       { status: 500 }
