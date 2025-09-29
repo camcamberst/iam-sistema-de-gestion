@@ -77,10 +77,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         href: '/admin/calculadora',
         subItems: [
           { label: 'Panel Calculadora', href: '/admin/calculadora' },
-          // Solo mostrar "Definir RATES" para admin y super_admin
-          ...(userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin') 
-            ? [{ label: 'Definir RATES', href: '/admin/rates' }] 
-            : [])
+          { label: 'Definir RATES', href: '/admin/rates' }
         ]
       },
       {
