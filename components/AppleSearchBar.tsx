@@ -71,7 +71,7 @@ export default function AppleSearchBar({
       <select
         value={selectedFilters[filter.id] || ''}
         onChange={(e) => handleFilterChange(filter.id, e.target.value)}
-        className="apple-input text-sm h-9 px-3 pr-8 leading-tight w-full"
+        className="apple-input text-sm h-10 px-3 pr-8 leading-normal w-full"
       >
         <option value="">Todos</option>
         {filter.options.map((option) => (
@@ -102,7 +102,7 @@ export default function AppleSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="apple-input pl-9 pr-3 text-sm h-9 leading-tight"
+            className="apple-input pl-10 pr-3 text-sm h-10 leading-normal"
           />
         </div>
 
@@ -153,12 +153,6 @@ export default function AppleSearchBar({
               className="apple-button-secondary px-2.5 py-1.5 text-xs rounded-md"
             >
               Cerrar
-            </button>
-            <button
-              onClick={handleSearch}
-              className="apple-button px-3 py-1.5 text-xs rounded-md"
-            >
-              Aplicar Filtros
             </button>
           </div>
         </div>
