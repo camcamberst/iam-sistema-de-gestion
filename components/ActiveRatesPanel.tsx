@@ -33,18 +33,19 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
         throw new Error(data.error || "Error al cargar tasas");
       }
 
-      // Filtrar solo tasas activas y agrupar por tipo
+      // Filtrar solo tasas activas de las 3 divisas específicas para la calculadora
       const now = new Date();
+      const calculatorRates = ['USD_COP', 'EUR_USD', 'GBP_USD'];
+      
       const activeRates = data.data
         .filter((rate: any) => {
           const validTo = rate.valid_to ? new Date(rate.valid_to) : null;
-          return !validTo || validTo > now;
+          return (!validTo || validTo > now) && calculatorRates.includes(rate.kind);
         })
         .sort((a: any, b: any) => {
-          if (a.kind !== b.kind) {
-            return a.kind.localeCompare(b.kind);
-          }
-          return new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime();
+          // Ordenar por prioridad: USD_COP, EUR_USD, GBP_USD
+          const order = { 'USD_COP': 1, 'EUR_USD': 2, 'GBP_USD': 3 };
+          return (order[a.kind as keyof typeof order] || 4) - (order[b.kind as keyof typeof order] || 4);
         });
 
       setRates(activeRates);
@@ -89,7 +90,10 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
       <div className="apple-card">
         {showTitle && (
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-medium text-gray-900">Tasas Activas</h3>
+            <div>
+              <h3 className="text-sm font-medium text-gray-900">Tasas de Calculadora</h3>
+              <p className="text-xs text-gray-500">Solo manuales</p>
+            </div>
             {loading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
           </div>
         )}
@@ -99,9 +103,9 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
         ) : (
           <div className="space-y-2">
             {rates.length === 0 ? (
-              <p className="text-gray-500 text-xs text-center py-2">No hay tasas activas</p>
+              <p className="text-gray-500 text-xs text-center py-2">No hay tasas de calculadora</p>
             ) : (
-              rates.slice(0, 3).map((rate) => (
+              rates.map((rate) => (
                 <div key={rate.id} className="flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-md">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs">{getSourceIcon(rate.source)}</span>
@@ -114,9 +118,6 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
                 </div>
               ))
             )}
-            {rates.length > 3 && (
-              <p className="text-xs text-gray-500 text-center">+{rates.length - 3} más</p>
-            )}
           </div>
         )}
       </div>
@@ -125,8 +126,11 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
 
   return (
     <div className="apple-card">
-      <div className="flex items-center justify-between mb-4">
-        <h2 className="text-base font-medium">Tasas Activas para Calculadora</h2>
+      <div className="flex items-center justify-between mb-3">
+        <div>
+          <h2 className="text-sm font-medium">Tasas de Calculadora</h2>
+          <p className="text-xs text-gray-500">Solo tasas manuales</p>
+        </div>
         <button 
           onClick={loadActiveRates}
           className="text-xs text-blue-600 hover:text-blue-800"
@@ -137,8 +141,8 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
       </div>
 
       {error ? (
-        <div className="text-center py-6">
-          <p className="text-red-600 text-sm">{error}</p>
+        <div className="text-center py-4">
+          <p className="text-red-600 text-xs">{error}</p>
           <button 
             onClick={loadActiveRates}
             className="mt-2 text-xs text-blue-600 hover:text-blue-800"
@@ -147,27 +151,27 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true }: 
           </button>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="space-y-2">
           {rates.length === 0 ? (
-            <div className="text-center py-6">
-              <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
-                <span className="text-gray-400 text-xl">📊</span>
+            <div className="text-center py-4">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
+                <span className="text-gray-400 text-sm">📊</span>
               </div>
-              <p className="text-gray-500 text-sm">No hay tasas activas</p>
-              <p className="text-gray-400 text-xs mt-1">Las tasas se cargarán automáticamente</p>
+              <p className="text-gray-500 text-xs">No hay tasas de calculadora</p>
+              <p className="text-gray-400 text-xs mt-1">Configura las tasas manualmente</p>
             </div>
           ) : (
             rates.map((rate) => (
-              <div key={rate.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="flex items-center space-x-3">
-                  <span className="text-lg">{getSourceIcon(rate.source)}</span>
+              <div key={rate.id} className="flex items-center justify-between p-2.5 bg-gray-50 rounded-md border border-gray-200">
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm">{getSourceIcon(rate.source)}</span>
                   <div>
-                    <div className="text-sm font-medium text-gray-900">{getKindLabel(rate.kind)}</div>
+                    <div className="text-xs font-medium text-gray-900">{getKindLabel(rate.kind)}</div>
                     <div className="text-xs text-gray-500">{getScopeLabel(rate.scope)}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900">{rate.value_effective}</div>
+                  <div className="text-sm font-bold text-gray-900">{rate.value_effective}</div>
                   <div className="text-xs text-gray-500">
                     {new Date(rate.valid_from).toLocaleDateString('es-ES', {
                       day: '2-digit',
