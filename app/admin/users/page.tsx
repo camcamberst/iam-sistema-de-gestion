@@ -817,29 +817,29 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-aim-card border border-aim-border rounded-xl p-6 w-full max-w-md">
-        <h2 className="text-xl font-semibold text-white mb-4">Editar Usuario</h2>
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-lg">
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">Editar Usuario</h2>
+
+        <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Nombre</label>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Nombre</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-gray-300 text-sm font-medium mb-2">Email</label>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Email</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -858,65 +858,67 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_active}
-                onChange={(e) => setFormData({ ...formData, is_active: e.target.checked })}
-                className="rounded"
+            <label className="block text-gray-700 text-sm font-medium mb-2">Usuario Activo</label>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+              className="relative w-10 h-6 rounded-full transition-colors"
+              style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
+              aria-pressed={formData.is_active}
+            >
+              <span
+                className="absolute top-[3px] rounded-full bg-white shadow"
+                style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
               />
-              <span className="text-white">Usuario Activo</span>
-            </label>
+            </button>
           </div>
 
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-3">Grupos</label>
-            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-4 bg-gray-50">
+            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
               {groups.map((group) => {
                 const isChecked = formData.group_ids.includes(group.id);
                 const isDisabled = formData.role === 'modelo' && 
                                  formData.group_ids.length > 0 && 
                                  !isChecked;
-                
+
                 return (
-                  <label 
+                  <div 
                     key={group.id} 
-                    className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 ${
+                    className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 ${
                       isDisabled 
                         ? 'opacity-50 bg-gray-100 cursor-not-allowed' 
-                        : 'hover:bg-gray-100 cursor-pointer'
+                        : 'hover:bg-gray-100'
                     }`}
                   >
-                    <input
-                      type="checkbox"
-                      checked={isChecked}
-                      disabled={isDisabled}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData({
-                            ...formData,
-                            group_ids: [...formData.group_ids, group.id]
-                          });
-                        } else {
-                          setFormData({
-                            ...formData,
-                            group_ids: formData.group_ids.filter(id => id !== group.id)
-                          });
-                        }
-                      }}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
-                    />
-                    <span className={`text-sm font-medium ${
-                      isDisabled 
-                        ? 'text-gray-400' 
-                        : 'text-gray-700'
+                    <span className={`text-[13px] font-medium ${
+                      isDisabled ? 'text-gray-400' : 'text-gray-700'
                     }`}>
                       {group.name}
-                      {isDisabled && (
-                        <span className="text-xs text-gray-400 ml-2">(deshabilitado)</span>
-                      )}
                     </span>
-                  </label>
+                    <button
+                      type="button"
+                      disabled={isDisabled}
+                      onClick={() => {
+                        if (!isChecked) {
+                          if (formData.role === 'modelo') {
+                            setFormData({ ...formData, group_ids: [group.id] });
+                          } else {
+                            setFormData({ ...formData, group_ids: [...formData.group_ids, group.id] });
+                          }
+                        } else {
+                          setFormData({ ...formData, group_ids: formData.group_ids.filter(id => id !== group.id) });
+                        }
+                      }}
+                      className="relative w-9 h-5 rounded-full transition-colors duration-200"
+                      style={{ background: isChecked ? '#111827' : '#e5e7eb' }}
+                    >
+                      <span
+                        className="absolute top-[2px] rounded-full bg-white shadow"
+                        style={{ left: isChecked ? 18 : 2, width: 16, height: 16 }}
+                      />
+                    </button>
+                  </div>
                 );
               })}
             </div>
@@ -927,17 +929,17 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
             )}
           </div>
 
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-3 pt-6">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-600 hover:bg-gray-700 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-3 px-4 rounded-lg transition-colors"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg transition-colors"
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg transition-colors"
             >
               Actualizar Usuario
             </button>
