@@ -107,10 +107,10 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
           href: '/admin/reports/groups'
         },
         {
-          id: 'audit-reports',
-          title: 'Auditoría del Sistema',
-          icon: '🔒',
-          href: '/admin/audit'
+          id: 'performance-reports',
+          title: 'Rendimiento del Sistema',
+          icon: '⚡',
+          href: '/admin/reports/performance'
         }
       ]
     },
@@ -126,23 +126,23 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
           href: '/admin/settings/general'
         },
         {
-          id: 'permissions',
-          title: 'Permisos del Sistema',
-          icon: '🔐',
-          href: '/admin/settings/permissions'
+          id: 'security-settings',
+          title: 'Seguridad',
+          icon: '🔒',
+          href: '/admin/settings/security'
         },
         {
-          id: 'backup',
-          title: 'Backup y Restauración',
-          icon: '💾',
-          href: '/admin/settings/backup'
+          id: 'notifications-settings',
+          title: 'Notificaciones',
+          icon: '🔔',
+          href: '/admin/settings/notifications'
         }
       ]
     }
   ];
 
   // ===========================================
-  // 🔧 HELPER FUNCTIONS
+  // 🎯 NAVIGATION LOGIC
   // ===========================================
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
@@ -153,79 +153,80 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
   };
 
   const isItemActive = (item: MenuItem): boolean => {
-    if (item.href) {
-      return pathname === item.href;
-    }
+    if (item.href && pathname === item.href) return true;
     if (item.subItems) {
-      return item.subItems.some(subItem => pathname === subItem.href);
+      return item.subItems.some(subItem => 
+        subItem.href && pathname === subItem.href
+      );
     }
     return false;
   };
 
   const isSubItemActive = (subItem: MenuItem): boolean => {
-    return pathname === subItem.href;
+    return subItem.href ? pathname === subItem.href : false;
   };
 
   // ===========================================
   // 🎨 RENDER FUNCTIONS
   // ===========================================
   const renderMenuItem = (item: MenuItem) => {
-    const isActive = isItemActive(item);
     const isExpanded = expandedItems.includes(item.id);
+    const isActive = isItemActive(item);
     const hasSubItems = item.subItems && item.subItems.length > 0;
 
     return (
-      <div key={item.id} className="mb-2">
+      <div key={item.id} className="mb-1">
         {/* Main Menu Item */}
         <div
           className={`
-            flex items-center justify-between p-4 rounded-xl cursor-pointer
-            transition-all duration-300 ease-out
+            flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer
+            transition-all duration-200 ease-out
             ${isActive 
-              ? 'apple-glass bg-gradient-to-r from-blue-500/20 to-purple-500/20' 
-              : 'hover:bg-white/10'
+              ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+              : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
             }
           `}
           onClick={() => hasSubItems && toggleExpanded(item.id)}
         >
           <div className="flex items-center space-x-3">
-            <span className="text-2xl">{item.icon}</span>
-            <span className="text-white font-medium">{item.title}</span>
+            <span className="text-lg">{item.icon}</span>
+            <span className="font-medium text-sm">{item.title}</span>
             {item.badge && (
-              <span className="px-2 py-1 text-xs bg-red-500 text-white rounded-full">
+              <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
                 {item.badge}
               </span>
             )}
           </div>
           
           {hasSubItems && (
-            <div className={`transition-transform duration-300 ${isExpanded ? 'rotate-180' : ''}`}>
-              <svg className="w-5 h-5 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-              </svg>
-            </div>
+            <span className={`
+              text-gray-400 transition-transform duration-200
+              ${isExpanded ? 'rotate-180' : ''}
+            `}>
+              ▼
+            </span>
           )}
         </div>
 
         {/* Sub Items */}
         {hasSubItems && isExpanded && (
-          <div className="ml-6 space-y-1 apple-slide-in">
-            {item.subItems!.map((subItem) => (
+          <div className="ml-4 mt-1 space-y-1">
+            {item.subItems!.map(subItem => (
               <Link
                 key={subItem.id}
                 href={subItem.href!}
                 className={`
-                  flex items-center space-x-3 p-3 rounded-lg
-                  transition-all duration-300 ease-out
+                  flex items-center space-x-3 px-4 py-2 rounded-lg
+                  transition-all duration-200 ease-out
                   ${isSubItemActive(subItem)
-                    ? 'bg-blue-500/20 text-blue-300'
-                    : 'text-white/70 hover:text-white hover:bg-white/10'
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }
                 `}
                 onClick={onClose}
               >
-                <span className="text-lg">{subItem.icon}</span>
-                <span className="font-medium">{subItem.title}</span>
+                <span className="text-sm">{subItem.icon}</span>
+                <span className="text-sm font-medium">{subItem.title}</span>
               </Link>
             ))}
           </div>
@@ -242,51 +243,61 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
       {/* Backdrop */}
       {isOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-opacity duration-300"
+          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
           onClick={onClose}
         />
       )}
 
       {/* Sidebar */}
       <div className={`
-        apple-sidebar
-        ${isOpen ? 'translate-x-0' : 'translate-x-full'}
+        fixed top-0 left-0 h-full w-80 bg-white border-r border-gray-200
+        transform transition-transform duration-300 ease-out z-50
+        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        lg:translate-x-0 lg:static lg:z-auto
       `}>
         {/* Header */}
-        <div className="p-6 border-b border-white/10">
+        <div className="p-6 border-b border-gray-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center">
-                <span className="text-white font-bold text-lg">AIM</span>
+              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+                <span className="text-white font-bold text-sm">AIM</span>
               </div>
               <div>
-                <h2 className="text-white font-bold text-lg">Sistema de Gestión</h2>
-                <p className="text-white/60 text-sm">Panel Administrativo</p>
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Sistema de Gestión
+                </h2>
+                <p className="text-gray-500 text-xs">
+                  Panel Administrativo
+                </p>
               </div>
             </div>
             
+            {/* Close button for mobile */}
             <button
               onClick={onClose}
-              className="p-2 rounded-lg hover:bg-white/10 transition-colors duration-200"
+              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
             >
-              <svg className="w-6 h-6 text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
+              <span className="text-gray-500">✕</span>
             </button>
           </div>
         </div>
 
         {/* Navigation */}
-        <div className="p-6 space-y-2 overflow-y-auto h-full">
-          {menuItems.map(renderMenuItem)}
+        <div className="flex-1 overflow-y-auto py-6">
+          <nav className="px-4 space-y-2">
+            {menuItems.map(renderMenuItem)}
+          </nav>
         </div>
 
         {/* Footer */}
-        <div className="absolute bottom-0 left-0 right-0 p-6 border-t border-white/10">
+        <div className="p-6 border-t border-gray-200">
           <div className="text-center">
-            <p className="text-white/40 text-xs">
-              © 2024 AIM Sistema de Gestión
-            </p>
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mx-auto mb-3 flex items-center justify-center">
+              <span className="text-white text-xl">🍎</span>
+            </div>
+            <h3 className="text-sm font-medium text-gray-900 mb-1">
+              AIM Sistema
+            </h3>
             <p className="text-white/30 text-xs mt-1">
               Diseño Apple-style
             </p>
@@ -296,5 +307,3 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
     </>
   );
 }
-/ /   F o r z a r   a c t u a l i z a c i � � n   d e l   m e n � �  
- 
