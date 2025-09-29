@@ -108,6 +108,30 @@
 }
 
 /* ===========================================
+   🖱️ APPLE-LIKE SCROLLBARS
+   =========================================== */
+.apple-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: #cfd4da transparent;
+}
+.apple-scroll::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+.apple-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.apple-scroll::-webkit-scrollbar-thumb {
+  background: #cfd4da;
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+.apple-scroll::-webkit-scrollbar-thumb:hover {
+  background: #b7bec7;
+}
+
+/* ===========================================
    🎭 APPLE-STYLE ANIMATIONS
    =========================================== */
 

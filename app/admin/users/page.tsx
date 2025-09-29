@@ -295,7 +295,7 @@ export default function UsersListPage() {
 
         {/* Users Table */}
         <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200">
-          <div className="p-6">
+          <div className="p-6 apple-scroll overflow-auto max-h-[70vh]">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Usuarios del Sistema ({users.length})
             </h2>
@@ -312,16 +312,15 @@ export default function UsersListPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-[13px]">
+                <table className="min-w-full text-left text-[13px] table-fixed">
                   <thead className="border-b border-gray-200">
                     <tr>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Email</th>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Rol</th>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Grupos</th>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Estado</th>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Último Login</th>
-                      <th className="px-6 py-3 text-gray-600 font-medium text-xs uppercase tracking-wide">Acciones</th>
+                      <th className="px-6 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
+                      <th className="px-6 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Email</th>
+                      <th className="px-6 py-3 w-[10%] text-gray-600 font-medium text-xs uppercase tracking-wide">Rol</th>
+                      <th className="px-6 py-3 w-[20%] text-gray-600 font-medium text-xs uppercase tracking-wide">Grupos</th>
+                      <th className="px-6 py-3 w-[8%] text-gray-600 font-medium text-xs uppercase tracking-wide">Estado</th>
+                      <th className="px-6 py-3 w-[6%] text-gray-600 font-medium text-xs uppercase tracking-wide">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -359,7 +358,12 @@ export default function UsersListPage() {
                                 </span>
                               ))}
                               {user.groups.length > 2 && (
-                                <span className="text-gray-500 text-[11px] whitespace-nowrap">+{user.groups.length - 2}</span>
+                                <span
+                                  className="text-gray-500 text-[11px] whitespace-nowrap cursor-help"
+                                  title={user.groups.map(g=>g.name).join(', ')}
+                                >
+                                  +{user.groups.length - 2}
+                                </span>
                               )}
                             </div>
                           ) : (
@@ -370,12 +374,6 @@ export default function UsersListPage() {
                           <span className={`px-2 py-[2px] rounded-full text-[11px] font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
-                        </td>
-                        <td className="px-6 py-4 text-gray-500">
-                          {user.last_login ? 
-                            new Date(user.last_login).toLocaleDateString() : 
-                            'Nunca'
-                          }
                         </td>
                         <td className="px-6 py-4">
                           <div className="flex space-x-2">
