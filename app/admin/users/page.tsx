@@ -294,8 +294,8 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 apple-scroll overflow-auto max-h-[70vh] pb-0">
-          <div className="p-6 pb-4">
+        <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 apple-scroll overflow-auto max-h-[70vh] p-0">
+          <div className="pt-6 px-6 pb-0">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">
               Usuarios del Sistema ({users.length})
             </h2>
@@ -375,22 +375,22 @@ export default function UsersListPage() {
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
-                          <div className="flex space-x-2">
+                         <td className="px-6 py-4">
+                           <div className="flex space-x-2">
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="apple-button-secondary px-3 py-[6px] text-[12px]"
+                              className="px-2.5 py-1 text-[12px] rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
-                              className="px-3 py-[6px] text-[12px] text-red-600 border border-red-300 rounded hover:bg-red-50 transition-colors"
+                              className="px-2.5 py-1 text-[12px] rounded-md border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
                             >
                               Eliminar
                             </button>
-                          </div>
-                        </td>
+                           </div>
+                         </td>
                       </tr>
                     ))}
                   </tbody>
