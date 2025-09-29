@@ -131,6 +131,32 @@
   background: #b7bec7;
 }
 
+/* Global window scrollbars (html, body) with Apple look */
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: #cfd4da transparent;
+}
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  height: 12px;
+  width: 12px;
+}
+html::-webkit-scrollbar-track,
+body::-webkit-scrollbar-track {
+  background: #f5f7fb;
+}
+html::-webkit-scrollbar-thumb,
+body::-webkit-scrollbar-thumb {
+  background: #cfd4da;
+  border-radius: 8px;
+  border: 3px solid #f5f7fb;
+  background-clip: padding-box;
+}
+html::-webkit-scrollbar-thumb:hover,
+body::-webkit-scrollbar-thumb:hover {
+  background: #b7bec7;
+}
+
 /* ===========================================
    🎭 APPLE-STYLE ANIMATIONS
    =========================================== */
