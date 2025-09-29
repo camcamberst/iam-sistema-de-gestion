@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import AppleSelect from './AppleSelect';
 
 // ===========================================
 // 🔍 APPLE-STYLE SEARCH BAR COMPONENT
@@ -80,21 +81,13 @@ export default function AppleSearchBar({
   // ===========================================
   const renderFilter = (filter: SearchFilter) => (
     <div key={filter.id} className="space-y-1 min-w-0">
-      <label className="text-gray-500 text-xs font-medium">
-        {filter.label}
-      </label>
-      <select
+      <label className="text-gray-500 text-xs font-medium">{filter.label}</label>
+      <AppleSelect
         value={selectedFilters[filter.id] || ''}
-        onChange={(e) => handleFilterChange(filter.id, e.target.value)}
-        className="apple-input text-sm px-3 pr-8 py-2.5 leading-normal w-full appearance-none bg-white"
-      >
-        <option value="">Todos</option>
-        {filter.options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
+        options={[{ label: 'Todos', value: '' }, ...filter.options]}
+        onChange={(v) => handleFilterChange(filter.id, v)}
+        className="text-[13px]"
+      />
     </div>
   );
 
@@ -106,7 +99,7 @@ export default function AppleSearchBar({
       {/* Search Input */}
       <div className="flex items-center space-x-2">
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -117,12 +110,12 @@ export default function AppleSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="apple-input pl-14 pr-3 text-sm py-2.5 leading-normal"
+            className="apple-input pl-16 pr-3 text-[13px] py-2 leading-normal"
           />
         </div>
 
         {/* Search Button */}
-        <button onClick={handleSearch} title="Buscar" className="apple-button px-2.5 py-1.5 rounded-md text-xs">
+        <button onClick={handleSearch} title="Buscar" className="apple-button px-2 py-1.5 rounded-md text-xs">
           <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
             <path d="M12.9 14.32a8 8 0 111.414-1.414l3.387 3.387a1 1 0 01-1.414 1.414l-3.387-3.387zM14 8a6 6 0 11-12 0 6 6 0 0112 0z" />
           </svg>
@@ -132,7 +125,7 @@ export default function AppleSearchBar({
         {filters.length > 0 && (
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className={`px-2.5 py-1.5 rounded-md text-xs border ${isExpanded ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+            className={`px-2 py-1.5 rounded-md text-xs border ${isExpanded ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             title={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'}
           >
             <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
@@ -145,7 +138,7 @@ export default function AppleSearchBar({
         {(query || hasActiveFilters) && (
           <button
             onClick={clearFilters}
-            className="apple-button-secondary px-2.5 py-1.5 text-xs text-red-500 hover:text-red-400 rounded-md"
+            className="apple-button-secondary px-2 py-1.5 text-xs text-red-500 hover:text-red-400 rounded-md"
             title="Limpiar búsqueda y filtros"
           >
             <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
