@@ -92,10 +92,14 @@ export async function POST(request: NextRequest) {
     );
 
     const body = await request.json();
+    console.log('🔍 [DEBUG] Body completo recibido:', JSON.stringify(body, null, 2));
+    
     const { email, password, name, role, group_ids } = body;
+    console.log('🔍 [DEBUG] Datos extraídos:', { email, name, role, group_ids });
 
     // Validación de datos vitales
     if (!email || !password || !name || !role) {
+      console.log('❌ [DEBUG] Datos faltantes:', { email: !!email, password: !!password, name: !!name, role: !!role });
       return NextResponse.json(
         { success: false, error: 'Datos vitales faltantes' },
         { status: 400 }
@@ -105,6 +109,7 @@ export async function POST(request: NextRequest) {
     console.log('📋 [API] Datos recibidos:', { name, email, role, group_ids });
 
     // 1. Crear usuario en Auth (solo datos básicos)
+    console.log('🔍 [DEBUG] Creando usuario en Auth con:', { email, name, role });
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
@@ -124,8 +129,10 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [API] Usuario creado en Auth:', authData.user.id);
+    console.log('🔍 [DEBUG] Auth user metadata:', authData.user.user_metadata);
 
     // 2. Crear perfil en tabla users (solo datos vitales)
+    console.log('🔍 [DEBUG] Creando perfil en users con:', { id: authData.user.id, name, email, role });
     const { error: profileError } = await supabase
       .from('users')
       .insert({
@@ -138,6 +145,7 @@ export async function POST(request: NextRequest) {
 
     if (profileError) {
       console.error('❌ [API] Error perfil:', profileError);
+      console.log('🔍 [DEBUG] Profile error details:', JSON.stringify(profileError, null, 2));
       return NextResponse.json(
         { success: false, error: 'Error creando perfil' },
         { status: 500 }
@@ -150,12 +158,15 @@ export async function POST(request: NextRequest) {
     let assignedGroups: Array<{ id: string; name: string }> = [];
     if (group_ids && group_ids.length > 0) {
       console.log('📋 [API] Asignando grupos:', group_ids);
+      console.log('🔍 [DEBUG] Group IDs recibidos:', JSON.stringify(group_ids, null, 2));
       
       const userGroups = group_ids.map((groupId: string) => ({
         user_id: authData.user.id,
         group_id: groupId,
         is_manager: false
       }));
+
+      console.log('🔍 [DEBUG] User groups a insertar:', JSON.stringify(userGroups, null, 2));
 
       const { data: groupsData, error: groupsError } = await supabase
         .from('user_groups')
@@ -169,6 +180,7 @@ export async function POST(request: NextRequest) {
 
       if (groupsError) {
         console.error('❌ [API] Error asignando grupos:', groupsError);
+        console.log('🔍 [DEBUG] Groups error details:', JSON.stringify(groupsError, null, 2));
         // No fallar la creación del usuario por esto
       } else {
         assignedGroups = groupsData?.map((ug: any) => ({
@@ -176,7 +188,10 @@ export async function POST(request: NextRequest) {
           name: ug.groups.name
         })) || [];
         console.log('✅ [API] Grupos asignados:', assignedGroups.length);
+        console.log('🔍 [DEBUG] Grupos asignados:', JSON.stringify(assignedGroups, null, 2));
       }
+    } else {
+      console.log('🔍 [DEBUG] No se proporcionaron grupos o están vacíos');
     }
 
     console.log('✅ [API] Usuario creado completamente:', authData.user.id);
