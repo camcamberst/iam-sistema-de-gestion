@@ -231,9 +231,18 @@ export async function PUT(request: NextRequest) {
     );
 
     const body = await request.json();
+    console.log('🔍 [DEBUG] Body completo recibido en PUT:', JSON.stringify(body, null, 2));
+    
     const { id, name, email, role, is_active, group_ids } = body;
+    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, role, is_active, group_ids });
 
     if (!id || !name || !email || !role) {
+      console.log('❌ [DEBUG] Datos faltantes en PUT:', { 
+        id: !!id, 
+        name: !!name, 
+        email: !!email, 
+        role: !!role 
+      });
       return NextResponse.json(
         { success: false, error: 'Datos vitales faltantes' },
         { status: 400 }
@@ -241,6 +250,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Actualizar datos vitales
+    console.log('🔍 [DEBUG] Actualizando usuario con:', { id, name, email, role, is_active });
     const { error: updateError } = await supabase
       .from('users')
       .update({
@@ -253,14 +263,20 @@ export async function PUT(request: NextRequest) {
 
     if (updateError) {
       console.error('❌ [API] Error actualizando:', updateError);
+      console.log('🔍 [DEBUG] Update error details:', JSON.stringify(updateError, null, 2));
       return NextResponse.json(
         { success: false, error: 'Error actualizando usuario' },
         { status: 500 }
       );
     }
 
+    console.log('✅ [API] Usuario actualizado exitosamente:', id);
+
     // Actualizar grupos si se proporcionaron
     if (group_ids !== undefined) {
+      console.log('🔍 [DEBUG] Actualizando grupos:', group_ids);
+      console.log('🔍 [DEBUG] Group IDs recibidos en PUT:', JSON.stringify(group_ids, null, 2));
+      
       // Eliminar grupos existentes
       await supabase
         .from('user_groups')
@@ -275,9 +291,19 @@ export async function PUT(request: NextRequest) {
           is_manager: false
         }));
 
-        await supabase
+        console.log('🔍 [DEBUG] User groups a insertar en PUT:', JSON.stringify(userGroups, null, 2));
+
+        const { error: groupsError } = await supabase
           .from('user_groups')
           .insert(userGroups);
+
+        if (groupsError) {
+          console.error('❌ [API] Error actualizando grupos:', groupsError);
+          console.log('🔍 [DEBUG] Groups error details en PUT:', JSON.stringify(groupsError, null, 2));
+          // No fallar la actualización del usuario por esto
+        } else {
+          console.log('✅ [API] Grupos actualizados exitosamente');
+        }
       }
     }
 
