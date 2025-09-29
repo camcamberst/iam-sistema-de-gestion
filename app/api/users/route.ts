@@ -1,29 +1,43 @@
 // =====================================================
-// 👥 API ULTRA SIMPLE DE USUARIOS - VERSIÓN MÍNIMA
+// 👥 API ULTRA SIMPLE - SOLO DATOS VITALES
 // =====================================================
-// Solo operaciones básicas sin complejidades
+// Solo maneja: Nombre, Email, Rol, Grupos
+// Sin complejidades que causen errores
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 // =====================================================
-// 📋 GET - Obtener usuarios (VERSIÓN MÍNIMA)
+// 📋 GET - Obtener usuarios (SOLO DATOS VITALES)
 // =====================================================
 
 export async function GET(request: NextRequest) {
   try {
-    console.log('👥 [API] Obteniendo usuarios (VERSIÓN MÍNIMA)');
+    console.log('👥 [API] Obteniendo usuarios (SOLO DATOS VITALES)');
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Obtener usuarios básicos
+    // Obtener usuarios con datos vitales
     const { data: users, error } = await supabase
       .from('users')
-      .select('id, name, email, role, is_active, created_at')
+      .select(`
+        id,
+        name,
+        email,
+        role,
+        is_active,
+        created_at,
+        user_groups(
+          groups!inner(
+            id,
+            name
+          )
+        )
+      `)
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -34,34 +48,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('✅ [API] Usuarios obtenidos:', users?.length || 0);
+    // Formatear usuarios con grupos
+    const formattedUsers = (users || []).map(user => ({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      is_active: user.is_active,
+      created_at: user.created_at,
+      groups: user.user_groups?.map((ug: any) => ({
+        id: ug.groups.id,
+        name: ug.groups.name
+      })) || []
+    }));
 
-    // Obtener grupos para cada usuario
-    const usersWithGroups = await Promise.all(
-      (users || []).map(async (user) => {
-        const { data: userGroups } = await supabase
-          .from('user_groups')
-          .select(`
-            groups!inner(
-              id,
-              name
-            )
-          `)
-          .eq('user_id', user.id);
-
-        return {
-          ...user,
-          groups: userGroups?.map((ug: any) => ({
-            id: ug.groups.id,
-            name: ug.groups.name
-          })) || []
-        };
-      })
-    );
+    console.log('✅ [API] Usuarios obtenidos:', formattedUsers.length);
 
     return NextResponse.json({
       success: true,
-      users: usersWithGroups
+      users: formattedUsers
     });
 
   } catch (error) {
@@ -74,12 +79,12 @@ export async function GET(request: NextRequest) {
 }
 
 // =====================================================
-// ➕ POST - Crear usuario (VERSIÓN MÍNIMA)
+// ➕ POST - Crear usuario (SOLO DATOS VITALES)
 // =====================================================
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('➕ [API] Creando usuario (VERSIÓN MÍNIMA)');
+    console.log('➕ [API] Creando usuario (SOLO DATOS VITALES)');
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -89,19 +94,25 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { email, password, name, role, group_ids } = body;
 
-    // Validación básica
+    // Validación de datos vitales
     if (!email || !password || !name || !role) {
       return NextResponse.json(
-        { success: false, error: 'Datos faltantes' },
+        { success: false, error: 'Datos vitales faltantes' },
         { status: 400 }
       );
     }
 
-    // 1. Crear usuario en Auth
+    console.log('📋 [API] Datos recibidos:', { name, email, role, group_ids });
+
+    // 1. Crear usuario en Auth (solo datos básicos)
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email,
       password,
-      email_confirm: true
+      email_confirm: true,
+      user_metadata: {
+        name,
+        role
+      }
     });
 
     if (authError || !authData.user) {
@@ -112,7 +123,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 2. Crear perfil básico
+    console.log('✅ [API] Usuario creado en Auth:', authData.user.id);
+
+    // 2. Crear perfil en tabla users (solo datos vitales)
     const { error: profileError } = await supabase
       .from('users')
       .insert({
@@ -131,9 +144,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 3. Asignar grupos si se proporcionaron
+    console.log('✅ [API] Perfil creado en users');
+
+    // 3. Asignar grupos (solo si se proporcionaron)
     let assignedGroups: Array<{ id: string; name: string }> = [];
     if (group_ids && group_ids.length > 0) {
+      console.log('📋 [API] Asignando grupos:', group_ids);
+      
       const userGroups = group_ids.map((groupId: string) => ({
         user_id: authData.user.id,
         group_id: groupId,
@@ -158,10 +175,11 @@ export async function POST(request: NextRequest) {
           id: ug.groups.id,
           name: ug.groups.name
         })) || [];
+        console.log('✅ [API] Grupos asignados:', assignedGroups.length);
       }
     }
 
-    console.log('✅ [API] Usuario creado:', authData.user.id);
+    console.log('✅ [API] Usuario creado completamente:', authData.user.id);
 
     return NextResponse.json({
       success: true,
@@ -171,7 +189,7 @@ export async function POST(request: NextRequest) {
         email,
         role,
         is_active: true,
-        groups: assignedGroups // Grupos reales asignados
+        groups: assignedGroups
       }
     });
 
@@ -185,12 +203,12 @@ export async function POST(request: NextRequest) {
 }
 
 // =====================================================
-// ✏️ PUT - Editar usuario (VERSIÓN MÍNIMA)
+// ✏️ PUT - Editar usuario (SOLO DATOS VITALES)
 // =====================================================
 
 export async function PUT(request: NextRequest) {
   try {
-    console.log('✏️ [API] Editando usuario (VERSIÓN MÍNIMA)');
+    console.log('✏️ [API] Editando usuario (SOLO DATOS VITALES)');
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -198,16 +216,17 @@ export async function PUT(request: NextRequest) {
     );
 
     const body = await request.json();
-    const { id, name, email, role, is_active } = body;
+    const { id, name, email, role, is_active, group_ids } = body;
 
     if (!id || !name || !email || !role) {
       return NextResponse.json(
-        { success: false, error: 'Datos faltantes' },
+        { success: false, error: 'Datos vitales faltantes' },
         { status: 400 }
       );
     }
 
-    const { error } = await supabase
+    // Actualizar datos vitales
+    const { error: updateError } = await supabase
       .from('users')
       .update({
         name,
@@ -217,12 +236,34 @@ export async function PUT(request: NextRequest) {
       })
       .eq('id', id);
 
-    if (error) {
-      console.error('❌ [API] Error actualizando:', error);
+    if (updateError) {
+      console.error('❌ [API] Error actualizando:', updateError);
       return NextResponse.json(
         { success: false, error: 'Error actualizando usuario' },
         { status: 500 }
       );
+    }
+
+    // Actualizar grupos si se proporcionaron
+    if (group_ids !== undefined) {
+      // Eliminar grupos existentes
+      await supabase
+        .from('user_groups')
+        .delete()
+        .eq('user_id', id);
+
+      // Agregar nuevos grupos
+      if (group_ids.length > 0) {
+        const userGroups = group_ids.map((groupId: string) => ({
+          user_id: id,
+          group_id: groupId,
+          is_manager: false
+        }));
+
+        await supabase
+          .from('user_groups')
+          .insert(userGroups);
+      }
     }
 
     console.log('✅ [API] Usuario actualizado:', id);
@@ -235,7 +276,7 @@ export async function PUT(request: NextRequest) {
         email, 
         role, 
         is_active,
-        groups: [] // Campo requerido por la interfaz
+        groups: group_ids || []
       }
     });
 
@@ -249,12 +290,12 @@ export async function PUT(request: NextRequest) {
 }
 
 // =====================================================
-// 🗑️ DELETE - Eliminar usuario (VERSIÓN MÍNIMA)
+// 🗑️ DELETE - Eliminar usuario (SOLO DATOS VITALES)
 // =====================================================
 
 export async function DELETE(request: NextRequest) {
   try {
-    console.log('🗑️ [API] Eliminando usuario (VERSIÓN MÍNIMA)');
+    console.log('🗑️ [API] Eliminando usuario (SOLO DATOS VITALES)');
     
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -270,6 +311,12 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // Eliminar grupos primero
+    await supabase
+      .from('user_groups')
+      .delete()
+      .eq('user_id', userId);
 
     // Eliminar de tabla users
     const { error: deleteError } = await supabase
