@@ -106,7 +106,7 @@ export default function AppleSearchBar({
       {/* Search Input */}
       <div className="flex items-center space-x-2">
         <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
@@ -117,7 +117,7 @@ export default function AppleSearchBar({
             onChange={(e) => setQuery(e.target.value)}
             onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
             placeholder={placeholder}
-            className="apple-input pl-11 pr-3 text-sm py-2.5 leading-normal"
+            className="apple-input pl-14 pr-3 text-sm py-2.5 leading-normal"
           />
         </div>
 
