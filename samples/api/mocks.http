@@ -1,0 +1,19 @@
+### Mock: Fix Period Rates (cron)
+POST https://localhost/mock/api/rates/fix-period
+Content-Type: application/json
+Authorization: Bearer MOCK_SERVICE_TOKEN
+
+{
+  "period_id": "00000000-0000-0000-0000-000000000001",
+  "sources": {
+    "EUR_USD": { "source": "ECB", "value_raw": 1.0100 },
+    "GBP_USD": { "source": "OXR", "value_raw": 1.2000 },
+    "USD_COP": { "source": "OXR", "value_raw": 4094 }
+  }
+}
+
+### Mock: Calculator Preview
+GET https://localhost/mock/api/calculator/preview?model_id=00000000-0000-0000-0000-0000000000AA&period_id=00000000-0000-0000-0000-000000000001
+Authorization: Bearer MOCK_USER_TOKEN
+
+
