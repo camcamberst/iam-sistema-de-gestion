@@ -131,6 +131,19 @@ export default function LoginPage() {
           >
             {loading ? 'Iniciando sesión...' : 'Entrar'}
           </button>
+          <div className="flex items-center justify-between text-xs text-gray-500 mt-2">
+            <button
+              type="button"
+              onClick={() => alert('Recuperación de contraseña próximamente')}
+              className="hover:underline"
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+            <span>Soporte: soporte@aim.com</span>
+          </div>
+          <div className="text-center text-[11px] text-gray-400 mt-4">
+            Al continuar aceptas nuestras políticas de privacidad y seguridad de datos.
+          </div>
         </form>
       </div>
     </div>
