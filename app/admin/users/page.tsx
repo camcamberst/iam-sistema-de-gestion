@@ -280,6 +280,9 @@ export default function UsersListPage() {
         {/* Error Message */}
         {/* Search and Filters */}
         <div className="mb-6">
+          <div className="grid grid-cols-1 gap-2 mb-2">
+            <span className="text-xs text-gray-500 font-medium">Búsqueda</span>
+          </div>
           <AppleSearchBar
             onSearch={handleSearch}
             placeholder="Buscar por nombre o email..."
