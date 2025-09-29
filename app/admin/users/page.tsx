@@ -818,8 +818,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-lg">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6">Editar Usuario</h2>
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-5 w-full max-w-md">
+        <h2 className="text-lg font-semibold text-gray-900 mb-4">Editar Usuario</h2>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
@@ -874,8 +874,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-3">Grupos</label>
-            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
+            <label className="block text-gray-700 text-sm font-medium mb-2">Grupos</label>
+            <div className="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-2.5 bg-gray-50">
               {groups.map((group) => {
                 const isChecked = formData.group_ids.includes(group.id);
                 const isDisabled = formData.role === 'modelo' && 
@@ -929,7 +929,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
             )}
           </div>
 
-          <div className="flex space-x-3 pt-6">
+          <div className="flex space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
