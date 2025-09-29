@@ -36,11 +36,12 @@ export default function ModelCalculator() {
   const [calculating, setCalculating] = useState(false);
 
   // Plataformas disponibles (configuradas por admin)
+  // Por defecto, ninguna plataforma está habilitada hasta que el admin las configure
   const availablePlatforms = [
-    { id: 'chaturbate', name: 'Chaturbate', enabled: true },
-    { id: 'myfreecams', name: 'MyFreeCams', enabled: true },
-    { id: 'stripchat', name: 'Stripchat', enabled: true },
-    { id: 'dxlive', name: 'DX Live', enabled: true },
+    { id: 'chaturbate', name: 'Chaturbate', enabled: false },
+    { id: 'myfreecams', name: 'MyFreeCams', enabled: false },
+    { id: 'stripchat', name: 'Stripchat', enabled: false },
+    { id: 'dxlive', name: 'DX Live', enabled: false },
     { id: 'big7', name: 'BIG7', enabled: false },
     { id: 'aw', name: 'AW', enabled: false },
     { id: 'mondo', name: 'MONDO', enabled: false },
@@ -156,14 +157,14 @@ export default function ModelCalculator() {
           <div className="flex gap-2">
             <button
               onClick={calculateTotals}
-              disabled={calculating}
+              disabled={calculating || platforms.filter(p => p.enabled).length === 0}
               className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
               {calculating ? 'Calculando...' : 'Calcular'}
             </button>
             <button
               onClick={saveValues}
-              disabled={loading}
+              disabled={loading || platforms.filter(p => p.enabled).length === 0}
               className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50"
             >
               {loading ? 'Guardando...' : 'Guardar'}
@@ -175,23 +176,39 @@ export default function ModelCalculator() {
       {/* Plataformas habilitadas */}
       <div className="apple-card">
         <h3 className="text-base font-medium text-gray-900 mb-4">Plataformas Habilitadas</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {platforms.filter(p => p.enabled).map(platform => (
-            <div key={platform.id} className="space-y-2">
-              <label className="block text-sm font-medium text-gray-700">
-                {platform.name}
-              </label>
-              <input
-                type="number"
-                step="0.01"
-                value={platform.value}
-                onChange={(e) => handleValueChange(platform.id, parseFloat(e.target.value) || 0)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="0.00"
-              />
+        
+        {platforms.filter(p => p.enabled).length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="text-gray-400 text-2xl">📊</span>
             </div>
-          ))}
-        </div>
+            <h4 className="text-lg font-medium text-gray-900 mb-2">No hay plataformas habilitadas</h4>
+            <p className="text-gray-500 mb-4">
+              Tu administrador aún no ha configurado las plataformas para tu calculadora.
+            </p>
+            <p className="text-sm text-gray-400">
+              Contacta a tu administrador para que habilite las plataformas que usarás.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {platforms.filter(p => p.enabled).map(platform => (
+              <div key={platform.id} className="space-y-2">
+                <label className="block text-sm font-medium text-gray-700">
+                  {platform.name}
+                </label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={platform.value}
+                  onChange={(e) => handleValueChange(platform.id, parseFloat(e.target.value) || 0)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  placeholder="0.00"
+                />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Resultados */}
