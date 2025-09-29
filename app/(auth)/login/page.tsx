@@ -79,17 +79,22 @@ export default function LoginPage() {
     <div className="min-h-screen flex items-center justify-center p-4" style={{
       background: 'radial-gradient(1200px 800px at 10% -10%, rgba(255,255,255,0.08), transparent), linear-gradient(180deg, rgb(16 18 27), rgb(16 18 27))'
     }}>
-      <div className="bg-aim-card border border-aim-border rounded-xl shadow-lg p-8 w-full max-w-md backdrop-blur-glass">
-        <h1 className="text-3xl font-bold text-center mb-6 text-white">Iniciar Sesión</h1>
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <div className="flex items-center justify-center mb-6 space-x-3">
+          <div className="w-10 h-10 bg-black rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">AIM</span>
+          </div>
+          <span className="text-xl font-semibold text-gray-900">Sistema de Gestión</span>
+        </div>
         <form onSubmit={handleLogin} className="space-y-4">
           <div>
             <input
               type="email"
-              placeholder="Email"
+              placeholder="Correo electrónico"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full p-3 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
           </div>
           <div className="relative">
@@ -99,12 +104,12 @@ export default function LoginPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               required
-              className="w-full p-3 pr-12 rounded-lg bg-gray-800 border border-gray-700 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 pr-12 rounded-lg border border-gray-300 text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
-              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 transition-colors"
             >
               {showPassword ? (
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -118,11 +123,11 @@ export default function LoginPage() {
               )}
             </button>
           </div>
-          {error && <p className="text-red-400 text-center">{error}</p>}
+          {error && <p className="text-red-600 text-center text-sm bg-red-50 border border-red-200 rounded-lg py-2">{error}</p>}
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full bg-gray-900 hover:bg-black text-white font-medium py-3 px-4 rounded-lg transition duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {loading ? 'Iniciando sesión...' : 'Entrar'}
           </button>
