@@ -136,7 +136,7 @@ export async function DELETE(
     }
 
     // Marcar como inactiva (no eliminar físicamente)
-    mockRates[rateIndex].valid_to = new Date();
+    mockRates[rateIndex].valid_to = new Date().toISOString();
 
     return NextResponse.json({
       success: true,
