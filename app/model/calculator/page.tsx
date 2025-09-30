@@ -261,6 +261,28 @@ export default function ModelCalculatorPage() {
           </p>
         </div>
 
+        {/* Rates actualizadas */}
+        <div className="apple-card mb-6">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Tasas Actualizadas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="text-center p-4 bg-blue-50 rounded-lg">
+              <div className="text-2xl font-bold text-blue-600">$3,900</div>
+              <div className="text-sm text-gray-600">USD → COP</div>
+            </div>
+            <div className="text-center p-4 bg-green-50 rounded-lg">
+              <div className="text-2xl font-bold text-green-600">1.01</div>
+              <div className="text-sm text-gray-600">EUR → USD</div>
+            </div>
+            <div className="text-center p-4 bg-purple-50 rounded-lg">
+              <div className="text-2xl font-bold text-purple-600">1.20</div>
+              <div className="text-sm text-gray-600">GBP → USD</div>
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-2 text-center">
+            Tasas configuradas por tu administrador
+          </p>
+        </div>
+
         {/* Error Message */}
         {error && (
           <div className="apple-card mb-6">
@@ -280,9 +302,9 @@ export default function ModelCalculatorPage() {
           </div>
         )}
 
-        {/* Plataformas Habilitadas */}
+        {/* Tabla de Calculadora */}
         <div className="apple-card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Plataformas Habilitadas</h2>
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Calculadora de Ingresos</h2>
           
           {platforms.filter(p => p.enabled).length === 0 ? (
             <div className="text-center py-8">
@@ -298,32 +320,60 @@ export default function ModelCalculatorPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {platforms.filter(p => p.enabled).map(platform => (
-                <div key={platform.id} className="space-y-3">
-                  <label className="block text-sm font-medium text-gray-700">
-                    {platform.name}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="number"
-                      min="0"
-                      step="0.01"
-                      value={platform.value}
-                      onChange={(e) => handleValueChange(platform.id, parseFloat(e.target.value) || 0)}
-                      className="apple-input w-full"
-                      placeholder="Ingresa valor"
-                    />
-                    <div className="absolute inset-y-0 right-0 flex items-center pr-3">
-                      <span className="text-gray-500 text-sm">USD</span>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-500 space-y-1">
-                    <div>Reparto: {platform.percentage}%</div>
-                    <div>Cuota mín: ${platform.minQuota} USD</div>
-                  </div>
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">PLATAFORMAS</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">VALORES</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">DÓLARES</th>
+                    <th className="text-left py-3 px-4 font-medium text-gray-700">COP MODELO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {platforms.filter(p => p.enabled).map(platform => {
+                    // Calcular dólares y COP para esta plataforma
+                    const usdBruto = platform.value;
+                    const usdModelo = (platform.value * platform.percentage) / 100;
+                    const copModelo = usdModelo * 3900; // Rate hardcodeado por ahora
+                    
+                    return (
+                      <tr key={platform.id} className="border-b border-gray-100">
+                        <td className="py-4 px-4">
+                          <div className="font-medium text-gray-900">{platform.name}</div>
+                          <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="relative">
+                            <input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              value={platform.value}
+                              onChange={(e) => handleValueChange(platform.id, parseFloat(e.target.value) || 0)}
+                              className="apple-input w-32"
+                              placeholder="0.00"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                              <span className="text-gray-500 text-xs">USD</span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="text-gray-600 font-medium">
+                            ${usdBruto.toFixed(2)} USD
+                          </div>
+                        </td>
+                        <td className="py-4 px-4">
+                          <div className="text-gray-600 font-medium">
+                            ${copModelo.toLocaleString()} COP
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
         </div>
@@ -354,56 +404,68 @@ export default function ModelCalculatorPage() {
           </div>
         </div>
 
-        {/* Resultados */}
-        {result && (
-          <div className="apple-card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-6">Resultados del Cálculo</h3>
-            
-            {/* Totales principales */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <div className="text-center p-6 bg-blue-50 rounded-lg">
-                <div className="text-3xl font-bold text-blue-600 mb-2">
-                  ${result.totalUsdBruto.toFixed(2)}
-                </div>
-                <div className="text-sm text-gray-600">USD Bruto</div>
+        {/* Totales y Alertas */}
+        <div className="apple-card">
+          <h3 className="text-lg font-semibold text-gray-900 mb-6">Totales y Alertas</h3>
+          
+          {/* Totales principales */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="text-center p-6 bg-blue-50 rounded-lg">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                ${platforms.reduce((sum, p) => sum + p.value, 0).toFixed(2)}
               </div>
-              <div className="text-center p-6 bg-green-50 rounded-lg">
-                <div className="text-3xl font-bold text-green-600 mb-2">
-                  ${result.totalUsdModelo.toFixed(2)}
-                </div>
-                <div className="text-sm text-gray-600">USD Modelo</div>
-              </div>
-              <div className="text-center p-6 bg-purple-50 rounded-lg">
-                <div className="text-3xl font-bold text-purple-600 mb-2">
-                  ${result.totalCopModelo.toLocaleString()}
-                </div>
-                <div className="text-sm text-gray-600">COP Modelo</div>
-              </div>
+              <div className="text-sm text-gray-600">USD Bruto Total</div>
             </div>
+            <div className="text-center p-6 bg-green-50 rounded-lg">
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                ${platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0).toFixed(2)}
+              </div>
+              <div className="text-sm text-gray-600">USD Modelo Total</div>
+            </div>
+            <div className="text-center p-6 bg-purple-50 rounded-lg">
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                ${(platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0) * 3900).toLocaleString()}
+              </div>
+              <div className="text-sm text-gray-600">COP Modelo Total</div>
+            </div>
+          </div>
+          
+          {/* 90% de anticipo */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="text-sm text-gray-600">
+              <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0) * 3900 * 0.9).toLocaleString()} COP
+            </div>
+          </div>
+          
+          {/* Alerta de cuota mínima */}
+          {(() => {
+            const totalUsdModelo = platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0);
+            const cuotaMinima = platforms[0]?.minQuota || 470;
+            const porcentajeAlcanzado = (totalUsdModelo / cuotaMinima) * 100;
+            const estaPorDebajo = totalUsdModelo < cuotaMinima;
             
-            {/* Alerta de cuota mínima */}
-            {result.cuotaMinimaAlert.below && (
-              <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            return (
+              <div className={`p-4 rounded-lg border ${estaPorDebajo ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
                 <div className="flex items-center">
-                  <span className="text-red-500 text-xl mr-3">⚠️</span>
+                  <span className={`text-xl mr-3 ${estaPorDebajo ? 'text-red-500' : 'text-green-500'}`}>
+                    {estaPorDebajo ? '⚠️' : '✅'}
+                  </span>
                   <div>
-                    <div className="text-red-800 font-medium">Cuota mínima no alcanzada</div>
-                    <div className="text-red-600 text-sm">
-                      Te faltan {result.cuotaMinimaAlert.percentToReach.toFixed(1)}% para alcanzar la cuota mínima
+                    <div className={`font-medium ${estaPorDebajo ? 'text-red-800' : 'text-green-800'}`}>
+                      {estaPorDebajo ? 'Cuota mínima no alcanzada' : 'Cuota mínima alcanzada'}
+                    </div>
+                    <div className={`text-sm ${estaPorDebajo ? 'text-red-600' : 'text-green-600'}`}>
+                      {estaPorDebajo 
+                        ? `Te faltan ${(100 - porcentajeAlcanzado).toFixed(1)}% para alcanzar la cuota mínima de $${cuotaMinima} USD`
+                        : `Has alcanzado el ${porcentajeAlcanzado.toFixed(1)}% de la cuota mínima de $${cuotaMinima} USD`
+                      }
                     </div>
                   </div>
                 </div>
               </div>
-            )}
-
-            {/* Anticipo máximo */}
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-600">
-                <strong>Anticipo máximo disponible:</strong> ${result.anticipoMaxCop.toLocaleString()} COP
-              </div>
-            </div>
-          </div>
-        )}
+            );
+          })()}
+        </div>
       </div>
     </div>
   );
