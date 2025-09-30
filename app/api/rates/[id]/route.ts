@@ -1,50 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 
-// Datos mock (mismo que en route.ts - en producción sería BD)
-let mockRates = [
-  {
-    id: '1',
-    scope: 'global',
-    kind: 'USD_COP',
-    value_raw: 4094,
-    adjustment: -200,
-    value_effective: 3894,
-    source: 'system',
-    author_id: 'system',
-    valid_from: new Date('2024-01-01T00:00:00Z'),
-    valid_to: null as string | null,
-    period_base: true,
-    created_at: new Date('2024-01-01T00:00:00Z')
-  },
-  {
-    id: '2',
-    scope: 'global',
-    kind: 'EUR_USD',
-    value_raw: 1.01,
-    adjustment: 0,
-    value_effective: 1.01,
-    source: 'ECB',
-    author_id: 'system',
-    valid_from: new Date('2024-01-01T00:00:00Z'),
-    valid_to: null as string | null,
-    period_base: true,
-    created_at: new Date('2024-01-01T00:00:00Z')
-  },
-  {
-    id: '3',
-    scope: 'global',
-    kind: 'GBP_USD',
-    value_raw: 1.2,
-    adjustment: 0,
-    value_effective: 1.2,
-    source: 'OXR',
-    author_id: 'system',
-    valid_from: new Date('2024-01-01T00:00:00Z'),
-    valid_to: null as string | null,
-    period_base: true,
-    created_at: new Date('2024-01-01T00:00:00Z')
-  }
-];
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+);
 
 export const dynamic = 'force-dynamic';
 
@@ -54,9 +14,14 @@ export async function GET(
   { params }: { params: { id: string } }
 ) {
   try {
-    const rate = mockRates.find(r => r.id === params.id);
-    
-    if (!rate) {
+    const { data: rate, error } = await supabase
+      .from('rates')
+      .select('*')
+      .eq('id', params.id)
+      .single();
+
+    if (error) {
+      console.error('Error al obtener tasa:', error);
       return NextResponse.json(
         { success: false, error: 'Tasa no encontrada' },
         { status: 404 }
@@ -82,34 +47,46 @@ export async function PATCH(
 ) {
   try {
     const body = await request.json();
-    const { value_effective, adjustment, source, author_id } = body;
+    const { value, author_id } = body;
 
-    const rateIndex = mockRates.findIndex(r => r.id === params.id);
-    
-    if (rateIndex === -1) {
+    if (!value || !author_id) {
       return NextResponse.json(
-        { success: false, error: 'Tasa no encontrada' },
-        { status: 404 }
+        { success: false, error: 'value y author_id son requeridos' },
+        { status: 400 }
       );
     }
 
-    // Actualizar campos permitidos
-    if (value_effective !== undefined) {
-      mockRates[rateIndex].value_effective = value_effective;
-    }
-    if (adjustment !== undefined) {
-      mockRates[rateIndex].adjustment = adjustment;
-    }
-    if (source) {
-      mockRates[rateIndex].source = source;
-    }
-    if (author_id) {
-      mockRates[rateIndex].author_id = author_id;
+    // Desactivar tasa anterior
+    await supabase
+      .from('rates')
+      .update({ valid_to: new Date().toISOString() })
+      .eq('id', params.id);
+
+    // Crear nueva tasa
+    const { data, error } = await supabase
+      .from('rates')
+      .insert({
+        kind: body.kind,
+        value: parseFloat(value),
+        scope: body.scope || 'global',
+        scope_id: body.scope_id || null,
+        author_id: author_id,
+        valid_from: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error al actualizar tasa:', error);
+      return NextResponse.json(
+        { success: false, error: error.message },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({
       success: true,
-      data: mockRates[rateIndex],
+      data,
       message: 'Tasa actualizada exitosamente'
     });
   } catch (error: any) {
@@ -126,17 +103,21 @@ export async function DELETE(
   { params }: { params: { id: string } }
 ) {
   try {
-    const rateIndex = mockRates.findIndex(r => r.id === params.id);
-    
-    if (rateIndex === -1) {
+    const { error } = await supabase
+      .from('rates')
+      .update({ 
+        valid_to: new Date().toISOString(),
+        active: false 
+      })
+      .eq('id', params.id);
+
+    if (error) {
+      console.error('Error al eliminar tasa:', error);
       return NextResponse.json(
-        { success: false, error: 'Tasa no encontrada' },
-        { status: 404 }
+        { success: false, error: error.message },
+        { status: 500 }
       );
     }
-
-    // Marcar como inactiva (no eliminar físicamente)
-    mockRates[rateIndex].valid_to = new Date().toISOString();
 
     return NextResponse.json({
       success: true,

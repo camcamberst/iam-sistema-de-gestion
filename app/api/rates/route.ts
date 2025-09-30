@@ -58,52 +58,41 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { scope, kind, value_raw, adjustment, value_effective, source, author_id } = body;
+    const { scope, kind, value, author_id } = body;
 
     // Validaciones básicas
-    if (!scope || !kind || value_effective === undefined) {
+    if (!scope || !kind || value === undefined) {
       return NextResponse.json(
-        { success: false, error: 'Datos requeridos: scope, kind, value_effective' },
+        { success: false, error: 'Datos requeridos: scope, kind, value' },
         { status: 400 }
       );
     }
 
-    if (!['USD_COP', 'EUR_USD', 'GBP_USD'].includes(kind)) {
+    if (!['USD→COP', 'EUR→USD', 'GBP→USD'].includes(kind)) {
       return NextResponse.json(
-        { success: false, error: 'kind debe ser USD_COP, EUR_USD o GBP_USD' },
+        { success: false, error: 'kind debe ser USD→COP, EUR→USD o GBP→USD' },
         { status: 400 }
       );
     }
 
-    // ===========================================
-    // 🔐 VALIDACIÓN DE JERARQUÍA (TEMPORAL)
-    // ===========================================
-    // TODO: Implementar autenticación real y validación de roles
-    // Por ahora, permitir solo scopes válidos
-    const validScopes = ['global'];
-    if (scope.startsWith('group:')) {
-      validScopes.push(scope);
-    }
-    
-    if (!validScopes.includes(scope)) {
-      return NextResponse.json(
-        { success: false, error: 'Scope no válido para tu rol' },
-        { status: 403 }
-      );
-    }
+    // Desactivar tasa anterior si existe
+    await supabase
+      .from('rates')
+      .update({ valid_to: new Date().toISOString() })
+      .eq('kind', kind)
+      .eq('scope', scope)
+      .is('valid_to', null);
 
-    // Insertar en Supabase
+    // Insertar nueva tasa
     const { data: newRate, error } = await supabase
       .from('rates')
       .insert({
-        scope,
         kind,
-        value_raw: value_raw || value_effective,
-        adjustment: adjustment || 0,
-        value_effective,
-        source: source || 'manual',
-        author_id: null, // TODO: implementar autenticación real
-        period_base: false
+        value: parseFloat(value),
+        scope: scope || 'global',
+        scope_id: body.scope_id || null,
+        author_id: author_id || null,
+        valid_from: new Date().toISOString()
       })
       .select()
       .single();
