@@ -270,11 +270,11 @@ export default function ConfigCalculatorPage() {
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         value={groupPercentage}
                         onChange={(e) => setGroupPercentage(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="60.00"
+                        placeholder="60"
                       />
                     </div>
                     <div>
@@ -283,7 +283,7 @@ export default function ConfigCalculatorPage() {
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         value={percentageOverride}
                         onChange={(e) => setPercentageOverride(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -303,11 +303,11 @@ export default function ConfigCalculatorPage() {
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         value={groupMinQuota}
                         onChange={(e) => setGroupMinQuota(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                        placeholder="1000.00"
+                        placeholder="470"
                       />
                     </div>
                     <div>
@@ -316,7 +316,7 @@ export default function ConfigCalculatorPage() {
                       </label>
                       <input
                         type="number"
-                        step="0.01"
+                        step="1"
                         value={minQuotaOverride}
                         onChange={(e) => setMinQuotaOverride(e.target.value)}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
