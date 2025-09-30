@@ -88,27 +88,7 @@ export default function AdminDashboard() {
           </p>
         )}
 
-        {/* Cards por rol */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <div className="apple-card">
-            <div className="text-sm text-gray-500">Usuarios</div>
-            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.total}</div>
-          </div>
-          {user?.role !== 'modelo' && (
-            <div className="apple-card">
-            <div className="text-sm text-gray-500">Super Admin</div>
-            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.super_admin}</div>
-            </div>
-          )}
-          <div className="apple-card">
-            <div className="text-sm text-gray-500">Admin</div>
-            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.admin}</div>
-          </div>
-          <div className="apple-card">
-            <div className="text-sm text-gray-500">Modelos</div>
-            <div className="text-2xl font-semibold text-gray-900 mt-2">{stats.modelo}</div>
-          </div>
-        </div>
+        {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
         {/* Panel de Tasas Activas para Super Admin y Admin */}
         {(user?.role === 'super_admin' || user?.role === 'admin') && (
