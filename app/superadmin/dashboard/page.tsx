@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import ActiveRatesPanel from '../../../../components/ActiveRatesPanel';
+import ActiveRatesPanel from '../../../components/ActiveRatesPanel';
 
 interface User {
   id: string;

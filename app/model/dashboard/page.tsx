@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ModelCalculator from '../../../../components/ModelCalculator';
+import ModelCalculator from '../../../components/ModelCalculator';
 
 interface User {
   id: string;
