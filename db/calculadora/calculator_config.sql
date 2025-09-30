@@ -7,7 +7,7 @@ CREATE TABLE IF NOT EXISTS calculator_config (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   model_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE,
   admin_id uuid NOT NULL REFERENCES public.users(id) ON DELETE CASCADE, -- Quien configuró
-  group_id uuid REFERENCES public.groups(id) ON DELETE SET NULL, -- Grupo de la modelo
+  group_id uuid NULL, -- Grupo de la modelo (referencia manual)
   
   -- Configuración de plataformas (JSON)
   enabled_platforms jsonb NOT NULL DEFAULT '[]'::jsonb, -- Array de IDs de plataformas habilitadas
@@ -23,10 +23,10 @@ CREATE TABLE IF NOT EXISTS calculator_config (
   -- Metadatos
   active boolean NOT NULL DEFAULT TRUE,
   created_at timestamptz NOT NULL DEFAULT now(),
-  updated_at timestamptz NOT NULL DEFAULT now(),
+  updated_at timestamptz NOT NULL DEFAULT now()
   
   -- Una configuración activa por modelo
-  UNIQUE (model_id) WHERE active = true
+  -- Nota: La restricción de unicidad se manejará a nivel de aplicación
 );
 
 -- Índices para optimización
@@ -49,20 +49,12 @@ DROP POLICY IF EXISTS "Admins can manage calculator_config of models in their gr
 CREATE POLICY "Admins can manage calculator_config of models in their groups."
   ON calculator_config FOR ALL
   USING (
-    EXISTS (
-      SELECT 1 FROM public.user_groups ug
-      JOIN public.groups g ON ug.group_id = g.id
-      WHERE ug.user_id = auth.uid()
-      AND g.id = calculator_config.group_id
-    ) OR (SELECT role FROM public.users WHERE id = auth.uid()) = 'super_admin'
+    (SELECT role FROM public.users WHERE id = auth.uid()) = 'super_admin' OR
+    (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
   )
   WITH CHECK (
-    EXISTS (
-      SELECT 1 FROM public.user_groups ug
-      JOIN public.groups g ON ug.group_id = g.id
-      WHERE ug.user_id = auth.uid()
-      AND g.id = calculator_config.group_id
-    ) OR (SELECT role FROM public.users WHERE id = auth.uid()) = 'super_admin'
+    (SELECT role FROM public.users WHERE id = auth.uid()) = 'super_admin' OR
+    (SELECT role FROM public.users WHERE id = auth.uid()) = 'admin'
   );
 
 -- Política para que los super_admins puedan ver y modificar todas las configuraciones

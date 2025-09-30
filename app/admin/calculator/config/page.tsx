@@ -49,7 +49,9 @@ export default function ConfigCalculatorPage() {
       setError(null);
 
       // Cargar modelos disponibles
-      const modelsResponse = await fetch('/api/calculator/models?adminId=current-user'); // TODO: Obtener ID real
+      const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      const userId = userData ? JSON.parse(userData).id : 'current-user';
+      const modelsResponse = await fetch(`/api/calculator/models?adminId=${userId}`);
       const modelsData = await modelsResponse.json();
       
       if (!modelsData.success) {
@@ -121,8 +123,8 @@ export default function ConfigCalculatorPage() {
         },
         body: JSON.stringify({
           modelId: selectedModel.id,
-          adminId: 'current-user', // TODO: Obtener ID real
-          groupId: selectedModel.groups[0]?.id,
+          adminId: userId,
+          groupId: selectedModel.groups[0]?.id || 'default-group',
           enabledPlatforms,
           percentageOverride: percentageOverride ? parseFloat(percentageOverride) : null,
           minQuotaOverride: minQuotaOverride ? parseFloat(minQuotaOverride) : null,
