@@ -116,6 +116,10 @@ export default function ConfigCalculatorPage() {
       setSaving(true);
       setError(null);
 
+      // Obtener ID del usuario actual
+      const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      const userId = userData ? JSON.parse(userData).id : 'current-user';
+
       const response = await fetch('/api/calculator/config', {
         method: 'POST',
         headers: {
