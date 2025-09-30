@@ -46,6 +46,8 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
+  // Mantener valores escritos como texto para permitir decimales con coma y punto
+  const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculatorResult | null>(null);
@@ -162,6 +164,13 @@ export default function ModelCalculatorPage() {
         value: p.value
       })));
       setPlatforms(enabledPlatforms);
+      // Inicializar inputs de texto vacíos
+      setInputValues(
+        enabledPlatforms.reduce((acc: Record<string, string>, p) => {
+          acc[p.id] = p.value ? String(p.value) : '';
+          return acc;
+        }, {})
+      );
 
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Error:', err);
@@ -441,22 +450,23 @@ export default function ModelCalculatorPage() {
                             {/* INPUT DE PRUEBA COMPLETAMENTE AISLADO */}
                             <input
                               type="text"
-                              value={platform.value || ''}
+                              inputMode="decimal"
+                              value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
-                                const inputValue = e.target.value;
-                                console.log('🔍 [DEBUG] INPUT RAW:', inputValue);
-                                
-                                // Convertir coma a punto ANTES de parseFloat
-                                const normalizedValue = inputValue.replace(',', '.');
-                                console.log('🔍 [DEBUG] NORMALIZED:', normalizedValue);
-                                
-                                const value = parseFloat(normalizedValue) || 0;
-                                console.log('🔍 [DEBUG] VALOR FINAL:', value);
-                                
-                                // Actualizar estado
-                                setPlatforms(prev => prev.map(p => 
-                                  p.id === platform.id ? { ...p, value } : p
-                                ));
+                                const raw = e.target.value;
+                                // Permitir solo dígitos, puntos y comas, y un solo separador decimal
+                                const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                // Reemplazar comas por puntos para normalizar
+                                const normalized = cleaned.replace(',', '.');
+                                // Evitar múltiples puntos (mantener el primero)
+                                const parts = normalized.split('.');
+                                const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                setInputValues(prev => ({ ...prev, [platform.id]: safeNormalized }));
+
+                                // Convertir a número si es válido
+                                const numeric = Number.parseFloat(safeNormalized);
+                                const value = Number.isFinite(numeric) ? numeric : 0;
+                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value } : p));
                               }}
                               onKeyDown={(e) => {
                                 console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
