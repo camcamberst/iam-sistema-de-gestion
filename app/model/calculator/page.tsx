@@ -149,10 +149,18 @@ export default function ModelCalculatorPage() {
           enabled: true,
           value: 0,
           percentage: platform.percentage_override || platform.group_percentage || 80,
-          minQuota: platform.min_quota_override || platform.group_min_quota || 470
+          minQuota: platform.min_quota_override || platform.group_min_quota || 470,
+          currency: platform.currency || 'USD' // CRÍTICO: Agregar currency
         }));
 
       console.log('🔍 [CALCULATOR] Enabled platforms:', enabledPlatforms);
+      console.log('🔍 [CALCULATOR] Platform details:', enabledPlatforms.map(p => ({
+        id: p.id,
+        name: p.name,
+        currency: p.currency,
+        percentage: p.percentage,
+        value: p.value
+      })));
       setPlatforms(enabledPlatforms);
 
     } catch (err: any) {
@@ -372,6 +380,14 @@ export default function ModelCalculatorPage() {
                     const usdBruto = platform.value;
                     
                     // Aplicar fórmula específica según la plataforma
+                    console.log('🔍 [CALCULATOR] Calculating for platform:', {
+                      id: platform.id,
+                      name: platform.name,
+                      currency: platform.currency,
+                      value: platform.value,
+                      percentage: platform.percentage
+                    });
+                    
                     let usdModelo = 0;
                     if (platform.currency === 'EUR') {
                       // EUR→USD→COP

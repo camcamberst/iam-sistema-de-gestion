@@ -6,19 +6,33 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
-// GET: Debug completo del flujo de calculadora
 export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get('userId');
+
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'userId es requerido' }, { status: 400 });
+  }
+
   try {
-    console.log('🔍 [DEBUG-CALCULATOR-FLOW] Starting complete flow debug...');
+    console.log('🔍 [DEBUG] Starting calculator flow debug for userId:', userId);
 
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    // 1. Verificar si el usuario existe
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, name, email, role')
+      .eq('id', userId)
+      .single();
 
-    if (!userId) {
-      return NextResponse.json({ success: false, error: 'userId es requerido' }, { status: 400 });
+    if (userError) {
+      return NextResponse.json({
+        success: false,
+        error: 'Usuario no encontrado',
+        debug: { userError: userError.message }
+      });
     }
 
-    // 1. Verificar configuración de la modelo
+    // 2. Verificar configuración de calculadora
     const { data: config, error: configError } = await supabase
       .from('calculator_config')
       .select('*')
@@ -26,71 +40,44 @@ export async function GET(request: NextRequest) {
       .eq('active', true)
       .single();
 
-    console.log('🔍 [DEBUG-CALCULATOR-FLOW] Config for userId', userId, ':', config);
-    console.log('🔍 [DEBUG-CALCULATOR-FLOW] Config error:', configError);
-
-    // 2. Verificar todas las configuraciones
-    const { data: allConfigs, error: allConfigsError } = await supabase
-      .from('calculator_config')
-      .select('*')
-      .order('created_at', { ascending: false });
-
-    console.log('🔍 [DEBUG-CALCULATOR-FLOW] All configs:', allConfigs);
-
     // 3. Verificar plataformas disponibles
-    const { data: platforms, error: platformsError } = await supabase
+    const { data: allPlatforms, error: platformsError } = await supabase
       .from('calculator_platforms')
       .select('*')
       .eq('active', true)
       .order('name');
 
-    console.log('🔍 [DEBUG-CALCULATOR-FLOW] Platforms:', platforms);
-
-    // 4. Verificar usuarios
-    const { data: users, error: usersError } = await supabase
-      .from('users')
-      .select('id, email, name, role')
-      .order('role');
-
-    console.log('🔍 [DEBUG-CALCULATOR-FLOW] Users:', users);
-
-    // 5. Si hay configuración, verificar plataformas habilitadas
-    let enabledPlatforms = [];
-    if (config && config.enabled_platforms) {
-      const { data: enabledPlatformsData, error: enabledPlatformsError } = await supabase
-        .from('calculator_platforms')
-        .select('*')
-        .in('id', config.enabled_platforms)
-        .eq('active', true);
-
-      enabledPlatforms = enabledPlatformsData || [];
-      console.log('🔍 [DEBUG-CALCULATOR-FLOW] Enabled platforms:', enabledPlatforms);
-    }
+    // 4. Verificar tasas
+    const { data: rates, error: ratesError } = await supabase
+      .from('rates')
+      .select('*')
+      .is('valid_to', null)
+      .order('kind');
 
     return NextResponse.json({
       success: true,
       debug: {
-        userId,
-        config: config || null,
-        configError: configError?.message,
-        allConfigs: allConfigs || [],
-        platforms: platforms || [],
-        enabledPlatforms: enabledPlatforms,
-        users: users || [],
+        user: user,
+        hasConfig: !!config,
+        config: config,
+        totalPlatforms: allPlatforms?.length || 0,
+        platforms: allPlatforms?.slice(0, 5) || [], // Solo primeras 5 para debug
+        totalRates: rates?.length || 0,
+        rates: rates,
         errors: {
           configError: configError?.message,
-          allConfigsError: allConfigsError?.message,
           platformsError: platformsError?.message,
-          usersError: usersError?.message
+          ratesError: ratesError?.message
         }
       }
     });
 
   } catch (error: any) {
-    console.error('❌ [DEBUG-CALCULATOR-FLOW] Error:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error.message || 'Error interno del servidor' 
-    }, { status: 500 });
+    console.error('❌ [DEBUG] Error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error.message,
+      debug: { stack: error.stack }
+    });
   }
 }
