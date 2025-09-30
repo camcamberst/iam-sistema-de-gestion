@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('id, email, name, role')
-      .order('role', 'name');
+      .order('role');
 
     console.log('🔍 [DEBUG-CALCULATOR-FLOW] Users:', users);
 
