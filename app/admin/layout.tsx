@@ -162,7 +162,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </div>
 
             {/* Main Navigation - Apple.com Style */}
-            <nav className="hidden md:flex items-center space-x-8">
+            <nav className="flex items-center space-x-8">
+              {console.log('🔍 [RENDER] Menu items length:', menuItems.length)}
+              {console.log('🔍 [RENDER] Menu items:', menuItems)}
               {menuItems.map((item) => (
                 <div
                   key={item.id}
