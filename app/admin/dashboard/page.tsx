@@ -209,7 +209,7 @@ export default function AdminDashboard() {
               {/* Barra de alcance de meta (compacta) */}
               <div className="mt-1">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-xs font-medium text-gray-700">Alcance de meta diaria</span>
+                  <span className="text-xs font-medium text-gray-700">Objetivo básico</span>
                   <span className="text-xs text-gray-600">${summary ? summary.usdBruto.toFixed(0) : '—'} / ${summary ? summary.goalUsd.toFixed(0) : '—'} USD</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
