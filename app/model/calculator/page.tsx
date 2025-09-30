@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 
 interface User {
@@ -56,8 +56,17 @@ export default function ModelCalculatorPage() {
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [adminOverride, setAdminOverride] = useState(false);
+  const [queryModelId, setQueryModelId] = useState<string | null>(null);
   const router = useRouter();
-  const searchParams = useSearchParams();
+  // Evitar useSearchParams para no requerir Suspense durante pre-render
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const sp = new URLSearchParams(window.location.search);
+    const mid = sp.get('modelId');
+    const asAdmin = sp.get('asAdmin');
+    setQueryModelId(mid);
+    setAdminOverride(Boolean(mid && asAdmin === '1'));
+  }, []);
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
@@ -104,20 +113,18 @@ export default function ModelCalculatorPage() {
         setUser(current);
 
         // Soporte de modo admin: permitir ver calculadora de una modelo específica
-        const qpModelId = searchParams?.get('modelId');
-        const qpAsAdmin = searchParams?.get('asAdmin');
         const isAdmin = current.role === 'admin' || current.role === 'super_admin';
-        const useOverride = Boolean(qpModelId && qpAsAdmin === '1' && isAdmin);
+        const useOverride = Boolean(queryModelId && adminOverride && isAdmin);
         setAdminOverride(useOverride);
 
         // Cargar configuración de calculadora del usuario actual o de la modelo seleccionada por admin
-        await loadCalculatorConfig(useOverride ? (qpModelId as string) : current.id);
+        await loadCalculatorConfig(useOverride ? (queryModelId as string) : current.id);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [queryModelId, adminOverride]);
 
   const loadCalculatorConfig = async (userId: string) => {
     try {
