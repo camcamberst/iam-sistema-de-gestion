@@ -118,6 +118,7 @@ export default function ModelCalculatorPage() {
 
       const data = await response.json();
       console.log('🔍 [CALCULATOR] Config data:', data);
+      console.log('🔍 [CALCULATOR] Platforms received:', data.config?.platforms);
 
       if (!data.success) {
         throw new Error(data.error || 'Error al cargar configuración');
