@@ -110,8 +110,8 @@ export default function ModelCalculatorPage() {
       const calculatorFlowData = await calculatorFlowResponse.json();
       console.log('🔍 [CALCULATOR] Calculator flow data:', calculatorFlowData);
 
-      // Cargar configuración desde API híbrida
-      const response = await fetch(`/api/calculator/config-hybrid?userId=${userId}`);
+      // Cargar configuración desde API v2
+      const response = await fetch(`/api/calculator/config-v2?userId=${userId}`);
       if (!response.ok) {
         throw new Error('Error al cargar configuración');
       }

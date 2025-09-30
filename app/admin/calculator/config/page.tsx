@@ -123,7 +123,7 @@ export default function ConfigCalculatorPage() {
       const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
       const userId = userData ? JSON.parse(userData).id : 'current-user';
 
-      const response = await fetch('/api/calculator/config', {
+      const response = await fetch('/api/calculator/config-v2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
