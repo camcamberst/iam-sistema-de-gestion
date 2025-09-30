@@ -220,6 +220,13 @@ export default function RatesPage() {
 
 	async function onCreate(e: React.FormEvent) {
 		e.preventDefault();
+		
+		// Validación de TypeScript
+		if (!userInfo) {
+			setError("Usuario no autenticado");
+			return;
+		}
+		
 		try {
 			setLoading(true);
 			setError(null);
