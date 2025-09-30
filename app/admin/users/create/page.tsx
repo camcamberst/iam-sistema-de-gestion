@@ -67,24 +67,28 @@ export default function CreateUserPage() {
     }
   }
 
+  const [showPassword, setShowPassword] = useState(false);
+
   return (
-    <div>
-      <h1>Crear Usuario</h1>
-      <form onSubmit={onSubmit} style={{ display: "grid", gap: 12, maxWidth: 480 }}>
-        <input
+    <div className="max-w-2xl mx-auto">
+      <div className="apple-card" style={{ padding: 24 }}>
+        <h1 className="text-xl font-semibold text-gray-900 mb-4">Crear Usuario</h1>
+        <form onSubmit={onSubmit} style={{ display: "grid", gap: 16 }}>
+          <input
           placeholder="Nombre"
           value={form.name}
           onChange={e=>setForm({...form, name:e.target.value})}
           required
           style={{
             width:'100%',
-            border:'1px solid #d1d5db',
+            border:'1px solid #e5e7eb',
             borderRadius:12,
-            padding:'10px 12px',
-            color:'#111827'
+            padding:'12px 14px',
+            color:'#111827',
+            background:'#fafafa'
           }}
-        />
-        <input
+          />
+          <input
           placeholder="Correo electrónico"
           type="email"
           value={form.email}
@@ -92,26 +96,43 @@ export default function CreateUserPage() {
           required
           style={{
             width:'100%',
-            border:'1px solid #d1d5db',
+            border:'1px solid #e5e7eb',
             borderRadius:12,
-            padding:'10px 12px',
-            color:'#111827'
+            padding:'12px 14px',
+            color:'#111827',
+            background:'#fafafa'
           }}
-        />
-        <input
-          placeholder="Contraseña"
-          type="password"
-          value={form.password}
-          onChange={e=>setForm({...form, password:e.target.value})}
-          required
-          style={{
-            width:'100%',
-            border:'1px solid #d1d5db',
-            borderRadius:12,
-            padding:'10px 12px',
-            color:'#111827'
-          }}
-        />
+          />
+          {/* Password with show/hide */}
+          <div style={{ position:'relative' }}>
+            <input
+              placeholder="Contraseña"
+              type={showPassword ? 'text' : 'password'}
+              value={form.password}
+              onChange={e=>setForm({...form, password:e.target.value})}
+              required
+              style={{
+                width:'100%',
+                border:'1px solid #e5e7eb',
+                borderRadius:12,
+                padding:'12px 44px 12px 14px',
+                color:'#111827',
+                background:'#fafafa'
+              }}
+            />
+            <button
+              type="button"
+              onClick={() => setShowPassword(v=>!v)}
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+              style={{
+                position:'absolute', right:8, top:8,
+                borderRadius:10, padding:'6px 10px',
+                background:'#111827', color:'#fff', fontSize:12
+              }}
+            >
+              {showPassword ? 'Ocultar' : 'Ver'}
+            </button>
+          </div>
         {/* Rol - Dropdown Apple-like */}
         <div ref={roleDropdownRef}>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Rol</div>
@@ -263,7 +284,8 @@ export default function CreateUserPage() {
         <button disabled={submitting} type="submit">
           {submitting? "Creando...":"Crear"}
         </button>
-      </form>
+        </form>
+      </div>
     </div>
   );
 }
