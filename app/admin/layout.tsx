@@ -69,11 +69,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const baseItems = [
       {
         id: 'calculator',
-        label: 'Gestionar Calculadora',
-        href: '/admin/calculadora',
-        subItems: [
-          { label: 'Panel Calculadora', href: '/admin/calculadora' }
-        ]
+        label: 'Mi Calculadora',
+        href: '/admin/model/dashboard',
+        subItems: []
       }
     ];
 
