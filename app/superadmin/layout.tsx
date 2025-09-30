@@ -81,11 +81,11 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     if (userRole === 'super_admin' || userRole === 'admin') {
       baseItems.unshift({
         id: 'users',
-        label: 'Gestión de Usuarios',
+        label: 'Gestión Usarios',
         href: '/admin/users',
         subItems: [
-          { label: 'Consultar Usuarios', href: '/admin/users' },
-          { label: 'Crear Usuario', href: '/admin/users/create' }
+          { label: 'Crear Usuario', href: '/admin/users/create' },
+          { label: 'Consultar Usuarios', href: '/admin/users' }
         ]
       });
 
