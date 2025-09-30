@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ModelCalculator from '../../../components/ModelCalculator';
+import { createClient } from "@supabase/supabase-js";
 
 interface User {
   id: string;
@@ -19,40 +20,50 @@ export default function ModelDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+  );
 
   useEffect(() => {
-    const checkAuth = async () => {
+    const load = async () => {
       try {
-        // Verificar que estamos en el cliente
-        if (typeof window === 'undefined') {
+        setLoading(true);
+        // Load current user
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth?.user?.id;
+        if (!uid) {
+          setUser(null);
+          setLoading(false);
           return;
         }
-
-        const userData = localStorage.getItem('user');
-        if (!userData) {
-          router.push('/login');
-          return;
+        const { data: userRow } = await supabase
+          .from('users')
+          .select('id,name,email,role')
+          .eq('id', uid)
+          .single();
+        let groups: string[] = [];
+        if (userRow && userRow.role !== 'super_admin') {
+          const { data: ug } = await supabase
+            .from('user_groups')
+            .select('groups(name)')
+            .eq('user_id', uid);
+          groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
         }
-
-        const parsedUser = JSON.parse(userData);
-        
-        // Verificar que sea modelo
-        if (parsedUser.role !== 'modelo') {
-          router.push('/login');
-          return;
-        }
-
-        setUser(parsedUser);
-      } catch (error) {
-        console.error('Error checking auth:', error);
-        router.push('/login');
+        const current = {
+          id: userRow?.id || uid,
+          name: userRow?.name || auth.user?.email?.split('@')[0] || 'Usuario',
+          email: userRow?.email || auth.user?.email || '',
+          role: (userRow?.role as any) || 'modelo',
+          groups,
+        };
+        setUser(current);
       } finally {
         setLoading(false);
       }
     };
-
-    checkAuth();
-  }, [router]);
+    load();
+  }, []);
 
   if (loading) {
     return (
