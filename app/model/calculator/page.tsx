@@ -468,7 +468,12 @@ export default function ModelCalculatorPage() {
               <h4 className="text-lg font-medium text-gray-900 mb-2">Error al cargar calculadora</h4>
               <p className="text-gray-500 mb-4">{error}</p>
               <button
-                onClick={() => loadCalculatorConfig(user.id)}
+                onClick={() => {
+                  const targetId = (adminOverride && queryModelId) ? (queryModelId as string) : (user ? user.id : null);
+                  if (targetId) {
+                    loadCalculatorConfig(targetId);
+                  }
+                }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
               >
                 Reintentar
