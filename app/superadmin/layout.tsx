@@ -69,11 +69,9 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     const baseItems = [
       {
         id: 'calculator',
-        label: 'Gestionar Calculadora',
-        href: '/admin/calculadora',
-        subItems: [
-          { label: 'Panel Calculadora', href: '/admin/calculadora' }
-        ]
+        label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
+        href: userRole === 'modelo' ? '/model/calculator' : '/admin/calculator/config',
+        subItems: userRole === 'modelo' ? [ { label: 'Ingresar Valores', href: '/model/calculator' } ] : []
       }
     ];
 
@@ -122,11 +120,11 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       // Agregar opciones administrativas de calculadora SOLO para admins/super_admins
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
       if (calculatorIndex !== -1) {
-        baseItems[calculatorIndex].subItems.push(
+        baseItems[calculatorIndex].subItems = [
           { label: 'Definir RATES', href: '/admin/rates' },
           { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
-          { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view' }
-        );
+          { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view-model' }
+        ];
       }
     }
 
