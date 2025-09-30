@@ -22,10 +22,17 @@ export default function ModelLayout({
 }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
   const pathname = usePathname();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const checkAuth = async () => {
       try {
         const userData = localStorage.getItem('user');
@@ -52,7 +59,7 @@ export default function ModelLayout({
     };
 
     checkAuth();
-  }, [router]);
+  }, [mounted, router]);
 
   const getMenuItems = () => {
     return [

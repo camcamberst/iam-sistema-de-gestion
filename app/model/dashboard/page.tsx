@@ -18,9 +18,16 @@ interface User {
 export default function ModelDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const checkAuth = async () => {
       try {
         const userData = localStorage.getItem('user');
@@ -47,7 +54,7 @@ export default function ModelDashboard() {
     };
 
     checkAuth();
-  }, [router]);
+  }, [mounted, router]);
 
   if (loading) {
     return (
