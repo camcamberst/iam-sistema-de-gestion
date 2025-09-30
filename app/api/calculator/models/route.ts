@@ -28,7 +28,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
     }
 
-    // Obtener todas las modelos (simplificado para testing)
+    // Obtener todas las modelos con sus grupos reales
     const { data: models, error: modelsError } = await supabase
       .from('users')
       .select(`
@@ -36,6 +36,10 @@ export async function GET(request: NextRequest) {
         email,
         name,
         role,
+        groups:user_groups(
+          group_id,
+          group:groups(id, name)
+        ),
         calculator_config:calculator_config!calculator_config_model_id_fkey(
           id,
           active,
@@ -60,7 +64,7 @@ export async function GET(request: NextRequest) {
       email: model.email,
       name: model.name,
       role: model.role,
-      groups: [{ id: 'default', name: 'Grupo por defecto' }], // Mock para testing
+      groups: model.groups?.map((g: any) => g.group).filter(Boolean) || [{ id: 'default', name: 'Sin grupo asignado' }],
       hasConfig: model.calculator_config && model.calculator_config.length > 0,
       currentConfig: model.calculator_config?.[0] || null
     })) || [];
