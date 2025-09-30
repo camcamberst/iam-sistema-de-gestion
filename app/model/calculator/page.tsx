@@ -105,8 +105,8 @@ export default function ModelCalculatorPage() {
     try {
       console.log('🔍 [CALCULATOR] Loading config for userId:', userId);
 
-      // Cargar configuración desde API simplificada
-      const response = await fetch(`/api/calculator/config-simple?userId=${userId}`);
+      // Cargar configuración desde API híbrida
+      const response = await fetch(`/api/calculator/config-hybrid?userId=${userId}`);
       if (!response.ok) {
         throw new Error('Error al cargar configuración');
       }
