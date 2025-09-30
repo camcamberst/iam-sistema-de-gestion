@@ -58,11 +58,13 @@ export default function LoginPage() {
       // Redirigir según el rol con lógica moderna
       switch (user.role) {
         case 'super_admin':
+          router.push('/superadmin/dashboard');
+          break;
         case 'admin':
           router.push('/admin/dashboard');
           break;
         case 'modelo':
-          router.push('/admin/dashboard'); // Los modelos también van al dashboard admin
+          router.push('/model/dashboard');
           break;
         default:
           router.push('/admin/dashboard');
