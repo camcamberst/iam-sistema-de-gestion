@@ -9,10 +9,10 @@ const supabase = createClient(
 // GET: Obtener configuración de calculadora para una modelo
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const modelId = searchParams.get('modelId');
+  const userId = searchParams.get('userId');
 
-  if (!modelId) {
-    return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
+  if (!userId) {
+    return NextResponse.json({ success: false, error: 'userId es requerido' }, { status: 400 });
   }
 
   try {
@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
         admin:users!calculator_config_admin_id_fkey(id, email, name),
         group:groups(id, name)
       `)
-      .eq('model_id', modelId)
+      .eq('model_id', userId)
       .eq('active', true)
       .single();
 
@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('calculator_config')
       .update({ active: false })
-      .eq('model_id', modelId);
+      .eq('model_id', userId);
 
     // Crear nueva configuración
     const { data, error } = await supabase

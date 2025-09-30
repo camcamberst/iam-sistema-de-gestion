@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import ModelCalculator from '../../../../components/ModelCalculator';
+import ModelCalculatorNew from '../../../../components/ModelCalculatorNew';
 import { createClient } from "@supabase/supabase-js";
 
 interface User {
@@ -103,7 +103,7 @@ export default function ModelDashboard() {
         </div>
 
         {/* Calculadora para modelos */}
-        <ModelCalculator />
+        <ModelCalculatorNew />
       </div>
     </div>
   );
