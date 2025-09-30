@@ -231,7 +231,7 @@ export default function RatesPage() {
 					kind: form.kind,
 					value: Number(form.value),
 					source: form.source,
-					author_id: "admin",
+					author_id: userInfo.id,
 				}),
 			});
 			const data = await res.json();
