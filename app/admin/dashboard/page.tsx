@@ -12,6 +12,8 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: Role; groups: string[] } | null>(null);
+  // Resumen de productividad (modelo)
+  const [summary, setSummary] = useState<{ usdBruto: number; usdModelo: number; copModelo: number; goalUsd: number; pct: number } | null>(null);
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
@@ -77,6 +79,73 @@ export default function AdminDashboard() {
     load();
   }, []);
 
+  // Cargar resumen de productividad para modelo
+  useEffect(() => {
+    const loadProductivity = async () => {
+      if (!user || user.role !== 'modelo') return;
+      try {
+        // 1) Tasas activas
+        const ratesRes = await fetch('/api/rates-v2?activeOnly=true');
+        const ratesJson = await ratesRes.json();
+        const rates = {
+          usd_cop: ratesJson?.data?.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
+          eur_usd: ratesJson?.data?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+          gbp_usd: ratesJson?.data?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.2,
+        };
+
+        // 2) Configuración de plataformas habilitadas
+        const cfgRes = await fetch(`/api/calculator/config-v2?userId=${user.id}`);
+        const cfg = await cfgRes.json();
+        const enabled = (cfg?.config?.platforms || []).filter((p: any) => p.enabled);
+
+        // Porcentaje y cuota mínima (fallbacks sensatos)
+        const percentage = (enabled[0]?.percentage_override || enabled[0]?.group_percentage || 80) as number;
+        const goalUsd = (enabled[0]?.min_quota_override || enabled[0]?.group_min_quota || 470) as number;
+
+        // 3) Valores del día (v2)
+        const today = new Date().toISOString().split('T')[0];
+        const valuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${today}`);
+        const valuesJson = await valuesRes.json();
+        const rows: Array<{ platform_id: string; value: number }> = valuesJson?.data || [];
+        const idToValue: Record<string, number> = {};
+        rows.forEach((r) => {
+          idToValue[r.platform_id] = Number(r.value) || 0;
+        });
+
+        // 4) Cálculo por plataforma (mismo criterio que calculadora)
+        let usdBruto = 0;
+        let usdModelo = 0;
+        for (const p of enabled) {
+          const v = idToValue[p.id] || 0;
+          if (v <= 0) continue;
+          let u = 0;
+          if (p.currency === 'EUR') {
+            if (p.id === 'big7') u = (v * rates.eur_usd) * 0.84;
+            else if (p.id === 'mondo') u = (v * rates.eur_usd) * 0.78;
+            else u = v * rates.eur_usd;
+          } else if (p.currency === 'GBP') {
+            if (p.id === 'aw') u = (v * rates.gbp_usd) * 0.677;
+            else u = v * rates.gbp_usd;
+          } else {
+            if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') u = v * 0.75;
+            else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') u = v * 0.05;
+            else if (p.id === 'dxlive') u = v * 0.60;
+            else if (p.id === 'secretfriends') u = v * 0.5;
+            else u = v;
+          }
+          usdBruto += u;
+          usdModelo += (u * percentage) / 100;
+        }
+        const copModelo = usdModelo * rates.usd_cop;
+        const pct = Math.max(0, Math.min(100, (usdBruto / goalUsd) * 100));
+        setSummary({ usdBruto, usdModelo, copModelo, goalUsd, pct });
+      } catch (e) {
+        console.warn('⚠️ resumen productividad:', e);
+      }
+    };
+    loadProductivity();
+  }, [user]);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -120,36 +189,36 @@ export default function AdminDashboard() {
             </div>
 
             {/* Resumen de productividad y progreso de meta */}
-            <div className="apple-card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-md bg-blue-50 text-center">
-                  <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
-                  <div className="text-2xl font-bold text-blue-600">—</div>
+            <div className="apple-card py-3">
+              <h2 className="text-sm font-semibold text-gray-900 mb-3">Resumen de Productividad</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
+                <div className="p-3 rounded-md bg-blue-50 text-center">
+                  <div className="text-[11px] text-gray-600">USD Bruto (hoy)</div>
+                  <div className="text-xl font-bold text-blue-600">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
                 </div>
-                <div className="p-4 rounded-md bg-green-50 text-center">
-                  <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
-                  <div className="text-2xl font-bold text-green-600">—</div>
+                <div className="p-3 rounded-md bg-green-50 text-center">
+                  <div className="text-[11px] text-gray-600">USD Modelo (hoy)</div>
+                  <div className="text-xl font-bold text-green-600">${summary ? summary.usdModelo.toFixed(2) : '—'}</div>
                 </div>
-                <div className="p-4 rounded-md bg-purple-50 text-center">
-                  <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
-                  <div className="text-2xl font-bold text-purple-600">—</div>
+                <div className="p-3 rounded-md bg-purple-50 text-center">
+                  <div className="text-[11px] text-gray-600">COP Modelo (hoy)</div>
+                  <div className="text-xl font-bold text-purple-600">{summary ? summary.copModelo.toLocaleString('es-CO', {maximumFractionDigits:0}) : '—'}</div>
                 </div>
               </div>
 
               {/* Barra de alcance de meta (compacta) */}
-              <div className="mt-2">
+              <div className="mt-1">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Alcance de meta diaria</span>
-                  <span className="text-sm text-gray-600">— / — USD</span>
+                  <span className="text-xs font-medium text-gray-700">Alcance de meta diaria</span>
+                  <span className="text-xs text-gray-600">${summary ? summary.usdBruto.toFixed(0) : '—'} / ${summary ? summary.goalUsd.toFixed(0) : '—'} USD</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-500" style={{ width: '0%' }}></div>
+                <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                  <div className="h-1.5 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" style={{ width: `${summary ? Math.min(100, summary.pct).toFixed(0) : 0}%` }}></div>
                 </div>
-                <div className="text-right text-xs text-gray-600 mt-1">0%</div>
+                <div className="text-right text-[11px] text-gray-600 mt-1">{summary ? Math.min(100, summary.pct).toFixed(0) : 0}%</div>
               </div>
 
-              <div className="mt-4 text-sm text-gray-500">
+              <div className="mt-3 text-xs text-gray-500">
                 Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline">Mi Calculadora</a>.
               </div>
             </div>
