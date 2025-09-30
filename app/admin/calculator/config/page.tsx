@@ -64,10 +64,13 @@ export default function ConfigCalculatorPage() {
       const platformsResponse = await fetch('/api/calculator/platforms');
       const platformsData = await platformsResponse.json();
       
+      console.log('🔍 [DEBUG] Plataformas cargadas:', platformsData);
+      
       if (!platformsData.success) {
         throw new Error(platformsData.error || 'Error al cargar plataformas');
       }
 
+      console.log('📊 [DEBUG] Total plataformas:', platformsData.data?.length);
       setPlatforms(platformsData.data);
 
     } catch (err: any) {
@@ -232,7 +235,12 @@ export default function ConfigCalculatorPage() {
               <div className="space-y-6">
                 {/* Plataformas habilitadas */}
                 <div>
-                  <h3 className="text-base font-medium text-gray-900 mb-3">Plataformas Habilitadas</h3>
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-base font-medium text-gray-900">Seleccionar Páginas</h3>
+                    <span className="text-sm text-gray-500">
+                      {platforms.length} plataformas disponibles
+                    </span>
+                  </div>
                   <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
                     <div className="space-y-3">
                       {platforms.map(platform => (
