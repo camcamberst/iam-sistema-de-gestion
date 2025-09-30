@@ -385,8 +385,9 @@ export default function ModelCalculatorPage() {
                               type="text"
                               value={platform.value > 0 ? platform.value : ''}
                               onChange={(e) => {
-                                // Permitir solo números, puntos y comas
                                 const inputValue = e.target.value;
+                                
+                                // Permitir solo números, punto y coma
                                 const cleanValue = inputValue.replace(/[^0-9.,]/g, '');
                                 
                                 // Convertir coma a punto para parseFloat
@@ -394,28 +395,6 @@ export default function ModelCalculatorPage() {
                                 const value = parseFloat(normalizedValue) || 0;
                                 
                                 handleValueChange(platform.id, value);
-                              }}
-                              onKeyDown={(e) => {
-                                // Permitir teclas de navegación, backspace, delete, etc.
-                                const allowedKeys = [
-                                  'Backspace', 'Delete', 'Tab', 'Enter', 'Escape',
-                                  'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-                                  'Home', 'End'
-                                ];
-                                
-                                // Permitir números, punto y coma
-                                const isNumber = e.key >= '0' && e.key <= '9';
-                                const isDecimal = e.key === '.' || e.key === ',';
-                                const isAllowed = allowedKeys.includes(e.key);
-                                
-                                if (!isNumber && !isDecimal && !isAllowed) {
-                                  e.preventDefault();
-                                }
-                                
-                                // Evitar múltiples puntos/comas
-                                if (isDecimal && e.currentTarget.value.includes('.')) {
-                                  e.preventDefault();
-                                }
                               }}
                               className="apple-input w-28 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                               placeholder="0.00"
