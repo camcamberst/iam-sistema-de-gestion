@@ -66,7 +66,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const userRole = userData ? JSON.parse(userData).role : 'modelo';
 
     // Menú base para todos los roles
-    const baseItems = [
+    const baseItems: Array<{
+      id: string;
+      label: string;
+      href: string;
+      subItems: Array<{label: string; href: string}>;
+    }> = [
       {
         id: 'calculator',
         label: 'Mi Calculadora',
