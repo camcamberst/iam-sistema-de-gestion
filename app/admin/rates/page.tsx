@@ -7,7 +7,7 @@ import { canEditUser, canDeleteUser, getAvailableGroups } from "../../../lib/hie
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ReferenceRatesPanel from "../../../components/ReferenceRatesPanel";
 
-type RateKind = "USD_COP" | "EUR_USD" | "GBP_USD";
+type RateKind = "USD→COP" | "EUR→USD" | "GBP→USD";
 
 interface RateItem {
 	id: string;
@@ -134,8 +134,8 @@ export default function RatesPage() {
 
 	const [form, setForm] = useState({
 		scope: "global",
-		kind: "USD_COP" as RateKind,
-		value_effective: "",
+		kind: "USD→COP" as RateKind,
+		value: "",
 		source: "manual",
 	});
 
@@ -229,7 +229,7 @@ export default function RatesPage() {
 				body: JSON.stringify({
 					scope: form.scope,
 					kind: form.kind,
-					value_effective: Number(form.value_effective),
+					value: Number(form.value),
 					source: form.source,
 					author_id: "admin",
 				}),
@@ -238,7 +238,7 @@ export default function RatesPage() {
 			if (!data.success) throw new Error(data.error || "Error al crear tasa");
 			
 			// Limpiar formulario
-			setForm({ ...form, value_effective: "" });
+			setForm({ ...form, value: "" });
 			
 			// Recargar datos automáticamente
 			await loadRates();
@@ -334,9 +334,9 @@ export default function RatesPage() {
 							value={form.kind}
 							onChange={(e) => setForm({ ...form, kind: e.target.value as RateKind })}
 						>
-							<option value="USD_COP">USD → COP</option>
-							<option value="EUR_USD">EUR → USD</option>
-							<option value="GBP_USD">GBP → USD</option>
+							<option value="USD→COP">USD → COP</option>
+							<option value="EUR→USD">EUR → USD</option>
+							<option value="GBP→USD">GBP → USD</option>
 						</select>
 					</div>
 					<div>
@@ -345,8 +345,8 @@ export default function RatesPage() {
 							type="number"
 							step="any"
 							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-							value={form.value_effective}
-							onChange={(e) => setForm({ ...form, value_effective: e.target.value })}
+							value={form.value}
+							onChange={(e) => setForm({ ...form, value: e.target.value })}
 							required
 						/>
 					</div>
