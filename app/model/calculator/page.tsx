@@ -105,15 +105,10 @@ export default function ModelCalculatorPage() {
     try {
       console.log('🔍 [CALCULATOR] Loading config for userId:', userId);
 
-      // Primero verificar si las tablas existen
-      const checkTablesResponse = await fetch(`/api/debug/check-tables`);
-      const checkTablesData = await checkTablesResponse.json();
-      console.log('🔍 [CALCULATOR] Check tables data:', checkTablesData);
-
-      // Luego verificar estado de la base de datos
-      const debugResponse = await fetch(`/api/debug/database?userId=${userId}`);
-      const debugData = await debugResponse.json();
-      console.log('🔍 [CALCULATOR] Debug data:', debugData);
+      // Debug específico del flujo de calculadora
+      const calculatorFlowResponse = await fetch(`/api/debug/calculator-flow?userId=${userId}`);
+      const calculatorFlowData = await calculatorFlowResponse.json();
+      console.log('🔍 [CALCULATOR] Calculator flow data:', calculatorFlowData);
 
       // Cargar configuración desde API híbrida
       const response = await fetch(`/api/calculator/config-hybrid?userId=${userId}`);
