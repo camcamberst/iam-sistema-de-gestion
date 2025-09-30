@@ -56,6 +56,9 @@ export default function ModelDashboard() {
           email: userRow?.email || auth.user?.email || '',
           role: (userRow?.role as any) || 'modelo',
           groups,
+          organization_id: '',
+          is_active: true,
+          last_login: new Date().toISOString(),
         };
         setUser(current);
       } finally {
