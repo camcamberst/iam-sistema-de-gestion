@@ -44,6 +44,7 @@ interface CalculatorResult {
 export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [rates, setRates] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculatorResult | null>(null);
@@ -109,6 +110,14 @@ export default function ModelCalculatorPage() {
       const calculatorFlowResponse = await fetch(`/api/debug/calculator-flow?userId=${userId}`);
       const calculatorFlowData = await calculatorFlowResponse.json();
       console.log('🔍 [CALCULATOR] Calculator flow data:', calculatorFlowData);
+
+      // Cargar tasas activas
+      const ratesResponse = await fetch('/api/calculator/rates-active');
+      const ratesData = await ratesResponse.json();
+      console.log('🔍 [CALCULATOR] Rates data:', ratesData);
+      if (ratesData.success) {
+        setRates(ratesData.rates);
+      }
 
       // Cargar configuración desde API v2
       const response = await fetch(`/api/calculator/config-v2?userId=${userId}`);
@@ -280,15 +289,21 @@ export default function ModelCalculatorPage() {
           <h2 className="text-base font-semibold text-gray-900 mb-3">Tasas Actualizadas</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">$3,900</div>
+              <div className="text-2xl font-bold text-blue-600">
+                ${rates?.usd_cop || 3900}
+              </div>
               <div className="text-sm text-gray-600">USD → COP</div>
             </div>
             <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">1.01</div>
+              <div className="text-2xl font-bold text-green-600">
+                {rates?.eur_usd || 1.01}
+              </div>
               <div className="text-sm text-gray-600">EUR → USD</div>
             </div>
             <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">1.20</div>
+              <div className="text-2xl font-bold text-purple-600">
+                {rates?.gbp_usd || 1.20}
+              </div>
               <div className="text-sm text-gray-600">GBP → USD</div>
             </div>
           </div>
