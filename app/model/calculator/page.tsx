@@ -425,7 +425,7 @@ export default function ModelCalculatorPage() {
                             {/* INPUT DE PRUEBA COMPLETAMENTE AISLADO */}
                             <input
                               type="text"
-                              defaultValue=""
+                              value={platform.value || ''}
                               onChange={(e) => {
                                 const inputValue = e.target.value;
                                 console.log('🔍 [DEBUG] INPUT RAW:', inputValue);
