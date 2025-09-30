@@ -166,10 +166,10 @@ export default function ModelCalculatorPage() {
       setPlatforms(enabledPlatforms);
       // Inicializar inputs de texto vacíos
       setInputValues(
-        enabledPlatforms.reduce((acc: Record<string, string>, p) => {
+        enabledPlatforms.reduce((acc: Record<string, string>, p: Platform) => {
           acc[p.id] = p.value ? String(p.value) : '';
           return acc;
-        }, {})
+        }, {} as Record<string, string>)
       );
 
     } catch (err: any) {
