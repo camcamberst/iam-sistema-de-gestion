@@ -2,148 +2,41 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 
 // ===========================================
 // 🍎 APPLE-STYLE SIDEBAR COMPONENT
 // ===========================================
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'modelo';
+  groups: string[];
+  organization_id: string;
+  is_active: boolean;
+  last_login: string;
+}
+
 interface MenuItem {
   id: string;
-  title: string;
-  icon: string;
-  href?: string;
-  subItems?: MenuItem[];
-  badge?: string;
-  isActive?: boolean;
-  isExpanded?: boolean;
+  label: string;
+  href: string;
+  subItems: Array<{
+    label: string;
+    href: string;
+  }>;
 }
 
 interface AppleSidebarProps {
-  isOpen: boolean;
-  onClose: () => void;
+  user: User;
+  menuItems: MenuItem[];
+  currentPath: string;
 }
 
-export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
-  const pathname = usePathname();
+export default function AppleSidebar({ user, menuItems, currentPath }: AppleSidebarProps) {
   const [expandedItems, setExpandedItems] = useState<string[]>([]);
 
-  // ===========================================
-  // 📋 ESCALABLE MENU STRUCTURE
-  // ===========================================
-  const menuItems: MenuItem[] = [
-    {
-      id: 'users',
-      title: 'Gestión de Usuarios',
-      icon: '👥',
-      subItems: [
-        {
-          id: 'create-user',
-          title: 'Crear Usuario',
-          icon: '➕',
-          href: '/admin/users/create'
-        },
-        {
-          id: 'list-users',
-          title: 'Consultar Usuarios',
-          icon: '🔍',
-          href: '/admin/users'
-        }
-      ]
-    },
-    {
-      id: 'calculator',
-      title: 'Gestionar Calculadora',
-      icon: '🧮',
-      subItems: [
-        {
-          id: 'calculator-home',
-          title: 'Panel Calculadora',
-          icon: '🧰',
-          href: '/admin/calculadora'
-        },
-        {
-          id: 'define-rates',
-          title: 'Definir RATES',
-          icon: '💱',
-          href: '/admin/rates'
-        }
-      ]
-    },
-    {
-      id: 'groups',
-      title: 'Gestión de Grupos',
-      icon: '🏢',
-      subItems: [
-        {
-          id: 'create-group',
-          title: 'Crear Grupo',
-          icon: '➕',
-          href: '/admin/groups/create'
-        },
-        {
-          id: 'list-groups',
-          title: 'Consultar Grupos',
-          icon: '🔍',
-          href: '/admin/groups'
-        }
-      ]
-    },
-    {
-      id: 'reports',
-      title: 'Reportes y Analytics',
-      icon: '📊',
-      subItems: [
-        {
-          id: 'user-reports',
-          title: 'Reportes de Usuarios',
-          icon: '📈',
-          href: '/admin/reports/users'
-        },
-        {
-          id: 'group-reports',
-          title: 'Estadísticas de Grupos',
-          icon: '📊',
-          href: '/admin/reports/groups'
-        },
-        {
-          id: 'performance-reports',
-          title: 'Rendimiento del Sistema',
-          icon: '⚡',
-          href: '/admin/reports/performance'
-        }
-      ]
-    },
-    {
-      id: 'settings',
-      title: 'Configuración',
-      icon: '⚙️',
-      subItems: [
-        {
-          id: 'general-settings',
-          title: 'Configuración General',
-          icon: '🔧',
-          href: '/admin/settings/general'
-        },
-        {
-          id: 'security-settings',
-          title: 'Seguridad',
-          icon: '🔒',
-          href: '/admin/settings/security'
-        },
-        {
-          id: 'notifications-settings',
-          title: 'Notificaciones',
-          icon: '🔔',
-          href: '/admin/settings/notifications'
-        }
-      ]
-    }
-  ];
-
-  // ===========================================
-  // 🎯 NAVIGATION LOGIC
-  // ===========================================
   const toggleExpanded = (itemId: string) => {
     setExpandedItems(prev => 
       prev.includes(itemId) 
@@ -152,158 +45,107 @@ export default function AppleSidebar({ isOpen, onClose }: AppleSidebarProps) {
     );
   };
 
-  const isItemActive = (item: MenuItem): boolean => {
-    if (item.href && pathname === item.href) return true;
-    if (item.subItems) {
-      return item.subItems.some(subItem => 
-        subItem.href && pathname === subItem.href
-      );
-    }
-    return false;
+  const isActive = (href: string) => {
+    return currentPath === href;
   };
 
-  const isSubItemActive = (subItem: MenuItem): boolean => {
-    return subItem.href ? pathname === subItem.href : false;
+  const isParentActive = (item: MenuItem) => {
+    return isActive(item.href) || item.subItems.some(subItem => isActive(subItem.href));
   };
 
-  // ===========================================
-  // 🎨 RENDER FUNCTIONS
-  // ===========================================
-  const renderMenuItem = (item: MenuItem) => {
-    const isExpanded = expandedItems.includes(item.id);
-    const isActive = isItemActive(item);
-    const hasSubItems = item.subItems && item.subItems.length > 0;
-
-    return (
-      <div key={item.id} className="mb-1">
-        {/* Main Menu Item */}
-        <div
-          className={`
-            flex items-center justify-between px-4 py-3 rounded-lg cursor-pointer
-            transition-all duration-200 ease-out
-            ${isActive 
-              ? 'bg-blue-50 text-blue-700 border border-blue-200' 
-              : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
-            }
-          `}
-          onClick={() => hasSubItems && toggleExpanded(item.id)}
-        >
-          <div className="flex items-center space-x-3">
-            <span className="text-lg">{item.icon}</span>
-            <span className="font-medium text-sm">{item.title}</span>
-            {item.badge && (
-              <span className="bg-red-100 text-red-600 text-xs px-2 py-1 rounded-full">
-                {item.badge}
-              </span>
-            )}
-          </div>
-          
-          {hasSubItems && (
-            <span className={`
-              text-gray-400 transition-transform duration-200
-              ${isExpanded ? 'rotate-180' : ''}
-            `}>
-              ▼
-            </span>
-          )}
-        </div>
-
-        {/* Sub Items */}
-        {hasSubItems && isExpanded && (
-          <div className="ml-4 mt-1 space-y-1">
-            {item.subItems!.map(subItem => (
-              <Link
-                key={subItem.id}
-                href={subItem.href!}
-                className={`
-                  flex items-center space-x-3 px-4 py-2 rounded-lg
-                  transition-all duration-200 ease-out
-                  ${isSubItemActive(subItem)
-                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                    : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                  }
-                `}
-                onClick={onClose}
-              >
-                <span className="text-sm">{subItem.icon}</span>
-                <span className="text-sm font-medium">{subItem.title}</span>
-              </Link>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // ===========================================
-  // 🎨 MAIN RENDER
-  // ===========================================
   return (
-    <>
-      {/* Backdrop */}
-      {isOpen && (
-        <div 
-          className="fixed inset-0 bg-black/20 backdrop-blur-sm z-40 lg:hidden"
-          onClick={onClose}
-        />
-      )}
-
-      {/* Sidebar */}
-      <div className={`
-        fixed top-0 left-0 h-full w-80 bg-white border-r border-gray-200
-        transform transition-transform duration-300 ease-out z-50
-        ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-        lg:translate-x-0 lg:static lg:z-auto
-      `}>
-        {/* Header */}
-        <div className="p-6 border-b border-gray-200">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AIM</span>
-              </div>
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">
-                  Sistema de Gestión
-                </h2>
-                <p className="text-gray-500 text-xs">
-                  Panel Administrativo
-                </p>
-              </div>
-            </div>
-            
-            {/* Close button for mobile */}
-            <button
-              onClick={onClose}
-              className="lg:hidden p-2 rounded-lg hover:bg-gray-100 transition-colors"
-            >
-              <span className="text-gray-500">✕</span>
-            </button>
+    <div className="fixed left-0 top-0 h-full w-64 bg-white border-r border-gray-200 shadow-lg z-50">
+      {/* Header */}
+      <div className="p-6 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
+            <span className="text-white font-bold text-sm">AIM</span>
           </div>
+          <span className="text-lg font-semibold text-gray-900">Sistema de Gestión</span>
         </div>
+      </div>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-6">
-          <nav className="px-4 space-y-2">
-            {menuItems.map(renderMenuItem)}
-          </nav>
-        </div>
-
-        {/* Footer */}
-        <div className="p-6 border-t border-gray-200">
-          <div className="text-center">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl mx-auto mb-3 flex items-center justify-center">
-              <span className="text-white text-xl">🍎</span>
-            </div>
-            <h3 className="text-sm font-medium text-gray-900 mb-1">
-              AIM Sistema
-            </h3>
-            <p className="text-white/30 text-xs mt-1">
-              Diseño Apple-style
-            </p>
+      {/* User Info */}
+      <div className="p-4 border-b border-gray-200">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+            <span className="text-blue-600 font-medium text-sm">
+              {user.name.split(' ').map(n => n[0]).join('').toUpperCase()}
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-medium text-gray-900 truncate">{user.name}</p>
+            <p className="text-xs text-gray-500 truncate">{user.email}</p>
+            <p className="text-xs text-gray-400 capitalize">{user.role.replace('_', ' ')}</p>
           </div>
         </div>
       </div>
-    </>
+
+      {/* Navigation */}
+      <nav className="flex-1 overflow-y-auto">
+        <div className="p-4 space-y-1">
+          {menuItems.map((item) => (
+            <div key={item.id}>
+              <button
+                onClick={() => toggleExpanded(item.id)}
+                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  isParentActive(item)
+                    ? 'bg-blue-50 text-blue-700 border border-blue-200'
+                    : 'text-gray-700 hover:bg-gray-50'
+                }`}
+              >
+                <span>{item.label}</span>
+                {item.subItems.length > 0 && (
+                  <svg
+                    className={`w-4 h-4 transition-transform ${
+                      expandedItems.includes(item.id) ? 'rotate-180' : ''
+                    }`}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                )}
+              </button>
+              
+              {expandedItems.includes(item.id) && item.subItems.length > 0 && (
+                <div className="ml-4 mt-1 space-y-1">
+                  {item.subItems.map((subItem) => (
+                    <Link
+                      key={subItem.href}
+                      href={subItem.href}
+                      className={`block px-3 py-2 text-sm rounded-lg transition-colors ${
+                        isActive(subItem.href)
+                          ? 'bg-blue-100 text-blue-700 font-medium'
+                          : 'text-gray-600 hover:bg-gray-50'
+                      }`}
+                    >
+                      {subItem.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </nav>
+
+      {/* Footer */}
+      <div className="p-4 border-t border-gray-200">
+        <button
+          onClick={() => {
+            localStorage.removeItem('user');
+            window.location.href = '/login';
+          }}
+          className="w-full flex items-center px-3 py-2 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+        >
+          <svg className="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+          </svg>
+          Cerrar sesión
+        </button>
+      </div>
+    </div>
   );
 }
