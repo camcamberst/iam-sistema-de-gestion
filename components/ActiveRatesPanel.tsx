@@ -6,7 +6,7 @@ interface ActiveRate {
   id: string;
   kind: string;
   scope: string;
-  value_effective: number;
+  value: number;
   source: string;
   valid_from: string;
 }
@@ -36,7 +36,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
       // Filtrar solo tasas activas de las 3 divisas específicas para la calculadora
       const now = new Date();
-      const calculatorRates = ['USD_COP', 'EUR_USD', 'GBP_USD'];
+      const calculatorRates = ['USD→COP', 'EUR→USD', 'GBP→USD'];
       
       // Filtrar solo tasas activas y obtener la más reciente de cada tipo
       const activeRates = data.data
@@ -56,8 +56,8 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
           return acc;
         }, [])
         .sort((a: any, b: any) => {
-          // Ordenar por prioridad: USD_COP, EUR_USD, GBP_USD
-          const order = { 'USD_COP': 1, 'EUR_USD': 2, 'GBP_USD': 3 };
+          // Ordenar por prioridad: USD→COP, EUR→USD, GBP→USD
+          const order = { 'USD→COP': 1, 'EUR→USD': 2, 'GBP→USD': 3 };
           return (order[a.kind as keyof typeof order] || 4) - (order[b.kind as keyof typeof order] || 4);
         });
 
@@ -82,9 +82,9 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
   const getKindLabel = (kind: string) => {
     switch (kind) {
-      case 'USD_COP': return 'USD → COP';
-      case 'EUR_USD': return 'EUR → USD';
-      case 'GBP_USD': return 'GBP → USD';
+      case 'USD→COP': return 'USD → COP';
+      case 'EUR→USD': return 'EUR → USD';
+      case 'GBP→USD': return 'GBP → USD';
       default: return kind;
     }
   };
@@ -132,7 +132,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                     <span className="text-xs font-medium">{getKindLabel(rate.kind)}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-semibold text-gray-900">{rate.value_effective}</div>
+                    <div className="text-xs font-semibold text-gray-900">{rate.value}</div>
                     <div className="text-xs text-gray-500">{getScopeLabel(rate.scope)}</div>
                   </div>
                 </div>
@@ -191,7 +191,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm font-bold text-gray-900">{rate.value_effective}</div>
+                  <div className="text-sm font-bold text-gray-900">{rate.value}</div>
                   <div className="text-xs text-gray-500">
                     {new Date(rate.valid_from).toLocaleDateString('es-ES', {
                       day: '2-digit',
