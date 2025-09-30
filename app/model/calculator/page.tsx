@@ -105,6 +105,11 @@ export default function ModelCalculatorPage() {
     try {
       console.log('🔍 [CALCULATOR] Loading config for userId:', userId);
 
+      // Primero verificar estado de la base de datos
+      const debugResponse = await fetch(`/api/debug/database?userId=${userId}`);
+      const debugData = await debugResponse.json();
+      console.log('🔍 [CALCULATOR] Debug data:', debugData);
+
       // Cargar configuración desde API híbrida
       const response = await fetch(`/api/calculator/config-hybrid?userId=${userId}`);
       if (!response.ok) {
