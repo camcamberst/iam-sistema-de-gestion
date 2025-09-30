@@ -258,19 +258,27 @@ export default function ModelCalculatorPage() {
 
   return (
     <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mi Calculadora</h1>
-          <p className="text-gray-500 text-sm">
-            Bienvenida, {user.name} · Ingresa tus valores por plataforma
-          </p>
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Mi Calculadora</h1>
+            <p className="text-gray-500 text-sm">
+              Bienvenida, {user.name} · Ingresa tus valores por plataforma
+            </p>
+          </div>
+          <button
+            onClick={() => window.history.back()}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+          >
+            ← Volver
+          </button>
         </div>
 
         {/* Rates actualizadas */}
-        <div className="apple-card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Tasas Actualizadas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="apple-card mb-4">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">Tasas Actualizadas</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="text-center p-4 bg-blue-50 rounded-lg">
               <div className="text-2xl font-bold text-blue-600">$3,900</div>
               <div className="text-sm text-gray-600">USD → COP</div>
@@ -309,8 +317,8 @@ export default function ModelCalculatorPage() {
         )}
 
         {/* Tabla de Calculadora */}
-        <div className="apple-card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Calculadora de Ingresos</h2>
+        <div className="apple-card mb-4">
+          <h2 className="text-base font-semibold text-gray-900 mb-3">Calculadora de Ingresos</h2>
           
           {platforms.filter(p => p.enabled).length === 0 ? (
             <div className="text-center py-8">
@@ -330,10 +338,10 @@ export default function ModelCalculatorPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">PLATAFORMAS</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">VALORES</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">DÓLARES</th>
-                    <th className="text-left py-3 px-4 font-medium text-gray-700">COP MODELO</th>
+                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">PLATAFORMAS</th>
+                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">VALORES</th>
+                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">DÓLARES</th>
+                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">COP MODELO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -345,11 +353,11 @@ export default function ModelCalculatorPage() {
                     
                     return (
                       <tr key={platform.id} className="border-b border-gray-100">
-                        <td className="py-4 px-4">
-                          <div className="font-medium text-gray-900">{platform.name}</div>
+                        <td className="py-3 px-3">
+                          <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
                           <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
                         </td>
-                        <td className="py-4 px-4">
+                        <td className="py-3 px-3">
                           <div className="relative">
                             <input
                               type="number"
@@ -357,7 +365,7 @@ export default function ModelCalculatorPage() {
                               step="0.01"
                               value={platform.value}
                               onChange={(e) => handleValueChange(platform.id, parseFloat(e.target.value) || 0)}
-                              className="apple-input w-32"
+                              className="apple-input w-28 text-sm"
                               placeholder="0.00"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
@@ -365,13 +373,13 @@ export default function ModelCalculatorPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="py-4 px-4">
-                          <div className="text-gray-600 font-medium">
+                        <td className="py-3 px-3">
+                          <div className="text-gray-600 font-medium text-sm">
                             ${usdBruto.toFixed(2)} USD
                           </div>
                         </td>
-                        <td className="py-4 px-4">
-                          <div className="text-gray-600 font-medium">
+                        <td className="py-3 px-3">
+                          <div className="text-gray-600 font-medium text-sm">
                             ${copModelo.toLocaleString()} COP
                           </div>
                         </td>
@@ -385,24 +393,24 @@ export default function ModelCalculatorPage() {
         </div>
 
         {/* Botones de Acción */}
-        <div className="apple-card mb-6">
+        <div className="apple-card mb-4">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">Cálculo de Totales</h3>
+              <h3 className="text-base font-semibold text-gray-900">Cálculo de Totales</h3>
               <p className="text-sm text-gray-500">Calcula tus ingresos totales</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               <button
                 onClick={calculateTotals}
                 disabled={calculating || platforms.filter(p => p.enabled).length === 0}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 font-medium text-sm"
               >
                 {calculating ? 'Calculando...' : 'Calcular'}
               </button>
               <button
                 onClick={saveValues}
                 disabled={saving || platforms.filter(p => p.enabled).length === 0}
-                className="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium"
+                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-medium text-sm"
               >
                 {saving ? 'Guardando...' : 'Guardar'}
               </button>
@@ -412,7 +420,7 @@ export default function ModelCalculatorPage() {
 
         {/* Totales y Alertas */}
         <div className="apple-card">
-          <h3 className="text-lg font-semibold text-gray-900 mb-6">Totales y Alertas</h3>
+          <h3 className="text-base font-semibold text-gray-900 mb-4">Totales y Alertas</h3>
           
           {/* Totales principales */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
