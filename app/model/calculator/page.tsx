@@ -379,8 +379,10 @@ export default function ModelCalculatorPage() {
                         usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.84; // 16% impuesto
                       } else if (platform.id === 'mondo') {
                         usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.78; // 22% descuento
-                      } else {
+                      } else if (platform.id === 'modelka' || platform.id === 'xmodels' || platform.id === '777' || platform.id === 'vx' || platform.id === 'livecreator' || platform.id === 'mow') {
                         usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR directo
+                      } else {
+                        usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR directo por defecto
                       }
                     } else if (platform.currency === 'GBP') {
                       // GBP→USD→COP
@@ -401,8 +403,10 @@ export default function ModelCalculatorPage() {
                         usdModelo = platform.value * 0.5; // 50% descuento
                       } else if (platform.id === 'superfoon') {
                         usdModelo = platform.value; // 100% directo
-                      } else {
+                      } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
                         usdModelo = platform.value; // USD directo
+                      } else {
+                        usdModelo = platform.value; // USD directo por defecto
                       }
                     }
                     
@@ -527,6 +531,8 @@ export default function ModelCalculatorPage() {
                       usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (p.id === 'mondo') {
                       usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                      usdBruto = p.value * (rates?.eur_usd || 1.01);
                     } else {
                       usdBruto = p.value * (rates?.eur_usd || 1.01);
                     }
@@ -546,6 +552,8 @@ export default function ModelCalculatorPage() {
                     } else if (p.id === 'secretfriends') {
                       usdBruto = p.value * 0.5;
                     } else if (p.id === 'superfoon') {
+                      usdBruto = p.value;
+                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
                       usdBruto = p.value;
                     } else {
                       usdBruto = p.value;
