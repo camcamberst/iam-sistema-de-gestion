@@ -70,8 +70,9 @@ export default function CreateUserPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="max-w-2xl mx-auto">
-      <div className="apple-card" style={{ padding: 24 }}>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        <div className="apple-card" style={{ padding: 24 }}>
         <h1 className="text-xl font-semibold text-gray-900 mb-4">Crear Usuario</h1>
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 16 }}>
           <input
@@ -285,6 +286,7 @@ export default function CreateUserPage() {
           {submitting? "Creando...":"Crear"}
         </button>
         </form>
+        </div>
       </div>
     </div>
   );
