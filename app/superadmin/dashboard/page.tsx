@@ -27,9 +27,16 @@ export default function SuperAdminDashboard() {
   const [user, setUser] = useState<User | null>(null);
   const [stats, setStats] = useState<Stats>({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!mounted) return;
+
     const checkAuth = async () => {
       try {
         const userData = localStorage.getItem('user');
@@ -57,7 +64,7 @@ export default function SuperAdminDashboard() {
     };
 
     checkAuth();
-  }, [router]);
+  }, [mounted, router]);
 
   const loadStats = async () => {
     try {
@@ -97,7 +104,7 @@ export default function SuperAdminDashboard() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Super Admin Dashboard</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Dashboard</h1>
         {user && (
           <p className="text-gray-500 mb-6 text-sm">
             Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
