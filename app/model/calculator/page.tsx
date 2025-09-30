@@ -419,7 +419,7 @@ export default function ModelCalculatorPage() {
           <div>
             <h1 className="text-2xl font-semibold text-gray-900 mb-1">Mi Calculadora</h1>
             <p className="text-gray-500 text-sm">
-              Bienvenida, {user.name} · Ingresa tus valores por plataforma
+              Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
             </p>
           </div>
           <button
