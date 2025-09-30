@@ -172,6 +172,38 @@ export default function ModelCalculatorPage() {
         }, {} as Record<string, string>)
       );
 
+      // Cargar valores guardados previamente y fusionarlos
+      try {
+        const savedResp = await fetch(`/api/calculator/model-values?modelId=${userId}`);
+        const savedJson = await savedResp.json();
+        console.log('🔍 [CALCULATOR] Saved values:', savedJson);
+        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+          const platformToValue: Record<string, number> = {};
+          for (const row of savedJson.data) {
+            if (row && row.platform) {
+              const parsed = Number.parseFloat(String(row.value));
+              platformToValue[row.platform] = Number.isFinite(parsed) ? parsed : 0;
+            }
+          }
+          setPlatforms(prev => prev.map(p => ({
+            ...p,
+            value: platformToValue[p.id] ?? p.value
+          })));
+          setInputValues(prev => {
+            const next: Record<string, string> = { ...prev };
+            for (const p of enabledPlatforms) {
+              const v = platformToValue[p.id];
+              if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                next[p.id] = String(v);
+              }
+            }
+            return next;
+          });
+        }
+      } catch (e) {
+        console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
+      }
+
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Error:', err);
       setError(err.message || 'Error al cargar configuración');
@@ -246,7 +278,7 @@ export default function ModelCalculatorPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: user?.id,
+          modelId: user?.id,
           values
         }),
       });
