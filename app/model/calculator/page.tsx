@@ -46,6 +46,8 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
+  // Periodo activo (por ahora: fecha del día). En el futuro, puede venir de backend
+  const [periodDate, setPeriodDate] = useState<string>(new Date().toISOString().split('T')[0]);
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -58,6 +60,9 @@ export default function ModelCalculatorPage() {
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
+  // Flags para conmutar nuevas capacidades sin romper producción
+  const USE_VALUES_V2 = process.env.NEXT_PUBLIC_CALC_USE_VALUES_V2 === 'true';
+  const ENABLE_AUTOSAVE = process.env.NEXT_PUBLIC_CALC_AUTOSAVE === 'true';
 
   useEffect(() => {
     const load = async () => {
@@ -172,33 +177,62 @@ export default function ModelCalculatorPage() {
         }, {} as Record<string, string>)
       );
 
-      // Cargar valores guardados previamente y fusionarlos
+      // Cargar valores guardados previamente (preferir v2 si flag activo) y fusionarlos
       try {
-        const savedResp = await fetch(`/api/calculator/model-values?modelId=${userId}`);
-        const savedJson = await savedResp.json();
-        console.log('🔍 [CALCULATOR] Saved values:', savedJson);
-        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
-          const platformToValue: Record<string, number> = {};
-          for (const row of savedJson.data) {
-            if (row && row.platform) {
-              const parsed = Number.parseFloat(String(row.value));
-              platformToValue[row.platform] = Number.isFinite(parsed) ? parsed : 0;
-            }
-          }
-          setPlatforms(prev => prev.map(p => ({
-            ...p,
-            value: platformToValue[p.id] ?? p.value
-          })));
-          setInputValues(prev => {
-            const next: Record<string, string> = { ...prev };
-            for (const p of enabledPlatforms) {
-              const v = platformToValue[p.id];
-              if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-                next[p.id] = String(v);
+        if (USE_VALUES_V2) {
+          const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+          const savedJson = await savedResp.json();
+          console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
+          if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+            const platformToValue: Record<string, number> = {};
+            for (const row of savedJson.data) {
+              if (row && row.platform_id) {
+                const parsed = Number.parseFloat(String(row.value));
+                platformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
               }
             }
-            return next;
-          });
+            setPlatforms(prev => prev.map(p => ({
+              ...p,
+              value: platformToValue[p.id] ?? p.value
+            })));
+            setInputValues(prev => {
+              const next: Record<string, string> = { ...prev };
+              for (const p of enabledPlatforms) {
+                const v = platformToValue[p.id];
+                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                  next[p.id] = String(v);
+                }
+              }
+              return next;
+            });
+          }
+        } else {
+          const savedResp = await fetch(`/api/calculator/model-values?modelId=${userId}`);
+          const savedJson = await savedResp.json();
+          console.log('🔍 [CALCULATOR] Saved values (v1):', savedJson);
+          if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+            const platformToValue: Record<string, number> = {};
+            for (const row of savedJson.data) {
+              if (row && row.platform) {
+                const parsed = Number.parseFloat(String(row.value));
+                platformToValue[row.platform] = Number.isFinite(parsed) ? parsed : 0;
+              }
+            }
+            setPlatforms(prev => prev.map(p => ({
+              ...p,
+              value: platformToValue[p.id] ?? p.value
+            })));
+            setInputValues(prev => {
+              const next: Record<string, string> = { ...prev };
+              for (const p of enabledPlatforms) {
+                const v = platformToValue[p.id];
+                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                  next[p.id] = String(v);
+                }
+              }
+              return next;
+            });
+          }
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
@@ -272,15 +306,16 @@ export default function ModelCalculatorPage() {
 
       console.log('🔍 [CALCULATOR] Saving values:', values);
 
-      const response = await fetch('/api/calculator/model-values', {
+      const endpoint = USE_VALUES_V2 ? '/api/calculator/model-values-v2' : '/api/calculator/model-values';
+      const payload = USE_VALUES_V2
+        ? { modelId: user?.id, values, periodDate }
+        : { modelId: user?.id, values };
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          modelId: user?.id,
-          values
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await response.json();
@@ -298,6 +333,44 @@ export default function ModelCalculatorPage() {
       setSaving(false);
     }
   };
+
+  // Autosave con debounce (opcional por flag)
+  useEffect(() => {
+    if (!ENABLE_AUTOSAVE) return;
+    if (!user) return;
+    // Preparar mapa de valores a guardar
+    const enabled = platforms.filter(p => p.enabled && p.value > 0);
+    const values: Record<string, number> = enabled.reduce((acc, p) => {
+      acc[p.id] = p.value;
+      return acc;
+    }, {} as Record<string, number>);
+
+    const hasAny = Object.keys(values).length > 0;
+    if (!hasAny) return;
+
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/calculator/model-values-v2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelId: user.id, values, periodDate }),
+          signal: controller.signal
+        });
+        const json = await res.json();
+        if (!json.success) {
+          console.warn('⚠️ [AUTOSAVE] Error guardando automáticamente:', json.error);
+        }
+      } catch (e) {
+        console.warn('⚠️ [AUTOSAVE] Excepción en autosave:', e);
+      }
+    }, 800);
+
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [ENABLE_AUTOSAVE, user, platforms, periodDate]);
 
   if (loading) {
     return (
