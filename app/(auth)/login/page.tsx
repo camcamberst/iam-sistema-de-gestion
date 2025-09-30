@@ -62,7 +62,7 @@ export default function LoginPage() {
           router.push('/admin/dashboard');
           break;
         case 'modelo':
-          router.push('/modelo/dashboard');
+          router.push('/admin/dashboard'); // Los modelos también van al dashboard admin
           break;
         default:
           router.push('/admin/dashboard');
