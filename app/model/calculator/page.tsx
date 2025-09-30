@@ -22,6 +22,7 @@ interface Platform {
   value: number;
   percentage: number;
   minQuota: number;
+  currency?: string;
 }
 
 interface CalculatorResult {
