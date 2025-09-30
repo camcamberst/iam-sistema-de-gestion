@@ -93,7 +93,7 @@ export async function POST(request: NextRequest) {
     await supabase
       .from('calculator_config')
       .update({ active: false })
-      .eq('model_id', userId);
+      .eq('model_id', modelId);
 
     // Crear nueva configuración
     const { data, error } = await supabase
