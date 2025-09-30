@@ -61,8 +61,25 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
   // ===========================================
   const getMenuItems = () => {
+    // Obtener el rol del usuario desde localStorage
+    const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+    const userRole = userData ? JSON.parse(userData).role : 'modelo';
+
+    // Menú base para todos los roles
     const baseItems = [
       {
+        id: 'calculator',
+        label: 'Gestionar Calculadora',
+        href: '/admin/calculadora',
+        subItems: [
+          { label: 'Panel Calculadora', href: '/admin/calculadora' }
+        ]
+      }
+    ];
+
+    // Agregar opciones según el rol
+    if (userRole === 'super_admin' || userRole === 'admin') {
+      baseItems.unshift({
         id: 'users',
         label: 'Gestión de Usuarios',
         href: '/admin/users',
@@ -70,19 +87,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           { label: 'Consultar Usuarios', href: '/admin/users' },
           { label: 'Crear Usuario', href: '/admin/users/create' }
         ]
-      },
-      {
-        id: 'calculator',
-        label: 'Gestionar Calculadora',
-        href: '/admin/calculadora',
-        subItems: [
-          { label: 'Panel Calculadora', href: '/admin/calculadora' },
-          { label: 'Definir RATES', href: '/admin/rates' },
-          { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
-          { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view' }
-        ]
-      },
-      {
+      });
+
+      baseItems.push({
         id: 'groups',
         label: 'Gestión de Grupos',
         href: '/admin/groups',
@@ -90,8 +97,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           { label: 'Consultar Grupos', href: '/admin/groups' },
           { label: 'Crear Grupo', href: '/admin/groups/create' }
         ]
-      },
-      {
+      });
+
+      baseItems.push({
         id: 'reports',
         label: 'Reportes',
         href: '/admin/reports',
@@ -99,8 +107,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
           { label: 'Estadísticas', href: '/admin/reports/stats' }
         ]
-      },
-      {
+      });
+
+      baseItems.push({
         id: 'settings',
         label: 'Configuración',
         href: '/admin/settings',
@@ -108,8 +117,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           { label: 'Configuración General', href: '/admin/settings/general' },
           { label: 'Permisos', href: '/admin/settings/permissions' }
         ]
-      }
-    ];
+      });
+
+      // Agregar opciones administrativas de calculadora
+      baseItems[0].subItems.push(
+        { label: 'Definir RATES', href: '/admin/rates' },
+        { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
+        { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view' }
+      );
+    }
 
     return baseItems;
   };
