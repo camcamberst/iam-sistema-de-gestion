@@ -26,7 +26,10 @@ interface Model {
 export default function ViewModelCalculator() {
   const [user, setUser] = useState<User | null>(null);
   const [models, setModels] = useState<Model[]>([]);
+  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [groupsOptions, setGroupsOptions] = useState<Array<{ id: string; name: string }>>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [modelsLoading, setModelsLoading] = useState(false);
   const router = useRouter();
@@ -81,10 +84,34 @@ export default function ViewModelCalculator() {
   const loadModels = async () => {
     try {
       setModelsLoading(true);
-      const response = await fetch('/api/calculator/models');
+      if (!user) return;
+      const response = await fetch(`/api/calculator/models?adminId=${user.id}`);
       if (response.ok) {
         const data = await response.json();
-        setModels(data.models || []);
+        const list: Model[] = (data.data || []).map((m: any) => ({
+          id: m.id,
+          email: m.email,
+          name: m.name,
+          role: m.role,
+          groups: (m.groups || []).map((g: any) => g?.name || g).filter(Boolean)
+        }));
+        // Filtrado por grupos para admin (solo ve sus grupos)
+        const visibleForRole = (user.role === 'admin')
+          ? list.filter((m: Model) => m.groups.some(g => user.groups.includes(g)))
+          : list;
+        setModels(visibleForRole);
+        setFilteredModels(visibleForRole);
+        // Opciones de grupos para super admin
+        if (user.role === 'super_admin') {
+          const unique = new Map<string, { id: string; name: string }>();
+          for (const m of list) {
+            for (const g of m.groups) {
+              const key = String(g);
+              if (!unique.has(key)) unique.set(key, { id: key, name: key });
+            }
+          }
+          setGroupsOptions(Array.from(unique.values()));
+        }
       }
     } catch (error) {
       console.error('Error loading models:', error);
@@ -98,6 +125,20 @@ export default function ViewModelCalculator() {
       loadModels();
     }
   }, [user]);
+
+  // Aplicar filtro por grupo (solo super admin)
+  useEffect(() => {
+    if (!user) return;
+    if (user.role !== 'super_admin') {
+      setFilteredModels(models);
+      return;
+    }
+    if (!selectedGroup) {
+      setFilteredModels(models);
+      return;
+    }
+    setFilteredModels(models.filter(m => m.groups.includes(selectedGroup)));
+  }, [user, models, selectedGroup]);
 
   if (loading) {
     return (
@@ -129,10 +170,28 @@ export default function ViewModelCalculator() {
           Selecciona una modelo para ver su calculadora
         </p>
 
-        {/* Selector de modelo */}
+        {/* Filtros y selector de modelo */}
         <div className="apple-card mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
           <div className="space-y-4">
+            {user.role === 'super_admin' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filtrar por grupo
+                </label>
+                <select
+                  value={selectedGroup}
+                  onChange={(e) => setSelectedGroup(e.target.value)}
+                  className="apple-input w-full"
+                  disabled={modelsLoading}
+                >
+                  <option value="">Todos los grupos</option>
+                  {groupsOptions.map((g) => (
+                    <option key={g.id} value={g.name}>{g.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Modelo
@@ -140,14 +199,14 @@ export default function ViewModelCalculator() {
               <select
                 value={selectedModel?.id || ''}
                 onChange={(e) => {
-                  const model = models.find(m => m.id === e.target.value);
+                  const model = filteredModels.find(m => m.id === e.target.value);
                   setSelectedModel(model || null);
                 }}
                 className="apple-input w-full"
                 disabled={modelsLoading}
               >
                 <option value="">Selecciona una modelo...</option>
-                {models.map((model) => (
+                {filteredModels.map((model) => (
                   <option key={model.id} value={model.id}>
                     {model.name} ({model.email})
                   </option>
