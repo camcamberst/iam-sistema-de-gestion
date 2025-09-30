@@ -119,8 +119,40 @@ export default function AdminDashboard() {
               <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
             </div>
 
-            {/* Calculadora para modelos */}
-            <ModelCalculator />
+            {/* Resumen de productividad y progreso de meta */}
+            <div className="apple-card">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div className="p-4 rounded-md bg-blue-50 text-center">
+                  <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
+                  <div className="text-2xl font-bold text-blue-600">—</div>
+                </div>
+                <div className="p-4 rounded-md bg-green-50 text-center">
+                  <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
+                  <div className="text-2xl font-bold text-green-600">—</div>
+                </div>
+                <div className="p-4 rounded-md bg-purple-50 text-center">
+                  <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
+                  <div className="text-2xl font-bold text-purple-600">—</div>
+                </div>
+              </div>
+
+              {/* Barra de alcance de meta (compacta) */}
+              <div className="mt-2">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium text-gray-700">Alcance de meta diaria</span>
+                  <span className="text-sm text-gray-600">— / — USD</span>
+                </div>
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-500" style={{ width: '0%' }}></div>
+                </div>
+                <div className="text-right text-xs text-gray-600 mt-1">0%</div>
+              </div>
+
+              <div className="mt-4 text-sm text-gray-500">
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline">Mi Calculadora</a>.
+              </div>
+            </div>
           </div>
         )}
       </div>
