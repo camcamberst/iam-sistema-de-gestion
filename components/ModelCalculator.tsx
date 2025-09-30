@@ -53,15 +53,62 @@ export default function ModelCalculator() {
   ];
 
   useEffect(() => {
-    // Inicializar plataformas con valores por defecto
-    const initialPlatforms = availablePlatforms.map(platform => ({
-      ...platform,
-      value: 0,
-      percentage: 60, // Por defecto 60% según jerarquía
-      minQuota: 1000 // Cuota mínima por defecto
-    }));
-    setPlatforms(initialPlatforms);
+    loadModelConfig();
   }, []);
+
+  const loadModelConfig = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Obtener configuración de la modelo actual
+      const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      const userId = userData ? JSON.parse(userData).id : null;
+
+      if (!userId) {
+        setError('Usuario no autenticado');
+        return;
+      }
+
+      const response = await fetch(`/api/calculator/config?modelId=${userId}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        // Si no hay configuración, mostrar mensaje
+        setPlatforms([]);
+        return;
+      }
+
+      const config = data.data.config;
+      const availablePlatforms = data.data.platforms;
+
+      if (!config || !availablePlatforms) {
+        setPlatforms([]);
+        return;
+      }
+
+      // Crear plataformas basadas en la configuración del admin
+      const enabledPlatformIds = config.enabled_platforms || [];
+      const configuredPlatforms = availablePlatforms
+        .filter((platform: any) => enabledPlatformIds.includes(platform.id))
+        .map((platform: any) => ({
+          id: platform.id,
+          name: platform.name,
+          enabled: true,
+          value: 0,
+          percentage: config.percentage_override || config.group_percentage || 60,
+          minQuota: config.min_quota_override || config.group_min_quota || 470
+        }));
+
+      setPlatforms(configuredPlatforms);
+
+    } catch (err: any) {
+      console.error('Error al cargar configuración:', err);
+      setError(err.message || 'Error al cargar configuración');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleValueChange = (platformId: string, value: number) => {
     setPlatforms(prev => prev.map(p => 
@@ -177,7 +224,12 @@ export default function ModelCalculator() {
       <div className="apple-card">
         <h3 className="text-base font-medium text-gray-900 mb-4">Plataformas Habilitadas</h3>
         
-        {platforms.filter(p => p.enabled).length === 0 ? (
+        {loading ? (
+          <div className="text-center py-8">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando configuración...</p>
+          </div>
+        ) : platforms.filter(p => p.enabled).length === 0 ? (
           <div className="text-center py-8">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <span className="text-gray-400 text-2xl">📊</span>
