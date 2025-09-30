@@ -102,8 +102,19 @@ export default function ModelDashboard() {
           <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
         </div>
 
-        {/* Calculadora para modelos */}
-        <ModelCalculatorNew />
+        {/* Información adicional del dashboard */}
+        <div className="apple-card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Acceso Rápido</h2>
+          <p className="text-gray-600 mb-4">
+            Usa el menú "Mi Calculadora" para acceder a tu calculadora de ingresos.
+          </p>
+          <a
+            href="/model/calculator"
+            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Ir a Mi Calculadora
+          </a>
+        </div>
       </div>
     </div>
   );

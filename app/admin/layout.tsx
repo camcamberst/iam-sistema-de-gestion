@@ -78,7 +78,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {
         id: 'calculator',
         label: 'Mi Calculadora',
-        href: '/admin/model/dashboard',
+        href: '/model/calculator',
         subItems: []
       }
     ];
