@@ -67,7 +67,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
         id: 'calculator',
         label: 'Mi Calculadora',
         href: '/model/dashboard',
-        subItems: []
+        subItems: [] as Array<{label: string; href: string}>
       }
     ];
   };
