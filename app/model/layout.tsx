@@ -114,7 +114,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                   </Link>
 
                   {/* Dropdown Menu */}
-                  {activeMenu === item.id && (
+                  {activeMenu === item.id && item.subItems.length > 0 && (
                     <div className="absolute top-full left-0 mt-1 w-64 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
                       <div className="py-2">
                         {item.subItems.map((subItem) => (
