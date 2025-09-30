@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 
 interface User {
@@ -55,7 +55,9 @@ export default function ModelCalculatorPage() {
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [adminOverride, setAdminOverride] = useState(false);
   const router = useRouter();
+  const searchParams = useSearchParams();
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
@@ -68,7 +70,7 @@ export default function ModelCalculatorPage() {
     const load = async () => {
       try {
         setLoading(true);
-        // Load current user
+        // Load current auth user
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth?.user?.id;
         if (!uid) {
@@ -100,9 +102,16 @@ export default function ModelCalculatorPage() {
           last_login: new Date().toISOString(),
         };
         setUser(current);
-        
-        // Cargar configuración de calculadora
-        await loadCalculatorConfig(current.id);
+
+        // Soporte de modo admin: permitir ver calculadora de una modelo específica
+        const qpModelId = searchParams?.get('modelId');
+        const qpAsAdmin = searchParams?.get('asAdmin');
+        const isAdmin = current.role === 'admin' || current.role === 'super_admin';
+        const useOverride = Boolean(qpModelId && qpAsAdmin === '1' && isAdmin);
+        setAdminOverride(useOverride);
+
+        // Cargar configuración de calculadora del usuario actual o de la modelo seleccionada por admin
+        await loadCalculatorConfig(useOverride ? (qpModelId as string) : current.id);
       } finally {
         setLoading(false);
       }
@@ -383,7 +392,7 @@ export default function ModelCalculatorPage() {
     );
   }
 
-  if (!user || user.role !== 'modelo') {
+  if (!user || (user.role !== 'modelo' && !adminOverride)) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">

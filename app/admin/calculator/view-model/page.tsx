@@ -225,13 +225,11 @@ export default function ViewModelCalculator() {
             <p className="text-sm text-gray-500 mb-6">
               Vista de administrador - Puedes editar los valores ingresados por la modelo
             </p>
-            
-            {/* Aquí iría el componente ModelCalculator con permisos de admin */}
-            <div className="bg-gray-50 p-4 rounded-lg">
-              <p className="text-gray-600 text-center">
-                Componente ModelCalculator con permisos de admin será implementado aquí
-              </p>
-            </div>
+            <iframe
+              src={`/model/calculator?modelId=${selectedModel.id}&asAdmin=1`}
+              className="w-full rounded-lg border border-gray-200"
+              style={{ minHeight: '900px' }}
+            />
           </div>
         )}
       </div>
