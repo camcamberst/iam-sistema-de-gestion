@@ -64,6 +64,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     // Obtener el rol del usuario desde localStorage
     const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
     const userRole = userData ? JSON.parse(userData).role : 'modelo';
+    
+    console.log('🔍 [MENU] User role:', userRole);
+    console.log('🔍 [MENU] User data:', userData);
 
     // Menú base para todos los roles
     const baseItems: Array<{
@@ -133,6 +136,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       }
     }
 
+    console.log('🔍 [MENU] Final menu items:', baseItems);
     return baseItems;
   };
 
