@@ -167,23 +167,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* Main Navigation - Apple.com Style */}
             <nav className="flex items-center space-x-8">
-              {menuItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="relative"
-                  onMouseEnter={() => setActiveMenu(item.id)}
-                  onMouseLeave={() => setActiveMenu(null)}
-                >
-                  <Link
-                    href={item.href}
-                    className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      isActive(item.href) || isParentActive(item) 
-                        ? 'text-gray-900' 
-                        : 'text-gray-600'
-                    }`}
+              {menuItems.length > 0 ? (
+                menuItems.map((item) => (
+                  <div
+                    key={item.id}
+                    className="relative"
+                    onMouseEnter={() => setActiveMenu(item.id)}
+                    onMouseLeave={() => setActiveMenu(null)}
                   >
-                    {item.label}
-                  </Link>
+                    <Link
+                      href={item.href}
+                      className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                        isActive(item.href) || isParentActive(item) 
+                          ? 'text-gray-900' 
+                          : 'text-gray-600'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (
@@ -206,7 +207,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     </div>
                   )}
                 </div>
-              ))}
+              ))
+              ) : (
+                <div className="text-gray-500 text-sm">Cargando menú...</div>
+              )}
             </nav>
 
             {/* User Actions */}
