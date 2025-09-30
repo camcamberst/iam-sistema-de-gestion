@@ -141,6 +141,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const menuItems = getMenuItems();
+  
+  // Debug logs
+  console.log('🔍 [RENDER] Menu items length:', menuItems.length);
+  console.log('🔍 [RENDER] Menu items:', menuItems);
 
   const isActive = (href: string) => pathname === href;
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
@@ -163,8 +167,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* Main Navigation - Apple.com Style */}
             <nav className="flex items-center space-x-8">
-              {console.log('🔍 [RENDER] Menu items length:', menuItems.length)}
-              {console.log('🔍 [RENDER] Menu items:', menuItems)}
               {menuItems.map((item) => (
                 <div
                   key={item.id}
