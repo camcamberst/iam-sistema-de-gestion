@@ -107,37 +107,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Quick actions según rol */}
-        {user?.role === 'super_admin' && (
-          <div className="apple-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Accesos rápidos</h2>
-                <p className="text-sm text-gray-500">Tareas frecuentes del sistema</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Link href="/admin/users" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Usuarios</Link>
-                <Link href="/admin/groups" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Grupos</Link>
-                <Link href="/admin/users/create" className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black">+ Nuevo Usuario</Link>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {user?.role === 'admin' && (
-          <div className="apple-card">
-            <div className="flex items-center justify-between">
-              <div>
-                <h2 className="text-lg font-semibold text-gray-900">Accesos rápidos</h2>
-                <p className="text-sm text-gray-500">Gestión acotada a tus grupos</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <Link href="/admin/users" className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-100">Usuarios de mis grupos</Link>
-                <Link href="/admin/users/create" className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black">+ Crear usuario</Link>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Módulo de accesos rápidos retirado para dashboards admin/superadmin */}
 
         {user?.role === 'modelo' && (
           <div className="space-y-6">
