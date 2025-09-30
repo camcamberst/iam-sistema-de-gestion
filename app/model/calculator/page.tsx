@@ -386,17 +386,15 @@ export default function ModelCalculatorPage() {
                               value={platform.value > 0 ? platform.value : ''}
                               onChange={(e) => {
                                 const inputValue = e.target.value;
+                                console.log('🔍 [DEBUG] Raw input:', inputValue);
                                 
-                                // Permitir solo números, punto y coma
-                                const cleanValue = inputValue.replace(/[^0-9.,]/g, '');
+                                // Permitir cualquier entrada temporalmente
+                                const value = parseFloat(inputValue) || 0;
                                 
-                                // Convertir coma a punto para parseFloat
-                                const normalizedValue = cleanValue.replace(',', '.');
-                                const value = parseFloat(normalizedValue) || 0;
-                                
+                                console.log('🔍 [DEBUG] Parsed value:', value);
                                 handleValueChange(platform.id, value);
                               }}
-                              className="apple-input w-28 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              className="w-28 text-sm border border-gray-300 rounded px-2 py-1"
                               placeholder="0.00"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
