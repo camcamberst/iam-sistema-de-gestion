@@ -290,31 +290,31 @@ export default function ModelCalculatorPage() {
           </button>
         </div>
 
-        {/* Rates actualizadas */}
-        <div className="apple-card mb-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-3">Tasas Actualizadas</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600">
+        {/* Rates actualizadas - COMPACTO */}
+        <div className="apple-card mb-3">
+          <h2 className="text-sm font-semibold text-gray-900 mb-2">Tasas Actualizadas</h2>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center p-2 bg-blue-50 rounded-md">
+              <div className="text-lg font-bold text-blue-600">
                 ${rates?.usd_cop || 3900}
               </div>
-              <div className="text-sm text-gray-600">USD → COP</div>
+              <div className="text-xs text-gray-600">USD→COP</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600">
+            <div className="text-center p-2 bg-green-50 rounded-md">
+              <div className="text-lg font-bold text-green-600">
                 {rates?.eur_usd || 1.01}
               </div>
-              <div className="text-sm text-gray-600">EUR → USD</div>
+              <div className="text-xs text-gray-600">EUR→USD</div>
             </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600">
+            <div className="text-center p-2 bg-purple-50 rounded-md">
+              <div className="text-lg font-bold text-purple-600">
                 {rates?.gbp_usd || 1.20}
               </div>
-              <div className="text-sm text-gray-600">GBP → USD</div>
+              <div className="text-xs text-gray-600">GBP→USD</div>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-2 text-center">
-            Tasas configuradas por tu administrador
+          <p className="text-xs text-gray-500 mt-1 text-center">
+            Configuradas por tu administrador
           </p>
         </div>
 
@@ -439,29 +439,29 @@ export default function ModelCalculatorPage() {
           </div>
         </div>
 
-        {/* Totales y Alertas */}
+        {/* Totales y Alertas - COMPACTO */}
         <div className="apple-card">
-          <h3 className="text-base font-semibold text-gray-900 mb-4">Totales y Alertas</h3>
+          <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
           
-          {/* Totales principales */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-            <div className="text-center p-6 bg-blue-50 rounded-lg">
-              <div className="text-3xl font-bold text-blue-600 mb-2">
+          {/* Totales principales - COMPACTO */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-3 bg-blue-50 rounded-md">
+              <div className="text-xl font-bold text-blue-600 mb-1">
                 ${platforms.reduce((sum, p) => sum + p.value, 0).toFixed(2)}
               </div>
-              <div className="text-sm text-gray-600">USD Bruto Total</div>
+              <div className="text-xs text-gray-600">USD Bruto</div>
             </div>
-            <div className="text-center p-6 bg-green-50 rounded-lg">
-              <div className="text-3xl font-bold text-green-600 mb-2">
+            <div className="text-center p-3 bg-green-50 rounded-md">
+              <div className="text-xl font-bold text-green-600 mb-1">
                 ${platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0).toFixed(2)}
               </div>
-              <div className="text-sm text-gray-600">USD Modelo Total</div>
+              <div className="text-xs text-gray-600">USD Modelo</div>
             </div>
-            <div className="text-center p-6 bg-purple-50 rounded-lg">
-              <div className="text-3xl font-bold text-purple-600 mb-2">
+            <div className="text-center p-3 bg-purple-50 rounded-md">
+              <div className="text-xl font-bold text-purple-600 mb-1">
                 ${(platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0) * 3900).toLocaleString()}
               </div>
-              <div className="text-sm text-gray-600">COP Modelo Total</div>
+              <div className="text-xs text-gray-600">COP Modelo</div>
             </div>
           </div>
           
@@ -472,7 +472,7 @@ export default function ModelCalculatorPage() {
             </div>
           </div>
           
-          {/* Alerta de cuota mínima */}
+          {/* Alerta de cuota mínima - MODERNA Y DINÁMICA */}
           {(() => {
             const totalUsdModelo = platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0);
             const cuotaMinima = platforms[0]?.minQuota || 470;
@@ -480,20 +480,66 @@ export default function ModelCalculatorPage() {
             const estaPorDebajo = totalUsdModelo < cuotaMinima;
             
             return (
-              <div className={`p-4 rounded-lg border ${estaPorDebajo ? 'bg-red-50 border-red-200' : 'bg-green-50 border-green-200'}`}>
-                <div className="flex items-center">
-                  <span className={`text-xl mr-3 ${estaPorDebajo ? 'text-red-500' : 'text-green-500'}`}>
-                    {estaPorDebajo ? '⚠️' : '✅'}
-                  </span>
-                  <div>
-                    <div className={`font-medium ${estaPorDebajo ? 'text-red-800' : 'text-green-800'}`}>
-                      {estaPorDebajo ? 'Cuota mínima no alcanzada' : 'Cuota mínima alcanzada'}
+              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
+                estaPorDebajo 
+                  ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-300 shadow-red-100' 
+                  : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100'
+              }`}>
+                {/* Efecto de brillo animado */}
+                <div className={`absolute inset-0 opacity-20 ${
+                  estaPorDebajo ? 'bg-gradient-to-r from-red-400 to-pink-400' : 'bg-gradient-to-r from-green-400 to-emerald-400'
+                } animate-pulse`}></div>
+                
+                <div className="relative p-4">
+                  <div className="flex items-center space-x-4">
+                    {/* Icono animado */}
+                    <div className={`relative flex-shrink-0 ${
+                      estaPorDebajo ? 'animate-bounce' : 'animate-pulse'
+                    }`}>
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                        estaPorDebajo 
+                          ? 'bg-gradient-to-r from-red-500 to-pink-500 shadow-lg shadow-red-200' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-200'
+                      }`}>
+                        <span className="text-white text-xl">
+                          {estaPorDebajo ? '⚡' : '🎯'}
+                        </span>
+                      </div>
                     </div>
-                    <div className={`text-sm ${estaPorDebajo ? 'text-red-600' : 'text-green-600'}`}>
-                      {estaPorDebajo 
-                        ? `Te faltan ${(100 - porcentajeAlcanzado).toFixed(1)}% para alcanzar la cuota mínima de $${cuotaMinima} USD`
-                        : `Has alcanzado el ${porcentajeAlcanzado.toFixed(1)}% de la cuota mínima de $${cuotaMinima} USD`
-                      }
+                    
+                    {/* Contenido */}
+                    <div className="flex-1">
+                      <div className={`font-bold text-lg mb-1 ${
+                        estaPorDebajo ? 'text-red-800' : 'text-green-800'
+                      }`}>
+                        {estaPorDebajo ? '🚨 Cuota Mínima Pendiente' : '🎉 Cuota Mínima Alcanzada'}
+                      </div>
+                      <div className={`text-sm font-medium ${
+                        estaPorDebajo ? 'text-red-700' : 'text-green-700'
+                      }`}>
+                        {estaPorDebajo 
+                          ? `Faltan $${(cuotaMinima - totalUsdModelo).toFixed(2)} USD (${(100 - porcentajeAlcanzado).toFixed(1)}% restante)`
+                          : `¡Excelente! Has superado la meta en ${(porcentajeAlcanzado - 100).toFixed(1)}%`
+                        }
+                      </div>
+                      
+                      {/* Barra de progreso animada */}
+                      <div className="mt-3">
+                        <div className="flex justify-between text-xs text-gray-600 mb-1">
+                          <span>Progreso</span>
+                          <span>{porcentajeAlcanzado.toFixed(1)}%</span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                          <div 
+                            className={`h-full transition-all duration-1000 ease-out ${
+                              estaPorDebajo 
+                                ? 'bg-gradient-to-r from-red-500 to-pink-500' 
+                                : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                            }`}
+                            style={{ width: `${Math.min(porcentajeAlcanzado, 100)}%` }}
+                          ></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
