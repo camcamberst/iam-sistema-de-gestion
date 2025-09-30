@@ -472,7 +472,7 @@ export default function ModelCalculatorPage() {
             </div>
           </div>
           
-          {/* Alerta de cuota mínima - MODERNA Y DINÁMICA */}
+          {/* Alerta de cuota mínima - COMPACTA UNA LÍNEA */}
           {(() => {
             const totalUsdModelo = platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0);
             const cuotaMinima = platforms[0]?.minQuota || 470;
@@ -480,7 +480,7 @@ export default function ModelCalculatorPage() {
             const estaPorDebajo = totalUsdModelo < cuotaMinima;
             
             return (
-              <div className={`relative overflow-hidden rounded-xl border-2 transition-all duration-300 ${
+              <div className={`relative overflow-hidden rounded-lg border-2 transition-all duration-300 ${
                 estaPorDebajo 
                   ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-300 shadow-red-100' 
                   : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100'
@@ -490,46 +490,44 @@ export default function ModelCalculatorPage() {
                   estaPorDebajo ? 'bg-gradient-to-r from-red-400 to-pink-400' : 'bg-gradient-to-r from-green-400 to-emerald-400'
                 } animate-pulse`}></div>
                 
-                <div className="relative p-4">
-                  <div className="flex items-center space-x-4">
+                <div className="relative p-3">
+                  <div className="flex items-center space-x-3">
                     {/* Icono animado */}
                     <div className={`relative flex-shrink-0 ${
                       estaPorDebajo ? 'animate-bounce' : 'animate-pulse'
                     }`}>
-                      <div className={`w-12 h-12 rounded-full flex items-center justify-center ${
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         estaPorDebajo 
                           ? 'bg-gradient-to-r from-red-500 to-pink-500 shadow-lg shadow-red-200' 
                           : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-200'
                       }`}>
-                        <span className="text-white text-xl">
+                        <span className="text-white text-sm">
                           {estaPorDebajo ? '⚡' : '🎯'}
                         </span>
                       </div>
                     </div>
                     
-                    {/* Contenido */}
+                    {/* Contenido compacto */}
                     <div className="flex-1">
-                      <div className={`font-bold text-lg mb-1 ${
-                        estaPorDebajo ? 'text-red-800' : 'text-green-800'
-                      }`}>
-                        {estaPorDebajo ? '🚨 Cuota Mínima Pendiente' : '🎉 Cuota Mínima Alcanzada'}
-                      </div>
-                      <div className={`text-sm font-medium ${
-                        estaPorDebajo ? 'text-red-700' : 'text-green-700'
-                      }`}>
-                        {estaPorDebajo 
-                          ? `Faltan $${(cuotaMinima - totalUsdModelo).toFixed(2)} USD (${(100 - porcentajeAlcanzado).toFixed(1)}% restante)`
-                          : `¡Excelente! Has superado la meta en ${(porcentajeAlcanzado - 100).toFixed(1)}%`
-                        }
+                      <div className="flex items-center justify-between">
+                        <div className={`font-bold text-sm ${
+                          estaPorDebajo ? 'text-red-800' : 'text-green-800'
+                        }`}>
+                          {estaPorDebajo ? 'Cuota Mínima Pendiente' : 'Cuota Mínima Alcanzada'}
+                        </div>
+                        <div className={`text-xs font-medium ${
+                          estaPorDebajo ? 'text-red-700' : 'text-green-700'
+                        }`}>
+                          {estaPorDebajo 
+                            ? `Faltan $${Math.ceil(cuotaMinima - totalUsdModelo)} USD (${Math.ceil(100 - porcentajeAlcanzado)}% restante)`
+                            : `¡Excelente! +${Math.ceil(porcentajeAlcanzado - 100)}%`
+                          }
+                        </div>
                       </div>
                       
-                      {/* Barra de progreso animada */}
-                      <div className="mt-3">
-                        <div className="flex justify-between text-xs text-gray-600 mb-1">
-                          <span>Progreso</span>
-                          <span>{porcentajeAlcanzado.toFixed(1)}%</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      {/* Barra de progreso compacta */}
+                      <div className="mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
                           <div 
                             className={`h-full transition-all duration-1000 ease-out ${
                               estaPorDebajo 
@@ -538,6 +536,9 @@ export default function ModelCalculatorPage() {
                             }`}
                             style={{ width: `${Math.min(porcentajeAlcanzado, 100)}%` }}
                           ></div>
+                        </div>
+                        <div className="text-right text-xs text-gray-600 mt-1">
+                          {Math.ceil(porcentajeAlcanzado)}%
                         </div>
                       </div>
                     </div>
