@@ -112,11 +112,17 @@ export default function ModelCalculatorPage() {
       console.log('🔍 [CALCULATOR] Calculator flow data:', calculatorFlowData);
 
       // Cargar tasas activas
-      const ratesResponse = await fetch('/api/calculator/rates-active');
+      const ratesResponse = await fetch('/api/rates-v2?activeOnly=true');
       const ratesData = await ratesResponse.json();
       console.log('🔍 [CALCULATOR] Rates data:', ratesData);
-      if (ratesData.success) {
-        setRates(ratesData.rates);
+      if (ratesData.success && ratesData.data) {
+        // Formatear tasas para la calculadora
+        const formattedRates = {
+          usd_cop: ratesData.data.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
+          eur_usd: ratesData.data.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+          gbp_usd: ratesData.data.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20
+        };
+        setRates(formattedRates);
       }
 
       // Cargar configuración desde API v2
