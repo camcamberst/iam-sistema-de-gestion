@@ -35,6 +35,11 @@ export default function ModelCalculator() {
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState(false);
 
+  console.log('🔍 [ModelCalculator] Component mounted');
+  console.log('🔍 [ModelCalculator] Loading:', loading);
+  console.log('🔍 [ModelCalculator] Platforms:', platforms);
+  console.log('🔍 [ModelCalculator] Error:', error);
+
   // Plataformas disponibles (configuradas por admin)
   // Por defecto, ninguna plataforma está habilitada hasta que el admin las configure
   const availablePlatforms = [
