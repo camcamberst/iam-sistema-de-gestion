@@ -802,43 +802,45 @@ export default function ModelCalculatorPage() {
           
           {/* Alerta de cuota mínima - COMPACTA UNA LÍNEA */}
           {(() => {
-            const totalUsdModelo = platforms.reduce((sum, p) => {
-              // Calcular USD modelo usando fórmulas específicas + porcentaje
-              let usdModelo = 0;
+            const totalUsdBruto = platforms.reduce((sum, p) => {
+              // Calcular USD bruto usando fórmulas específicas (sin porcentaje de reparto)
+              let usdBruto = 0;
               if (p.currency === 'EUR') {
                 if (p.id === 'big7') {
-                  usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                  usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
                 } else if (p.id === 'mondo') {
-                  usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                  usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
                 } else {
-                  usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  usdBruto = p.value * (rates?.eur_usd || 1.01);
                 }
               } else if (p.currency === 'GBP') {
                 if (p.id === 'aw') {
-                  usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                  usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
                 } else {
-                  usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                  usdBruto = p.value * (rates?.gbp_usd || 1.20);
                 }
               } else if (p.currency === 'USD') {
                 if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                  usdModelo = p.value * 0.75;
+                  usdBruto = p.value * 0.75;
                 } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                  usdModelo = p.value * 0.05;
+                  usdBruto = p.value * 0.05;
                 } else if (p.id === 'dxlive') {
-                  usdModelo = p.value * 0.60;
+                  usdBruto = p.value * 0.60;
                 } else if (p.id === 'secretfriends') {
-                  usdModelo = p.value * 0.5;
+                  usdBruto = p.value * 0.5;
                 } else if (p.id === 'superfoon') {
-                  usdModelo = p.value;
+                  usdBruto = p.value;
+                } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                  usdBruto = p.value;
                 } else {
-                  usdModelo = p.value;
+                  usdBruto = p.value;
                 }
               }
-              return sum + (usdModelo * p.percentage / 100);
+              return sum + usdBruto;
             }, 0);
             const cuotaMinima = platforms[0]?.minQuota || 470;
-            const porcentajeAlcanzado = (totalUsdModelo / cuotaMinima) * 100;
-            const estaPorDebajo = totalUsdModelo < cuotaMinima;
+            const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
+            const estaPorDebajo = totalUsdBruto < cuotaMinima;
             
             return (
               <div className={`relative overflow-hidden rounded-lg border-2 transition-all duration-300 ${
@@ -880,7 +882,7 @@ export default function ModelCalculatorPage() {
                           estaPorDebajo ? 'text-red-700' : 'text-green-700'
                         }`}>
                           {estaPorDebajo 
-                            ? `Faltan $${Math.ceil(cuotaMinima - totalUsdModelo)} USD (${Math.ceil(100 - porcentajeAlcanzado)}% restante)`
+                            ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${Math.ceil(100 - porcentajeAlcanzado)}% restante)`
                             : `¡Excelente! +${Math.ceil(porcentajeAlcanzado - 100)}%`
                           }
                         </div>
