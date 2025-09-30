@@ -128,8 +128,8 @@ export default function ModelCalculatorPage() {
       const enabledPlatforms = data.config.platforms
         .filter((p: any) => p.enabled)
         .map((platform: any) => ({
-          id: platform.platform_id,
-          name: platform.platform_name,
+          id: platform.id,
+          name: platform.name,
           enabled: true,
           value: 0,
           percentage: platform.percentage_override || platform.group_percentage || 80,
