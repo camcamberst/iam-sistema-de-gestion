@@ -233,21 +233,30 @@ export default function ConfigCalculatorPage() {
                 {/* Plataformas habilitadas */}
                 <div>
                   <h3 className="text-base font-medium text-gray-900 mb-3">Plataformas Habilitadas</h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    {platforms.map(platform => (
-                      <label key={platform.id} className="flex items-center space-x-3">
-                        <input
-                          type="checkbox"
-                          checked={enabledPlatforms.includes(platform.id)}
-                          onChange={() => handlePlatformToggle(platform.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <div className="flex-1">
-                          <span className="text-sm font-medium text-gray-900">{platform.name}</span>
-                          <p className="text-xs text-gray-500">{platform.description}</p>
+                  <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
+                    <div className="space-y-3">
+                      {platforms.map(platform => (
+                        <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1">
+                            <span className="text-sm font-medium text-gray-900">{platform.name}</span>
+                            <p className="text-xs text-gray-500">{platform.description}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handlePlatformToggle(platform.id)}
+                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              enabledPlatforms.includes(platform.id) ? 'bg-blue-600' : 'bg-gray-200'
+                            }`}
+                          >
+                            <span
+                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                                enabledPlatforms.includes(platform.id) ? 'translate-x-6' : 'translate-x-1'
+                              }`}
+                            />
+                          </button>
                         </div>
-                      </label>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
 
