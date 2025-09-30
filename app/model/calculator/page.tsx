@@ -381,20 +381,44 @@ export default function ModelCalculatorPage() {
                         </td>
                         <td className="py-3 px-3">
                           <div className="relative">
+                            {/* INPUT DE PRUEBA COMPLETAMENTE AISLADO */}
                             <input
                               type="text"
-                              value={platform.value > 0 ? platform.value : ''}
+                              defaultValue=""
                               onChange={(e) => {
-                                const inputValue = e.target.value;
-                                console.log('🔍 [DEBUG] Raw input:', inputValue);
+                                console.log('🔍 [DEBUG] INPUT CAMBIO:', e.target.value);
+                                console.log('🔍 [DEBUG] TIPO DE EVENTO:', e.type);
+                                console.log('🔍 [DEBUG] TARGET:', e.target);
                                 
-                                // Permitir cualquier entrada temporalmente
+                                const inputValue = e.target.value;
                                 const value = parseFloat(inputValue) || 0;
                                 
-                                console.log('🔍 [DEBUG] Parsed value:', value);
-                                handleValueChange(platform.id, value);
+                                console.log('🔍 [DEBUG] VALOR PARSEADO:', value);
+                                
+                                // Actualizar estado
+                                setPlatforms(prev => prev.map(p => 
+                                  p.id === platform.id ? { ...p, value } : p
+                                ));
                               }}
-                              className="w-28 text-sm border border-gray-300 rounded px-2 py-1"
+                              onKeyDown={(e) => {
+                                console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
+                                console.log('🔍 [DEBUG] CÓDIGO DE TECLA:', e.keyCode);
+                              }}
+                              onKeyUp={(e) => {
+                                console.log('🔍 [DEBUG] TECLA SOLTADA:', e.key);
+                              }}
+                              onInput={(e) => {
+                                console.log('🔍 [DEBUG] INPUT EVENT:', e.currentTarget.value);
+                              }}
+                              style={{
+                                width: '112px',
+                                height: '32px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                padding: '4px 8px',
+                                fontSize: '14px',
+                                backgroundColor: 'white'
+                              }}
                               placeholder="0.00"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
