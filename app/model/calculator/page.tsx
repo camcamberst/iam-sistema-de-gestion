@@ -381,16 +381,19 @@ export default function ModelCalculatorPage() {
                         <td className="py-3 px-3">
                           <div className="relative">
                             <input
-                              type="number"
-                              min="0"
-                              step="0.01"
-                              value={platform.value}
-                              onChange={(e) => handleValueChange(platform.id, parseFloat(e.target.value) || 0)}
-                              className="apple-input w-28 text-sm"
-                              placeholder="0.00"
+                              type="text"
+                              value={platform.value > 0 ? platform.value : ''}
+                              onChange={(e) => {
+                                const value = parseFloat(e.target.value) || 0;
+                                handleValueChange(platform.id, value);
+                              }}
+                              className="apple-input w-28 text-sm [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              placeholder="Ingresar valor"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <span className="text-gray-500 text-xs">USD</span>
+                              <span className="text-gray-500 text-xs">
+                                {platform.currency || 'USD'}
+                              </span>
                             </div>
                           </div>
                         </td>
