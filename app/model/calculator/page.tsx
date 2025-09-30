@@ -368,10 +368,47 @@ export default function ModelCalculatorPage() {
                 </thead>
                 <tbody>
                   {platforms.filter(p => p.enabled).map(platform => {
-                    // Calcular dólares y COP para esta plataforma
+                    // Calcular dólares y COP para esta plataforma usando fórmulas específicas
                     const usdBruto = platform.value;
-                    const usdModelo = (platform.value * platform.percentage) / 100;
-                    const copModelo = usdModelo * 3900; // Rate hardcodeado por ahora
+                    
+                    // Aplicar fórmula específica según la plataforma
+                    let usdModelo = 0;
+                    if (platform.currency === 'EUR') {
+                      // EUR→USD→COP
+                      if (platform.id === 'big7') {
+                        usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.84; // 16% impuesto
+                      } else if (platform.id === 'mondo') {
+                        usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.78; // 22% descuento
+                      } else {
+                        usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR directo
+                      }
+                    } else if (platform.currency === 'GBP') {
+                      // GBP→USD→COP
+                      if (platform.id === 'aw') {
+                        usdModelo = (platform.value * (rates?.gbp_usd || 1.20)) * 0.677; // 32.3% descuento
+                      } else {
+                        usdModelo = platform.value * (rates?.gbp_usd || 1.20); // GBP directo
+                      }
+                    } else if (platform.currency === 'USD') {
+                      // USD→USD→COP
+                      if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                        usdModelo = platform.value * 0.75; // 25% descuento
+                      } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                        usdModelo = platform.value * 0.05; // 100 tokens = 5 USD
+                      } else if (platform.id === 'dxlive') {
+                        usdModelo = platform.value * 0.60; // 100 pts = 60 USD
+                      } else if (platform.id === 'secretfriends') {
+                        usdModelo = platform.value * 0.5; // 50% descuento
+                      } else if (platform.id === 'superfoon') {
+                        usdModelo = platform.value; // 100% directo
+                      } else {
+                        usdModelo = platform.value; // USD directo
+                      }
+                    }
+                    
+                    // Aplicar porcentaje de reparto del modelo
+                    const usdModeloFinal = (usdModelo * platform.percentage) / 100;
+                    const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
                     return (
                       <tr key={platform.id} className="border-b border-gray-100">
@@ -386,14 +423,15 @@ export default function ModelCalculatorPage() {
                               type="text"
                               defaultValue=""
                               onChange={(e) => {
-                                console.log('🔍 [DEBUG] INPUT CAMBIO:', e.target.value);
-                                console.log('🔍 [DEBUG] TIPO DE EVENTO:', e.type);
-                                console.log('🔍 [DEBUG] TARGET:', e.target);
-                                
                                 const inputValue = e.target.value;
-                                const value = parseFloat(inputValue) || 0;
+                                console.log('🔍 [DEBUG] INPUT RAW:', inputValue);
                                 
-                                console.log('🔍 [DEBUG] VALOR PARSEADO:', value);
+                                // Convertir coma a punto ANTES de parseFloat
+                                const normalizedValue = inputValue.replace(',', '.');
+                                console.log('🔍 [DEBUG] NORMALIZED:', normalizedValue);
+                                
+                                const value = parseFloat(normalizedValue) || 0;
+                                console.log('🔍 [DEBUG] VALOR FINAL:', value);
                                 
                                 // Actualizar estado
                                 setPlatforms(prev => prev.map(p => 
@@ -430,12 +468,12 @@ export default function ModelCalculatorPage() {
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 font-medium text-sm">
-                            ${usdBruto.toFixed(2)} USD
+                            ${usdModelo.toFixed(2)} USD
                           </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 font-medium text-sm">
-                            ${copModelo.toLocaleString()} COP
+                            ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                           </div>
                         </td>
                       </tr>
@@ -481,19 +519,118 @@ export default function ModelCalculatorPage() {
           <div className="grid grid-cols-3 gap-3 mb-4">
             <div className="text-center p-3 bg-blue-50 rounded-md">
               <div className="text-xl font-bold text-blue-600 mb-1">
-                ${platforms.reduce((sum, p) => sum + p.value, 0).toFixed(2)}
+                ${platforms.reduce((sum, p) => {
+                  // Calcular USD bruto usando fórmulas específicas
+                  let usdBruto = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdBruto = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdBruto = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdBruto = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdBruto = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdBruto = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdBruto = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdBruto = p.value;
+                    } else {
+                      usdBruto = p.value;
+                    }
+                  }
+                  return sum + usdBruto;
+                }, 0).toFixed(2)}
               </div>
               <div className="text-xs text-gray-600">USD Bruto</div>
             </div>
             <div className="text-center p-3 bg-green-50 rounded-md">
               <div className="text-xl font-bold text-green-600 mb-1">
-                ${platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0).toFixed(2)}
+                ${platforms.reduce((sum, p) => {
+                  // Calcular USD modelo usando fórmulas específicas + porcentaje
+                  let usdModelo = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdModelo = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdModelo = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdModelo = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdModelo = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value;
+                    } else {
+                      usdModelo = p.value;
+                    }
+                  }
+                  return sum + (usdModelo * p.percentage / 100);
+                }, 0).toFixed(2)}
               </div>
               <div className="text-xs text-gray-600">USD Modelo</div>
             </div>
             <div className="text-center p-3 bg-purple-50 rounded-md">
               <div className="text-xl font-bold text-purple-600 mb-1">
-                ${(platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0) * 3900).toLocaleString()}
+                ${(platforms.reduce((sum, p) => {
+                  // Calcular USD modelo usando fórmulas específicas + porcentaje
+                  let usdModelo = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdModelo = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdModelo = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdModelo = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdModelo = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value;
+                    } else {
+                      usdModelo = p.value;
+                    }
+                  }
+                  return sum + (usdModelo * p.percentage / 100);
+                }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
               <div className="text-xs text-gray-600">COP Modelo</div>
             </div>
@@ -502,13 +639,79 @@ export default function ModelCalculatorPage() {
           {/* 90% de anticipo */}
           <div className="mb-6 p-4 bg-gray-50 rounded-lg">
             <div className="text-sm text-gray-600">
-              <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0) * 3900 * 0.9).toLocaleString()} COP
+              <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
+                // Calcular USD modelo usando fórmulas específicas + porcentaje
+                let usdModelo = 0;
+                if (p.currency === 'EUR') {
+                  if (p.id === 'big7') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                  } else if (p.id === 'mondo') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                  } else {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  }
+                } else if (p.currency === 'GBP') {
+                  if (p.id === 'aw') {
+                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                  } else {
+                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                  }
+                } else if (p.currency === 'USD') {
+                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                    usdModelo = p.value * 0.75;
+                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                    usdModelo = p.value * 0.05;
+                  } else if (p.id === 'dxlive') {
+                    usdModelo = p.value * 0.60;
+                  } else if (p.id === 'secretfriends') {
+                    usdModelo = p.value * 0.5;
+                  } else if (p.id === 'superfoon') {
+                    usdModelo = p.value;
+                  } else {
+                    usdModelo = p.value;
+                  }
+                }
+                return sum + (usdModelo * p.percentage / 100);
+              }, 0) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
             </div>
           </div>
           
           {/* Alerta de cuota mínima - COMPACTA UNA LÍNEA */}
           {(() => {
-            const totalUsdModelo = platforms.reduce((sum, p) => sum + (p.value * p.percentage / 100), 0);
+            const totalUsdModelo = platforms.reduce((sum, p) => {
+              // Calcular USD modelo usando fórmulas específicas + porcentaje
+              let usdModelo = 0;
+              if (p.currency === 'EUR') {
+                if (p.id === 'big7') {
+                  usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                } else if (p.id === 'mondo') {
+                  usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                } else {
+                  usdModelo = p.value * (rates?.eur_usd || 1.01);
+                }
+              } else if (p.currency === 'GBP') {
+                if (p.id === 'aw') {
+                  usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                } else {
+                  usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                }
+              } else if (p.currency === 'USD') {
+                if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                  usdModelo = p.value * 0.75;
+                } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                  usdModelo = p.value * 0.05;
+                } else if (p.id === 'dxlive') {
+                  usdModelo = p.value * 0.60;
+                } else if (p.id === 'secretfriends') {
+                  usdModelo = p.value * 0.5;
+                } else if (p.id === 'superfoon') {
+                  usdModelo = p.value;
+                } else {
+                  usdModelo = p.value;
+                }
+              }
+              return sum + (usdModelo * p.percentage / 100);
+            }, 0);
             const cuotaMinima = platforms[0]?.minQuota || 470;
             const porcentajeAlcanzado = (totalUsdModelo / cuotaMinima) * 100;
             const estaPorDebajo = totalUsdModelo < cuotaMinima;
