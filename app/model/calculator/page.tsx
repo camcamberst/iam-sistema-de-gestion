@@ -115,8 +115,6 @@ export default function ModelCalculatorPage() {
         // Soporte de modo admin: permitir ver calculadora de una modelo específica
         const isAdmin = current.role === 'admin' || current.role === 'super_admin';
         const useOverride = Boolean(queryModelId && adminOverride && isAdmin);
-        setAdminOverride(useOverride);
-
         // Cargar configuración de calculadora del usuario actual o de la modelo seleccionada por admin
         await loadCalculatorConfig(useOverride ? (queryModelId as string) : current.id);
       } finally {
@@ -399,7 +397,10 @@ export default function ModelCalculatorPage() {
     );
   }
 
-  if (!user || (user.role !== 'modelo' && !adminOverride)) {
+  const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
+  const allowed = Boolean(user && (user.role === 'modelo' || (isAdminUser && queryModelId && adminOverride)));
+
+  if (!allowed) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
