@@ -47,8 +47,7 @@ export async function GET(request: NextRequest) {
           created_at
         )
       `)
-      .eq('role', 'modelo')
-      .eq('active', true);
+      .eq('role', 'modelo');
 
     if (modelsError) {
       console.error('Error al obtener modelos:', modelsError);
