@@ -154,7 +154,7 @@ export default function ModelCalculatorPage() {
         }));
 
       console.log('🔍 [CALCULATOR] Enabled platforms:', enabledPlatforms);
-      console.log('🔍 [CALCULATOR] Platform details:', enabledPlatforms.map(p => ({
+      console.log('🔍 [CALCULATOR] Platform details:', enabledPlatforms.map((p: Platform) => ({
         id: p.id,
         name: p.name,
         currency: p.currency,
