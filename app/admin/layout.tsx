@@ -119,12 +119,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-      // Agregar opciones administrativas de calculadora
-      baseItems[0].subItems.push(
-        { label: 'Definir RATES', href: '/admin/rates' },
-        { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
-        { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view' }
-      );
+      // Agregar opciones administrativas de calculadora SOLO para admins/super_admins
+      const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
+      if (calculatorIndex !== -1) {
+        baseItems[calculatorIndex].subItems.push(
+          { label: 'Definir RATES', href: '/admin/rates' },
+          { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
+          { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view' }
+        );
+      }
     }
 
     return baseItems;
