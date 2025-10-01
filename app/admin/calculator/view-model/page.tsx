@@ -32,11 +32,29 @@ export default function ViewModelCalculator() {
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [modelsLoading, setModelsLoading] = useState(false);
+  
+  // Estados para dropdowns personalizados
+  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
+  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
   const router = useRouter();
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
+
+  // Cerrar dropdowns al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setIsGroupDropdownOpen(false);
+        setIsModelDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -163,7 +181,24 @@ export default function ViewModelCalculator() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <>
+      <style jsx>{`
+        .dropdown-container .overflow-y-auto::-webkit-scrollbar {
+          width: 6px;
+        }
+        .dropdown-container .overflow-y-auto::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 3px;
+        }
+        .dropdown-container .overflow-y-auto::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        .dropdown-container .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+      `}</style>
+      <div className="min-h-screen bg-white">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">Ver Calculadora de Modelo</h1>
         <p className="text-gray-500 mb-6 text-sm">
@@ -175,43 +210,92 @@ export default function ViewModelCalculator() {
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
           <div className="space-y-4">
             {user.role === 'super_admin' && (
-              <div>
+              <div className="dropdown-container relative">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   Filtrar por grupo
                 </label>
-                <select
-                  value={selectedGroup}
-                  onChange={(e) => setSelectedGroup(e.target.value)}
-                  className="apple-input w-full"
-                  disabled={modelsLoading}
-                >
-                  <option value="">Todos los grupos</option>
-                  {groupsOptions.map((g) => (
-                    <option key={g.id} value={g.name}>{g.name}</option>
-                  ))}
-                </select>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
+                    disabled={modelsLoading}
+                    className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <span className="text-gray-700">
+                      {selectedGroup || 'Todos los grupos'}
+                    </span>
+                    <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isGroupDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {isGroupDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-32 overflow-y-auto">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedGroup('');
+                          setIsGroupDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        Todos los grupos
+                      </button>
+                      {groupsOptions.map((g) => (
+                        <button
+                          key={g.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedGroup(g.name);
+                            setIsGroupDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
+                        >
+                          {g.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-            <div>
+            <div className="dropdown-container relative">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Modelo
               </label>
-              <select
-                value={selectedModel?.id || ''}
-                onChange={(e) => {
-                  const model = filteredModels.find(m => m.id === e.target.value);
-                  setSelectedModel(model || null);
-                }}
-                className="apple-input w-full"
-                disabled={modelsLoading}
-              >
-                <option value="">Selecciona una modelo...</option>
-                {filteredModels.map((model) => (
-                  <option key={model.id} value={model.id}>
-                    {model.name} ({model.email})
-                  </option>
-                ))}
-              </select>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                  disabled={modelsLoading}
+                  className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span className="text-gray-700">
+                    {selectedModel ? `${selectedModel.name} (${selectedModel.email})` : 'Selecciona una modelo...'}
+                  </span>
+                  <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isModelDropdownOpen && (
+                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-32 overflow-y-auto">
+                    {filteredModels.map((model) => (
+                      <button
+                        key={model.id}
+                        type="button"
+                        onClick={() => {
+                          setSelectedModel(model);
+                          setIsModelDropdownOpen(false);
+                        }}
+                        className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
+                      >
+                        {model.name} ({model.email})
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -234,5 +318,6 @@ export default function ViewModelCalculator() {
         )}
       </div>
     </div>
+    </>
   );
 }
