@@ -148,6 +148,12 @@ export default function SolicitarAnticipoPage() {
       const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
       const valuesData = await valuesResponse.json();
       console.log('🔍 [SOLICITAR ANTICIPO] Values response:', valuesData);
+      console.log('🔍 [SOLICITAR ANTICIPO] Values data structure:', {
+        success: valuesData.success,
+        hasValues: !!valuesData.values,
+        valuesLength: valuesData.values?.length || 0,
+        valuesType: typeof valuesData.values
+      });
       
       // Cargar tasas
       console.log('🔍 [SOLICITAR ANTICIPO] Cargando tasas...');
@@ -175,7 +181,7 @@ export default function SolicitarAnticipoPage() {
             currency: platform.currency || 'USD'
           }));
 
-        const platformValuesMap = new Map(valuesData.values.map((mv: any) => [mv.platform_id, mv.value]));
+        const platformValuesMap = new Map((valuesData.values || []).map((mv: any) => [mv.platform_id, mv.value]));
         console.log('🔍 [SOLICITAR ANTICIPO] Platform values map:', platformValuesMap);
         console.log('🔍 [SOLICITAR ANTICIPO] Enabled platforms:', enabledPlatforms);
 
