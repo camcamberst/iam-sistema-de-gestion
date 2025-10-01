@@ -21,6 +21,7 @@ interface Anticipo {
   created_at: string;
   realized_at: string;
   // Datos de transferencia
+  nombre_beneficiario?: string;
   banco?: string;
   tipo_cuenta?: string;
   numero_cuenta?: string;
