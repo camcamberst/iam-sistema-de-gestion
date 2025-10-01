@@ -343,6 +343,8 @@ export default function SolicitarAnticipoPage() {
         select {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
+          max-height: 200px;
+          overflow-y: auto;
         }
         select::-webkit-scrollbar {
           width: 6px;
@@ -362,9 +364,20 @@ export default function SolicitarAnticipoPage() {
           padding: 8px 12px;
           background: white;
           color: #374151;
+          font-size: 14px;
+          line-height: 1.4;
         }
         select option:hover {
           background: #f3f4f6;
+        }
+        select option:checked {
+          background: #3b82f6;
+          color: white;
+        }
+        /* Forzar que el dropdown se abra hacia abajo */
+        select:focus {
+          position: relative;
+          z-index: 10;
         }
       `}</style>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -526,21 +539,23 @@ export default function SolicitarAnticipoPage() {
                   />
                 </div>
                 
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Banco
                   </label>
                   <select
                     value={anticipoData.banco || ''}
                     onChange={(e) => handleInputChange('banco', e.target.value)}
-                    className="apple-input w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent relative z-10"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 8px center',
                       backgroundRepeat: 'no-repeat',
                       backgroundSize: '16px',
-                      paddingRight: '32px'
+                      paddingRight: '32px',
+                      maxHeight: '200px'
                     }}
+                    size={1}
                     required
                   >
                     <option value="">Selecciona un banco</option>
@@ -568,21 +583,23 @@ export default function SolicitarAnticipoPage() {
                   </div>
                 )}
 
-                <div>
+                <div className="relative">
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tipo de Cuenta
                   </label>
                   <select
                     value={anticipoData.tipo_cuenta || ''}
                     onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
-                    className="apple-input w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent relative z-10"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 8px center',
                       backgroundRepeat: 'no-repeat',
                       backgroundSize: '16px',
-                      paddingRight: '32px'
+                      paddingRight: '32px',
+                      maxHeight: '200px'
                     }}
+                    size={1}
                     required
                   >
                     <option value="">Selecciona tipo de cuenta</option>
