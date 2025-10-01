@@ -67,7 +67,8 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
         label: 'Mi Calculadora',
         href: '/model/calculator',
         subItems: [
-          { label: 'Ingresar Valores', href: '/model/calculator' }
+          { label: 'Ingresar Valores', href: '/model/calculator' },
+          { label: 'Mi Historial', href: '/model/calculator/history' }
         ]
       },
       {
