@@ -340,13 +340,10 @@ export default function SolicitarAnticipoPage() {
   return (
     <div className="min-h-screen bg-white">
       <style jsx>{`
+        /* Estilos para dropdowns normales (sin size) */
         .bank-select {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
-          max-height: 120px !important;
-          overflow-y: auto;
-          position: relative;
-          z-index: 20;
         }
         .bank-select::-webkit-scrollbar {
           width: 6px;
@@ -363,12 +360,11 @@ export default function SolicitarAnticipoPage() {
           background: #94a3b8;
         }
         .bank-select option {
-          padding: 6px 12px;
+          padding: 8px 12px;
           background: white;
           color: #374151;
-          font-size: 13px;
-          line-height: 1.3;
-          height: 32px;
+          font-size: 14px;
+          line-height: 1.4;
         }
         .bank-select option:hover {
           background: #f3f4f6;
@@ -377,16 +373,10 @@ export default function SolicitarAnticipoPage() {
           background: #3b82f6;
           color: white;
         }
-        /* Forzar apertura hacia abajo */
-        .bank-select:focus {
-          position: relative;
-          z-index: 30;
-        }
-        /* Contenedor con espacio suficiente */
+        /* Contenedor normal */
         .dropdown-container {
           position: relative;
-          z-index: 10;
-          margin-bottom: 20px;
+          margin-bottom: 16px;
         }
       `}</style>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -563,7 +553,6 @@ export default function SolicitarAnticipoPage() {
                       backgroundSize: '16px',
                       paddingRight: '32px'
                     }}
-                    size={5}
                     required
                   >
                     <option value="">Selecciona un banco</option>
@@ -606,7 +595,6 @@ export default function SolicitarAnticipoPage() {
                       backgroundSize: '16px',
                       paddingRight: '32px'
                     }}
-                    size={3}
                     required
                   >
                     <option value="">Selecciona tipo de cuenta</option>
