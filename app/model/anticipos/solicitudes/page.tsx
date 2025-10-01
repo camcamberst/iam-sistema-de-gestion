@@ -47,6 +47,11 @@ interface Anticipo {
 const renderTransferDetails = (anticipo: Anticipo) => {
   let details: string[] = [];
 
+  // Siempre mostrar el beneficiario si está disponible
+  if (anticipo.nombre_beneficiario) {
+    details.push(`Beneficiario: ${anticipo.nombre_beneficiario}`);
+  }
+
   if (anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata') {
     if (anticipo.numero_telefono) details.push(`Tel: ${anticipo.numero_telefono}`);
   } else if (anticipo.banco && anticipo.numero_cuenta) {

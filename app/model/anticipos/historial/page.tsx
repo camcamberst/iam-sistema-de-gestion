@@ -229,6 +229,7 @@ export default function MiHistorialPage() {
                     {/* Segunda línea: Información compacta con datos de transferencia */}
                     <div className="flex items-center justify-between text-xs text-gray-600">
                       <div className="flex items-center space-x-3">
+                        {anticipo.nombre_beneficiario && <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>}
                         <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
                         {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
                           anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
