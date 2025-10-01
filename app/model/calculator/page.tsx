@@ -23,6 +23,9 @@ interface Platform {
   percentage: number;
   minQuota: number;
   currency?: string;
+  // Propiedades para debugging
+  percentage_override?: number | null;
+  group_percentage?: number | null;
 }
 
 interface CalculatorResult {
@@ -207,7 +210,10 @@ export default function ModelCalculatorPage() {
             value: 0,
             percentage: finalPercentage,
             minQuota: platform.min_quota_override || platform.group_min_quota || 470,
-            currency: platform.currency || 'USD' // CRÍTICO: Agregar currency
+            currency: platform.currency || 'USD', // CRÍTICO: Agregar currency
+            // Propiedades para debugging
+            percentage_override: platform.percentage_override,
+            group_percentage: platform.group_percentage
           };
         });
 
