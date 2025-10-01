@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { getCalculatorDate } from '@/utils/calculator-dates';
 
 interface User {
   id: string;
@@ -135,12 +136,12 @@ export default function SolicitarAnticipoPage() {
       console.log('🔍 [SOLICITAR ANTICIPO] Iniciando carga de datos de productividad para userId:', userId);
       
       // Obtener datos de productividad del período actual
-      const periodDate = new Date().toISOString().split('T')[0];
+      const periodDate = getCalculatorDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
       // Cargar configuración de calculadora
       console.log('🔍 [SOLICITAR ANTICIPO] Cargando configuración...');
-      const configResponse = await fetch(`/api/calculator/config-v2?userId=${userId}`);
+      const configResponse = await fetch(`/api/calculator/config-v2?modelId=${userId}`);
       const configData = await configResponse.json();
       console.log('🔍 [SOLICITAR ANTICIPO] Config response:', configData);
       
@@ -166,12 +167,13 @@ export default function SolicitarAnticipoPage() {
       const ratesData = await ratesResponse.json();
       console.log('🔍 [SOLICITAR ANTICIPO] Rates response:', ratesData);
       
-      if (ratesData.success && configData.config) {
+      if (ratesData.success && configData.success && configData.config) {
         console.log('🔍 [SOLICITAR ANTICIPO] Config and rates successful, checking values...');
         
         // Manejar caso donde valuesData no es exitoso pero tenemos datos
         if (!valuesData.success) {
           console.log('🔍 [SOLICITAR ANTICIPO] Values API failed, but continuing with empty values...');
+          console.log('🔍 [SOLICITAR ANTICIPO] Values error:', valuesData.error);
         }
         
         const rates = {
@@ -194,9 +196,11 @@ export default function SolicitarAnticipoPage() {
           }));
 
         // Crear mapa de valores desde la API
-        const platformValuesMap = new Map((valuesData.data || []).map((mv: any) => [mv.platform_id, mv.value]));
+        const valuesArray = valuesData.success ? (valuesData.data || []) : [];
+        const platformValuesMap = new Map(valuesArray.map((mv: any) => [mv.platform_id, mv.value]));
         console.log('🔍 [SOLICITAR ANTICIPO] Platform values map:', platformValuesMap);
         console.log('🔍 [SOLICITAR ANTICIPO] Enabled platforms:', enabledPlatforms);
+        console.log('🔍 [SOLICITAR ANTICIPO] Values array length:', valuesArray.length);
 
         enabledPlatforms.forEach((p: any) => {
           const value = Number(platformValuesMap.get(p.id) || 0);
@@ -272,6 +276,18 @@ export default function SolicitarAnticipoPage() {
           copModelo,
           anticipoDisponible,
           anticiposPagados
+        });
+      } else {
+        console.log('🔍 [SOLICITAR ANTICIPO] No se pudo cargar configuración o tasas');
+        console.log('🔍 [SOLICITAR ANTICIPO] Config success:', configData.success);
+        console.log('🔍 [SOLICITAR ANTICIPO] Rates success:', ratesData.success);
+        console.log('🔍 [SOLICITAR ANTICIPO] Has config:', !!configData.config);
+        
+        // Establecer valores por defecto
+        setProductivityData({
+          copModelo: 0,
+          anticipoDisponible: 0,
+          anticiposPagados: 0
         });
       }
     } catch (error) {
