@@ -313,17 +313,6 @@ export default function SolicitarAnticipoPage() {
     return '';
   };
 
-  // Función para validar teléfono (exactamente 10 dígitos)
-  const validateTelefono = (telefono: string): string => {
-    const cleanTelefono = telefono.replace(/\D/g, ''); // Solo números
-    if (cleanTelefono.length === 0) {
-      return 'El número de teléfono es requerido';
-    }
-    if (cleanTelefono.length !== 10) {
-      return 'El número de teléfono debe tener exactamente 10 dígitos';
-    }
-    return '';
-  };
 
   // Manejar cambio en el input de monto
   const handleMontoChange = (value: string) => {
