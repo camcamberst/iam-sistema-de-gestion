@@ -19,15 +19,9 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [MODEL-VALUES-V2] Loading values:', { modelId, periodDate });
 
-    // 🔍 DEBUG: Verificar si hay datos en la tabla
-    const { data: allData, error: allError } = await supabase
-      .from('model_values')
-      .select('*')
-      .eq('model_id', modelId);
+    // 🔍 DEBUG: Verificar si hay datos en la tabla (consulta simple)
+    console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
     
-    console.log('🔍 [MODEL-VALUES-V2] All data for modelId:', allData);
-    console.log('🔍 [MODEL-VALUES-V2] All data error:', allError);
-
     const { data: values, error } = await supabase
       .from('model_values')
       .select(`
@@ -37,13 +31,15 @@ export async function GET(request: NextRequest) {
       .eq('period_date', periodDate)
       .order('platform_id');
 
-    console.log('🔍 [MODEL-VALUES-V2] Filtered query result:', { values, error });
+    console.log('🔍 [MODEL-VALUES-V2] Query completed. Values:', values);
+    console.log('🔍 [MODEL-VALUES-V2] Query error:', error);
 
     if (error) {
       console.error('Error al obtener valores:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    console.log('🔍 [MODEL-VALUES-V2] Returning data:', values || []);
     return NextResponse.json({ success: true, data: values || [] });
 
   } catch (error: any) {
