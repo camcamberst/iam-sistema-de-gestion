@@ -47,6 +47,10 @@ export default function SolicitarAnticipoPage() {
     anticipoDisponible: 0,
     anticiposPagados: 0
   });
+  
+  // Estados para validación y formato de monto
+  const [montoError, setMontoError] = useState('');
+  const [montoFormatted, setMontoFormatted] = useState('0');
 
   const router = useRouter();
   const supabase = createClient(
@@ -287,19 +291,51 @@ export default function SolicitarAnticipoPage() {
     return (anticipoData.monto_solicitado / productivityData.anticipoDisponible) * 100;
   };
 
+  // Función para formatear número con separadores de miles
+  const formatNumber = (value: number): string => {
+    return value.toLocaleString('es-CO');
+  };
+
+  // Función para parsear número desde string formateado
+  const parseFormattedNumber = (value: string): number => {
+    return parseFloat(value.replace(/\./g, '').replace(/,/g, '.')) || 0;
+  };
+
+  // Función para validar monto
+  const validateMonto = (monto: number): string => {
+    if (monto <= 0) {
+      return 'El monto debe ser mayor a 0';
+    }
+    if (monto > productivityData.anticipoDisponible) {
+      return `El monto no puede superar $${formatNumber(productivityData.anticipoDisponible)} COP`;
+    }
+    return '';
+  };
+
+  // Manejar cambio en el input de monto
+  const handleMontoChange = (value: string) => {
+    const numericValue = parseFormattedNumber(value);
+    
+    // Actualizar el valor numérico
+    setAnticipoData(prev => ({ ...prev, monto_solicitado: numericValue }));
+    
+    // Formatear para mostrar
+    setMontoFormatted(formatNumber(numericValue));
+    
+    // Validar
+    const error = validateMonto(numericValue);
+    setMontoError(error);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!user) return;
     
     // Validaciones
-    if (anticipoData.monto_solicitado <= 0) {
-      setError('El monto debe ser mayor a 0');
-      return;
-    }
-    
-    if (anticipoData.monto_solicitado > productivityData.anticipoDisponible) {
-      setError(`El monto no puede exceder $${productivityData.anticipoDisponible.toLocaleString('es-CO')} COP`);
+    const montoError = validateMonto(anticipoData.monto_solicitado);
+    if (montoError) {
+      setError(montoError);
       return;
     }
 
@@ -491,19 +527,19 @@ export default function SolicitarAnticipoPage() {
                 </label>
                 <div className="relative">
                   <input
-                    type="number"
-                    value={anticipoData.monto_solicitado || ''}
-                    onChange={(e) => handleInputChange('monto_solicitado', parseFloat(e.target.value) || 0)}
+                    type="text"
+                    value={montoFormatted}
+                    onChange={(e) => handleMontoChange(e.target.value)}
                     placeholder="0"
-                    className="apple-input w-full pr-20"
-                    min="0"
-                    max={productivityData.anticipoDisponible}
-                    step="1000"
+                    className={`apple-input w-full pr-20 ${montoError ? 'border-red-500 focus:ring-red-500' : ''}`}
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-blue-600">
                     {calculatePercentage().toFixed(1)}%
                   </div>
                 </div>
+                {montoError && (
+                  <p className="text-red-500 text-xs mt-1">{montoError}</p>
+                )}
                 <p className="text-xs text-gray-500 mt-2">
                   Máximo disponible: ${productivityData.anticipoDisponible.toLocaleString('es-CO')} COP
                 </p>
@@ -743,7 +779,7 @@ export default function SolicitarAnticipoPage() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || productivityData.anticipoDisponible <= 0}
+                disabled={submitting || productivityData.anticipoDisponible <= 0 || !!montoError || anticipoData.monto_solicitado <= 0}
                 className="flex-1 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
               >
                 {submitting ? 'Enviando...' : 'Enviar Solicitud'}
