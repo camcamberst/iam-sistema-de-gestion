@@ -328,19 +328,23 @@ export default function SolicitarAnticipoPage() {
   return (
     <div className="min-h-screen bg-white">
       <style jsx>{`
-        /* Solo scrollbar personalizada */
-        select::-webkit-scrollbar {
+        /* Dropdown compacto con scrollbar */
+        .bank-select {
+          max-height: 120px !important;
+          overflow-y: auto !important;
+        }
+        .bank-select::-webkit-scrollbar {
           width: 6px;
         }
-        select::-webkit-scrollbar-track {
+        .bank-select::-webkit-scrollbar-track {
           background: #f1f5f9;
           border-radius: 3px;
         }
-        select::-webkit-scrollbar-thumb {
+        .bank-select::-webkit-scrollbar-thumb {
           background: #cbd5e1;
           border-radius: 3px;
         }
-        select::-webkit-scrollbar-thumb:hover {
+        .bank-select::-webkit-scrollbar-thumb:hover {
           background: #94a3b8;
         }
       `}</style>
@@ -520,7 +524,7 @@ export default function SolicitarAnticipoPage() {
                     <select
                       value={anticipoData.banco || ''}
                       onChange={(e) => handleInputChange('banco', e.target.value)}
-                      className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300"
+                      className="bank-select w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300"
                       required
                     >
                       <option value="">Selecciona un banco</option>
