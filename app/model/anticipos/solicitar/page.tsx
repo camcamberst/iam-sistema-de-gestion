@@ -340,52 +340,24 @@ export default function SolicitarAnticipoPage() {
   return (
     <div className="min-h-screen bg-white">
       <style jsx>{`
-        /* Estilos Apple para dropdowns con altura limitada */
-        .bank-select {
+        /* Estilos simples para dropdowns */
+        select {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
-          background: white;
-          border: 1px solid #d1d5db;
-          border-radius: 8px;
-          box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-          transition: all 0.2s ease;
-          max-height: 120px !important;
-          overflow-y: auto;
         }
-        .bank-select:focus {
-          border-color: #3b82f6;
-          box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-          outline: none;
-        }
-        .bank-select::-webkit-scrollbar {
+        select::-webkit-scrollbar {
           width: 6px;
         }
-        .bank-select::-webkit-scrollbar-track {
+        select::-webkit-scrollbar-track {
           background: #f1f5f9;
           border-radius: 3px;
         }
-        .bank-select::-webkit-scrollbar-thumb {
+        select::-webkit-scrollbar-thumb {
           background: #cbd5e1;
           border-radius: 3px;
         }
-        .bank-select::-webkit-scrollbar-thumb:hover {
+        select::-webkit-scrollbar-thumb:hover {
           background: #94a3b8;
-        }
-        .bank-select option {
-          padding: 8px 12px;
-          background: white;
-          color: #374151;
-          font-size: 14px;
-          line-height: 1.4;
-          border-radius: 4px;
-          margin: 1px 2px;
-        }
-        .bank-select option:hover {
-          background: #f3f4f6;
-        }
-        .bank-select option:checked {
-          background: #3b82f6;
-          color: white;
         }
         /* Contenedor con espacio suficiente para apertura hacia abajo */
         .dropdown-container {
@@ -564,14 +536,17 @@ export default function SolicitarAnticipoPage() {
                   <select
                     value={anticipoData.banco || ''}
                     onChange={(e) => handleInputChange('banco', e.target.value)}
-                    className="bank-select w-full appearance-none px-4 py-3 text-sm"
+                    className="w-full appearance-none px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
                       backgroundSize: '16px',
-                      paddingRight: '40px'
+                      paddingRight: '40px',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.2s ease'
                     }}
+                    size={5}
                     required
                   >
                     <option value="">Selecciona un banco</option>
@@ -606,14 +581,17 @@ export default function SolicitarAnticipoPage() {
                   <select
                     value={anticipoData.tipo_cuenta || ''}
                     onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
-                    className="bank-select w-full appearance-none px-4 py-3 text-sm"
+                    className="w-full appearance-none px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     style={{
                       backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
                       backgroundPosition: 'right 12px center',
                       backgroundRepeat: 'no-repeat',
                       backgroundSize: '16px',
-                      paddingRight: '40px'
+                      paddingRight: '40px',
+                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                      transition: 'all 0.2s ease'
                     }}
+                    size={3}
                     required
                   >
                     <option value="">Selecciona tipo de cuenta</option>
