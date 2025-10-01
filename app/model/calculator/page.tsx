@@ -375,10 +375,11 @@ export default function ModelCalculatorPage() {
     }
   };
 
-  // Autosave con debounce (opcional por flag)
+  // Autosave con debounce (opcional por flag) - OPTIMIZADO
   useEffect(() => {
     if (!ENABLE_AUTOSAVE) return;
     if (!user) return;
+    
     // Preparar mapa de valores a guardar
     const enabled = platforms.filter(p => p.enabled && p.value > 0);
     const values: Record<string, number> = enabled.reduce((acc, p) => {
@@ -411,7 +412,7 @@ export default function ModelCalculatorPage() {
       controller.abort();
       clearTimeout(t);
     };
-  }, [ENABLE_AUTOSAVE, user, platforms, periodDate]);
+  }, [ENABLE_AUTOSAVE, user?.id, periodDate]); // OPTIMIZADO: Removido 'platforms' para evitar bucle infinito
 
   if (loading) {
     return (
