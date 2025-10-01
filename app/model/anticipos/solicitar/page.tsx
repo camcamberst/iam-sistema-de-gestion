@@ -503,7 +503,6 @@ export default function SolicitarAnticipoPage() {
                 ${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
               <div className="text-xs font-medium text-green-600">Anticipo Disponible</div>
-              <div className="text-xs text-green-500 mt-1">👆 Haz clic para cargar</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
               <div className="text-lg font-bold text-orange-700 mb-1">
