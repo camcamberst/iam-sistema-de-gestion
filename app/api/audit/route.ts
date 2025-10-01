@@ -8,6 +8,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getAuditLogs, getAuditStats, detectAnomalies } from '../../../lib/security/audit';
 
+// Forzar renderizado dinámico
+export const dynamic = 'force-dynamic';
+
 /**
  * 🔐 Autenticación simple y directa
  */
