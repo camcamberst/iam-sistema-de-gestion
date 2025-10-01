@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Usar service role key para bypass RLS
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+  {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false
+    }
+  }
 );
 
 // GET: Obtener valores de modelo (soporta periodDate opcional)
@@ -18,6 +25,7 @@ export async function GET(request: NextRequest) {
 
   try {
     console.log('🔍 [MODEL-VALUES-V2] Loading values:', { modelId, periodDate });
+    console.log('🔍 [MODEL-VALUES-V2] Service role key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
 
     // 🔍 DEBUG: Verificar si hay datos en la tabla (consulta simple)
     console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
@@ -38,12 +46,24 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MODEL-VALUES-V2] Values is array:', Array.isArray(values));
 
     if (error) {
-      console.error('Error al obtener valores:', error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      console.error('❌ [MODEL-VALUES-V2] Database error:', error);
+      return NextResponse.json({ 
+        success: false, 
+        error: error.message,
+        details: error,
+        modelId,
+        periodDate
+      }, { status: 500 });
     }
 
-    console.log('🔍 [MODEL-VALUES-V2] Returning data:', values || []);
-    return NextResponse.json({ success: true, data: values || [] });
+    console.log('✅ [MODEL-VALUES-V2] Success! Returning data:', values || []);
+    return NextResponse.json({ 
+      success: true, 
+      data: values || [],
+      count: values?.length || 0,
+      modelId,
+      periodDate
+    });
 
   } catch (error: any) {
     console.error('❌ [MODEL-VALUES-V2] Error:', error);
