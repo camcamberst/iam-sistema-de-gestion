@@ -50,31 +50,19 @@ export default function SolicitarAnticipoPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
 
-  // Lista de bancos de Colombia
+  // Lista de bancos de Colombia (versión resumida)
   const bancosColombia = [
-    'Banco de Bogotá',
     'Bancolombia',
+    'Banco de Bogotá',
     'BBVA Colombia',
-    'Citibank Colombia',
-    'Colpatria',
     'Davivienda',
-    'HSBC Colombia',
-    'Itaú Colombia',
-    'Scotiabank Colpatria',
+    'Colpatria',
     'Banco Popular',
     'Banco AV Villas',
     'Banco Caja Social',
     'Banco Falabella',
-    'Banco Pichincha',
     'Banco Santander',
     'Banco de Occidente',
-    'Banco Cooperativo Coopcentral',
-    'Banco Finandina',
-    'Banco GNB Sudameris',
-    'Banco Mundo Mujer',
-    'Banco ProCredit',
-    'Banco Serfinanza',
-    'Banco W',
     'Nequi',
     'Daviplata',
     'Otros'
@@ -461,7 +449,7 @@ export default function SolicitarAnticipoPage() {
                         className="mr-3 text-blue-600 focus:ring-blue-500"
                       />
                       <span className="text-sm font-medium text-gray-700">
-                        {medio === 'cuenta_bancaria' ? 'Cuenta Bancaria' : medio.toUpperCase()}
+                        {medio === 'cuenta_bancaria' ? 'CUENTA BANCARIA' : medio.toUpperCase()}
                       </span>
                     </label>
                   ))}
@@ -507,7 +495,7 @@ export default function SolicitarAnticipoPage() {
             {/* Datos Cuenta Bancaria */}
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
               <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-                <h3 className="text-lg font-semibold text-green-900 mb-6">Datos de Cuenta Bancaria</h3>
+                <h3 className="text-lg font-semibold text-green-900 mb-6">Datos de CUENTA BANCARIA</h3>
                 
                 {/* Primera fila: Nombre del Titular y Banco */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -532,7 +520,7 @@ export default function SolicitarAnticipoPage() {
                     <select
                       value={anticipoData.banco || ''}
                       onChange={(e) => handleInputChange('banco', e.target.value)}
-                      className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                      className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300"
                       required
                     >
                       <option value="">Selecciona un banco</option>
