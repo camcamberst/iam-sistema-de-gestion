@@ -156,7 +156,7 @@ export async function POST(request: NextRequest) {
         enabled_platforms: enabledPlatforms || [],
         percentage_override: percentageOverride || null,
         min_quota_override: minQuotaOverride || null,
-        group_percentage: groupPercentage || null,
+        group_percentage: groupPercentage !== undefined ? groupPercentage : null,
         group_min_quota: groupMinQuota || null
       })
       .select()
