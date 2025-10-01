@@ -37,8 +37,9 @@ export default function SolicitarAnticipoPage() {
     medio_pago: 'nequi'
   });
   
-  // Estado para dropdown personalizado
+  // Estado para dropdowns personalizados
   const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
+  const [isAccountTypeDropdownOpen, setIsAccountTypeDropdownOpen] = useState(false);
   
   // Datos de productividad
   const [productivityData, setProductivityData] = useState({
@@ -69,24 +70,30 @@ export default function SolicitarAnticipoPage() {
     'Otros'
   ];
 
+  // Opciones de tipo de cuenta
+  const tiposCuenta = ['Ahorros', 'Corriente'];
+
   useEffect(() => {
     loadUser();
   }, []);
 
-  // Cerrar dropdown cuando se hace click fuera
+  // Cerrar dropdowns cuando se hace click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (isBankDropdownOpen) {
-        const target = event.target as HTMLElement;
-        if (!target.closest('.relative')) {
-          setIsBankDropdownOpen(false);
-        }
+      const target = event.target as HTMLElement;
+      
+      if (isBankDropdownOpen && !target.closest('.bank-dropdown')) {
+        setIsBankDropdownOpen(false);
+      }
+      
+      if (isAccountTypeDropdownOpen && !target.closest('.account-type-dropdown')) {
+        setIsAccountTypeDropdownOpen(false);
       }
     };
 
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isBankDropdownOpen]);
+  }, [isBankDropdownOpen, isAccountTypeDropdownOpen]);
 
   const loadUser = async () => {
     try {
@@ -537,7 +544,7 @@ export default function SolicitarAnticipoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Banco
                     </label>
-                    <div className="relative">
+                    <div className="relative bank-dropdown">
                       <button
                         type="button"
                         onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
@@ -602,16 +609,45 @@ export default function SolicitarAnticipoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Tipo de Cuenta
                     </label>
-                    <select
-                      value={anticipoData.tipo_cuenta || ''}
-                      onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
-                      className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                      required
-                    >
-                      <option value="">Selecciona tipo de cuenta</option>
-                      <option value="ahorros">Ahorros</option>
-                      <option value="corriente">Corriente</option>
-                    </select>
+                    <div className="relative account-type-dropdown">
+                      <button
+                        type="button"
+                        onClick={() => setIsAccountTypeDropdownOpen(!isAccountTypeDropdownOpen)}
+                        className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300 text-left flex items-center justify-between"
+                      >
+                        <span className={anticipoData.tipo_cuenta ? 'text-gray-900' : 'text-gray-500'}>
+                          {anticipoData.tipo_cuenta ? (anticipoData.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente') : 'Selecciona tipo de cuenta'}
+                        </span>
+                        <svg 
+                          className={`w-4 h-4 transition-transform duration-200 ${isAccountTypeDropdownOpen ? 'rotate-180' : ''}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {isAccountTypeDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
+                          <div className="py-1">
+                            {tiposCuenta.map((tipo) => (
+                              <button
+                                key={tipo}
+                                type="button"
+                                onClick={() => {
+                                  handleInputChange('tipo_cuenta', tipo.toLowerCase());
+                                  setIsAccountTypeDropdownOpen(false);
+                                }}
+                                className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
+                              >
+                                {tipo}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <div>
