@@ -46,6 +46,7 @@ export default function SolicitudesPendientesPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado'>('todos');
 
   const router = useRouter();
   const supabase = createClient(
@@ -89,7 +90,8 @@ export default function SolicitudesPendientesPage() {
 
   const loadAnticipos = async (adminId: string) => {
     try {
-      const response = await fetch(`/api/anticipos?adminId=${adminId}&estado=pendiente`);
+      // Cargar tanto pendientes como aprobadas
+      const response = await fetch(`/api/anticipos?adminId=${adminId}&estado=pendiente,aprobado`);
       const data = await response.json();
       
       if (data.success) {
@@ -101,6 +103,14 @@ export default function SolicitudesPendientesPage() {
       console.error('Error loading anticipos:', error);
       setError('Error al cargar solicitudes');
     }
+  };
+
+  // Filtrar anticipos por estado
+  const getAnticiposFiltrados = () => {
+    if (estadoFiltro === 'todos') {
+      return anticipos;
+    }
+    return anticipos.filter(anticipo => anticipo.estado === estadoFiltro);
   };
 
   const handleAction = async (anticipoId: string, action: 'aprobado' | 'rechazado' | 'realizado', comentarios?: string) => {
@@ -188,8 +198,22 @@ export default function SolicitudesPendientesPage() {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Solicitudes Pendientes</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Gestión de Solicitudes</h1>
           <p className="text-gray-600">Gestiona las solicitudes de anticipo de tu grupo</p>
+          
+          {/* Filtro de Estado */}
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Filtrar por estado:</label>
+            <select
+              value={estadoFiltro}
+              onChange={(e) => setEstadoFiltro(e.target.value as 'todos' | 'pendiente' | 'aprobado')}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="todos">Todos</option>
+              <option value="pendiente">Pendientes</option>
+              <option value="aprobado">Aprobadas</option>
+            </select>
+          </div>
         </div>
 
         {/* Messages */}
@@ -228,7 +252,7 @@ export default function SolicitudesPendientesPage() {
           </div>
         ) : (
           <div className="space-y-3">
-            {anticipos.map((anticipo) => {
+            {getAnticiposFiltrados().map((anticipo) => {
               const medioPagoInfo = getMedioPagoInfo(anticipo);
               
               return (
@@ -267,29 +291,48 @@ export default function SolicitudesPendientesPage() {
 
                     {/* Botones de acción compactos */}
                     <div className="ml-4 flex space-x-2">
-                      <button
-                        onClick={() => {
-                          const comentarios = prompt('Comentarios (opcional):');
-                          handleAction(anticipo.id, 'aprobado', comentarios || undefined);
-                        }}
-                        disabled={processing === anticipo.id}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
-                      >
-                        {processing === anticipo.id ? 'Procesando...' : 'Aprobar'}
-                      </button>
+                      {anticipo.estado === 'pendiente' && (
+                        <>
+                          <button
+                            onClick={() => {
+                              const comentarios = prompt('Comentarios (opcional):');
+                              handleAction(anticipo.id, 'aprobado', comentarios || undefined);
+                            }}
+                            disabled={processing === anticipo.id}
+                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                          >
+                            {processing === anticipo.id ? 'Procesando...' : 'Aprobar'}
+                          </button>
+                          
+                          <button
+                            onClick={() => {
+                              const comentarios = prompt('Motivo del rechazo:');
+                              if (comentarios) {
+                                handleAction(anticipo.id, 'rechazado', comentarios);
+                              }
+                            }}
+                            disabled={processing === anticipo.id}
+                            className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                          >
+                            Rechazar
+                          </button>
+                        </>
+                      )}
                       
-                      <button
-                        onClick={() => {
-                          const comentarios = prompt('Motivo del rechazo:');
-                          if (comentarios) {
-                            handleAction(anticipo.id, 'rechazado', comentarios);
-                          }
-                        }}
-                        disabled={processing === anticipo.id}
-                        className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
-                      >
-                        Rechazar
-                      </button>
+                      {anticipo.estado === 'aprobado' && (
+                        <button
+                          onClick={() => {
+                            const confirmar = confirm('¿Confirmas que el anticipo ha sido realizado/pagado?');
+                            if (confirmar) {
+                              handleAction(anticipo.id, 'realizado');
+                            }
+                          }}
+                          disabled={processing === anticipo.id}
+                          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                        >
+                          {processing === anticipo.id ? 'Procesando...' : 'Marcar como Realizado'}
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
