@@ -145,7 +145,7 @@ export default function SolicitarAnticipoPage() {
 
       // Cargar valores del modelo
       console.log('🔍 [SOLICITAR ANTICIPO] Cargando valores del modelo...');
-      const valuesResponse = await fetch(`/api/calculator/model-values-v2?userId=${userId}&periodDate=${periodDate}`);
+      const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
       const valuesData = await valuesResponse.json();
       console.log('🔍 [SOLICITAR ANTICIPO] Values response:', valuesData);
       
@@ -232,8 +232,10 @@ export default function SolicitarAnticipoPage() {
         });
 
         // Obtener anticipos ya pagados en el período actual
+        console.log('🔍 [SOLICITAR ANTICIPO] Cargando anticipos pagados...');
         const anticiposResponse = await fetch(`/api/anticipos/paid?modelId=${userId}&periodDate=${periodDate}`);
         const anticiposData = await anticiposResponse.json();
+        console.log('🔍 [SOLICITAR ANTICIPO] Anticipos response:', anticiposData);
         const anticiposPagados = anticiposData.success ? anticiposData.total : 0;
 
         const anticipoDisponible = Math.max(0, (copModelo * 0.9) - anticiposPagados);
