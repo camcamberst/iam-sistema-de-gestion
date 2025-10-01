@@ -74,6 +74,14 @@ export default function ModelCalculatorPage() {
   // Flags para conmutar nuevas capacidades sin romper producción
   const USE_VALUES_V2 = process.env.NEXT_PUBLIC_CALC_USE_VALUES_V2 === 'true';
   const ENABLE_AUTOSAVE = process.env.NEXT_PUBLIC_CALC_AUTOSAVE === 'true';
+  
+  // 🔍 DEBUG: Verificar variables de entorno
+  console.log('🔍 [CALCULATOR] Environment variables debug:', {
+    NEXT_PUBLIC_CALC_USE_VALUES_V2: process.env.NEXT_PUBLIC_CALC_USE_VALUES_V2,
+    NEXT_PUBLIC_CALC_AUTOSAVE: process.env.NEXT_PUBLIC_CALC_AUTOSAVE,
+    USE_VALUES_V2,
+    ENABLE_AUTOSAVE
+  });
 
   useEffect(() => {
     const load = async () => {
@@ -193,7 +201,9 @@ export default function ModelCalculatorPage() {
 
       // Cargar valores guardados previamente (preferir v2 si flag activo) y fusionarlos
       try {
+        console.log('🔍 [CALCULATOR] Loading saved values - USE_VALUES_V2:', USE_VALUES_V2);
         if (USE_VALUES_V2) {
+          console.log('🔍 [CALCULATOR] Using V2 system for loading values');
           const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
           const savedJson = await savedResp.json();
           console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
@@ -319,11 +329,15 @@ export default function ModelCalculatorPage() {
       }, {} as Record<string, number>);
 
       console.log('🔍 [CALCULATOR] Saving values:', values);
+      console.log('🔍 [CALCULATOR] USE_VALUES_V2 for saving:', USE_VALUES_V2);
 
       const endpoint = USE_VALUES_V2 ? '/api/calculator/model-values-v2' : '/api/calculator/model-values';
       const payload = USE_VALUES_V2
         ? { modelId: user?.id, values, periodDate }
         : { modelId: user?.id, values };
+      
+      console.log('🔍 [CALCULATOR] Using endpoint:', endpoint);
+      console.log('🔍 [CALCULATOR] Payload:', payload);
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
