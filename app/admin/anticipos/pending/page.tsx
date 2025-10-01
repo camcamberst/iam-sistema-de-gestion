@@ -25,6 +25,7 @@ interface Anticipo {
   tipo_cuenta?: string;
   numero_cuenta?: string;
   documento_titular?: string;
+  cedula_titular?: string;
   created_at: string;
   model: {
     id: string;
@@ -38,6 +39,30 @@ interface Anticipo {
     end_date: string;
   };
 }
+
+const renderTransferDetails = (anticipo: Anticipo) => {
+  let details: string[] = [];
+
+  if (anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata') {
+    if (anticipo.numero_telefono) details.push(`Tel: ${anticipo.numero_telefono}`);
+  } else if (anticipo.banco && anticipo.numero_cuenta) {
+    details.push(`Banco: ${anticipo.banco}`);
+    details.push(`Cta: ${anticipo.numero_cuenta}`);
+    if (anticipo.tipo_cuenta) details.push(`Tipo: ${anticipo.tipo_cuenta}`);
+    if (anticipo.nombre_titular) details.push(`Titular: ${anticipo.nombre_titular}`);
+    if (anticipo.cedula_titular) details.push(`Cédula: ${anticipo.cedula_titular}`);
+  }
+
+  if (details.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-x-3 text-xs text-gray-700 mt-1">
+      {details.map((detail, i) => (
+        <span key={i}>{detail}</span>
+      ))}
+    </div>
+  );
+};
 
 export default function SolicitudesPendientesPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -284,6 +309,9 @@ export default function SolicitudesPendientesPage() {
                         </div>
                       </div>
                     </div>
+
+                    {/* Datos de transferencia */}
+                    {renderTransferDetails(anticipo)}
 
                     {/* Botones de acción compactos */}
                     <div className="ml-2 flex space-x-1">

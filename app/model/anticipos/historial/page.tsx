@@ -20,6 +20,13 @@ interface Anticipo {
   comentarios_admin?: string;
   created_at: string;
   realized_at: string;
+  // Datos de transferencia
+  banco?: string;
+  tipo_cuenta?: string;
+  numero_cuenta?: string;
+  numero_telefono?: string;
+  nombre_titular?: string;
+  cedula_titular?: string;
   model: {
     id: string;
     name: string;
@@ -32,6 +39,30 @@ interface Anticipo {
     end_date: string;
   };
 }
+
+const renderTransferDetails = (anticipo: Anticipo) => {
+  let details: string[] = [];
+
+  if (anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata') {
+    if (anticipo.numero_telefono) details.push(`Tel: ${anticipo.numero_telefono}`);
+  } else if (anticipo.banco && anticipo.numero_cuenta) {
+    details.push(`Banco: ${anticipo.banco}`);
+    details.push(`Cta: ${anticipo.numero_cuenta}`);
+    if (anticipo.tipo_cuenta) details.push(`Tipo: ${anticipo.tipo_cuenta}`);
+    if (anticipo.nombre_titular) details.push(`Titular: ${anticipo.nombre_titular}`);
+    if (anticipo.cedula_titular) details.push(`Cédula: ${anticipo.cedula_titular}`);
+  }
+
+  if (details.length === 0) return null;
+
+  return (
+    <div className="flex flex-wrap gap-x-3 text-xs text-gray-700 mt-1">
+      {details.map((detail, i) => (
+        <span key={i}>{detail}</span>
+      ))}
+    </div>
+  );
+};
 
 export default function MiHistorialPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -225,6 +256,9 @@ export default function MiHistorialPage() {
                       <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
                       <span className="text-gray-500">{new Date(anticipo.realized_at).toLocaleDateString('es-CO')}</span>
                     </div>
+
+                    {/* Datos de transferencia */}
+                    {renderTransferDetails(anticipo)}
 
                     {/* Comentarios del admin - solo si existen */}
                     {anticipo.comentarios_admin && (
