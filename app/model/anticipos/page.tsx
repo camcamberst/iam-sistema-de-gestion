@@ -113,7 +113,7 @@ export default function MisAnticiposPage() {
         {/* Opciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {/* Solicitar Anticipo */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,19 +122,19 @@ export default function MisAnticiposPage() {
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Solicitar Anticipo</h3>
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-gray-500 text-sm mb-4 flex-grow">
               Crea una nueva solicitud de anticipo
             </p>
             <button
               onClick={() => router.push('/model/anticipos/solicitar')}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 mt-auto"
             >
               Nueva Solicitud
             </button>
           </div>
 
           {/* Mis Solicitudes */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -143,19 +143,19 @@ export default function MisAnticiposPage() {
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Mis Solicitudes</h3>
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-gray-500 text-sm mb-4 flex-grow">
               Revisa el estado de tus solicitudes
             </p>
             <button
               onClick={() => router.push('/model/anticipos/solicitudes')}
-              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200"
+              className="w-full px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors duration-200 mt-auto"
             >
               Ver Solicitudes
             </button>
           </div>
 
           {/* Mi Historial */}
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-md transition-shadow duration-200 flex flex-col h-full">
             <div className="flex items-center mb-4">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                 <svg className="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -164,12 +164,12 @@ export default function MisAnticiposPage() {
               </div>
             </div>
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Mi Historial</h3>
-            <p className="text-gray-500 text-sm mb-4">
+            <p className="text-gray-500 text-sm mb-4 flex-grow">
               Consulta tu historial de anticipos
             </p>
             <button
               onClick={() => router.push('/model/anticipos/historial')}
-              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200"
+              className="w-full px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors duration-200 mt-auto"
             >
               Ver Historial
             </button>
