@@ -36,6 +36,11 @@ export default function ViewModelCalculator() {
   // Estados para dropdowns personalizados
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  
+  // Estados para optimización de carga
+  const [iframeLoading, setIframeLoading] = useState(false);
+  const [iframeError, setIframeError] = useState(false);
+  const [preloadData, setPreloadData] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -55,6 +60,39 @@ export default function ViewModelCalculator() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Precargar datos de la calculadora cuando se selecciona un modelo
+  const preloadCalculatorData = async (modelId: string) => {
+    try {
+      setIframeLoading(true);
+      setIframeError(false);
+      
+      // Precargar configuración de la calculadora
+      const configResponse = await fetch(`/api/calculator/config-v2?modelId=${modelId}`);
+      const configData = await configResponse.json();
+      
+      // Precargar valores guardados
+      const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${modelId}&periodDate=${new Date().toISOString().split('T')[0]}`);
+      const valuesData = await valuesResponse.json();
+      
+      // Precargar tasas activas
+      const ratesResponse = await fetch('/api/rates-v2');
+      const ratesData = await ratesResponse.json();
+      
+      setPreloadData({
+        config: configData,
+        values: valuesData,
+        rates: ratesData
+      });
+      
+      console.log('✅ [PRELOAD] Datos precargados para modelo:', modelId);
+    } catch (error) {
+      console.error('❌ [PRELOAD] Error precargando datos:', error);
+      setIframeError(true);
+    } finally {
+      setIframeLoading(false);
+    }
+  };
 
   useEffect(() => {
     const load = async () => {
@@ -287,6 +325,8 @@ export default function ViewModelCalculator() {
                         onClick={() => {
                           setSelectedModel(model);
                           setIsModelDropdownOpen(false);
+                          // Precargar datos de la calculadora
+                          preloadCalculatorData(model.id);
                         }}
                         className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
                       >
@@ -309,11 +349,57 @@ export default function ViewModelCalculator() {
             <p className="text-sm text-gray-500 mb-6">
               Vista de administrador - Puedes editar los valores ingresados por la modelo
             </p>
-            <iframe
-              src={`/model/calculator?modelId=${selectedModel.id}&asAdmin=1`}
-              className="w-full rounded-lg border border-gray-200"
-              style={{ minHeight: '900px' }}
-            />
+            
+            {/* Loading State */}
+            {iframeLoading && (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <p className="text-gray-600">Cargando calculadora...</p>
+                  <p className="text-sm text-gray-500 mt-2">Precargando datos para una experiencia más fluida</p>
+                </div>
+              </div>
+            )}
+            
+            {/* Error State */}
+            {iframeError && (
+              <div className="flex items-center justify-center py-12">
+                <div className="text-center">
+                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-red-600 font-medium">Error al cargar la calculadora</p>
+                  <p className="text-sm text-gray-500 mt-2">Intenta seleccionar la modelo nuevamente</p>
+                  <button
+                    onClick={() => preloadCalculatorData(selectedModel.id)}
+                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
+                  >
+                    Reintentar
+                  </button>
+                </div>
+              </div>
+            )}
+            
+            {/* Iframe optimizado */}
+            {!iframeLoading && !iframeError && (
+              <iframe
+                src={`/model/calculator?modelId=${selectedModel.id}&asAdmin=1&preload=${preloadData ? 'true' : 'false'}`}
+                className="w-full rounded-lg border border-gray-200"
+                style={{ minHeight: '900px' }}
+                loading="eager"
+                sandbox="allow-scripts allow-same-origin allow-forms"
+                onLoad={() => {
+                  console.log('✅ [IFRAME] Calculadora cargada exitosamente');
+                  setIframeLoading(false);
+                }}
+                onError={() => {
+                  console.error('❌ [IFRAME] Error cargando calculadora');
+                  setIframeError(true);
+                }}
+              />
+            )}
           </div>
         )}
       </div>
