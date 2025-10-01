@@ -194,8 +194,8 @@ export default function ModelDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mi Dashboard</h1>
         {user && (
           <p className="text-gray-500 mb-6 text-sm">
@@ -205,7 +205,7 @@ export default function ModelDashboard() {
         )}
 
         {/* Panel de perfil */}
-        <div className="apple-card mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-1">Mi perfil</h2>
           <p className="text-sm text-gray-500">Revisa tu información</p>
           <div className="mt-4 text-sm text-gray-700">Email: {user.email}</div>
@@ -213,7 +213,7 @@ export default function ModelDashboard() {
         </div>
 
         {/* Resumen de productividad y progreso de meta */}
-        <div className="apple-card">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
           
           {productivityLoading ? (
