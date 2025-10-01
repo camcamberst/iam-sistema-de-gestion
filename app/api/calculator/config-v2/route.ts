@@ -63,6 +63,13 @@ export async function GET(request: NextRequest) {
     }
 
     // 4. Formatear respuesta
+    console.log('🔍 [CONFIG-V2] Raw config data:', {
+      percentage_override: config.percentage_override,
+      group_percentage: config.group_percentage,
+      min_quota_override: config.min_quota_override,
+      group_min_quota: config.group_min_quota
+    });
+    
     const result = {
       model_id: effectiveModelId,
       active: true,
@@ -77,9 +84,9 @@ export async function GET(request: NextRequest) {
         direct_payout: platform.direct_payout,
         enabled: true,
         percentage_override: config.percentage_override,
-        group_percentage: config.group_percentage || 80,
+        group_percentage: config.group_percentage, // NO fallback aquí
         min_quota_override: config.min_quota_override,
-        group_min_quota: config.group_min_quota || 470
+        group_min_quota: config.group_min_quota
       }))
     };
 
