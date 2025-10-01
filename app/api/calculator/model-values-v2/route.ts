@@ -19,6 +19,15 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [MODEL-VALUES-V2] Loading values:', { modelId, periodDate });
 
+    // 🔍 DEBUG: Verificar si hay datos en la tabla
+    const { data: allData, error: allError } = await supabase
+      .from('model_values')
+      .select('*')
+      .eq('model_id', modelId);
+    
+    console.log('🔍 [MODEL-VALUES-V2] All data for modelId:', allData);
+    console.log('🔍 [MODEL-VALUES-V2] All data error:', allError);
+
     const { data: values, error } = await supabase
       .from('model_values')
       .select(`
@@ -27,6 +36,8 @@ export async function GET(request: NextRequest) {
       .eq('model_id', modelId)
       .eq('period_date', periodDate)
       .order('platform_id');
+
+    console.log('🔍 [MODEL-VALUES-V2] Filtered query result:', { values, error });
 
     if (error) {
       console.error('Error al obtener valores:', error);
