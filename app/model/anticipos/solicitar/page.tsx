@@ -364,26 +364,26 @@ export default function SolicitarAnticipoPage() {
         </div>
 
         {/* Resumen de Productividad */}
-        <div className="apple-card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
-          <div className="grid grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-xl font-bold text-blue-600 mb-1">
+        <div className="apple-card mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-6">Resumen de Productividad</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="text-center p-6 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200">
+              <div className="text-2xl font-bold text-blue-700 mb-2">
                 ${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
-              <div className="text-xs text-gray-600">COP Modelo</div>
+              <div className="text-sm font-medium text-blue-600">COP Modelo</div>
             </div>
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-xl font-bold text-green-600 mb-1">
+            <div className="text-center p-6 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200">
+              <div className="text-2xl font-bold text-green-700 mb-2">
                 ${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
-              <div className="text-xs text-gray-600">Anticipo Disponible</div>
+              <div className="text-sm font-medium text-green-600">Anticipo Disponible</div>
             </div>
-            <div className="text-center p-4 bg-orange-50 rounded-lg">
-              <div className="text-xl font-bold text-orange-600 mb-1">
+            <div className="text-center p-6 bg-gradient-to-br from-orange-50 to-orange-100 rounded-xl border border-orange-200">
+              <div className="text-2xl font-bold text-orange-700 mb-2">
                 ${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
-              <div className="text-xs text-gray-600">Ya Pagados</div>
+              <div className="text-sm font-medium text-orange-600">Ya Pagados</div>
             </div>
           </div>
         </div>
@@ -416,127 +416,139 @@ export default function SolicitarAnticipoPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Monto Solicitado */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
-                Monto Solicitado (COP)
-              </label>
-              <div className="relative">
-                <input
-                  type="number"
-                  value={anticipoData.monto_solicitado || ''}
-                  onChange={(e) => handleInputChange('monto_solicitado', parseFloat(e.target.value) || 0)}
-                  placeholder="0"
-                  className="apple-input w-full pr-20"
-                  min="0"
-                  max={productivityData.anticipoDisponible}
-                  step="1000"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm text-gray-500">
-                  {calculatePercentage().toFixed(1)}%
+          <form onSubmit={handleSubmit} className="space-y-8">
+            {/* Monto Solicitado y Medio de Pago - Layout Horizontal */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Monto Solicitado */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Monto Solicitado (COP)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    value={anticipoData.monto_solicitado || ''}
+                    onChange={(e) => handleInputChange('monto_solicitado', parseFloat(e.target.value) || 0)}
+                    placeholder="0"
+                    className="apple-input w-full pr-20"
+                    min="0"
+                    max={productivityData.anticipoDisponible}
+                    step="1000"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-blue-600">
+                    {calculatePercentage().toFixed(1)}%
+                  </div>
                 </div>
+                <p className="text-xs text-gray-500 mt-2">
+                  Máximo disponible: ${productivityData.anticipoDisponible.toLocaleString('es-CO')} COP
+                </p>
               </div>
-              <p className="text-xs text-gray-500 mt-1">
-                Máximo disponible: ${productivityData.anticipoDisponible.toLocaleString('es-CO')} COP
-              </p>
-            </div>
 
-            {/* Medio de Pago */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
-                Medio de Pago
-              </label>
-              <div className="grid grid-cols-3 gap-3">
-                {['nequi', 'daviplata', 'cuenta_bancaria'].map((medio) => (
-                  <label key={medio} className="flex items-center">
-                    <input
-                      type="radio"
-                      name="medio_pago"
-                      value={medio}
-                      checked={anticipoData.medio_pago === medio}
-                      onChange={(e) => handleInputChange('medio_pago', e.target.value)}
-                      className="mr-2"
-                    />
-                    <span className="text-sm capitalize">
-                      {medio === 'cuenta_bancaria' ? 'Cuenta Bancaria' : medio.toUpperCase()}
-                    </span>
-                  </label>
-                ))}
+              {/* Medio de Pago */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-3">
+                  Medio de Pago
+                </label>
+                <div className="space-y-3">
+                  {['nequi', 'daviplata', 'cuenta_bancaria'].map((medio) => (
+                    <label key={medio} className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                      <input
+                        type="radio"
+                        name="medio_pago"
+                        value={medio}
+                        checked={anticipoData.medio_pago === medio}
+                        onChange={(e) => handleInputChange('medio_pago', e.target.value)}
+                        className="mr-3 text-blue-600 focus:ring-blue-500"
+                      />
+                      <span className="text-sm font-medium text-gray-700">
+                        {medio === 'cuenta_bancaria' ? 'Cuenta Bancaria' : medio.toUpperCase()}
+                      </span>
+                    </label>
+                  ))}
+                </div>
               </div>
             </div>
 
             {/* Datos NEQUI/DAVIPLATA */}
             {(anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
-                    Nombre del Beneficiario
-                  </label>
-                  <input
-                    type="text"
-                    value={anticipoData.nombre_beneficiario || ''}
-                    onChange={(e) => handleInputChange('nombre_beneficiario', e.target.value)}
-                    placeholder="Nombre completo"
-                    className="apple-input w-full"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
-                    Número de {anticipoData.medio_pago.toUpperCase()}
-                  </label>
-                  <input
-                    type="tel"
-                    value={anticipoData.numero_telefono || ''}
-                    onChange={(e) => handleInputChange('numero_telefono', e.target.value)}
-                    placeholder="Número de teléfono"
-                    className="apple-input w-full"
-                    required
-                  />
+              <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
+                <h3 className="text-lg font-semibold text-blue-900 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Nombre del Beneficiario
+                    </label>
+                    <input
+                      type="text"
+                      value={anticipoData.nombre_beneficiario || ''}
+                      onChange={(e) => handleInputChange('nombre_beneficiario', e.target.value)}
+                      placeholder="Nombre completo"
+                      className="apple-input w-full"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Número de {anticipoData.medio_pago.toUpperCase()}
+                    </label>
+                    <input
+                      type="tel"
+                      value={anticipoData.numero_telefono || ''}
+                      onChange={(e) => handleInputChange('numero_telefono', e.target.value)}
+                      placeholder="Número de teléfono"
+                      className="apple-input w-full"
+                      required
+                    />
+                  </div>
                 </div>
               </div>
             )}
 
             {/* Datos Cuenta Bancaria */}
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
-                    Nombre del Titular
-                  </label>
-                  <input
-                    type="text"
-                    value={anticipoData.nombre_titular || ''}
-                    onChange={(e) => handleInputChange('nombre_titular', e.target.value)}
-                    placeholder="Nombre completo del titular"
-                    className="apple-input w-full"
-                    required
-                  />
-                </div>
+              <div className="bg-green-50 rounded-xl p-6 border border-green-200">
+                <h3 className="text-lg font-semibold text-green-900 mb-6">Datos de Cuenta Bancaria</h3>
                 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Banco
-                  </label>
-                  <select
-                    value={anticipoData.banco || ''}
-                    onChange={(e) => handleInputChange('banco', e.target.value)}
-                    className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                    required
-                  >
-                    <option value="">Selecciona un banco</option>
-                    {bancosColombia.map((banco) => (
-                      <option key={banco} value={banco}>
-                        {banco}
-                      </option>
-                    ))}
-                  </select>
+                {/* Primera fila: Nombre del Titular y Banco */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Nombre del Titular
+                    </label>
+                    <input
+                      type="text"
+                      value={anticipoData.nombre_titular || ''}
+                      onChange={(e) => handleInputChange('nombre_titular', e.target.value)}
+                      placeholder="Nombre completo del titular"
+                      className="apple-input w-full"
+                      required
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Banco
+                    </label>
+                    <select
+                      value={anticipoData.banco || ''}
+                      onChange={(e) => handleInputChange('banco', e.target.value)}
+                      className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                      required
+                    >
+                      <option value="">Selecciona un banco</option>
+                      {bancosColombia.map((banco) => (
+                        <option key={banco} value={banco}>
+                          {banco}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
+                {/* Banco Otros */}
                 {anticipoData.banco === 'Otros' && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
+                  <div className="mb-6">
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
                       Nombre del Banco
                     </label>
                     <input
@@ -550,38 +562,42 @@ export default function SolicitarAnticipoPage() {
                   </div>
                 )}
 
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Tipo de Cuenta
-                  </label>
-                  <select
-                    value={anticipoData.tipo_cuenta || ''}
-                    onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
-                    className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                    required
-                  >
-                    <option value="">Selecciona tipo de cuenta</option>
-                    <option value="ahorros">Ahorros</option>
-                    <option value="corriente">Corriente</option>
-                  </select>
+                {/* Segunda fila: Tipo de Cuenta y Número de Cuenta */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Tipo de Cuenta
+                    </label>
+                    <select
+                      value={anticipoData.tipo_cuenta || ''}
+                      onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
+                      className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
+                      required
+                    >
+                      <option value="">Selecciona tipo de cuenta</option>
+                      <option value="ahorros">Ahorros</option>
+                      <option value="corriente">Corriente</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                      Número de Cuenta
+                    </label>
+                    <input
+                      type="text"
+                      value={anticipoData.numero_cuenta || ''}
+                      onChange={(e) => handleInputChange('numero_cuenta', e.target.value)}
+                      placeholder="Número de cuenta"
+                      className="apple-input w-full"
+                      required
+                    />
+                  </div>
                 </div>
 
+                {/* Tercera fila: Documento del Titular */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
-                    Número de Cuenta
-                  </label>
-                  <input
-                    type="text"
-                    value={anticipoData.numero_cuenta || ''}
-                    onChange={(e) => handleInputChange('numero_cuenta', e.target.value)}
-                    placeholder="Número de cuenta"
-                    className="apple-input w-full"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
+                  <label className="block text-sm font-medium text-gray-700 mb-3">
                     Documento del Titular
                   </label>
                   <input
@@ -597,18 +613,18 @@ export default function SolicitarAnticipoPage() {
             )}
 
             {/* Botones */}
-            <div className="flex space-x-4 pt-6">
+            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-6 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors duration-200"
+                className="flex-1 px-8 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={submitting || productivityData.anticipoDisponible <= 0}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200"
+                className="flex-1 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
               >
                 {submitting ? 'Enviando...' : 'Enviar Solicitud'}
               </button>
