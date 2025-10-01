@@ -85,6 +85,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       }
     ];
 
+    // Agregar menú de anticipos para modelos
+    if (userRole === 'modelo') {
+      baseItems.push({
+        id: 'anticipos',
+        label: 'Mis Anticipos',
+        href: '/model/anticipos',
+        subItems: [
+          { label: 'Solicitar Anticipo', href: '/model/anticipos/solicitar' },
+          { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
+          { label: 'Mi Historial', href: '/model/anticipos/historial' }
+        ]
+      });
+    }
+
     // Agregar opciones según el rol
     if (userRole === 'super_admin' || userRole === 'admin') {
       baseItems.unshift({
@@ -98,12 +112,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       });
 
       baseItems.push({
-        id: 'groups',
-        label: 'Gestión de Grupos',
-        href: '/admin/groups',
+        id: 'anticipos',
+        label: 'Gestión Anticipos',
+        href: '/admin/anticipos',
         subItems: [
-          { label: 'Consultar Grupos', href: '/admin/groups' },
-          { label: 'Crear Grupo', href: '/admin/groups/create' }
+          { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
+          { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
         ]
       });
 
