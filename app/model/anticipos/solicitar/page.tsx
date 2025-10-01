@@ -340,11 +340,7 @@ export default function SolicitarAnticipoPage() {
   return (
     <div className="min-h-screen bg-white">
       <style jsx>{`
-        /* Estilos simples para dropdowns */
-        select {
-          scrollbar-width: thin;
-          scrollbar-color: #cbd5e1 #f1f5f9;
-        }
+        /* Solo scrollbar personalizada */
         select::-webkit-scrollbar {
           width: 6px;
         }
@@ -358,16 +354,6 @@ export default function SolicitarAnticipoPage() {
         }
         select::-webkit-scrollbar-thumb:hover {
           background: #94a3b8;
-        }
-        /* Contenedor con espacio suficiente para apertura hacia abajo */
-        .dropdown-container {
-          position: relative;
-          margin-bottom: 24px;
-          z-index: 10;
-        }
-        /* Asegurar espacio suficiente abajo */
-        .form-section {
-          padding-bottom: 200px;
         }
       `}</style>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -403,7 +389,7 @@ export default function SolicitarAnticipoPage() {
         </div>
 
         {/* Formulario */}
-        <div className="apple-card form-section">
+        <div className="apple-card">
           <h2 className="text-lg font-semibold text-gray-900 mb-6">Datos del Anticipo</h2>
           
           {success && (
@@ -529,23 +515,14 @@ export default function SolicitarAnticipoPage() {
                   />
                 </div>
                 
-                <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Banco
                   </label>
                   <select
                     value={anticipoData.banco || ''}
                     onChange={(e) => handleInputChange('banco', e.target.value)}
-                    className="w-full appearance-none px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 12px center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px',
-                      paddingRight: '40px',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
                     required
                   >
                     <option value="">Selecciona un banco</option>
@@ -573,23 +550,14 @@ export default function SolicitarAnticipoPage() {
                   </div>
                 )}
 
-                <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
+                <div className="mb-4">
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tipo de Cuenta
                   </label>
                   <select
                     value={anticipoData.tipo_cuenta || ''}
                     onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
-                    className="w-full appearance-none px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 12px center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '16px',
-                      paddingRight: '40px',
-                      boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
-                      transition: 'all 0.2s ease'
-                    }}
+                    className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
                     required
                   >
                     <option value="">Selecciona tipo de cuenta</option>
