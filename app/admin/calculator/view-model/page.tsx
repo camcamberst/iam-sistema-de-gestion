@@ -323,9 +323,13 @@ export default function ViewModelCalculator() {
                         key={model.id}
                         type="button"
                         onClick={() => {
+                          // Reiniciar estados y seleccionar modelo
                           setSelectedModel(model);
                           setIsModelDropdownOpen(false);
-                          // Precargar datos de la calculadora
+                          setIframeError(false);
+                          setPreloadData(null);
+                          setIframeLoading(true);
+                          // Precargar datos de la calculadora para carga más rápida
                           preloadCalculatorData(model.id);
                         }}
                         className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
@@ -385,6 +389,7 @@ export default function ViewModelCalculator() {
             {/* Iframe optimizado */}
             {!iframeLoading && !iframeError && (
               <iframe
+                key={`${selectedModel.id}-${preloadData ? 'pre' : 'nopre'}`}
                 src={`/model/calculator?modelId=${selectedModel.id}&asAdmin=1&preload=${preloadData ? 'true' : 'false'}`}
                 className="w-full rounded-lg border border-gray-200"
                 style={{ minHeight: '900px' }}
