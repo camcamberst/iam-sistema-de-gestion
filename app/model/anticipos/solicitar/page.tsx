@@ -340,7 +340,7 @@ export default function SolicitarAnticipoPage() {
   return (
     <div className="min-h-screen bg-white">
       <style jsx>{`
-        /* Estilos Apple para dropdowns */
+        /* Estilos Apple para dropdowns con altura limitada */
         .bank-select {
           scrollbar-width: thin;
           scrollbar-color: #cbd5e1 #f1f5f9;
@@ -349,6 +349,8 @@ export default function SolicitarAnticipoPage() {
           border-radius: 8px;
           box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
           transition: all 0.2s ease;
+          max-height: 120px !important;
+          overflow-y: auto;
         }
         .bank-select:focus {
           border-color: #3b82f6;
@@ -370,13 +372,13 @@ export default function SolicitarAnticipoPage() {
           background: #94a3b8;
         }
         .bank-select option {
-          padding: 10px 12px;
+          padding: 8px 12px;
           background: white;
           color: #374151;
           font-size: 14px;
           line-height: 1.4;
           border-radius: 4px;
-          margin: 2px 4px;
+          margin: 1px 2px;
         }
         .bank-select option:hover {
           background: #f3f4f6;
