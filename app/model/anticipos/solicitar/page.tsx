@@ -327,6 +327,26 @@ export default function SolicitarAnticipoPage() {
     setMontoError(error);
   };
 
+  // Función para redondear a la baja al múltiplo de 10.000 más cercano
+  const roundDownToNearestTenThousand = (value: number): number => {
+    return Math.floor(value / 10000) * 10000;
+  };
+
+  // Manejar clic en el cuadro "Anticipo Disponible"
+  const handleAnticipoDisponibleClick = () => {
+    const roundedValue = roundDownToNearestTenThousand(productivityData.anticipoDisponible);
+    
+    // Actualizar el valor numérico
+    setAnticipoData(prev => ({ ...prev, monto_solicitado: roundedValue }));
+    
+    // Formatear para mostrar
+    setMontoFormatted(formatNumber(roundedValue));
+    
+    // Limpiar errores si el valor es válido
+    const error = validateMonto(roundedValue);
+    setMontoError(error);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -474,11 +494,16 @@ export default function SolicitarAnticipoPage() {
               </div>
               <div className="text-xs font-medium text-blue-600">COP Modelo</div>
             </div>
-            <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200">
+            <div 
+              className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 cursor-pointer hover:from-green-100 hover:to-green-200 hover:shadow-md transition-all duration-200"
+              onClick={handleAnticipoDisponibleClick}
+              title="Hacer clic para cargar este monto"
+            >
               <div className="text-lg font-bold text-green-700 mb-1">
                 ${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
               <div className="text-xs font-medium text-green-600">Anticipo Disponible</div>
+              <div className="text-xs text-green-500 mt-1">👆 Haz clic para cargar</div>
             </div>
             <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
               <div className="text-lg font-bold text-orange-700 mb-1">
