@@ -36,25 +36,25 @@ POST /api/rates/fix-period
 - Acciones: consulta ECB/OXR/Fixer, aplica -200 a USD_COP, guarda period_base por `period_id` activo.
 
 ---
-### Configuración de Calculadora
+### Configuración de Calculadora (V2 consolidado)
 
-GET /api/calculator/config?model_id={uuid}
+GET /api/calculator/config-v2?modelId={uuid} | ?userId={uuid}
 - Auth: SA/Admin del grupo / Modelo (solo lectura)
-- Respuesta: { enabled_platform_ids, porcentaje_override?, cuota_minima_override?, version, valid_from, valid_to }
+- Respuesta: { config: { model_id, active, platforms: [...] } }
 
-POST /api/calculator/config
+POST /api/calculator/config-v2
 - Auth: SA/Admin del grupo
-- Body: { model_id, enabled_platform_ids, porcentaje_override?, cuota_minima_override? }
-- Crea/actualiza versión vigente.
+- Body: { modelId, adminId, groupId, enabledPlatforms, percentageOverride?, minQuotaOverride?, groupPercentage?, groupMinQuota? }
+- Crea/actualiza configuración activa.
 
 ---
 ### Valores de Modelo (columna VALORES)
 
-GET /api/calculator/values?model_id={uuid}&period_id={uuid}
+GET /api/calculator/model-values-v2?modelId={uuid}&periodDate=YYYY-MM-DD
 - Auth: SA/Admin del grupo / Modelo
 - Respuesta: array por plataforma con { platform_id, value_input, version, created_at }
 
-POST /api/calculator/values
+POST /api/calculator/model-values-v2
 - Auth: Modelo (propios) / SA/Admin (corrección)
 - Body: { model_id, period_id, items: [{ platform_id, value_input }] }
 - Crea nueva versión o upsert según política.

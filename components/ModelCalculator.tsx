@@ -75,7 +75,8 @@ export default function ModelCalculator() {
         return;
       }
 
-      const response = await fetch(`/api/calculator/config?modelId=${userId}`);
+      // Usar API consolidada v2
+      const response = await fetch(`/api/calculator/config-v2?userId=${userId}`);
       const data = await response.json();
 
       if (!data.success) {

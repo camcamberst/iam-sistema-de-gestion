@@ -59,8 +59,8 @@ export default function ModelCalculatorNew() {
       const user = JSON.parse(userData);
       console.log('🔍 [ModelCalculatorNew] User:', user);
 
-      // Cargar configuración desde API simplificada
-      const response = await fetch(`/api/calculator/config-simple?userId=${user.id}`);
+      // Cargar configuración usando API consolidada v2 (compatibilidad con modelId/userId)
+      const response = await fetch(`/api/calculator/config-v2?userId=${user.id}`);
       if (!response.ok) {
         throw new Error('Error al cargar configuración');
       }

@@ -9,20 +9,25 @@ const supabase = createClient(
 // GET: Obtener configuración de calculadora para modelo
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
-  const userId = searchParams.get('userId');
+  // Compatibilidad: aceptar userId (legado) o modelId (nuevo)
+  const legacyUserId = searchParams.get('userId');
+  const modelIdParam = searchParams.get('modelId');
+  const effectiveModelId = modelIdParam || legacyUserId;
 
-  if (!userId) {
-    return NextResponse.json({ success: false, error: 'userId es requerido' }, { status: 400 });
+  if (!effectiveModelId) {
+    return NextResponse.json({ success: false, error: 'modelId o userId es requerido' }, { status: 400 });
   }
 
   try {
-    console.log('🔍 [CONFIG-V2] Loading config for userId:', userId);
+    console.log('🔍 [CONFIG-V2] Loading config for modelId:', effectiveModelId, {
+      via: modelIdParam ? 'modelId' : 'userId-legacy'
+    });
 
     // 1. Obtener configuración de la modelo
     const { data: config, error: configError } = await supabase
       .from('calculator_config')
       .select('*')
-      .eq('model_id', userId)
+      .eq('model_id', effectiveModelId)
       .eq('active', true)
       .single();
 
@@ -33,11 +38,11 @@ export async function GET(request: NextRequest) {
 
     // 2. Si no hay configuración, retornar vacío
     if (!config) {
-      console.log('🔍 [CONFIG-V2] No config found for userId:', userId);
+      console.log('🔍 [CONFIG-V2] No config found for modelId:', effectiveModelId);
       return NextResponse.json({
         success: true,
         config: {
-          model_id: userId,
+          model_id: effectiveModelId,
           active: false,
           platforms: []
         }
@@ -59,7 +64,7 @@ export async function GET(request: NextRequest) {
 
     // 4. Formatear respuesta
     const result = {
-      model_id: userId,
+      model_id: effectiveModelId,
       active: true,
       platforms: platforms.map(platform => ({
         id: platform.id,
