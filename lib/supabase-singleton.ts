@@ -18,6 +18,11 @@ if (!supabaseUrl || !supabaseAnonKey) {
   throw new Error('❌ Supabase configuration missing. Check environment variables.');
 }
 
+// Asegurar que las variables no sean undefined
+const SUPABASE_URL = supabaseUrl as string;
+const SUPABASE_ANON_KEY = supabaseAnonKey as string;
+const SERVICE_ROLE_KEY = serviceRoleKey as string;
+
 // Singleton para cliente anónimo
 let supabaseInstance: SupabaseClient | null = null;
 
@@ -30,7 +35,7 @@ let supabaseAdminInstance: SupabaseClient | null = null;
 export function getSupabaseClient(): SupabaseClient {
   if (!supabaseInstance) {
     console.log('🔧 [SUPABASE] Creating singleton client');
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
+    supabaseInstance = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
       auth: {
         autoRefreshToken: true,
         persistSession: true,
@@ -46,11 +51,11 @@ export function getSupabaseClient(): SupabaseClient {
  */
 export function getSupabaseAdminClient(): SupabaseClient {
   if (!supabaseAdminInstance) {
-    if (!serviceRoleKey) {
+    if (!SERVICE_ROLE_KEY) {
       throw new Error('❌ Service role key missing for admin client');
     }
     console.log('🔧 [SUPABASE] Creating singleton admin client');
-    supabaseAdminInstance = createClient(supabaseUrl, serviceRoleKey, {
+    supabaseAdminInstance = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
       auth: {
         autoRefreshToken: false,
         persistSession: false
