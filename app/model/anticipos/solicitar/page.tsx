@@ -433,7 +433,7 @@ export default function SolicitarAnticipoPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Monto Solicitado */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                 Monto Solicitado (COP)
               </label>
               <div className="relative">
@@ -458,7 +458,7 @@ export default function SolicitarAnticipoPage() {
 
             {/* Medio de Pago */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                 Medio de Pago
               </label>
               <div className="grid grid-cols-3 gap-3">
@@ -484,7 +484,7 @@ export default function SolicitarAnticipoPage() {
             {(anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Nombre del Beneficiario
                   </label>
                   <input
@@ -497,7 +497,7 @@ export default function SolicitarAnticipoPage() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Número de {anticipoData.medio_pago.toUpperCase()}
                   </label>
                   <input
@@ -516,7 +516,7 @@ export default function SolicitarAnticipoPage() {
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Nombre del Titular
                   </label>
                   <input
@@ -530,7 +530,7 @@ export default function SolicitarAnticipoPage() {
                 </div>
                 
                 <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Banco
                   </label>
                   <select
@@ -546,7 +546,6 @@ export default function SolicitarAnticipoPage() {
                       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                       transition: 'all 0.2s ease'
                     }}
-                    size={5}
                     required
                   >
                     <option value="">Selecciona un banco</option>
@@ -560,7 +559,7 @@ export default function SolicitarAnticipoPage() {
 
                 {anticipoData.banco === 'Otros' && (
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                       Nombre del Banco
                     </label>
                     <input
@@ -575,7 +574,7 @@ export default function SolicitarAnticipoPage() {
                 )}
 
                 <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Tipo de Cuenta
                   </label>
                   <select
@@ -591,7 +590,6 @@ export default function SolicitarAnticipoPage() {
                       boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
                       transition: 'all 0.2s ease'
                     }}
-                    size={3}
                     required
                   >
                     <option value="">Selecciona tipo de cuenta</option>
@@ -601,7 +599,7 @@ export default function SolicitarAnticipoPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Número de Cuenta
                   </label>
                   <input
@@ -615,7 +613,7 @@ export default function SolicitarAnticipoPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-700 mb-2 ml-0">
                     Documento del Titular
                   </label>
                   <input
