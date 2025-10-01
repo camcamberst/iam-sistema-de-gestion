@@ -88,12 +88,12 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       });
 
       baseItems.push({
-        id: 'groups',
-        label: 'Gestión de Grupos',
-        href: '/admin/groups',
+        id: 'anticipos',
+        label: 'Gestión Anticipos',
+        href: '/admin/anticipos',
         subItems: [
-          { label: 'Consultar Grupos', href: '/admin/groups' },
-          { label: 'Crear Grupo', href: '/admin/groups/create' }
+          { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
+          { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
         ]
       });
 
