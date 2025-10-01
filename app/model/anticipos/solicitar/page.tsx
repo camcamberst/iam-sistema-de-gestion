@@ -66,8 +66,6 @@ export default function SolicitarAnticipoPage() {
     'Banco Falabella',
     'Banco Santander',
     'Banco de Occidente',
-    'Nequi',
-    'Daviplata',
     'Otros'
   ];
 
