@@ -127,24 +127,33 @@ export default function SolicitarAnticipoPage() {
 
   const loadProductivityData = async (userId: string) => {
     try {
+      console.log('🔍 [SOLICITAR ANTICIPO] Iniciando carga de datos de productividad para userId:', userId);
+      
       // Obtener datos de productividad del período actual
       const periodDate = new Date().toISOString().split('T')[0];
+      console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
       // Cargar configuración de calculadora
+      console.log('🔍 [SOLICITAR ANTICIPO] Cargando configuración...');
       const configResponse = await fetch(`/api/calculator/config-v2?userId=${userId}`);
       const configData = await configResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Config response:', configData);
       
       if (!configData.success) {
         throw new Error('Error al cargar configuración');
       }
 
       // Cargar valores del modelo
+      console.log('🔍 [SOLICITAR ANTICIPO] Cargando valores del modelo...');
       const valuesResponse = await fetch(`/api/calculator/model-values-v2?userId=${userId}&periodDate=${periodDate}`);
       const valuesData = await valuesResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Values response:', valuesData);
       
       // Cargar tasas
+      console.log('🔍 [SOLICITAR ANTICIPO] Cargando tasas...');
       const ratesResponse = await fetch('/api/rates-v2?activeOnly=true');
       const ratesData = await ratesResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Rates response:', ratesData);
       
       if (ratesData.success && configData.config && valuesData.success) {
         const rates = {
@@ -167,9 +176,12 @@ export default function SolicitarAnticipoPage() {
           }));
 
         const platformValuesMap = new Map(valuesData.values.map((mv: any) => [mv.platform_id, mv.value]));
+        console.log('🔍 [SOLICITAR ANTICIPO] Platform values map:', platformValuesMap);
+        console.log('🔍 [SOLICITAR ANTICIPO] Enabled platforms:', enabledPlatforms);
 
         enabledPlatforms.forEach((p: any) => {
           const value = Number(platformValuesMap.get(p.id) || 0);
+          console.log(`🔍 [SOLICITAR ANTICIPO] Platform ${p.id}: value=${value}`);
           let usdBrutoPlatform = 0;
           let usdModeloPlatform = 0;
 
