@@ -236,7 +236,7 @@ export default function MiHistorialPage() {
                           anticipo.banco && anticipo.numero_cuenta && (
                             <>
                               <span><span className="font-medium">Banco:</span> {anticipo.banco}</span>
-                              <span><span className="font-medium">Cta:</span> {anticipo.numero_cuenta}</span>
+                              <span><span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}</span>
                             </>
                           )
                         )}

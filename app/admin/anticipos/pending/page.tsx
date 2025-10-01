@@ -47,9 +47,9 @@ const renderTransferDetails = (anticipo: Anticipo) => {
     if (anticipo.numero_telefono) details.push(`Tel: ${anticipo.numero_telefono}`);
   } else if (anticipo.banco && anticipo.numero_cuenta) {
     details.push(`Banco: ${anticipo.banco}`);
-    details.push(`Cta: ${anticipo.numero_cuenta}`);
+    details.push(`Cuenta: ${anticipo.numero_cuenta}`);
     if (anticipo.tipo_cuenta) details.push(`Tipo: ${anticipo.tipo_cuenta}`);
-    if (anticipo.nombre_titular) details.push(`Titular: ${anticipo.nombre_titular}`);
+    if (anticipo.nombre_titular) details.push(`Titular de la cuenta: ${anticipo.nombre_titular}`);
     if (anticipo.cedula_titular) details.push(`Cédula: ${anticipo.cedula_titular}`);
   }
 
