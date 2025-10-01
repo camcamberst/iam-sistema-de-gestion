@@ -40,30 +40,6 @@ interface Anticipo {
   };
 }
 
-const renderTransferDetails = (anticipo: Anticipo) => {
-  let details: string[] = [];
-
-  if (anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata') {
-    if (anticipo.numero_telefono) details.push(`Tel: ${anticipo.numero_telefono}`);
-  } else if (anticipo.banco && anticipo.numero_cuenta) {
-    details.push(`Banco: ${anticipo.banco}`);
-    details.push(`Cta: ${anticipo.numero_cuenta}`);
-    if (anticipo.tipo_cuenta) details.push(`Tipo: ${anticipo.tipo_cuenta}`);
-    if (anticipo.nombre_titular) details.push(`Titular: ${anticipo.nombre_titular}`);
-    if (anticipo.cedula_titular) details.push(`Cédula: ${anticipo.cedula_titular}`);
-  }
-
-  if (details.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-x-3 text-xs text-gray-700 mt-1">
-      {details.map((detail, i) => (
-        <span key={i}>{detail}</span>
-      ))}
-    </div>
-  );
-};
-
 export default function MiHistorialPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -250,15 +226,23 @@ export default function MiHistorialPage() {
                       </span>
                     </div>
                     
-                    {/* Segunda línea: Información compacta */}
+                    {/* Segunda línea: Información compacta con datos de transferencia */}
                     <div className="flex items-center justify-between text-xs text-gray-600">
-                      <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
-                      <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
+                      <div className="flex items-center space-x-3">
+                        <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                        {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
+                          anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
+                        ) : (
+                          anticipo.banco && anticipo.numero_cuenta && (
+                            <>
+                              <span><span className="font-medium">Banco:</span> {anticipo.banco}</span>
+                              <span><span className="font-medium">Cta:</span> {anticipo.numero_cuenta}</span>
+                            </>
+                          )
+                        )}
+                      </div>
                       <span className="text-gray-500">{new Date(anticipo.realized_at).toLocaleDateString('es-CO')}</span>
                     </div>
-
-                    {/* Datos de transferencia */}
-                    {renderTransferDetails(anticipo)}
 
                     {/* Comentarios del admin - solo si existen */}
                     {anticipo.comentarios_admin && (
