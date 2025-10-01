@@ -231,7 +231,7 @@ export default function SolicitarAnticipoPage() {
           anticipoDisponible,
           anticiposPagados,
           enabledPlatforms: enabledPlatforms.length,
-          platformValues: Object.keys(idToValue).length,
+          platformValues: Object.keys(platformValuesMap).length,
           rates
         });
 
