@@ -163,21 +163,7 @@ export default function ModelCalculatorPage() {
       }
 
       // Cargar configuración desde API v2
-      // Usar modelId cuando es acceso de admin, userId cuando es acceso directo
-      const isAdminAccess = adminOverride && queryModelId;
-      const apiParam = isAdminAccess ? 'modelId' : 'userId';
-      const apiValue = isAdminAccess ? queryModelId : userId;
-      
-      console.log('🔍 [CALCULATOR] API call params:', { 
-        isAdminAccess, 
-        apiParam, 
-        apiValue, 
-        adminOverride, 
-        queryModelId, 
-        userId 
-      });
-      
-      const response = await fetch(`/api/calculator/config-v2?${apiParam}=${apiValue}`);
+      const response = await fetch(`/api/calculator/config-v2?userId=${userId}`);
       if (!response.ok) {
         throw new Error('Error al cargar configuración');
       }
@@ -223,7 +209,7 @@ export default function ModelCalculatorPage() {
       // Cargar valores guardados previamente (solo sistema V2)
       try {
         console.log('🔍 [CALCULATOR] Loading saved values - V2 system only');
-        const savedResp = await fetch(`/api/calculator/model-values-v2?${apiParam}=${apiValue}&periodDate=${periodDate}`);
+        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
         const savedJson = await savedResp.json();
         console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
         if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
@@ -368,13 +354,10 @@ export default function ModelCalculatorPage() {
     const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
-        // Usar el ID correcto según el contexto (admin o modelo)
-        const saveModelId = adminOverride && queryModelId ? queryModelId : user.id;
-        
         const res = await fetch('/api/calculator/model-values-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: saveModelId, values, periodDate }),
+          body: JSON.stringify({ modelId: user.id, values, periodDate }),
           signal: controller.signal
         });
         const json = await res.json();
