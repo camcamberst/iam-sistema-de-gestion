@@ -339,6 +339,34 @@ export default function SolicitarAnticipoPage() {
 
   return (
     <div className="min-h-screen bg-white">
+      <style jsx>{`
+        select {
+          scrollbar-width: thin;
+          scrollbar-color: #cbd5e1 #f1f5f9;
+        }
+        select::-webkit-scrollbar {
+          width: 6px;
+        }
+        select::-webkit-scrollbar-track {
+          background: #f1f5f9;
+          border-radius: 3px;
+        }
+        select::-webkit-scrollbar-thumb {
+          background: #cbd5e1;
+          border-radius: 3px;
+        }
+        select::-webkit-scrollbar-thumb:hover {
+          background: #94a3b8;
+        }
+        select option {
+          padding: 8px 12px;
+          background: white;
+          color: #374151;
+        }
+        select option:hover {
+          background: #f3f4f6;
+        }
+      `}</style>
       <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -505,7 +533,14 @@ export default function SolicitarAnticipoPage() {
                   <select
                     value={anticipoData.banco || ''}
                     onChange={(e) => handleInputChange('banco', e.target.value)}
-                    className="apple-input w-full"
+                    className="apple-input w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 8px center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '16px',
+                      paddingRight: '32px'
+                    }}
                     required
                   >
                     <option value="">Selecciona un banco</option>
@@ -537,21 +572,23 @@ export default function SolicitarAnticipoPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tipo de Cuenta
                   </label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {['ahorros', 'corriente'].map((tipo) => (
-                      <label key={tipo} className="flex items-center">
-                        <input
-                          type="radio"
-                          name="tipo_cuenta"
-                          value={tipo}
-                          checked={anticipoData.tipo_cuenta === tipo}
-                          onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
-                          className="mr-2"
-                        />
-                        <span className="text-sm capitalize">{tipo}</span>
-                      </label>
-                    ))}
-                  </div>
+                  <select
+                    value={anticipoData.tipo_cuenta || ''}
+                    onChange={(e) => handleInputChange('tipo_cuenta', e.target.value)}
+                    className="apple-input w-full appearance-none bg-white border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 8px center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '16px',
+                      paddingRight: '32px'
+                    }}
+                    required
+                  >
+                    <option value="">Selecciona tipo de cuenta</option>
+                    <option value="ahorros">Ahorros</option>
+                    <option value="corriente">Corriente</option>
+                  </select>
                 </div>
 
                 <div>
