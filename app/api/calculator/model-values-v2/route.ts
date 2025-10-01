@@ -33,6 +33,9 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [MODEL-VALUES-V2] Query completed. Values:', values);
     console.log('🔍 [MODEL-VALUES-V2] Query error:', error);
+    console.log('🔍 [MODEL-VALUES-V2] Values count:', values?.length || 0);
+    console.log('🔍 [MODEL-VALUES-V2] Values type:', typeof values);
+    console.log('🔍 [MODEL-VALUES-V2] Values is array:', Array.isArray(values));
 
     if (error) {
       console.error('Error al obtener valores:', error);
