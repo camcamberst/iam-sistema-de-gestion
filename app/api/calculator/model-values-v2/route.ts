@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getCalculatorDate } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -17,7 +18,7 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const periodDate = searchParams.get('periodDate') || new Date().toISOString().split('T')[0];
+  const periodDate = searchParams.get('periodDate') || getCalculatorDate();
 
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });

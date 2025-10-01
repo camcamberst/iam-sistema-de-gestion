@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
+import { getCalculatorDate } from '@/utils/calculator-dates';
 
 interface User {
   id: string;
@@ -71,8 +72,9 @@ export default function ViewModelCalculator() {
       const configResponse = await fetch(`/api/calculator/config-v2?modelId=${modelId}`);
       const configData = await configResponse.json();
       
-      // Precargar valores guardados
-      const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${modelId}&periodDate=${new Date().toISOString().split('T')[0]}`);
+      // Precargar valores guardados usando fecha de Europa Central
+      const calculatorDate = getCalculatorDate();
+      const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${modelId}&periodDate=${calculatorDate}`);
       const valuesData = await valuesResponse.json();
       
       // Precargar tasas activas

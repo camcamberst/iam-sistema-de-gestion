@@ -141,3 +141,4 @@ ORDER BY period_date DESC, created_at DESC;
 **Fecha:** 1 Octubre 2025  
 **Estado:** Sistema funcional, pendiente resolver visualización de valores en admin  
 **Próximo objetivo:** Implementar detección de último periodo con datos
+
