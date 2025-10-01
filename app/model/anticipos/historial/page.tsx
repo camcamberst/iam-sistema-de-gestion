@@ -148,10 +148,21 @@ export default function MiHistorialPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-8">
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {/* Header con botón de regreso */}
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => router.back()}
+              className="flex items-center text-gray-600 hover:text-gray-900 transition-colors duration-200"
+            >
+              <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              Regresar
+            </button>
+          </div>
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Mi Historial</h1>
           <p className="text-gray-600">Anticipos realizados y pagados</p>
         </div>
@@ -170,7 +181,7 @@ export default function MiHistorialPage() {
         )}
 
         {/* Resumen */}
-        <div className="apple-card mb-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="text-center p-4 bg-green-50 rounded-lg">
@@ -196,7 +207,7 @@ export default function MiHistorialPage() {
 
         {/* Lista de Anticipos Realizados */}
         {anticipos.length === 0 ? (
-          <div className="apple-card text-center py-8">
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 text-center py-8 px-6">
             <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -204,9 +215,9 @@ export default function MiHistorialPage() {
             <p className="text-gray-500">Aún no tienes anticipos que hayan sido pagados</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3">
             {anticipos.map((anticipo) => (
-              <div key={anticipo.id} className="apple-card">
+              <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
                 <div className="flex items-start justify-between">
                   <div className="flex-1">
                     <div className="flex items-center space-x-3 mb-3">
