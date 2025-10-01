@@ -30,10 +30,10 @@ export async function GET(request: NextRequest) {
 
     // Filtros según el rol
     if (adminId) {
-      // Admin/Super Admin: obtener anticipos de su grupo
+      // Admin/Super Admin: obtener anticipos
       const { data: adminUser } = await supabase
         .from('users')
-        .select('role, group_id')
+        .select('role')
         .eq('id', adminId)
         .single();
 
@@ -41,18 +41,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
       }
 
-      if (adminUser.role === 'super_admin') {
-        // Super admin: ver todos los anticipos
-        // No aplicar filtros adicionales
-      } else if (adminUser.role === 'admin') {
-        // Admin: solo anticipos de su grupo
-        query = query.in('model_id', 
-          supabase
-            .from('users')
-            .select('id')
-            .eq('group_id', adminUser.group_id)
-        );
-      }
+      // Por ahora, admins y super_admins pueden ver todos los anticipos
+      // TODO: Implementar filtrado por grupo cuando se tenga la estructura de grupos
     } else if (modelId) {
       // Modelo: solo sus propios anticipos
       query = query.eq('model_id', modelId);
