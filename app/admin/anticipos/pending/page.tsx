@@ -256,41 +256,37 @@ export default function SolicitudesPendientesPage() {
               const medioPagoInfo = getMedioPagoInfo(anticipo);
               
               return (
-                <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+                <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       {/* Primera línea: Modelo y monto */}
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1">
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-900">
+                          <h3 className="text-base font-semibold text-gray-900">
                             {anticipo.model.name}
                           </h3>
-                          <p className="text-sm text-gray-500">{anticipo.model.email}</p>
                         </div>
                         <div className="text-right">
-                          <div className="text-lg font-bold text-gray-900">
+                          <div className="text-base font-bold text-gray-900">
                             ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            {anticipo.porcentaje_solicitado.toFixed(1)}% disponible
                           </div>
                         </div>
                       </div>
 
                       {/* Segunda línea: Información compacta */}
-                      <div className="flex items-center justify-between text-sm text-gray-600">
-                        <div className="flex items-center space-x-4">
-                          <span><strong>Medio:</strong> {medioPagoInfo.tipo}</span>
-                          <span><strong>Info:</strong> {medioPagoInfo.info}</span>
+                      <div className="flex items-center justify-between text-xs text-gray-600">
+                        <div className="flex items-center space-x-3">
+                          <span><span className="font-medium">Medio:</span> {medioPagoInfo.tipo}</span>
+                          <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
                         </div>
                         <div className="text-xs text-gray-500">
-                          {formatDate(anticipo.created_at)}
+                          {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
                         </div>
                       </div>
                     </div>
 
                     {/* Botones de acción compactos */}
-                    <div className="ml-4 flex space-x-2">
+                    <div className="ml-2 flex space-x-1">
                       {anticipo.estado === 'pendiente' && (
                         <>
                           <button
@@ -299,9 +295,9 @@ export default function SolicitudesPendientesPage() {
                               handleAction(anticipo.id, 'aprobado', comentarios || undefined);
                             }}
                             disabled={processing === anticipo.id}
-                            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                            className="px-2 py-1 bg-blue-600 text-white rounded text-xs font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                           >
-                            {processing === anticipo.id ? 'Procesando...' : 'Aprobar'}
+                            {processing === anticipo.id ? '...' : 'Aprobar'}
                           </button>
                           
                           <button
@@ -312,7 +308,7 @@ export default function SolicitudesPendientesPage() {
                               }
                             }}
                             disabled={processing === anticipo.id}
-                            className="px-3 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                            className="px-2 py-1 bg-gray-600 text-white rounded text-xs font-medium hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                           >
                             Rechazar
                           </button>
@@ -328,9 +324,9 @@ export default function SolicitudesPendientesPage() {
                             }
                           }}
                           disabled={processing === anticipo.id}
-                          className="px-3 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                          className="px-2 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                         >
-                          {processing === anticipo.id ? 'Procesando...' : 'Marcar como Realizado'}
+                          {processing === anticipo.id ? '...' : 'Realizado'}
                         </button>
                       )}
                     </div>

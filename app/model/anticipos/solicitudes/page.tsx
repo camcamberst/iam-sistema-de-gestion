@@ -240,11 +240,12 @@ export default function MisSolicitudesPage() {
         ) : (
           <div className="space-y-3">
             {anticipos.map((anticipo) => (
-              <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
+              <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-2">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                    {/* Primera línea: Monto y Estado */}
+                    <div className="flex items-center space-x-3 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900">
                         ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                       </h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(anticipo.estado)}`}>
@@ -252,45 +253,36 @@ export default function MisSolicitudesPage() {
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-2 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}
-                      </div>
-                      <div>
-                        <span className="font-medium">Porcentaje:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%
-                      </div>
-                      <div className="col-span-2">
-                        <span className="font-medium">Solicitado:</span> {formatDate(anticipo.created_at)}
-                      </div>
+                    {/* Segunda línea: Información compacta */}
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                      <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
+                      <span className="text-gray-500">{new Date(anticipo.created_at).toLocaleDateString('es-CO')}</span>
                     </div>
 
-                    {/* Comentarios compactos */}
+                    {/* Comentarios compactos - solo si existen */}
                     {anticipo.comentarios_admin && (
-                      <div className="mt-2 p-2 bg-blue-50 rounded-lg">
-                        <p className="text-xs text-blue-800">
-                          <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
-                        </p>
+                      <div className="mt-1 p-1 bg-blue-50 rounded text-xs text-blue-800">
+                        <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
                       </div>
                     )}
 
                     {anticipo.comentarios_rechazo && (
-                      <div className="mt-2 p-2 bg-red-50 rounded-lg">
-                        <p className="text-xs text-red-800">
-                          <span className="font-medium">Rechazo:</span> {anticipo.comentarios_rechazo}
-                        </p>
+                      <div className="mt-1 p-1 bg-red-50 rounded text-xs text-red-800">
+                        <span className="font-medium">Rechazo:</span> {anticipo.comentarios_rechazo}
                       </div>
                     )}
                   </div>
 
                   {/* Botón de cancelar compacto */}
                   {anticipo.estado === 'pendiente' && (
-                    <div className="ml-3">
+                    <div className="ml-2">
                       <button
                         onClick={() => handleCancel(anticipo.id)}
                         disabled={cancelling === anticipo.id}
-                        className="px-3 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 text-sm font-medium"
+                        className="px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                       >
-                        {cancelling === anticipo.id ? 'Cancelando...' : 'Cancelar'}
+                        {cancelling === anticipo.id ? '...' : 'Cancelar'}
                       </button>
                     </div>
                   )}

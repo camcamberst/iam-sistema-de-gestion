@@ -206,11 +206,12 @@ export default function MiHistorialPage() {
         ) : (
           <div className="space-y-3">
             {anticipos.map((anticipo) => (
-              <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-4">
-                <div className="flex items-start justify-between">
+              <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    <div className="flex items-center space-x-3 mb-3">
-                      <h3 className="text-lg font-semibold text-gray-900">
+                    {/* Primera línea: Monto y Estado */}
+                    <div className="flex items-center space-x-3 mb-1">
+                      <h3 className="text-base font-semibold text-gray-900">
                         ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                       </h3>
                       <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
@@ -218,37 +219,24 @@ export default function MiHistorialPage() {
                       </span>
                     </div>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">Medio de pago:</span> {anticipo.medio_pago.toUpperCase()}
-                      </div>
-                      <div>
-                        <span className="font-medium">Porcentaje:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%
-                      </div>
-                      <div>
-                        <span className="font-medium">Período:</span> {formatPeriod(anticipo.period.start_date, anticipo.period.end_date)}
-                      </div>
-                      <div>
-                        <span className="font-medium">Solicitado:</span> {formatDate(anticipo.created_at)}
-                      </div>
-                      <div>
-                        <span className="font-medium">Realizado:</span> {formatDate(anticipo.realized_at)}
-                      </div>
+                    {/* Segunda línea: Información compacta */}
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                      <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
+                      <span className="text-gray-500">{new Date(anticipo.realized_at).toLocaleDateString('es-CO')}</span>
                     </div>
 
-                    {/* Comentarios del admin */}
+                    {/* Comentarios del admin - solo si existen */}
                     {anticipo.comentarios_admin && (
-                      <div className="mt-3 p-3 bg-green-50 rounded-lg">
-                        <p className="text-sm text-green-800">
-                          <span className="font-medium">Comentarios del admin:</span> {anticipo.comentarios_admin}
-                        </p>
+                      <div className="mt-1 p-1 bg-green-50 rounded text-xs text-green-800">
+                        <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
                       </div>
                     )}
                   </div>
 
-                  {/* Icono de realizado */}
-                  <div className="ml-4 flex items-center">
-                    <svg className="w-8 h-8 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  {/* Icono de realizado compacto */}
+                  <div className="ml-2 flex items-center">
+                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                     </svg>
                   </div>

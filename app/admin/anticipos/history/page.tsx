@@ -382,77 +382,49 @@ export default function HistorialAnticiposPage() {
         ) : (
           <div className="space-y-4">
             {filteredAnticipos.map((anticipo) => (
-              <div key={anticipo.id} className="apple-card">
-                <div className="flex items-start justify-between">
+              <div key={anticipo.id} className="apple-card p-3">
+                <div className="flex items-center justify-between">
                   <div className="flex-1">
-                    {/* Header con modelo y monto */}
-                    <div className="flex items-center space-x-3 mb-3">
+                    {/* Primera línea: Modelo, monto y estado */}
+                    <div className="flex items-center justify-between mb-1">
                       <div>
-                        <h3 className="text-lg font-semibold text-gray-900">
+                        <h3 className="text-base font-semibold text-gray-900">
                           {anticipo.model.name}
                         </h3>
-                        <p className="text-sm text-gray-500">{anticipo.model.email}</p>
                       </div>
-                      <div className="text-right">
-                        <div className="text-xl font-bold text-gray-900">
-                          ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
+                      <div className="flex items-center space-x-2">
+                        <div className="text-right">
+                          <div className="text-base font-bold text-gray-900">
+                            ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
+                          </div>
                         </div>
-                        <div className="text-sm text-gray-500">
-                          {anticipo.porcentaje_solicitado.toFixed(1)}%
-                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(anticipo.estado)}`}>
+                          {getEstadoLabel(anticipo.estado)}
+                        </span>
                       </div>
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(anticipo.estado)}`}>
-                        {getEstadoLabel(anticipo.estado)}
-                      </span>
                     </div>
                     
-                    {/* Información del anticipo */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
-                      <div>
-                        <span className="font-medium">Medio de pago:</span> {anticipo.medio_pago.toUpperCase()}
+                    {/* Segunda línea: Información compacta */}
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <div className="flex items-center space-x-3">
+                        <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                        <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
                       </div>
-                      <div>
-                        <span className="font-medium">Período:</span> {anticipo.period.name}
+                      <div className="text-xs text-gray-500">
+                        {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
                       </div>
-                      <div>
-                        <span className="font-medium">Solicitado:</span> {formatDate(anticipo.created_at)}
-                      </div>
-                      {anticipo.approved_at && (
-                        <div>
-                          <span className="font-medium">Aprobado:</span> {formatDate(anticipo.approved_at)}
-                        </div>
-                      )}
-                      {anticipo.rejected_at && (
-                        <div>
-                          <span className="font-medium">Rechazado:</span> {formatDate(anticipo.rejected_at)}
-                        </div>
-                      )}
-                      {anticipo.realized_at && (
-                        <div>
-                          <span className="font-medium">Realizado:</span> {formatDate(anticipo.realized_at)}
-                        </div>
-                      )}
-                      {anticipo.cancelled_at && (
-                        <div>
-                          <span className="font-medium">Cancelado:</span> {formatDate(anticipo.cancelled_at)}
-                        </div>
-                      )}
                     </div>
 
-                    {/* Comentarios */}
+                    {/* Comentarios - solo si existen */}
                     {anticipo.comentarios_admin && (
-                      <div className="mt-3 p-3 bg-blue-50 rounded-lg">
-                        <p className="text-sm text-blue-800">
-                          <span className="font-medium">Comentarios del admin:</span> {anticipo.comentarios_admin}
-                        </p>
+                      <div className="mt-1 p-1 bg-blue-50 rounded text-xs text-blue-800">
+                        <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
                       </div>
                     )}
 
                     {anticipo.comentarios_rechazo && (
-                      <div className="mt-3 p-3 bg-red-50 rounded-lg">
-                        <p className="text-sm text-red-800">
-                          <span className="font-medium">Motivo del rechazo:</span> {anticipo.comentarios_rechazo}
-                        </p>
+                      <div className="mt-1 p-1 bg-red-50 rounded text-xs text-red-800">
+                        <span className="font-medium">Rechazo:</span> {anticipo.comentarios_rechazo}
                       </div>
                     )}
                   </div>
