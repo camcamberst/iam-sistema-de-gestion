@@ -51,6 +51,7 @@ export default function SolicitarAnticipoPage() {
   // Estados para validación y formato de monto
   const [montoError, setMontoError] = useState('');
   const [montoFormatted, setMontoFormatted] = useState('0');
+  const [telefonoError, setTelefonoError] = useState('');
 
   const router = useRouter();
   const supabase = createClient(
@@ -312,6 +313,18 @@ export default function SolicitarAnticipoPage() {
     return '';
   };
 
+  // Función para validar teléfono (exactamente 10 dígitos)
+  const validateTelefono = (telefono: string): string => {
+    const cleanTelefono = telefono.replace(/\D/g, ''); // Solo números
+    if (cleanTelefono.length === 0) {
+      return 'El número de teléfono es requerido';
+    }
+    if (cleanTelefono.length !== 10) {
+      return 'El número de teléfono debe tener exactamente 10 dígitos';
+    }
+    return '';
+  };
+
   // Manejar cambio en el input de monto
   const handleMontoChange = (value: string) => {
     const numericValue = parseFormattedNumber(value);
@@ -347,6 +360,42 @@ export default function SolicitarAnticipoPage() {
     setMontoError(error);
   };
 
+  // Función para validar teléfono colombiano (10 dígitos)
+  const validateTelefono = (telefono: string): string => {
+    const cleanTelefono = telefono.replace(/\D/g, ''); // Solo números
+    
+    if (cleanTelefono.length === 0) {
+      return '';
+    }
+    
+    if (cleanTelefono.length !== 10) {
+      return 'El número de teléfono debe tener exactamente 10 dígitos';
+    }
+    
+    // Validar que empiece con 3 (celulares colombianos)
+    if (!cleanTelefono.startsWith('3')) {
+      return 'El número debe empezar con 3 (celular colombiano)';
+    }
+    
+    return '';
+  };
+
+  // Manejar cambio en el campo de teléfono
+  const handleTelefonoChange = (value: string) => {
+    // Solo permitir números
+    const numericValue = value.replace(/\D/g, '');
+    
+    // Limitar a 10 dígitos
+    const limitedValue = numericValue.slice(0, 10);
+    
+    // Actualizar el estado
+    setAnticipoData(prev => ({ ...prev, numero_telefono: limitedValue }));
+    
+    // Validar
+    const error = validateTelefono(limitedValue);
+    setTelefonoError(error);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -362,6 +411,13 @@ export default function SolicitarAnticipoPage() {
     if (anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') {
       if (!anticipoData.nombre_beneficiario || !anticipoData.numero_telefono) {
         setError('Nombre y número son requeridos para NEQUI/DAVIPLATA');
+        return;
+      }
+      
+      // Validar formato del teléfono
+      const telefonoError = validateTelefono(anticipoData.numero_telefono);
+      if (telefonoError) {
+        setError(telefonoError);
         return;
       }
     }
@@ -619,11 +675,15 @@ export default function SolicitarAnticipoPage() {
                     <input
                       type="tel"
                       value={anticipoData.numero_telefono || ''}
-                      onChange={(e) => handleInputChange('numero_telefono', e.target.value)}
-                      placeholder="Número de teléfono"
-                      className="apple-input w-full"
+                      onChange={(e) => handleTelefonoChange(e.target.value)}
+                      placeholder="Número de teléfono (10 dígitos)"
+                      className={`apple-input w-full ${telefonoError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      maxLength={10}
                       required
                     />
+                    {telefonoError && (
+                      <p className="text-red-500 text-xs mt-1">{telefonoError}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -803,7 +863,7 @@ export default function SolicitarAnticipoPage() {
               </button>
               <button
                 type="submit"
-                disabled={submitting || productivityData.anticipoDisponible <= 0 || !!montoError || anticipoData.monto_solicitado <= 0}
+                disabled={submitting || productivityData.anticipoDisponible <= 0 || !!montoError || anticipoData.monto_solicitado <= 0 || !!telefonoError}
                 className="flex-1 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
               >
                 {submitting ? 'Enviando...' : 'Enviar Solicitud'}
