@@ -158,7 +158,7 @@ export default function SolicitarAnticipoPage() {
         const platformValuesMap = new Map(valuesData.values.map((mv: any) => [mv.platform_id, mv.value]));
 
         enabledPlatforms.forEach((p: any) => {
-          const value = platformValuesMap.get(p.id) || 0;
+          const value = Number(platformValuesMap.get(p.id) || 0);
           let usdBrutoPlatform = 0;
           let usdModeloPlatform = 0;
 
