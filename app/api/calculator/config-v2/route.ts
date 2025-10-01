@@ -70,6 +70,15 @@ export async function GET(request: NextRequest) {
       group_min_quota: config.group_min_quota
     });
     
+    // DEBUG PROFUNDO: Verificar cada plataforma
+    console.log('🔍 [CONFIG-V2] DEBUG - Platform mapping:', platforms.map(platform => ({
+      id: platform.id,
+      name: platform.name,
+      percentage_override: config.percentage_override,
+      group_percentage: config.group_percentage,
+      final_group_percentage: config.group_percentage
+    })));
+    
     const result = {
       model_id: effectiveModelId,
       active: true,

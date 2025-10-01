@@ -179,15 +179,37 @@ export default function ModelCalculatorPage() {
       // Procesar plataformas habilitadas
       const enabledPlatforms = data.config.platforms
         .filter((p: any) => p.enabled)
-        .map((platform: any) => ({
-          id: platform.id,
-          name: platform.name,
-          enabled: true,
-          value: 0,
-          percentage: platform.percentage_override || platform.group_percentage || 80,
-          minQuota: platform.min_quota_override || platform.group_min_quota || 470,
-          currency: platform.currency || 'USD' // CRÍTICO: Agregar currency
-        }));
+        .map((platform: any) => {
+          // DEBUG PROFUNDO: Verificar valores antes del fallback
+          console.log('🔍 [CALCULATOR] DEBUG - Platform raw data:', {
+            id: platform.id,
+            name: platform.name,
+            percentage_override: platform.percentage_override,
+            group_percentage: platform.group_percentage,
+            percentage_override_type: typeof platform.percentage_override,
+            group_percentage_type: typeof platform.group_percentage
+          });
+          
+          const finalPercentage = platform.percentage_override || platform.group_percentage || 80;
+          
+          console.log('🔍 [CALCULATOR] DEBUG - Final percentage calculation:', {
+            id: platform.id,
+            percentage_override: platform.percentage_override,
+            group_percentage: platform.group_percentage,
+            final_percentage: finalPercentage,
+            using_fallback: !platform.percentage_override && !platform.group_percentage
+          });
+          
+          return {
+            id: platform.id,
+            name: platform.name,
+            enabled: true,
+            value: 0,
+            percentage: finalPercentage,
+            minQuota: platform.min_quota_override || platform.group_min_quota || 470,
+            currency: platform.currency || 'USD' // CRÍTICO: Agregar currency
+          };
+        });
 
       console.log('🔍 [CALCULATOR] Enabled platforms:', enabledPlatforms);
       console.log('🔍 [CALCULATOR] Platform details:', enabledPlatforms.map((p: Platform) => ({
@@ -196,6 +218,15 @@ export default function ModelCalculatorPage() {
         currency: p.currency,
         percentage: p.percentage,
         value: p.value
+      })));
+      
+      // DEBUG PROFUNDO: Verificar datos de porcentaje
+      console.log('🔍 [CALCULATOR] DEBUG - Platform percentage data:', enabledPlatforms.map((p: Platform) => ({
+        id: p.id,
+        name: p.name,
+        percentage_override: p.percentage_override,
+        group_percentage: p.group_percentage,
+        final_percentage: p.percentage
       })));
       setPlatforms(enabledPlatforms);
       // Inicializar inputs de texto vacíos
