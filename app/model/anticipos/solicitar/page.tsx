@@ -161,7 +161,14 @@ export default function SolicitarAnticipoPage() {
       const ratesData = await ratesResponse.json();
       console.log('🔍 [SOLICITAR ANTICIPO] Rates response:', ratesData);
       
-      if (ratesData.success && configData.config && valuesData.success) {
+      if (ratesData.success && configData.config) {
+        console.log('🔍 [SOLICITAR ANTICIPO] Config and rates successful, checking values...');
+        
+        // Manejar caso donde valuesData no es exitoso pero tenemos datos
+        if (!valuesData.success) {
+          console.log('🔍 [SOLICITAR ANTICIPO] Values API failed, but continuing with empty values...');
+        }
+        
         const rates = {
           usd_cop: ratesData.data.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
           eur_usd: ratesData.data.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
