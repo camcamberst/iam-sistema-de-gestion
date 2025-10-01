@@ -37,6 +37,9 @@ export default function SolicitarAnticipoPage() {
     medio_pago: 'nequi'
   });
   
+  // Estado para dropdown personalizado
+  const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
+  
   // Datos de productividad
   const [productivityData, setProductivityData] = useState({
     copModelo: 0,
@@ -71,6 +74,21 @@ export default function SolicitarAnticipoPage() {
   useEffect(() => {
     loadUser();
   }, []);
+
+  // Cerrar dropdown cuando se hace click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (isBankDropdownOpen) {
+        const target = event.target as HTMLElement;
+        if (!target.closest('.relative')) {
+          setIsBankDropdownOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isBankDropdownOpen]);
 
   const loadUser = async () => {
     try {
@@ -521,19 +539,45 @@ export default function SolicitarAnticipoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Banco
                     </label>
-                    <select
-                      value={anticipoData.banco || ''}
-                      onChange={(e) => handleInputChange('banco', e.target.value)}
-                      className="bank-select w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300"
-                      required
-                    >
-                      <option value="">Selecciona un banco</option>
-                      {bancosColombia.map((banco) => (
-                        <option key={banco} value={banco}>
-                          {banco}
-                        </option>
-                      ))}
-                    </select>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
+                        className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300 text-left flex items-center justify-between"
+                      >
+                        <span className={anticipoData.banco ? 'text-gray-900' : 'text-gray-500'}>
+                          {anticipoData.banco || 'Selecciona un banco'}
+                        </span>
+                        <svg 
+                          className={`w-4 h-4 transition-transform duration-200 ${isBankDropdownOpen ? 'rotate-180' : ''}`} 
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                      
+                      {isBankDropdownOpen && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-32 overflow-y-auto">
+                          <div className="py-1">
+                            {bancosColombia.map((banco) => (
+                              <button
+                                key={banco}
+                                type="button"
+                                onClick={() => {
+                                  handleInputChange('banco', banco);
+                                  setIsBankDropdownOpen(false);
+                                }}
+                                className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
+                              >
+                                {banco}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
