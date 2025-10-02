@@ -38,6 +38,16 @@ export const getSystemDate = (): string => {
 };
 
 /**
+ * Obtiene la fecha actual en formato YYYY-MM-DD usando Colombia (America/Bogota)
+ * Alias explícito para módulos fuera de calculadora (p.ej. Anticipos)
+ */
+export const getColombiaDate = (): string => {
+  return new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'America/Bogota' 
+  });
+};
+
+/**
  * Convierte una fecha a formato YYYY-MM-DD usando Europa Central
  * @param date - Fecha a convertir
  * @returns Fecha en formato YYYY-MM-DD (Europa Central)

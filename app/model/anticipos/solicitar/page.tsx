@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { getCalculatorDate } from '@/utils/calculator-dates';
+import { getCalculatorDate, getColombiaDate } from '@/utils/calculator-dates';
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 
 interface User {
@@ -151,8 +151,8 @@ export default function SolicitarAnticipoPage() {
     try {
       console.log('🔍 [SOLICITAR ANTICIPO] Iniciando carga de datos de productividad para userId:', userId);
       
-      // Obtener datos de productividad del período actual
-      const periodDate = getCalculatorDate();
+      // Obtener datos de productividad del período actual (Colombia)
+      const periodDate = getColombiaDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
       // Cargar configuración de calculadora
