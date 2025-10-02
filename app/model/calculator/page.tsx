@@ -167,7 +167,7 @@ export default function ModelCalculatorPage() {
       }
 
       // Cargar configuración desde API v2
-      const response = await fetch(`/api/calculator/config-v2?userId=${userId}`);
+      const response = await fetch(`/api/calculator/config-v2?modelId=${userId}`);
       if (!response.ok) {
         throw new Error('Error al cargar configuración');
       }
