@@ -7,6 +7,12 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// Verificar configuración de Supabase
+console.log('🔍 [API ANTICIPOS] Configuración Supabase:', {
+  url: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurado' : '❌ No configurado',
+  serviceKey: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅ Configurado' : '❌ No configurado'
+});
+
 // =====================================================
 // 📋 GET - Obtener anticipos
 // =====================================================
@@ -23,13 +29,23 @@ export async function GET(request: NextRequest) {
     // Filtros según el rol
     if (adminId) {
       // Admin/Super Admin: obtener anticipos
-      const { data: adminUser } = await supabase
+      console.log('🔍 [API ANTICIPOS] Buscando admin con ID:', adminId);
+      
+      const { data: adminUser, error: adminError } = await supabase
         .from('users')
         .select('role, group_id')
         .eq('id', adminId)
         .single();
 
+      console.log('🔍 [API ANTICIPOS] Resultado admin:', { adminUser, adminError });
+
+      if (adminError) {
+        console.error('❌ [API ANTICIPOS] Error al buscar admin:', adminError);
+        return NextResponse.json({ success: false, error: `Error al buscar admin: ${adminError.message}` }, { status: 500 });
+      }
+
       if (!adminUser) {
+        console.error('❌ [API ANTICIPOS] Admin no encontrado con ID:', adminId);
         return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
       }
 
