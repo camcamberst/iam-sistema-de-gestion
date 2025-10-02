@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { getCalculatorDate } from '@/utils/calculator-dates';
 
 interface User {
@@ -108,14 +108,14 @@ export default function AdminModelCalculator({
     load();
   }, [modelId, adminId, modelName]);
 
-  // Polling para sincronización en tiempo real
+  // Polling optimizado para sincronización en tiempo real (solo valores)
   useEffect(() => {
     if (!user) return;
 
     const interval = setInterval(async () => {
       try {
         console.log('🔄 [ADMIN-MODEL-CALCULATOR] Polling for updates...');
-        await loadCalculatorConfig(modelId);
+        await loadModelValuesOnly(modelId);
       } catch (error) {
         console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error in polling:', error);
       }
@@ -123,6 +123,43 @@ export default function AdminModelCalculator({
 
     return () => clearInterval(interval);
   }, [user, modelId]);
+
+  // Función optimizada para cargar solo valores (sin parpadeo)
+  const loadModelValuesOnly = async (userId: string) => {
+    try {
+      console.log('🔍 [ADMIN-MODEL-CALCULATOR] Loading values only for userId:', userId);
+      
+      // Solo cargar valores guardados, no toda la configuración
+      const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+      const savedJson = await savedResp.json();
+      
+      if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+        const savedValues: Record<string, string> = {};
+        savedJson.data.forEach((item: any) => {
+          savedValues[item.platform_id] = item.value.toString();
+        });
+        
+        // Solo actualizar si los valores han cambiado
+        const currentValues = JSON.stringify(inputValues);
+        const newValues = JSON.stringify(savedValues);
+        
+        if (currentValues !== newValues) {
+          console.log('🔄 [ADMIN-MODEL-CALCULATOR] Values updated from server');
+          setInputValues(savedValues);
+          
+          // Actualizar plataformas con valores guardados
+          setPlatforms(prev => prev.map(p => ({
+            ...p,
+            value: parseFloat(savedValues[p.id]) || 0
+          })));
+          
+          setLastSaved(new Date());
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error loading values only:', error);
+    }
+  };
 
   const loadCalculatorConfig = async (userId: string) => {
     try {
@@ -217,95 +254,6 @@ export default function AdminModelCalculator({
     ));
   };
 
-  const calculateResults = () => {
-    if (!rates) return;
-
-    const enabledPlatforms = platforms.filter(p => p.enabled && p.value > 0);
-    if (enabledPlatforms.length === 0) {
-      setResult(null);
-      return;
-    }
-
-    const perPlatform = enabledPlatforms.map(platform => {
-      let usdBruto = 0;
-      let usdModelo = 0;
-
-      // Aplicar fórmulas específicas por plataforma
-      if (platform.currency === 'EUR') {
-        if (platform.id === 'big7') {
-          usdBruto = platform.value * rates.eur_usd;
-          usdModelo = usdBruto * 0.84;
-        } else if (platform.id === 'mondo') {
-          usdBruto = platform.value * rates.eur_usd;
-          usdModelo = usdBruto * 0.78;
-        } else {
-          usdBruto = platform.value * rates.eur_usd;
-          usdModelo = usdBruto;
-        }
-      } else if (platform.currency === 'GBP') {
-        if (platform.id === 'aw') {
-          usdBruto = platform.value * rates.gbp_usd;
-          usdModelo = usdBruto * 0.677;
-        } else {
-          usdBruto = platform.value * rates.gbp_usd;
-          usdModelo = usdBruto;
-        }
-      } else if (platform.currency === 'USD') {
-        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-          usdBruto = platform.value;
-          usdModelo = platform.value * 0.75;
-        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-          usdBruto = platform.value;
-          usdModelo = platform.value * 0.05;
-        } else if (platform.id === 'dxlive') {
-          usdBruto = platform.value;
-          usdModelo = platform.value * 0.60;
-        } else if (platform.id === 'secretfriends') {
-          usdBruto = platform.value;
-          usdModelo = platform.value * 0.5;
-        } else if (platform.id === 'superfoon') {
-          usdBruto = platform.value;
-          usdModelo = platform.value;
-        } else {
-          usdBruto = platform.value;
-          usdModelo = platform.value;
-        }
-      }
-
-      // Aplicar porcentaje de la modelo
-      usdModelo = usdModelo * (platform.percentage / 100);
-      const copModelo = usdModelo * rates.usd_cop;
-
-      return {
-        platformId: platform.id,
-        usdBruto,
-        usdModelo,
-        copModelo
-      };
-    });
-
-    const totalUsdBruto = perPlatform.reduce((sum, p) => sum + p.usdBruto, 0);
-    const totalUsdModelo = perPlatform.reduce((sum, p) => sum + p.usdModelo, 0);
-    const totalCopModelo = perPlatform.reduce((sum, p) => sum + p.copModelo, 0);
-
-    // Calcular cuota mínima
-    const cuotaMinima = 470;
-    const cuotaMinimaAlert = {
-      below: totalUsdModelo < cuotaMinima,
-      percentToReach: totalUsdModelo < cuotaMinima ? ((cuotaMinima - totalUsdModelo) / cuotaMinima) * 100 : 0
-    };
-
-    const anticipoMaxCop = totalCopModelo * 0.9;
-
-    setResult({
-      perPlatform,
-      totalUsdBruto,
-      totalUsdModelo,
-      totalCopModelo,
-      cuotaMinimaAlert,
-      anticipoMaxCop
-    });
-  };
 
   const saveValues = async () => {
     if (!user) return;
@@ -384,10 +332,100 @@ export default function AdminModelCalculator({
     };
   }, [ENABLE_AUTOSAVE, user?.id, periodDate, platforms]);
 
-  // Recalcular cuando cambian las plataformas
-  useEffect(() => {
-    calculateResults();
+  // Optimizar cálculos con useMemo para evitar parpadeo
+  const calculatedResults = useMemo(() => {
+    if (!rates) return null;
+
+    const enabledPlatforms = platforms.filter(p => p.enabled && p.value > 0);
+    if (enabledPlatforms.length === 0) {
+      return null;
+    }
+
+    const perPlatform = enabledPlatforms.map(platform => {
+      let usdBruto = 0;
+      let usdModelo = 0;
+
+      // Aplicar fórmulas específicas por plataforma
+      if (platform.currency === 'EUR') {
+        if (platform.id === 'big7') {
+          usdBruto = platform.value * rates.eur_usd;
+          usdModelo = usdBruto * 0.84;
+        } else if (platform.id === 'mondo') {
+          usdBruto = platform.value * rates.eur_usd;
+          usdModelo = usdBruto * 0.78;
+        } else {
+          usdBruto = platform.value * rates.eur_usd;
+          usdModelo = usdBruto;
+        }
+      } else if (platform.currency === 'GBP') {
+        if (platform.id === 'aw') {
+          usdBruto = platform.value * rates.gbp_usd;
+          usdModelo = usdBruto * 0.677;
+        } else {
+          usdBruto = platform.value * rates.gbp_usd;
+          usdModelo = usdBruto;
+        }
+      } else if (platform.currency === 'USD') {
+        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+          usdBruto = platform.value;
+          usdModelo = platform.value * 0.75;
+        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+          usdBruto = platform.value;
+          usdModelo = platform.value * 0.05;
+        } else if (platform.id === 'dxlive') {
+          usdBruto = platform.value;
+          usdModelo = platform.value * 0.60;
+        } else if (platform.id === 'secretfriends') {
+          usdBruto = platform.value;
+          usdModelo = platform.value * 0.5;
+        } else if (platform.id === 'superfoon') {
+          usdBruto = platform.value;
+          usdModelo = platform.value;
+        } else {
+          usdBruto = platform.value;
+          usdModelo = platform.value;
+        }
+      }
+
+      // Aplicar porcentaje de la modelo
+      usdModelo = usdModelo * (platform.percentage / 100);
+      const copModelo = usdModelo * rates.usd_cop;
+
+      return {
+        platformId: platform.id,
+        usdBruto,
+        usdModelo,
+        copModelo
+      };
+    });
+
+    const totalUsdBruto = perPlatform.reduce((sum, p) => sum + p.usdBruto, 0);
+    const totalUsdModelo = perPlatform.reduce((sum, p) => sum + p.usdModelo, 0);
+    const totalCopModelo = perPlatform.reduce((sum, p) => sum + p.copModelo, 0);
+
+    // Calcular cuota mínima
+    const cuotaMinima = 470;
+    const cuotaMinimaAlert = {
+      below: totalUsdModelo < cuotaMinima,
+      percentToReach: totalUsdModelo < cuotaMinima ? ((cuotaMinima - totalUsdModelo) / cuotaMinima) * 100 : 0
+    };
+
+    const anticipoMaxCop = totalCopModelo * 0.9;
+
+    return {
+      perPlatform,
+      totalUsdBruto,
+      totalUsdModelo,
+      totalCopModelo,
+      cuotaMinimaAlert,
+      anticipoMaxCop
+    };
   }, [platforms, rates]);
+
+  // Actualizar resultado cuando cambian los cálculos
+  useEffect(() => {
+    setResult(calculatedResults);
+  }, [calculatedResults]);
 
   if (loading) {
     return (
