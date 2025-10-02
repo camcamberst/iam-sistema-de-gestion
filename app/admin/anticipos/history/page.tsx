@@ -37,6 +37,10 @@ interface Anticipo {
     name: string;
     email: string;
     group_id?: string;
+    group?: {
+      id: string;
+      name: string;
+    };
   };
   period: {
     id: string;
@@ -629,6 +633,10 @@ export default function HistorialAnticiposPage() {
                         <h3 className="text-base font-semibold text-gray-900">
                           {anticipo.model.name}
                         </h3>
+                        <div className="text-xs text-gray-500 mt-1">
+                          <span className="font-medium">Email:</span> {anticipo.model.email} | 
+                          <span className="font-medium ml-1">Grupo:</span> {anticipo.model.group?.name || 'Sin grupo'}
+                        </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="text-right">
