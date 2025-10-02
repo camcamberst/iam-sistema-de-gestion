@@ -45,8 +45,11 @@ export default function MiHistorialPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [anticipos, setAnticipos] = useState<Anticipo[]>([]);
+  const [allAnticipos, setAllAnticipos] = useState<Anticipo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [totalRealizado, setTotalRealizado] = useState(0);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
+  const [availablePeriods, setAvailablePeriods] = useState<Array<{key: string, label: string}>>([]);
 
   const router = useRouter();
   const supabase = createClient(
@@ -96,13 +99,14 @@ export default function MiHistorialPage() {
       
       if (data.success) {
         const anticiposRealizados = data.data || [];
-        setAnticipos(anticiposRealizados);
+        setAllAnticipos(anticiposRealizados);
         
-        // Calcular total realizado
-        const total = anticiposRealizados.reduce((sum: number, anticipo: Anticipo) => 
-          sum + anticipo.monto_solicitado, 0
-        );
-        setTotalRealizado(total);
+        // Generar períodos disponibles
+        const periods = generateAvailablePeriods(anticiposRealizados);
+        setAvailablePeriods(periods);
+        
+        // Filtrar por período actual por defecto
+        filterAnticiposByPeriod(anticiposRealizados, 'current');
       } else {
         setError(data.error || 'Error al cargar historial');
       }
@@ -110,6 +114,93 @@ export default function MiHistorialPage() {
       console.error('Error loading anticipos:', error);
       setError('Error al cargar historial');
     }
+  };
+
+  const generateAvailablePeriods = (anticiposData: Anticipo[]) => {
+    const periodMap = new Map<string, string>();
+    
+    // Agregar período actual
+    periodMap.set('current', 'Período Actual');
+    
+    // Extraer períodos únicos de los anticipos
+    anticiposData.forEach(anticipo => {
+      if (anticipo.period?.start_date) {
+        const periodKey = anticipo.period.start_date;
+        const periodLabel = formatPeriodLabel(anticipo.period.start_date, anticipo.period.end_date);
+        periodMap.set(periodKey, periodLabel);
+      }
+    });
+    
+    // Convertir a array y ordenar por fecha (más reciente primero)
+    const periods = Array.from(periodMap.entries())
+      .map(([key, label]) => ({ key, label }))
+      .sort((a, b) => {
+        if (a.key === 'current') return -1;
+        if (b.key === 'current') return 1;
+        return new Date(b.key).getTime() - new Date(a.key).getTime();
+      });
+    
+    return periods;
+  };
+
+  const formatPeriodLabel = (startDate: string, endDate: string) => {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    
+    if (start.getMonth() === end.getMonth()) {
+      return `${start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })} - Período ${start.getDate() <= 15 ? '1' : '2'}`;
+    }
+    
+    return `${start.toLocaleDateString('es-CO', { month: 'short' })} - ${end.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })}`;
+  };
+
+  const filterAnticiposByPeriod = (anticiposData: Anticipo[], periodKey: string) => {
+    let filteredAnticipos: Anticipo[];
+    
+    if (periodKey === 'current') {
+      // Filtrar por período actual (último período)
+      const currentDate = new Date();
+      const currentMonth = currentDate.getMonth();
+      const currentYear = currentDate.getFullYear();
+      const currentDay = currentDate.getDate();
+      
+      filteredAnticipos = anticiposData.filter(anticipo => {
+        if (!anticipo.period?.start_date) return false;
+        
+        const anticipoDate = new Date(anticipo.period.start_date);
+        const anticipoMonth = anticipoDate.getMonth();
+        const anticipoYear = anticipoDate.getFullYear();
+        const anticipoDay = anticipoDate.getDate();
+        
+        // Mismo mes y año
+        if (anticipoMonth === currentMonth && anticipoYear === currentYear) {
+          // Verificar si está en el período correcto (1-15 o 16-31)
+          const isCurrentPeriod1 = currentDay <= 15 && anticipoDay <= 15;
+          const isCurrentPeriod2 = currentDay > 15 && anticipoDay > 15;
+          return isCurrentPeriod1 || isCurrentPeriod2;
+        }
+        
+        return false;
+      });
+    } else {
+      // Filtrar por período específico
+      filteredAnticipos = anticiposData.filter(anticipo => 
+        anticipo.period?.start_date === periodKey
+      );
+    }
+    
+    setAnticipos(filteredAnticipos);
+    
+    // Calcular total realizado
+    const total = filteredAnticipos.reduce((sum: number, anticipo: Anticipo) => 
+      sum + anticipo.monto_solicitado, 0
+    );
+    setTotalRealizado(total);
+  };
+
+  const handlePeriodChange = (periodKey: string) => {
+    setSelectedPeriod(periodKey);
+    filterAnticiposByPeriod(allAnticipos, periodKey);
   };
 
   // Agrupar anticipos por período (start_date) y ordenarlos desc
@@ -174,8 +265,32 @@ export default function MiHistorialPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Mi Historial</h1>
-          <p className="text-gray-600">Anticipos realizados y pagados</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-2">Mi Historial</h1>
+              <p className="text-gray-600">Anticipos realizados y pagados</p>
+            </div>
+            
+            {/* Filtro por Período - Apple Style */}
+            <div className="relative">
+              <select
+                value={selectedPeriod}
+                onChange={(e) => handlePeriodChange(e.target.value)}
+                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-colors duration-200 min-w-[200px]"
+              >
+                {availablePeriods.map((period) => (
+                  <option key={period.key} value={period.key}>
+                    {period.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Error Message */}
