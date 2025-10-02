@@ -454,8 +454,8 @@ export default function AdminModelCalculator({
           </div>
         )}
 
-        {/* Calculadora */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        {/* Calculadora - REPLICAR ESTRUCTURA EXACTA DE LA MODELO */}
+        <div className="apple-card">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Calculadora de Ingresos</h2>
           
           {platforms.length === 0 ? (
@@ -469,79 +469,288 @@ export default function AdminModelCalculator({
               <p className="text-gray-500">Tu administrador aún no ha configurado las plataformas para tu calculadora.</p>
             </div>
           ) : (
-            <div className="space-y-4">
-              {platforms.map((platform) => (
-                <div key={platform.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      checked={platform.enabled}
-                      onChange={(e) => {
-                        setPlatforms(prev => prev.map(p => 
-                          p.id === platform.id ? { ...p, enabled: e.target.checked } : p
-                        ));
-                      }}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                    />
-                    <span className="font-medium text-gray-900">{platform.name}</span>
-                  </div>
-                  
-                  {platform.enabled && (
-                    <div className="flex items-center space-x-2">
-                      <input
-                        type="text"
-                        value={inputValues[platform.id] || ''}
-                        onChange={(e) => handleInputChange(platform.id, e.target.value)}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="0"
-                      />
-                      <span className="text-sm text-gray-500">{platform.currency}</span>
-                      <span className="text-sm text-gray-500">({platform.percentage}%)</span>
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b border-gray-200">
+                    <th className="text-left py-3 px-3 text-sm font-medium text-gray-700">PLATAFORMAS</th>
+                    <th className="text-left py-3 px-3 text-sm font-medium text-gray-700">VALORES</th>
+                    <th className="text-left py-3 px-3 text-sm font-medium text-gray-700">DÓLARES</th>
+                    <th className="text-left py-3 px-3 text-sm font-medium text-gray-700">COP MODELO</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {platforms.map((platform) => {
+                    // Calcular USD modelo usando fórmulas específicas + porcentaje
+                    let usdModelo = 0;
+                    if (platform.currency === 'EUR') {
+                      if (platform.id === 'big7') {
+                        usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.84;
+                      } else if (platform.id === 'mondo') {
+                        usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.78;
+                      } else {
+                        usdModelo = platform.value * (rates?.eur_usd || 1.01);
+                      }
+                    } else if (platform.currency === 'GBP') {
+                      if (platform.id === 'aw') {
+                        usdModelo = (platform.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                      } else {
+                        usdModelo = platform.value * (rates?.gbp_usd || 1.20);
+                      }
+                    } else if (platform.currency === 'USD') {
+                      if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                        usdModelo = platform.value * 0.75;
+                      } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                        usdModelo = platform.value * 0.05;
+                      } else if (platform.id === 'dxlive') {
+                        usdModelo = platform.value * 0.60;
+                      } else if (platform.id === 'secretfriends') {
+                        usdModelo = platform.value * 0.5;
+                      } else if (platform.id === 'superfoon') {
+                        usdModelo = platform.value;
+                      } else {
+                        usdModelo = platform.value;
+                      }
+                    }
+                    
+                    // Aplicar porcentaje de la modelo
+                    usdModelo = usdModelo * (platform.percentage / 100);
+                    const copModelo = usdModelo * (rates?.usd_cop || 3900);
+
+                    return (
+                      <tr key={platform.id} className="border-b border-gray-100">
+                        <td className="py-3 px-3">
+                          <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
+                          <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="relative">
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={inputValues[platform.id] ?? ''}
+                              onChange={(e) => {
+                                const raw = e.target.value;
+                                const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                const normalized = cleaned.replace(',', '.');
+                                const parts = normalized.split('.');
+                                const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                setInputValues(prev => ({ ...prev, [platform.id]: safeNormalized }));
+
+                                const numeric = Number.parseFloat(safeNormalized);
+                                const value = Number.isFinite(numeric) ? numeric : 0;
+                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value } : p));
+                              }}
+                              style={{
+                                width: '112px',
+                                height: '32px',
+                                border: '1px solid #d1d5db',
+                                borderRadius: '6px',
+                                padding: '4px 8px',
+                                fontSize: '14px',
+                                backgroundColor: 'white'
+                              }}
+                              placeholder="0.00"
+                            />
+                            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
+                              <span className="text-gray-500 text-xs">
+                                {platform.currency || 'USD'}
+                              </span>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="text-gray-600 font-medium text-sm">
+                            ${usdModelo.toFixed(2)} USD
+                          </div>
+                        </td>
+                        <td className="py-3 px-3">
+                          <div className="text-gray-600 font-medium text-sm">
+                            ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
             </div>
           )}
+        </div>
 
-          {/* Resultados */}
-          {result && (
-            <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Total USD:</span>
-                  <div className="text-lg font-bold text-blue-900">
-                    ${result.totalUsdModelo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Total COP:</span>
-                  <div className="text-lg font-bold text-green-900">
-                    ${result.totalCopModelo.toLocaleString('es-CO')}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-sm font-medium text-gray-700">Anticipo Máximo:</span>
-                  <div className="text-lg font-bold text-purple-900">
-                    ${result.anticipoMaxCop.toLocaleString('es-CO')}
-                  </div>
-                </div>
+        {/* Totales y Alertas - COMPACTO */}
+        <div className="apple-card">
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-sm font-semibold text-gray-900">Totales y Alertas</h3>
+            <button
+              onClick={saveValues}
+              disabled={saving || platforms.filter(p => p.enabled).length === 0}
+              className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+            >
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
+          </div>
+          
+          {/* Totales principales - COMPACTO */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            <div className="text-center p-3 bg-blue-50 rounded-md">
+              <div className="text-xl font-bold text-blue-600 mb-1">
+                ${platforms.reduce((sum, p) => {
+                  // Calcular USD bruto usando fórmulas específicas
+                  let usdBruto = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdBruto = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdBruto = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdBruto = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdBruto = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdBruto = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdBruto = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdBruto = p.value;
+                    } else {
+                      usdBruto = p.value;
+                    }
+                  }
+                  return sum + usdBruto;
+                }, 0).toFixed(2)} USD
               </div>
+              <div className="text-xs text-gray-600">USD Bruto</div>
             </div>
-          )}
-
-          {/* Botón de guardar */}
-          {platforms.length > 0 && (
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={saveValues}
-                disabled={saving}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-              >
-                {saving ? 'Guardando...' : 'Guardar Valores'}
-              </button>
+            <div className="text-center p-3 bg-green-50 rounded-md">
+              <div className="text-xl font-bold text-green-600 mb-1">
+                ${platforms.reduce((sum, p) => {
+                  // Calcular USD modelo usando fórmulas específicas + porcentaje
+                  let usdModelo = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdModelo = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdModelo = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdModelo = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdModelo = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value;
+                    } else {
+                      usdModelo = p.value;
+                    }
+                  }
+                  return sum + (usdModelo * p.percentage / 100);
+                }, 0).toFixed(2)} USD
+              </div>
+              <div className="text-xs text-gray-600">USD Modelo</div>
             </div>
-          )}
+            <div className="text-center p-3 bg-purple-50 rounded-md">
+              <div className="text-xl font-bold text-purple-600 mb-1">
+                ${(platforms.reduce((sum, p) => {
+                  // Calcular USD modelo usando fórmulas específicas + porcentaje
+                  let usdModelo = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdModelo = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdModelo = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdModelo = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdModelo = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value;
+                    } else {
+                      usdModelo = p.value;
+                    }
+                  }
+                  return sum + (usdModelo * p.percentage / 100);
+                }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              </div>
+              <div className="text-xs text-gray-600">COP Modelo</div>
+            </div>
+          </div>
+          
+          {/* 90% de anticipo */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+            <div className="text-sm text-gray-600">
+              <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
+                // Calcular USD modelo usando fórmulas específicas + porcentaje
+                let usdModelo = 0;
+                if (p.currency === 'EUR') {
+                  if (p.id === 'big7') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                  } else if (p.id === 'mondo') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                  } else {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  }
+                } else if (p.currency === 'GBP') {
+                  if (p.id === 'aw') {
+                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                  } else {
+                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                  }
+                } else if (p.currency === 'USD') {
+                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                    usdModelo = p.value * 0.75;
+                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                    usdModelo = p.value * 0.05;
+                  } else if (p.id === 'dxlive') {
+                    usdModelo = p.value * 0.60;
+                  } else if (p.id === 'secretfriends') {
+                    usdModelo = p.value * 0.5;
+                  } else if (p.id === 'superfoon') {
+                    usdModelo = p.value;
+                  } else {
+                    usdModelo = p.value;
+                  }
+                }
+                return sum + (usdModelo * p.percentage / 100);
+              }, 0) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+            </div>
+          </div>
         </div>
       </div>
     </div>
