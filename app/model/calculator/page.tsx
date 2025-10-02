@@ -333,6 +333,9 @@ export default function ModelCalculatorPage() {
     try {
       setSaving(true);
       setError(null);
+      
+      // CRÍTICO: Deshabilitar autosave durante guardado manual
+      console.log('🔒 [CALCULATOR] Disabling autosave during manual save');
 
       const values = platforms.reduce((acc, platform) => {
         if (platform.enabled && platform.value > 0) {
@@ -378,6 +381,9 @@ export default function ModelCalculatorPage() {
       // Actualizar automáticamente después de guardar
       console.log('🔄 [CALCULATOR] Auto-refresh after save triggered');
       await loadCalculatorConfig(user?.id || '');
+      
+      // CRÍTICO: Rehabilitar autosave después del guardado
+      console.log('🔓 [CALCULATOR] Re-enabling autosave after manual save');
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Save error:', err);
       setError(err.message || 'Error al guardar');
@@ -390,6 +396,7 @@ export default function ModelCalculatorPage() {
   useEffect(() => {
     if (!ENABLE_AUTOSAVE) return;
     if (!user) return;
+    if (saving) return; // CRÍTICO: No ejecutar autosave durante guardado manual
     
     // Preparar mapa de valores a guardar
     const enabled = platforms.filter(p => p.enabled && p.value > 0);
