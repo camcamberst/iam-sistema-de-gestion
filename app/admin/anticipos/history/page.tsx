@@ -131,10 +131,15 @@ export default function HistorialAnticiposPage() {
     try {
       console.log('🔍 [CARGAR ANTICIPOS] Cargando anticipos para admin:', adminId);
       
-      const response = await fetch(`/api/anticipos?adminId=${adminId}`);
-      const data = await response.json();
+      const url = `/api/anticipos?adminId=${adminId}`;
+      console.log('🔍 [CARGAR ANTICIPOS] URL:', url);
       
-      console.log('🔍 [CARGAR ANTICIPOS] Respuesta API:', data);
+      const response = await fetch(url);
+      console.log('🔍 [CARGAR ANTICIPOS] Response status:', response.status);
+      console.log('🔍 [CARGAR ANTICIPOS] Response ok:', response.ok);
+      
+      const data = await response.json();
+      console.log('🔍 [CARGAR ANTICIPOS] Respuesta API completa:', data);
       
       if (data.success) {
         const anticiposData = data.data || [];
@@ -146,7 +151,7 @@ export default function HistorialAnticiposPage() {
         setError(data.error || 'Error al cargar historial');
       }
     } catch (error) {
-      console.error('Error loading anticipos:', error);
+      console.error('🔍 [CARGAR ANTICIPOS] Error en fetch:', error);
       setError('Error al cargar historial');
     }
   };
