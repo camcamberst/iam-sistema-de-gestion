@@ -112,7 +112,13 @@ export async function GET(request: NextRequest) {
       }
       
       if (estado && estado !== 'todos') {
-        query = query.eq('estado', estado);
+        // Manejar múltiples estados separados por comas
+        if (estado.includes(',')) {
+          const estados = estado.split(',').map(e => e.trim());
+          query = query.in('estado', estados);
+        } else {
+          query = query.eq('estado', estado);
+        }
       }
 
       const { data: anticipos, error } = await query;
