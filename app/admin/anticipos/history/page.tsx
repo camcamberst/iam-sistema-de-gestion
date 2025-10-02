@@ -47,6 +47,8 @@ interface Anticipo {
 }
 
 export default function HistorialAnticiposPage() {
+  console.log('🔍 [COMPONENT] HistorialAnticiposPage se está ejecutando');
+  
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [anticipos, setAnticipos] = useState<Anticipo[]>([]);
