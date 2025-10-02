@@ -181,14 +181,28 @@ export default function MiHistorialPage() {
     // Abreviaciones de meses
     const monthAbbr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
     
+    console.log('🔍 [FORMAT PERIOD LABEL] Input:', { startDate, endDate });
+    console.log('🔍 [FORMAT PERIOD LABEL] Parsed dates:', { 
+      startMonth: start.getMonth(), 
+      startYear: start.getFullYear(), 
+      startDay: start.getDate(),
+      endMonth: end.getMonth(), 
+      endYear: end.getFullYear(), 
+      endDay: end.getDate()
+    });
+    
     if (start.getMonth() === end.getMonth()) {
       const monthName = monthAbbr[start.getMonth()];
       const year = start.getFullYear();
       const period = start.getDate() <= 15 ? '1' : '2';
-      return `${monthName} ${year} - P${period}`;
+      const label = `${monthName} ${year} - P${period}`;
+      console.log('🔍 [FORMAT PERIOD LABEL] Generated label:', label);
+      return label;
     }
     
-    return `${monthAbbr[start.getMonth()]} - ${monthAbbr[end.getMonth()]} ${end.getFullYear()}`;
+    const label = `${monthAbbr[start.getMonth()]} - ${monthAbbr[end.getMonth()]} ${end.getFullYear()}`;
+    console.log('🔍 [FORMAT PERIOD LABEL] Generated cross-month label:', label);
+    return label;
   };
 
   const filterAnticiposByPeriod = (anticiposData: Anticipo[], periodKey: string) => {
