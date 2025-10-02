@@ -129,12 +129,20 @@ export default function HistorialAnticiposPage() {
 
   const loadAnticipos = async (adminId: string) => {
     try {
+      console.log('🔍 [CARGAR ANTICIPOS] Cargando anticipos para admin:', adminId);
+      
       const response = await fetch(`/api/anticipos?adminId=${adminId}`);
       const data = await response.json();
       
+      console.log('🔍 [CARGAR ANTICIPOS] Respuesta API:', data);
+      
       if (data.success) {
-        setAnticipos(data.data || []);
+        const anticiposData = data.data || [];
+        console.log('🔍 [CARGAR ANTICIPOS] Anticipos cargados:', anticiposData.length);
+        console.log('🔍 [CARGAR ANTICIPOS] Detalles anticipos:', anticiposData);
+        setAnticipos(anticiposData);
       } else {
+        console.error('🔍 [CARGAR ANTICIPOS] Error en API:', data.error);
         setError(data.error || 'Error al cargar historial');
       }
     } catch (error) {
@@ -145,10 +153,14 @@ export default function HistorialAnticiposPage() {
 
   const loadGrupos = async () => {
     try {
+      console.log('🔍 [CARGAR GRUPOS] Iniciando carga de grupos...');
+      
       const { data: gruposData } = await supabase
         .from('groups')
         .select('id, name')
         .order('name');
+      
+      console.log('🔍 [CARGAR GRUPOS] Grupos obtenidos:', gruposData);
       
       if (gruposData) {
         setGrupos(gruposData);
@@ -157,16 +169,21 @@ export default function HistorialAnticiposPage() {
         const modelosPorGrupoData: Record<string, string[]> = {};
         
         for (const grupo of gruposData) {
+          console.log('🔍 [CARGAR GRUPOS] Cargando modelos para grupo:', grupo.name);
+          
           const { data: modelosData } = await supabase
             .from('user_groups')
             .select('user_id')
             .eq('group_id', grupo.id);
+          
+          console.log('🔍 [CARGAR GRUPOS] Modelos del grupo', grupo.name, ':', modelosData);
           
           if (modelosData) {
             modelosPorGrupoData[grupo.id] = modelosData.map(m => m.user_id);
           }
         }
         
+        console.log('🔍 [CARGAR GRUPOS] Modelos por grupo final:', modelosPorGrupoData);
         setModelosPorGrupo(modelosPorGrupoData);
       }
     } catch (error) {
@@ -177,8 +194,15 @@ export default function HistorialAnticiposPage() {
   const applyFilters = () => {
     let filtered = [...anticipos];
 
+    console.log('🔍 [FILTROS] Aplicando filtros:', {
+      totalAnticipos: anticipos.length,
+      filtros: filters,
+      modelosPorGrupo: modelosPorGrupo
+    });
+
     if (filters.estado) {
       filtered = filtered.filter(anticipo => anticipo.estado === filters.estado);
+      console.log('🔍 [FILTROS] Después de estado:', filtered.length);
     }
 
     if (filters.modelo) {
@@ -186,22 +210,39 @@ export default function HistorialAnticiposPage() {
         anticipo.model.name.toLowerCase().includes(filters.modelo.toLowerCase()) ||
         anticipo.model.email.toLowerCase().includes(filters.modelo.toLowerCase())
       );
+      console.log('🔍 [FILTROS] Después de modelo:', filtered.length);
     }
 
     if (filters.periodo) {
       filtered = filtered.filter(anticipo => 
         anticipo.period.name.toLowerCase().includes(filters.periodo.toLowerCase())
       );
+      console.log('🔍 [FILTROS] Después de período:', filtered.length);
     }
 
     if (filters.grupo) {
       // Filtrar por grupo usando los modelos del grupo seleccionado
       const modelosDelGrupo = modelosPorGrupo[filters.grupo] || [];
-      filtered = filtered.filter(anticipo => 
-        modelosDelGrupo.includes(anticipo.model.id)
-      );
+      console.log('🔍 [FILTROS] Modelos del grupo:', {
+        grupoId: filters.grupo,
+        modelosDelGrupo,
+        totalModelos: modelosDelGrupo.length
+      });
+      
+      filtered = filtered.filter(anticipo => {
+        const pertenece = modelosDelGrupo.includes(anticipo.model.id);
+        console.log('🔍 [FILTROS] Anticipo:', {
+          id: anticipo.id,
+          modelId: anticipo.model.id,
+          modelName: anticipo.model.name,
+          pertenece
+        });
+        return pertenece;
+      });
+      console.log('🔍 [FILTROS] Después de grupo:', filtered.length);
     }
 
+    console.log('🔍 [FILTROS] Resultado final:', filtered.length);
     setFilteredAnticipos(filtered);
   };
 
