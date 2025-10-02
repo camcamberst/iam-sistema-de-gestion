@@ -22,8 +22,13 @@ export const canRequestAnticipo = (): AnticipoRestriction => {
   // 🔧 BYPASS TEMPORAL: Activar para pruebas e implementaciones
   const BYPASS_ANTICIPOS = process.env.NEXT_PUBLIC_BYPASS_ANTICIPOS === 'true';
   
-  if (BYPASS_ANTICIPOS) {
+  // 🔧 BYPASS HARDCODED TEMPORAL: Activar inmediatamente para pruebas
+  const BYPASS_HARDCODED = true; // CAMBIAR A false CUANDO SE QUIERA DESACTIVAR
+  
+  if (BYPASS_ANTICIPOS || BYPASS_HARDCODED) {
     console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS ACTIVADO - Restricciones deshabilitadas para pruebas');
+    console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS_ANTICIPOS:', BYPASS_ANTICIPOS);
+    console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS_HARDCODED:', BYPASS_HARDCODED);
     return { allowed: true };
   }
   // Obtener fecha actual en Colombia
