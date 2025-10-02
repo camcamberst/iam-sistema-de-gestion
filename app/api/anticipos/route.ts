@@ -53,29 +53,32 @@ export async function GET(request: NextRequest) {
           .single();
         
         if (adminGroup?.group_id) {
-          // Filtramos anticipos por grupo del admin
-          query = query
-            .select(`
-              *,
-              users!anticipos_model_id_fkey (
-                id,
-                email,
-                group_id
-              )
-            `)
-            .eq('users.group_id', adminGroup.group_id);
+          // Filtramos anticipos por grupo del admin usando una consulta separada
+          const { data: modelIds } = await supabase
+            .from('users')
+            .select('id')
+            .eq('group_id', adminGroup.group_id)
+            .eq('role', 'model');
+          
+          if (modelIds && modelIds.length > 0) {
+            const ids = modelIds.map(m => m.id);
+            query = query.in('model_id', ids);
+          } else {
+            // Si no hay modelos en el grupo, devolver array vacío
+            query = query.eq('id', 'no-exists');
+          }
         }
-      } else if (adminUser.role === 'super_admin') {
-        // Super Admin: ve todos los anticipos
-        query = query.select(`
-          *,
-          users!anticipos_model_id_fkey (
-            id,
-            email,
-            group_id
-          )
-        `);
       }
+      
+      // Aplicar select con joins para ambos roles
+      query = query.select(`
+        *,
+        users!anticipos_model_id_fkey (
+          id,
+          email,
+          group_id
+        )
+      `);
     } else if (modelId) {
       // Modelo: solo sus propios anticipos
       query = query.eq('model_id', modelId);
