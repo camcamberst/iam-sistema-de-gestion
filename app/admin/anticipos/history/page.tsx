@@ -156,9 +156,15 @@ export default function HistorialAnticiposPage() {
       console.log('🔍 [CARGAR ANTICIPOS] Respuesta API completa:', data);
       
       if (data.success) {
-        const anticiposData = data.data || [];
+        const anticiposData = data.anticipos || data.data || [];
         console.log('🔍 [CARGAR ANTICIPOS] Anticipos cargados:', anticiposData.length);
         console.log('🔍 [CARGAR ANTICIPOS] Detalles anticipos:', anticiposData);
+        console.log('🔍 [CARGAR ANTICIPOS] Tipo de anticipos:', typeof anticiposData);
+        console.log('🔍 [CARGAR ANTICIPOS] Es array:', Array.isArray(anticiposData));
+        if (anticiposData && anticiposData.length > 0) {
+          console.log('🔍 [CARGAR ANTICIPOS] Primer anticipo:', anticiposData[0]);
+          console.log('🔍 [CARGAR ANTICIPOS] Estados de anticipos:', anticiposData.map(a => a.estado));
+        }
         setAnticipos(anticiposData);
       } else {
         console.error('🔍 [CARGAR ANTICIPOS] Error en API:', data.error);
