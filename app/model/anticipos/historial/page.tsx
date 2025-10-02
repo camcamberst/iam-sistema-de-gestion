@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 
@@ -112,6 +112,20 @@ export default function MiHistorialPage() {
     }
   };
 
+  // Agrupar anticipos por período (start_date) y ordenarlos desc
+  const groupedByPeriod = useMemo(() => {
+    const groups: Record<string, Anticipo[]> = {};
+    anticipos.forEach(a => {
+      const key = a.period?.start_date || 'sin_periodo';
+      if (!groups[key]) groups[key] = [];
+      groups[key].push(a);
+    });
+    const ordered = Object.keys(groups)
+      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+      .map((k) => [k, groups[k]] as [string, Anticipo[]]);
+    return ordered;
+  }, [anticipos]);
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
@@ -212,30 +226,20 @@ export default function MiHistorialPage() {
             <p className="text-gray-500">Aún no tienes anticipos que hayan sido pagados</p>
           </div>
         ) : (
-          (() => {
-            // Agrupar por período usando start_date
-            const groups: Record<string, Anticipo[]> = {};
-            anticipos.forEach(a => {
-              const key = a.period?.start_date || 'sin_periodo';
-              if (!groups[key]) groups[key] = [];
-              groups[key].push(a);
-            });
-            const orderedKeys = Object.keys(groups).sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
-            return (
-              <div className="space-y-4">
-                {orderedKeys.map(periodKey => (
-                  <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-200">
-                    <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-                      <div className="text-sm font-medium text-gray-900">
-                        {formatPeriod(periodKey, periodKey)}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {groups[periodKey].length} {groups[periodKey].length === 1 ? 'solicitud' : 'solicitudes'}
-                      </div>
-                    </div>
-                    <div className="p-3 space-y-3">
-                      {groups[periodKey].map((anticipo) => (
-                        <div key={anticipo.id} className="bg-gray-50 rounded-lg border border-gray-200 p-3">
+          <div className="space-y-4">
+            {groupedByPeriod.map(([periodKey, items]) => (
+              <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-200">
+                <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                  <div className="text-sm font-medium text-gray-900">
+                    {formatPeriod(periodKey, periodKey)}
+                  </div>
+                  <div className="text-xs text-gray-500">
+                    {items.length} {items.length === 1 ? 'solicitud' : 'solicitudes'}
+                  </div>
+                </div>
+                <div className="p-3 space-y-3">
+                  {items.map((anticipo) => (
+                    <div key={anticipo.id} className="bg-gray-50 rounded-lg border border-gray-200 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     {/* Primera línea: Monto y Estado */}
@@ -284,13 +288,11 @@ export default function MiHistorialPage() {
                     </svg>
                   </div>
                 </div>
-                      ))}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            );
-          })()
+            ))}
+          </div>
         )}
 
         {/* Botones de navegación */}
