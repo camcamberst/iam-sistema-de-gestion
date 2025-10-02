@@ -288,6 +288,7 @@ export default function MiHistorialPage() {
                           </svg>
                         </div>
                       </div>
+                    </div>
                   ))}
                 </div>
               </div>
