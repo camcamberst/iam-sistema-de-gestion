@@ -454,7 +454,7 @@ export default function SolicitarAnticipoPage() {
       setSubmitting(true);
       setError(null);
 
-      const periodDate = new Date().toISOString().split('T')[0];
+      const periodDate = getCalculatorDate();
       const porcentajeSolicitado = calculatePercentage();
 
       const response = await fetch('/api/anticipos', {
