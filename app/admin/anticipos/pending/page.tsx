@@ -16,7 +16,7 @@ interface Anticipo {
   monto_solicitado: number;
   porcentaje_solicitado: number;
   medio_pago: string;
-  estado: 'pendiente' | 'aprobado' | 'rechazado' | 'realizado' | 'cancelado';
+  estado: 'pendiente' | 'aprobado' | 'rechazado' | 'realizado' | 'confirmado' | 'cancelado';
   nombre_beneficiario?: string;
   numero_telefono?: string;
   nombre_titular?: string;
