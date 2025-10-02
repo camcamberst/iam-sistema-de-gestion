@@ -167,11 +167,17 @@ export default function MiHistorialPage() {
     const start = new Date(startDate);
     const end = new Date(endDate);
     
+    // Abreviaciones de meses
+    const monthAbbr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+    
     if (start.getMonth() === end.getMonth()) {
-      return `${start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })} - Período ${start.getDate() <= 15 ? '1' : '2'}`;
+      const monthName = monthAbbr[start.getMonth()];
+      const year = start.getFullYear();
+      const period = start.getDate() <= 15 ? '1' : '2';
+      return `${monthName} ${year} - P${period}`;
     }
     
-    return `${start.toLocaleDateString('es-CO', { month: 'short' })} - ${end.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })}`;
+    return `${monthAbbr[start.getMonth()]} - ${monthAbbr[end.getMonth()]} ${end.getFullYear()}`;
   };
 
   const filterAnticiposByPeriod = (anticiposData: Anticipo[], periodKey: string) => {
@@ -417,38 +423,42 @@ export default function MiHistorialPage() {
                             )}
                           </div>
                           
-                          {/* Segunda línea: Información compacta en una sola línea */}
+                          {/* Segunda línea: Información ultra compacta en una sola línea */}
                           <div className="flex items-center justify-between text-xs text-gray-600">
-                            <div className="flex items-center space-x-4 flex-wrap">
+                            <div className="flex items-center space-x-2 overflow-hidden">
                               {anticipo.nombre_beneficiario && (
-                                <span className="whitespace-nowrap">
-                                  <span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}
+                                <span className="whitespace-nowrap truncate max-w-[120px]">
+                                  <span className="font-medium">B:</span> {anticipo.nombre_beneficiario}
                                 </span>
                               )}
                               <span className="whitespace-nowrap">
-                                <span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}
+                                <span className="font-medium">M:</span> {anticipo.medio_pago.toUpperCase()}
                               </span>
                               {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
                                 anticipo.numero_telefono && (
                                   <span className="whitespace-nowrap">
-                                    <span className="font-medium">Tel:</span> {anticipo.numero_telefono}
+                                    <span className="font-medium">T:</span> {anticipo.numero_telefono}
                                   </span>
                                 )
                               ) : (
                                 anticipo.banco && anticipo.numero_cuenta && (
                                   <>
-                                    <span className="whitespace-nowrap">
-                                      <span className="font-medium">Banco:</span> {anticipo.banco}
+                                    <span className="whitespace-nowrap truncate max-w-[80px]">
+                                      <span className="font-medium">B:</span> {anticipo.banco}
                                     </span>
-                                    <span className="whitespace-nowrap">
-                                      <span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}
+                                    <span className="whitespace-nowrap truncate max-w-[100px]">
+                                      <span className="font-medium">C:</span> {anticipo.numero_cuenta}
                                     </span>
                                   </>
                                 )
                               )}
                             </div>
-                            <span className="text-gray-500 whitespace-nowrap">
-                              {new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO')}
+                            <span className="text-gray-500 whitespace-nowrap text-xs">
+                              {new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO', { 
+                                day: '2-digit', 
+                                month: '2-digit', 
+                                year: '2-digit' 
+                              })}
                             </span>
                           </div>
 
