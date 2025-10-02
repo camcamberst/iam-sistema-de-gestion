@@ -62,6 +62,15 @@ export default function HistorialAnticiposPage() {
   const [grupos, setGrupos] = useState<Array<{id: string, name: string}>>([]);
   const [isGrupoDropdownOpen, setIsGrupoDropdownOpen] = useState(false);
   const [modelosPorGrupo, setModelosPorGrupo] = useState<Record<string, string[]>>({});
+  
+  // Estados para estadísticas dinámicas
+  const [stats, setStats] = useState({
+    totalSolicitudes: 0,
+    realizados: 0,
+    pendientes: 0,
+    totalPagado: 0
+  });
+  const [showPendientes, setShowPendientes] = useState(false);
 
   const router = useRouter();
   const supabase = createClient(
@@ -165,6 +174,7 @@ export default function HistorialAnticiposPage() {
           console.log('🔍 [CARGAR ANTICIPOS] Estados de anticipos:', anticiposData.map((a: any) => a.estado));
         }
         setAnticipos(anticiposData);
+        calculateStats(anticiposData);
       } else {
         console.error('🔍 [CARGAR ANTICIPOS] Error en API:', data.error);
         setError(data.error || 'Error al cargar historial');
@@ -172,6 +182,45 @@ export default function HistorialAnticiposPage() {
     } catch (error) {
       console.error('🔍 [CARGAR ANTICIPOS] Error en fetch:', error);
       setError('Error al cargar historial');
+    }
+  };
+
+  const calculateStats = (anticiposData: Anticipo[]) => {
+    console.log('🔍 [ESTADÍSTICAS] Calculando estadísticas para:', anticiposData.length, 'anticipos');
+    
+    const totalSolicitudes = anticiposData.length;
+    const realizados = anticiposData.filter(a => a.estado === 'realizado' || a.estado === 'confirmado').length;
+    const pendientes = anticiposData.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado').length;
+    const totalPagado = anticiposData
+      .filter(a => a.estado === 'realizado' || a.estado === 'confirmado')
+      .reduce((sum, a) => sum + a.monto_solicitado, 0);
+
+    console.log('🔍 [ESTADÍSTICAS] Resultados:', {
+      totalSolicitudes,
+      realizados,
+      pendientes,
+      totalPagado
+    });
+
+    setStats({
+      totalSolicitudes,
+      realizados,
+      pendientes,
+      totalPagado
+    });
+  };
+
+  const handlePendientesClick = () => {
+    console.log('🔍 [BOTÓN PENDIENTES] Mostrando anticipos pendientes');
+    setShowPendientes(!showPendientes);
+    
+    if (!showPendientes) {
+      // Filtrar solo anticipos pendientes
+      const pendientes = anticipos.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado');
+      setFilteredAnticipos(pendientes);
+    } else {
+      // Volver a aplicar filtros normales
+      applyFilters();
     }
   };
 
@@ -438,20 +487,29 @@ export default function HistorialAnticiposPage() {
         {/* Estadísticas */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <div className="apple-card text-center p-4">
-            <div className="text-2xl font-bold text-blue-600 mb-1">{estadisticas.total}</div>
+            <div className="text-2xl font-bold text-blue-600 mb-1">{stats.totalSolicitudes}</div>
             <div className="text-sm text-gray-600">Total Solicitudes</div>
           </div>
           <div className="apple-card text-center p-4">
-            <div className="text-2xl font-bold text-green-600 mb-1">{estadisticas.realizados}</div>
+            <div className="text-2xl font-bold text-green-600 mb-1">{stats.realizados}</div>
             <div className="text-sm text-gray-600">Realizados</div>
           </div>
-          <div className="apple-card text-center p-4">
-            <div className="text-2xl font-bold text-yellow-600 mb-1">{estadisticas.pendientes}</div>
-            <div className="text-sm text-gray-600">Pendientes</div>
+          <div 
+            className={`apple-card text-center p-4 cursor-pointer transition-all duration-200 ${
+              showPendientes 
+                ? 'bg-yellow-50 border-yellow-200 shadow-md' 
+                : 'hover:bg-gray-50 hover:shadow-sm'
+            }`}
+            onClick={handlePendientesClick}
+          >
+            <div className="text-2xl font-bold text-yellow-600 mb-1">{stats.pendientes}</div>
+            <div className="text-sm text-gray-600">
+              {showPendientes ? 'Ocultar Pendientes' : 'Ver Pendientes'}
+            </div>
           </div>
           <div className="apple-card text-center p-4">
             <div className="text-2xl font-bold text-green-600 mb-1">
-              ${estadisticas.montoRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              ${stats.totalPagado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
             </div>
             <div className="text-sm text-gray-600">Total Pagado (COP)</div>
           </div>
