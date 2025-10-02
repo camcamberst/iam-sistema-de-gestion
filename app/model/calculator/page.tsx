@@ -67,9 +67,9 @@ export default function ModelCalculatorPage() {
     if (typeof window === 'undefined') return;
     const sp = new URLSearchParams(window.location.search);
     const mid = sp.get('modelId');
-    const asAdmin = sp.get('asAdmin');
+    const adminView = sp.get('adminView');
     setQueryModelId(mid);
-    setAdminOverride(Boolean(mid && asAdmin === '1'));
+    setAdminOverride(Boolean(mid && adminView === 'true'));
   }, []);
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
