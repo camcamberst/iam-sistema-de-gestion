@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId y values son requeridos' }, { status: 400 });
     }
 
-    const effectiveDate = periodDate || new Date().toISOString().split('T')[0];
+    const effectiveDate = periodDate || getCalculatorDate();
     console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values });
 
     const rows = Object.entries(values).map(([platformId, value]) => ({
