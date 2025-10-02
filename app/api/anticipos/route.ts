@@ -56,13 +56,10 @@ export async function GET(request: NextRequest) {
 
       console.log('🔍 [API ANTICIPOS] Rol del admin:', adminUser.role);
 
+      // Consulta simplificada para debuggear
       let query = supabase
         .from('anticipos')
-        .select(`
-          *,
-          model:users!anticipos_model_id_fkey(id, name, email, role),
-          period:periods(id, name, start_date, end_date)
-        `)
+        .select('*')
         .order('created_at', { ascending: false });
 
       // Filtrado por rol: Admin solo ve anticipos de su grupo, Super Admin ve todos
