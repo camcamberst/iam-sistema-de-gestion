@@ -331,7 +331,6 @@ export default function MisSolicitudesPage() {
                     {/* Segunda línea: Información compacta */}
                     <div className="flex items-center justify-between text-xs text-gray-600">
                       <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
-                      <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
                       <span className="text-gray-500">{new Date(anticipo.created_at).toLocaleDateString('es-CO')}</span>
                     </div>
 
