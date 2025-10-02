@@ -68,6 +68,7 @@ export default function AdminModelCalculator({
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
+  const [isUserEditing, setIsUserEditing] = useState(false);
 
   // Sistema V2 siempre activo (sin flags de entorno)
   const ENABLE_AUTOSAVE = process.env.NEXT_PUBLIC_CALC_AUTOSAVE === 'true';
@@ -128,6 +129,12 @@ export default function AdminModelCalculator({
   const loadModelValuesOnly = async (userId: string) => {
     try {
       console.log('🔍 [ADMIN-MODEL-CALCULATOR] Loading values only for userId:', userId);
+      
+      // NO cargar valores si el usuario está editando activamente
+      if (isUserEditing) {
+        console.log('⏸️ [ADMIN-MODEL-CALCULATOR] Skipping update - user is editing');
+        return;
+      }
       
       // Solo cargar valores guardados, no toda la configuración
       const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
@@ -241,6 +248,9 @@ export default function AdminModelCalculator({
   };
 
   const handleInputChange = (platformId: string, value: string) => {
+    // Marcar que el usuario está editando
+    setIsUserEditing(true);
+    
     setInputValues(prev => ({
       ...prev,
       [platformId]: value
@@ -252,6 +262,11 @@ export default function AdminModelCalculator({
         ? { ...p, value: parseFloat(value) || 0 }
         : p
     ));
+    
+    // Resetear flag de edición después de un tiempo
+    setTimeout(() => {
+      setIsUserEditing(false);
+    }, 2000); // 2 segundos después de la última edición
   };
 
 
@@ -283,6 +298,7 @@ export default function AdminModelCalculator({
 
       console.log('✅ [ADMIN-MODEL-CALCULATOR] Values saved successfully');
       setLastSaved(new Date());
+      setIsUserEditing(false); // Resetear flag de edición después de guardar
 
     } catch (error) {
       console.error('❌ [ADMIN-MODEL-CALCULATOR] Error saving values:', error);
@@ -320,6 +336,7 @@ export default function AdminModelCalculator({
           console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error guardando automáticamente:', json.error);
         } else {
           setLastSaved(new Date());
+          setIsUserEditing(false); // Resetear flag de edición después de autosave
         }
       } catch (e) {
         console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Excepción en autosave:', e);
