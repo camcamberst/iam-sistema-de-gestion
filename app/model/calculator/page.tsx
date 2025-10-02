@@ -59,7 +59,7 @@ export default function ModelCalculatorPage() {
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
-  // Eliminado: isFirstLoad ya no se necesita
+  const [valuesLoaded, setValuesLoaded] = useState(false);
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   const supabase = createClient(
@@ -252,10 +252,9 @@ export default function ModelCalculatorPage() {
             }
           }
           
-          // Solo cargar valores si no hay valores actuales en los inputs
-          const hasCurrentValues = Object.values(inputValues).some(v => v && parseFloat(v) > 0);
-          if (!hasCurrentValues) {
-            console.log('🔍 [CALCULATOR] No hay valores actuales, cargando valores guardados');
+          // Solo cargar valores si no se han cargado previamente
+          if (!valuesLoaded) {
+            console.log('🔍 [CALCULATOR] Cargando valores guardados por primera vez');
             setPlatforms(prev => prev.map(p => ({
               ...p,
               value: platformToValue[p.id] ?? p.value
@@ -270,8 +269,9 @@ export default function ModelCalculatorPage() {
               }
               return next;
             });
+            setValuesLoaded(true);
           } else {
-            console.log('🔍 [CALCULATOR] Hay valores actuales, no sobrescribiendo');
+            console.log('🔍 [CALCULATOR] Valores ya cargados previamente, no sobrescribiendo');
           }
         }
       } catch (e) {
@@ -371,6 +371,8 @@ export default function ModelCalculatorPage() {
         throw new Error(data.error || 'Error al guardar');
       }
 
+      // Marcar que se han guardado nuevos valores
+      setValuesLoaded(false);
       alert('Valores guardados correctamente');
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Save error:', err);
@@ -457,15 +459,16 @@ export default function ModelCalculatorPage() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-            <button
-              onClick={async () => {
-                console.log('🔄 [MODEL-CALCULATOR] Manual refresh triggered');
-                await loadCalculatorConfig(user?.id || '');
-              }}
-              className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
-            >
-              🔄 Actualizar
-            </button>
+              <button
+                onClick={async () => {
+                  console.log('🔄 [MODEL-CALCULATOR] Manual refresh triggered');
+                  setValuesLoaded(false); // Resetear para permitir recarga
+                  await loadCalculatorConfig(user?.id || '');
+                }}
+                className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+              >
+                🔄 Actualizar
+              </button>
             <button
               onClick={() => window.history.back()}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
@@ -515,6 +518,7 @@ export default function ModelCalculatorPage() {
               <button
                 onClick={() => {
                   if (user?.id) {
+                    setValuesLoaded(false); // Resetear para permitir recarga
                     loadCalculatorConfig(user.id);
                   }
                 }}
