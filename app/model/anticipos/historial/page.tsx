@@ -280,17 +280,38 @@ export default function MiHistorialPage() {
     return period ? period.label : 'Sin períodos disponibles';
   };
 
-  // Agrupar anticipos por período (start_date) y ordenarlos desc
+  // Agrupar anticipos por período corregido y ordenarlos desc
   const groupedByPeriod = useMemo(() => {
     const groups: Record<string, Anticipo[]> = {};
     anticipos.forEach(a => {
-      const key = a.period?.start_date || 'sin_periodo';
-      if (!groups[key]) groups[key] = [];
-      groups[key].push(a);
+      if (!a.period?.start_date) return;
+      
+      // Aplicar la misma corrección de parseo que en el filtrado
+      const correctedDate = new Date(a.period.start_date + 'T00:00:00-05:00');
+      const year = correctedDate.getFullYear();
+      const month = correctedDate.getMonth();
+      const day = correctedDate.getDate();
+      
+      // Generar clave de período corregida
+      const periodNumber = day <= 15 ? '1' : '2';
+      const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
+      
+      console.log('🔍 [AGRUPAR PERÍODOS] Anticipo corregido:', {
+        id: a.id,
+        original_start_date: a.period.start_date,
+        corrected_date: correctedDate.toISOString().split('T')[0],
+        correctedPeriodKey
+      });
+      
+      if (!groups[correctedPeriodKey]) groups[correctedPeriodKey] = [];
+      groups[correctedPeriodKey].push(a);
     });
+    
     const ordered = Object.keys(groups)
-      .sort((a, b) => new Date(b).getTime() - new Date(a).getTime())
+      .sort((a, b) => b.localeCompare(a)) // Ordenar por clave corregida
       .map((k) => [k, groups[k]] as [string, Anticipo[]]);
+    
+    console.log('🔍 [AGRUPAR PERÍODOS] Grupos finales:', ordered);
     return ordered;
   }, [anticipos]);
 
@@ -305,11 +326,24 @@ export default function MiHistorialPage() {
   };
 
   const formatPeriod = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Aplicar corrección de timezone para parseo correcto
+    const start = new Date(startDate + 'T00:00:00-05:00');
+    const end = new Date(endDate + 'T00:00:00-05:00');
+    
+    console.log('🔍 [FORMAT PERIOD] Fechas corregidas:', {
+      original_start: startDate,
+      original_end: endDate,
+      corrected_start: start.toISOString().split('T')[0],
+      corrected_end: end.toISOString().split('T')[0],
+      start_month: start.getMonth(),
+      start_year: start.getFullYear(),
+      start_day: start.getDate()
+    });
     
     if (start.getMonth() === end.getMonth()) {
-      return `${start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })} - Período ${start.getDate() <= 15 ? '1' : '2'}`;
+      const periodNumber = start.getDate() <= 15 ? '1' : '2';
+      const monthName = start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+      return `${monthName} - Período ${periodNumber}`;
     }
     
     return `${start.toLocaleDateString('es-CO', { month: 'short' })} - ${end.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })}`;
