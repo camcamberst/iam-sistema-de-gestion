@@ -224,6 +224,14 @@ export default function HistorialAnticiposPage() {
       modelosPorGrupo: modelosPorGrupo
     });
 
+    // Si no hay filtro de grupo seleccionado, no mostrar resultados
+    if (!filters.grupo) {
+      console.log('🔍 [FILTROS] No hay grupo seleccionado, mostrando 0 resultados');
+      setFilteredAnticipos([]);
+      setTotalAnticipos(0);
+      return;
+    }
+
 
     if (filters.modelo) {
       filtered = filtered.filter(anticipo => 
