@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
       
       const { data: adminUser, error: adminError } = await supabase
         .from('users')
-        .select('role, group_id')
+        .select('role')
         .eq('id', adminId)
         .single();
 
@@ -64,20 +64,39 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false });
 
       // Filtrado por rol: Admin solo ve anticipos de su grupo, Super Admin ve todos
-      if (adminUser.role === 'admin' && adminUser.group_id) {
+      if (adminUser.role === 'admin') {
         // Admin: solo anticipos de modelos de su grupo
-        // Obtener IDs de modelos del grupo
-        const { data: modelIds } = await supabase
-          .from('users')
-          .select('id')
-          .eq('group_id', adminUser.group_id)
-          .eq('role', 'model');
+        // Obtener grupos del admin
+        const { data: adminGroups } = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', adminId);
         
-        if (modelIds && modelIds.length > 0) {
-          const ids = modelIds.map(m => m.id);
-          query = query.in('model_id', ids);
+        if (adminGroups && adminGroups.length > 0) {
+          const groupIds = adminGroups.map(g => g.group_id);
+          
+          // Obtener IDs de modelos de esos grupos
+          const { data: modelIds } = await supabase
+            .from('user_groups')
+            .select(`
+              user_id,
+              users!user_groups_user_id_fkey (
+                id,
+                role
+              )
+            `)
+            .in('group_id', groupIds)
+            .eq('users.role', 'modelo');
+          
+          if (modelIds && modelIds.length > 0) {
+            const ids = modelIds.map(m => m.user_id);
+            query = query.in('model_id', ids);
+          } else {
+            // Si no hay modelos en el grupo, devolver array vacío
+            query = query.eq('id', 'no-exists');
+          }
         } else {
-          // Si no hay modelos en el grupo, devolver array vacío
+          // Si el admin no tiene grupos, devolver array vacío
           query = query.eq('id', 'no-exists');
         }
       }
