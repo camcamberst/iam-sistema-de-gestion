@@ -148,8 +148,18 @@ export default function MiHistorialPage() {
         const periodKey = anticipo.period.start_date;
         const periodLabel = formatPeriodLabel(anticipo.period.start_date, anticipo.period.end_date);
         periodMap.set(periodKey, periodLabel);
+        
+        console.log('🔍 [GENERAR PERÍODOS] Anticipo:', {
+          id: anticipo.id,
+          start_date: anticipo.period.start_date,
+          end_date: anticipo.period.end_date,
+          periodKey,
+          periodLabel
+        });
       }
     });
+    
+    console.log('🔍 [GENERAR PERÍODOS] Períodos generados:', Array.from(periodMap.entries()));
     
     // Convertir a array y ordenar por fecha (más reciente primero)
     const periods = Array.from(periodMap.entries())
@@ -160,6 +170,7 @@ export default function MiHistorialPage() {
         return new Date(b.key).getTime() - new Date(a.key).getTime();
       });
     
+    console.log('🔍 [GENERAR PERÍODOS] Períodos ordenados:', periods);
     return periods;
   };
 
