@@ -366,10 +366,14 @@ export default function ModelCalculatorPage() {
         throw new Error(data.error || 'Error al guardar');
       }
 
-      // Marcar que se han guardado nuevos valores
+      // Marcar que se han guardado nuevos valores y actualizar automáticamente
       setValuesLoaded(false);
       setConfigLoaded(false); // Permitir recarga completa
       alert('Valores guardados correctamente');
+      
+      // Actualizar automáticamente después de guardar
+      console.log('🔄 [CALCULATOR] Auto-refresh after save triggered');
+      await loadCalculatorConfig(user?.id || '');
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Save error:', err);
       setError(err.message || 'Error al guardar');
@@ -455,17 +459,6 @@ export default function ModelCalculatorPage() {
             </p>
           </div>
           <div className="flex items-center space-x-4">
-              <button
-                onClick={async () => {
-                  console.log('🔄 [MODEL-CALCULATOR] Manual refresh triggered');
-                  setValuesLoaded(false); // Resetear para permitir recarga
-                  setConfigLoaded(false); // Resetear para permitir recarga de config
-                  await loadCalculatorConfig(user?.id || '');
-                }}
-                className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
-              >
-                🔄 Actualizar
-              </button>
             <button
               onClick={() => window.history.back()}
               className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
