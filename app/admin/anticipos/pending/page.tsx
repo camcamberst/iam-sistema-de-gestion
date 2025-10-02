@@ -120,17 +120,23 @@ export default function SolicitudesPendientesPage() {
 
   const loadAnticipos = async (adminId: string) => {
     try {
+      console.log('🔍 [ADMIN] Cargando anticipos para admin:', adminId);
       // Cargar tanto pendientes como aprobadas
       const response = await fetch(`/api/anticipos?adminId=${adminId}&estado=pendiente,aprobado`);
       const data = await response.json();
       
+      console.log('🔍 [ADMIN] Respuesta de la API:', data);
+      
       if (data.success) {
-        setAnticipos(data.data || []);
+        const anticiposData = data.anticipos || data.data || [];
+        console.log('🔍 [ADMIN] Anticipos cargados:', anticiposData.length);
+        setAnticipos(anticiposData);
       } else {
+        console.error('❌ [ADMIN] Error en respuesta:', data.error);
         setError(data.error || 'Error al cargar solicitudes');
       }
     } catch (error) {
-      console.error('Error loading anticipos:', error);
+      console.error('❌ [ADMIN] Error loading anticipos:', error);
       setError('Error al cargar solicitudes');
     }
   };
