@@ -163,7 +163,7 @@ export default function HistorialAnticiposPage() {
         console.log('🔍 [CARGAR ANTICIPOS] Es array:', Array.isArray(anticiposData));
         if (anticiposData && anticiposData.length > 0) {
           console.log('🔍 [CARGAR ANTICIPOS] Primer anticipo:', anticiposData[0]);
-          console.log('🔍 [CARGAR ANTICIPOS] Estados de anticipos:', anticiposData.map(a => a.estado));
+          console.log('🔍 [CARGAR ANTICIPOS] Estados de anticipos:', anticiposData.map((a: any) => a.estado));
         }
         setAnticipos(anticiposData);
       } else {
