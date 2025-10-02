@@ -458,6 +458,7 @@ export default function HistorialAnticiposPage() {
                 <option value="aprobado">Aprobado</option>
                 <option value="rechazado">Rechazado</option>
                 <option value="realizado">Realizado</option>
+                <option value="confirmado">Confirmado</option>
                 <option value="cancelado">Cancelado</option>
               </select>
             </div>
