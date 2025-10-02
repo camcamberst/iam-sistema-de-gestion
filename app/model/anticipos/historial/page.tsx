@@ -282,29 +282,41 @@ export default function MiHistorialPage() {
 
   // Agrupar anticipos por período corregido y ordenarlos desc
   const groupedByPeriod = useMemo(() => {
+    if (!anticipos || anticipos.length === 0) {
+      console.log('🔍 [AGRUPAR PERÍODOS] No hay anticipos para agrupar');
+      return [];
+    }
+    
     const groups: Record<string, Anticipo[]> = {};
     anticipos.forEach(a => {
-      if (!a.period?.start_date) return;
+      if (!a.period?.start_date) {
+        console.log('🔍 [AGRUPAR PERÍODOS] Anticipo sin período:', a.id);
+        return;
+      }
       
-      // Aplicar la misma corrección de parseo que en el filtrado
-      const correctedDate = new Date(a.period.start_date + 'T00:00:00-05:00');
-      const year = correctedDate.getFullYear();
-      const month = correctedDate.getMonth();
-      const day = correctedDate.getDate();
-      
-      // Generar clave de período corregida
-      const periodNumber = day <= 15 ? '1' : '2';
-      const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
-      
-      console.log('🔍 [AGRUPAR PERÍODOS] Anticipo corregido:', {
-        id: a.id,
-        original_start_date: a.period.start_date,
-        corrected_date: correctedDate.toISOString().split('T')[0],
-        correctedPeriodKey
-      });
-      
-      if (!groups[correctedPeriodKey]) groups[correctedPeriodKey] = [];
-      groups[correctedPeriodKey].push(a);
+      try {
+        // Aplicar la misma corrección de parseo que en el filtrado
+        const correctedDate = new Date(a.period.start_date + 'T00:00:00-05:00');
+        const year = correctedDate.getFullYear();
+        const month = correctedDate.getMonth();
+        const day = correctedDate.getDate();
+        
+        // Generar clave de período corregida
+        const periodNumber = day <= 15 ? '1' : '2';
+        const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
+        
+        console.log('🔍 [AGRUPAR PERÍODOS] Anticipo corregido:', {
+          id: a.id,
+          original_start_date: a.period.start_date,
+          corrected_date: correctedDate.toISOString().split('T')[0],
+          correctedPeriodKey
+        });
+        
+        if (!groups[correctedPeriodKey]) groups[correctedPeriodKey] = [];
+        groups[correctedPeriodKey].push(a);
+      } catch (error) {
+        console.error('🔍 [AGRUPAR PERÍODOS] Error procesando anticipo:', a.id, error);
+      }
     });
     
     const ordered = Object.keys(groups)
@@ -326,27 +338,32 @@ export default function MiHistorialPage() {
   };
 
   const formatPeriod = (startDate: string, endDate: string) => {
-    // Aplicar corrección de timezone para parseo correcto
-    const start = new Date(startDate + 'T00:00:00-05:00');
-    const end = new Date(endDate + 'T00:00:00-05:00');
-    
-    console.log('🔍 [FORMAT PERIOD] Fechas corregidas:', {
-      original_start: startDate,
-      original_end: endDate,
-      corrected_start: start.toISOString().split('T')[0],
-      corrected_end: end.toISOString().split('T')[0],
-      start_month: start.getMonth(),
-      start_year: start.getFullYear(),
-      start_day: start.getDate()
-    });
-    
-    if (start.getMonth() === end.getMonth()) {
-      const periodNumber = start.getDate() <= 15 ? '1' : '2';
-      const monthName = start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
-      return `${monthName} - Período ${periodNumber}`;
+    try {
+      // Aplicar corrección de timezone para parseo correcto
+      const start = new Date(startDate + 'T00:00:00-05:00');
+      const end = new Date(endDate + 'T00:00:00-05:00');
+      
+      console.log('🔍 [FORMAT PERIOD] Fechas corregidas:', {
+        original_start: startDate,
+        original_end: endDate,
+        corrected_start: start.toISOString().split('T')[0],
+        corrected_end: end.toISOString().split('T')[0],
+        start_month: start.getMonth(),
+        start_year: start.getFullYear(),
+        start_day: start.getDate()
+      });
+      
+      if (start.getMonth() === end.getMonth()) {
+        const periodNumber = start.getDate() <= 15 ? '1' : '2';
+        const monthName = start.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' });
+        return `${monthName} - Período ${periodNumber}`;
+      }
+      
+      return `${start.toLocaleDateString('es-CO', { month: 'short' })} - ${end.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })}`;
+    } catch (error) {
+      console.error('🔍 [FORMAT PERIOD] Error formateando período:', error);
+      return 'Período no disponible';
     }
-    
-    return `${start.toLocaleDateString('es-CO', { month: 'short' })} - ${end.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })}`;
   };
 
   if (loading) {
@@ -479,7 +496,10 @@ export default function MiHistorialPage() {
               <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-200">
                 <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
                   <div className="text-sm font-medium text-gray-900">
-                    {formatPeriod(periodKey, periodKey)}
+                    {items.length > 0 && items[0].period ? 
+                      formatPeriod(items[0].period.start_date, items[0].period.end_date) : 
+                      'Período no disponible'
+                    }
                   </div>
                   <div className="text-xs text-gray-500">
                     {items.length} {items.length === 1 ? 'solicitud' : 'solicitudes'}
