@@ -61,6 +61,7 @@ export default function ModelCalculatorPage() {
   const [saving, setSaving] = useState(false);
   const [adminOverride, setAdminOverride] = useState(false);
   const [queryModelId, setQueryModelId] = useState<string | null>(null);
+  const [isFirstLoad, setIsFirstLoad] = useState(true);
   const router = useRouter();
   // Evitar useSearchParams para no requerir Suspense durante pre-render
   useEffect(() => {
@@ -251,42 +252,49 @@ export default function ModelCalculatorPage() {
         }, {} as Record<string, string>)
       );
 
-      // Cargar valores guardados previamente (solo sistema V2)
-      try {
-        console.log('🔍 [CALCULATOR] Loading saved values - V2 system only');
-        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
-        const savedJson = await savedResp.json();
-        console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
-        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
-          const platformToValue: Record<string, number> = {};
-          for (const row of savedJson.data) {
-            if (row && row.platform_id) {
-              const parsed = Number.parseFloat(String(row.value));
-              platformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
-            }
-          }
-          setPlatforms(prev => prev.map(p => ({
-            ...p,
-            value: platformToValue[p.id] ?? p.value
-          })));
-          setInputValues(prev => {
-            const next: Record<string, string> = { ...prev };
-            for (const p of enabledPlatforms) {
-              const v = platformToValue[p.id];
-              if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-                next[p.id] = String(v);
+      // Cargar valores guardados previamente (solo sistema V2) - SOLO EN PRIMERA CARGA
+      if (isFirstLoad) {
+        try {
+          console.log('🔍 [CALCULATOR] Loading saved values - V2 system only (FIRST LOAD)');
+          const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+          const savedJson = await savedResp.json();
+          console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
+          if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+            const platformToValue: Record<string, number> = {};
+            for (const row of savedJson.data) {
+              if (row && row.platform_id) {
+                const parsed = Number.parseFloat(String(row.value));
+                platformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
               }
             }
-            return next;
-          });
+            setPlatforms(prev => prev.map(p => ({
+              ...p,
+              value: platformToValue[p.id] ?? p.value
+            })));
+            setInputValues(prev => {
+              const next: Record<string, string> = { ...prev };
+              for (const p of enabledPlatforms) {
+                const v = platformToValue[p.id];
+                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                  next[p.id] = String(v);
+                }
+              }
+              return next;
+            });
+          }
+        } catch (e) {
+          console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
         }
-      } catch (e) {
-        console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
+      } else {
+        console.log('🔍 [CALCULATOR] Skipping saved values load - not first load');
       }
 
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Error:', err);
       setError(err.message || 'Error al cargar configuración');
+    } finally {
+      // Marcar que ya no es la primera carga
+      setIsFirstLoad(false);
     }
   };
 
