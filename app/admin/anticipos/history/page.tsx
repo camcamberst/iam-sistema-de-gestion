@@ -36,6 +36,7 @@ interface Anticipo {
     id: string;
     name: string;
     email: string;
+    group_id?: string;
   };
   period: {
     id: string;
@@ -54,8 +55,11 @@ export default function HistorialAnticiposPage() {
   const [filters, setFilters] = useState({
     estado: '',
     modelo: '',
-    periodo: ''
+    periodo: '',
+    grupo: ''
   });
+  const [grupos, setGrupos] = useState<Array<{id: string, name: string}>>([]);
+  const [isGrupoDropdownOpen, setIsGrupoDropdownOpen] = useState(false);
 
   const router = useRouter();
   const supabase = createClient(
@@ -70,6 +74,22 @@ export default function HistorialAnticiposPage() {
   useEffect(() => {
     applyFilters();
   }, [anticipos, filters]);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (isGrupoDropdownOpen && !target.closest('.grupo-dropdown')) {
+        setIsGrupoDropdownOpen(false);
+      }
+    };
+    if (isGrupoDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isGrupoDropdownOpen]);
 
   const loadUser = async () => {
     try {
@@ -93,6 +113,11 @@ export default function HistorialAnticiposPage() {
 
       setUser(userData);
       await loadAnticipos(userData.id);
+      
+      // Cargar grupos si es super admin
+      if (userData.role === 'super_admin') {
+        await loadGrupos();
+      }
     } catch (error) {
       console.error('Error loading user:', error);
       setError('Error al cargar datos del usuario');
@@ -117,6 +142,22 @@ export default function HistorialAnticiposPage() {
     }
   };
 
+  const loadGrupos = async () => {
+    try {
+      const { data: gruposData } = await supabase
+        .from('groups')
+        .select('id, name')
+        .eq('disabled', false)
+        .order('name');
+      
+      if (gruposData) {
+        setGrupos(gruposData);
+      }
+    } catch (error) {
+      console.error('Error loading grupos:', error);
+    }
+  };
+
   const applyFilters = () => {
     let filtered = [...anticipos];
 
@@ -134,6 +175,12 @@ export default function HistorialAnticiposPage() {
     if (filters.periodo) {
       filtered = filtered.filter(anticipo => 
         anticipo.period.name.toLowerCase().includes(filters.periodo.toLowerCase())
+      );
+    }
+
+    if (filters.grupo) {
+      filtered = filtered.filter(anticipo => 
+        anticipo.model.group_id === filters.grupo
       );
     }
 
@@ -370,6 +417,67 @@ export default function HistorialAnticiposPage() {
                 className="apple-input w-full"
               />
             </div>
+            {user?.role === 'super_admin' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Grupo</label>
+                <div className="relative grupo-dropdown">
+                  <button
+                    type="button"
+                    onClick={() => setIsGrupoDropdownOpen(!isGrupoDropdownOpen)}
+                    className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-all duration-200 text-left flex items-center justify-between"
+                  >
+                    <span className="text-gray-900">
+                      {filters.grupo ? grupos.find(g => g.id === filters.grupo)?.name || 'Seleccionar grupo' : 'Todos los grupos'}
+                    </span>
+                    <svg 
+                      className={`w-4 h-4 transition-transform duration-200 ${isGrupoDropdownOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {isGrupoDropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                      <div className="py-1">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFilters(prev => ({ ...prev, grupo: '' }));
+                            setIsGrupoDropdownOpen(false);
+                          }}
+                          className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150 ${
+                            !filters.grupo 
+                              ? 'bg-blue-50 text-blue-700 font-medium' 
+                              : 'text-gray-900'
+                          }`}
+                        >
+                          Todos los grupos
+                        </button>
+                        {grupos.map((grupo) => (
+                          <button
+                            key={grupo.id}
+                            type="button"
+                            onClick={() => {
+                              setFilters(prev => ({ ...prev, grupo: grupo.id }));
+                              setIsGrupoDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150 ${
+                              filters.grupo === grupo.id 
+                                ? 'bg-blue-50 text-blue-700 font-medium' 
+                                : 'text-gray-900'
+                            }`}
+                          >
+                            {grupo.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
