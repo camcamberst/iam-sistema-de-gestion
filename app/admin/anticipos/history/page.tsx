@@ -60,6 +60,7 @@ export default function HistorialAnticiposPage() {
   });
   const [grupos, setGrupos] = useState<Array<{id: string, name: string}>>([]);
   const [isGrupoDropdownOpen, setIsGrupoDropdownOpen] = useState(false);
+  const [modelosPorGrupo, setModelosPorGrupo] = useState<Record<string, string[]>>({});
 
   const router = useRouter();
   const supabase = createClient(
@@ -147,11 +148,26 @@ export default function HistorialAnticiposPage() {
       const { data: gruposData } = await supabase
         .from('groups')
         .select('id, name')
-        .eq('disabled', false)
         .order('name');
       
       if (gruposData) {
         setGrupos(gruposData);
+        
+        // Cargar modelos por grupo
+        const modelosPorGrupoData: Record<string, string[]> = {};
+        
+        for (const grupo of gruposData) {
+          const { data: modelosData } = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .eq('group_id', grupo.id);
+          
+          if (modelosData) {
+            modelosPorGrupoData[grupo.id] = modelosData.map(m => m.user_id);
+          }
+        }
+        
+        setModelosPorGrupo(modelosPorGrupoData);
       }
     } catch (error) {
       console.error('Error loading grupos:', error);
@@ -179,8 +195,10 @@ export default function HistorialAnticiposPage() {
     }
 
     if (filters.grupo) {
+      // Filtrar por grupo usando los modelos del grupo seleccionado
+      const modelosDelGrupo = modelosPorGrupo[filters.grupo] || [];
       filtered = filtered.filter(anticipo => 
-        anticipo.model.group_id === filters.grupo
+        modelosDelGrupo.includes(anticipo.model.id)
       );
     }
 

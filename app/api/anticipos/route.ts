@@ -60,7 +60,7 @@ export async function GET(request: NextRequest) {
         .from('anticipos')
         .select(`
           *,
-          model:users!anticipos_model_id_fkey(id, name, email, role, group_id),
+          model:users!anticipos_model_id_fkey(id, name, email, role),
           period:periods(id, name, start_date, end_date)
         `)
         .order('created_at', { ascending: false });
@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
         .from('anticipos')
         .select(`
           *,
-          model:users!anticipos_model_id_fkey(id, name, email, role, group_id),
+          model:users!anticipos_model_id_fkey(id, name, email, role),
           period:periods(id, name, start_date, end_date)
         `)
         .eq('model_id', modelId)
