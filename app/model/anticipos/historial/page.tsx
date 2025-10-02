@@ -417,23 +417,39 @@ export default function MiHistorialPage() {
                             )}
                           </div>
                           
-                          {/* Segunda línea: Información compacta con datos de transferencia */}
+                          {/* Segunda línea: Información compacta en una sola línea */}
                           <div className="flex items-center justify-between text-xs text-gray-600">
-                            <div className="flex items-center space-x-3">
-                              {anticipo.nombre_beneficiario && <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>}
-                              <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                            <div className="flex items-center space-x-4 flex-wrap">
+                              {anticipo.nombre_beneficiario && (
+                                <span className="whitespace-nowrap">
+                                  <span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}
+                                </span>
+                              )}
+                              <span className="whitespace-nowrap">
+                                <span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}
+                              </span>
                               {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
-                                anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
+                                anticipo.numero_telefono && (
+                                  <span className="whitespace-nowrap">
+                                    <span className="font-medium">Tel:</span> {anticipo.numero_telefono}
+                                  </span>
+                                )
                               ) : (
                                 anticipo.banco && anticipo.numero_cuenta && (
                                   <>
-                                    <span><span className="font-medium">Banco:</span> {anticipo.banco}</span>
-                                    <span><span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}</span>
+                                    <span className="whitespace-nowrap">
+                                      <span className="font-medium">Banco:</span> {anticipo.banco}
+                                    </span>
+                                    <span className="whitespace-nowrap">
+                                      <span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}
+                                    </span>
                                   </>
                                 )
                               )}
                             </div>
-                            <span className="text-gray-500">{new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO')}</span>
+                            <span className="text-gray-500 whitespace-nowrap">
+                              {new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO')}
+                            </span>
                           </div>
 
                           {/* Comentarios del admin - solo si existen */}
