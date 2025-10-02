@@ -976,7 +976,7 @@ export default function ModelCalculatorPage() {
                         <div className={`font-bold text-sm ${
                           estaPorDebajo ? 'text-red-800' : 'text-green-800'
                         }`}>
-                          {estaPorDebajo ? 'Objetivo básico Pendiente' : 'Objetivo básico Alcanzado'}
+                          {estaPorDebajo ? 'Objetivo Básico Pendiente' : 'Objetivo Básico Alcanzado'}
                         </div>
                         <div className={`text-xs font-medium ${
                           estaPorDebajo ? 'text-red-700' : 'text-green-700'

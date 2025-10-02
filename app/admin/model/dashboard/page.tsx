@@ -247,7 +247,7 @@ export default function ModelDashboard() {
               {/* Barra de alcance de meta (compacta) */}
               <div className="mt-2">
                 <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Alcance de objetivo básico</span>
+                  <span className="text-sm font-medium text-gray-700">Alcance de objetivo Básico</span>
                   <span className="text-sm text-gray-600">
                     {productivityData ? 
                       `$${productivityData.usdModelo.toFixed(2)} / $${productivityData.goalUsd} USD` : 
