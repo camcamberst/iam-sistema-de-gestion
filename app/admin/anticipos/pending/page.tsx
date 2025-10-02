@@ -40,34 +40,6 @@ interface Anticipo {
   };
 }
 
-const renderTransferDetails = (anticipo: Anticipo) => {
-  let details: string[] = [];
-
-  // Siempre mostrar el beneficiario si está disponible
-  if (anticipo.nombre_beneficiario) {
-    details.push(`Beneficiario: ${anticipo.nombre_beneficiario}`);
-  }
-
-  if (anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata') {
-    if (anticipo.numero_telefono) details.push(`Tel: ${anticipo.numero_telefono}`);
-  } else if (anticipo.banco && anticipo.numero_cuenta) {
-    details.push(`Banco: ${anticipo.banco}`);
-    details.push(`Cuenta: ${anticipo.numero_cuenta}`);
-    if (anticipo.tipo_cuenta) details.push(`Tipo: ${anticipo.tipo_cuenta}`);
-    if (anticipo.nombre_titular) details.push(`Titular de la cuenta: ${anticipo.nombre_titular}`);
-    if (anticipo.cedula_titular) details.push(`Cédula: ${anticipo.cedula_titular}`);
-  }
-
-  if (details.length === 0) return null;
-
-  return (
-    <div className="flex flex-wrap gap-x-3 text-xs text-gray-700 mt-1">
-      {details.map((detail, i) => (
-        <span key={i}>{detail}</span>
-      ))}
-    </div>
-  );
-};
 
 export default function SolicitudesPendientesPage() {
   const [user, setUser] = useState<User | null>(null);
@@ -315,7 +287,12 @@ export default function SolicitudesPendientesPage() {
                       <div className="flex items-center justify-between text-xs text-gray-600">
                         <div className="flex items-center space-x-3">
                           <span><span className="font-medium">Medio:</span> {medioPagoInfo.tipo}</span>
-                          <span><span className="font-medium">%:</span> {anticipo.porcentaje_solicitado.toFixed(1)}%</span>
+                          {anticipo.nombre_beneficiario && (
+                            <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>
+                          )}
+                          {anticipo.numero_telefono && (
+                            <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
+                          )}
                         </div>
                         <div className="text-xs text-gray-500">
                           {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
@@ -323,8 +300,6 @@ export default function SolicitudesPendientesPage() {
                       </div>
                     </div>
 
-                    {/* Datos de transferencia */}
-                    {renderTransferDetails(anticipo)}
 
                     {/* Botones de acción compactos */}
                     <div className="ml-2 flex space-x-1">
