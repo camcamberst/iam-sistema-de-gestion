@@ -59,19 +59,9 @@ export default function ModelCalculatorPage() {
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [adminOverride, setAdminOverride] = useState(false);
-  const [queryModelId, setQueryModelId] = useState<string | null>(null);
   const [isFirstLoad, setIsFirstLoad] = useState(true);
   const router = useRouter();
-  // Evitar useSearchParams para no requerir Suspense durante pre-render
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const sp = new URLSearchParams(window.location.search);
-    const mid = sp.get('modelId');
-    const adminView = sp.get('adminView');
-    setQueryModelId(mid);
-    setAdminOverride(Boolean(mid && adminView === 'true'));
-  }, []);
+  // Eliminado: Ya no maneja parámetros de admin
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
@@ -122,17 +112,14 @@ export default function ModelCalculatorPage() {
         };
         setUser(current);
 
-        // Soporte de modo admin: permitir ver calculadora de una modelo específica
-        const isAdmin = current.role === 'admin' || current.role === 'super_admin';
-        const useOverride = Boolean(queryModelId && adminOverride && isAdmin);
-        // Cargar configuración de calculadora del usuario actual o de la modelo seleccionada por admin
-        await loadCalculatorConfig(useOverride ? (queryModelId as string) : current.id);
+        // Solo cargar configuración del usuario actual (modelo)
+        await loadCalculatorConfig(current.id);
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, [queryModelId, adminOverride]);
+  }, []);
 
   const loadCalculatorConfig = async (userId: string) => {
     try {
@@ -169,8 +156,6 @@ export default function ModelCalculatorPage() {
 
       // Cargar configuración desde API v2
       console.log('🔍 [CALCULATOR] Fetching config for userId:', userId);
-      console.log('🔍 [CALCULATOR] Admin override:', adminOverride);
-      console.log('🔍 [CALCULATOR] Query model ID:', queryModelId);
       
       const response = await fetch(`/api/calculator/config-v2?modelId=${userId}`);
       console.log('🔍 [CALCULATOR] Config response status:', response.status);
@@ -360,17 +345,13 @@ export default function ModelCalculatorPage() {
 
       console.log('🔍 [CALCULATOR] Saving values:', values);
       console.log('🔍 [CALCULATOR] Using V2 system for saving');
-      console.log('🔍 [CALCULATOR] Admin override:', adminOverride);
-      console.log('🔍 [CALCULATOR] Query model ID:', queryModelId);
       console.log('🔍 [CALCULATOR] User ID:', user?.id);
 
       const endpoint = '/api/calculator/model-values-v2';
-      // Usar el ID correcto: modelo cuando es admin view, usuario cuando es acceso directo
-      const saveModelId = adminOverride && queryModelId ? queryModelId : user?.id;
-      const payload = { modelId: saveModelId, values, periodDate };
+      // Solo usar el ID del usuario actual (modelo)
+      const payload = { modelId: user?.id, values, periodDate };
       
       console.log('🔍 [CALCULATOR] Using endpoint:', endpoint);
-      console.log('🔍 [CALCULATOR] Save model ID:', saveModelId);
       console.log('🔍 [CALCULATOR] Payload:', payload);
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -414,12 +395,11 @@ export default function ModelCalculatorPage() {
     const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
-        // Usar el ID correcto para autosave también
-        const saveModelId = adminOverride && queryModelId ? queryModelId : user.id;
+        // Autosave solo para el usuario actual (modelo)
         const res = await fetch('/api/calculator/model-values-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: saveModelId, values, periodDate }),
+          body: JSON.stringify({ modelId: user.id, values, periodDate }),
           signal: controller.signal
         });
         const json = await res.json();
@@ -448,8 +428,8 @@ export default function ModelCalculatorPage() {
     );
   }
 
-  const isAdminUser = user?.role === 'admin' || user?.role === 'super_admin';
-  const allowed = Boolean(user && (user.role === 'modelo' || (isAdminUser && queryModelId && adminOverride)));
+  // Solo permitir acceso a modelos
+  const allowed = Boolean(user && user.role === 'modelo');
 
   if (!allowed) {
     return (
@@ -531,9 +511,8 @@ export default function ModelCalculatorPage() {
               <p className="text-gray-500 mb-4">{error}</p>
               <button
                 onClick={() => {
-                  const targetId = (adminOverride && queryModelId) ? (queryModelId as string) : (user ? user.id : null);
-                  if (targetId) {
-                    loadCalculatorConfig(targetId);
+                  if (user?.id) {
+                    loadCalculatorConfig(user.id);
                   }
                 }}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
