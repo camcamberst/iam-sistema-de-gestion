@@ -19,6 +19,13 @@ export interface AnticipoRestriction {
  * @returns Información sobre si está permitido y cuándo será la próxima fecha disponible
  */
 export const canRequestAnticipo = (): AnticipoRestriction => {
+  // 🔧 BYPASS TEMPORAL: Activar para pruebas e implementaciones
+  const BYPASS_ANTICIPOS = process.env.NEXT_PUBLIC_BYPASS_ANTICIPOS === 'true';
+  
+  if (BYPASS_ANTICIPOS) {
+    console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS ACTIVADO - Restricciones deshabilitadas para pruebas');
+    return { allowed: true };
+  }
   // Obtener fecha actual en Colombia
   const now = new Date();
   const colombiaDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Bogota" }));
@@ -91,6 +98,7 @@ export const getRestrictionInfo = () => {
   return {
     currentDate: colombiaDate,
     restriction,
-    timezone: 'America/Bogota'
+    timezone: 'America/Bogota',
+    bypassActive: process.env.NEXT_PUBLIC_BYPASS_ANTICIPOS === 'true'
   };
 };
