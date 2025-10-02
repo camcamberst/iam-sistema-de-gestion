@@ -69,6 +69,7 @@ export default function HistorialAnticiposPage() {
   );
 
   useEffect(() => {
+    console.log('🔍 [USE EFFECT] Ejecutando useEffect inicial');
     loadUser();
   }, []);
 
@@ -94,9 +95,14 @@ export default function HistorialAnticiposPage() {
 
   const loadUser = async () => {
     try {
+      console.log('🔍 [LOAD USER] Iniciando carga de usuario...');
       setLoading(true);
+      
       const { data: auth } = await supabase.auth.getUser();
+      console.log('🔍 [LOAD USER] Auth data:', auth);
+      
       if (!auth?.user) {
+        console.log('🔍 [LOAD USER] No hay usuario autenticado, redirigiendo a login');
         router.push('/login');
         return;
       }
@@ -107,22 +113,28 @@ export default function HistorialAnticiposPage() {
         .eq('id', auth.user.id)
         .single();
 
+      console.log('🔍 [LOAD USER] User data:', userData);
+
       if (!userData || (userData.role !== 'admin' && userData.role !== 'super_admin')) {
+        console.log('🔍 [LOAD USER] Usuario no autorizado, redirigiendo a login');
         router.push('/login');
         return;
       }
 
       setUser(userData);
+      console.log('🔍 [LOAD USER] Usuario establecido, cargando anticipos...');
       await loadAnticipos(userData.id);
       
       // Cargar grupos si es super admin
       if (userData.role === 'super_admin') {
+        console.log('🔍 [LOAD USER] Es super admin, cargando grupos...');
         await loadGrupos();
       }
     } catch (error) {
-      console.error('Error loading user:', error);
+      console.error('🔍 [LOAD USER] Error loading user:', error);
       setError('Error al cargar datos del usuario');
     } finally {
+      console.log('🔍 [LOAD USER] Finalizando carga de usuario');
       setLoading(false);
     }
   };
