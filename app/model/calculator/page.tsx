@@ -167,14 +167,21 @@ export default function ModelCalculatorPage() {
       }
 
       // Cargar configuración desde API v2
+      console.log('🔍 [CALCULATOR] Fetching config for userId:', userId);
+      console.log('🔍 [CALCULATOR] Admin override:', adminOverride);
+      console.log('🔍 [CALCULATOR] Query model ID:', queryModelId);
+      
       const response = await fetch(`/api/calculator/config-v2?modelId=${userId}`);
+      console.log('🔍 [CALCULATOR] Config response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error('Error al cargar configuración');
+        throw new Error(`Error al cargar configuración: ${response.status}`);
       }
 
       const data = await response.json();
       console.log('🔍 [CALCULATOR] Config data:', data);
       console.log('🔍 [CALCULATOR] Platforms received:', data.config?.platforms);
+      console.log('🔍 [CALCULATOR] Config success:', data.success);
 
       if (!data.success) {
         throw new Error(data.error || 'Error al cargar configuración');

@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import { getCalculatorDate } from '@/utils/calculator-dates';
-import AdminModelCalculator from '@/components/AdminModelCalculator';
+import ModelCalculator from '@/components/ModelCalculator';
 
 interface User {
   id: string;
@@ -314,12 +314,16 @@ export default function ViewModelCalculator() {
                        Vista de administrador - Puedes editar los valores ingresados por la modelo
                      </p>
                      
-                     {/* Componente React directo con sincronización en tiempo real */}
+                     {/* Iframe con parámetros corregidos */}
                      <div className="relative">
-                       <AdminModelCalculator 
-                         modelId={selectedModel.id}
-                         adminId={user?.id || ''}
-                         modelName={selectedModel.name}
+                       <iframe
+                         key={selectedModel.id}
+                         src={`/model/calculator?adminView=true&modelId=${selectedModel.id}&adminId=${user?.id}`}
+                         className="w-full rounded-lg border border-gray-200"
+                         style={{ minHeight: '800px' }}
+                         loading="eager"
+                         sandbox="allow-scripts allow-same-origin allow-forms"
+                         title={`Calculadora de ${selectedModel.name}`}
                        />
                      </div>
                    </div>
