@@ -50,6 +50,7 @@ export default function MiHistorialPage() {
   const [totalRealizado, setTotalRealizado] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
   const [availablePeriods, setAvailablePeriods] = useState<Array<{key: string, label: string}>>([]);
+  const [isPeriodDropdownOpen, setIsPeriodDropdownOpen] = useState(false);
 
   const router = useRouter();
   const supabase = createClient(
@@ -60,6 +61,25 @@ export default function MiHistorialPage() {
   useEffect(() => {
     loadUser();
   }, []);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      
+      if (isPeriodDropdownOpen && !target.closest('.period-dropdown')) {
+        setIsPeriodDropdownOpen(false);
+      }
+    };
+
+    if (isPeriodDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isPeriodDropdownOpen]);
 
   const loadUser = async () => {
     try {
@@ -201,6 +221,12 @@ export default function MiHistorialPage() {
   const handlePeriodChange = (periodKey: string) => {
     setSelectedPeriod(periodKey);
     filterAnticiposByPeriod(allAnticipos, periodKey);
+    setIsPeriodDropdownOpen(false);
+  };
+
+  const getSelectedPeriodLabel = () => {
+    const period = availablePeriods.find(p => p.key === selectedPeriod);
+    return period ? period.label : 'Período Actual';
   };
 
   // Agrupar anticipos por período (start_date) y ordenarlos desc
@@ -272,23 +298,45 @@ export default function MiHistorialPage() {
             </div>
             
             {/* Filtro por Período - Apple Style */}
-            <div className="relative">
-              <select
-                value={selectedPeriod}
-                onChange={(e) => handlePeriodChange(e.target.value)}
-                className="appearance-none bg-white border border-gray-200 rounded-lg px-4 py-2 pr-8 text-sm font-medium text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-colors duration-200 min-w-[200px]"
+            <div className="relative period-dropdown">
+              <button
+                type="button"
+                onClick={() => setIsPeriodDropdownOpen(!isPeriodDropdownOpen)}
+                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-all duration-200 text-left flex items-center justify-between min-w-[200px] shadow-sm"
               >
-                {availablePeriods.map((period) => (
-                  <option key={period.key} value={period.key}>
-                    {period.label}
-                  </option>
-                ))}
-              </select>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <span className="text-gray-900 font-medium">
+                  {getSelectedPeriodLabel()}
+                </span>
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-200 ${isPeriodDropdownOpen ? 'rotate-180' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                 </svg>
-              </div>
+              </button>
+              
+              {isPeriodDropdownOpen && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                  <div className="py-1">
+                    {availablePeriods.map((period) => (
+                      <button
+                        key={period.key}
+                        type="button"
+                        onClick={() => handlePeriodChange(period.key)}
+                        className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150 ${
+                          selectedPeriod === period.key 
+                            ? 'bg-blue-50 text-blue-700 font-medium' 
+                            : 'text-gray-900'
+                        }`}
+                      >
+                        {period.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
