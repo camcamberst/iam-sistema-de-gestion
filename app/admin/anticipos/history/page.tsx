@@ -55,7 +55,6 @@ export default function HistorialAnticiposPage() {
   const [filteredAnticipos, setFilteredAnticipos] = useState<Anticipo[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
-    estado: '',
     modelo: '',
     periodo: '',
     grupo: ''
@@ -225,10 +224,6 @@ export default function HistorialAnticiposPage() {
       modelosPorGrupo: modelosPorGrupo
     });
 
-    if (filters.estado) {
-      filtered = filtered.filter(anticipo => anticipo.estado === filters.estado);
-      console.log('🔍 [FILTROS] Después de estado:', filtered.length);
-    }
 
     if (filters.modelo) {
       filtered = filtered.filter(anticipo => 
@@ -459,29 +454,6 @@ export default function HistorialAnticiposPage() {
         <div className="apple-card mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
-              <select
-                value={filters.estado}
-                onChange={(e) => setFilters(prev => ({ ...prev, estado: e.target.value }))}
-                className="bank-select w-full appearance-none px-4 py-3 text-sm"
-                style={{
-                  backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                  backgroundPosition: 'right 12px center',
-                  backgroundRepeat: 'no-repeat',
-                  backgroundSize: '16px',
-                  paddingRight: '40px'
-                }}
-              >
-                <option value="">Todos los estados</option>
-                <option value="pendiente">Pendiente</option>
-                <option value="aprobado">Aprobado</option>
-                <option value="rechazado">Rechazado</option>
-                <option value="realizado">Realizado</option>
-                <option value="confirmado">Confirmado</option>
-                <option value="cancelado">Cancelado</option>
-              </select>
-            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Modelo</label>
               <input
