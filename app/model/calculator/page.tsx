@@ -71,6 +71,10 @@ export default function ModelCalculatorPage() {
   // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
   const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
   
+  // 🔧 FIX: Estado para controlar carga de valores
+  const [valuesLoaded, setValuesLoaded] = useState(false);
+  const [configLoaded, setConfigLoaded] = useState(false);
+  
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [CALCULATOR] System configuration:', {
     ENABLE_AUTOSAVE,
@@ -114,8 +118,11 @@ export default function ModelCalculatorPage() {
         };
         setUser(current);
 
-        // Solo cargar configuración del usuario actual (modelo)
-        await loadCalculatorConfig(current.id);
+        // 🔧 FIX: Solo cargar configuración del usuario actual (modelo) si no se ha cargado antes
+        if (!configLoaded) {
+          await loadCalculatorConfig(current.id);
+          setConfigLoaded(true);
+        }
       } finally {
         setLoading(false);
       }
@@ -124,7 +131,7 @@ export default function ModelCalculatorPage() {
   }, []);
 
   const loadCalculatorConfig = async (userId: string) => {
-    // Prevenir doble carga
+    // 🔧 FIX: Prevenir doble carga usando estado
     if (configLoaded) {
       console.log('🔍 [CALCULATOR] Config already loaded, skipping');
       return;
@@ -132,7 +139,6 @@ export default function ModelCalculatorPage() {
     
     try {
       console.log('🔍 [CALCULATOR] Loading config for userId:', userId);
-      setConfigLoaded(true);
 
       // Código legacy eliminado - ya no hay parámetros de admin
 
@@ -238,8 +244,12 @@ export default function ModelCalculatorPage() {
         console.log('🔍 [CALCULATOR] Loading saved values - V2 system only');
         const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
         const savedJson = await savedResp.json();
-        console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
-        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+      console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
+      
+      // 🔧 FIX: Delay para asegurar que la base de datos se actualice completamente
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
           const platformToValue: Record<string, number> = {};
           for (const row of savedJson.data) {
             if (row && row.platform_id) {
@@ -248,22 +258,25 @@ export default function ModelCalculatorPage() {
             }
           }
           
-          // Cargar valores guardados siempre
-          console.log('🔍 [CALCULATOR] Cargando valores guardados');
-          setPlatforms(prev => prev.map(p => ({
-            ...p,
-            value: platformToValue[p.id] ?? p.value
-          })));
-          setInputValues(prev => {
-            const next: Record<string, string> = { ...prev };
-            for (const p of enabledPlatforms) {
-              const v = platformToValue[p.id];
-              if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-                next[p.id] = String(v);
+          // 🔧 FIX: Cargar valores guardados solo si no se han cargado antes
+          if (!valuesLoaded) {
+            console.log('🔍 [CALCULATOR] Cargando valores guardados');
+            setPlatforms(prev => prev.map(p => ({
+              ...p,
+              value: platformToValue[p.id] ?? p.value
+            })));
+            setInputValues(prev => {
+              const next: Record<string, string> = { ...prev };
+              for (const p of enabledPlatforms) {
+                const v = platformToValue[p.id];
+                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                  next[p.id] = String(v);
+                }
               }
-            }
-            return next;
-          });
+              return next;
+            });
+            setValuesLoaded(true);
+          }
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
