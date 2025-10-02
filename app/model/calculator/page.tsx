@@ -76,7 +76,8 @@ export default function ModelCalculatorPage() {
     const newInputValues: Record<string, string> = {};
     platforms.forEach(p => {
       if (p.enabled) {
-        newInputValues[p.id] = p.value > 0 ? String(p.value) : '';
+        // 🔧 FIX: Permitir valor 0 - solo ocultar si es undefined/null
+        newInputValues[p.id] = (p.value !== undefined && p.value !== null) ? String(p.value) : '';
       }
     });
     setInputValues(prev => ({ ...prev, ...newInputValues }));
@@ -360,7 +361,8 @@ export default function ModelCalculatorPage() {
       console.log('🔒 [CALCULATOR] Disabling autosave during manual save');
 
       const values = platforms.reduce((acc, platform) => {
-        if (platform.enabled && platform.value > 0) {
+        // 🔧 FIX: Permitir guardar valor 0 - solo excluir si es undefined/null
+        if (platform.enabled && platform.value !== undefined && platform.value !== null) {
           acc[platform.id] = platform.value;
         }
         return acc;
