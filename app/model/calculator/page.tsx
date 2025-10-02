@@ -371,6 +371,10 @@ export default function ModelCalculatorPage() {
       setConfigLoaded(false); // Permitir recarga completa
       alert('Valores guardados correctamente');
       
+      // CRÍTICO: Esperar un momento para que el guardado se complete en la BD
+      console.log('🔄 [CALCULATOR] Waiting for database write to complete...');
+      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de delay
+      
       // Actualizar automáticamente después de guardar
       console.log('🔄 [CALCULATOR] Auto-refresh after save triggered');
       await loadCalculatorConfig(user?.id || '');
