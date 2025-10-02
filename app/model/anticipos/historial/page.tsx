@@ -125,8 +125,15 @@ export default function MiHistorialPage() {
         const periods = generateAvailablePeriods(anticiposRealizados);
         setAvailablePeriods(periods);
         
-        // Filtrar por período actual por defecto
-        filterAnticiposByPeriod(anticiposRealizados, 'current');
+        // Seleccionar el primer período real (más reciente)
+        if (periods.length > 0) {
+          const firstPeriod = periods[0];
+          setSelectedPeriod(firstPeriod.key);
+          filterAnticiposByPeriod(anticiposRealizados, firstPeriod.key);
+        } else {
+          setAnticipos([]);
+          setTotalRealizado(0);
+        }
       } else {
         setError(data.error || 'Error al cargar historial');
       }
@@ -139,10 +146,7 @@ export default function MiHistorialPage() {
   const generateAvailablePeriods = (anticiposData: Anticipo[]) => {
     const periodMap = new Map<string, { label: string, count: number }>();
     
-    // Agregar período actual
-    periodMap.set('current', { label: 'Período Actual', count: 0 });
-    
-    // Agrupar anticipos por período real (corrigiendo parseo histórico)
+    // NO agregar período actual - solo períodos con anticipos reales
     anticiposData.forEach(anticipo => {
       if (anticipo.period?.start_date) {
         // Corregir parseo de fecha histórica
@@ -188,11 +192,7 @@ export default function MiHistorialPage() {
         key, 
         label: `${data.label} (${data.count} anticipo${data.count !== 1 ? 's' : ''})` 
       }))
-      .sort((a, b) => {
-        if (a.key === 'current') return -1;
-        if (b.key === 'current') return 1;
-        return b.key.localeCompare(a.key);
-      });
+      .sort((a, b) => b.key.localeCompare(a.key));
     
     console.log('🔍 [GENERAR PERÍODOS] Períodos finales:', periods);
     return periods;
@@ -231,78 +231,33 @@ export default function MiHistorialPage() {
   };
 
   const filterAnticiposByPeriod = (anticiposData: Anticipo[], periodKey: string) => {
-    let filteredAnticipos: Anticipo[];
-    
-    console.log('🔍 [FILTRO PERÍODOS] Filtrando por periodKey:', periodKey);
+    console.log('🔍 [FILTRO PERÍODOS] Filtrando por período específico:', periodKey);
     console.log('🔍 [FILTRO PERÍODOS] Total anticipos disponibles:', anticiposData.length);
     
-    if (periodKey === 'current') {
-      // Filtrar por período actual (último período)
-      const currentDate = new Date();
-      const currentMonth = currentDate.getMonth();
-      const currentYear = currentDate.getFullYear();
-      const currentDay = currentDate.getDate();
+    const filteredAnticipos = anticiposData.filter(anticipo => {
+      if (!anticipo.period?.start_date) return false;
       
-      console.log('🔍 [FILTRO PERÍODOS] Período actual:', { currentMonth, currentYear, currentDay });
+      // Corregir parseo de fecha histórica
+      const correctedDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
+      const year = correctedDate.getFullYear();
+      const month = correctedDate.getMonth();
+      const day = correctedDate.getDate();
       
-      filteredAnticipos = anticiposData.filter(anticipo => {
-        if (!anticipo.period?.start_date) return false;
-        
-        // Parsear fecha en timezone de Colombia para evitar desfases
-        const anticipoDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
-        const anticipoMonth = anticipoDate.getMonth();
-        const anticipoYear = anticipoDate.getFullYear();
-        const anticipoDay = anticipoDate.getDate();
-        
-        console.log('🔍 [FILTRO PERÍODOS] Anticipo:', {
-          id: anticipo.id,
-          start_date: anticipo.period.start_date,
-          anticipoMonth,
-          anticipoYear,
-          anticipoDay
-        });
-        
-        // Mismo mes y año
-        if (anticipoMonth === currentMonth && anticipoYear === currentYear) {
-          // Verificar si está en el período correcto (1-15 o 16-31)
-          const isCurrentPeriod1 = currentDay <= 15 && anticipoDay <= 15;
-          const isCurrentPeriod2 = currentDay > 15 && anticipoDay > 15;
-          const matches = isCurrentPeriod1 || isCurrentPeriod2;
-          console.log('🔍 [FILTRO PERÍODOS] Coincide período actual:', matches);
-          return matches;
-        }
-        
-        return false;
+      // Generar clave de período corregida
+      const periodNumber = day <= 15 ? '1' : '2';
+      const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
+      
+      const matches = correctedPeriodKey === periodKey;
+      console.log('🔍 [FILTRO PERÍODOS] Anticipo corregido:', {
+        id: anticipo.id,
+        original_start_date: anticipo.period.start_date,
+        corrected_date: correctedDate.toISOString().split('T')[0],
+        correctedPeriodKey,
+        periodKey,
+        matches
       });
-    } else {
-      // Filtrar por período específico (usando clave corregida)
-      console.log('🔍 [FILTRO PERÍODOS] Filtrando por período específico:', periodKey);
-      
-      filteredAnticipos = anticiposData.filter(anticipo => {
-        if (!anticipo.period?.start_date) return false;
-        
-        // Corregir parseo de fecha histórica
-        const correctedDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
-        const year = correctedDate.getFullYear();
-        const month = correctedDate.getMonth();
-        const day = correctedDate.getDate();
-        
-        // Generar clave de período corregida
-        const periodNumber = day <= 15 ? '1' : '2';
-        const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
-        
-        const matches = correctedPeriodKey === periodKey;
-        console.log('🔍 [FILTRO PERÍODOS] Anticipo corregido:', {
-          id: anticipo.id,
-          original_start_date: anticipo.period.start_date,
-          corrected_date: correctedDate.toISOString().split('T')[0],
-          correctedPeriodKey,
-          periodKey,
-          matches
-        });
-        return matches;
-      });
-    }
+      return matches;
+    });
     
     console.log('🔍 [FILTRO PERÍODOS] Anticipos filtrados:', filteredAnticipos.length);
     setAnticipos(filteredAnticipos);
@@ -322,7 +277,7 @@ export default function MiHistorialPage() {
 
   const getSelectedPeriodLabel = () => {
     const period = availablePeriods.find(p => p.key === selectedPeriod);
-    return period ? period.label : 'Período Actual';
+    return period ? period.label : 'Sin períodos disponibles';
   };
 
   // Agrupar anticipos por período (start_date) y ordenarlos desc
