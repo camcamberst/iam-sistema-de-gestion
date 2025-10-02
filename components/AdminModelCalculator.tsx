@@ -275,17 +275,26 @@ export default function AdminModelCalculator({
         return acc;
       }, {} as Record<string, number>);
 
+      console.log('💾 [ADMIN-MODEL-CALCULATOR] Saving values:', {
+        modelId,
+        values,
+        periodDate,
+        enabledPlatforms: enabled.length
+      });
+
       const response = await fetch('/api/calculator/model-values-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          modelId: user.id, 
+          modelId: modelId, 
           values, 
           periodDate 
         })
       });
 
       const data = await response.json();
+      console.log('💾 [ADMIN-MODEL-CALCULATOR] Save response:', data);
+      
       if (!data.success) {
         throw new Error(data.error || 'Error al guardar');
       }
@@ -328,7 +337,7 @@ export default function AdminModelCalculator({
         const res = await fetch('/api/calculator/model-values-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: user.id, values, periodDate }),
+          body: JSON.stringify({ modelId: modelId, values, periodDate }),
           signal: controller.signal
         });
         const json = await res.json();
