@@ -72,7 +72,8 @@ export default function AdminModelCalculator({
   const [editingTimeout, setEditingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Sistema V2 siempre activo (sin flags de entorno)
-  const ENABLE_AUTOSAVE = process.env.NEXT_PUBLIC_CALC_AUTOSAVE === 'true';
+  // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
+  const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
   
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [ADMIN-MODEL-CALCULATOR] System configuration:', {
@@ -317,46 +318,46 @@ export default function AdminModelCalculator({
     }
   };
 
-  // Autosave cuando cambian los valores
-  useEffect(() => {
-    if (!ENABLE_AUTOSAVE) return;
-    if (!user) return;
-    
-    const enabled = platforms.filter(p => p.enabled && p.value > 0);
-    const values: Record<string, number> = enabled.reduce((acc, p) => {
-      acc[p.id] = p.value;
-      return acc;
-    }, {} as Record<string, number>);
+  // 🔧 FIX: Autosave deshabilitado para corregir problema de persistencia
+  // useEffect(() => {
+  //   if (!ENABLE_AUTOSAVE) return;
+  //   if (!user) return;
+  //   
+  //   const enabled = platforms.filter(p => p.enabled && p.value > 0);
+  //   const values: Record<string, number> = enabled.reduce((acc, p) => {
+  //     acc[p.id] = p.value;
+  //     return acc;
+  //   }, {} as Record<string, number>);
 
-    const hasAny = Object.keys(values).length > 0;
-    if (!hasAny) return;
+  //   const hasAny = Object.keys(values).length > 0;
+  //   if (!hasAny) return;
 
-    const controller = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch('/api/calculator/model-values-v2', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: modelId, values, periodDate }),
-          signal: controller.signal
-        });
-        const json = await res.json();
-        if (!json.success) {
-          console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error guardando automáticamente:', json.error);
-        } else {
-          setLastSaved(new Date());
-          setIsUserEditing(false); // Resetear flag de edición después de autosave
-        }
-      } catch (e) {
-        console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Excepción en autosave:', e);
-      }
-    }, 800);
+  //   const controller = new AbortController();
+  //   const t = setTimeout(async () => {
+  //     try {
+  //       const res = await fetch('/api/calculator/model-values-v2', {
+  //         method: 'POST',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify({ modelId: modelId, values, periodDate }),
+  //         signal: controller.signal
+  //       });
+  //       const json = await res.json();
+  //       if (!json.success) {
+  //         console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error guardando automáticamente:', json.error);
+  //       } else {
+  //         setLastSaved(new Date());
+  //         setIsUserEditing(false); // Resetear flag de edición después de autosave
+  //       }
+  //     } catch (e) {
+  //       console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Excepción en autosave:', e);
+  //     }
+  //   }, 800);
 
-    return () => {
-      controller.abort();
-      clearTimeout(t);
-    };
-  }, [ENABLE_AUTOSAVE, user?.id, periodDate, platforms]);
+  //   return () => {
+  //     controller.abort();
+  //     clearTimeout(t);
+  //   };
+  // }, [ENABLE_AUTOSAVE, user?.id, periodDate, platforms]);
 
   // Optimizar cálculos con useMemo para evitar parpadeo
   const calculatedResults = useMemo(() => {

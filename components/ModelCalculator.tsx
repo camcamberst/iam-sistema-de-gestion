@@ -71,7 +71,8 @@ export default function ModelCalculator({
   const [saving, setSaving] = useState(false);
 
   // Sistema V2 siempre activo (sin flags de entorno)
-  const ENABLE_AUTOSAVE = process.env.NEXT_PUBLIC_CALC_AUTOSAVE === 'true';
+  // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
+  const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
   
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [MODEL-CALCULATOR] System configuration:', {
@@ -335,43 +336,43 @@ export default function ModelCalculator({
     }
   };
 
-  // Autosave cuando cambian los valores
-  useEffect(() => {
-    if (!ENABLE_AUTOSAVE) return;
-    if (!user) return;
-    
-    const enabled = platforms.filter(p => p.enabled && p.value > 0);
-    const values: Record<string, number> = enabled.reduce((acc, p) => {
-      acc[p.id] = p.value;
-      return acc;
-    }, {} as Record<string, number>);
+  // 🔧 FIX: Autosave deshabilitado para corregir problema de persistencia
+  // useEffect(() => {
+  //   if (!ENABLE_AUTOSAVE) return;
+  //   if (!user) return;
+  //   
+  //   const enabled = platforms.filter(p => p.enabled && p.value > 0);
+  //   const values: Record<string, number> = enabled.reduce((acc, p) => {
+  //     acc[p.id] = p.value;
+  //     return acc;
+  //   }, {} as Record<string, number>);
 
-    const hasAny = Object.keys(values).length > 0;
-    if (!hasAny) return;
+  //   const hasAny = Object.keys(values).length > 0;
+  //   if (!hasAny) return;
 
-    const controller = new AbortController();
-    const t = setTimeout(async () => {
-      try {
-        const res = await fetch('/api/calculator/model-values-v2', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: user.id, values, periodDate }),
-          signal: controller.signal
-        });
-        const json = await res.json();
-        if (!json.success) {
-          console.warn('⚠️ [MODEL-CALCULATOR] Error guardando automáticamente:', json.error);
-        }
-      } catch (e) {
-        console.warn('⚠️ [MODEL-CALCULATOR] Excepción en autosave:', e);
-      }
-    }, 800);
+  //   const controller = new AbortController();
+  //   const t = setTimeout(async () => {
+  //     try {
+  //       const res = await fetch('/api/calculator/model-values-v2', {
+  //         method: 'POST',
+  //         headers: { 'Content-Type': 'application/json' },
+  //         body: JSON.stringify({ modelId: user.id, values, periodDate }),
+  //         signal: controller.signal
+  //       });
+  //       const json = await res.json();
+  //       if (!json.success) {
+  //         console.warn('⚠️ [MODEL-CALCULATOR] Error guardando automáticamente:', json.error);
+  //       }
+  //     } catch (e) {
+  //       console.warn('⚠️ [MODEL-CALCULATOR] Excepción en autosave:', e);
+  //     }
+  //   }, 800);
 
-    return () => {
-      controller.abort();
-      clearTimeout(t);
-    };
-  }, [ENABLE_AUTOSAVE, user?.id, periodDate]);
+  //   return () => {
+  //     controller.abort();
+  //     clearTimeout(t);
+  //   };
+  // }, [ENABLE_AUTOSAVE, user?.id, periodDate]);
 
   // Recalcular cuando cambian las plataformas
   useEffect(() => {
