@@ -71,10 +71,6 @@ export default function ModelCalculatorPage() {
   // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
   const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
   
-  // 🔧 FIX: Estado para controlar carga de valores
-  const [valuesLoaded, setValuesLoaded] = useState(false);
-  const [configLoaded, setConfigLoaded] = useState(false);
-  
   // 🔧 HELPER: Funciones de sincronización bidireccional
   const syncPlatformsToInputs = (platforms: Platform[]) => {
     const newInputValues: Record<string, string> = {};
