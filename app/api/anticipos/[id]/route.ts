@@ -63,7 +63,8 @@ export async function PUT(
       estado, 
       comentarios_admin, 
       comentarios_rechazo,
-      admin_id 
+      admin_id,
+      model_id
     } = body;
 
     // Validaciones
@@ -115,7 +116,7 @@ export async function PUT(
       updateData.realized_by = admin_id;
     } else if (estado === 'confirmado') {
       updateData.confirmed_at = new Date().toISOString();
-      updateData.confirmed_by = admin_id;
+      updateData.confirmed_by = model_id || admin_id;
     } else if (estado === 'cancelado') {
       updateData.cancelled_at = new Date().toISOString();
       updateData.cancelled_by = admin_id;

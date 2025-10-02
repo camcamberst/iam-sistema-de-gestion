@@ -185,7 +185,7 @@ export default function MisSolicitudesPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           estado: 'confirmado',
-          admin_id: user?.id
+          model_id: user?.id
         })
       });
 
