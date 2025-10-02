@@ -183,12 +183,17 @@ export default function MiHistorialPage() {
   const filterAnticiposByPeriod = (anticiposData: Anticipo[], periodKey: string) => {
     let filteredAnticipos: Anticipo[];
     
+    console.log('🔍 [FILTRO PERÍODOS] Filtrando por periodKey:', periodKey);
+    console.log('🔍 [FILTRO PERÍODOS] Total anticipos disponibles:', anticiposData.length);
+    
     if (periodKey === 'current') {
       // Filtrar por período actual (último período)
       const currentDate = new Date();
       const currentMonth = currentDate.getMonth();
       const currentYear = currentDate.getFullYear();
       const currentDay = currentDate.getDate();
+      
+      console.log('🔍 [FILTRO PERÍODOS] Período actual:', { currentMonth, currentYear, currentDay });
       
       filteredAnticipos = anticiposData.filter(anticipo => {
         if (!anticipo.period?.start_date) return false;
@@ -198,23 +203,43 @@ export default function MiHistorialPage() {
         const anticipoYear = anticipoDate.getFullYear();
         const anticipoDay = anticipoDate.getDate();
         
+        console.log('🔍 [FILTRO PERÍODOS] Anticipo:', {
+          id: anticipo.id,
+          start_date: anticipo.period.start_date,
+          anticipoMonth,
+          anticipoYear,
+          anticipoDay
+        });
+        
         // Mismo mes y año
         if (anticipoMonth === currentMonth && anticipoYear === currentYear) {
           // Verificar si está en el período correcto (1-15 o 16-31)
           const isCurrentPeriod1 = currentDay <= 15 && anticipoDay <= 15;
           const isCurrentPeriod2 = currentDay > 15 && anticipoDay > 15;
-          return isCurrentPeriod1 || isCurrentPeriod2;
+          const matches = isCurrentPeriod1 || isCurrentPeriod2;
+          console.log('🔍 [FILTRO PERÍODOS] Coincide período actual:', matches);
+          return matches;
         }
         
         return false;
       });
     } else {
       // Filtrar por período específico
-      filteredAnticipos = anticiposData.filter(anticipo => 
-        anticipo.period?.start_date === periodKey
-      );
+      console.log('🔍 [FILTRO PERÍODOS] Filtrando por período específico:', periodKey);
+      
+      filteredAnticipos = anticiposData.filter(anticipo => {
+        const matches = anticipo.period?.start_date === periodKey;
+        console.log('🔍 [FILTRO PERÍODOS] Anticipo:', {
+          id: anticipo.id,
+          start_date: anticipo.period?.start_date,
+          periodKey,
+          matches
+        });
+        return matches;
+      });
     }
     
+    console.log('🔍 [FILTRO PERÍODOS] Anticipos filtrados:', filteredAnticipos.length);
     setAnticipos(filteredAnticipos);
     
     // Calcular total realizado
@@ -428,26 +453,26 @@ export default function MiHistorialPage() {
                             <div className="flex items-center space-x-2 overflow-hidden">
                               {anticipo.nombre_beneficiario && (
                                 <span className="whitespace-nowrap truncate max-w-[120px]">
-                                  <span className="font-medium">B:</span> {anticipo.nombre_beneficiario}
+                                  <span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}
                                 </span>
                               )}
                               <span className="whitespace-nowrap">
-                                <span className="font-medium">M:</span> {anticipo.medio_pago.toUpperCase()}
+                                <span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}
                               </span>
                               {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
                                 anticipo.numero_telefono && (
                                   <span className="whitespace-nowrap">
-                                    <span className="font-medium">T:</span> {anticipo.numero_telefono}
+                                    <span className="font-medium">Tel:</span> {anticipo.numero_telefono}
                                   </span>
                                 )
                               ) : (
                                 anticipo.banco && anticipo.numero_cuenta && (
                                   <>
                                     <span className="whitespace-nowrap truncate max-w-[80px]">
-                                      <span className="font-medium">B:</span> {anticipo.banco}
+                                      <span className="font-medium">Banco:</span> {anticipo.banco}
                                     </span>
                                     <span className="whitespace-nowrap truncate max-w-[100px]">
-                                      <span className="font-medium">C:</span> {anticipo.numero_cuenta}
+                                      <span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}
                                     </span>
                                   </>
                                 )
