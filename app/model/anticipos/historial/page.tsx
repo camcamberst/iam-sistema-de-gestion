@@ -16,7 +16,7 @@ interface Anticipo {
   monto_solicitado: number;
   porcentaje_solicitado: number;
   medio_pago: string;
-  estado: 'realizado';
+  estado: 'realizado' | 'confirmado';
   comentarios_admin?: string;
   created_at: string;
   realized_at: string;
@@ -90,8 +90,8 @@ export default function MiHistorialPage() {
 
   const loadAnticipos = async (userId: string) => {
     try {
-      // Solo cargar anticipos realizados
-      const response = await fetch(`/api/anticipos?modelId=${userId}&estado=realizado`);
+      // Cargar realizados y confirmados para historial
+      const response = await fetch(`/api/anticipos?modelId=${userId}&estado=realizado,confirmado`);
       const data = await response.json();
       
       if (data.success) {
@@ -202,7 +202,7 @@ export default function MiHistorialPage() {
           </div>
         </div>
 
-        {/* Lista de Anticipos Realizados */}
+        {/* Lista de Anticipos por Período (Realizados y Confirmados) */}
         {anticipos.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 text-center py-8 px-6">
             <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -212,9 +212,30 @@ export default function MiHistorialPage() {
             <p className="text-gray-500">Aún no tienes anticipos que hayan sido pagados</p>
           </div>
         ) : (
-          <div className="space-y-3">
-            {anticipos.map((anticipo) => (
-              <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+          (() => {
+            // Agrupar por período usando start_date
+            const groups: Record<string, Anticipo[]> = {};
+            anticipos.forEach(a => {
+              const key = a.period?.start_date || 'sin_periodo';
+              if (!groups[key]) groups[key] = [];
+              groups[key].push(a);
+            });
+            const orderedKeys = Object.keys(groups).sort((a,b) => new Date(b).getTime() - new Date(a).getTime());
+            return (
+              <div className="space-y-4">
+                {orderedKeys.map(periodKey => (
+                  <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-200">
+                    <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
+                      <div className="text-sm font-medium text-gray-900">
+                        {formatPeriod(periodKey, periodKey)}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {groups[periodKey].length} {groups[periodKey].length === 1 ? 'solicitud' : 'solicitudes'}
+                      </div>
+                    </div>
+                    <div className="p-3 space-y-3">
+                      {groups[periodKey].map((anticipo) => (
+                        <div key={anticipo.id} className="bg-gray-50 rounded-lg border border-gray-200 p-3">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     {/* Primera línea: Monto y Estado */}
@@ -222,9 +243,11 @@ export default function MiHistorialPage() {
                       <h3 className="text-base font-semibold text-gray-900">
                         ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                       </h3>
-                      <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        Realizado
-                      </span>
+                      {anticipo.estado === 'confirmado' ? (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Confirmado</span>
+                      ) : (
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Realizado</span>
+                      )}
                     </div>
                     
                     {/* Segunda línea: Información compacta con datos de transferencia */}
@@ -243,7 +266,7 @@ export default function MiHistorialPage() {
                           )
                         )}
                       </div>
-                      <span className="text-gray-500">{new Date(anticipo.realized_at).toLocaleDateString('es-CO')}</span>
+                      <span className="text-gray-500">{new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO')}</span>
                     </div>
 
                     {/* Comentarios del admin - solo si existen */}
@@ -261,9 +284,13 @@ export default function MiHistorialPage() {
                     </svg>
                   </div>
                 </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            );
+          })()
         )}
 
         {/* Botones de navegación */}

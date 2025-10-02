@@ -123,7 +123,8 @@ export default function MisSolicitudesPage() {
 
   const loadAnticipos = async (userId: string) => {
     try {
-      const response = await fetch(`/api/anticipos?modelId=${userId}`);
+      // Mostrar solo solicitudes activas en proceso: pendiente, aprobado, realizado
+      const response = await fetch(`/api/anticipos?modelId=${userId}&estado=pendiente,aprobado,realizado`);
       const data = await response.json();
       
       if (data.success) {
