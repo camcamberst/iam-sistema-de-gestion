@@ -42,8 +42,40 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
       }
 
-      // Por ahora, admins y super_admins pueden ver todos los anticipos
-      // TODO: Implementar filtrado por grupo cuando se tenga la estructura de grupos
+      // Filtrado por rol: Admin solo ve anticipos de su grupo, Super Admin ve todos
+      if (adminUser.role === 'admin') {
+        // Admin: solo anticipos de modelos de su grupo
+        // Primero obtenemos el group_id del admin
+        const { data: adminGroup } = await supabase
+          .from('users')
+          .select('group_id')
+          .eq('id', adminId)
+          .single();
+        
+        if (adminGroup?.group_id) {
+          // Filtramos anticipos por grupo del admin
+          query = query
+            .select(`
+              *,
+              users!anticipos_model_id_fkey (
+                id,
+                email,
+                group_id
+              )
+            `)
+            .eq('users.group_id', adminGroup.group_id);
+        }
+      } else if (adminUser.role === 'super_admin') {
+        // Super Admin: ve todos los anticipos
+        query = query.select(`
+          *,
+          users!anticipos_model_id_fkey (
+            id,
+            email,
+            group_id
+          )
+        `);
+      }
     } else if (modelId) {
       // Modelo: solo sus propios anticipos
       query = query.eq('model_id', modelId);

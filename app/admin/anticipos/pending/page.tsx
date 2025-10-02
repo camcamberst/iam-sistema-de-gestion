@@ -76,7 +76,7 @@ export default function SolicitudesPendientesPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado'>('todos');
+  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado'>('todos');
 
   const router = useRouter();
   const supabase = createClient(
@@ -236,12 +236,14 @@ export default function SolicitudesPendientesPage() {
             <label className="block text-sm font-medium text-gray-700 mb-2">Filtrar por estado:</label>
             <select
               value={estadoFiltro}
-              onChange={(e) => setEstadoFiltro(e.target.value as 'todos' | 'pendiente' | 'aprobado')}
+              onChange={(e) => setEstadoFiltro(e.target.value as 'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado')}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
               <option value="todos">Todos</option>
               <option value="pendiente">Pendientes</option>
               <option value="aprobado">Aprobadas</option>
+              <option value="realizado">Realizadas</option>
+              <option value="confirmado">Confirmadas</option>
             </select>
           </div>
         </div>
@@ -361,6 +363,18 @@ export default function SolicitudesPendientesPage() {
                         >
                           {processing === anticipo.id ? '...' : 'Realizado'}
                         </button>
+                      )}
+
+                      {anticipo.estado === 'realizado' && (
+                        <div className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">
+                          Esperando confirmación de la modelo
+                        </div>
+                      )}
+
+                      {anticipo.estado === 'confirmado' && (
+                        <div className="px-2 py-1 bg-emerald-100 text-emerald-800 rounded text-xs font-medium">
+                          Confirmado por la modelo
+                        </div>
                       )}
                     </div>
                   </div>

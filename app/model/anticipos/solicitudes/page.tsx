@@ -171,6 +171,40 @@ export default function MisSolicitudesPage() {
     }
   };
 
+  const handleConfirm = async (anticipoId: string) => {
+    if (!confirm('¿Confirmas que recibiste el anticipo?')) {
+      return;
+    }
+
+    try {
+      setCancelling(anticipoId);
+      setError(null);
+
+      const response = await fetch(`/api/anticipos/${anticipoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          estado: 'confirmado',
+          admin_id: user?.id
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.success) {
+        // Recargar la lista
+        await loadAnticipos(user?.id || '');
+      } else {
+        setError(data.error || 'Error al confirmar anticipo');
+      }
+    } catch (error) {
+      console.error('Error confirming anticipo:', error);
+      setError('Error al confirmar anticipo');
+    } finally {
+      setCancelling(null);
+    }
+  };
+
   const getEstadoColor = (estado: string) => {
     switch (estado) {
       case 'pendiente':
@@ -181,6 +215,8 @@ export default function MisSolicitudesPage() {
         return 'bg-red-100 text-red-800';
       case 'realizado':
         return 'bg-green-100 text-green-800';
+      case 'confirmado':
+        return 'bg-emerald-100 text-emerald-800';
       case 'cancelado':
         return 'bg-gray-100 text-gray-800';
       default:
@@ -198,6 +234,8 @@ export default function MisSolicitudesPage() {
         return 'Rechazado';
       case 'realizado':
         return 'Realizado';
+      case 'confirmado':
+        return 'Confirmado';
       case 'cancelado':
         return 'Cancelado';
       default:
@@ -314,7 +352,7 @@ export default function MisSolicitudesPage() {
                     )}
                   </div>
 
-                  {/* Botón de cancelar compacto */}
+                  {/* Botones de acción compactos */}
                   {anticipo.estado === 'pendiente' && (
                     <div className="ml-2">
                       <button
@@ -323,6 +361,18 @@ export default function MisSolicitudesPage() {
                         className="px-2 py-1 bg-red-600 text-white rounded text-xs font-medium hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
                       >
                         {cancelling === anticipo.id ? '...' : 'Cancelar'}
+                      </button>
+                    </div>
+                  )}
+
+                  {anticipo.estado === 'realizado' && (
+                    <div className="ml-2">
+                      <button
+                        onClick={() => handleConfirm(anticipo.id)}
+                        disabled={cancelling === anticipo.id}
+                        className="px-2 py-1 bg-green-600 text-white rounded text-xs font-medium hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200"
+                      >
+                        {cancelling === anticipo.id ? '...' : 'Confirmar'}
                       </button>
                     </div>
                   )}

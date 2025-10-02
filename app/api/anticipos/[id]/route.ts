@@ -74,7 +74,7 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    if (!['pendiente', 'aprobado', 'rechazado', 'realizado', 'cancelado'].includes(estado)) {
+    if (!['pendiente', 'aprobado', 'rechazado', 'realizado', 'confirmado', 'cancelado'].includes(estado)) {
       return NextResponse.json({ 
         success: false, 
         error: 'Estado inválido' 
@@ -113,6 +113,9 @@ export async function PUT(
     } else if (estado === 'realizado') {
       updateData.realized_at = new Date().toISOString();
       updateData.realized_by = admin_id;
+    } else if (estado === 'confirmado') {
+      updateData.confirmed_at = new Date().toISOString();
+      updateData.confirmed_by = admin_id;
     } else if (estado === 'cancelado') {
       updateData.cancelled_at = new Date().toISOString();
       updateData.cancelled_by = admin_id;

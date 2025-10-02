@@ -112,15 +112,15 @@ LIMIT 10;
 -- 11. VERIFICAR ESTADÍSTICAS DE TABLAS
 SELECT 
   schemaname,
-  tablename,
+  relname as tablename,
   n_tup_ins as inserts,
   n_tup_upd as updates,
   n_tup_del as deletes,
   n_live_tup as live_tuples,
   n_dead_tup as dead_tuples
 FROM pg_stat_user_tables 
-WHERE tablename IN ('model_values', 'calculator_config', 'calculator_platforms', 'calculator_history')
-ORDER BY tablename;
+WHERE relname IN ('model_values', 'calculator_config', 'calculator_platforms', 'calculator_history')
+ORDER BY relname;
 
 -- 12. VERIFICAR ÚLTIMAS ACTIVIDADES
 SELECT 
