@@ -240,54 +240,54 @@ export default function MiHistorialPage() {
                 <div className="p-3 space-y-3">
                   {items.map((anticipo) => (
                     <div key={anticipo.id} className="bg-gray-50 rounded-lg border border-gray-200 p-3">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    {/* Primera línea: Monto y Estado */}
-                    <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-base font-semibold text-gray-900">
-                        ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
-                      </h3>
-                      {anticipo.estado === 'confirmado' ? (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Confirmado</span>
-                      ) : (
-                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Realizado</span>
-                      )}
-                    </div>
-                    
-                    {/* Segunda línea: Información compacta con datos de transferencia */}
-                    <div className="flex items-center justify-between text-xs text-gray-600">
-                      <div className="flex items-center space-x-3">
-                        {anticipo.nombre_beneficiario && <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>}
-                        <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
-                        {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
-                          anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
-                        ) : (
-                          anticipo.banco && anticipo.numero_cuenta && (
-                            <>
-                              <span><span className="font-medium">Banco:</span> {anticipo.banco}</span>
-                              <span><span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}</span>
-                            </>
-                          )
-                        )}
-                      </div>
-                      <span className="text-gray-500">{new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO')}</span>
-                    </div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          {/* Primera línea: Monto y Estado */}
+                          <div className="flex items-center space-x-3 mb-1">
+                            <h3 className="text-base font-semibold text-gray-900">
+                              ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
+                            </h3>
+                            {anticipo.estado === 'confirmado' ? (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Confirmado</span>
+                            ) : (
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Realizado</span>
+                            )}
+                          </div>
+                          
+                          {/* Segunda línea: Información compacta con datos de transferencia */}
+                          <div className="flex items-center justify-between text-xs text-gray-600">
+                            <div className="flex items-center space-x-3">
+                              {anticipo.nombre_beneficiario && <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>}
+                              <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                              {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
+                                anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
+                              ) : (
+                                anticipo.banco && anticipo.numero_cuenta && (
+                                  <>
+                                    <span><span className="font-medium">Banco:</span> {anticipo.banco}</span>
+                                    <span><span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}</span>
+                                  </>
+                                )
+                              )}
+                            </div>
+                            <span className="text-gray-500">{new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO')}</span>
+                          </div>
 
-                    {/* Comentarios del admin - solo si existen */}
-                    {anticipo.comentarios_admin && (
-                      <div className="mt-1 p-1 bg-green-50 rounded text-xs text-green-800">
-                        <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
-                      </div>
-                    )}
-                  </div>
+                          {/* Comentarios del admin - solo si existen */}
+                          {anticipo.comentarios_admin && (
+                            <div className="mt-1 p-1 bg-green-50 rounded text-xs text-green-800">
+                              <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
+                            </div>
+                          )}
+                        </div>
 
-                  {/* Icono de realizado compacto */}
-                  <div className="ml-2 flex items-center">
-                    <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
+                        {/* Icono de realizado compacto */}
+                        <div className="ml-2 flex items-center">
+                          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                          </svg>
+                        </div>
+                      </div>
                   ))}
                 </div>
               </div>
