@@ -110,42 +110,21 @@ export default function AdminModelCalculator({
     load();
   }, [modelId, adminId, modelName]);
 
-  // Polling optimizado para sincronización en tiempo real (solo valores)
-  useEffect(() => {
-    if (!user) return;
+  // ELIMINADO: Polling automático - Solo actualizar manualmente
+  // useEffect(() => {
+  //   if (!user) return;
+  //   const interval = setInterval(async () => {
+  //     await loadModelValuesOnly(modelId);
+  //   }, 5000);
+  //   return () => clearInterval(interval);
+  // }, [user, modelId, editingTimeout]);
 
-    const interval = setInterval(async () => {
-      try {
-        console.log('🔄 [ADMIN-MODEL-CALCULATOR] Polling for updates...');
-        await loadModelValuesOnly(modelId);
-      } catch (error) {
-        console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error in polling:', error);
-      }
-    }, 5000); // Polling cada 5 segundos
-
-    return () => {
-      clearInterval(interval);
-      // Limpiar timeout de edición si existe
-      if (editingTimeout) {
-        clearTimeout(editingTimeout);
-      }
-    };
-  }, [user, modelId, editingTimeout]);
-
-  // Función optimizada para cargar solo valores (sin parpadeo)
+  // Función para cargar valores manualmente (sin polling automático)
   const loadModelValuesOnly = async (userId: string) => {
     try {
-      console.log('🔍 [ADMIN-MODEL-CALCULATOR] Loading values only for userId:', userId);
+      console.log('🔄 [ADMIN-MODEL-CALCULATOR] Manual refresh - loading values for userId:', userId);
       
-      // NO cargar valores si el usuario está editando activamente
-      if (isUserEditing) {
-        console.log('⏸️ [ADMIN-MODEL-CALCULATOR] Skipping update - user is editing');
-        return;
-      }
-      
-      console.log('🔄 [ADMIN-MODEL-CALCULATOR] User not editing - proceeding with update');
-      
-      // Solo cargar valores guardados, no toda la configuración
+      // Cargar valores guardados
       const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
       const savedJson = await savedResp.json();
       
@@ -155,25 +134,22 @@ export default function AdminModelCalculator({
           savedValues[item.platform_id] = item.value.toString();
         });
         
-        // Solo actualizar si los valores han cambiado
-        const currentValues = JSON.stringify(inputValues);
-        const newValues = JSON.stringify(savedValues);
+        console.log('🔄 [ADMIN-MODEL-CALCULATOR] Values loaded from server:', savedValues);
+        setInputValues(savedValues);
         
-        if (currentValues !== newValues) {
-          console.log('🔄 [ADMIN-MODEL-CALCULATOR] Values updated from server');
-          setInputValues(savedValues);
-          
-          // Actualizar plataformas con valores guardados
-          setPlatforms(prev => prev.map(p => ({
-            ...p,
-            value: parseFloat(savedValues[p.id]) || 0
-          })));
-          
-          setLastSaved(new Date());
-        }
+        // Actualizar plataformas con valores guardados
+        setPlatforms(prev => prev.map(p => ({
+          ...p,
+          value: parseFloat(savedValues[p.id]) || 0
+        })));
+        
+        setLastSaved(new Date());
+        console.log('✅ [ADMIN-MODEL-CALCULATOR] Values updated successfully');
+      } else {
+        console.log('ℹ️ [ADMIN-MODEL-CALCULATOR] No saved values found');
       }
     } catch (error) {
-      console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error loading values only:', error);
+      console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] Error loading values:', error);
     }
   };
 
@@ -501,11 +477,22 @@ export default function AdminModelCalculator({
               Bienvenida, {modelName} · Ingresa tus valores por plataforma
             </p>
           </div>
-          {lastSaved && (
-            <div className="text-sm text-green-600">
-              Última actualización: {lastSaved.toLocaleTimeString()}
-            </div>
-          )}
+          <div className="flex items-center space-x-4">
+            {lastSaved && (
+              <div className="text-sm text-green-600">
+                Última actualización: {lastSaved.toLocaleTimeString()}
+              </div>
+            )}
+            <button
+              onClick={async () => {
+                console.log('🔄 [ADMIN-MODEL-CALCULATOR] Manual refresh triggered');
+                await loadModelValuesOnly(modelId);
+              }}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+            >
+              🔄 Actualizar
+            </button>
+          </div>
         </div>
 
         {/* Tasas */}

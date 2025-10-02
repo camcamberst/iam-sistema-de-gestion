@@ -450,12 +450,23 @@ export default function ModelCalculatorPage() {
               Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
             </p>
           </div>
-          <button
-            onClick={() => window.history.back()}
-            className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
-          >
-            ← Volver
-          </button>
+          <div className="flex items-center space-x-4">
+            <button
+              onClick={async () => {
+                console.log('🔄 [MODEL-CALCULATOR] Manual refresh triggered');
+                await loadCalculatorConfig(user?.id || '');
+              }}
+              className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
+            >
+              🔄 Actualizar
+            </button>
+            <button
+              onClick={() => window.history.back()}
+              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+            >
+              ← Volver
+            </button>
+          </div>
         </div>
 
         {/* Rates actualizadas - COMPACTO */}
