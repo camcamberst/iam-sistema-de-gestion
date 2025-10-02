@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import { getCalculatorDate } from '@/utils/calculator-dates';
+import ModelCalculator from '@/components/ModelCalculator';
 
 interface User {
   id: string;
@@ -303,30 +304,26 @@ export default function ViewModelCalculator() {
           </div>
         </div>
 
-        {/* Vista de calculadora de modelo */}
-        {selectedModel && (
-          <div className="apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Calculadora de {selectedModel.name}
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Vista de administrador - Puedes editar los valores ingresados por la modelo
-            </p>
-            
-            {/* Iframe con parámetros corregidos */}
-            <div className="relative">
-              <iframe
-                key={selectedModel.id}
-                src={`/model/calculator?adminView=true&modelId=${selectedModel.id}&adminId=${user?.id}`}
-                className="w-full rounded-lg border border-gray-200"
-                style={{ minHeight: '800px' }}
-                loading="eager"
-                sandbox="allow-scripts allow-same-origin allow-forms"
-                title={`Calculadora de ${selectedModel.name}`}
-              />
-            </div>
-          </div>
-        )}
+                 {/* Vista de calculadora de modelo */}
+                 {selectedModel && (
+                   <div className="apple-card">
+                     <h2 className="text-lg font-semibold text-gray-900 mb-4">
+                       Calculadora de {selectedModel.name}
+                     </h2>
+                     <p className="text-sm text-gray-500 mb-6">
+                       Vista de administrador - Puedes editar los valores ingresados por la modelo
+                     </p>
+                     
+                     {/* Componente React directo */}
+                     <div className="relative">
+                       <ModelCalculator 
+                         modelId={selectedModel.id}
+                         adminView={true}
+                         adminId={user?.id}
+                       />
+                     </div>
+                   </div>
+                 )}
       </div>
     </div>
     </>
