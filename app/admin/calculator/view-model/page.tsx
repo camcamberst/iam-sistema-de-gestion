@@ -57,38 +57,6 @@ export default function ViewModelCalculator() {
   }, []);
 
   // Precargar datos de la calculadora cuando se selecciona un modelo
-  const preloadCalculatorData = async (modelId: string) => {
-    try {
-      setIframeLoading(true);
-      setIframeError(false);
-      
-      // Precargar configuración de la calculadora
-      const configResponse = await fetch(`/api/calculator/config-v2?modelId=${modelId}`);
-      const configData = await configResponse.json();
-      
-      // Precargar valores guardados usando fecha de Europa Central
-      const calculatorDate = getCalculatorDate();
-      const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${modelId}&periodDate=${calculatorDate}`);
-      const valuesData = await valuesResponse.json();
-      
-      // Precargar tasas activas
-      const ratesResponse = await fetch('/api/rates-v2');
-      const ratesData = await ratesResponse.json();
-      
-      setPreloadData({
-        config: configData,
-        values: valuesData,
-        rates: ratesData
-      });
-      
-      console.log('✅ [PRELOAD] Datos precargados para modelo:', modelId);
-    } catch (error) {
-      console.error('❌ [PRELOAD] Error precargando datos:', error);
-      setIframeError(true);
-    } finally {
-      setIframeLoading(false);
-    }
-  };
 
   useEffect(() => {
     const load = async () => {
