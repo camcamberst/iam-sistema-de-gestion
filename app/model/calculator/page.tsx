@@ -75,6 +75,26 @@ export default function ModelCalculatorPage() {
   const [valuesLoaded, setValuesLoaded] = useState(false);
   const [configLoaded, setConfigLoaded] = useState(false);
   
+  // 🔧 HELPER: Funciones de sincronización bidireccional
+  const syncPlatformsToInputs = (platforms: Platform[]) => {
+    const newInputValues: Record<string, string> = {};
+    platforms.forEach(p => {
+      if (p.enabled) {
+        newInputValues[p.id] = p.value > 0 ? String(p.value) : '';
+      }
+    });
+    setInputValues(prev => ({ ...prev, ...newInputValues }));
+  };
+
+  const syncInputsToPlatforms = (inputValues: Record<string, string>) => {
+    setPlatforms(prev => prev.map(p => {
+      const inputValue = inputValues[p.id];
+      const numeric = Number.parseFloat(inputValue || '0');
+      const value = Number.isFinite(numeric) ? numeric : 0;
+      return { ...p, value };
+    }));
+  };
+  
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [CALCULATOR] System configuration:', {
     ENABLE_AUTOSAVE,
@@ -261,20 +281,17 @@ export default function ModelCalculatorPage() {
           // 🔧 FIX: Cargar valores guardados solo si no se han cargado antes
           if (!valuesLoaded) {
             console.log('🔍 [CALCULATOR] Cargando valores guardados');
+            
+            // 1. Actualizar platforms.value con valores guardados
             setPlatforms(prev => prev.map(p => ({
               ...p,
               value: platformToValue[p.id] ?? p.value
             })));
-            setInputValues(prev => {
-              const next: Record<string, string> = { ...prev };
-              for (const p of enabledPlatforms) {
-                const v = platformToValue[p.id];
-                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-                  next[p.id] = String(v);
-                }
-              }
-              return next;
-            });
+            
+            // 2. La sincronización automática se encargará de actualizar inputValues
+            // No necesitamos hacerlo manualmente aquí
+            console.log('🔍 [CALCULATOR] Valores guardados aplicados a platforms, sincronización automática activada');
+            
             setValuesLoaded(true);
           }
         }
@@ -393,6 +410,14 @@ export default function ModelCalculatorPage() {
       setSaving(false);
     }
   };
+
+  // 🔧 AUTOMATIC SYNC: Sincronización automática platforms → inputValues
+  useEffect(() => {
+    if (platforms.length > 0) {
+      console.log('🔍 [SYNC] Sincronizando platforms → inputValues automáticamente');
+      syncPlatformsToInputs(platforms);
+    }
+  }, [platforms]);
 
   // 🔧 FIX: Autosave deshabilitado para corregir problema de persistencia
   // useEffect(() => {
@@ -640,12 +665,15 @@ export default function ModelCalculatorPage() {
                                 // Evitar múltiples puntos (mantener el primero)
                                 const parts = normalized.split('.');
                                 const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                // 🔧 SYNC: Actualizar inputValues
                                 setInputValues(prev => ({ ...prev, [platform.id]: safeNormalized }));
 
-                                // Convertir a número si es válido
+                                // 🔧 SYNC: Convertir a número y actualizar platforms.value
                                 const numeric = Number.parseFloat(safeNormalized);
                                 const value = Number.isFinite(numeric) ? numeric : 0;
                                 setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value } : p));
+                                
+                                console.log('🔍 [SYNC] Usuario escribió:', { platform: platform.id, input: safeNormalized, numeric: value });
                               }}
                               onKeyDown={(e) => {
                                 console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
