@@ -28,6 +28,7 @@ export default function ViewModelCalculator() {
   const [user, setUser] = useState<User | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [filteredModels, setFilteredModels] = useState<Model[]>([]);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [groupsOptions, setGroupsOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -273,7 +274,7 @@ export default function ViewModelCalculator() {
                   className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="text-gray-700">
-                    Selecciona una modelo...
+                    {selectedModel ? `${selectedModel.name} (${selectedModel.email})` : 'Selecciona una modelo...'}
                   </span>
                   <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
@@ -287,8 +288,8 @@ export default function ViewModelCalculator() {
                         key={model.id}
                         type="button"
                         onClick={() => {
-                          // Redirect to dedicated calculator view page
-                          router.push(`/admin/calculator/view/${model.id}`);
+                          setSelectedModel(model);
+                          setIsModelDropdownOpen(false);
                         }}
                         className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
                       >
@@ -302,29 +303,30 @@ export default function ViewModelCalculator() {
           </div>
         </div>
 
-        {/* Instrucciones */}
-        <div className="apple-card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">
-            Ver Calculadora de Modelo
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Selecciona una modelo del dropdown para ver y editar su calculadora.
-          </p>
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="flex items-start space-x-3">
-              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-              </svg>
-              <div>
-                <h3 className="text-sm font-medium text-blue-900">Nueva implementación</h3>
-                <p className="text-sm text-blue-700 mt-1">
-                  Ahora la calculadora se abre en una página dedicada sin iframe, 
-                  lo que mejora la estabilidad y el rendimiento.
-                </p>
-              </div>
+        {/* Vista de calculadora de modelo */}
+        {selectedModel && (
+          <div className="apple-card">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">
+              Calculadora de {selectedModel.name}
+            </h2>
+            <p className="text-sm text-gray-500 mb-6">
+              Vista de administrador - Puedes editar los valores ingresados por la modelo
+            </p>
+            
+            {/* Iframe con parámetros corregidos */}
+            <div className="relative">
+              <iframe
+                key={selectedModel.id}
+                src={`/model/calculator?adminView=true&modelId=${selectedModel.id}&adminId=${user?.id}`}
+                className="w-full rounded-lg border border-gray-200"
+                style={{ minHeight: '800px' }}
+                loading="eager"
+                sandbox="allow-scripts allow-same-origin allow-forms"
+                title={`Calculadora de ${selectedModel.name}`}
+              />
             </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
     </>
