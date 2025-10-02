@@ -28,7 +28,6 @@ export default function ViewModelCalculator() {
   const [user, setUser] = useState<User | null>(null);
   const [models, setModels] = useState<Model[]>([]);
   const [filteredModels, setFilteredModels] = useState<Model[]>([]);
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [groupsOptions, setGroupsOptions] = useState<Array<{ id: string; name: string }>>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [loading, setLoading] = useState(true);
@@ -37,11 +36,6 @@ export default function ViewModelCalculator() {
   // Estados para dropdowns personalizados
   const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
   const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
-  
-  // Estados para optimización de carga
-  const [iframeLoading, setIframeLoading] = useState(false);
-  const [iframeError, setIframeError] = useState(false);
-  const [preloadData, setPreloadData] = useState<any>(null);
   const router = useRouter();
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -325,14 +319,8 @@ export default function ViewModelCalculator() {
                         key={model.id}
                         type="button"
                         onClick={() => {
-                          // Reiniciar estados y seleccionar modelo
-                          setSelectedModel(model);
-                          setIsModelDropdownOpen(false);
-                          setIframeError(false);
-                          setPreloadData(null);
-                          setIframeLoading(true);
-                          // Precargar datos de la calculadora para carga más rápida
-                          preloadCalculatorData(model.id);
+                          // Redirect to dedicated calculator view page
+                          router.push(`/admin/calculator/view/${model.id}`);
                         }}
                         className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
                       >
@@ -346,69 +334,29 @@ export default function ViewModelCalculator() {
           </div>
         </div>
 
-        {/* Vista de calculadora de modelo */}
-        {selectedModel && (
-          <div className="apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Calculadora de {selectedModel.name}
-            </h2>
-            <p className="text-sm text-gray-500 mb-6">
-              Vista de administrador - Puedes editar los valores ingresados por la modelo
-            </p>
-            
-            {/* Loading State */}
-            {iframeLoading && (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Cargando calculadora...</p>
-                  <p className="text-sm text-gray-500 mt-2">Precargando datos para una experiencia más fluida</p>
-                </div>
+        {/* Instrucciones */}
+        <div className="apple-card">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">
+            Ver Calculadora de Modelo
+          </h2>
+          <p className="text-gray-600 mb-4">
+            Selecciona una modelo del dropdown para ver y editar su calculadora.
+          </p>
+          <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="flex items-start space-x-3">
+              <svg className="w-5 h-5 text-blue-600 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+              </svg>
+              <div>
+                <h3 className="text-sm font-medium text-blue-900">Nueva implementación</h3>
+                <p className="text-sm text-blue-700 mt-1">
+                  Ahora la calculadora se abre en una página dedicada sin iframe, 
+                  lo que mejora la estabilidad y el rendimiento.
+                </p>
               </div>
-            )}
-            
-            {/* Error State */}
-            {iframeError && (
-              <div className="flex items-center justify-center py-12">
-                <div className="text-center">
-                  <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <svg className="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <p className="text-red-600 font-medium">Error al cargar la calculadora</p>
-                  <p className="text-sm text-gray-500 mt-2">Intenta seleccionar la modelo nuevamente</p>
-                  <button
-                    onClick={() => preloadCalculatorData(selectedModel.id)}
-                    className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-                  >
-                    Reintentar
-                  </button>
-                </div>
-              </div>
-            )}
-            
-            {/* Iframe optimizado */}
-            {!iframeLoading && !iframeError && (
-              <iframe
-                key={`${selectedModel.id}-${preloadData ? 'pre' : 'nopre'}`}
-                src={`/model/calculator?modelId=${selectedModel.id}&asAdmin=1&preload=${preloadData ? 'true' : 'false'}`}
-                className="w-full rounded-lg border border-gray-200"
-                style={{ minHeight: '900px' }}
-                loading="eager"
-                sandbox="allow-scripts allow-same-origin allow-forms"
-                onLoad={() => {
-                  console.log('✅ [IFRAME] Calculadora cargada exitosamente');
-                  setIframeLoading(false);
-                }}
-                onError={() => {
-                  console.error('❌ [IFRAME] Error cargando calculadora');
-                  setIframeError(true);
-                }}
-              />
-            )}
+            </div>
           </div>
-        )}
+        </div>
       </div>
     </div>
     </>
