@@ -69,6 +69,7 @@ export default function AdminModelCalculator({
   const [saving, setSaving] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [isUserEditing, setIsUserEditing] = useState(false);
+  const [editingTimeout, setEditingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   // Sistema V2 siempre activo (sin flags de entorno)
   const ENABLE_AUTOSAVE = process.env.NEXT_PUBLIC_CALC_AUTOSAVE === 'true';
@@ -122,8 +123,14 @@ export default function AdminModelCalculator({
       }
     }, 5000); // Polling cada 5 segundos
 
-    return () => clearInterval(interval);
-  }, [user, modelId]);
+    return () => {
+      clearInterval(interval);
+      // Limpiar timeout de edición si existe
+      if (editingTimeout) {
+        clearTimeout(editingTimeout);
+      }
+    };
+  }, [user, modelId, editingTimeout]);
 
   // Función optimizada para cargar solo valores (sin parpadeo)
   const loadModelValuesOnly = async (userId: string) => {
@@ -135,6 +142,8 @@ export default function AdminModelCalculator({
         console.log('⏸️ [ADMIN-MODEL-CALCULATOR] Skipping update - user is editing');
         return;
       }
+      
+      console.log('🔄 [ADMIN-MODEL-CALCULATOR] User not editing - proceeding with update');
       
       // Solo cargar valores guardados, no toda la configuración
       const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
@@ -251,6 +260,11 @@ export default function AdminModelCalculator({
     // Marcar que el usuario está editando
     setIsUserEditing(true);
     
+    // Limpiar timeout anterior si existe
+    if (editingTimeout) {
+      clearTimeout(editingTimeout);
+    }
+    
     setInputValues(prev => ({
       ...prev,
       [platformId]: value
@@ -263,10 +277,14 @@ export default function AdminModelCalculator({
         : p
     ));
     
-    // Resetear flag de edición después de un tiempo
-    setTimeout(() => {
+    // Crear nuevo timeout para resetear flag de edición
+    const newTimeout = setTimeout(() => {
+      console.log('⏰ [ADMIN-MODEL-CALCULATOR] User editing timeout - resuming polling');
       setIsUserEditing(false);
-    }, 2000); // 2 segundos después de la última edición
+      setEditingTimeout(null);
+    }, 5000); // 5 segundos después de la última edición
+    
+    setEditingTimeout(newTimeout);
   };
 
 
@@ -298,7 +316,13 @@ export default function AdminModelCalculator({
 
       console.log('✅ [ADMIN-MODEL-CALCULATOR] Values saved successfully');
       setLastSaved(new Date());
-      setIsUserEditing(false); // Resetear flag de edición después de guardar
+      
+      // Limpiar timeout y resetear flag de edición
+      if (editingTimeout) {
+        clearTimeout(editingTimeout);
+        setEditingTimeout(null);
+      }
+      setIsUserEditing(false);
 
     } catch (error) {
       console.error('❌ [ADMIN-MODEL-CALCULATOR] Error saving values:', error);
