@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { canRequestAnticipo } from '@/utils/anticipo-restrictions';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -94,6 +95,16 @@ export async function GET(request: NextRequest) {
 // =====================================================
 export async function POST(request: NextRequest) {
   try {
+    // Validar restricciones temporales
+    const restriction = canRequestAnticipo();
+    if (!restriction.allowed) {
+      console.log('🚫 [API ANTICIPOS] Solicitud bloqueada por restricción temporal:', restriction.reason);
+      return NextResponse.json({ 
+        success: false, 
+        error: restriction.reason 
+      }, { status: 400 });
+    }
+
     const body = await request.json();
     console.log('🔍 [API ANTICIPOS] POST request body:', body);
 

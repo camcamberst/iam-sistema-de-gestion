@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { getCalculatorDate } from '@/utils/calculator-dates';
+import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 
 interface User {
   id: string;
@@ -53,6 +54,9 @@ export default function SolicitarAnticipoPage() {
   const [montoError, setMontoError] = useState('');
   const [montoFormatted, setMontoFormatted] = useState('0');
   const [telefonoError, setTelefonoError] = useState('');
+  
+  // Estado para restricciones temporales
+  const [restrictionInfo, setRestrictionInfo] = useState<AnticipoRestriction | null>(null);
 
   const router = useRouter();
   const supabase = createClient(
@@ -81,6 +85,13 @@ export default function SolicitarAnticipoPage() {
 
   useEffect(() => {
     loadUser();
+  }, []);
+
+  // Validar restricciones temporales
+  useEffect(() => {
+    const restriction = canRequestAnticipo();
+    setRestrictionInfo(restriction);
+    console.log('🔍 [SOLICITAR ANTICIPO] Restricción temporal:', restriction);
   }, []);
 
   // Cerrar dropdowns cuando se hace click fuera
@@ -479,6 +490,46 @@ export default function SolicitarAnticipoPage() {
       setSubmitting(false);
     }
   };
+
+  // Mostrar pantalla de restricción si no está permitido solicitar anticipo
+  if (restrictionInfo && !restrictionInfo.allowed) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="max-w-md mx-auto text-center p-6">
+          <div className="mb-4">
+            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+              Solicitud No Disponible
+            </h2>
+            <p className="text-gray-600 mb-4">
+              {restrictionInfo.reason}
+            </p>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-800">
+                <strong>Próxima fecha disponible:</strong><br />
+                {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                })}
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => router.back()}
+            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+          >
+            Regresar
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
