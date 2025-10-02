@@ -228,7 +228,6 @@ export default function HistorialAnticiposPage() {
     if (!filters.grupo) {
       console.log('🔍 [FILTROS] No hay grupo seleccionado, mostrando 0 resultados');
       setFilteredAnticipos([]);
-      setTotalAnticipos(0);
       return;
     }
 
