@@ -175,8 +175,9 @@ export default function MiHistorialPage() {
   };
 
   const formatPeriodLabel = (startDate: string, endDate: string) => {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
+    // Parsear fechas en timezone de Colombia para evitar desfases
+    const start = new Date(startDate + 'T00:00:00-05:00');
+    const end = new Date(endDate + 'T00:00:00-05:00');
     
     // Abreviaciones de meses
     const monthAbbr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
@@ -223,7 +224,8 @@ export default function MiHistorialPage() {
       filteredAnticipos = anticiposData.filter(anticipo => {
         if (!anticipo.period?.start_date) return false;
         
-        const anticipoDate = new Date(anticipo.period.start_date);
+        // Parsear fecha en timezone de Colombia para evitar desfases
+        const anticipoDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
         const anticipoMonth = anticipoDate.getMonth();
         const anticipoYear = anticipoDate.getFullYear();
         const anticipoDay = anticipoDate.getDate();
