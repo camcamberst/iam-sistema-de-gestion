@@ -360,11 +360,17 @@ export default function ModelCalculatorPage() {
 
       console.log('🔍 [CALCULATOR] Saving values:', values);
       console.log('🔍 [CALCULATOR] Using V2 system for saving');
+      console.log('🔍 [CALCULATOR] Admin override:', adminOverride);
+      console.log('🔍 [CALCULATOR] Query model ID:', queryModelId);
+      console.log('🔍 [CALCULATOR] User ID:', user?.id);
 
       const endpoint = '/api/calculator/model-values-v2';
-      const payload = { modelId: user?.id, values, periodDate };
+      // Usar el ID correcto: modelo cuando es admin view, usuario cuando es acceso directo
+      const saveModelId = adminOverride && queryModelId ? queryModelId : user?.id;
+      const payload = { modelId: saveModelId, values, periodDate };
       
       console.log('🔍 [CALCULATOR] Using endpoint:', endpoint);
+      console.log('🔍 [CALCULATOR] Save model ID:', saveModelId);
       console.log('🔍 [CALCULATOR] Payload:', payload);
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -408,10 +414,12 @@ export default function ModelCalculatorPage() {
     const controller = new AbortController();
     const t = setTimeout(async () => {
       try {
+        // Usar el ID correcto para autosave también
+        const saveModelId = adminOverride && queryModelId ? queryModelId : user.id;
         const res = await fetch('/api/calculator/model-values-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: user.id, values, periodDate }),
+          body: JSON.stringify({ modelId: saveModelId, values, periodDate }),
           signal: controller.signal
         });
         const json = await res.json();
