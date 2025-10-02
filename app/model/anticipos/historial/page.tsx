@@ -137,40 +137,64 @@ export default function MiHistorialPage() {
   };
 
   const generateAvailablePeriods = (anticiposData: Anticipo[]) => {
-    const periodMap = new Map<string, string>();
+    const periodMap = new Map<string, { label: string, count: number }>();
     
     // Agregar período actual
-    periodMap.set('current', 'Período Actual');
+    periodMap.set('current', { label: 'Período Actual', count: 0 });
     
-    // Extraer períodos únicos de los anticipos
+    // Agrupar anticipos por período real (corrigiendo parseo histórico)
     anticiposData.forEach(anticipo => {
       if (anticipo.period?.start_date) {
-        const periodKey = anticipo.period.start_date;
-        const periodLabel = formatPeriodLabel(anticipo.period.start_date, anticipo.period.end_date);
-        periodMap.set(periodKey, periodLabel);
+        // Corregir parseo de fecha histórica
+        const correctedDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
+        const year = correctedDate.getFullYear();
+        const month = correctedDate.getMonth();
+        const day = correctedDate.getDate();
         
-        console.log('🔍 [GENERAR PERÍODOS] Anticipo:', {
+        // Generar período real basado en fecha corregida
+        const periodNumber = day <= 15 ? '1' : '2';
+        const monthAbbr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+        const monthName = monthAbbr[month];
+        
+        // Crear clave única basada en año-mes-período
+        const periodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
+        const periodLabel = `${monthName} ${year} - P${periodNumber}`;
+        
+        console.log('🔍 [GENERAR PERÍODOS] Anticipo corregido:', {
           id: anticipo.id,
-          start_date: anticipo.period.start_date,
-          end_date: anticipo.period.end_date,
+          original_start_date: anticipo.period.start_date,
+          corrected_date: correctedDate.toISOString().split('T')[0],
+          year,
+          month: month + 1,
+          day,
           periodKey,
           periodLabel
         });
+        
+        // Agrupar por período corregido
+        if (periodMap.has(periodKey)) {
+          periodMap.get(periodKey)!.count++;
+        } else {
+          periodMap.set(periodKey, { label: periodLabel, count: 1 });
+        }
       }
     });
     
-    console.log('🔍 [GENERAR PERÍODOS] Períodos generados:', Array.from(periodMap.entries()));
+    console.log('🔍 [GENERAR PERÍODOS] Períodos consolidados:', Array.from(periodMap.entries()));
     
     // Convertir a array y ordenar por fecha (más reciente primero)
     const periods = Array.from(periodMap.entries())
-      .map(([key, label]) => ({ key, label }))
+      .map(([key, data]) => ({ 
+        key, 
+        label: `${data.label} (${data.count} anticipo${data.count !== 1 ? 's' : ''})` 
+      }))
       .sort((a, b) => {
         if (a.key === 'current') return -1;
         if (b.key === 'current') return 1;
-        return new Date(b.key).getTime() - new Date(a.key).getTime();
+        return b.key.localeCompare(a.key);
       });
     
-    console.log('🔍 [GENERAR PERÍODOS] Períodos ordenados:', periods);
+    console.log('🔍 [GENERAR PERÍODOS] Períodos finales:', periods);
     return periods;
   };
 
@@ -251,14 +275,28 @@ export default function MiHistorialPage() {
         return false;
       });
     } else {
-      // Filtrar por período específico
+      // Filtrar por período específico (usando clave corregida)
       console.log('🔍 [FILTRO PERÍODOS] Filtrando por período específico:', periodKey);
       
       filteredAnticipos = anticiposData.filter(anticipo => {
-        const matches = anticipo.period?.start_date === periodKey;
-        console.log('🔍 [FILTRO PERÍODOS] Anticipo:', {
+        if (!anticipo.period?.start_date) return false;
+        
+        // Corregir parseo de fecha histórica
+        const correctedDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
+        const year = correctedDate.getFullYear();
+        const month = correctedDate.getMonth();
+        const day = correctedDate.getDate();
+        
+        // Generar clave de período corregida
+        const periodNumber = day <= 15 ? '1' : '2';
+        const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
+        
+        const matches = correctedPeriodKey === periodKey;
+        console.log('🔍 [FILTRO PERÍODOS] Anticipo corregido:', {
           id: anticipo.id,
-          start_date: anticipo.period?.start_date,
+          original_start_date: anticipo.period.start_date,
+          corrected_date: correctedDate.toISOString().split('T')[0],
+          correctedPeriodKey,
           periodKey,
           matches
         });
