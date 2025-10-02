@@ -273,7 +273,7 @@ export default function ViewModelCalculator() {
                   className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span className="text-gray-700">
-                    {selectedModel ? `${selectedModel.name} (${selectedModel.email})` : 'Selecciona una modelo...'}
+                    Selecciona una modelo...
                   </span>
                   <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
