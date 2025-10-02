@@ -20,15 +20,6 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [API ANTICIPOS] GET request:', { modelId, periodDate, estado, adminId });
 
-    let query = supabase
-      .from('anticipos')
-      .select(`
-        *,
-        model:users!anticipos_model_id_fkey(id, name, email, role),
-        period:periods(id, name, start_date, end_date)
-      `)
-      .order('created_at', { ascending: false });
-
     // Filtros según el rol
     if (adminId) {
       // Admin/Super Admin: obtener anticipos
@@ -41,6 +32,15 @@ export async function GET(request: NextRequest) {
       if (!adminUser) {
         return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
       }
+
+      let query = supabase
+        .from('anticipos')
+        .select(`
+          *,
+          model:users!anticipos_model_id_fkey(id, name, email, role),
+          period:periods(id, name, start_date, end_date)
+        `)
+        .order('created_at', { ascending: false });
 
       // Filtrado por rol: Admin solo ve anticipos de su grupo, Super Admin ve todos
       if (adminUser.role === 'admin' && adminUser.group_id) {
@@ -61,54 +61,78 @@ export async function GET(request: NextRequest) {
         }
       }
       
-      // Aplicar select con joins para ambos roles
-      query = query.select(`
-        *,
-        users!anticipos_model_id_fkey (
-          id,
-          email,
-          group_id
-        )
-      `);
-    } else if (modelId) {
-      // Modelo: solo sus propios anticipos
-      query = query.eq('model_id', modelId);
-    }
-
-    // Filtros adicionales
-    if (periodDate) {
-      query = query.eq('period_id', 
-        supabase
-          .from('periods')
-          .select('id')
-          .eq('start_date', periodDate)
-      );
-    }
-
-    if (estado) {
-      // Soporte para múltiples estados separados por comas
-      if (estado.includes(',')) {
-        const estados = estado.split(',').map(e => e.trim());
-        query = query.in('estado', estados);
-      } else {
+      // Aplicar filtros adicionales
+      if (periodDate) {
+        query = query.eq('period_id', 
+          supabase
+            .from('periods')
+            .select('id')
+            .eq('start_date', periodDate)
+        );
+      }
+      
+      if (estado && estado !== 'todos') {
         query = query.eq('estado', estado);
       }
+
+      const { data: anticipos, error } = await query;
+      
+      if (error) {
+        console.error('❌ [API ANTICIPOS] Error fetching anticipos:', error);
+        return NextResponse.json({ success: false, error: 'Error al obtener anticipos' }, { status: 500 });
+      }
+
+      return NextResponse.json({ success: true, anticipos: anticipos || [] });
+      
+    } else if (modelId) {
+      // Modelo: solo sus propios anticipos
+      let query = supabase
+        .from('anticipos')
+        .select(`
+          *,
+          model:users!anticipos_model_id_fkey(id, name, email, role),
+          period:periods(id, name, start_date, end_date)
+        `)
+        .eq('model_id', modelId)
+        .order('created_at', { ascending: false });
+
+      // Filtros adicionales
+      if (periodDate) {
+        query = query.eq('period_id', 
+          supabase
+            .from('periods')
+            .select('id')
+            .eq('start_date', periodDate)
+        );
+      }
+
+      if (estado) {
+        // Soporte para múltiples estados separados por comas
+        if (estado.includes(',')) {
+          const estados = estado.split(',').map(e => e.trim());
+          query = query.in('estado', estados);
+        } else {
+          query = query.eq('estado', estado);
+        }
+      }
+
+      const { data: anticipos, error } = await query;
+
+      if (error) {
+        console.error('❌ [API ANTICIPOS] Error:', error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
+
+      console.log('✅ [API ANTICIPOS] Anticipos encontrados:', anticipos?.length || 0);
+
+      return NextResponse.json({
+        success: true,
+        data: anticipos || [],
+        count: anticipos?.length || 0
+      });
+    } else {
+      return NextResponse.json({ success: false, error: 'Parámetros inválidos' }, { status: 400 });
     }
-
-    const { data: anticipos, error } = await query;
-
-    if (error) {
-      console.error('❌ [API ANTICIPOS] Error:', error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    console.log('✅ [API ANTICIPOS] Anticipos encontrados:', anticipos?.length || 0);
-
-    return NextResponse.json({
-      success: true,
-      data: anticipos || [],
-      count: anticipos?.length || 0
-    });
 
   } catch (error: any) {
     console.error('❌ [API ANTICIPOS] Error general:', error);
