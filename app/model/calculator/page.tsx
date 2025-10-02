@@ -133,20 +133,7 @@ export default function ModelCalculatorPage() {
       console.log('🔍 [CALCULATOR] Loading config for userId:', userId);
       setConfigLoaded(true);
 
-      // Verificar si hay datos precargados desde el admin
-      const urlParams = new URLSearchParams(window.location.search);
-      const preloadParam = urlParams.get('preload');
-      
-      if (preloadParam === 'true') {
-        console.log('⚡ [CALCULATOR] Usando datos precargados para carga más rápida');
-        // Los datos ya están precargados, saltar algunas llamadas
-        setLoading(false); // Carga más rápida
-      } else {
-        // Debug específico del flujo de calculadora
-        const calculatorFlowResponse = await fetch(`/api/debug/calculator-flow?userId=${userId}`);
-        const calculatorFlowData = await calculatorFlowResponse.json();
-        console.log('🔍 [CALCULATOR] Calculator flow data:', calculatorFlowData);
-      }
+      // Código legacy eliminado - ya no hay parámetros de admin
 
       // Cargar tasas activas
       const ratesResponse = await fetch('/api/rates-v2?activeOnly=true');
