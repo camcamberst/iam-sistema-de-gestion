@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
       // Admin/Super Admin: obtener anticipos
       const { data: adminUser } = await supabase
         .from('users')
-        .select('role')
+        .select('role, group_id')
         .eq('id', adminId)
         .single();
 
@@ -43,30 +43,21 @@ export async function GET(request: NextRequest) {
       }
 
       // Filtrado por rol: Admin solo ve anticipos de su grupo, Super Admin ve todos
-      if (adminUser.role === 'admin') {
+      if (adminUser.role === 'admin' && adminUser.group_id) {
         // Admin: solo anticipos de modelos de su grupo
-        // Primero obtenemos el group_id del admin
-        const { data: adminGroup } = await supabase
+        // Obtener IDs de modelos del grupo
+        const { data: modelIds } = await supabase
           .from('users')
-          .select('group_id')
-          .eq('id', adminId)
-          .single();
+          .select('id')
+          .eq('group_id', adminUser.group_id)
+          .eq('role', 'model');
         
-        if (adminGroup?.group_id) {
-          // Filtramos anticipos por grupo del admin usando una consulta separada
-          const { data: modelIds } = await supabase
-            .from('users')
-            .select('id')
-            .eq('group_id', adminGroup.group_id)
-            .eq('role', 'model');
-          
-          if (modelIds && modelIds.length > 0) {
-            const ids = modelIds.map(m => m.id);
-            query = query.in('model_id', ids);
-          } else {
-            // Si no hay modelos en el grupo, devolver array vacío
-            query = query.eq('id', 'no-exists');
-          }
+        if (modelIds && modelIds.length > 0) {
+          const ids = modelIds.map(m => m.id);
+          query = query.in('model_id', ids);
+        } else {
+          // Si no hay modelos en el grupo, devolver array vacío
+          query = query.eq('id', 'no-exists');
         }
       }
       
