@@ -369,18 +369,11 @@ export default function ModelCalculatorPage() {
         throw new Error(data.error || 'Error al guardar');
       }
 
-      // Marcar que se han guardado nuevos valores y actualizar automáticamente
-      setValuesLoaded(false);
-      setConfigLoaded(false); // Permitir recarga completa
+      // Marcar que se han guardado nuevos valores
       alert('Valores guardados correctamente');
       
-      // CRÍTICO: Esperar un momento para que el guardado se complete en la BD
-      console.log('🔄 [CALCULATOR] Waiting for database write to complete...');
-      await new Promise(resolve => setTimeout(resolve, 1000)); // 1 segundo de delay
-      
-      // Actualizar automáticamente después de guardar
-      console.log('🔄 [CALCULATOR] Auto-refresh after save triggered');
-      await loadCalculatorConfig(user?.id || '');
+      // CRÍTICO: NO actualizar automáticamente - los valores ya están en el estado
+      console.log('✅ [CALCULATOR] Valores guardados exitosamente - no se necesita recarga');
       
       // CRÍTICO: Rehabilitar autosave después del guardado
       console.log('🔓 [CALCULATOR] Re-enabling autosave after manual save');
