@@ -109,7 +109,7 @@ export default function ModelCalculatorPage() {
           groups,
           organization_id: '',
           is_active: true,
-          last_login: new Date().toISOString(),
+          last_login: new Date().toISOString(), // Usar fecha del servidor para last_login
         };
         setUser(current);
 
