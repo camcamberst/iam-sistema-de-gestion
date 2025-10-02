@@ -248,27 +248,22 @@ export default function ModelCalculatorPage() {
             }
           }
           
-          // Solo cargar valores si no se han cargado previamente
-          if (!valuesLoaded) {
-            console.log('🔍 [CALCULATOR] Cargando valores guardados por primera vez');
-            setPlatforms(prev => prev.map(p => ({
-              ...p,
-              value: platformToValue[p.id] ?? p.value
-            })));
-            setInputValues(prev => {
-              const next: Record<string, string> = { ...prev };
-              for (const p of enabledPlatforms) {
-                const v = platformToValue[p.id];
-                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-                  next[p.id] = String(v);
-                }
+          // Cargar valores guardados siempre
+          console.log('🔍 [CALCULATOR] Cargando valores guardados');
+          setPlatforms(prev => prev.map(p => ({
+            ...p,
+            value: platformToValue[p.id] ?? p.value
+          })));
+          setInputValues(prev => {
+            const next: Record<string, string> = { ...prev };
+            for (const p of enabledPlatforms) {
+              const v = platformToValue[p.id];
+              if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                next[p.id] = String(v);
               }
-              return next;
-            });
-            setValuesLoaded(true);
-          } else {
-            console.log('🔍 [CALCULATOR] Valores ya cargados previamente, no sobrescribiendo');
-          }
+            }
+            return next;
+          });
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
