@@ -120,7 +120,10 @@ export default function SuperAdminDashboard() {
             </div>
 
             {/* Calculadora para modelos */}
-            <ModelCalculator />
+            <ModelCalculator 
+              modelId={user.id}
+              adminView={false}
+            />
           </div>
         )}
       </div>
