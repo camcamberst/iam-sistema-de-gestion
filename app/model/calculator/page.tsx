@@ -59,7 +59,6 @@ export default function ModelCalculatorPage() {
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [lastSaved, setLastSaved] = useState<string | null>(null);
   const [adminOverride, setAdminOverride] = useState(false);
   const [queryModelId, setQueryModelId] = useState<string | null>(null);
   const router = useRouter();
@@ -252,7 +251,7 @@ export default function ModelCalculatorPage() {
         }, {} as Record<string, string>)
       );
 
-      // Cargar valores guardados previamente (solo sistema V2) - MEJORADO
+      // Cargar valores guardados previamente (solo sistema V2)
       try {
         console.log('🔍 [CALCULATOR] Loading saved values - V2 system only');
         const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
@@ -266,28 +265,20 @@ export default function ModelCalculatorPage() {
               platformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
             }
           }
-          
-          // Solo cargar valores si no hay valores actuales en los inputs
-          const hasCurrentValues = Object.values(inputValues).some(v => v && parseFloat(v) > 0);
-          if (!hasCurrentValues) {
-            console.log('🔍 [CALCULATOR] No hay valores actuales, cargando valores guardados');
-            setPlatforms(prev => prev.map(p => ({
-              ...p,
-              value: platformToValue[p.id] ?? p.value
-            })));
-            setInputValues(prev => {
-              const next: Record<string, string> = { ...prev };
-              for (const p of enabledPlatforms) {
-                const v = platformToValue[p.id];
-                if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
-                  next[p.id] = String(v);
-                }
+          setPlatforms(prev => prev.map(p => ({
+            ...p,
+            value: platformToValue[p.id] ?? p.value
+          })));
+          setInputValues(prev => {
+            const next: Record<string, string> = { ...prev };
+            for (const p of enabledPlatforms) {
+              const v = platformToValue[p.id];
+              if (typeof v === 'number' && Number.isFinite(v) && v > 0) {
+                next[p.id] = String(v);
               }
-              return next;
-            });
-          } else {
-            console.log('🔍 [CALCULATOR] Hay valores actuales, no sobrescribiendo');
-          }
+            }
+            return next;
+          });
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
@@ -382,9 +373,7 @@ export default function ModelCalculatorPage() {
         throw new Error(data.error || 'Error al guardar');
       }
 
-      // Mostrar confirmación visual
-      setLastSaved(new Date().toLocaleTimeString('es-CO'));
-      setTimeout(() => setLastSaved(null), 3000); // Ocultar después de 3 segundos
+      alert('Valores guardados correctamente');
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Save error:', err);
       setError(err.message || 'Error al guardar');
@@ -393,44 +382,44 @@ export default function ModelCalculatorPage() {
     }
   };
 
-  // Autosave con debounce (opcional por flag) - DESHABILITADO TEMPORALMENTE
-  // useEffect(() => {
-  //   if (!ENABLE_AUTOSAVE) return;
-  //   if (!user) return;
-  //   
-  //   // Preparar mapa de valores a guardar
-  //   const enabled = platforms.filter(p => p.enabled && p.value > 0);
-  //   const values: Record<string, number> = enabled.reduce((acc, p) => {
-  //     acc[p.id] = p.value;
-  //     return acc;
-  //   }, {} as Record<string, number>);
+  // Autosave con debounce (opcional por flag) - OPTIMIZADO
+  useEffect(() => {
+    if (!ENABLE_AUTOSAVE) return;
+    if (!user) return;
+    
+    // Preparar mapa de valores a guardar
+    const enabled = platforms.filter(p => p.enabled && p.value > 0);
+    const values: Record<string, number> = enabled.reduce((acc, p) => {
+      acc[p.id] = p.value;
+      return acc;
+    }, {} as Record<string, number>);
 
-  //   const hasAny = Object.keys(values).length > 0;
-  //   if (!hasAny) return;
+    const hasAny = Object.keys(values).length > 0;
+    if (!hasAny) return;
 
-  //   const controller = new AbortController();
-  //   const t = setTimeout(async () => {
-  //     try {
-  //       const res = await fetch('/api/calculator/model-values-v2', {
-  //         method: 'POST',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify({ modelId: user.id, values, periodDate }),
-  //         signal: controller.signal
-  //       });
-  //       const json = await res.json();
-  //       if (!json.success) {
-  //         console.warn('⚠️ [AUTOSAVE] Error guardando automáticamente:', json.error);
-  //       }
-  //     } catch (e) {
-  //       console.warn('⚠️ [AUTOSAVE] Excepción en autosave:', e);
-  //     }
-  //   }, 800);
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        const res = await fetch('/api/calculator/model-values-v2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelId: user.id, values, periodDate }),
+          signal: controller.signal
+        });
+        const json = await res.json();
+        if (!json.success) {
+          console.warn('⚠️ [AUTOSAVE] Error guardando automáticamente:', json.error);
+        }
+      } catch (e) {
+        console.warn('⚠️ [AUTOSAVE] Excepción en autosave:', e);
+      }
+    }, 800);
 
-  //   return () => {
-  //     controller.abort();
-  //     clearTimeout(t);
-  //   };
-  // }, [ENABLE_AUTOSAVE, user?.id, periodDate]); // OPTIMIZADO: Removido 'platforms' para evitar bucle infinito
+    return () => {
+      controller.abort();
+      clearTimeout(t);
+    };
+  }, [ENABLE_AUTOSAVE, user?.id, periodDate]); // OPTIMIZADO: Removido 'platforms' para evitar bucle infinito
 
   if (loading) {
     return (
@@ -705,29 +694,13 @@ export default function ModelCalculatorPage() {
         <div className="apple-card">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-semibold text-gray-900">Totales y Alertas</h3>
-            <div className="flex items-center space-x-3">
-              {lastSaved && (
-                <span className="text-xs text-green-600 font-medium">
-                  ✓ Guardado a las {lastSaved}
-                </span>
-              )}
-              <button
-                onClick={async () => {
-                  console.log('🔄 [CALCULATOR] Manual refresh triggered');
-                  await loadCalculatorConfig(user?.id || '');
-                }}
-                className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium"
-              >
-                🔄 Actualizar
-              </button>
-              <button
-                onClick={saveValues}
-                disabled={saving || platforms.filter(p => p.enabled).length === 0}
-                className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
-              >
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
+            <button
+              onClick={saveValues}
+              disabled={saving || platforms.filter(p => p.enabled).length === 0}
+              className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+            >
+              {saving ? 'Guardando...' : 'Guardar'}
+            </button>
           </div>
           
           {/* Totales principales - COMPACTO */}
