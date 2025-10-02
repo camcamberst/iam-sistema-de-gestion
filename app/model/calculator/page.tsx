@@ -60,6 +60,7 @@ export default function ModelCalculatorPage() {
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [valuesLoaded, setValuesLoaded] = useState(false);
+  const [configLoaded, setConfigLoaded] = useState(false);
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   const supabase = createClient(
@@ -122,8 +123,15 @@ export default function ModelCalculatorPage() {
   }, []);
 
   const loadCalculatorConfig = async (userId: string) => {
+    // Prevenir doble carga
+    if (configLoaded) {
+      console.log('🔍 [CALCULATOR] Config already loaded, skipping');
+      return;
+    }
+    
     try {
       console.log('🔍 [CALCULATOR] Loading config for userId:', userId);
+      setConfigLoaded(true);
 
       // Verificar si hay datos precargados desde el admin
       const urlParams = new URLSearchParams(window.location.search);
@@ -373,6 +381,7 @@ export default function ModelCalculatorPage() {
 
       // Marcar que se han guardado nuevos valores
       setValuesLoaded(false);
+      setConfigLoaded(false); // Permitir recarga completa
       alert('Valores guardados correctamente');
     } catch (err: any) {
       console.error('❌ [CALCULATOR] Save error:', err);
@@ -463,6 +472,7 @@ export default function ModelCalculatorPage() {
                 onClick={async () => {
                   console.log('🔄 [MODEL-CALCULATOR] Manual refresh triggered');
                   setValuesLoaded(false); // Resetear para permitir recarga
+                  setConfigLoaded(false); // Resetear para permitir recarga de config
                   await loadCalculatorConfig(user?.id || '');
                 }}
                 className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm font-medium transition-colors"
@@ -519,6 +529,7 @@ export default function ModelCalculatorPage() {
                 onClick={() => {
                   if (user?.id) {
                     setValuesLoaded(false); // Resetear para permitir recarga
+                    setConfigLoaded(false); // Resetear para permitir recarga de config
                     loadCalculatorConfig(user.id);
                   }
                 }}
