@@ -16,10 +16,16 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Obtener información del admin (simplificado)
+    // Obtener información del admin con sus grupos
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
-      .select('role')
+      .select(`
+        role,
+        groups:user_groups(
+          group_id,
+          group:groups(id, name)
+        )
+      `)
       .eq('id', adminId)
       .single();
 
@@ -28,8 +34,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
     }
 
-    // Obtener todas las modelos con sus grupos reales
-    const { data: models, error: modelsError } = await supabase
+    const isSuperAdmin = adminUser.role === 'super_admin';
+    const isAdmin = adminUser.role === 'admin';
+
+    if (!isSuperAdmin && !isAdmin) {
+      return NextResponse.json({ success: false, error: 'No tienes permisos para acceder a esta función' }, { status: 403 });
+    }
+
+    let modelsQuery = supabase
       .from('users')
       .select(`
         id,
@@ -52,6 +64,37 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('role', 'modelo');
+
+    // Si es admin (no super admin), filtrar por sus grupos
+    if (isAdmin && !isSuperAdmin) {
+      const adminGroupIds = adminUser.groups?.map((g: any) => g.group_id).filter(Boolean) || [];
+      
+      if (adminGroupIds.length === 0) {
+        return NextResponse.json({ success: true, data: [] });
+      }
+
+      // Obtener IDs de modelos que pertenecen a los grupos del admin
+      const { data: modelIds, error: modelIdsError } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', adminGroupIds);
+
+      if (modelIdsError) {
+        console.error('Error al obtener IDs de modelos:', modelIdsError);
+        return NextResponse.json({ success: false, error: 'Error al filtrar modelos' }, { status: 500 });
+      }
+
+      const userIds = modelIds?.map((m: any) => m.user_id) || [];
+      
+      if (userIds.length === 0) {
+        return NextResponse.json({ success: true, data: [] });
+      }
+
+      // Filtrar modelos por IDs obtenidos
+      modelsQuery = modelsQuery.in('id', userIds);
+    }
+
+    const { data: models, error: modelsError } = await modelsQuery;
 
     if (modelsError) {
       console.error('Error al obtener modelos:', modelsError);
