@@ -54,6 +54,8 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
       }
 
+      console.log('🔍 [API ANTICIPOS] Rol del admin:', adminUser.role);
+
       let query = supabase
         .from('anticipos')
         .select(`
@@ -64,6 +66,7 @@ export async function GET(request: NextRequest) {
         .order('created_at', { ascending: false });
 
       // Filtrado por rol: Admin solo ve anticipos de su grupo, Super Admin ve todos
+      console.log('🔍 [API ANTICIPOS] Aplicando filtros para rol:', adminUser.role);
       if (adminUser.role === 'admin') {
         // Admin: solo anticipos de modelos de su grupo
         // Obtener grupos del admin
@@ -116,6 +119,11 @@ export async function GET(request: NextRequest) {
       }
 
       const { data: anticipos, error } = await query;
+      
+      console.log('🔍 [API ANTICIPOS] Resultado de la consulta:', { 
+        anticiposCount: anticipos?.length || 0, 
+        error: error?.message 
+      });
       
       if (error) {
         console.error('❌ [API ANTICIPOS] Error fetching anticipos:', error);
