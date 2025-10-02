@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { getSupabaseAdminClient } from '@/lib/supabase-singleton';
+import { getSupabaseClient, getSupabaseAdminClient } from '@/lib/supabase-singleton';
 import { getCalculatorDate } from '@/utils/calculator-dates';
 
 interface User {
@@ -41,6 +41,7 @@ export default function AdminCalculatorViewPage({ params }: { params: { modelId:
   const [saving, setSaving] = useState(false);
 
   const router = useRouter();
+  const supabase = getSupabaseClient();
   const supabaseAdmin = getSupabaseAdminClient();
 
   useEffect(() => {
@@ -49,17 +50,18 @@ export default function AdminCalculatorViewPage({ params }: { params: { modelId:
 
   const loadData = async () => {
     try {
+      console.log('🔍 [ADMIN-CALC] Iniciando carga de datos para modelId:', params.modelId);
       setLoading(true);
       setError(null);
 
       // 1. Verificar que el usuario actual es admin/super_admin
-      const { data: auth } = await supabaseAdmin.auth.getUser();
+      const { data: auth } = await supabase.auth.getUser();
       if (!auth?.user) {
         router.push('/login');
         return;
       }
 
-      const { data: userData } = await supabaseAdmin
+      const { data: userData } = await supabase
         .from('users')
         .select('id, name, email, role')
         .eq('id', auth.user.id)
@@ -71,8 +73,10 @@ export default function AdminCalculatorViewPage({ params }: { params: { modelId:
       }
 
       setUser(userData);
+      console.log('🔍 [ADMIN-CALC] Usuario autenticado:', userData);
 
       // 2. Obtener datos de la modelo
+      console.log('🔍 [ADMIN-CALC] Buscando modelo con ID:', params.modelId);
       const { data: modelData } = await supabaseAdmin
         .from('users')
         .select('id, name, email, role')
@@ -85,8 +89,10 @@ export default function AdminCalculatorViewPage({ params }: { params: { modelId:
       }
 
       setModel(modelData);
+      console.log('🔍 [ADMIN-CALC] Modelo encontrada:', modelData);
 
       // 3. Cargar configuración de calculadora
+      console.log('🔍 [ADMIN-CALC] Cargando configuración de calculadora...');
       const { data: config } = await supabaseAdmin
         .from('calculator_config')
         .select('*')
