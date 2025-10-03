@@ -276,9 +276,11 @@ export default function AdminViewModelPage() {
                       </thead>
                       <tbody>
                         {selectedModel.calculatorData.platforms.map((platform: any) => {
-                          // Obtener valor actual de esta plataforma
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
-                          console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'Value:', currentValue, 'Values array:', selectedModel.calculatorData.values);
+                          // Obtener valor actual de esta plataforma - buscar por platform_id o por platform name
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                            v.platform_id === platform.id || v.platform === platform.name
+                          )?.value || 0;
+                          console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'ID:', platform.id, 'Value:', currentValue);
                           
                           // Calcular dólares y COP para esta plataforma usando las mismas fórmulas
                           let usdBruto = currentValue;
@@ -364,7 +366,9 @@ export default function AdminViewModelPage() {
                     <div className="text-center p-3 bg-blue-50 rounded-md">
                       <div className="text-xl font-bold text-blue-600 mb-1">
                         ${selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                            v.platform_id === platform.id || v.platform === platform.name
+                          )?.value || 0;
                           let usdBruto = 0;
                           if (platform.currency === 'EUR') {
                             usdBruto = currentValue * 1.01;
@@ -381,7 +385,9 @@ export default function AdminViewModelPage() {
                     <div className="text-center p-3 bg-green-50 rounded-md">
                       <div className="text-xl font-bold text-green-600 mb-1">
                         ${selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                            v.platform_id === platform.id || v.platform === platform.name
+                          )?.value || 0;
                           let usdModelo = 0;
                           if (platform.currency === 'EUR') {
                             usdModelo = currentValue * 1.01;
@@ -398,7 +404,9 @@ export default function AdminViewModelPage() {
                     <div className="text-center p-3 bg-purple-50 rounded-md">
                       <div className="text-xl font-bold text-purple-600 mb-1">
                         ${(selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                            v.platform_id === platform.id || v.platform === platform.name
+                          )?.value || 0;
                           let usdModelo = 0;
                           if (platform.currency === 'EUR') {
                             usdModelo = currentValue * 1.01;
