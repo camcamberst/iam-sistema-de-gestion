@@ -196,160 +196,236 @@ export default function AdminViewModelPage() {
   if (selectedModel) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}
-          <div className="mb-6">
-            <button 
-              onClick={handleBackToModels}
-              className="mb-4 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
-            >
-              ← Volver a la lista de modelos
-            </button>
-            <h1 className="text-3xl font-semibold text-gray-900">
-              Calculadora de {selectedModel.name}
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
-            </p>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                Calculadora de {selectedModel.name}
+              </h1>
+              <p className="text-gray-500 text-sm">
+                {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
+              </p>
+            </div>
+            <div className="flex items-center space-x-4">
+              <button
+                onClick={handleBackToModels}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+              >
+                ← Volver
+              </button>
+            </div>
           </div>
 
           {/* Datos de la calculadora */}
           {selectedModel.calculatorData ? (
-            <div className="space-y-6">
-              {/* Estado de configuración */}
-              <div className="apple-card">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">
-                  Estado de Configuración
-                </h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Estado</label>
-                    <div className={`mt-1 px-3 py-1 rounded-full text-sm inline-block ${
-                      selectedModel.calculatorData.isConfigured 
-                        ? 'bg-green-100 text-green-800' 
-                        : 'bg-gray-100 text-gray-800'
+            <div className="space-y-4">
+              {/* Estado de configuración - COMPACTO */}
+              <div className="apple-card mb-3">
+                <h2 className="text-sm font-semibold text-gray-900 mb-2">Estado de Configuración</h2>
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="text-center p-2 bg-blue-50 rounded-md">
+                    <div className={`text-lg font-bold ${
+                      selectedModel.calculatorData.isConfigured ? 'text-green-600' : 'text-gray-600'
                     }`}>
+                      {selectedModel.calculatorData.isConfigured ? '✓' : '○'}
+                    </div>
+                    <div className="text-xs text-gray-600">
                       {selectedModel.calculatorData.isConfigured ? 'Configurada' : 'Sin configurar'}
                     </div>
                   </div>
-                  
-                  {selectedModel.calculatorData.config && (
-                    <>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Porcentaje Override</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedModel.calculatorData.config.percentage_override || 'No definido'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Cuota Mínima Override</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedModel.calculatorData.config.min_quota_override || 'No definido'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Porcentaje del Grupo</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedModel.calculatorData.config.group_percentage || 'No definido'}
-                        </p>
-                      </div>
-                      <div>
-                        <label className="text-sm font-medium text-gray-700">Cuota Mínima del Grupo</label>
-                        <p className="mt-1 text-sm text-gray-900">
-                          {selectedModel.calculatorData.config.group_min_quota || 'No definido'}
-                        </p>
-                      </div>
-                    </>
-                  )}
+                  <div className="text-center p-2 bg-purple-50 rounded-md">
+                    <div className="text-lg font-bold text-purple-600">
+                      {selectedModel.calculatorData.platforms?.length || 0}
+                    </div>
+                    <div className="text-xs text-gray-600">Plataformas</div>
+                  </div>
                 </div>
               </div>
 
-              {/* Plataformas habilitadas */}
-              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
-                <div className="apple-card">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Plataformas Habilitadas ({selectedModel.calculatorData.platforms.length})
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    {selectedModel.calculatorData.platforms.map((platform: any) => (
-                      <div key={platform.id} className="border rounded-lg p-4">
-                        <h4 className="font-medium text-gray-900">{platform.name}</h4>
-                        <div className="mt-2 space-y-1 text-sm text-gray-600">
-                          <div>Porcentaje: {platform.percentage}%</div>
-                          <div>Cuota mínima: ${platform.min_quota}</div>
-                          <div>Moneda: {platform.currency || 'USD'}</div>
-                        </div>
-                      </div>
-                    ))}
+              {/* Tabla de Calculadora - REPLICANDO DISEÑO DE MI CALCULADORA */}
+              <div className="apple-card mb-4">
+                <h2 className="text-base font-semibold text-gray-900 mb-3">Calculadora de Ingresos</h2>
+                
+                {!selectedModel.calculatorData.isConfigured || !selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <span className="text-gray-400 text-2xl">📊</span>
+                    </div>
+                    <h4 className="text-lg font-medium text-gray-900 mb-2">No hay plataformas habilitadas</h4>
+                    <p className="text-gray-500 mb-4">
+                      Esta modelo no tiene configuración de calculadora o plataformas habilitadas.
+                    </p>
+                    <p className="text-sm text-gray-400">
+                      Contacta al administrador para que configure las plataformas.
+                    </p>
                   </div>
-                </div>
-              )}
-
-              {/* Valores actuales */}
-              {selectedModel.calculatorData.values && selectedModel.calculatorData.values.length > 0 && (
-                <div className="apple-card">
-                  <h3 className="text-lg font-medium text-gray-900 mb-4">
-                    Valores Actuales ({selectedModel.calculatorData.values.length})
-                  </h3>
+                ) : (
                   <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y divide-gray-200">
-                      <thead className="bg-gray-50">
-                        <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Plataforma
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Valor
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Tokens
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            USD
-                          </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                            Actualizado
-                          </th>
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200">
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">PLATAFORMAS</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">VALORES</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">DÓLARES</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">COP MODELO</th>
                         </tr>
                       </thead>
-                      <tbody className="bg-white divide-y divide-gray-200">
-                        {selectedModel.calculatorData.values.map((value: any, index: number) => (
-                          <tr key={index}>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                              {value.platform || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {value.value || 0}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              {value.tokens || 0}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                              ${value.value_usd || 0}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {new Date(value.updated_at || value.created_at).toLocaleDateString()}
-                            </td>
-                          </tr>
-                        ))}
+                      <tbody>
+                        {selectedModel.calculatorData.platforms.map((platform: any) => {
+                          // Obtener valor actual de esta plataforma
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          
+                          // Calcular dólares y COP para esta plataforma usando las mismas fórmulas
+                          let usdBruto = currentValue;
+                          
+                          // Aplicar fórmula específica según la plataforma
+                          let usdModelo = 0;
+                          if (platform.currency === 'EUR') {
+                            if (platform.id === 'big7') {
+                              usdModelo = (currentValue * 1.01) * 0.84; // 16% impuesto
+                            } else if (platform.id === 'mondo') {
+                              usdModelo = (currentValue * 1.01) * 0.78; // 22% descuento
+                            } else {
+                              usdModelo = currentValue * 1.01; // EUR directo
+                            }
+                          } else if (platform.currency === 'GBP') {
+                            if (platform.id === 'aw') {
+                              usdModelo = (currentValue * 1.20) * 0.677; // 32.3% descuento
+                            } else {
+                              usdModelo = currentValue * 1.20; // GBP directo
+                            }
+                          } else if (platform.currency === 'USD') {
+                            if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                              usdModelo = currentValue * 0.75; // 25% descuento
+                            } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                              usdModelo = currentValue * 0.05; // 100 tokens = 5 USD
+                            } else if (platform.id === 'dxlive') {
+                              usdModelo = currentValue * 0.60; // 100 pts = 60 USD
+                            } else if (platform.id === 'secretfriends') {
+                              usdModelo = currentValue * 0.5; // 50% descuento
+                            } else if (platform.id === 'superfoon') {
+                              usdModelo = currentValue; // 100% directo
+                            } else {
+                              usdModelo = currentValue; // USD directo por defecto
+                            }
+                          }
+                          
+                          // Aplicar porcentaje de reparto del modelo
+                          const usdModeloFinal = (usdModelo * platform.percentage) / 100;
+                          const copModelo = usdModeloFinal * 3900; // Tasa fija por ahora
+                          
+                          return (
+                            <tr key={platform.id} className="border-b border-gray-100">
+                              <td className="py-3 px-3">
+                                <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
+                                <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="relative">
+                                  <div className="text-gray-600 font-medium text-sm">
+                                    {currentValue.toFixed(2)}
+                                  </div>
+                                  <div className="text-xs text-gray-500">
+                                    {platform.currency || 'USD'}
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="text-gray-600 font-medium text-sm">
+                                  ${usdModelo.toFixed(2)} USD
+                                </div>
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="text-gray-600 font-medium text-sm">
+                                  ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
                       </tbody>
                     </table>
                   </div>
-                </div>
-              )}
+                )}
+              </div>
 
-              {/* Sin datos */}
-              {(!selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0) && 
-               (!selectedModel.calculatorData.values || selectedModel.calculatorData.values.length === 0) && (
+              {/* Totales y Alertas - COMPACTO */}
+              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
                 <div className="apple-card">
-                  <div className="text-center py-8">
-                    <div className="text-gray-400 mb-4">📊</div>
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Sin datos de calculadora
-                    </h3>
-                    <p className="text-gray-600">
-                      Esta modelo no tiene configuración de calculadora o valores registrados
-                    </p>
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
+                  
+                  {/* Totales principales - COMPACTO */}
+                  <div className="grid grid-cols-3 gap-3 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded-md">
+                      <div className="text-xl font-bold text-blue-600 mb-1">
+                        ${selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          let usdBruto = 0;
+                          if (platform.currency === 'EUR') {
+                            usdBruto = currentValue * 1.01;
+                          } else if (platform.currency === 'GBP') {
+                            usdBruto = currentValue * 1.20;
+                          } else {
+                            usdBruto = currentValue;
+                          }
+                          return sum + usdBruto;
+                        }, 0).toFixed(2)}
+                      </div>
+                      <div className="text-xs text-gray-600">USD Bruto</div>
+                    </div>
+                    <div className="text-center p-3 bg-green-50 rounded-md">
+                      <div className="text-xl font-bold text-green-600 mb-1">
+                        ${selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          let usdModelo = 0;
+                          if (platform.currency === 'EUR') {
+                            usdModelo = currentValue * 1.01;
+                          } else if (platform.currency === 'GBP') {
+                            usdModelo = currentValue * 1.20;
+                          } else {
+                            usdModelo = currentValue;
+                          }
+                          return sum + (usdModelo * platform.percentage / 100);
+                        }, 0).toFixed(2)}
+                      </div>
+                      <div className="text-xs text-gray-600">USD Modelo</div>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded-md">
+                      <div className="text-xl font-bold text-purple-600 mb-1">
+                        ${(selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          let usdModelo = 0;
+                          if (platform.currency === 'EUR') {
+                            usdModelo = currentValue * 1.01;
+                          } else if (platform.currency === 'GBP') {
+                            usdModelo = currentValue * 1.20;
+                          } else {
+                            usdModelo = currentValue;
+                          }
+                          return sum + (usdModelo * platform.percentage / 100);
+                        }, 0) * 3900).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                      </div>
+                      <div className="text-xs text-gray-600">COP Modelo</div>
+                    </div>
+                  </div>
+                  
+                  {/* 90% de anticipo */}
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-600">
+                      <strong>90% de anticipo disponible:</strong> ${(selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
+                        const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                        let usdModelo = 0;
+                        if (platform.currency === 'EUR') {
+                          usdModelo = currentValue * 1.01;
+                        } else if (platform.currency === 'GBP') {
+                          usdModelo = currentValue * 1.20;
+                        } else {
+                          usdModelo = currentValue;
+                        }
+                        return sum + (usdModelo * platform.percentage / 100);
+                      }, 0) * 3900 * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                    </div>
                   </div>
                 </div>
               )}
