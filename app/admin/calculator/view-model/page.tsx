@@ -3,8 +3,6 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
-import { getCalculatorDate } from '@/utils/calculator-dates';
-import ModelCalculator from '@/components/ModelCalculator';
 
 interface User {
   id: string;
@@ -21,49 +19,42 @@ interface Model {
   id: string;
   name: string;
   email: string;
-  role: string;
-  groups: string[];
+  groups: Array<{
+    group: {
+      id: string;
+      name: string;
+    };
+  }>;
+  calculator_config?: {
+    id: string;
+    active: boolean;
+    enabled_platforms: string[];
+    percentage_override: number | null;
+    min_quota_override: number | null;
+    group_percentage: number | null;
+    group_min_quota: number | null;
+  };
+  calculatorData?: any; // Datos de la calculadora cargados desde la API
 }
 
-export default function ViewModelCalculator() {
+export default function AdminViewModelPage() {
   const [user, setUser] = useState<User | null>(null);
   const [models, setModels] = useState<Model[]>([]);
-  const [filteredModels, setFilteredModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  const [groupsOptions, setGroupsOptions] = useState<Array<{ id: string; name: string }>>([]);
-  const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [loading, setLoading] = useState(true);
-  const [modelsLoading, setModelsLoading] = useState(false);
-  
-  // Estados para dropdowns personalizados
-  const [isGroupDropdownOpen, setIsGroupDropdownOpen] = useState(false);
-  const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+  
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
 
-  // Cerrar dropdowns al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (!target.closest('.dropdown-container')) {
-        setIsGroupDropdownOpen(false);
-        setIsModelDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  // Precargar datos de la calculadora cuando se selecciona un modelo
-
   useEffect(() => {
     const load = async () => {
       try {
         setLoading(true);
+        
         // Load current user
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth?.user?.id;
@@ -72,11 +63,13 @@ export default function ViewModelCalculator() {
           setLoading(false);
           return;
         }
+        
         const { data: userRow } = await supabase
           .from('users')
           .select('id,name,email,role')
           .eq('id', uid)
           .single();
+        
         let groups: string[] = [];
         if (userRow && userRow.role !== 'super_admin') {
           const { data: ug } = await supabase
@@ -85,17 +78,24 @@ export default function ViewModelCalculator() {
             .eq('user_id', uid);
           groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
         }
-        const current = {
+        
+        setUser({
           id: userRow?.id || uid,
           name: userRow?.name || auth.user?.email?.split('@')[0] || 'Usuario',
           email: userRow?.email || auth.user?.email || '',
-          role: (userRow?.role as any) || 'admin',
+          role: (userRow?.role as any) || 'modelo',
           groups,
           organization_id: '',
           is_active: true,
-          last_login: new Date().toISOString(),
-        };
-        setUser(current);
+          last_login: new Date().toISOString()
+        });
+
+        // Load models according to hierarchy
+        await loadModels(uid);
+        
+      } catch (err: any) {
+        console.error('Error loading user:', err);
+        setError(err.message || 'Error al cargar usuario');
       } finally {
         setLoading(false);
       }
@@ -103,64 +103,50 @@ export default function ViewModelCalculator() {
     load();
   }, []);
 
-  const loadModels = async () => {
+  const loadModels = async (adminId: string) => {
     try {
-      setModelsLoading(true);
-      if (!user) return;
-      const response = await fetch(`/api/calculator/models?adminId=${user.id}`);
-      if (response.ok) {
-        const data = await response.json();
-        const list: Model[] = (data.data || []).map((m: any) => ({
-          id: m.id,
-          email: m.email,
-          name: m.name,
-          role: m.role,
-          groups: (m.groups || []).map((g: any) => g?.name || g).filter(Boolean)
-        }));
-        // Filtrado por grupos para admin (solo ve sus grupos)
-        const visibleForRole = (user.role === 'admin')
-          ? list.filter((m: Model) => m.groups.some(g => user.groups.includes(g)))
-          : list;
-        setModels(visibleForRole);
-        setFilteredModels(visibleForRole);
-        // Opciones de grupos para super admin
-        if (user.role === 'super_admin') {
-          const unique = new Map<string, { id: string; name: string }>();
-          for (const m of list) {
-            for (const g of m.groups) {
-              const key = String(g);
-              if (!unique.has(key)) unique.set(key, { id: key, name: key });
-            }
-          }
-          setGroupsOptions(Array.from(unique.values()));
-        }
+      const response = await fetch(`/api/calculator/models?adminId=${adminId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setModels(data.models || []);
+      } else {
+        setError(data.error || 'Error al cargar modelos');
       }
-    } catch (error) {
-      console.error('Error loading models:', error);
-    } finally {
-      setModelsLoading(false);
+    } catch (err: any) {
+      console.error('Error loading models:', err);
+      setError(err.message || 'Error al cargar modelos');
     }
   };
 
-  useEffect(() => {
-    if (user && (user.role === 'admin' || user.role === 'super_admin')) {
-      loadModels();
+  const handleModelSelect = async (model: Model) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Cargar datos de la calculadora del modelo
+      const response = await fetch(`/api/calculator/admin-view?modelId=${model.id}&adminId=${user?.id}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setSelectedModel({
+          ...model,
+          calculatorData: data
+        });
+      } else {
+        setError(data.error || 'Error al cargar datos de la calculadora');
+      }
+    } catch (err: any) {
+      console.error('Error loading calculator data:', err);
+      setError(err.message || 'Error al cargar datos de la calculadora');
+    } finally {
+      setLoading(false);
     }
-  }, [user]);
+  };
 
-  // Aplicar filtro por grupo (solo super admin)
-  useEffect(() => {
-    if (!user) return;
-    if (user.role !== 'super_admin') {
-      setFilteredModels(models);
-      return;
-    }
-    if (!selectedGroup) {
-      setFilteredModels(models);
-      return;
-    }
-    setFilteredModels(models.filter(m => m.groups.includes(selectedGroup)));
-  }, [user, models, selectedGroup]);
+  const handleBackToModels = () => {
+    setSelectedModel(null);
+  };
 
   if (loading) {
     return (
@@ -173,163 +159,283 @@ export default function ViewModelCalculator() {
     );
   }
 
-  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
+  if (error) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4">Acceso Denegado</h1>
-          <p className="text-gray-600">No tienes permisos para acceder a esta página.</p>
+          <div className="text-red-600 mb-4">❌</div>
+          <p className="text-red-600 mb-4">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Reintentar
+          </button>
         </div>
       </div>
     );
   }
 
-  return (
-    <>
-      <style jsx>{`
-        .dropdown-container .overflow-y-auto::-webkit-scrollbar {
-          width: 6px;
-        }
-        .dropdown-container .overflow-y-auto::-webkit-scrollbar-track {
-          background: #f1f5f9;
-          border-radius: 3px;
-        }
-        .dropdown-container .overflow-y-auto::-webkit-scrollbar-thumb {
-          background: #cbd5e1;
-          border-radius: 3px;
-        }
-        .dropdown-container .overflow-y-auto::-webkit-scrollbar-thumb:hover {
-          background: #94a3b8;
-        }
-      `}</style>
-      <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Ver Calculadora de Modelo</h1>
-        <p className="text-gray-500 mb-6 text-sm">
-          Selecciona una modelo para ver su calculadora
-        </p>
+  if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
+    return (
+      <div className="min-h-screen bg-white flex items-center justify-center">
+        <div className="text-center">
+          <div className="text-red-600 mb-4">🚫</div>
+          <p className="text-red-600 mb-4">No tienes permisos para acceder a esta función</p>
+          <button 
+            onClick={() => router.push('/admin/dashboard')}
+            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+          >
+            Volver al Dashboard
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-        {/* Filtros y selector de modelo */}
-        <div className="apple-card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
-          <div className="space-y-4">
-            {user.role === 'super_admin' && (
-              <div className="dropdown-container relative">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Filtrar por grupo
-                </label>
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsGroupDropdownOpen(!isGroupDropdownOpen)}
-                    disabled={modelsLoading}
-                    className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <span className="text-gray-700">
-                      {selectedGroup || 'Todos los grupos'}
-                    </span>
-                    <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isGroupDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {isGroupDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-32 overflow-y-auto">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedGroup('');
-                          setIsGroupDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        Todos los grupos
-                      </button>
-                      {groupsOptions.map((g) => (
-                        <button
-                          key={g.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedGroup(g.name);
-                            setIsGroupDropdownOpen(false);
-                          }}
-                          className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
-                        >
-                          {g.name}
-                        </button>
-                      ))}
+  // Si hay un modelo seleccionado, mostrar su calculadora
+  if (selectedModel) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {/* Header */}
+          <div className="mb-6">
+            <button 
+              onClick={handleBackToModels}
+              className="mb-4 inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+            >
+              ← Volver a la lista de modelos
+            </button>
+            <h1 className="text-3xl font-semibold text-gray-900">
+              Calculadora de {selectedModel.name}
+            </h1>
+            <p className="text-gray-600 mt-2">
+              {selectedModel.email} • {selectedModel.groups.map(g => g.group.name).join(', ')}
+            </p>
+          </div>
+
+          {/* Datos de la calculadora */}
+          {selectedModel.calculatorData ? (
+            <div className="space-y-6">
+              {/* Estado de configuración */}
+              <div className="apple-card">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">
+                  Estado de Configuración
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-sm font-medium text-gray-700">Estado</label>
+                    <div className={`mt-1 px-3 py-1 rounded-full text-sm inline-block ${
+                      selectedModel.calculatorData.isConfigured 
+                        ? 'bg-green-100 text-green-800' 
+                        : 'bg-gray-100 text-gray-800'
+                    }`}>
+                      {selectedModel.calculatorData.isConfigured ? 'Configurada' : 'Sin configurar'}
                     </div>
+                  </div>
+                  
+                  {selectedModel.calculatorData.config && (
+                    <>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Porcentaje Override</label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {selectedModel.calculatorData.config.percentage_override || 'No definido'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Cuota Mínima Override</label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {selectedModel.calculatorData.config.min_quota_override || 'No definido'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Porcentaje del Grupo</label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {selectedModel.calculatorData.config.group_percentage || 'No definido'}
+                        </p>
+                      </div>
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">Cuota Mínima del Grupo</label>
+                        <p className="mt-1 text-sm text-gray-900">
+                          {selectedModel.calculatorData.config.group_min_quota || 'No definido'}
+                        </p>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
-            )}
-            <div className="dropdown-container relative">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Modelo
-              </label>
-              <div className="relative">
-                <button
-                  type="button"
-                  onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
-                  disabled={modelsLoading}
-                  className="w-full px-4 py-3 text-sm bg-white border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm text-left flex items-center justify-between disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  <span className="text-gray-700">
-                    {selectedModel ? `${selectedModel.name} (${selectedModel.email})` : 'Selecciona una modelo...'}
-                  </span>
-                  <svg className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isModelDropdownOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {isModelDropdownOpen && (
-                  <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-32 overflow-y-auto">
-                    {filteredModels.map((model) => (
-                      <button
-                        key={model.id}
-                        type="button"
-                        onClick={() => {
-                          setSelectedModel(model);
-                          setIsModelDropdownOpen(false);
-                        }}
-                        className="w-full px-4 py-3 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
-                      >
-                        {model.name} ({model.email})
-                      </button>
+
+              {/* Plataformas habilitadas */}
+              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
+                <div className="apple-card">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Plataformas Habilitadas ({selectedModel.calculatorData.platforms.length})
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {selectedModel.calculatorData.platforms.map((platform: any) => (
+                      <div key={platform.id} className="border rounded-lg p-4">
+                        <h4 className="font-medium text-gray-900">{platform.name}</h4>
+                        <div className="mt-2 space-y-1 text-sm text-gray-600">
+                          <div>Porcentaje: {platform.percentage}%</div>
+                          <div>Cuota mínima: ${platform.min_quota}</div>
+                          <div>Moneda: {platform.currency || 'USD'}</div>
+                        </div>
+                      </div>
                     ))}
                   </div>
-                )}
+                </div>
+              )}
+
+              {/* Valores actuales */}
+              {selectedModel.calculatorData.values && selectedModel.calculatorData.values.length > 0 && (
+                <div className="apple-card">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Valores Actuales ({selectedModel.calculatorData.values.length})
+                  </h3>
+                  <div className="overflow-x-auto">
+                    <table className="min-w-full divide-y divide-gray-200">
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Plataforma
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Valor
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Tokens
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            USD
+                          </th>
+                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                            Actualizado
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {selectedModel.calculatorData.values.map((value: any, index: number) => (
+                          <tr key={index}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                              {value.platform || 'N/A'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {value.value || 0}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              {value.tokens || 0}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                              ${value.value_usd || 0}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              {new Date(value.updated_at || value.created_at).toLocaleDateString()}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Sin datos */}
+              {(!selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0) && 
+               (!selectedModel.calculatorData.values || selectedModel.calculatorData.values.length === 0) && (
+                <div className="apple-card">
+                  <div className="text-center py-8">
+                    <div className="text-gray-400 mb-4">📊</div>
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      Sin datos de calculadora
+                    </h3>
+                    <p className="text-gray-600">
+                      Esta modelo no tiene configuración de calculadora o valores registrados
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="apple-card">
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4">🧮</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Calculadora de {selectedModel.name}
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  Cargando datos de la calculadora...
+                </p>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               </div>
             </div>
-          </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar lista de modelos
+  return (
+    <div className="min-h-screen bg-white">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="mb-6">
+          <h1 className="text-3xl font-semibold text-gray-900">
+            Ver Calculadora de Modelo
+          </h1>
+          <p className="text-gray-600 mt-2">
+            Selecciona una modelo para ver su calculadora
+          </p>
         </div>
 
-                 {/* Vista de calculadora de modelo */}
-                 {selectedModel && (
-                   <div className="apple-card">
-                     <h2 className="text-lg font-semibold text-gray-900 mb-4">
-                       Calculadora de {selectedModel.name}
-                     </h2>
-                     <p className="text-sm text-gray-500 mb-6">
-                       Vista de administrador - Puedes editar los valores ingresados por la modelo
-                     </p>
-                     
-                     {/* Iframe con parámetros corregidos */}
-                     <div className="relative">
-                       <iframe
-                         key={selectedModel.id}
-                         src={`/model/calculator?adminView=true&modelId=${selectedModel.id}&adminId=${user?.id}`}
-                         className="w-full rounded-lg border border-gray-200"
-                         style={{ minHeight: '800px' }}
-                         loading="eager"
-                         sandbox="allow-scripts allow-same-origin allow-forms"
-                         title={`Calculadora de ${selectedModel.name}`}
-                       />
-                     </div>
-                   </div>
-                 )}
+        {/* Lista de modelos */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {models.map((model) => (
+            <div 
+              key={model.id}
+              onClick={() => handleModelSelect(model)}
+              className="apple-card cursor-pointer hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-lg font-medium text-gray-900">
+                  {model.name}
+                </h3>
+                <div className={`px-2 py-1 rounded-full text-xs ${
+                  model.calculator_config?.active 
+                    ? 'bg-green-100 text-green-800' 
+                    : 'bg-gray-100 text-gray-800'
+                }`}>
+                  {model.calculator_config?.active ? 'Configurada' : 'Sin configurar'}
+                </div>
+              </div>
+              
+              <p className="text-sm text-gray-600 mb-2">
+                {model.email}
+              </p>
+              
+              <div className="text-sm text-gray-500">
+                Grupos: {model.groups.map(g => g.group.name).join(', ')}
+              </div>
+              
+              <div className="mt-3 text-sm text-blue-600">
+                Ver calculadora →
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {models.length === 0 && (
+          <div className="text-center py-12">
+            <div className="text-gray-400 mb-4">👥</div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No hay modelos disponibles
+            </h3>
+            <p className="text-gray-600">
+              No se encontraron modelos asignados a tus grupos
+            </p>
+          </div>
+        )}
       </div>
     </div>
-    </>
   );
 }
