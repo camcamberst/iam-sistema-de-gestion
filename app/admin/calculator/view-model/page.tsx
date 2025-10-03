@@ -128,6 +128,9 @@ export default function AdminViewModelPage() {
       const data = await response.json();
       
       if (data.success) {
+        console.log('🔍 [ADMIN-VIEW] Calculator data received:', data);
+        console.log('🔍 [ADMIN-VIEW] Platforms:', data.platforms);
+        console.log('🔍 [ADMIN-VIEW] Values:', data.values);
         setSelectedModel({
           ...model,
           calculatorData: data
@@ -275,6 +278,7 @@ export default function AdminViewModelPage() {
                         {selectedModel.calculatorData.platforms.map((platform: any) => {
                           // Obtener valor actual de esta plataforma
                           const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                          console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'Value:', currentValue);
                           
                           // Calcular dólares y COP para esta plataforma usando las mismas fórmulas
                           let usdBruto = currentValue;

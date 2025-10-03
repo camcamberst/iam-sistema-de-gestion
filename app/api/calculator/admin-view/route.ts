@@ -109,7 +109,19 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'Error al obtener plataformas' }, { status: 500 });
       }
 
-      platforms = platformData || [];
+      // Formatear plataformas con porcentajes y cuotas
+      platforms = (platformData || []).map((platform: any) => ({
+        id: platform.id,
+        name: platform.name,
+        description: platform.description,
+        currency: platform.currency,
+        token_rate: platform.token_rate,
+        discount_factor: platform.discount_factor,
+        tax_rate: platform.tax_rate,
+        direct_payout: platform.direct_payout,
+        percentage: config.percentage_override || config.group_percentage || 80,
+        min_quota: config.min_quota_override || config.group_min_quota || 470
+      }));
     }
 
     // 6. Obtener valores actuales del modelo (solo lectura)
