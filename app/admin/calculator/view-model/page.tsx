@@ -42,9 +42,9 @@ export default function AdminViewModelPage() {
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [hasChanges, setHasChanges] = useState(false);
   const router = useRouter();
   
   const supabase = createClient(
@@ -151,27 +151,8 @@ export default function AdminViewModelPage() {
 
   const handleBackToModels = () => {
     setSelectedModel(null);
-    setEditing(false);
     setEditValues({});
-  };
-
-  const handleEditToggle = () => {
-    if (editing) {
-      // Cancelar edición
-      setEditing(false);
-      setEditValues({});
-    } else {
-      // Iniciar edición - cargar valores actuales
-      const currentValues: Record<string, string> = {};
-      selectedModel?.calculatorData?.platforms?.forEach((platform: any) => {
-        const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
-          v.platform_id === platform.id || v.platform === platform.name
-        )?.value || 0;
-        currentValues[platform.id] = currentValue.toString();
-      });
-      setEditValues(currentValues);
-      setEditing(true);
-    }
+    setHasChanges(false);
   };
 
   const handleValueChange = (platformId: string, value: string) => {
@@ -179,6 +160,7 @@ export default function AdminViewModelPage() {
       ...prev,
       [platformId]: value
     }));
+    setHasChanges(true);
   };
 
   const handleSave = async () => {
@@ -221,10 +203,27 @@ export default function AdminViewModelPage() {
       // Recargar datos de la calculadora
       await handleModelSelect(selectedModel);
       
-      setEditing(false);
       setEditValues({});
+      setHasChanges(false);
       
-      alert('Valores guardados correctamente');
+      // Notificación elegante estilo Apple
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+      notification.innerHTML = '✅ Valores guardados correctamente';
+      document.body.appendChild(notification);
+      
+      // Animar entrada
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      // Remover después de 3 segundos
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
 
     } catch (err: any) {
       console.error('❌ [ADMIN-EDIT] Save error:', err);
@@ -294,31 +293,36 @@ export default function AdminViewModelPage() {
                 {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
               </p>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3">
               <button
-                onClick={handleEditToggle}
-                className={`px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium ${
-                  editing 
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
-                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                onClick={handleSave}
+                disabled={saving || !hasChanges}
+                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                  hasChanges && !saving
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                {editing ? '✕ Cancelar' : '✏️ Editar'}
+                {saving ? (
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>Guardando...</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center space-x-2">
+                    <span>💾</span>
+                    <span>Guardar</span>
+                  </div>
+                )}
               </button>
-              {editing && (
-                <button
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors duration-200 text-sm font-medium"
-                >
-                  {saving ? '💾 Guardando...' : '💾 Guardar'}
-                </button>
-              )}
               <button
                 onClick={handleBackToModels}
-                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
+                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 text-sm font-semibold transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
               >
-                ← Volver
+                <div className="flex items-center space-x-2">
+                  <span>←</span>
+                  <span>Volver</span>
+                </div>
               </button>
             </div>
           </div>
@@ -326,31 +330,34 @@ export default function AdminViewModelPage() {
           {/* Datos de la calculadora */}
           {selectedModel.calculatorData ? (
             <div className="space-y-4">
-              {/* Tasas actualizadas - EXACTAMENTE COMO MI CALCULADORA */}
-              <div className="apple-card mb-3">
-                <h2 className="text-sm font-semibold text-gray-900 mb-2">Tasas Actualizadas</h2>
-                <div className="grid grid-cols-3 gap-2">
-                  <div className="text-center p-2 bg-blue-50 rounded-md">
-                    <div className="text-lg font-bold text-blue-600">
+              {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 hover:shadow-md transition-all duration-300">
+                <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  Tasas Actualizadas
+                </h2>
+                <div className="grid grid-cols-3 gap-3">
+                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    <div className="text-xl font-bold text-blue-700 mb-1">
                       ${selectedModel.calculatorData.rates?.usd_cop || 3900}
                     </div>
-                    <div className="text-xs text-gray-600">USD→COP</div>
+                    <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
                   </div>
-                  <div className="text-center p-2 bg-green-50 rounded-md">
-                    <div className="text-lg font-bold text-green-600">
+                  <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    <div className="text-xl font-bold text-green-700 mb-1">
                       {selectedModel.calculatorData.rates?.eur_usd || 1.01}
                     </div>
-                    <div className="text-xs text-gray-600">EUR→USD</div>
+                    <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
                   </div>
-                  <div className="text-center p-2 bg-purple-50 rounded-md">
-                    <div className="text-lg font-bold text-purple-600">
+                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    <div className="text-xl font-bold text-purple-700 mb-1">
                       {selectedModel.calculatorData.rates?.gbp_usd || 1.20}
                     </div>
-                    <div className="text-xs text-gray-600">GBP→USD</div>
+                    <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-1 text-center">
-                  Configuradas por tu administrador
+                <p className="text-xs text-gray-500 mt-3 text-center font-medium">
+                  ⚙️ Configuradas por tu administrador
                 </p>
               </div>
 
@@ -377,9 +384,12 @@ export default function AdminViewModelPage() {
                 </div>
               </div>
 
-              {/* Tabla de Calculadora - REPLICANDO DISEÑO DE MI CALCULADORA */}
-              <div className="apple-card mb-4">
-                <h2 className="text-base font-semibold text-gray-900 mb-3">Calculadora de Ingresos</h2>
+              {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
+              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4 hover:shadow-md transition-all duration-300">
+                <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center">
+                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                  Calculadora de Ingresos
+                </h2>
                 
                 {!selectedModel.calculatorData.isConfigured || !selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0 ? (
                   <div className="text-center py-8">
@@ -453,43 +463,36 @@ export default function AdminViewModelPage() {
                           const copModelo = usdModeloFinal * 3900; // Tasa fija por ahora
                           
                           return (
-                            <tr key={platform.id} className="border-b border-gray-100">
+                            <tr key={platform.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 group">
                               <td className="py-3 px-3">
                                 <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
                                 <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
                               </td>
                               <td className="py-3 px-3">
-                                <div className="relative">
-                                  {editing ? (
-                                    <div className="flex items-center space-x-2">
-                                      <input
-                                        type="text"
-                                        inputMode="decimal"
-                                        value={editValues[platform.id] || ''}
-                                        onChange={(e) => {
-                                          const raw = e.target.value;
-                                          const cleaned = raw.replace(/[^0-9.,]/g, '');
-                                          const normalized = cleaned.replace(',', '.');
-                                          const parts = normalized.split('.');
-                                          const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
-                                          handleValueChange(platform.id, safeNormalized);
-                                        }}
-                                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                        placeholder="0.00"
-                                      />
-                                      <span className="text-xs text-gray-500">
-                                        {platform.currency || 'USD'}
-                                      </span>
-                                    </div>
-                                  ) : (
-                                    <>
-                                      <div className="text-gray-600 font-medium text-sm">
-                                        {currentValue.toFixed(2)}
-                                      </div>
-                                      <div className="text-xs text-gray-500">
-                                        {platform.currency || 'USD'}
-                                      </div>
-                                    </>
+                                <div className="relative group">
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="text"
+                                      inputMode="decimal"
+                                      value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
+                                      onChange={(e) => {
+                                        const raw = e.target.value;
+                                        const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                        const normalized = cleaned.replace(',', '.');
+                                        const parts = normalized.split('.');
+                                        const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                        handleValueChange(platform.id, safeNormalized);
+                                      }}
+                                      className="w-24 px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 focus:shadow-lg focus:shadow-blue-100"
+                                      placeholder="0.00"
+                                    />
+                                    <span className="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+                                      {platform.currency || 'USD'}
+                                    </span>
+                                  </div>
+                                  {/* Indicador de cambio */}
+                                  {editValues[platform.id] !== undefined && editValues[platform.id] !== currentValue.toFixed(2) && (
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
                                   )}
                                 </div>
                               </td>
