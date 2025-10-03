@@ -504,30 +504,33 @@ export default function ModelCalculatorPage() {
           </div>
         </div>
 
-        {/* Rates actualizadas - COMPACTO */}
-        <div className="apple-card mb-3">
-          <h2 className="text-sm font-semibold text-gray-900 mb-2">Tasas Actualizadas</h2>
-          <div className="grid grid-cols-3 gap-2">
-            <div className="text-center p-2 bg-blue-50 rounded-md">
-              <div className="text-lg font-bold text-blue-600">
+        {/* Rates actualizadas - ESTILO APPLE REFINADO */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 hover:shadow-md transition-all duration-300">
+          <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+            Tasas Actualizadas
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-xl font-bold text-blue-700 mb-1">
                 ${rates?.usd_cop || 3900}
               </div>
-              <div className="text-xs text-gray-600">USD→COP</div>
+              <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
             </div>
-            <div className="text-center p-2 bg-green-50 rounded-md">
-              <div className="text-lg font-bold text-green-600">
+            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-xl font-bold text-green-700 mb-1">
                 {rates?.eur_usd || 1.01}
               </div>
-              <div className="text-xs text-gray-600">EUR→USD</div>
+              <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
             </div>
-            <div className="text-center p-2 bg-purple-50 rounded-md">
-              <div className="text-lg font-bold text-purple-600">
+            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-xl font-bold text-purple-700 mb-1">
                 {rates?.gbp_usd || 1.20}
               </div>
-              <div className="text-xs text-gray-600">GBP→USD</div>
+              <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
             </div>
           </div>
-          <p className="text-xs text-gray-500 mt-1 text-center">
+          <p className="text-xs text-gray-500 mt-3 text-center font-medium">
             Configuradas por tu administrador
           </p>
         </div>
