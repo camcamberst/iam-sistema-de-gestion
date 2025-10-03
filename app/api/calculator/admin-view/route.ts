@@ -95,7 +95,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 5. Obtener plataformas habilitadas si hay configuración
-    let platforms = [];
+    let platforms: any[] = [];
     if (config) {
       const { data: platformData, error: platformError } = await supabase
         .from('calculator_platforms')
