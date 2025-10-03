@@ -278,7 +278,7 @@ export default function AdminViewModelPage() {
                         {selectedModel.calculatorData.platforms.map((platform: any) => {
                           // Obtener valor actual de esta plataforma
                           const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
-                          console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'Value:', currentValue);
+                          console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'Value:', currentValue, 'Values array:', selectedModel.calculatorData.values);
                           
                           // Calcular dólares y COP para esta plataforma usando las mismas fórmulas
                           let usdBruto = currentValue;
