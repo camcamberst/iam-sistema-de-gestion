@@ -208,8 +208,8 @@ export default function AdminViewModelPage() {
       
       // Notificación elegante estilo Apple
       const notification = document.createElement('div');
-      notification.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
-      notification.innerHTML = '✅ Valores guardados correctamente';
+      notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+      notification.innerHTML = 'Valores guardados correctamente';
       document.body.appendChild(notification);
       
       // Animar entrada
@@ -293,38 +293,22 @@ export default function AdminViewModelPage() {
                 {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
               </p>
             </div>
-            <div className="flex items-center space-x-3">
+
+            {/* Footer actions */}
+            <div className="mt-6 flex justify-end">
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
                   hasChanges && !saving
                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
-                {saving ? (
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                    <span>Guardando...</span>
-                  </div>
-                ) : (
-                  <div className="flex items-center space-x-2">
-                    <span>💾</span>
-                    <span>Guardar</span>
-                  </div>
-                )}
-              </button>
-              <button
-                onClick={handleBackToModels}
-                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-all duration-200 text-sm font-semibold transform hover:scale-105 active:scale-95 shadow-sm hover:shadow-md"
-              >
-                <div className="flex items-center space-x-2">
-                  <span>←</span>
-                  <span>Volver</span>
-                </div>
+                {saving ? 'Guardando...' : 'Guardar'}
               </button>
             </div>
+            {/* Botones desplazados al pie para una UI más limpia */}
           </div>
 
           {/* Datos de la calculadora */}
@@ -357,7 +341,7 @@ export default function AdminViewModelPage() {
                   </div>
                 </div>
                 <p className="text-xs text-gray-500 mt-3 text-center font-medium">
-                  ⚙️ Configuradas por tu administrador
+                  Configuradas por tu administrador
                 </p>
               </div>
 
@@ -371,9 +355,7 @@ export default function AdminViewModelPage() {
                 
                 {!selectedModel.calculatorData.isConfigured || !selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0 ? (
                   <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <span className="text-gray-400 text-2xl">📊</span>
-                    </div>
+                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"></div>
                     <h4 className="text-lg font-medium text-gray-900 mb-2">No hay plataformas habilitadas</h4>
                     <p className="text-gray-500 mb-4">
                       Esta modelo no tiene configuración de calculadora o plataformas habilitadas.
@@ -581,8 +563,8 @@ export default function AdminViewModelPage() {
             </div>
           ) : (
             <div className="apple-card">
-              <div className="text-center py-12">
-                <div className="text-gray-400 mb-4">🧮</div>
+                  <div className="text-center py-12">
+                <div className="text-gray-400 mb-4"></div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
                   Calculadora de {selectedModel.name}
                 </h3>
