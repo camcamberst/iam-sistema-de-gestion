@@ -124,7 +124,22 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    // 6. Obtener valores actuales del modelo (solo lectura)
+    // 6. Obtener tasas actualizadas
+    const { data: ratesData, error: ratesError } = await supabase
+      .from('rates')
+      .select('kind, value')
+      .eq('active', true);
+
+    let rates = null;
+    if (!ratesError && ratesData) {
+      rates = {
+        usd_cop: ratesData.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
+        eur_usd: ratesData.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+        gbp_usd: ratesData.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20
+      };
+    }
+
+    // 7. Obtener valores actuales del modelo (solo lectura)
     const { data: modelValues, error: valuesError } = await supabase
       .from('model_values')
       .select(`
@@ -144,7 +159,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
-    // 7. Formatear respuesta
+    // 8. Formatear respuesta
     const response = {
       success: true,
       model: {
@@ -172,6 +187,7 @@ export async function GET(request: NextRequest) {
         currency: p.currency
       })),
       values: modelValues || [],
+      rates: rates,
       isConfigured: !!config
     };
 

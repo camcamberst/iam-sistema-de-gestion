@@ -223,6 +223,34 @@ export default function AdminViewModelPage() {
           {/* Datos de la calculadora */}
           {selectedModel.calculatorData ? (
             <div className="space-y-4">
+              {/* Tasas actualizadas - EXACTAMENTE COMO MI CALCULADORA */}
+              <div className="apple-card mb-3">
+                <h2 className="text-sm font-semibold text-gray-900 mb-2">Tasas Actualizadas</h2>
+                <div className="grid grid-cols-3 gap-2">
+                  <div className="text-center p-2 bg-blue-50 rounded-md">
+                    <div className="text-lg font-bold text-blue-600">
+                      ${selectedModel.calculatorData.rates?.usd_cop || 3900}
+                    </div>
+                    <div className="text-xs text-gray-600">USD→COP</div>
+                  </div>
+                  <div className="text-center p-2 bg-green-50 rounded-md">
+                    <div className="text-lg font-bold text-green-600">
+                      {selectedModel.calculatorData.rates?.eur_usd || 1.01}
+                    </div>
+                    <div className="text-xs text-gray-600">EUR→USD</div>
+                  </div>
+                  <div className="text-center p-2 bg-purple-50 rounded-md">
+                    <div className="text-lg font-bold text-purple-600">
+                      {selectedModel.calculatorData.rates?.gbp_usd || 1.20}
+                    </div>
+                    <div className="text-xs text-gray-600">GBP→USD</div>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-500 mt-1 text-center">
+                  Configuradas por tu administrador
+                </p>
+              </div>
+
               {/* Estado de configuración - COMPACTO */}
               <div className="apple-card mb-3">
                 <h2 className="text-sm font-semibold text-gray-900 mb-2">Estado de Configuración</h2>
