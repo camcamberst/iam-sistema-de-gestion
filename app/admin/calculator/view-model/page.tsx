@@ -42,6 +42,9 @@ export default function AdminViewModelPage() {
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
   const router = useRouter();
   
   const supabase = createClient(
@@ -148,6 +151,87 @@ export default function AdminViewModelPage() {
 
   const handleBackToModels = () => {
     setSelectedModel(null);
+    setEditing(false);
+    setEditValues({});
+  };
+
+  const handleEditToggle = () => {
+    if (editing) {
+      // Cancelar edición
+      setEditing(false);
+      setEditValues({});
+    } else {
+      // Iniciar edición - cargar valores actuales
+      const currentValues: Record<string, string> = {};
+      selectedModel?.calculatorData?.platforms?.forEach((platform: any) => {
+        const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+          v.platform_id === platform.id || v.platform === platform.name
+        )?.value || 0;
+        currentValues[platform.id] = currentValue.toString();
+      });
+      setEditValues(currentValues);
+      setEditing(true);
+    }
+  };
+
+  const handleValueChange = (platformId: string, value: string) => {
+    setEditValues(prev => ({
+      ...prev,
+      [platformId]: value
+    }));
+  };
+
+  const handleSave = async () => {
+    if (!selectedModel || !user) return;
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Convertir valores de string a number
+      const valuesToSave: Record<string, number> = {};
+      Object.entries(editValues).forEach(([platformId, value]) => {
+        const numericValue = Number.parseFloat(value) || 0;
+        if (numericValue > 0) {
+          valuesToSave[platformId] = numericValue;
+        }
+      });
+
+      console.log('🔍 [ADMIN-EDIT] Saving values:', valuesToSave);
+
+      const response = await fetch('/api/calculator/model-values-v2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelId: selectedModel.id,
+          values: valuesToSave,
+          periodDate: selectedModel.calculatorData.periodDate
+        }),
+      });
+
+      const data = await response.json();
+      console.log('🔍 [ADMIN-EDIT] Save result:', data);
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al guardar');
+      }
+
+      // Recargar datos de la calculadora
+      await handleModelSelect(selectedModel);
+      
+      setEditing(false);
+      setEditValues({});
+      
+      alert('Valores guardados correctamente');
+
+    } catch (err: any) {
+      console.error('❌ [ADMIN-EDIT] Save error:', err);
+      setError(err.message || 'Error al guardar valores');
+    } finally {
+      setSaving(false);
+    }
   };
 
   if (loading) {
@@ -211,6 +295,25 @@ export default function AdminViewModelPage() {
               </p>
             </div>
             <div className="flex items-center space-x-4">
+              <button
+                onClick={handleEditToggle}
+                className={`px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium ${
+                  editing 
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200' 
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                {editing ? '✕ Cancelar' : '✏️ Editar'}
+              </button>
+              {editing && (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors duration-200 text-sm font-medium"
+                >
+                  {saving ? '💾 Guardando...' : '💾 Guardar'}
+                </button>
+              )}
               <button
                 onClick={handleBackToModels}
                 className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
@@ -357,12 +460,37 @@ export default function AdminViewModelPage() {
                               </td>
                               <td className="py-3 px-3">
                                 <div className="relative">
-                                  <div className="text-gray-600 font-medium text-sm">
-                                    {currentValue.toFixed(2)}
-                                  </div>
-                                  <div className="text-xs text-gray-500">
-                                    {platform.currency || 'USD'}
-                                  </div>
+                                  {editing ? (
+                                    <div className="flex items-center space-x-2">
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={editValues[platform.id] || ''}
+                                        onChange={(e) => {
+                                          const raw = e.target.value;
+                                          const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                          const normalized = cleaned.replace(',', '.');
+                                          const parts = normalized.split('.');
+                                          const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                          handleValueChange(platform.id, safeNormalized);
+                                        }}
+                                        className="w-20 px-2 py-1 text-sm border border-gray-300 rounded focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        placeholder="0.00"
+                                      />
+                                      <span className="text-xs text-gray-500">
+                                        {platform.currency || 'USD'}
+                                      </span>
+                                    </div>
+                                  ) : (
+                                    <>
+                                      <div className="text-gray-600 font-medium text-sm">
+                                        {currentValue.toFixed(2)}
+                                      </div>
+                                      <div className="text-xs text-gray-500">
+                                        {platform.currency || 'USD'}
+                                      </div>
+                                    </>
+                                  )}
                                 </div>
                               </td>
                               <td className="py-3 px-3">
