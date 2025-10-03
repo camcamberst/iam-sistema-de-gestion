@@ -361,28 +361,6 @@ export default function AdminViewModelPage() {
                 </p>
               </div>
 
-              {/* Estado de configuración - COMPACTO */}
-              <div className="apple-card mb-3">
-                <h2 className="text-sm font-semibold text-gray-900 mb-2">Estado de Configuración</h2>
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="text-center p-2 bg-blue-50 rounded-md">
-                    <div className={`text-lg font-bold ${
-                      selectedModel.calculatorData.isConfigured ? 'text-green-600' : 'text-gray-600'
-                    }`}>
-                      {selectedModel.calculatorData.isConfigured ? '✓' : '○'}
-                    </div>
-                    <div className="text-xs text-gray-600">
-                      {selectedModel.calculatorData.isConfigured ? 'Configurada' : 'Sin configurar'}
-                    </div>
-                  </div>
-                  <div className="text-center p-2 bg-purple-50 rounded-md">
-                    <div className="text-lg font-bold text-purple-600">
-                      {selectedModel.calculatorData.platforms?.length || 0}
-                    </div>
-                    <div className="text-xs text-gray-600">Plataformas</div>
-                  </div>
-                </div>
-              </div>
 
               {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4 hover:shadow-md transition-all duration-300">
