@@ -20,12 +20,11 @@ interface Model {
   name: string;
   email: string;
   groups: Array<{
-    group: {
-      id: string;
-      name: string;
-    };
+    id: string;
+    name: string;
   }>;
-  calculator_config?: {
+  hasConfig?: boolean;
+  currentConfig?: {
     id: string;
     active: boolean;
     enabled_platforms: string[];
@@ -210,7 +209,7 @@ export default function AdminViewModelPage() {
               Calculadora de {selectedModel.name}
             </h1>
             <p className="text-gray-600 mt-2">
-              {selectedModel.email} • {selectedModel.groups.map(g => g.group.name).join(', ')}
+              {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
             </p>
           </div>
 
@@ -401,11 +400,11 @@ export default function AdminViewModelPage() {
                   {model.name}
                 </h3>
                 <div className={`px-2 py-1 rounded-full text-xs ${
-                  model.calculator_config?.active 
+                  model.currentConfig?.active 
                     ? 'bg-green-100 text-green-800' 
                     : 'bg-gray-100 text-gray-800'
                 }`}>
-                  {model.calculator_config?.active ? 'Configurada' : 'Sin configurar'}
+                  {model.currentConfig?.active ? 'Configurada' : 'Sin configurar'}
                 </div>
               </div>
               
@@ -414,7 +413,7 @@ export default function AdminViewModelPage() {
               </p>
               
               <div className="text-sm text-gray-500">
-                Grupos: {model.groups.map(g => g.group.name).join(', ')}
+                Grupos: {model.groups.map(g => g.name).join(', ')}
               </div>
               
               <div className="mt-3 text-sm text-blue-600">

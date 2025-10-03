@@ -70,7 +70,7 @@ export async function GET(request: NextRequest) {
       const adminGroupIds = adminUser.groups?.map((g: any) => g.group_id).filter(Boolean) || [];
       
       if (adminGroupIds.length === 0) {
-        return NextResponse.json({ success: true, data: [] });
+        return NextResponse.json({ success: true, models: [] });
       }
 
       // Obtener IDs de modelos que pertenecen a los grupos del admin
@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
       const userIds = modelIds?.map((m: any) => m.user_id) || [];
       
       if (userIds.length === 0) {
-        return NextResponse.json({ success: true, data: [] });
+        return NextResponse.json({ success: true, models: [] });
       }
 
       // Filtrar modelos por IDs obtenidos
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      data: processedModels
+      models: processedModels
     });
 
   } catch (error: any) {
