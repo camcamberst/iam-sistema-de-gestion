@@ -723,16 +723,21 @@ export default function ModelCalculatorPage() {
           )}
         </div>
 
-        {/* Botón Guardar integrado en Totales y Alertas (autosave deshabilitado) */}
-
-        {/* Totales y Alertas - COMPACTO */}
-        <div className="apple-card">
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-sm font-semibold text-gray-900">Totales y Alertas</h3>
+        {/* Totales y Alertas - ESTILO APPLE REFINADO */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-base font-semibold text-gray-900 flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              Totales y Alertas
+            </h3>
             <button
               onClick={saveValues}
               disabled={saving || platforms.filter(p => p.enabled).length === 0}
-              className="px-3 py-1.5 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50 text-sm font-medium"
+              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                !saving && platforms.filter(p => p.enabled).length > 0
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
+                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+              }`}
             >
               {saving ? 'Guardando...' : 'Guardar'}
             </button>
@@ -740,8 +745,8 @@ export default function ModelCalculatorPage() {
           
           {/* Totales principales - COMPACTO */}
           <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-3 bg-blue-50 rounded-md">
-              <div className="text-xl font-bold text-blue-600 mb-1">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200">
+              <div className="text-xl font-bold text-blue-700 mb-1">
                 ${platforms.reduce((sum, p) => {
                   // Calcular USD bruto usando fórmulas específicas
                   let usdBruto = 0;
@@ -781,10 +786,10 @@ export default function ModelCalculatorPage() {
                   return sum + usdBruto;
                 }, 0).toFixed(2)}
               </div>
-              <div className="text-xs text-gray-600">USD Bruto</div>
+              <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full inline-block">USD Bruto</div>
             </div>
-            <div className="text-center p-3 bg-green-50 rounded-md">
-              <div className="text-xl font-bold text-green-600 mb-1">
+            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200">
+              <div className="text-xl font-bold text-green-700 mb-1">
                 ${platforms.reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
@@ -820,10 +825,10 @@ export default function ModelCalculatorPage() {
                   return sum + (usdModelo * p.percentage / 100);
                 }, 0).toFixed(2)}
               </div>
-              <div className="text-xs text-gray-600">USD Modelo</div>
+              <div className="text-xs font-medium text-green-700 bg-green-200 px-2 py-1 rounded-full inline-block">USD Modelo</div>
             </div>
-            <div className="text-center p-3 bg-purple-50 rounded-md">
-              <div className="text-xl font-bold text-purple-600 mb-1">
+            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200">
+              <div className="text-xl font-bold text-purple-700 mb-1">
                 ${(platforms.reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
@@ -859,12 +864,12 @@ export default function ModelCalculatorPage() {
                   return sum + (usdModelo * p.percentage / 100);
                 }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
-              <div className="text-xs text-gray-600">COP Modelo</div>
+              <div className="text-xs font-medium text-purple-700 bg-purple-200 px-2 py-1 rounded-full inline-block">COP Modelo</div>
             </div>
           </div>
           
-          {/* 90% de anticipo */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+          {/* 90% de anticipo - estilo sutil */}
+          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
             <div className="text-sm text-gray-600">
               <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
                 // Calcular USD modelo usando fórmulas específicas + porcentaje
@@ -903,7 +908,7 @@ export default function ModelCalculatorPage() {
             </div>
           </div>
           
-          {/* Alerta de cuota mínima - COMPACTA UNA LÍNEA */}
+          {/* Alerta de cuota mínima - barra refinada */}
           {(() => {
             const totalUsdBruto = platforms.reduce((sum, p) => {
               // Calcular USD bruto usando fórmulas específicas (sin porcentaje de reparto)
@@ -946,17 +951,17 @@ export default function ModelCalculatorPage() {
             const estaPorDebajo = totalUsdBruto < cuotaMinima;
             
             return (
-              <div className={`relative overflow-hidden rounded-lg border-2 transition-all duration-300 ${
+              <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
                 estaPorDebajo 
-                  ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-300 shadow-red-100' 
-                  : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-300 shadow-green-100'
+                  ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200' 
+                  : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
               }`}>
                 {/* Efecto de brillo animado */}
                 <div className={`absolute inset-0 opacity-20 ${
                   estaPorDebajo ? 'bg-gradient-to-r from-red-400 to-pink-400' : 'bg-gradient-to-r from-green-400 to-emerald-400'
                 } animate-pulse`}></div>
                 
-                <div className="relative p-3">
+                <div className="relative p-4">
                   <div className="flex items-center space-x-3">
                     {/* Icono animado */}
                     <div className={`relative flex-shrink-0 ${
@@ -964,12 +969,10 @@ export default function ModelCalculatorPage() {
                     }`}>
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                         estaPorDebajo 
-                          ? 'bg-gradient-to-r from-red-500 to-pink-500 shadow-lg shadow-red-200' 
-                          : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-lg shadow-green-200'
+                          ? 'bg-gradient-to-r from-red-500 to-pink-500 shadow-md shadow-red-200' 
+                          : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-md shadow-green-200'
                       }`}>
-                        <span className="text-white text-sm">
-                          {estaPorDebajo ? '⚡' : '🎯'}
-                        </span>
+                        <span className="text-white text-sm">✓</span>
                       </div>
                     </div>
                     
@@ -986,14 +989,14 @@ export default function ModelCalculatorPage() {
                         }`}>
                           {estaPorDebajo 
                             ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${Math.ceil(100 - porcentajeAlcanzado)}% restante)`
-                            : `¡Excelente! +${Math.ceil(porcentajeAlcanzado - 100)}%`
+                            : `Excelente +${Math.ceil(porcentajeAlcanzado - 100)}%`
                           }
                         </div>
                       </div>
                       
                       {/* Barra de progreso compacta */}
                       <div className="mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
+                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                           <div 
                             className={`h-full transition-all duration-1000 ease-out ${
                               estaPorDebajo 
