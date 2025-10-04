@@ -28,6 +28,7 @@ export default function ConfigCalculatorPage() {
   const [models, setModels] = useState<Model[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [platformsLoaded, setPlatformsLoaded] = useState(false);
+  const [platformsData, setPlatformsData] = useState<Platform[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,9 +91,12 @@ export default function ConfigCalculatorPage() {
       console.log('🔍 [DEBUG] platformsData.config.platforms is array:', Array.isArray(platformsData.config?.platforms));
       console.log('🔍 [DEBUG] platformsData.config.platforms content:', platformsData.config?.platforms);
       
-      setPlatforms(platformsData.config?.platforms || []);
+      const platformsArray = platformsData.config?.platforms || [];
+      setPlatforms(platformsArray);
+      setPlatformsData(platformsArray);
       setPlatformsLoaded(true);
-      console.log('🔍 [DEBUG] setPlatforms called with:', platformsData.config?.platforms);
+      console.log('🔍 [DEBUG] setPlatforms called with:', platformsArray);
+      console.log('🔍 [DEBUG] setPlatformsData called with:', platformsArray);
       console.log('🔍 [DEBUG] platformsLoaded set to true');
 
     } catch (err: any) {
@@ -271,11 +275,14 @@ export default function ConfigCalculatorPage() {
                         console.log('🔍 [RENDER] platforms is array:', Array.isArray(platforms));
                         console.log('🔍 [RENDER] platforms length:', platforms?.length);
                         
-                        // 🔧 FIX: Validación más robusta usando platformsLoaded
-                        if (!platformsLoaded || !platforms || !Array.isArray(platforms) || platforms.length === 0) {
+                        // 🔧 FIX: Usar platformsData como fuente de verdad
+                        const platformsToRender = platformsData.length > 0 ? platformsData : platforms;
+                        
+                        if (!platformsLoaded || !platformsToRender || !Array.isArray(platformsToRender) || platformsToRender.length === 0) {
                           console.log('🔍 [RENDER] No platforms to render, showing loading state');
                           console.log('🔍 [RENDER] platformsLoaded:', platformsLoaded);
                           console.log('🔍 [RENDER] platforms:', platforms);
+                          console.log('🔍 [RENDER] platformsData:', platformsData);
                           return (
                             <div className="text-center py-8 text-gray-500">
                               <p>No hay plataformas disponibles</p>
@@ -284,7 +291,7 @@ export default function ConfigCalculatorPage() {
                           );
                         }
                         
-                        return platforms.map(platform => (
+                        return platformsToRender.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
                             <span className="text-sm font-medium text-gray-900">{platform.name}</span>
