@@ -42,14 +42,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
     }
 
-    // 2. Obtener anticipos ya pagados del período actual
+    // 2. Obtener anticipos ya pagados del mes actual (no solo del período específico)
     console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos para modelId:', modelId, 'periodId:', period.id);
+    
+    // Obtener todos los períodos del mes actual
+    const currentDate = new Date(periodDate);
+    const year = currentDate.getFullYear();
+    const month = currentDate.getMonth() + 1; // getMonth() es 0-based
+    
+    console.log('🔍 [MI-CALCULADORA-REAL] Buscando períodos del mes:', year, month);
+    
+    const { data: monthPeriods, error: monthPeriodsError } = await supabase
+      .from('periods')
+      .select('id')
+      .gte('start_date', `${year}-${month.toString().padStart(2, '0')}-01`)
+      .lt('start_date', `${year}-${(month + 1).toString().padStart(2, '0')}-01`);
+    
+    if (monthPeriodsError) {
+      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener períodos del mes:', monthPeriodsError);
+      return NextResponse.json({ success: false, error: 'Error al obtener períodos del mes' }, { status: 500 });
+    }
+    
+    const periodIds = monthPeriods?.map(p => p.id) || [];
+    console.log('🔍 [MI-CALCULADORA-REAL] Períodos del mes encontrados:', periodIds);
     
     const { data: anticipos, error: anticiposError } = await supabase
       .from('anticipos')
-      .select('monto_solicitado, estado')
+      .select('monto_solicitado, estado, period_id')
       .eq('model_id', modelId)
-      .eq('period_id', period.id)
+      .in('period_id', periodIds)
       .eq('estado', 'confirmado');
 
     console.log('🔍 [MI-CALCULADORA-REAL] Resultado de consulta anticipos:', {
