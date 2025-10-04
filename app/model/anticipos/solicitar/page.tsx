@@ -155,39 +155,32 @@ export default function SolicitarAnticipoPage() {
       const periodDate = getColombiaDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
-      // 🚀 NUEVA IMPLEMENTACIÓN: Usar endpoint de totales con función centralizada
-      console.log('🔍 [SOLICITAR ANTICIPO] Usando endpoint de totales centralizado...');
-      const totalsResponse = await fetch(`/api/calculator/totals?modelId=${userId}&periodDate=${periodDate}`);
-      const totalsData = await totalsResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Totals response:', totalsData);
+      // 🚀 NUEVA IMPLEMENTACIÓN: Usar endpoint de valores actuales (misma lógica que Mi Calculadora)
+      console.log('🔍 [SOLICITAR ANTICIPO] Usando endpoint de valores actuales...');
+      const currentValuesResponse = await fetch(`/api/calculator/current-values?modelId=${userId}&periodDate=${periodDate}`);
+      const currentValuesData = await currentValuesResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Current values response:', currentValuesData);
       
-      if (totalsData.success) {
-        console.log('✅ [SOLICITAR ANTICIPO] Datos de totales obtenidos correctamente:', {
-          copModelo: totalsData.data.copModelo,
-          anticipoDisponible: totalsData.data.anticipoDisponible,
-          anticiposPagados: totalsData.data.anticiposPagados,
-          totalUsdBruto: totalsData.data.totalUsdBruto,
-          totalUsdModelo: totalsData.data.totalUsdModelo,
-          totalCopModelo: totalsData.data.totalCopModelo,
-          cuotaMinimaAlert: totalsData.data.cuotaMinimaAlert,
-          anticipoMaxCop: totalsData.data.anticipoMaxCop,
-          enabledPlatforms: totalsData.data.enabledPlatforms,
-          valuesCount: totalsData.data.valuesCount
+      if (currentValuesData.success) {
+        console.log('✅ [SOLICITAR ANTICIPO] Datos de valores actuales obtenidos correctamente:', {
+          copModelo: currentValuesData.data.copModelo,
+          anticipoDisponible: currentValuesData.data.anticipoDisponible,
+          anticiposPagados: currentValuesData.data.anticiposPagados
         });
 
         console.log('🔄 [SOLICITAR ANTICIPO] Estableciendo datos de productividad:', {
-          copModelo: totalsData.data.copModelo,
-          anticipoDisponible: totalsData.data.anticipoDisponible,
-          anticiposPagados: totalsData.data.anticiposPagados
+          copModelo: currentValuesData.data.copModelo,
+          anticipoDisponible: currentValuesData.data.anticipoDisponible,
+          anticiposPagados: currentValuesData.data.anticiposPagados
         });
 
         setProductivityData({
-          copModelo: totalsData.data.copModelo,
-          anticipoDisponible: totalsData.data.anticipoDisponible,
-          anticiposPagados: totalsData.data.anticiposPagados
+          copModelo: currentValuesData.data.copModelo,
+          anticipoDisponible: currentValuesData.data.anticipoDisponible,
+          anticiposPagados: currentValuesData.data.anticiposPagados
         });
       } else {
-        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener totales:', totalsData.error);
+        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener valores actuales:', currentValuesData.error);
         
         // Fallback: Establecer valores por defecto
         setProductivityData({
