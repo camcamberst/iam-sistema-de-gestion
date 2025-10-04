@@ -175,6 +175,12 @@ export default function SolicitarAnticipoPage() {
           valuesCount: totalsData.data.valuesCount
         });
 
+        console.log('🔄 [SOLICITAR ANTICIPO] Estableciendo datos de productividad:', {
+          copModelo: totalsData.data.copModelo,
+          anticipoDisponible: totalsData.data.anticipoDisponible,
+          anticiposPagados: totalsData.data.anticiposPagados
+        });
+
         setProductivityData({
           copModelo: totalsData.data.copModelo,
           anticipoDisponible: totalsData.data.anticipoDisponible,
