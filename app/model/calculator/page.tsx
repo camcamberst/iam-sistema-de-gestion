@@ -658,21 +658,23 @@ export default function ModelCalculatorPage() {
                               inputMode="decimal"
                               value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
-                                const value = e.target.value;
+                                const rawValue = e.target.value;
                                 
-                                // 🔧 SYNC: Actualizar inputValues directamente
-                                setInputValues(prev => ({ ...prev, [platform.id]: value }));
+                                // 🔧 UNIFICAR SEPARADORES: Tanto punto como coma se muestran como punto
+                                const unifiedValue = rawValue.replace(',', '.');
+                                
+                                // 🔧 SYNC: Actualizar inputValues con valor unificado
+                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
 
-                                // 🔧 SYNC: Convertir a número (normalizar coma a punto)
-                                const normalizedValue = value.replace(',', '.');
-                                const numeric = Number.parseFloat(normalizedValue);
+                                // 🔧 SYNC: Convertir a número (ya está normalizado)
+                                const numeric = Number.parseFloat(unifiedValue);
                                 const numericValue = Number.isFinite(numeric) ? numeric : 0;
                                 setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                 
                                 console.log('🔍 [SYNC] Usuario escribió:', { 
                                   platform: platform.id, 
-                                  input: value,
-                                  normalized: normalizedValue, 
+                                  original: rawValue,
+                                  unified: unifiedValue,
                                   numeric: numericValue 
                                 });
                               }}
@@ -688,8 +690,8 @@ export default function ModelCalculatorPage() {
                                 fontSize: '14px',
                                 backgroundColor: 'white'
                               }}
-                              placeholder="0,00"
-                              title="Ingresa valores con decimales (ej: 135.50 o 135,50)"
+                              placeholder="0.00"
+                              title="Ingresa valores con decimales (punto o coma se convierten a punto)"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                               <span className="text-gray-500 text-xs">
