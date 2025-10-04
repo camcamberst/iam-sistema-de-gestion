@@ -280,14 +280,15 @@ export default function ModelCalculatorPage() {
             console.log('🔍 [CALCULATOR] Cargando valores guardados');
             
             // 1. Actualizar platforms.value con valores guardados
-            setPlatforms(prev => prev.map(p => ({
+            const updatedPlatforms = platforms.map(p => ({
               ...p,
               value: platformToValue[p.id] ?? p.value
-            })));
+            }));
+            setPlatforms(updatedPlatforms);
             
-            // 2. La sincronización automática se encargará de actualizar inputValues
-            // No necesitamos hacerlo manualmente aquí
-            console.log('🔍 [CALCULATOR] Valores guardados aplicados a platforms, sincronización automática activada');
+            // 2. Sincronizar manualmente platforms → inputValues
+            syncPlatformsToInputs(updatedPlatforms);
+            console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados manualmente');
             
             setValuesLoaded(true);
           }
