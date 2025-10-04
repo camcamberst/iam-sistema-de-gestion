@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate } from '@/utils/calculator-dates';
-import { computeTotals } from '@/lib/calculadora/calc';
+import { computeTotals, ConversionType } from '@/lib/calculadora/calc';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -104,9 +104,9 @@ export async function GET(request: NextRequest) {
       id: p.id,
       code: p.id, // Usar id como code
       name: p.name,
-      conversionType: p.currency === 'EUR' ? 'eur_usd_cop' : 
+      conversionType: (p.currency === 'EUR' ? 'eur_usd_cop' : 
                      p.currency === 'GBP' ? 'gbp_usd_cop' : 
-                     p.currency === 'USD' ? 'usd_cop' : 'tokens',
+                     p.currency === 'USD' ? 'usd_cop' : 'tokens') as ConversionType,
       tokenRateUsd: p.token_rate,
       discountFactor: p.discount_factor,
       taxFactor: p.tax_rate,
