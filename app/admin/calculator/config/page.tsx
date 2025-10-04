@@ -27,6 +27,7 @@ export default function ConfigCalculatorPage() {
   const router = useRouter();
   const [models, setModels] = useState<Model[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [platformsLoaded, setPlatformsLoaded] = useState(false);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -90,17 +91,9 @@ export default function ConfigCalculatorPage() {
       console.log('🔍 [DEBUG] platformsData.data content:', platformsData.data);
       
       setPlatforms(platformsData.data);
+      setPlatformsLoaded(true);
       console.log('🔍 [DEBUG] setPlatforms called with:', platformsData.data);
-      
-      // 🔧 FIX: Forzar re-render después de setPlatforms
-      setTimeout(() => {
-        console.log('🔍 [DEBUG] Forced re-render after setPlatforms');
-        setPlatforms(prev => {
-          console.log('🔍 [DEBUG] setPlatforms callback - prev:', prev);
-          console.log('🔍 [DEBUG] setPlatforms callback - new data:', platformsData.data);
-          return platformsData.data;
-        });
-      }, 100);
+      console.log('🔍 [DEBUG] platformsLoaded set to true');
 
     } catch (err: any) {
       setError(err.message || 'Error al cargar datos');
@@ -278,9 +271,11 @@ export default function ConfigCalculatorPage() {
                         console.log('🔍 [RENDER] platforms is array:', Array.isArray(platforms));
                         console.log('🔍 [RENDER] platforms length:', platforms?.length);
                         
-                        // Validación robusta para evitar crash
-                        if (!platforms || !Array.isArray(platforms) || platforms.length === 0) {
-                          console.log('🔍 [RENDER] No platforms to render, showing empty state');
+                        // 🔧 FIX: Validación más robusta usando platformsLoaded
+                        if (!platformsLoaded || !platforms || !Array.isArray(platforms) || platforms.length === 0) {
+                          console.log('🔍 [RENDER] No platforms to render, showing loading state');
+                          console.log('🔍 [RENDER] platformsLoaded:', platformsLoaded);
+                          console.log('🔍 [RENDER] platforms:', platforms);
                           return (
                             <div className="text-center py-8 text-gray-500">
                               <p>No hay plataformas disponibles</p>
