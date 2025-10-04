@@ -251,7 +251,7 @@ export default function ConfigCalculatorPage() {
                   <div className="flex items-center justify-between mb-3">
                     <h3 className="text-base font-medium text-gray-900">Seleccionar Páginas</h3>
                     <span className="text-sm text-gray-500">
-                      {platforms.length} plataformas disponibles
+                      {platforms ? platforms.length : 0} plataformas disponibles
                     </span>
                   </div>
                   <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
@@ -261,6 +261,18 @@ export default function ConfigCalculatorPage() {
                         console.log('🔍 [RENDER] platforms type:', typeof platforms);
                         console.log('🔍 [RENDER] platforms is array:', Array.isArray(platforms));
                         console.log('🔍 [RENDER] platforms length:', platforms?.length);
+                        
+                        // Validación robusta para evitar crash
+                        if (!platforms || !Array.isArray(platforms) || platforms.length === 0) {
+                          console.log('🔍 [RENDER] No platforms to render, showing empty state');
+                          return (
+                            <div className="text-center py-8 text-gray-500">
+                              <p>No hay plataformas disponibles</p>
+                              <p className="text-sm">Cargando datos...</p>
+                            </div>
+                          );
+                        }
+                        
                         return platforms.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
