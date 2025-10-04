@@ -131,8 +131,16 @@ export async function GET(request: NextRequest) {
       cuotaMinimaUsd: config.min_quota_override || config.group_min_quota || 470
     };
 
-    // 7. USAR FUNCIÓN CENTRALIZADA
+    // 7. DEBUG: Verificar datos antes de computeTotals
+    console.log('🔍 [CALCULATOR-TOTALS] PlatformRules:', platformRules.length);
+    console.log('🔍 [CALCULATOR-TOTALS] ValueInputs:', valueInputs.length);
+    console.log('🔍 [CALCULATOR-TOTALS] Rates:', rates);
+    console.log('🔍 [CALCULATOR-TOTALS] Config:', calculatorConfig);
+    
+    // 8. USAR FUNCIÓN CENTRALIZADA
     const result = computeTotals(platformRules, valueInputs, rates, calculatorConfig);
+    
+    console.log('🔍 [CALCULATOR-TOTALS] Resultado computeTotals:', result);
 
     // 8. Obtener anticipos ya pagados
     const { data: anticipos, error: anticiposError } = await supabase
