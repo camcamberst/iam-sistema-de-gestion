@@ -143,3 +143,82 @@ export const getPeriodEndDate = (): string => {
   
   return `${year}-${month.toString().padStart(2, '0')}-${endDay.toString().padStart(2, '0')}`;
 };
+
+/**
+ * Obtiene la fecha del siguiente día en Europa Central
+ * @returns Fecha del siguiente día en formato YYYY-MM-DD
+ */
+export const getNextCalculatorDate = (): string => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  return formatCalculatorDate(tomorrow);
+};
+
+/**
+ * Crea un período automáticamente si no existe
+ * @param date - Fecha del período (opcional, usa fecha actual si no se proporciona)
+ * @returns Período creado o existente
+ */
+export const createPeriodIfNeeded = async (date?: string) => {
+  const { createClient } = await import('@supabase/supabase-js');
+  
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.SUPABASE_SERVICE_ROLE_KEY as string,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  );
+  
+  const targetDate = date || getCalculatorDate();
+  
+  try {
+    // Verificar si existe período para la fecha
+    const { data: existingPeriod, error: checkError } = await supabase
+      .from('periods')
+      .select('id, name, start_date, end_date, is_active')
+      .eq('start_date', targetDate)
+      .eq('end_date', targetDate)
+      .eq('is_active', true)
+      .single();
+    
+    if (checkError && checkError.code !== 'PGRST116') {
+      console.error('❌ [CREATE-PERIOD] Error verificando período:', checkError);
+      throw checkError;
+    }
+    
+    if (existingPeriod) {
+      console.log('✅ [CREATE-PERIOD] Período ya existe:', existingPeriod);
+      return existingPeriod;
+    }
+    
+    // Crear nuevo período
+    console.log('🔄 [CREATE-PERIOD] Creando período para:', targetDate);
+    
+    const { data: newPeriod, error: createError } = await supabase
+      .from('periods')
+      .insert({
+        name: `Período ${targetDate}`,
+        start_date: targetDate,
+        end_date: targetDate,
+        is_active: true
+      })
+      .select()
+      .single();
+    
+    if (createError) {
+      console.error('❌ [CREATE-PERIOD] Error creando período:', createError);
+      throw createError;
+    }
+    
+    console.log('✅ [CREATE-PERIOD] Período creado exitosamente:', newPeriod);
+    return newPeriod;
+    
+  } catch (error) {
+    console.error('❌ [CREATE-PERIOD] Error en createPeriodIfNeeded:', error);
+    throw error;
+  }
+};

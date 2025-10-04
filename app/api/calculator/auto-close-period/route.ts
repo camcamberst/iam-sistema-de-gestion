@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getCalculatorDate, getCurrentCalculatorPeriod } from '@/utils/calculator-dates';
+import { getCalculatorDate, getCurrentCalculatorPeriod, createPeriodIfNeeded, getNextCalculatorDate } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -24,6 +24,11 @@ export async function POST(request: NextRequest) {
     
     console.log('🔄 [AUTO-CLOSE] Fecha actual:', currentDate);
     console.log('🔄 [AUTO-CLOSE] Período:', period.description);
+    
+    // 1. Crear período actual si no existe
+    console.log('🔄 [AUTO-CLOSE] Verificando/creando período actual...');
+    const currentPeriod = await createPeriodIfNeeded(currentDate);
+    console.log('✅ [AUTO-CLOSE] Período actual:', currentPeriod);
     
     // 1. Obtener todas las configuraciones activas
     const { data: configs, error: configsError } = await supabase
@@ -117,6 +122,17 @@ export async function POST(request: NextRequest) {
       }
     }
     
+    // 3. Crear período siguiente si es día de corte
+    const today = new Date();
+    const day = today.getDate();
+    
+    if (day === 1 || day === 16) {
+      console.log('🔄 [AUTO-CLOSE] Es día de corte, creando período siguiente...');
+      const nextDate = getNextCalculatorDate();
+      const nextPeriod = await createPeriodIfNeeded(nextDate);
+      console.log('✅ [AUTO-CLOSE] Período siguiente creado:', nextPeriod);
+    }
+    
     console.log('✅ [AUTO-CLOSE] Cierre automático completado');
     console.log('📊 [AUTO-CLOSE] Resultados:', results);
     
@@ -125,6 +141,7 @@ export async function POST(request: NextRequest) {
       message: 'Cierre automático completado',
       period: period.description,
       date: currentDate,
+      current_period: currentPeriod,
       results: results,
       summary: {
         total_models: results.length,

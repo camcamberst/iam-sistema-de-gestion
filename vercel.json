@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/auto-close-calculator",
+      "schedule": "0 0 1,16 * *"
+    }
+  ]
+}

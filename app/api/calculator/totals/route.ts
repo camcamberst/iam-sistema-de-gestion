@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 import { computeTotals, ConversionType } from '@/lib/calculadora/calc';
 
 // Usar service role key para bypass RLS
@@ -25,8 +25,13 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
   }
 
-  try {
-    console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales para modelId:', modelId, 'periodDate:', periodDate);
+        try {
+          console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales para modelId:', modelId, 'periodDate:', periodDate);
+          
+          // 0. Crear período si no existe
+          console.log('🔄 [CALCULATOR-TOTALS] Verificando/creando período...');
+          await createPeriodIfNeeded(periodDate);
+          console.log('✅ [CALCULATOR-TOTALS] Período verificado/creado');
 
     // 1. Obtener configuración de calculadora
     const { data: config, error: configError } = await supabase
