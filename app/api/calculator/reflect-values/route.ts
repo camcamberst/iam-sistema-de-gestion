@@ -53,11 +53,25 @@ export async function GET(request: NextRequest) {
     let anticipoDisponible = 0;
 
     if (!valuesError && values && values.length > 0) {
-      // Calcular un valor básico basado en los valores ingresados
-      const totalValue = values.reduce((sum, v) => sum + (Number(v.value) || 0), 0);
-      // Aplicar una conversión básica (esto es solo para mostrar algo, no para calcular)
-      copModelo = Math.round(totalValue * 2500); // Conversión básica
-      anticipoDisponible = Math.max(0, Math.round(copModelo * 0.9) - anticiposPagados);
+      // Obtener el valor real de Mi Calculadora desde la base de datos
+      // Buscar en calculator_history el valor más reciente
+      const { data: historyData, error: historyError } = await supabase
+        .from('calculator_history')
+        .select('total_cop_modelo')
+        .eq('model_id', modelId)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      if (!historyError && historyData && historyData.length > 0) {
+        // Usar el valor real de Mi Calculadora
+        copModelo = historyData[0].total_cop_modelo || 0;
+        anticipoDisponible = Math.max(0, Math.round(copModelo * 0.9) - anticiposPagados);
+      } else {
+        // Si no hay historial, usar conversión básica como fallback
+        const totalValue = values.reduce((sum, v) => sum + (Number(v.value) || 0), 0);
+        copModelo = Math.round(totalValue * 2500);
+        anticipoDisponible = Math.max(0, Math.round(copModelo * 0.9) - anticiposPagados);
+      }
     }
 
     console.log('✅ [REFLECT-VALUES] Valores reflejados:', {
@@ -65,7 +79,8 @@ export async function GET(request: NextRequest) {
       anticipoDisponible: anticipoDisponible,
       anticiposPagados: anticiposPagados,
       valuesCount: values?.length || 0,
-      totalValue: values?.reduce((sum, v) => sum + (Number(v.value) || 0), 0) || 0
+      hasHistory: historyData && historyData.length > 0,
+      historyValue: historyData?.[0]?.total_cop_modelo || 0
     });
 
     return NextResponse.json({
