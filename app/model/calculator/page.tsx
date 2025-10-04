@@ -76,8 +76,8 @@ export default function ModelCalculatorPage() {
     const newInputValues: Record<string, string> = {};
     platforms.forEach(p => {
       if (p.enabled) {
-        // 🔧 FIX: Permitir valor 0 - solo ocultar si es undefined/null
-        newInputValues[p.id] = (p.value !== undefined && p.value !== null) ? String(p.value) : '';
+        // 🔧 FIX: Mostrar vacío para valores 0, mantener valores reales
+        newInputValues[p.id] = (p.value !== undefined && p.value !== null && p.value !== 0) ? String(p.value) : '';
       }
     });
     setInputValues(prev => ({ ...prev, ...newInputValues }));
