@@ -654,27 +654,22 @@ export default function ModelCalculatorPage() {
                           <div className="relative">
                             {/* INPUT DE PRUEBA COMPLETAMENTE AISLADO */}
                             <input
-                              type="text"
+                              type="number"
+                              step="0.01"
+                              min="0"
                               inputMode="decimal"
                               value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
-                                const raw = e.target.value;
-                                // Permitir solo dígitos, puntos y comas, y un solo separador decimal
-                                const cleaned = raw.replace(/[^0-9.,]/g, '');
-                                // Reemplazar comas por puntos para normalizar
-                                const normalized = cleaned.replace(',', '.');
-                                // Evitar múltiples puntos (mantener el primero)
-                                const parts = normalized.split('.');
-                                const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
-                                // 🔧 SYNC: Actualizar inputValues
-                                setInputValues(prev => ({ ...prev, [platform.id]: safeNormalized }));
+                                const value = e.target.value;
+                                // 🔧 SYNC: Actualizar inputValues directamente
+                                setInputValues(prev => ({ ...prev, [platform.id]: value }));
 
                                 // 🔧 SYNC: Convertir a número y actualizar platforms.value
-                                const numeric = Number.parseFloat(safeNormalized);
-                                const value = Number.isFinite(numeric) ? numeric : 0;
-                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value } : p));
+                                const numeric = Number.parseFloat(value);
+                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                 
-                                console.log('🔍 [SYNC] Usuario escribió:', { platform: platform.id, input: safeNormalized, numeric: value });
+                                console.log('🔍 [SYNC] Usuario escribió:', { platform: platform.id, input: value, numeric: numericValue });
                               }}
                               onKeyDown={(e) => {
                                 console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
@@ -696,6 +691,7 @@ export default function ModelCalculatorPage() {
                                 backgroundColor: 'white'
                               }}
                               placeholder="0.00"
+                              title="Ingresa valores con decimales (ej: 135.50)"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                               <span className="text-gray-500 text-xs">
