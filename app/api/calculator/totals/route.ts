@@ -131,16 +131,120 @@ export async function GET(request: NextRequest) {
       cuotaMinimaUsd: config.min_quota_override || config.group_min_quota || 470
     };
 
-    // 7. DEBUG: Verificar datos antes de computeTotals
-    console.log('🔍 [CALCULATOR-TOTALS] PlatformRules:', platformRules.length);
-    console.log('🔍 [CALCULATOR-TOTALS] ValueInputs:', valueInputs.length);
-    console.log('🔍 [CALCULATOR-TOTALS] Rates:', rates);
-    console.log('🔍 [CALCULATOR-TOTALS] Config:', calculatorConfig);
-    
-    // 8. USAR FUNCIÓN CENTRALIZADA
-    const result = computeTotals(platformRules, valueInputs, rates, calculatorConfig);
-    
-    console.log('🔍 [CALCULATOR-TOTALS] Resultado computeTotals:', result);
+    // 7. IMPLEMENTACIÓN CORREGIDA DE CÁLCULO
+    const enabled = new Set(config.enabled_platforms);
+    const valueByPlatform = new Map<string, number>(values?.map(v => [v.platform_id, Number(v.value) || 0]) || []);
+
+    console.log('🔍 [CALCULATOR-TOTALS] Enabled platforms:', Array.from(enabled));
+    console.log('🔍 [CALCULATOR-TOTALS] Value by platform:', Object.fromEntries(valueByPlatform));
+
+    const perPlatform = [];
+    let totalUsdBruto = 0;
+    let totalUsdModelo = 0;
+
+    for (const platform of platforms || []) {
+      if (!enabled.has(platform.id)) continue;
+      
+      const valueInput = valueByPlatform.get(platform.id) || 0;
+      console.log(`🔍 [CALCULATOR-TOTALS] Procesando ${platform.id}: value=${valueInput}, currency=${platform.currency}`);
+      
+      if (valueInput === 0) {
+        perPlatform.push({
+          platformId: platform.id,
+          usdBruto: 0,
+          usdModelo: 0,
+          copModelo: 0
+        });
+        continue;
+      }
+
+      // Calcular USD bruto según tipo de conversión
+      let usdBruto = 0;
+      
+      if (platform.currency === 'EUR') {
+        usdBruto = valueInput * rates.EUR_USD;
+        if (platform.tax_rate !== null && platform.tax_rate !== undefined) {
+          usdBruto *= platform.tax_rate;
+        }
+        if (platform.discount_factor !== null && platform.discount_factor !== undefined) {
+          usdBruto *= platform.discount_factor;
+        }
+      } else if (platform.currency === 'GBP') {
+        usdBruto = valueInput * rates.GBP_USD;
+        if (platform.tax_rate !== null && platform.tax_rate !== undefined) {
+          usdBruto *= platform.tax_rate;
+        }
+        if (platform.discount_factor !== null && platform.discount_factor !== undefined) {
+          usdBruto *= platform.discount_factor;
+        }
+      } else if (platform.currency === 'USD') {
+        usdBruto = valueInput;
+        if (platform.tax_rate !== null && platform.tax_rate !== undefined) {
+          usdBruto *= platform.tax_rate;
+        }
+        if (platform.discount_factor !== null && platform.discount_factor !== undefined) {
+          usdBruto *= platform.discount_factor;
+        }
+      } else {
+        // Tokens/Créditos
+        const tokenRate = platform.token_rate || 0;
+        usdBruto = valueInput * tokenRate;
+        if (platform.tax_rate !== null && platform.tax_rate !== undefined) {
+          usdBruto *= platform.tax_rate;
+        }
+        if (platform.discount_factor !== null && platform.discount_factor !== undefined) {
+          usdBruto *= platform.discount_factor;
+        }
+      }
+
+      usdBruto = Math.max(0, usdBruto); // clampNonNegative
+
+      // Reglas especiales
+      let percentageModel = config.percentage_override || config.group_percentage || 80;
+      if (platform.id === 'superfoon') {
+        percentageModel = 100; // SUPERFOON: 100% para la modelo
+      }
+
+      const usdModelo = usdBruto * (percentageModel / 100);
+      const copModelo = Math.round(usdModelo * rates.USD_COP);
+
+      console.log(`🔍 [CALCULATOR-TOTALS] ${platform.id}: usdBruto=${usdBruto}, usdModelo=${usdModelo}, copModelo=${copModelo}`);
+
+      perPlatform.push({
+        platformId: platform.id,
+        usdBruto: Math.round(usdBruto * 100) / 100,
+        usdModelo: Math.round(usdModelo * 100) / 100,
+        copModelo: copModelo
+      });
+
+      totalUsdBruto += usdBruto;
+      totalUsdModelo += usdModelo;
+    }
+
+    const totalCopModelo = Math.round(totalUsdModelo * rates.USD_COP);
+
+    // Alerta de cuota mínima
+    let cuotaMinimaAlert;
+    const cuotaMinimaUsd = config.min_quota_override || config.group_min_quota || 470;
+    if (cuotaMinimaUsd > 0) {
+      const below = totalUsdBruto < cuotaMinimaUsd;
+      const percentToReach = below
+        ? Math.max(0, ((cuotaMinimaUsd - totalUsdBruto) / cuotaMinimaUsd) * 100)
+        : 0;
+      cuotaMinimaAlert = { below, percentToReach: Math.round(percentToReach * 100) / 100 };
+    }
+
+    // Anticipo máximo: 90% de COP MODELO
+    const anticipoMaxCop = Math.round(totalCopModelo * 0.90);
+
+    const result = {
+      perPlatform,
+      totalUsdBruto: Math.round(totalUsdBruto * 100) / 100,
+      totalUsdModelo: Math.round(totalUsdModelo * 100) / 100,
+      totalCopModelo: Math.round(totalCopModelo),
+      cuotaMinimaAlert,
+      anticipoMaxCop: Math.round(anticipoMaxCop)
+    };
 
     // 8. Obtener anticipos ya pagados
     const { data: anticipos, error: anticiposError } = await supabase
