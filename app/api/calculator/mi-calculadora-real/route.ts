@@ -43,6 +43,8 @@ export async function GET(request: NextRequest) {
     }
 
     // 2. Obtener anticipos ya pagados del período actual
+    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos para modelId:', modelId, 'periodId:', period.id);
+    
     const { data: anticipos, error: anticiposError } = await supabase
       .from('anticipos')
       .select('monto_solicitado, estado')
@@ -50,9 +52,18 @@ export async function GET(request: NextRequest) {
       .eq('period_id', period.id)
       .eq('estado', 'realizado');
 
+    console.log('🔍 [MI-CALCULADORA-REAL] Resultado de consulta anticipos:', {
+      anticipos: anticipos,
+      error: anticiposError,
+      count: anticipos?.length || 0
+    });
+
     let anticiposPagados = 0;
     if (!anticiposError && anticipos) {
       anticiposPagados = anticipos.reduce((sum, a) => sum + (a.monto_solicitado || 0), 0);
+      console.log('🔍 [MI-CALCULADORA-REAL] Anticipos pagados calculados:', anticiposPagados);
+    } else {
+      console.log('🔍 [MI-CALCULADORA-REAL] No hay anticipos o error:', anticiposError);
     }
 
     // 3. Obtener configuración de la modelo
