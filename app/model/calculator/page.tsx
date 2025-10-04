@@ -565,7 +565,12 @@ export default function ModelCalculatorPage() {
         <div className="apple-card mb-4">
           <h2 className="text-base font-semibold text-gray-900 mb-3">Calculadora de Ingresos</h2>
           
-          {platforms.filter(p => p.enabled).length === 0 ? (
+          {(() => {
+            console.log('🔍 [RENDER] platforms.length:', platforms.length);
+            console.log('🔍 [RENDER] platforms:', platforms);
+            console.log('🔍 [RENDER] enabled platforms:', platforms.filter(p => p.enabled).length);
+            return platforms.filter(p => p.enabled).length === 0;
+          })() ? (
             <div className="text-center py-8">
               <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <span className="text-gray-400 text-2xl">📊</span>
