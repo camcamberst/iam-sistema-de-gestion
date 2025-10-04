@@ -27,6 +27,10 @@ export default function ConfigCalculatorPage() {
   const router = useRouter();
   const [models, setModels] = useState<Model[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
   // Debug: Log cuando cambia platforms
   useEffect(() => {
@@ -41,10 +45,6 @@ export default function ConfigCalculatorPage() {
       loadData();
     }
   }, [platforms, loading]);
-  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   // Configuración del formulario
   const [enabledPlatforms, setEnabledPlatforms] = useState<string[]>([]);
