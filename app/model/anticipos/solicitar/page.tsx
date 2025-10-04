@@ -155,32 +155,32 @@ export default function SolicitarAnticipoPage() {
       const periodDate = getColombiaDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
-      // 🚀 NUEVA IMPLEMENTACIÓN: Usar endpoint de valores actuales (misma lógica que Mi Calculadora)
-      console.log('🔍 [SOLICITAR ANTICIPO] Usando endpoint de valores actuales...');
-      const currentValuesResponse = await fetch(`/api/calculator/current-values?modelId=${userId}&periodDate=${periodDate}`);
-      const currentValuesData = await currentValuesResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Current values response:', currentValuesData);
+      // 🚀 NUEVA IMPLEMENTACIÓN: Usar endpoint con lógica del dashboard (que funciona correctamente)
+      console.log('🔍 [SOLICITAR ANTICIPO] Usando endpoint con lógica del dashboard...');
+      const dashboardValuesResponse = await fetch(`/api/calculator/dashboard-values?modelId=${userId}&periodDate=${periodDate}`);
+      const dashboardValuesData = await dashboardValuesResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Dashboard values response:', dashboardValuesData);
       
-      if (currentValuesData.success) {
-        console.log('✅ [SOLICITAR ANTICIPO] Datos de valores actuales obtenidos correctamente:', {
-          copModelo: currentValuesData.data.copModelo,
-          anticipoDisponible: currentValuesData.data.anticipoDisponible,
-          anticiposPagados: currentValuesData.data.anticiposPagados
+      if (dashboardValuesData.success) {
+        console.log('✅ [SOLICITAR ANTICIPO] Datos del dashboard obtenidos correctamente:', {
+          copModelo: dashboardValuesData.data.copModelo,
+          anticipoDisponible: dashboardValuesData.data.anticipoDisponible,
+          anticiposPagados: dashboardValuesData.data.anticiposPagados
         });
 
         console.log('🔄 [SOLICITAR ANTICIPO] Estableciendo datos de productividad:', {
-          copModelo: currentValuesData.data.copModelo,
-          anticipoDisponible: currentValuesData.data.anticipoDisponible,
-          anticiposPagados: currentValuesData.data.anticiposPagados
+          copModelo: dashboardValuesData.data.copModelo,
+          anticipoDisponible: dashboardValuesData.data.anticipoDisponible,
+          anticiposPagados: dashboardValuesData.data.anticiposPagados
         });
 
         setProductivityData({
-          copModelo: currentValuesData.data.copModelo,
-          anticipoDisponible: currentValuesData.data.anticipoDisponible,
-          anticiposPagados: currentValuesData.data.anticiposPagados
+          copModelo: dashboardValuesData.data.copModelo,
+          anticipoDisponible: dashboardValuesData.data.anticipoDisponible,
+          anticiposPagados: dashboardValuesData.data.anticiposPagados
         });
       } else {
-        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener valores actuales:', currentValuesData.error);
+        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener datos del dashboard:', dashboardValuesData.error);
         
         // Fallback: Establecer valores por defecto
         setProductivityData({
