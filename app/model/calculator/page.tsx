@@ -278,7 +278,7 @@ export default function ModelCalculatorPage() {
           console.log('🔍 [CALCULATOR] Cargando valores guardados');
           
           // 🔧 NUEVO ENFOQUE: Usar enabledPlatforms directamente (no el estado platforms)
-          const updatedPlatforms = enabledPlatforms.map(p => ({
+          const updatedPlatforms = enabledPlatforms.map((p: Platform) => ({
             ...p,
             value: platformToValue[p.id] ?? p.value
           }));
