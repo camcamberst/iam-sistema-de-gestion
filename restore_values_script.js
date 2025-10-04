@@ -1,19 +1,7 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/**
+ * Script para restaurar valores de modelo desde los datos que obtuvimos anteriormente
+ */
 
-// Usar service role key para bypass RLS
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
-
-// Valores a restaurar basados en los datos que obtuvimos anteriormente
 const valuesToRestore = [
   // Modelo: fe54995d-1828-4721-8153-53fce6f4fe56 (Melanié)
   { model_id: "fe54995d-1828-4721-8153-53fce6f4fe56", platform_id: "777", value: "0.00", period_date: "2025-10-04" },
@@ -55,89 +43,5 @@ const valuesToRestore = [
   { model_id: "c8a156fb-1a56-4160-a63d-679c36bda1e7", platform_id: "xmodels", value: "0.00", period_date: "2025-10-04" }
 ];
 
-// POST: Restaurar valores manualmente
-export async function POST(request: NextRequest) {
-  try {
-    console.log('🔄 [RESTORE-MANUAL] Iniciando restauración manual de valores...');
-    
-    // 1. Eliminar valores existentes para el período 2025-10-04
-    console.log('🔄 [RESTORE-MANUAL] Eliminando valores existentes...');
-    const { error: deleteError } = await supabase
-      .from('model_values')
-      .delete()
-      .eq('period_date', '2025-10-04');
-    
-    if (deleteError) {
-      console.error('❌ [RESTORE-MANUAL] Error eliminando valores existentes:', deleteError);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Error eliminando valores existentes' 
-      }, { status: 500 });
-    }
-    
-    console.log('✅ [RESTORE-MANUAL] Valores existentes eliminados');
-    
-    // 2. Insertar valores restaurados
-    console.log('🔄 [RESTORE-MANUAL] Insertando valores restaurados...');
-    const { data: restoredValues, error: insertError } = await supabase
-      .from('model_values')
-      .insert(valuesToRestore)
-      .select();
-    
-    if (insertError) {
-      console.error('❌ [RESTORE-MANUAL] Error insertando valores:', insertError);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Error insertando valores' 
-      }, { status: 500 });
-    }
-    
-    console.log('✅ [RESTORE-MANUAL] Valores restaurados exitosamente:', restoredValues?.length || 0);
-    
-    return NextResponse.json({
-      success: true,
-      message: 'Valores restaurados exitosamente',
-      restored_count: restoredValues?.length || 0,
-      total_values: valuesToRestore.length,
-      values: restoredValues
-    });
-    
-  } catch (error) {
-    console.error('❌ [RESTORE-MANUAL] Error en restauración manual:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Error interno del servidor' 
-    }, { status: 500 });
-  }
-}
-
-// GET: Verificar valores restaurados
-export async function GET(request: NextRequest) {
-  try {
-    const { data: currentValues, error: valuesError } = await supabase
-      .from('model_values')
-      .select('*')
-      .eq('period_date', '2025-10-04');
-    
-    if (valuesError) {
-      console.error('❌ [RESTORE-MANUAL] Error obteniendo valores:', valuesError);
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Error obteniendo valores' 
-      }, { status: 500 });
-    }
-    
-    return NextResponse.json({
-      success: true,
-      current_count: currentValues?.length || 0,
-      values: currentValues || []
-    });
-    
-  } catch (error) {
-    console.error('❌ [RESTORE-MANUAL] Error verificando valores:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Error interno del servidor' 
-    }, { status: 500 });
-  }
-}
+console.log('Valores a restaurar:', valuesToRestore.length);
+console.log('Primeros 5 valores:', valuesToRestore.slice(0, 5));
