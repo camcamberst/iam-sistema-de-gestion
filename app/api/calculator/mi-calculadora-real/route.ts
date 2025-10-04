@@ -55,7 +55,10 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MI-CALCULADORA-REAL] Resultado de consulta anticipos:', {
       anticipos: anticipos,
       error: anticiposError,
-      count: anticipos?.length || 0
+      count: anticipos?.length || 0,
+      periodId: period.id,
+      periodDate: periodDate,
+      modelId: modelId
     });
 
     let anticiposPagados = 0;
