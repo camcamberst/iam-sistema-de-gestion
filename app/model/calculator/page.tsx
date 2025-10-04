@@ -248,6 +248,7 @@ export default function ModelCalculatorPage() {
         final_percentage: p.percentage
       })));
       setPlatforms(enabledPlatforms);
+      console.log('🔍 [CALCULATOR] setPlatforms called with:', enabledPlatforms.length, 'platforms');
       // Inicializar inputs de texto vacíos
       setInputValues(
         enabledPlatforms.reduce((acc: Record<string, string>, p: Platform) => {
@@ -280,10 +281,12 @@ export default function ModelCalculatorPage() {
             console.log('🔍 [CALCULATOR] Cargando valores guardados');
             
             // 1. Actualizar platforms.value con valores guardados
+            console.log('🔍 [CALCULATOR] platforms before update:', platforms.length);
             const updatedPlatforms = platforms.map(p => ({
               ...p,
               value: platformToValue[p.id] ?? p.value
             }));
+            console.log('🔍 [CALCULATOR] updatedPlatforms after update:', updatedPlatforms.length);
             setPlatforms(updatedPlatforms);
             
             // 2. Sincronizar manualmente platforms → inputValues
