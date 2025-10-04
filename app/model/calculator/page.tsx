@@ -660,16 +660,26 @@ export default function ModelCalculatorPage() {
                               inputMode="decimal"
                               value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
-                                const value = e.target.value;
-                                // 🔧 SYNC: Actualizar inputValues directamente
-                                setInputValues(prev => ({ ...prev, [platform.id]: value }));
+                                const rawValue = e.target.value;
+                                
+                                // 🔧 SOPORTE INTERNACIONAL: Permitir punto y coma como separador decimal
+                                // Normalizar coma a punto para JavaScript
+                                const normalizedValue = rawValue.replace(',', '.');
+                                
+                                // 🔧 SYNC: Actualizar inputValues con valor original (mantiene formato del usuario)
+                                setInputValues(prev => ({ ...prev, [platform.id]: rawValue }));
 
-                                // 🔧 SYNC: Convertir a número y actualizar platforms.value
-                                const numeric = Number.parseFloat(value);
+                                // 🔧 SYNC: Convertir a número usando valor normalizado
+                                const numeric = Number.parseFloat(normalizedValue);
                                 const numericValue = Number.isFinite(numeric) ? numeric : 0;
                                 setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                 
-                                console.log('🔍 [SYNC] Usuario escribió:', { platform: platform.id, input: value, numeric: numericValue });
+                                console.log('🔍 [SYNC] Usuario escribió:', { 
+                                  platform: platform.id, 
+                                  original: rawValue, 
+                                  normalized: normalizedValue, 
+                                  numeric: numericValue 
+                                });
                               }}
                               onKeyDown={(e) => {
                                 console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
@@ -690,8 +700,8 @@ export default function ModelCalculatorPage() {
                                 fontSize: '14px',
                                 backgroundColor: 'white'
                               }}
-                              placeholder="0.00"
-                              title="Ingresa valores con decimales (ej: 135.50)"
+                              placeholder="0,00"
+                              title="Ingresa valores con decimales (ej: 135.50 o 135,50)"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
                               <span className="text-gray-500 text-xs">
