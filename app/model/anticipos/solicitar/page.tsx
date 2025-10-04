@@ -155,151 +155,35 @@ export default function SolicitarAnticipoPage() {
       const periodDate = getColombiaDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
-      // Cargar configuración de calculadora
-      console.log('🔍 [SOLICITAR ANTICIPO] Cargando configuración...');
-      const configResponse = await fetch(`/api/calculator/config-v2?modelId=${userId}`);
-      const configData = await configResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Config response:', configData);
+      // 🚀 NUEVA IMPLEMENTACIÓN: Usar endpoint de totales con función centralizada
+      console.log('🔍 [SOLICITAR ANTICIPO] Usando endpoint de totales centralizado...');
+      const totalsResponse = await fetch(`/api/calculator/totals?modelId=${userId}&periodDate=${periodDate}`);
+      const totalsData = await totalsResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Totals response:', totalsData);
       
-      if (!configData.success) {
-        throw new Error('Error al cargar configuración');
-      }
-
-      // Cargar valores del modelo
-      console.log('🔍 [SOLICITAR ANTICIPO] Cargando valores del modelo...');
-      const valuesResponse = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
-      const valuesData = await valuesResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Values response:', valuesData);
-      console.log('🔍 [SOLICITAR ANTICIPO] Values data structure:', {
-        success: valuesData.success,
-        hasValues: !!valuesData.values,
-        valuesLength: valuesData.values?.length || 0,
-        valuesType: typeof valuesData.values
-      });
-      
-      // Cargar tasas
-      console.log('🔍 [SOLICITAR ANTICIPO] Cargando tasas...');
-      const ratesResponse = await fetch('/api/rates-v2?activeOnly=true');
-      const ratesData = await ratesResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Rates response:', ratesData);
-      
-      if (ratesData.success && configData.success && configData.config) {
-        console.log('🔍 [SOLICITAR ANTICIPO] Config and rates successful, checking values...');
-        
-        // Manejar caso donde valuesData no es exitoso pero tenemos datos
-        if (!valuesData.success) {
-          console.log('🔍 [SOLICITAR ANTICIPO] Values API failed, but continuing with empty values...');
-          console.log('🔍 [SOLICITAR ANTICIPO] Values error:', valuesData.error);
-        }
-        
-        const rates = {
-          usd_cop: ratesData.data.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
-          eur_usd: ratesData.data.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
-          gbp_usd: ratesData.data.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20
-        };
-
-        // Calcular COP Modelo (misma lógica que en la calculadora)
-        let copModelo = 0;
-        const enabledPlatforms = configData.config.platforms
-          .filter((p: any) => p.enabled)
-          .map((platform: any) => ({
-            id: platform.id,
-            name: platform.name,
-            enabled: true,
-            value: 0,
-            percentage: platform.percentage_override || platform.group_percentage || 80,
-            currency: platform.currency || 'USD'
-          }));
-
-        // Crear mapa de valores desde la API
-        const valuesArray = valuesData.success ? (valuesData.data || []) : [];
-        const platformValuesMap = new Map(valuesArray.map((mv: any) => [mv.platform_id, mv.value]));
-        console.log('🔍 [SOLICITAR ANTICIPO] Platform values map:', platformValuesMap);
-        console.log('🔍 [SOLICITAR ANTICIPO] Enabled platforms:', enabledPlatforms);
-        console.log('🔍 [SOLICITAR ANTICIPO] Values array length:', valuesArray.length);
-
-        enabledPlatforms.forEach((p: any) => {
-          const value = Number(platformValuesMap.get(p.id) || 0);
-          console.log(`🔍 [SOLICITAR ANTICIPO] Platform ${p.id}: value=${value}`);
-          let usdBrutoPlatform = 0;
-          let usdModeloPlatform = 0;
-
-          // Aplicar fórmulas específicas por plataforma
-          if (p.currency === 'EUR') {
-            if (p.id === 'big7') {
-              usdBrutoPlatform = value * (rates.eur_usd || 1.01);
-              usdModeloPlatform = usdBrutoPlatform * 0.84;
-            } else if (p.id === 'mondo') {
-              usdBrutoPlatform = value * (rates.eur_usd || 1.01);
-              usdModeloPlatform = usdBrutoPlatform * 0.78;
-            } else {
-              usdBrutoPlatform = value * (rates.eur_usd || 1.01);
-              usdModeloPlatform = usdBrutoPlatform;
-            }
-          } else if (p.currency === 'GBP') {
-            if (p.id === 'aw') {
-              usdBrutoPlatform = value * (rates.gbp_usd || 1.20);
-              usdModeloPlatform = usdBrutoPlatform * 0.677;
-            } else {
-              usdBrutoPlatform = value * (rates.gbp_usd || 1.20);
-              usdModeloPlatform = usdBrutoPlatform;
-            }
-          } else if (p.currency === 'USD') {
-            if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-              usdBrutoPlatform = value;
-              usdModeloPlatform = value * 0.75;
-            } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-              usdBrutoPlatform = value;
-              usdModeloPlatform = value * 0.05;
-            } else if (p.id === 'dxlive') {
-              usdBrutoPlatform = value;
-              usdModeloPlatform = value * 0.60;
-            } else if (p.id === 'secretfriends') {
-              usdBrutoPlatform = value;
-              usdModeloPlatform = value * 0.5;
-            } else if (p.id === 'superfoon') {
-              usdBrutoPlatform = value;
-              usdModeloPlatform = value;
-            } else {
-              usdBrutoPlatform = value;
-              usdModeloPlatform = value;
-            }
-          }
-
-          usdModeloPlatform = usdModeloPlatform * (p.percentage / 100);
-          copModelo += usdModeloPlatform * (rates.usd_cop || 3900);
-        });
-
-        // Obtener anticipos ya pagados en el período actual
-        console.log('🔍 [SOLICITAR ANTICIPO] Cargando anticipos pagados...');
-        const anticiposResponse = await fetch(`/api/anticipos/paid?modelId=${userId}&periodDate=${periodDate}`);
-        const anticiposData = await anticiposResponse.json();
-        console.log('🔍 [SOLICITAR ANTICIPO] Anticipos response:', anticiposData);
-        const anticiposPagados = anticiposData.success ? anticiposData.total : 0;
-
-        const anticipoDisponible = Math.max(0, (copModelo * 0.9) - anticiposPagados);
-
-        console.log('🔍 [SOLICITAR ANTICIPO] Datos de productividad calculados:', {
-          copModelo,
-          anticipoDisponible,
-          anticiposPagados,
-          enabledPlatforms: enabledPlatforms.length,
-          platformValues: Object.keys(platformValuesMap).length,
-          rates
+      if (totalsData.success) {
+        console.log('✅ [SOLICITAR ANTICIPO] Datos de totales obtenidos correctamente:', {
+          copModelo: totalsData.data.copModelo,
+          anticipoDisponible: totalsData.data.anticipoDisponible,
+          anticiposPagados: totalsData.data.anticiposPagados,
+          totalUsdBruto: totalsData.data.totalUsdBruto,
+          totalUsdModelo: totalsData.data.totalUsdModelo,
+          totalCopModelo: totalsData.data.totalCopModelo,
+          cuotaMinimaAlert: totalsData.data.cuotaMinimaAlert,
+          anticipoMaxCop: totalsData.data.anticipoMaxCop,
+          enabledPlatforms: totalsData.data.enabledPlatforms,
+          valuesCount: totalsData.data.valuesCount
         });
 
         setProductivityData({
-          copModelo,
-          anticipoDisponible,
-          anticiposPagados
+          copModelo: totalsData.data.copModelo,
+          anticipoDisponible: totalsData.data.anticipoDisponible,
+          anticiposPagados: totalsData.data.anticiposPagados
         });
       } else {
-        console.log('🔍 [SOLICITAR ANTICIPO] No se pudo cargar configuración o tasas');
-        console.log('🔍 [SOLICITAR ANTICIPO] Config success:', configData.success);
-        console.log('🔍 [SOLICITAR ANTICIPO] Rates success:', ratesData.success);
-        console.log('🔍 [SOLICITAR ANTICIPO] Has config:', !!configData.config);
+        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener totales:', totalsData.error);
         
-        // Establecer valores por defecto
+        // Fallback: Establecer valores por defecto
         setProductivityData({
           copModelo: 0,
           anticipoDisponible: 0,
