@@ -34,7 +34,13 @@ export default function ConfigCalculatorPage() {
     console.log('🔍 [PLATFORMS-STATE] platforms type:', typeof platforms);
     console.log('🔍 [PLATFORMS-STATE] platforms is array:', Array.isArray(platforms));
     console.log('🔍 [PLATFORMS-STATE] platforms length:', platforms?.length);
-  }, [platforms]);
+    
+    // 🔧 FIX: Si platforms está vacío pero debería tener datos, forzar actualización
+    if (platforms.length === 0 && !loading) {
+      console.log('🔍 [PLATFORMS-STATE] Platforms is empty but should have data, forcing reload...');
+      loadData();
+    }
+  }, [platforms, loading]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,6 +91,16 @@ export default function ConfigCalculatorPage() {
       
       setPlatforms(platformsData.data);
       console.log('🔍 [DEBUG] setPlatforms called with:', platformsData.data);
+      
+      // 🔧 FIX: Forzar re-render después de setPlatforms
+      setTimeout(() => {
+        console.log('🔍 [DEBUG] Forced re-render after setPlatforms');
+        setPlatforms(prev => {
+          console.log('🔍 [DEBUG] setPlatforms callback - prev:', prev);
+          console.log('🔍 [DEBUG] setPlatforms callback - new data:', platformsData.data);
+          return platformsData.data;
+        });
+      }, 100);
 
     } catch (err: any) {
       setError(err.message || 'Error al cargar datos');
