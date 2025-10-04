@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
+import { getAnticiposConfirmadosDelMes } from '@/lib/anticipos/anticipos-utils';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -42,53 +43,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
     }
 
-    // 2. Obtener anticipos ya pagados del mes actual (no solo del período específico)
-    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos para modelId:', modelId, 'periodId:', period.id);
+    // 2. Obtener anticipos ya pagados del mes actual usando función centralizada
+    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos para modelId:', modelId, 'periodDate:', periodDate);
     
-    // Obtener todos los períodos del mes actual
-    const currentDate = new Date(periodDate);
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth() + 1; // getMonth() es 0-based
+    const anticiposResult = await getAnticiposConfirmadosDelMes(modelId, periodDate);
+    const anticiposPagados = anticiposResult.total;
     
-    console.log('🔍 [MI-CALCULADORA-REAL] Buscando períodos del mes:', year, month);
-    
-    const { data: monthPeriods, error: monthPeriodsError } = await supabase
-      .from('periods')
-      .select('id')
-      .gte('start_date', `${year}-${month.toString().padStart(2, '0')}-01`)
-      .lt('start_date', `${year}-${(month + 1).toString().padStart(2, '0')}-01`);
-    
-    if (monthPeriodsError) {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener períodos del mes:', monthPeriodsError);
-      return NextResponse.json({ success: false, error: 'Error al obtener períodos del mes' }, { status: 500 });
-    }
-    
-    const periodIds = monthPeriods?.map(p => p.id) || [];
-    console.log('🔍 [MI-CALCULADORA-REAL] Períodos del mes encontrados:', periodIds);
-    
-    const { data: anticipos, error: anticiposError } = await supabase
-      .from('anticipos')
-      .select('monto_solicitado, estado, period_id')
-      .eq('model_id', modelId)
-      .in('period_id', periodIds)
-      .eq('estado', 'confirmado');
-
-    console.log('🔍 [MI-CALCULADORA-REAL] Resultado de consulta anticipos:', {
-      anticipos: anticipos,
-      error: anticiposError,
-      count: anticipos?.length || 0,
-      periodId: period.id,
-      periodDate: periodDate,
-      modelId: modelId
-    });
-
-    let anticiposPagados = 0;
-    if (!anticiposError && anticipos) {
-      anticiposPagados = anticipos.reduce((sum, a) => sum + (a.monto_solicitado || 0), 0);
-      console.log('🔍 [MI-CALCULADORA-REAL] Anticipos pagados calculados:', anticiposPagados);
-    } else {
-      console.log('🔍 [MI-CALCULADORA-REAL] No hay anticipos o error:', anticiposError);
-    }
+    console.log('🔍 [MI-CALCULADORA-REAL] Anticipos pagados calculados:', anticiposPagados);
 
     // 3. Obtener configuración de la modelo
     const { data: config, error: configError } = await supabase

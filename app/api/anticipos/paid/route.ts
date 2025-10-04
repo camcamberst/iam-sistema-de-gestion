@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getAnticiposConfirmadosDelMes } from '@/lib/anticipos/anticipos-utils';
 
 // Forzar renderizado dinámico
 export const dynamic = 'force-dynamic';
@@ -27,34 +28,10 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    let query = supabase
-      .from('anticipos')
-      .select('monto_solicitado, estado, created_at')
-      .eq('model_id', modelId)
-      .eq('estado', 'realizado');
-
-    if (periodDate) {
-      // Filtrar por período específico
-      const { data: period } = await supabase
-        .from('periods')
-        .select('id')
-        .eq('start_date', periodDate)
-        .single();
-
-      if (period) {
-        query = query.eq('period_id', period.id);
-      }
-    }
-
-    const { data: anticipos, error } = await query;
-
-    if (error) {
-      console.error('❌ [API ANTICIPOS PAID] Error:', error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-    }
-
-    // Calcular total pagado
-    const total = anticipos?.reduce((sum, anticipo) => sum + (anticipo.monto_solicitado || 0), 0) || 0;
+    // Usar función centralizada para obtener anticipos del mes
+    const anticiposResult = await getAnticiposConfirmadosDelMes(modelId, periodDate || undefined);
+    const total = anticiposResult.total;
+    const anticipos = anticiposResult.anticipos;
 
     console.log('✅ [API ANTICIPOS PAID] Total pagado:', total);
 
