@@ -51,9 +51,9 @@ export async function GET(request: NextRequest) {
       let usdBruto = 0;
       
       if (test.currency === 'EUR') {
-        usdBruto = test.value * test.rate;
+        usdBruto = test.value * (test.rate || 1);
       } else if (test.currency === 'GBP') {
-        usdBruto = test.value * test.rate;
+        usdBruto = test.value * (test.rate || 1);
       } else if (test.currency === 'USD') {
         usdBruto = test.value;
         if (test.discountFactor) {
