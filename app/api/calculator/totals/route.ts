@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 import { computeTotals, ConversionType } from '@/lib/calculadora/calc';
-import { getRatesForModel } from '@/lib/rates/rates-manager';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -87,14 +86,35 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
-    // 4. Obtener tasas usando lógica centralizada
-    const ratesData = await getRatesForModel(modelId);
+    // 4. Obtener tasas
+    const { data: ratesData, error: ratesError } = await supabase
+      .from('rates')
+      .select('kind, value, valid_from, scope')
+      .eq('active', true)
+      .is('valid_to', null)
+      .order('valid_from', { ascending: false });
+
+    if (ratesError) {
+      console.error('❌ [CALCULATOR-TOTALS] Error al obtener tasas:', ratesError);
+      return NextResponse.json({ success: false, error: 'Error al obtener tasas' }, { status: 500 });
+    }
+
+    // 5. Procesar tasas (usar la más reciente)
+    const usdCopRates = ratesData?.filter((r: any) => r.kind === 'USD→COP') || [];
+    const eurUsdRates = ratesData?.filter((r: any) => r.kind === 'EUR→USD') || [];
+    const gbpUsdRates = ratesData?.filter((r: any) => r.kind === 'GBP→USD') || [];
+    
+    // Usar la tasa más reciente (más alta valid_from)
+    const latestUsdCop = usdCopRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
+    const latestEurUsd = eurUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
+    const latestGbpUsd = gbpUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
+    
     const rates = {
-      USD_COP: ratesData.usd_cop,
-      EUR_USD: ratesData.eur_usd,
-      GBP_USD: ratesData.gbp_usd
+      USD_COP: latestUsdCop?.value || 3900,
+      EUR_USD: latestEurUsd?.value || 1.01,
+      GBP_USD: latestGbpUsd?.value || 1.20
     };
-    console.log('🔍 [CALCULATOR-TOTALS] Tasas obtenidas con rates-manager:', rates);
+    console.log('🔍 [CALCULATOR-TOTALS] Tasas seleccionadas:', rates);
 
     // 6. Convertir datos al formato esperado por computeTotals
     const platformRules = platforms?.map(p => ({
