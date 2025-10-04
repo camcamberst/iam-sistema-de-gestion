@@ -31,6 +31,9 @@ export default function ConfigCalculatorPage() {
   const [platformsData, setPlatformsData] = useState<Platform[]>([]);
   const [renderPlatforms, setRenderPlatforms] = useState<Platform[]>([]);
   const [forceRender, setForceRender] = useState(0);
+  
+  // 🔧 FIX: Variable local que se actualiza inmediatamente
+  let platformsLocal: Platform[] = [];
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -94,11 +97,17 @@ export default function ConfigCalculatorPage() {
       console.log('🔍 [DEBUG] platformsData.config.platforms content:', platformsData.config?.platforms);
       
       const platformsArray = platformsData.config?.platforms || [];
+      
+      // 🔧 FIX: Actualización inmediata de variable local
+      platformsLocal = platformsArray;
+      
       setPlatforms(platformsArray);
       setPlatformsData(platformsArray);
-      setRenderPlatforms(platformsArray); // 🔧 FIX: Estado dedicado para render
+      setRenderPlatforms(platformsArray);
       setPlatformsLoaded(true);
       setForceRender(prev => prev + 1); // 🔧 FIX: Forzar re-render
+      
+      console.log('🔍 [DEBUG] platformsLocal updated with:', platformsArray);
       console.log('🔍 [DEBUG] setPlatforms called with:', platformsArray);
       console.log('🔍 [DEBUG] setPlatformsData called with:', platformsArray);
       console.log('🔍 [DEBUG] setRenderPlatforms called with:', platformsArray);
@@ -281,13 +290,14 @@ export default function ConfigCalculatorPage() {
                         console.log('🔍 [RENDER] platforms is array:', Array.isArray(platforms));
                         console.log('🔍 [RENDER] platforms length:', platforms?.length);
                         
-                        // 🔧 FIX: Usar renderPlatforms como fuente de verdad única
-                        const platformsToRender = renderPlatforms;
+                        // 🔧 FIX: Usar variable local como fuente de verdad única
+                        const platformsToRender = platformsLocal;
                         
                         console.log('🔍 [RENDER] forceRender value:', forceRender);
                         console.log('🔍 [RENDER] platformsLoaded:', platformsLoaded);
-                        console.log('🔍 [RENDER] renderPlatforms length:', renderPlatforms?.length);
-                        console.log('🔍 [RENDER] renderPlatforms is array:', Array.isArray(renderPlatforms));
+                        console.log('🔍 [RENDER] platformsLocal length:', platformsLocal?.length);
+                        console.log('🔍 [RENDER] platformsLocal is array:', Array.isArray(platformsLocal));
+                        console.log('🔍 [RENDER] platformsLocal content:', platformsLocal);
                         
                         if (!platformsLoaded || !platformsToRender || !Array.isArray(platformsToRender) || platformsToRender.length === 0) {
                           console.log('🔍 [RENDER] No platforms to render, showing loading state');
@@ -295,6 +305,7 @@ export default function ConfigCalculatorPage() {
                           console.log('🔍 [RENDER] platforms:', platforms);
                           console.log('🔍 [RENDER] platformsData:', platformsData);
                           console.log('🔍 [RENDER] renderPlatforms:', renderPlatforms);
+                          console.log('🔍 [RENDER] platformsLocal:', platformsLocal);
                           return (
                             <div className="text-center py-8 text-gray-500">
                               <p>No hay plataformas disponibles</p>
@@ -303,7 +314,7 @@ export default function ConfigCalculatorPage() {
                           );
                         }
                         
-                        console.log('🔍 [RENDER] About to map platformsToRender:', platformsToRender);
+                        console.log('🔍 [RENDER] About to map platformsLocal:', platformsToRender);
                         return platformsToRender.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
