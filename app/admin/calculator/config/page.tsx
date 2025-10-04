@@ -50,26 +50,34 @@ export default function ConfigCalculatorPage() {
 
   const loadData = async () => {
     try {
+      console.log('🔍 [LOAD] Iniciando loadData...');
       setLoading(true);
       setError(null);
 
       // Cargar modelos disponibles
+      console.log('🔍 [LOAD] Cargando modelos...');
       const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
       const userId = userData ? JSON.parse(userData).id : 'current-user';
+      console.log('🔍 [LOAD] UserId:', userId);
+      
       const modelsResponse = await fetch(`/api/calculator/models?adminId=${userId}`);
+      console.log('🔍 [LOAD] Models response status:', modelsResponse.status);
       const modelsData = await modelsResponse.json();
+      console.log('🔍 [LOAD] Models data:', modelsData);
 
       if (!modelsData.success) {
         throw new Error(modelsData.error || 'Error al cargar modelos');
       }
 
       setModels(modelsData.data);
+      console.log('🔍 [LOAD] Models set successfully');
 
       // Cargar plataformas disponibles
+      console.log('🔍 [LOAD] Cargando plataformas...');
       const platformsResponse = await fetch('/api/calculator/platforms');
+      console.log('🔍 [LOAD] Platforms response status:', platformsResponse.status);
       const platformsData = await platformsResponse.json();
-
-      console.log('🔍 [LOAD] Plataformas cargadas:', platformsData);
+      console.log('🔍 [LOAD] Platforms data:', platformsData);
 
       if (!platformsData.success) {
         throw new Error(platformsData.error || 'Error al cargar plataformas');
@@ -80,10 +88,13 @@ export default function ConfigCalculatorPage() {
       setForceRender(prev => prev + 1);
 
       console.log('🔍 [LOAD] platformsLocal actualizada con:', platformsLocal.length, 'plataformas');
+      console.log('🔍 [LOAD] loadData completado exitosamente');
 
     } catch (err: any) {
+      console.error('❌ [LOAD] Error en loadData:', err);
       setError(err.message || 'Error al cargar datos');
     } finally {
+      console.log('🔍 [LOAD] Setting loading to false');
       setLoading(false);
     }
   };
