@@ -78,9 +78,7 @@ export async function GET(request: NextRequest) {
       copModelo: copModelo,
       anticipoDisponible: anticipoDisponible,
       anticiposPagados: anticiposPagados,
-      valuesCount: values?.length || 0,
-      hasHistory: historyData && historyData.length > 0,
-      historyValue: historyData?.[0]?.total_cop_modelo || 0
+      valuesCount: values?.length || 0
     });
 
     return NextResponse.json({
