@@ -654,36 +654,64 @@ export default function ModelCalculatorPage() {
                           <div className="relative">
                             {/* INPUT DE PRUEBA COMPLETAMENTE AISLADO */}
                             <input
-                              type="number"
-                              step="0.01"
-                              min="0"
+                              type="text"
                               inputMode="decimal"
                               value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
                                 const rawValue = e.target.value;
                                 
-                                // 🔧 SOPORTE INTERNACIONAL: Permitir punto y coma como separador decimal
-                                // Normalizar coma a punto para JavaScript
-                                const normalizedValue = rawValue.replace(',', '.');
+                                // 🔧 VALIDACIÓN: Solo permitir dígitos, punto y coma
+                                const cleanedValue = rawValue.replace(/[^0-9.,]/g, '');
                                 
-                                // 🔧 SYNC: Actualizar inputValues con valor original (mantiene formato del usuario)
-                                setInputValues(prev => ({ ...prev, [platform.id]: rawValue }));
+                                // 🔧 PREVENIR MÚLTIPLES SEPARADORES: Solo un punto o coma
+                                const hasPoint = cleanedValue.includes('.');
+                                const hasComma = cleanedValue.includes(',');
+                                
+                                let finalValue = cleanedValue;
+                                if (hasPoint && hasComma) {
+                                  // Si tiene ambos, mantener solo el primero
+                                  const pointIndex = cleanedValue.indexOf('.');
+                                  const commaIndex = cleanedValue.indexOf(',');
+                                  if (pointIndex < commaIndex) {
+                                    finalValue = cleanedValue.substring(0, commaIndex) + cleanedValue.substring(commaIndex + 1);
+                                  } else {
+                                    finalValue = cleanedValue.substring(0, pointIndex) + cleanedValue.substring(pointIndex + 1);
+                                  }
+                                }
+                                
+                                // 🔧 SYNC: Actualizar inputValues
+                                setInputValues(prev => ({ ...prev, [platform.id]: finalValue }));
 
-                                // 🔧 SYNC: Convertir a número usando valor normalizado
+                                // 🔧 SYNC: Convertir a número (normalizar coma a punto)
+                                const normalizedValue = finalValue.replace(',', '.');
                                 const numeric = Number.parseFloat(normalizedValue);
                                 const numericValue = Number.isFinite(numeric) ? numeric : 0;
                                 setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                 
                                 console.log('🔍 [SYNC] Usuario escribió:', { 
                                   platform: platform.id, 
-                                  original: rawValue, 
+                                  original: rawValue,
+                                  cleaned: cleanedValue,
+                                  final: finalValue,
                                   normalized: normalizedValue, 
                                   numeric: numericValue 
                                 });
                               }}
                               onKeyDown={(e) => {
-                                console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
-                                console.log('🔍 [DEBUG] CÓDIGO DE TECLA:', e.keyCode);
+                                // 🔧 PERMITIR TECLAS ESPECÍFICAS: dígitos, punto, coma, backspace, delete, arrow keys
+                                const allowedKeys = [
+                                  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+                                  '.', ',',
+                                  'Backspace', 'Delete',
+                                  'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
+                                  'Tab', 'Enter'
+                                ];
+                                
+                                if (!allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
+                                  e.preventDefault();
+                                }
+                                
+                                console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key, 'PERMITIDA:', allowedKeys.includes(e.key));
                               }}
                               onKeyUp={(e) => {
                                 console.log('🔍 [DEBUG] TECLA SOLTADA:', e.key);
