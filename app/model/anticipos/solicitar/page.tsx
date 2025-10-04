@@ -155,32 +155,32 @@ export default function SolicitarAnticipoPage() {
       const periodDate = getColombiaDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
-      // 🚀 SOLUCIÓN SIMPLE: Solo reflejar los valores ya calculados por Mi Calculadora
-      console.log('🔍 [SOLICITAR ANTICIPO] Reflejando valores ya calculados por Mi Calculadora...');
-      const reflectValuesResponse = await fetch(`/api/calculator/reflect-values?modelId=${userId}&periodDate=${periodDate}&t=${Date.now()}`);
-      const reflectValuesData = await reflectValuesResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Reflect values response:', reflectValuesData);
+      // 🚀 SOLUCIÓN REAL: Usar la misma lógica de Mi Calculadora para obtener valores correctos
+      console.log('🔍 [SOLICITAR ANTICIPO] Obteniendo valores reales de Mi Calculadora...');
+      const miCalculadoraRealResponse = await fetch(`/api/calculator/mi-calculadora-real?modelId=${userId}&periodDate=${periodDate}&t=${Date.now()}`);
+      const miCalculadoraRealData = await miCalculadoraRealResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Mi Calculadora real response:', miCalculadoraRealData);
       
-      if (reflectValuesData.success) {
-        console.log('✅ [SOLICITAR ANTICIPO] Valores reflejados correctamente:', {
-          copModelo: reflectValuesData.data.copModelo,
-          anticipoDisponible: reflectValuesData.data.anticipoDisponible,
-          anticiposPagados: reflectValuesData.data.anticiposPagados
+      if (miCalculadoraRealData.success) {
+        console.log('✅ [SOLICITAR ANTICIPO] Valores reales de Mi Calculadora obtenidos correctamente:', {
+          copModelo: miCalculadoraRealData.data.copModelo,
+          anticipoDisponible: miCalculadoraRealData.data.anticipoDisponible,
+          anticiposPagados: miCalculadoraRealData.data.anticiposPagados
         });
 
         console.log('🔄 [SOLICITAR ANTICIPO] Estableciendo datos de productividad:', {
-          copModelo: reflectValuesData.data.copModelo,
-          anticipoDisponible: reflectValuesData.data.anticipoDisponible,
-          anticiposPagados: reflectValuesData.data.anticiposPagados
+          copModelo: miCalculadoraRealData.data.copModelo,
+          anticipoDisponible: miCalculadoraRealData.data.anticipoDisponible,
+          anticiposPagados: miCalculadoraRealData.data.anticiposPagados
         });
 
         setProductivityData({
-          copModelo: reflectValuesData.data.copModelo,
-          anticipoDisponible: reflectValuesData.data.anticipoDisponible,
-          anticiposPagados: reflectValuesData.data.anticiposPagados
+          copModelo: miCalculadoraRealData.data.copModelo,
+          anticipoDisponible: miCalculadoraRealData.data.anticipoDisponible,
+          anticiposPagados: miCalculadoraRealData.data.anticiposPagados
         });
       } else {
-        console.error('❌ [SOLICITAR ANTICIPO] Error al reflejar valores:', reflectValuesData.error);
+        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener valores reales de Mi Calculadora:', miCalculadoraRealData.error);
         
         // Fallback: Establecer valores por defecto
         setProductivityData({
