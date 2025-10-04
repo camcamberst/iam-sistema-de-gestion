@@ -678,9 +678,6 @@ export default function ModelCalculatorPage() {
                                   numeric: numericValue 
                                 });
                               }}
-                              onKeyDown={(e) => {
-                                console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
-                              }}
                               style={{
                                 width: '112px',
                                 height: '32px',
