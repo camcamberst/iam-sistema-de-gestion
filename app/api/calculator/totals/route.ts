@@ -102,12 +102,14 @@ export async function GET(request: NextRequest) {
     // 6. Convertir datos al formato esperado por computeTotals
     const platformRules = platforms?.map(p => ({
       id: p.id,
+      code: p.id, // Usar id como code
       name: p.name,
-      currency: p.currency,
-      tokenRate: p.token_rate,
+      conversionType: p.currency === 'EUR' ? 'eur_usd_cop' : 
+                     p.currency === 'GBP' ? 'gbp_usd_cop' : 
+                     p.currency === 'USD' ? 'usd_cop' : 'tokens',
+      tokenRateUsd: p.token_rate,
       discountFactor: p.discount_factor,
-      taxRate: p.tax_rate,
-      directPayout: p.direct_payout,
+      taxFactor: p.tax_rate,
       specialFlags: p.id === 'superfoon' ? { superfoon_100_model: true } : undefined
     })) || [];
 
