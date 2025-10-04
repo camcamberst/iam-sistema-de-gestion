@@ -102,12 +102,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener tasas' }, { status: 500 });
     }
 
-    // 6. Procesar tasas
+    // 6. Procesar tasas (usar la más reciente)
+    const usdCopRates = ratesData?.filter((r: any) => r.kind === 'USD→COP') || [];
+    const eurUsdRates = ratesData?.filter((r: any) => r.kind === 'EUR→USD') || [];
+    const gbpUsdRates = ratesData?.filter((r: any) => r.kind === 'GBP→USD') || [];
+    
+    // Usar la tasa más reciente (más alta valid_from)
+    const latestUsdCop = usdCopRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
+    const latestEurUsd = eurUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
+    const latestGbpUsd = gbpUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
+    
     const rates = {
-      usd_cop: ratesData?.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
-      eur_usd: ratesData?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
-      gbp_usd: ratesData?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20
+      usd_cop: latestUsdCop?.value || 3900,
+      eur_usd: latestEurUsd?.value || 1.01,
+      gbp_usd: latestGbpUsd?.value || 1.20
     };
+    
+    console.log('🔍 [MI-CALCULADORA-REAL] Tasas seleccionadas:', rates);
 
     // 7. MAPEAR VALORES A PLATAFORMAS
     const platformsWithValues = platforms?.map(platform => {
