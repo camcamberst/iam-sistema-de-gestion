@@ -85,14 +85,14 @@ export default function ConfigCalculatorPage() {
         throw new Error(platformsData.error || 'Error al cargar plataformas');
       }
 
-      console.log('📊 [DEBUG] Total plataformas:', platformsData.data?.length);
-      console.log('🔍 [DEBUG] platformsData.data type:', typeof platformsData.data);
-      console.log('🔍 [DEBUG] platformsData.data is array:', Array.isArray(platformsData.data));
-      console.log('🔍 [DEBUG] platformsData.data content:', platformsData.data);
+      console.log('📊 [DEBUG] Total plataformas:', platformsData.config?.platforms?.length);
+      console.log('🔍 [DEBUG] platformsData.config type:', typeof platformsData.config);
+      console.log('🔍 [DEBUG] platformsData.config.platforms is array:', Array.isArray(platformsData.config?.platforms));
+      console.log('🔍 [DEBUG] platformsData.config.platforms content:', platformsData.config?.platforms);
       
-      setPlatforms(platformsData.data);
+      setPlatforms(platformsData.config?.platforms || []);
       setPlatformsLoaded(true);
-      console.log('🔍 [DEBUG] setPlatforms called with:', platformsData.data);
+      console.log('🔍 [DEBUG] setPlatforms called with:', platformsData.config?.platforms);
       console.log('🔍 [DEBUG] platformsLoaded set to true');
 
     } catch (err: any) {

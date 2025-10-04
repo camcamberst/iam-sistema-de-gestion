@@ -30,11 +30,13 @@ export async function GET() {
 
     const response = {
       success: true,
-      data: data || []
+      config: {
+        platforms: data || []
+      }
     };
 
     console.log('🔍 [API-PLATFORMS] Response final:', response);
-    console.log('🔍 [API-PLATFORMS] Response data length:', response.data?.length);
+    console.log('🔍 [API-PLATFORMS] Response platforms length:', response.config.platforms?.length);
 
     return NextResponse.json(response);
 
