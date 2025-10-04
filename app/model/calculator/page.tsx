@@ -407,13 +407,13 @@ export default function ModelCalculatorPage() {
     }
   };
 
-  // 🔧 AUTOMATIC SYNC: Sincronización automática platforms → inputValues (SOLO en carga inicial)
-  useEffect(() => {
-    if (platforms.length > 0 && !valuesLoaded) {
-      console.log('🔍 [SYNC] Sincronizando platforms → inputValues automáticamente (carga inicial)');
-      syncPlatformsToInputs(platforms);
-    }
-  }, [platforms, valuesLoaded]);
+  // 🔧 SYNC DISABLED: Sincronización automática deshabilitada para evitar interferencia con decimales
+  // useEffect(() => {
+  //   if (platforms.length > 0 && !valuesLoaded) {
+  //     console.log('🔍 [SYNC] Sincronizando platforms → inputValues automáticamente (carga inicial)');
+  //     syncPlatformsToInputs(platforms);
+  //   }
+  // }, [platforms, valuesLoaded]);
 
   // 🔧 FIX: Autosave deshabilitado para corregir problema de persistencia
   // useEffect(() => {
