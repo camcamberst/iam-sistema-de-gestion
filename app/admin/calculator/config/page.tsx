@@ -27,6 +27,14 @@ export default function ConfigCalculatorPage() {
   const router = useRouter();
   const [models, setModels] = useState<Model[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  
+  // Debug: Log cuando cambia platforms
+  useEffect(() => {
+    console.log('🔍 [PLATFORMS-STATE] platforms changed:', platforms);
+    console.log('🔍 [PLATFORMS-STATE] platforms type:', typeof platforms);
+    console.log('🔍 [PLATFORMS-STATE] platforms is array:', Array.isArray(platforms));
+    console.log('🔍 [PLATFORMS-STATE] platforms length:', platforms?.length);
+  }, [platforms]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -71,7 +79,12 @@ export default function ConfigCalculatorPage() {
       }
 
       console.log('📊 [DEBUG] Total plataformas:', platformsData.data?.length);
+      console.log('🔍 [DEBUG] platformsData.data type:', typeof platformsData.data);
+      console.log('🔍 [DEBUG] platformsData.data is array:', Array.isArray(platformsData.data));
+      console.log('🔍 [DEBUG] platformsData.data content:', platformsData.data);
+      
       setPlatforms(platformsData.data);
+      console.log('🔍 [DEBUG] setPlatforms called with:', platformsData.data);
 
     } catch (err: any) {
       setError(err.message || 'Error al cargar datos');
@@ -243,7 +256,12 @@ export default function ConfigCalculatorPage() {
                   </div>
                   <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
                     <div className="space-y-3">
-                      {platforms.map(platform => (
+                      {(() => {
+                        console.log('🔍 [RENDER] About to map platforms:', platforms);
+                        console.log('🔍 [RENDER] platforms type:', typeof platforms);
+                        console.log('🔍 [RENDER] platforms is array:', Array.isArray(platforms));
+                        console.log('🔍 [RENDER] platforms length:', platforms?.length);
+                        return platforms.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
                             <span className="text-sm font-medium text-gray-900">{platform.name}</span>
@@ -263,7 +281,8 @@ export default function ConfigCalculatorPage() {
                             />
                           </button>
                         </div>
-                      ))}
+                      ));
+                      })()}
                     </div>
                   </div>
                 </div>
