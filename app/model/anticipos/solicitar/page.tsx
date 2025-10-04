@@ -157,7 +157,7 @@ export default function SolicitarAnticipoPage() {
       
       // 🚀 SOLUCIÓN SIMPLE: Solo reflejar los valores ya calculados por Mi Calculadora
       console.log('🔍 [SOLICITAR ANTICIPO] Reflejando valores ya calculados por Mi Calculadora...');
-      const reflectValuesResponse = await fetch(`/api/calculator/reflect-values?modelId=${userId}&periodDate=${periodDate}`);
+      const reflectValuesResponse = await fetch(`/api/calculator/reflect-values?modelId=${userId}&periodDate=${periodDate}&t=${Date.now()}`);
       const reflectValuesData = await reflectValuesResponse.json();
       console.log('🔍 [SOLICITAR ANTICIPO] Reflect values response:', reflectValuesData);
       
