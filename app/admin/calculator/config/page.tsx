@@ -30,6 +30,7 @@ export default function ConfigCalculatorPage() {
   const [platformsLoaded, setPlatformsLoaded] = useState(false);
   const [platformsData, setPlatformsData] = useState<Platform[]>([]);
   const [renderPlatforms, setRenderPlatforms] = useState<Platform[]>([]);
+  const [forceRender, setForceRender] = useState(0);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -97,10 +98,12 @@ export default function ConfigCalculatorPage() {
       setPlatformsData(platformsArray);
       setRenderPlatforms(platformsArray); // 🔧 FIX: Estado dedicado para render
       setPlatformsLoaded(true);
+      setForceRender(prev => prev + 1); // 🔧 FIX: Forzar re-render
       console.log('🔍 [DEBUG] setPlatforms called with:', platformsArray);
       console.log('🔍 [DEBUG] setPlatformsData called with:', platformsArray);
       console.log('🔍 [DEBUG] setRenderPlatforms called with:', platformsArray);
       console.log('🔍 [DEBUG] platformsLoaded set to true');
+      console.log('🔍 [DEBUG] forceRender triggered');
 
     } catch (err: any) {
       setError(err.message || 'Error al cargar datos');
@@ -281,6 +284,11 @@ export default function ConfigCalculatorPage() {
                         // 🔧 FIX: Usar renderPlatforms como fuente de verdad única
                         const platformsToRender = renderPlatforms;
                         
+                        console.log('🔍 [RENDER] forceRender value:', forceRender);
+                        console.log('🔍 [RENDER] platformsLoaded:', platformsLoaded);
+                        console.log('🔍 [RENDER] renderPlatforms length:', renderPlatforms?.length);
+                        console.log('🔍 [RENDER] renderPlatforms is array:', Array.isArray(renderPlatforms));
+                        
                         if (!platformsLoaded || !platformsToRender || !Array.isArray(platformsToRender) || platformsToRender.length === 0) {
                           console.log('🔍 [RENDER] No platforms to render, showing loading state');
                           console.log('🔍 [RENDER] platformsLoaded:', platformsLoaded);
@@ -295,6 +303,7 @@ export default function ConfigCalculatorPage() {
                           );
                         }
                         
+                        console.log('🔍 [RENDER] About to map platformsToRender:', platformsToRender);
                         return platformsToRender.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
