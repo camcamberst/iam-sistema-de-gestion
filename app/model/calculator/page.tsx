@@ -658,66 +658,26 @@ export default function ModelCalculatorPage() {
                               inputMode="decimal"
                               value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
-                                const rawValue = e.target.value;
+                                const value = e.target.value;
                                 
-                                // 🔧 VALIDACIÓN: Solo permitir dígitos, punto y coma
-                                const cleanedValue = rawValue.replace(/[^0-9.,]/g, '');
-                                
-                                // 🔧 PREVENIR MÚLTIPLES SEPARADORES: Solo un punto o coma
-                                const hasPoint = cleanedValue.includes('.');
-                                const hasComma = cleanedValue.includes(',');
-                                
-                                let finalValue = cleanedValue;
-                                if (hasPoint && hasComma) {
-                                  // Si tiene ambos, mantener solo el primero
-                                  const pointIndex = cleanedValue.indexOf('.');
-                                  const commaIndex = cleanedValue.indexOf(',');
-                                  if (pointIndex < commaIndex) {
-                                    finalValue = cleanedValue.substring(0, commaIndex) + cleanedValue.substring(commaIndex + 1);
-                                  } else {
-                                    finalValue = cleanedValue.substring(0, pointIndex) + cleanedValue.substring(pointIndex + 1);
-                                  }
-                                }
-                                
-                                // 🔧 SYNC: Actualizar inputValues
-                                setInputValues(prev => ({ ...prev, [platform.id]: finalValue }));
+                                // 🔧 SYNC: Actualizar inputValues directamente
+                                setInputValues(prev => ({ ...prev, [platform.id]: value }));
 
                                 // 🔧 SYNC: Convertir a número (normalizar coma a punto)
-                                const normalizedValue = finalValue.replace(',', '.');
+                                const normalizedValue = value.replace(',', '.');
                                 const numeric = Number.parseFloat(normalizedValue);
                                 const numericValue = Number.isFinite(numeric) ? numeric : 0;
                                 setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                 
                                 console.log('🔍 [SYNC] Usuario escribió:', { 
                                   platform: platform.id, 
-                                  original: rawValue,
-                                  cleaned: cleanedValue,
-                                  final: finalValue,
+                                  input: value,
                                   normalized: normalizedValue, 
                                   numeric: numericValue 
                                 });
                               }}
                               onKeyDown={(e) => {
-                                // 🔧 PERMITIR TECLAS ESPECÍFICAS: dígitos, punto, coma, backspace, delete, arrow keys
-                                const allowedKeys = [
-                                  '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-                                  '.', ',',
-                                  'Backspace', 'Delete',
-                                  'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown',
-                                  'Tab', 'Enter'
-                                ];
-                                
-                                if (!allowedKeys.includes(e.key) && !e.ctrlKey && !e.metaKey) {
-                                  e.preventDefault();
-                                }
-                                
-                                console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key, 'PERMITIDA:', allowedKeys.includes(e.key));
-                              }}
-                              onKeyUp={(e) => {
-                                console.log('🔍 [DEBUG] TECLA SOLTADA:', e.key);
-                              }}
-                              onInput={(e) => {
-                                console.log('🔍 [DEBUG] INPUT EVENT:', e.currentTarget.value);
+                                console.log('🔍 [DEBUG] TECLA PRESIONADA:', e.key);
                               }}
                               style={{
                                 width: '112px',
