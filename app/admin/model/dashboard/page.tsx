@@ -239,7 +239,7 @@ export default function ModelDashboard() {
                 <div className="p-4 rounded-md bg-purple-50 text-center">
                   <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
                   <div className="text-2xl font-bold text-purple-600">
-                    {productivityData ? `$${productivityData.copModelo.toLocaleString()}` : '—'}
+                    {productivityData ? `$${productivityData.copModelo.toFixed(2)}` : '—'}
                   </div>
                 </div>
               </div>
