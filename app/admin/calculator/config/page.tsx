@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Model {
@@ -40,8 +40,8 @@ export default function ConfigCalculatorPage() {
   const [groupPercentage, setGroupPercentage] = useState<string>('');
   const [groupMinQuota, setGroupMinQuota] = useState<string>('');
   
-  // 🔧 FIX: Variable local para plataformas (solución definitiva)
-  let platformsLocal: Platform[] = [];
+  // 🔧 FIX: useRef para mantener referencia de plataformas
+  const platformsRef = useRef<Platform[]>([]);
   const [forceRender, setForceRender] = useState(0);
 
   useEffect(() => {
@@ -83,11 +83,11 @@ export default function ConfigCalculatorPage() {
         throw new Error(platformsData.error || 'Error al cargar plataformas');
       }
 
-      // 🔧 FIX: Actualización inmediata de variable local
-      platformsLocal = platformsData.config?.platforms || [];
+      // 🔧 FIX: Actualización inmediata de useRef
+      platformsRef.current = platformsData.config?.platforms || [];
       setForceRender(prev => prev + 1);
 
-      console.log('🔍 [LOAD] platformsLocal actualizada con:', platformsLocal.length, 'plataformas');
+      console.log('🔍 [LOAD] platformsRef actualizada con:', platformsRef.current.length, 'plataformas');
       console.log('🔍 [LOAD] loadData completado exitosamente');
 
     } catch (err: any) {
@@ -240,18 +240,18 @@ export default function ConfigCalculatorPage() {
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-base font-medium text-gray-900">Seleccionar Páginas</h3>
                   <span className="text-sm text-gray-500">
-                    {platformsLocal.length} plataformas disponibles
+                    {platformsRef.current.length} plataformas disponibles
                   </span>
                 </div>
                 <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
                   <div className="space-y-3">
-                    {platformsLocal.length === 0 ? (
+                    {platformsRef.current.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
                         <p>No hay plataformas disponibles</p>
                         <p className="text-sm">Cargando datos...</p>
                       </div>
                     ) : (
-                      platformsLocal.map(platform => (
+                      platformsRef.current.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex-1">
                             <span className="text-sm font-medium text-gray-900">{platform.name}</span>
