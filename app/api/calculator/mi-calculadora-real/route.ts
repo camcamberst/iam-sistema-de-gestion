@@ -50,7 +50,7 @@ export async function GET(request: NextRequest) {
       .select('monto_solicitado, estado')
       .eq('model_id', modelId)
       .eq('period_id', period.id)
-      .eq('estado', 'realizado');
+      .eq('estado', 'confirmado');
 
     console.log('🔍 [MI-CALCULADORA-REAL] Resultado de consulta anticipos:', {
       anticipos: anticipos,
