@@ -42,49 +42,30 @@ export async function GET(request: NextRequest) {
       anticiposPagados = anticipos.reduce((sum, a) => sum + (a.monto_solicitado || 0), 0);
     }
 
-    // 2. Obtener los valores ya calculados por Mi Calculadora desde la base de datos
-    // Buscar en calculator_history los valores del período actual
-    const { data: historyData, error: historyError } = await supabase
-      .from('calculator_history')
-      .select('total_cop_modelo, total_usd_modelo')
+    // 2. Obtener valores actuales de model_values (misma fuente que Mi Calculadora)
+    const { data: values, error: valuesError } = await supabase
+      .from('model_values')
+      .select('value')
       .eq('model_id', modelId)
-      .eq('period_date', periodDate)
-      .order('created_at', { ascending: false })
-      .limit(1);
+      .eq('period_date', periodDate);
 
-    if (historyError) {
-      console.error('❌ [REFLECT-VALUES] Error al obtener historial:', historyError);
-    }
-
-    // 3. Si no hay historial, usar valores por defecto
     let copModelo = 0;
     let anticipoDisponible = 0;
 
-    if (historyData && historyData.length > 0) {
-      copModelo = historyData[0].total_cop_modelo || 0;
+    if (!valuesError && values && values.length > 0) {
+      // Calcular un valor básico basado en los valores ingresados
+      const totalValue = values.reduce((sum, v) => sum + (Number(v.value) || 0), 0);
+      // Aplicar una conversión básica (esto es solo para mostrar algo, no para calcular)
+      copModelo = Math.round(totalValue * 2500); // Conversión básica
       anticipoDisponible = Math.max(0, Math.round(copModelo * 0.9) - anticiposPagados);
-    } else {
-      // Si no hay historial, buscar en model_values y calcular básicamente
-      const { data: values, error: valuesError } = await supabase
-        .from('model_values')
-        .select('value')
-        .eq('model_id', modelId)
-        .eq('period_date', periodDate);
-
-      if (!valuesError && values && values.length > 0) {
-        // Calcular un valor básico basado en los valores ingresados
-        const totalValue = values.reduce((sum, v) => sum + (Number(v.value) || 0), 0);
-        // Aplicar una conversión básica (esto es solo para mostrar algo, no para calcular)
-        copModelo = Math.round(totalValue * 2500); // Conversión básica
-        anticipoDisponible = Math.max(0, Math.round(copModelo * 0.9) - anticiposPagados);
-      }
     }
 
     console.log('✅ [REFLECT-VALUES] Valores reflejados:', {
       copModelo: copModelo,
       anticipoDisponible: anticipoDisponible,
       anticiposPagados: anticiposPagados,
-      hasHistory: historyData && historyData.length > 0
+      valuesCount: values?.length || 0,
+      totalValue: values?.reduce((sum, v) => sum + (Number(v.value) || 0), 0) || 0
     });
 
     return NextResponse.json({
