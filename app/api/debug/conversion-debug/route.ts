@@ -186,8 +186,8 @@ export async function GET(request: NextRequest) {
         conversionResults,
         summary: {
           totalValues: values?.length || 0,
-          totalUsdBruto: conversionResults.reduce((sum, r) => sum + r.usdBruto, 0),
-          platformsWithConversion: conversionResults.filter(r => r.usdBruto > 0).length
+          totalUsdBruto: conversionResults.reduce((sum, r) => sum + (r.usdBruto || 0), 0),
+          platformsWithConversion: conversionResults.filter(r => (r.usdBruto || 0) > 0).length
         }
       }
     });
