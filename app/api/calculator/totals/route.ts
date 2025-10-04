@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 import { computeTotals, ConversionType } from '@/lib/calculadora/calc';
+import { getRatesForModel } from '@/lib/rates/rates-manager';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -86,23 +87,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
-    // 4. Obtener tasas
-    const { data: ratesData, error: ratesError } = await supabase
-      .from('rates')
-      .select('kind, value')
-      .eq('active', true);
-
-    if (ratesError) {
-      console.error('❌ [CALCULATOR-TOTALS] Error al obtener tasas:', ratesError);
-      return NextResponse.json({ success: false, error: 'Error al obtener tasas' }, { status: 500 });
-    }
-
-    // 5. Procesar tasas
+    // 4. Obtener tasas usando lógica centralizada
+    const ratesData = await getRatesForModel(modelId);
     const rates = {
-      USD_COP: ratesData?.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
-      EUR_USD: ratesData?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
-      GBP_USD: ratesData?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20
+      USD_COP: ratesData.usd_cop,
+      EUR_USD: ratesData.eur_usd,
+      GBP_USD: ratesData.gbp_usd
     };
+    console.log('🔍 [CALCULATOR-TOTALS] Tasas obtenidas con rates-manager:', rates);
 
     // 6. Convertir datos al formato esperado por computeTotals
     const platformRules = platforms?.map(p => ({

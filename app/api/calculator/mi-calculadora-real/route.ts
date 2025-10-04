@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
+import { getRatesForModel } from '@/lib/rates/rates-manager';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -91,34 +92,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
-    // 5. Obtener tasas
-    const { data: ratesData, error: ratesError } = await supabase
-      .from('rates')
-      .select('kind, value')
-      .eq('active', true);
-
-    if (ratesError) {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener tasas:', ratesError);
-      return NextResponse.json({ success: false, error: 'Error al obtener tasas' }, { status: 500 });
-    }
-
-    // 6. Procesar tasas (usar la más reciente)
-    const usdCopRates = ratesData?.filter((r: any) => r.kind === 'USD→COP') || [];
-    const eurUsdRates = ratesData?.filter((r: any) => r.kind === 'EUR→USD') || [];
-    const gbpUsdRates = ratesData?.filter((r: any) => r.kind === 'GBP→USD') || [];
-    
-    // Usar la tasa más reciente (más alta valid_from)
-    const latestUsdCop = usdCopRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
-    const latestEurUsd = eurUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
-    const latestGbpUsd = gbpUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
-    
-    const rates = {
-      usd_cop: latestUsdCop?.value || 3900,
-      eur_usd: latestEurUsd?.value || 1.01,
-      gbp_usd: latestGbpUsd?.value || 1.20
-    };
-    
-    console.log('🔍 [MI-CALCULADORA-REAL] Tasas seleccionadas:', rates);
+    // 5. Obtener tasas usando lógica centralizada
+    const rates = await getRatesForModel(modelId);
+    console.log('🔍 [MI-CALCULADORA-REAL] Tasas obtenidas con rates-manager:', rates);
 
     // 7. MAPEAR VALORES A PLATAFORMAS
     const platformsWithValues = platforms?.map(platform => {
