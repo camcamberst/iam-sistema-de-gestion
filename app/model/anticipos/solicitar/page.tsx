@@ -155,32 +155,32 @@ export default function SolicitarAnticipoPage() {
       const periodDate = getColombiaDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
       
-      // 🚀 NUEVA IMPLEMENTACIÓN: Usar endpoint que replica EXACTAMENTE la lógica de Mi Calculadora
-      console.log('🔍 [SOLICITAR ANTICIPO] Usando endpoint con lógica exacta de Mi Calculadora...');
-      const exactCalculatorResponse = await fetch(`/api/calculator/exact-calculator?modelId=${userId}&periodDate=${periodDate}`);
-      const exactCalculatorData = await exactCalculatorResponse.json();
-      console.log('🔍 [SOLICITAR ANTICIPO] Exact calculator response:', exactCalculatorData);
+      // 🚀 SOLUCIÓN SIMPLE: Solo reflejar los valores ya calculados por Mi Calculadora
+      console.log('🔍 [SOLICITAR ANTICIPO] Reflejando valores ya calculados por Mi Calculadora...');
+      const reflectValuesResponse = await fetch(`/api/calculator/reflect-values?modelId=${userId}&periodDate=${periodDate}`);
+      const reflectValuesData = await reflectValuesResponse.json();
+      console.log('🔍 [SOLICITAR ANTICIPO] Reflect values response:', reflectValuesData);
       
-      if (exactCalculatorData.success) {
-        console.log('✅ [SOLICITAR ANTICIPO] Datos de Mi Calculadora obtenidos correctamente:', {
-          copModelo: exactCalculatorData.data.copModelo,
-          anticipoDisponible: exactCalculatorData.data.anticipoDisponible,
-          anticiposPagados: exactCalculatorData.data.anticiposPagados
+      if (reflectValuesData.success) {
+        console.log('✅ [SOLICITAR ANTICIPO] Valores reflejados correctamente:', {
+          copModelo: reflectValuesData.data.copModelo,
+          anticipoDisponible: reflectValuesData.data.anticipoDisponible,
+          anticiposPagados: reflectValuesData.data.anticiposPagados
         });
 
         console.log('🔄 [SOLICITAR ANTICIPO] Estableciendo datos de productividad:', {
-          copModelo: exactCalculatorData.data.copModelo,
-          anticipoDisponible: exactCalculatorData.data.anticipoDisponible,
-          anticiposPagados: exactCalculatorData.data.anticiposPagados
+          copModelo: reflectValuesData.data.copModelo,
+          anticipoDisponible: reflectValuesData.data.anticipoDisponible,
+          anticiposPagados: reflectValuesData.data.anticiposPagados
         });
 
         setProductivityData({
-          copModelo: exactCalculatorData.data.copModelo,
-          anticipoDisponible: exactCalculatorData.data.anticipoDisponible,
-          anticiposPagados: exactCalculatorData.data.anticiposPagados
+          copModelo: reflectValuesData.data.copModelo,
+          anticipoDisponible: reflectValuesData.data.anticipoDisponible,
+          anticiposPagados: reflectValuesData.data.anticiposPagados
         });
       } else {
-        console.error('❌ [SOLICITAR ANTICIPO] Error al obtener datos de Mi Calculadora:', exactCalculatorData.error);
+        console.error('❌ [SOLICITAR ANTICIPO] Error al reflejar valores:', reflectValuesData.error);
         
         // Fallback: Establecer valores por defecto
         setProductivityData({
