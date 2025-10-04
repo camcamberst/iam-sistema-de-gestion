@@ -30,11 +30,24 @@ export async function GET(request: NextRequest) {
     // 0. Crear período si no existe
     await createPeriodIfNeeded(periodDate);
 
-    // 1. Obtener anticipos ya pagados
+    // 1. Obtener el período actual
+    const { data: period, error: periodError } = await supabase
+      .from('periods')
+      .select('id')
+      .eq('start_date', periodDate)
+      .single();
+
+    if (periodError) {
+      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener período:', periodError);
+      return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
+    }
+
+    // 2. Obtener anticipos ya pagados del período actual
     const { data: anticipos, error: anticiposError } = await supabase
       .from('anticipos')
       .select('monto_solicitado, estado')
       .eq('model_id', modelId)
+      .eq('period_id', period.id)
       .eq('estado', 'realizado');
 
     let anticiposPagados = 0;
@@ -42,7 +55,7 @@ export async function GET(request: NextRequest) {
       anticiposPagados = anticipos.reduce((sum, a) => sum + (a.monto_solicitado || 0), 0);
     }
 
-    // 2. Obtener configuración de la modelo
+    // 3. Obtener configuración de la modelo
     const { data: config, error: configError } = await supabase
       .from('calculator_config')
       .select('*')
@@ -67,7 +80,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 3. Obtener plataformas habilitadas
+    // 4. Obtener plataformas habilitadas
     const { data: platforms, error: platformsError } = await supabase
       .from('calculator_platforms')
       .select('*')
@@ -79,7 +92,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener plataformas' }, { status: 500 });
     }
 
-    // 4. Obtener valores del modelo
+    // 5. Obtener valores del modelo
     const { data: values, error: valuesError } = await supabase
       .from('model_values')
       .select('platform_id, value, period_date')
@@ -91,7 +104,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
-    // 5. Obtener tasas
+    // 6. Obtener tasas
     const { data: ratesData, error: ratesError } = await supabase
       .from('rates')
       .select('kind, value, valid_from, scope')
@@ -104,7 +117,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener tasas' }, { status: 500 });
     }
 
-    // 6. Procesar tasas (usar la más reciente)
+    // 7. Procesar tasas (usar la más reciente)
     const usdCopRates = ratesData?.filter((r: any) => r.kind === 'USD→COP') || [];
     const eurUsdRates = ratesData?.filter((r: any) => r.kind === 'EUR→USD') || [];
     const gbpUsdRates = ratesData?.filter((r: any) => r.kind === 'GBP→USD') || [];
@@ -122,7 +135,7 @@ export async function GET(request: NextRequest) {
     
     console.log('🔍 [MI-CALCULADORA-REAL] Tasas seleccionadas:', rates);
 
-    // 7. MAPEAR VALORES A PLATAFORMAS
+    // 8. MAPEAR VALORES A PLATAFORMAS
     const platformsWithValues = platforms?.map(platform => {
       const value = values?.find(v => v.platform_id === platform.id);
       return {
@@ -133,7 +146,7 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    // 8. CALCULAR USANDO LA MISMA LÓGICA DE MI CALCULADORA
+    // 9. CALCULAR USANDO LA MISMA LÓGICA DE MI CALCULADORA
     const totalUsdModelo = platformsWithValues.reduce((sum, p) => {
       if (!p.enabled || p.value === 0) return sum;
 
@@ -174,10 +187,10 @@ export async function GET(request: NextRequest) {
       return sum + (usdModelo * p.percentage / 100);
     }, 0);
 
-    // 9. CALCULAR COP MODELO (MISMA LÓGICA)
+    // 10. CALCULAR COP MODELO (MISMA LÓGICA)
     const copModelo = Math.round(totalUsdModelo * rates.usd_cop);
 
-    // 10. CALCULAR 90% DE ANTICIPO
+    // 11. CALCULAR 90% DE ANTICIPO
     const anticipoDisponible = Math.round(copModelo * 0.9);
 
     console.log('✅ [MI-CALCULADORA-REAL] Valores calculados con lógica real de Mi Calculadora:', {
