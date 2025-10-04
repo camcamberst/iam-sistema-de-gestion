@@ -247,8 +247,10 @@ export default function ModelCalculatorPage() {
         group_percentage: p.group_percentage,
         final_percentage: p.percentage
       })));
+      // 🔧 NUEVO ENFOQUE: Cargar plataformas PRIMERO, luego valores guardados
       setPlatforms(enabledPlatforms);
       console.log('🔍 [CALCULATOR] setPlatforms called with:', enabledPlatforms.length, 'platforms');
+      
       // Inicializar inputs de texto vacíos
       setInputValues(
         enabledPlatforms.reduce((acc: Record<string, string>, p: Platform) => {
@@ -257,17 +259,14 @@ export default function ModelCalculatorPage() {
         }, {} as Record<string, string>)
       );
 
-      // Cargar valores guardados previamente (solo sistema V2) - MEJORADO
+      // 🔧 NUEVO ENFOQUE: Cargar valores guardados DESPUÉS de que platforms esté establecido
       try {
         console.log('🔍 [CALCULATOR] Loading saved values - V2 system only');
         const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
         const savedJson = await savedResp.json();
-      console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
-      
-      // 🔧 FIX: Delay para asegurar que la base de datos se actualice completamente
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+        console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
+        
+        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
           const platformToValue: Record<string, number> = {};
           for (const row of savedJson.data) {
             if (row && row.platform_id) {
@@ -276,25 +275,20 @@ export default function ModelCalculatorPage() {
             }
           }
           
-          // 🔧 FIX: Cargar valores guardados solo si no se han cargado antes
-          if (!valuesLoaded) {
-            console.log('🔍 [CALCULATOR] Cargando valores guardados');
-            
-            // 1. Actualizar platforms.value con valores guardados
-            console.log('🔍 [CALCULATOR] platforms before update:', platforms.length);
-            const updatedPlatforms = platforms.map(p => ({
-              ...p,
-              value: platformToValue[p.id] ?? p.value
-            }));
-            console.log('🔍 [CALCULATOR] updatedPlatforms after update:', updatedPlatforms.length);
-            setPlatforms(updatedPlatforms);
-            
-            // 2. Sincronizar manualmente platforms → inputValues
-            syncPlatformsToInputs(updatedPlatforms);
-            console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados manualmente');
-            
-            setValuesLoaded(true);
-          }
+          console.log('🔍 [CALCULATOR] Cargando valores guardados');
+          
+          // 🔧 NUEVO ENFOQUE: Usar enabledPlatforms directamente (no el estado platforms)
+          const updatedPlatforms = enabledPlatforms.map(p => ({
+            ...p,
+            value: platformToValue[p.id] ?? p.value
+          }));
+          
+          console.log('🔍 [CALCULATOR] updatedPlatforms with saved values:', updatedPlatforms.length);
+          setPlatforms(updatedPlatforms);
+          
+          // Sincronizar manualmente
+          syncPlatformsToInputs(updatedPlatforms);
+          console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados manualmente');
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
