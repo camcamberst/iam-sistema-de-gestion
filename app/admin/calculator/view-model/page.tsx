@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
   id: string;
@@ -39,12 +40,19 @@ interface Model {
 export default function AdminViewModelPage() {
   const [user, setUser] = useState<User | null>(null);
   const [models, setModels] = useState<Model[]>([]);
+  const [allModels, setAllModels] = useState<Model[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  
+  // Estados para filtros
+  const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const [nameFilter, setNameFilter] = useState<string>('');
+  
   const router = useRouter();
   
   const supabase = createClient(
@@ -111,7 +119,28 @@ export default function AdminViewModelPage() {
       const data = await response.json();
       
       if (data.success) {
-        setModels(data.models || []);
+        const modelsData = data.models || [];
+        setAllModels(modelsData);
+        setModels(modelsData);
+        
+        // Extraer grupos únicos para el filtro
+        const groupsSet = new Set<{id: string, name: string}>();
+        modelsData.forEach((model: Model) => {
+          model.groups.forEach(group => {
+            groupsSet.add(group);
+          });
+        });
+        
+        // Filtrar grupos según el rol del usuario
+        let filteredGroups = Array.from(groupsSet);
+        if (user && user.role === 'admin') {
+          // Admin solo ve sus grupos asignados
+          filteredGroups = filteredGroups.filter(group => 
+            user.groups.includes(group.name)
+          );
+        }
+        
+        setAvailableGroups(filteredGroups);
       } else {
         setError(data.error || 'Error al cargar modelos');
       }
@@ -153,6 +182,41 @@ export default function AdminViewModelPage() {
     setSelectedModel(null);
     setEditValues({});
     setHasChanges(false);
+  };
+
+  // Función para filtrar por grupo
+  const handleGroupFilter = (groupId: string) => {
+    setSelectedGroup(groupId);
+    applyFilters(groupId, nameFilter);
+  };
+
+  // Función para filtrar por nombre
+  const handleNameFilter = (name: string) => {
+    setNameFilter(name);
+    applyFilters(selectedGroup, name);
+  };
+
+  // Aplicar ambos filtros
+  const applyFilters = (groupId: string, name: string) => {
+    let filteredModels = allModels;
+
+    // Filtrar por grupo
+    if (groupId !== 'all') {
+      filteredModels = filteredModels.filter(model =>
+        model.groups.some(group => group.id === groupId)
+      );
+    }
+
+    // Filtrar por nombre
+    if (name.trim()) {
+      const searchTerm = name.toLowerCase().trim();
+      filteredModels = filteredModels.filter(model =>
+        model.name.toLowerCase().includes(searchTerm) ||
+        model.email.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    setModels(filteredModels);
   };
 
   const handleValueChange = (platformId: string, value: string) => {
@@ -284,15 +348,28 @@ export default function AdminViewModelPage() {
       <div className="min-h-screen bg-white">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Header */}
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-                Calculadora de {selectedModel.name}
-              </h1>
-              <p className="text-gray-500 text-sm">
-                {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
-              </p>
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-4">
+              <button
+                onClick={handleBackToModels}
+                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium">Volver a la lista</span>
+              </button>
             </div>
+            
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                  Calculadora de {selectedModel.name}
+                </h1>
+                <p className="text-gray-500 text-sm">
+                  {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
+                </p>
+              </div>
 
             {/* Footer actions */}
             <div className="mt-6 flex justify-end">
@@ -580,67 +657,148 @@ export default function AdminViewModelPage() {
     );
   }
 
-  // Mostrar lista de modelos
+  // Mostrar lista de modelos con panel de filtros
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
-        <div className="mb-6">
-          <h1 className="text-3xl font-semibold text-gray-900">
-            Ver Calculadora de Modelo
-          </h1>
-          <p className="text-gray-600 mt-2">
-            Selecciona una modelo para ver su calculadora
-          </p>
-        </div>
+    <div className="min-h-screen bg-gray-100 p-6">
+      <h1 className="text-3xl font-bold text-gray-900 mb-6">Ver Calculadora de Modelo</h1>
 
-        {/* Lista de modelos */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {models.map((model) => (
-            <div 
-              key={model.id}
-              onClick={() => handleModelSelect(model)}
-              className="apple-card cursor-pointer hover:shadow-lg transition-shadow"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {model.name}
-                </h3>
-                <div className={`px-2 py-1 rounded-full text-xs ${
-                  model.currentConfig?.active 
-                    ? 'bg-green-100 text-green-800' 
-                    : 'bg-gray-100 text-gray-800'
-                }`}>
-                  {model.currentConfig?.active ? 'Configurada' : 'Sin configurar'}
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Panel izquierdo: Filtros */}
+        <div className="md:col-span-1">
+          <div className="apple-card space-y-6">
+            {/* Filtro por Grupo */}
+            {availableGroups.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
+                <AppleDropdown
+                  options={[
+                    { value: 'all', label: 'Todos los grupos' },
+                    ...availableGroups.map(group => ({
+                      value: group.id,
+                      label: group.name
+                    }))
+                  ]}
+                  value={selectedGroup}
+                  onChange={handleGroupFilter}
+                  placeholder="Selecciona un grupo"
+                />
               </div>
-              
-              <p className="text-sm text-gray-600 mb-2">
-                {model.email}
-              </p>
-              
-              <div className="text-sm text-gray-500">
-                Grupos: {model.groups.map(g => g.name).join(', ')}
-              </div>
-              
-              <div className="mt-3 text-sm text-blue-600">
-                Ver calculadora →
-              </div>
+            )}
+            
+            {/* Filtro por Nombre */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Buscar por Nombre</h2>
+              <input
+                type="text"
+                value={nameFilter}
+                onChange={(e) => handleNameFilter(e.target.value)}
+                placeholder="Buscar modelo..."
+                className="apple-input text-sm"
+              />
             </div>
-          ))}
+
+            {/* Información de resultados */}
+            <div className="p-3 bg-gray-50 rounded-lg">
+              <p className="text-xs text-gray-600">
+                Mostrando {models.length} de {allModels.length} modelos
+              </p>
+              {selectedGroup !== 'all' && (
+                <p className="text-xs text-blue-600 mt-1">
+                  Filtrado por: {availableGroups.find(g => g.id === selectedGroup)?.name}
+                </p>
+              )}
+              {nameFilter && (
+                <p className="text-xs text-green-600 mt-1">
+                  Búsqueda: "{nameFilter}"
+                </p>
+              )}
+            </div>
+          </div>
         </div>
 
-        {models.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 mb-4">👥</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              No hay modelos disponibles
-            </h3>
-            <p className="text-gray-600">
-              No se encontraron modelos asignados a tus grupos
-            </p>
+        {/* Panel derecho: Lista de modelos */}
+        <div className="md:col-span-2">
+          <div className="apple-card">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Modelos Disponibles</h2>
+            
+            {models.length > 0 ? (
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {models.map((model) => (
+                  <div 
+                    key={model.id}
+                    onClick={() => handleModelSelect(model)}
+                    className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200 bg-white"
+                  >
+                    <div className="flex items-center justify-between mb-3">
+                      <h3 className="text-base font-medium text-gray-900">
+                        {model.name}
+                      </h3>
+                      <div className={`px-2 py-1 rounded-full text-xs ${
+                        model.currentConfig?.active 
+                          ? 'bg-green-100 text-green-800' 
+                          : 'bg-gray-100 text-gray-800'
+                      }`}>
+                        {model.currentConfig?.active ? 'Configurada' : 'Sin configurar'}
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 mb-2">
+                      {model.email}
+                    </p>
+                    
+                    <div className="text-sm text-gray-500 mb-3">
+                      <span className="font-medium">Grupos:</span> {model.groups.map(g => g.name).join(', ')}
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <div className="text-sm text-blue-600 font-medium">
+                        Ver calculadora →
+                      </div>
+                      <div className="flex space-x-1">
+                        {model.groups.map((group) => (
+                          <span
+                            key={group.id}
+                            className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                          >
+                            {group.name}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <div className="text-gray-400 mb-4 text-4xl">👥</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {nameFilter || selectedGroup !== 'all' 
+                    ? 'No se encontraron modelos' 
+                    : 'No hay modelos disponibles'
+                  }
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {nameFilter || selectedGroup !== 'all' 
+                    ? 'Prueba ajustando los filtros de búsqueda'
+                    : 'No se encontraron modelos asignados a tus grupos'
+                  }
+                </p>
+                {(nameFilter || selectedGroup !== 'all') && (
+                  <button
+                    onClick={() => {
+                      setNameFilter('');
+                      setSelectedGroup('all');
+                      setModels(allModels);
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Limpiar filtros
+                  </button>
+                )}
+              </div>
+            )}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
