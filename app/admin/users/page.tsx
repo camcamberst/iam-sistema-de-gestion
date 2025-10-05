@@ -13,6 +13,7 @@ import {
   type CurrentUser 
 } from '../../../lib/hierarchy';
 import AppleSearchBar from '../../../components/AppleSearchBar';
+import AppleDropdown from '../../../components/ui/AppleDropdown';
 
 interface User {
   id: string;
@@ -686,15 +687,16 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
 
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
-            <select
+            <AppleDropdown
+              options={[
+                { value: 'modelo', label: 'Modelo' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'super_admin', label: 'Super Admin' }
+              ]}
               value={formData.role}
-              onChange={(e) => handleFieldChange('role', e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="modelo">Modelo</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
+              onChange={(value) => handleFieldChange('role', value)}
+              placeholder="Selecciona un rol"
+            />
           </div>
 
           <div>
@@ -849,15 +851,16 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
 
           <div>
             <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
-            <select
+            <AppleDropdown
+              options={[
+                { value: 'modelo', label: 'Modelo' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'super_admin', label: 'Super Admin' }
+              ]}
               value={formData.role}
-              onChange={(e) => setFormData({ ...formData, role: e.target.value as 'super_admin' | 'admin' | 'modelo' })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
-            >
-              <option value="modelo">Modelo</option>
-              <option value="admin">Admin</option>
-              <option value="super_admin">Super Admin</option>
-            </select>
+              onChange={(value) => setFormData({ ...formData, role: value as 'super_admin' | 'admin' | 'modelo' })}
+              placeholder="Selecciona un rol"
+            />
           </div>
 
           <div>

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { canEditUser, canDeleteUser, getAvailableGroups } from "../../../lib/hierarchy";
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ReferenceRatesPanel from "../../../components/ReferenceRatesPanel";
+import AppleDropdown from "../../../components/ui/AppleDropdown";
 
 type RateKind = "USD→COP" | "EUR→USD" | "GBP→USD";
 
@@ -322,29 +323,30 @@ export default function RatesPage() {
 				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 					<div>
 						<label className="block text-xs text-gray-500 mb-2">Aplicar a</label>
-						<select
-							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+						<AppleDropdown
+							options={availableScopes.map(scope => ({
+								value: scope.value,
+								label: scope.label
+							}))}
 							value={form.scope}
-							onChange={(e) => setForm({ ...form, scope: e.target.value })}
-						>
-							{availableScopes.map(scope => (
-								<option key={scope.value} value={scope.value}>
-									{scope.label}
-								</option>
-							))}
-						</select>
+							onChange={(value) => setForm({ ...form, scope: value })}
+							placeholder="Selecciona alcance"
+							className="text-sm"
+						/>
 					</div>
 					<div>
 						<label className="block text-xs text-gray-500 mb-2">Divisa</label>
-						<select
-							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+						<AppleDropdown
+							options={[
+								{ value: 'USD→COP', label: 'USD → COP' },
+								{ value: 'EUR→USD', label: 'EUR → USD' },
+								{ value: 'GBP→USD', label: 'GBP → USD' }
+							]}
 							value={form.kind}
-							onChange={(e) => setForm({ ...form, kind: e.target.value as RateKind })}
-						>
-							<option value="USD→COP">USD → COP</option>
-							<option value="EUR→USD">EUR → USD</option>
-							<option value="GBP→USD">GBP → USD</option>
-						</select>
+							onChange={(value) => setForm({ ...form, kind: value as RateKind })}
+							placeholder="Selecciona divisa"
+							className="text-sm"
+						/>
 					</div>
 					<div>
 						<label className="block text-xs text-gray-500 mb-2">Valor</label>

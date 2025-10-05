@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
+import AppleDropdown from '../../../components/ui/AppleDropdown';
 
 interface AuditLog {
   id: string;
@@ -71,17 +72,19 @@ export default function AuditPage() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-gray-300 text-sm mb-2">Severidad</label>
-              <select
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Todas' },
+                  { value: 'low', label: 'Baja', badgeColor: 'green' },
+                  { value: 'medium', label: 'Media', badgeColor: 'yellow' },
+                  { value: 'high', label: 'Alta', badgeColor: 'red' },
+                  { value: 'critical', label: 'Crítica', badgeColor: 'red' }
+                ]}
                 value={filter.severity}
-                onChange={(e) => setFilter({...filter, severity: e.target.value})}
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
-              >
-                <option value="">Todas</option>
-                <option value="low">Baja</option>
-                <option value="medium">Media</option>
-                <option value="high">Alta</option>
-                <option value="critical">Crítica</option>
-              </select>
+                onChange={(value) => setFilter({...filter, severity: value})}
+                placeholder="Todas las severidades"
+                className="bg-gray-800 border-gray-600 text-white"
+              />
             </div>
             
             <div>
@@ -97,15 +100,17 @@ export default function AuditPage() {
             
             <div>
               <label className="block text-gray-300 text-sm mb-2">Estado</label>
-              <select
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Todos' },
+                  { value: 'true', label: 'Exitoso', badgeColor: 'green' },
+                  { value: 'false', label: 'Fallido', badgeColor: 'red' }
+                ]}
                 value={filter.success}
-                onChange={(e) => setFilter({...filter, success: e.target.value})}
-                className="w-full bg-gray-800 border border-gray-600 rounded-lg px-3 py-2 text-white"
-              >
-                <option value="">Todos</option>
-                <option value="true">Exitoso</option>
-                <option value="false">Fallido</option>
-              </select>
+                onChange={(value) => setFilter({...filter, success: value})}
+                placeholder="Todos los estados"
+                className="bg-gray-800 border-gray-600 text-white"
+              />
             </div>
           </div>
         </div>

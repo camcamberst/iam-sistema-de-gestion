@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import AppleDropdown from '../../../components/ui/AppleDropdown';
 
 interface Model {
   id: string;
@@ -40,11 +41,6 @@ export default function ConfigCalculatorPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [currentUser, setCurrentUser] = useState<any>(null);
   
-  // Estados para dropdowns personalizados
-  const [groupDropdownOpen, setGroupDropdownOpen] = useState(false);
-  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
-  const groupDropdownRef = useRef<HTMLDivElement>(null);
-  const modelDropdownRef = useRef<HTMLDivElement>(null);
   
   // Estados de configuración
   const [enabledPlatforms, setEnabledPlatforms] = useState<string[]>([]);
@@ -57,22 +53,6 @@ export default function ConfigCalculatorPage() {
     loadData();
   }, []);
 
-  // Cerrar dropdowns al hacer click fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (groupDropdownRef.current && !groupDropdownRef.current.contains(event.target as Node)) {
-        setGroupDropdownOpen(false);
-      }
-      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
-        setModelDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
 
   const loadData = async () => {
     try {
@@ -285,113 +265,38 @@ export default function ConfigCalculatorPage() {
             {availableGroups.length > 0 && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
-                <div className="relative" ref={groupDropdownRef}>
-                  <button
-                    type="button"
-                    className="apple-input text-sm text-left cursor-pointer flex items-center justify-between"
-                    onClick={() => setGroupDropdownOpen(!groupDropdownOpen)}
-                  >
-                    <span>
-                      {selectedGroup === 'all' 
-                        ? 'Todos los grupos' 
-                        : availableGroups.find(g => g.id === selectedGroup)?.name || 'Todos los grupos'
-                      }
-                    </span>
-                    <svg 
-                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${groupDropdownOpen ? 'rotate-180' : ''}`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  
-                  {groupDropdownOpen && (
-                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-                      <div
-                        className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
-                        onClick={() => {
-                          handleGroupFilter('all');
-                          setGroupDropdownOpen(false);
-                        }}
-                      >
-                        Todos los grupos
-                      </div>
-                      {availableGroups.map((group) => (
-                        <div
-                          key={group.id}
-                          className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 border-t border-gray-100"
-                          onClick={() => {
-                            handleGroupFilter(group.id);
-                            setGroupDropdownOpen(false);
-                          }}
-                        >
-                          {group.name}
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
+                <AppleDropdown
+                  options={[
+                    { value: 'all', label: 'Todos los grupos' },
+                    ...availableGroups.map(group => ({
+                      value: group.id,
+                      label: group.name
+                    }))
+                  ]}
+                  value={selectedGroup}
+                  onChange={handleGroupFilter}
+                  placeholder="Selecciona un grupo"
+                />
               </div>
             )}
             
             {/* Selección de Modelo */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
-              <div className="relative" ref={modelDropdownRef}>
-                <button
-                  type="button"
-                  className="apple-input text-sm text-left cursor-pointer flex items-center justify-between"
-                  onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
-                >
-                  <span>
-                    {selectedModel 
-                      ? `${selectedModel.name || selectedModel.email} ${selectedModel.hasConfig ? '(Configurado)' : ''}` 
-                      : 'Selecciona un modelo'
-                    }
-                  </span>
-                  <svg 
-                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${modelDropdownOpen ? 'rotate-180' : ''}`}
-                    fill="none" 
-                    stroke="currentColor" 
-                    viewBox="0 0 24 24"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {modelDropdownOpen && (
-                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
-                    <div
-                      className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 text-gray-500"
-                      onClick={() => {
-                        setSelectedModel(null);
-                        setModelDropdownOpen(false);
-                      }}
-                    >
-                      Selecciona un modelo
-                    </div>
-                    {models.map((model) => (
-                      <div
-                        key={model.id}
-                        className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 border-t border-gray-100 flex items-center justify-between"
-                        onClick={() => {
-                          handleModelSelect(model.id);
-                          setModelDropdownOpen(false);
-                        }}
-                      >
-                        <span>{model.name || model.email}</span>
-                        {model.hasConfig && (
-                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
-                            Configurado
-                          </span>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Selecciona un modelo' },
+                  ...models.map(model => ({
+                    value: model.id,
+                    label: model.name || model.email,
+                    badge: model.hasConfig ? 'Configurado' : undefined,
+                    badgeColor: model.hasConfig ? 'green' as const : undefined
+                  }))
+                ]}
+                value={selectedModel?.id || ''}
+                onChange={(value) => value ? handleModelSelect(value) : setSelectedModel(null)}
+                placeholder="Selecciona un modelo"
+              />
               
               {/* Información del grupo del modelo seleccionado */}
               {selectedModel && selectedModel.groups.length > 0 && (
