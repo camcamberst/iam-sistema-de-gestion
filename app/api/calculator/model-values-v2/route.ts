@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId y values son requeridos' }, { status: 400 });
     }
 
-    const effectiveDate = periodDate || getCalculatorDate();
+    const effectiveDate = periodDate || getColombiaDate();
     console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values });
 
     const rows = Object.entries(values).map(([platformId, value]) => ({
