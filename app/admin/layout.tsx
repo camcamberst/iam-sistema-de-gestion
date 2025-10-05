@@ -192,16 +192,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     onMouseLeave={() => setActiveMenu(null)}
                   >
                     {item.href === '#' ? (
-                      <button
-                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer focus:outline-none ${
+                      <span
+                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-default ${
                           isParentActive(item) 
                             ? 'text-gray-900' 
                             : 'text-gray-600'
                         }`}
-                        onClick={(e) => e.preventDefault()}
                       >
                         {item.label}
-                      </button>
+                      </span>
                     ) : (
                       <Link
                         href={item.href}
