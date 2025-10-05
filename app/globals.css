@@ -85,6 +85,34 @@
   box-shadow: 0 0 0 3px rgba(0, 113, 227, 0.1);
 }
 
+/* Apple.com Select Dropdown */
+.apple-input select,
+select.apple-input {
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  cursor: pointer;
+}
+
+/* Apple-style dropdown options */
+.apple-input option {
+  @apply py-2 px-3;
+  background: white;
+  color: var(--apple-black);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.apple-input option:hover {
+  background: #f3f4f6;
+}
+
+.apple-input option:checked,
+.apple-input option:focus {
+  background: var(--apple-blue);
+  color: white;
+}
+
 /* Apple.com Navigation */
 .apple-nav-item {
   @apply text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200;

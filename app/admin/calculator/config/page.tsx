@@ -256,58 +256,76 @@ export default function ConfigCalculatorPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Panel izquierdo: Filtros y Selección de modelo */}
-        <div className="md:col-span-1 space-y-6">
-          {/* Filtro por Grupo */}
-          {availableGroups.length > 0 && (
-            <div className="apple-card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
-              <select
-                className="apple-input text-sm"
-                onChange={(e) => handleGroupFilter(e.target.value)}
-                value={selectedGroup}
-              >
-                <option value="all">Todos los grupos</option>
-                {availableGroups.map((group) => (
-                  <option key={group.id} value={group.id}>
-                    {group.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-          )}
-          
-          {/* Selección de Modelo */}
-          <div className="apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
-            <select
-              className="apple-input text-sm"
-              onChange={(e) => handleModelSelect(e.target.value)}
-              value={selectedModel?.id || ''}
-            >
-              <option value="">Selecciona un modelo</option>
-              {models.map((model) => (
-                <option key={model.id} value={model.id}>
-                  {model.name || model.email} {model.hasConfig ? '(Configurado)' : ''}
-                </option>
-              ))}
-            </select>
-            
-            {/* Información del grupo del modelo seleccionado */}
-            {selectedModel && selectedModel.groups.length > 0 && (
-              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
-                <p className="text-xs text-gray-600 mb-1">Grupos:</p>
-                <div className="flex flex-wrap gap-1">
-                  {selectedModel.groups.map((group) => (
-                    <span 
-                      key={group.id}
-                      className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                    >
-                      {group.name}
-                    </span>
-                  ))}
+        <div className="md:col-span-1">
+          <div className="apple-card space-y-6">
+            {/* Filtro por Grupo */}
+            {availableGroups.length > 0 && (
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
+                <div className="relative">
+                  <select
+                    className="apple-input text-sm appearance-none cursor-pointer pr-10"
+                    onChange={(e) => handleGroupFilter(e.target.value)}
+                    value={selectedGroup}
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                      backgroundPosition: 'right 0.75rem center',
+                      backgroundRepeat: 'no-repeat',
+                      backgroundSize: '1.5em 1.5em'
+                    }}
+                  >
+                    <option value="all">Todos los grupos</option>
+                    {availableGroups.map((group) => (
+                      <option key={group.id} value={group.id}>
+                        {group.name}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
             )}
+            
+            {/* Selección de Modelo */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
+              <div className="relative">
+                <select
+                  className="apple-input text-sm appearance-none cursor-pointer pr-10"
+                  onChange={(e) => handleModelSelect(e.target.value)}
+                  value={selectedModel?.id || ''}
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 0.75rem center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '1.5em 1.5em'
+                  }}
+                >
+                  <option value="">Selecciona un modelo</option>
+                  {models.map((model) => (
+                    <option key={model.id} value={model.id}>
+                      {model.name || model.email} {model.hasConfig ? '(Configurado)' : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Información del grupo del modelo seleccionado */}
+              {selectedModel && selectedModel.groups.length > 0 && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <p className="text-xs text-gray-600 mb-2">Grupos:</p>
+                  <div className="flex flex-wrap gap-1">
+                    {selectedModel.groups.map((group) => (
+                      <span 
+                        key={group.id}
+                        className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                      >
+                        {group.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </div>
 
