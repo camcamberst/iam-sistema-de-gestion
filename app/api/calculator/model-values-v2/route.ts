@@ -1,24 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getCalculatorDate } from '@/utils/calculator-dates';
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
+  process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
 // GET: Obtener valores de modelo (soporta periodDate opcional)
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const periodDate = searchParams.get('periodDate') || getCalculatorDate();
+  const periodDate = searchParams.get('periodDate') || getColombiaDate();
 
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
@@ -31,7 +25,8 @@ export async function GET(request: NextRequest) {
     // 🔍 DEBUG: Verificar si hay datos en la tabla (consulta simple)
     console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
     
-    const { data: values, error } = await supabase
+    // 1. Intentar cargar valores actuales de model_values
+    const { data: currentValues, error: currentError } = await supabase
       .from('model_values')
       .select(`
         model_id, platform_id, value, period_date, updated_at
@@ -40,11 +35,8 @@ export async function GET(request: NextRequest) {
       .eq('period_date', periodDate)
       .order('platform_id');
 
-    console.log('🔍 [MODEL-VALUES-V2] Query completed. Values:', values);
-    console.log('🔍 [MODEL-VALUES-V2] Query error:', error);
-    console.log('🔍 [MODEL-VALUES-V2] Values count:', values?.length || 0);
-    console.log('🔍 [MODEL-VALUES-V2] Values type:', typeof values);
-    console.log('🔍 [MODEL-VALUES-V2] Values is array:', Array.isArray(values));
+    console.log('🔍 [MODEL-VALUES-V2] Current values query completed. Values:', currentValues);
+    console.log('🔍 [MODEL-VALUES-V2] Current values count:', currentValues?.length || 0);
 
     if (error) {
       console.error('❌ [MODEL-VALUES-V2] Database error:', error);
@@ -57,11 +49,11 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    console.log('✅ [MODEL-VALUES-V2] Success! Returning data:', values || []);
+    console.log('✅ [MODEL-VALUES-V2] Success! Returning data:', currentValues || []);
     return NextResponse.json({ 
       success: true, 
-      data: values || [],
-      count: values?.length || 0,
+      data: currentValues || [],
+      count: currentValues?.length || 0,
       modelId,
       periodDate
     });
