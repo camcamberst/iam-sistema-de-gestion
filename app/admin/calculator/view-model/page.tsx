@@ -214,7 +214,8 @@ export default function AdminViewModelPage() {
       const searchTerm = name.toLowerCase().trim();
       filteredModels = filteredModels.filter(model =>
         model.name.toLowerCase().includes(searchTerm) ||
-        model.email.toLowerCase().includes(searchTerm)
+        model.email.toLowerCase().includes(searchTerm) ||
+        model.email.split('@')[0].toLowerCase().includes(searchTerm)
       );
     }
 
@@ -740,7 +741,7 @@ export default function AdminViewModelPage() {
                   { value: '', label: models.length === 0 ? 'No hay modelos disponibles' : 'Selecciona un modelo' },
                   ...models.map(model => ({
                     value: model.id,
-                    label: `${model.name || model.email}${nameFilter ? ` (coincide con "${nameFilter}")` : ''}`,
+                    label: `${model.email.split('@')[0]}${nameFilter ? ` (coincide con "${nameFilter}")` : ''}`,
                     badge: model.currentConfig?.active ? 'Configurada' : 'Sin configurar',
                     badgeColor: model.currentConfig?.active ? 'green' as const : 'gray' as const
                   }))
@@ -762,7 +763,7 @@ export default function AdminViewModelPage() {
                     const model = models.find(m => m.id === selectedModelId);
                     return model ? (
                       <>
-                        <p className="text-sm font-medium text-gray-900 mb-2">{model.name}</p>
+                        <p className="text-sm font-medium text-gray-900 mb-2">{model.email.split('@')[0]}</p>
                         <p className="text-xs text-gray-600 mb-2">{model.email}</p>
                         <div className="flex flex-wrap gap-1">
                           {model.groups.map((group) => (
@@ -838,7 +839,7 @@ export default function AdminViewModelPage() {
                   Modelo seleccionado
                 </h3>
                 <p className="text-gray-600 mb-4">
-                  {models.find(m => m.id === selectedModelId)?.name} está listo para ver su calculadora
+                  {models.find(m => m.id === selectedModelId)?.email.split('@')[0]} está listo para ver su calculadora
                 </p>
                 <p className="text-sm text-gray-500">
                   La calculadora se abrirá automáticamente
