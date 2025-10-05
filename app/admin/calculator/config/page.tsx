@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface Model {
@@ -40,6 +40,12 @@ export default function ConfigCalculatorPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [currentUser, setCurrentUser] = useState<any>(null);
   
+  // Estados para dropdowns personalizados
+  const [groupDropdownOpen, setGroupDropdownOpen] = useState(false);
+  const [modelDropdownOpen, setModelDropdownOpen] = useState(false);
+  const groupDropdownRef = useRef<HTMLDivElement>(null);
+  const modelDropdownRef = useRef<HTMLDivElement>(null);
+  
   // Estados de configuración
   const [enabledPlatforms, setEnabledPlatforms] = useState<string[]>([]);
   const [percentageOverride, setPercentageOverride] = useState<string>('');
@@ -49,6 +55,23 @@ export default function ConfigCalculatorPage() {
 
   useEffect(() => {
     loadData();
+  }, []);
+
+  // Cerrar dropdowns al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (groupDropdownRef.current && !groupDropdownRef.current.contains(event.target as Node)) {
+        setGroupDropdownOpen(false);
+      }
+      if (modelDropdownRef.current && !modelDropdownRef.current.contains(event.target as Node)) {
+        setModelDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
   }, []);
 
   const loadData = async () => {
@@ -262,25 +285,53 @@ export default function ConfigCalculatorPage() {
             {availableGroups.length > 0 && (
               <div>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
-                <div className="relative">
-                  <select
-                    className="apple-input text-sm appearance-none cursor-pointer pr-10"
-                    onChange={(e) => handleGroupFilter(e.target.value)}
-                    value={selectedGroup}
-                    style={{
-                      backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                      backgroundPosition: 'right 0.75rem center',
-                      backgroundRepeat: 'no-repeat',
-                      backgroundSize: '1.5em 1.5em'
-                    }}
+                <div className="relative" ref={groupDropdownRef}>
+                  <button
+                    type="button"
+                    className="apple-input text-sm text-left cursor-pointer flex items-center justify-between"
+                    onClick={() => setGroupDropdownOpen(!groupDropdownOpen)}
                   >
-                    <option value="all">Todos los grupos</option>
-                    {availableGroups.map((group) => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
+                    <span>
+                      {selectedGroup === 'all' 
+                        ? 'Todos los grupos' 
+                        : availableGroups.find(g => g.id === selectedGroup)?.name || 'Todos los grupos'
+                      }
+                    </span>
+                    <svg 
+                      className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${groupDropdownOpen ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {groupDropdownOpen && (
+                    <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                      <div
+                        className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150"
+                        onClick={() => {
+                          handleGroupFilter('all');
+                          setGroupDropdownOpen(false);
+                        }}
+                      >
+                        Todos los grupos
+                      </div>
+                      {availableGroups.map((group) => (
+                        <div
+                          key={group.id}
+                          className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 border-t border-gray-100"
+                          onClick={() => {
+                            handleGroupFilter(group.id);
+                            setGroupDropdownOpen(false);
+                          }}
+                        >
+                          {group.name}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -288,25 +339,58 @@ export default function ConfigCalculatorPage() {
             {/* Selección de Modelo */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
-              <div className="relative">
-                <select
-                  className="apple-input text-sm appearance-none cursor-pointer pr-10"
-                  onChange={(e) => handleModelSelect(e.target.value)}
-                  value={selectedModel?.id || ''}
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 0.75rem center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '1.5em 1.5em'
-                  }}
+              <div className="relative" ref={modelDropdownRef}>
+                <button
+                  type="button"
+                  className="apple-input text-sm text-left cursor-pointer flex items-center justify-between"
+                  onClick={() => setModelDropdownOpen(!modelDropdownOpen)}
                 >
-                  <option value="">Selecciona un modelo</option>
-                  {models.map((model) => (
-                    <option key={model.id} value={model.id}>
-                      {model.name || model.email} {model.hasConfig ? '(Configurado)' : ''}
-                    </option>
-                  ))}
-                </select>
+                  <span>
+                    {selectedModel 
+                      ? `${selectedModel.name || selectedModel.email} ${selectedModel.hasConfig ? '(Configurado)' : ''}` 
+                      : 'Selecciona un modelo'
+                    }
+                  </span>
+                  <svg 
+                    className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${modelDropdownOpen ? 'rotate-180' : ''}`}
+                    fill="none" 
+                    stroke="currentColor" 
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {modelDropdownOpen && (
+                  <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-60 overflow-auto">
+                    <div
+                      className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 text-gray-500"
+                      onClick={() => {
+                        setSelectedModel(null);
+                        setModelDropdownOpen(false);
+                      }}
+                    >
+                      Selecciona un modelo
+                    </div>
+                    {models.map((model) => (
+                      <div
+                        key={model.id}
+                        className="px-4 py-3 text-sm cursor-pointer hover:bg-gray-50 transition-colors duration-150 border-t border-gray-100 flex items-center justify-between"
+                        onClick={() => {
+                          handleModelSelect(model.id);
+                          setModelDropdownOpen(false);
+                        }}
+                      >
+                        <span>{model.name || model.email}</span>
+                        {model.hasConfig && (
+                          <span className="text-xs bg-green-100 text-green-800 px-2 py-1 rounded-full">
+                            Configurado
+                          </span>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
               
               {/* Información del grupo del modelo seleccionado */}
