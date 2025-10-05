@@ -104,7 +104,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.unshift({
         id: 'users',
         label: 'Gestión Usarios',
-        href: '/admin/users',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Crear Usuario', href: '/admin/users/create' },
           { label: 'Consultar Usuarios', href: '/admin/users' }
@@ -114,7 +114,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'anticipos',
         label: 'Gestión Anticipos',
-        href: '/admin/anticipos',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
           { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
@@ -124,7 +124,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'reports',
         label: 'Reportes',
-        href: '/admin/reports',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
           { label: 'Estadísticas', href: '/admin/reports/stats' }
@@ -134,7 +134,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'settings',
         label: 'Configuración',
-        href: '/admin/settings',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Configuración General', href: '/admin/settings/general' },
           { label: 'Permisos', href: '/admin/settings/permissions' }
