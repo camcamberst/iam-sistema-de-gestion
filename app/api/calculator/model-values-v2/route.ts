@@ -38,12 +38,12 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MODEL-VALUES-V2] Current values query completed. Values:', currentValues);
     console.log('🔍 [MODEL-VALUES-V2] Current values count:', currentValues?.length || 0);
 
-    if (error) {
-      console.error('❌ [MODEL-VALUES-V2] Database error:', error);
+    if (currentError) {
+      console.error('❌ [MODEL-VALUES-V2] Database error:', currentError);
       return NextResponse.json({ 
         success: false, 
-        error: error.message,
-        details: error,
+        error: currentError.message,
+        details: currentError,
         modelId,
         periodDate
       }, { status: 500 });
