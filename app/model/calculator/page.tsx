@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
-import { getCalculatorDate } from '@/utils/calculator-dates';
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface User {
   id: string;
@@ -50,8 +50,8 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
-  // Periodo activo usando fecha de Europa Central
-  const [periodDate, setPeriodDate] = useState<string>(getCalculatorDate());
+  // Periodo activo usando fecha de Colombia
+  const [periodDate, setPeriodDate] = useState<string>(getColombiaDate());
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
