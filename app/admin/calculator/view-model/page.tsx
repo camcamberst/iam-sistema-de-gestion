@@ -52,6 +52,7 @@ export default function AdminViewModelPage() {
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [nameFilter, setNameFilter] = useState<string>('');
+  const [selectedModelId, setSelectedModelId] = useState<string>('');
   
   const router = useRouter();
   
@@ -180,6 +181,7 @@ export default function AdminViewModelPage() {
 
   const handleBackToModels = () => {
     setSelectedModel(null);
+    setSelectedModelId('');
     setEditValues({});
     setHasChanges(false);
   };
@@ -217,6 +219,22 @@ export default function AdminViewModelPage() {
     }
 
     setModels(filteredModels);
+    
+    // Reset selected model if it's not in the filtered results
+    if (selectedModelId && !filteredModels.find(m => m.id === selectedModelId)) {
+      setSelectedModelId('');
+    }
+  };
+
+  // Función para seleccionar modelo desde dropdown
+  const handleModelDropdownSelect = (modelId: string) => {
+    setSelectedModelId(modelId);
+    if (modelId) {
+      const model = models.find(m => m.id === modelId);
+      if (model) {
+        handleModelSelect(model);
+      }
+    }
   };
 
   const handleValueChange = (platformId: string, value: string) => {
@@ -697,6 +715,76 @@ export default function AdminViewModelPage() {
               />
             </div>
 
+            {/* Selección de Modelo */}
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Selecciona un modelo' },
+                  ...models.map(model => ({
+                    value: model.id,
+                    label: model.name || model.email,
+                    badge: model.currentConfig?.active ? 'Configurada' : 'Sin configurar',
+                    badgeColor: model.currentConfig?.active ? 'green' as const : 'gray' as const
+                  }))
+                ]}
+                value={selectedModelId}
+                onChange={handleModelDropdownSelect}
+                placeholder="Selecciona un modelo"
+              />
+
+              {/* Información del modelo seleccionado */}
+              {selectedModelId && models.find(m => m.id === selectedModelId) && (
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  {(() => {
+                    const model = models.find(m => m.id === selectedModelId);
+                    return model ? (
+                      <>
+                        <p className="text-sm font-medium text-gray-900 mb-2">{model.name}</p>
+                        <p className="text-xs text-gray-600 mb-2">{model.email}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {model.groups.map((group) => (
+                            <span
+                              key={group.id}
+                              className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                            >
+                              {group.name}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+
+              {/* Estado cuando no hay modelos */}
+              {models.length === 0 && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
+                  <div className="text-gray-400 mb-2 text-2xl">👥</div>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {nameFilter || selectedGroup !== 'all' 
+                      ? 'No se encontraron modelos con los filtros aplicados' 
+                      : 'No hay modelos disponibles'
+                    }
+                  </p>
+                  {(nameFilter || selectedGroup !== 'all') && (
+                    <button
+                      onClick={() => {
+                        setNameFilter('');
+                        setSelectedGroup('all');
+                        setSelectedModelId('');
+                        setModels(allModels);
+                      }}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Limpiar filtros
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
             {/* Información de resultados */}
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-600">
@@ -716,85 +804,33 @@ export default function AdminViewModelPage() {
           </div>
         </div>
 
-        {/* Panel derecho: Lista de modelos */}
+        {/* Panel derecho: Información adicional o vacío */}
         <div className="md:col-span-2">
           <div className="apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Modelos Disponibles</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Información</h2>
             
-            {models.length > 0 ? (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {models.map((model) => (
-                  <div 
-                    key={model.id}
-                    onClick={() => handleModelSelect(model)}
-                    className="p-4 border border-gray-200 rounded-lg cursor-pointer hover:shadow-md hover:border-blue-300 transition-all duration-200 bg-white"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-base font-medium text-gray-900">
-                        {model.name}
-                      </h3>
-                      <div className={`px-2 py-1 rounded-full text-xs ${
-                        model.currentConfig?.active 
-                          ? 'bg-green-100 text-green-800' 
-                          : 'bg-gray-100 text-gray-800'
-                      }`}>
-                        {model.currentConfig?.active ? 'Configurada' : 'Sin configurar'}
-                      </div>
-                    </div>
-                    
-                    <p className="text-sm text-gray-600 mb-2">
-                      {model.email}
-                    </p>
-                    
-                    <div className="text-sm text-gray-500 mb-3">
-                      <span className="font-medium">Grupos:</span> {model.groups.map(g => g.name).join(', ')}
-                    </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm text-blue-600 font-medium">
-                        Ver calculadora →
-                      </div>
-                      <div className="flex space-x-1">
-                        {model.groups.map((group) => (
-                          <span
-                            key={group.id}
-                            className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
-                          >
-                            {group.name}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                ))}
+            {selectedModelId && models.find(m => m.id === selectedModelId) ? (
+              <div className="text-center py-8">
+                <div className="text-green-500 mb-4 text-4xl">✅</div>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  Modelo seleccionado
+                </h3>
+                <p className="text-gray-600 mb-4">
+                  {models.find(m => m.id === selectedModelId)?.name} está listo para ver su calculadora
+                </p>
+                <p className="text-sm text-gray-500">
+                  La calculadora se abrirá automáticamente
+                </p>
               </div>
             ) : (
               <div className="text-center py-12">
-                <div className="text-gray-400 mb-4 text-4xl">👥</div>
+                <div className="text-gray-400 mb-4 text-4xl">👈</div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {nameFilter || selectedGroup !== 'all' 
-                    ? 'No se encontraron modelos' 
-                    : 'No hay modelos disponibles'
-                  }
+                  Selecciona un modelo
                 </h3>
-                <p className="text-gray-600 mb-4">
-                  {nameFilter || selectedGroup !== 'all' 
-                    ? 'Prueba ajustando los filtros de búsqueda'
-                    : 'No se encontraron modelos asignados a tus grupos'
-                  }
+                <p className="text-gray-600">
+                  Usa los filtros de la izquierda para encontrar y seleccionar un modelo
                 </p>
-                {(nameFilter || selectedGroup !== 'all') && (
-                  <button
-                    onClick={() => {
-                      setNameFilter('');
-                      setSelectedGroup('all');
-                      setModels(allModels);
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Limpiar filtros
-                  </button>
-                )}
               </div>
             )}
           </div>
