@@ -117,7 +117,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                   >
                     {item.href === '#' ? (
                       <button
-                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer focus:outline-none ${
                           isParentActive(item) 
                             ? 'text-gray-900' 
                             : 'text-gray-600'
