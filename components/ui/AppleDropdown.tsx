@@ -18,6 +18,7 @@ interface AppleDropdownProps {
   className?: string;
   disabled?: boolean;
   maxHeight?: string;
+  autoOpen?: boolean;
 }
 
 const badgeColors = {
@@ -35,10 +36,20 @@ export default function AppleDropdown({
   placeholder = 'Selecciona una opción',
   className = '',
   disabled = false,
-  maxHeight = 'max-h-60'
+  maxHeight = 'max-h-60',
+  autoOpen = false
 }: AppleDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // Auto-abrir dropdown cuando autoOpen es true
+  useEffect(() => {
+    if (autoOpen && options.length > 1) { // > 1 porque el primer option es el placeholder
+      setIsOpen(true);
+    } else if (!autoOpen) {
+      setIsOpen(false);
+    }
+  }, [autoOpen, options.length]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {

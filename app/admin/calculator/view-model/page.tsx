@@ -752,6 +752,7 @@ export default function AdminViewModelPage() {
                     ? (nameFilter ? `No hay modelos que contengan "${nameFilter}"` : 'No hay modelos disponibles')
                     : `${models.length} modelo${models.length !== 1 ? 's' : ''} disponible${models.length !== 1 ? 's' : ''}`
                 }
+                autoOpen={nameFilter.length > 0 && models.length > 0}
               />
 
               {/* Información del modelo seleccionado */}
