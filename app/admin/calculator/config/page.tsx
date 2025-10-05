@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import AppleDropdown from '../../../components/ui/AppleDropdown';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface Model {
   id: string;

@@ -13,7 +13,7 @@ import {
   type CurrentUser 
 } from '../../../lib/hierarchy';
 import AppleSearchBar from '../../../components/AppleSearchBar';
-import AppleDropdown from '../../../components/ui/AppleDropdown';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
   id: string;

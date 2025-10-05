@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { canEditUser, canDeleteUser, getAvailableGroups } from "../../../lib/hierarchy";
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ReferenceRatesPanel from "../../../components/ReferenceRatesPanel";
-import AppleDropdown from "../../../components/ui/AppleDropdown";
+import AppleDropdown from "@/components/ui/AppleDropdown";
 
 type RateKind = "USD→COP" | "EUR→USD" | "GBP→USD";
 

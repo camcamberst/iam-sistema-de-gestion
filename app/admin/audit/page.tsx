@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import AppleDropdown from '../../../components/ui/AppleDropdown';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface AuditLog {
   id: string;
