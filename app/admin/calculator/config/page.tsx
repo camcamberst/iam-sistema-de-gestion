@@ -28,11 +28,17 @@ export default function ConfigCalculatorPage() {
   
   // Estados principales
   const [models, setModels] = useState<Model[]>([]);
+  const [allModels, setAllModels] = useState<Model[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [selectedModel, setSelectedModel] = useState<Model | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // Estados para filtro por grupo
+  const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const [currentUser, setCurrentUser] = useState<any>(null);
   
   // Estados de configuración
   const [enabledPlatforms, setEnabledPlatforms] = useState<string[]>([]);
@@ -51,12 +57,16 @@ export default function ConfigCalculatorPage() {
       setLoading(true);
       setError(null);
 
+      // Cargar datos del usuario actual
+      console.log('🔍 [LOAD] Cargando datos del usuario...');
+      const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+      const user = userData ? JSON.parse(userData) : null;
+      const userId = user?.id || 'current-user';
+      console.log('🔍 [LOAD] User data:', user);
+      setCurrentUser(user);
+      
       // Cargar modelos disponibles
       console.log('🔍 [LOAD] Cargando modelos...');
-      const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-      const userId = userData ? JSON.parse(userData).id : 'current-user';
-      console.log('🔍 [LOAD] UserId:', userId);
-      
       const modelsResponse = await fetch(`/api/calculator/models?adminId=${userId}`);
       console.log('🔍 [LOAD] Models response status:', modelsResponse.status);
       const modelsData = await modelsResponse.json();
@@ -66,7 +76,32 @@ export default function ConfigCalculatorPage() {
         throw new Error(modelsData.error || 'Error al cargar modelos');
       }
 
+      setAllModels(modelsData.models);
       setModels(modelsData.models);
+      
+      // Extraer grupos únicos de los modelos
+      const groups = new Set<string>();
+      const groupsData: Array<{id: string, name: string}> = [];
+      
+      modelsData.models.forEach((model: Model) => {
+        model.groups.forEach(group => {
+          if (!groups.has(group.id)) {
+            groups.add(group.id);
+            groupsData.push({id: group.id, name: group.name});
+          }
+        });
+      });
+      
+      // Filtrar grupos según permisos del usuario
+      let filteredGroups = groupsData;
+      if (user?.role === 'admin') {
+        // Admin solo ve sus grupos asignados
+        const userGroupIds = user.groups?.map((g: any) => g.id) || [];
+        filteredGroups = groupsData.filter(group => userGroupIds.includes(group.id));
+      }
+      
+      setAvailableGroups(filteredGroups);
+      console.log('🔍 [LOAD] Available groups:', filteredGroups);
       console.log('🔍 [LOAD] Models set successfully');
 
       // Cargar plataformas disponibles
@@ -125,6 +160,20 @@ export default function ConfigCalculatorPage() {
         ? prev.filter(id => id !== platformId)
         : [...prev, platformId]
     );
+  };
+
+  const handleGroupFilter = (groupId: string) => {
+    setSelectedGroup(groupId);
+    setSelectedModel(null); // Reset selected model when changing group
+    
+    if (groupId === 'all') {
+      setModels(allModels);
+    } else {
+      const filteredModels = allModels.filter(model => 
+        model.groups.some(group => group.id === groupId)
+      );
+      setModels(filteredModels);
+    }
   };
 
   const handleSave = async () => {
@@ -206,21 +255,60 @@ export default function ConfigCalculatorPage() {
       <h1 className="text-3xl font-bold text-gray-900 mb-6">Gestión de Calculadora</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Panel izquierdo: Selección de modelo */}
-        <div className="md:col-span-1 apple-card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
-          <select
-            className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md"
-            onChange={(e) => handleModelSelect(e.target.value)}
-            value={selectedModel?.id || ''}
-          >
-            <option value="">Selecciona un modelo</option>
-            {models.map((model) => (
-              <option key={model.id} value={model.id}>
-                {model.name || model.email} {model.hasConfig ? '(Configurado)' : ''}
-              </option>
-            ))}
-          </select>
+        {/* Panel izquierdo: Filtros y Selección de modelo */}
+        <div className="md:col-span-1 space-y-6">
+          {/* Filtro por Grupo */}
+          {availableGroups.length > 0 && (
+            <div className="apple-card">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
+              <select
+                className="apple-input text-sm"
+                onChange={(e) => handleGroupFilter(e.target.value)}
+                value={selectedGroup}
+              >
+                <option value="all">Todos los grupos</option>
+                {availableGroups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+          
+          {/* Selección de Modelo */}
+          <div className="apple-card">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
+            <select
+              className="apple-input text-sm"
+              onChange={(e) => handleModelSelect(e.target.value)}
+              value={selectedModel?.id || ''}
+            >
+              <option value="">Selecciona un modelo</option>
+              {models.map((model) => (
+                <option key={model.id} value={model.id}>
+                  {model.name || model.email} {model.hasConfig ? '(Configurado)' : ''}
+                </option>
+              ))}
+            </select>
+            
+            {/* Información del grupo del modelo seleccionado */}
+            {selectedModel && selectedModel.groups.length > 0 && (
+              <div className="mt-3 p-3 bg-gray-50 rounded-lg">
+                <p className="text-xs text-gray-600 mb-1">Grupos:</p>
+                <div className="flex flex-wrap gap-1">
+                  {selectedModel.groups.map((group) => (
+                    <span 
+                      key={group.id}
+                      className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                    >
+                      {group.name}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Panel derecho: Configuración */}
