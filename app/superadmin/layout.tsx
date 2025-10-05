@@ -70,7 +70,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       {
         id: 'calculator',
         label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
-        href: userRole === 'modelo' ? '/model/calculator' : '/admin/calculator/config',
+        href: '#', // Sin navegación directa
         subItems: userRole === 'modelo' ? [ { label: 'Ingresar Valores', href: '/model/calculator' } ] : []
       }
     ];
@@ -80,7 +80,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       baseItems.unshift({
         id: 'users',
         label: 'Gestión Usarios',
-        href: '/admin/users',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Crear Usuario', href: '/admin/users/create' },
           { label: 'Consultar Usuarios', href: '/admin/users' }
@@ -90,7 +90,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       baseItems.push({
         id: 'anticipos',
         label: 'Gestión Anticipos',
-        href: '/admin/anticipos',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
           { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
@@ -100,7 +100,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       baseItems.push({
         id: 'reports',
         label: 'Reportes',
-        href: '/admin/reports',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
           { label: 'Estadísticas', href: '/admin/reports/stats' }
@@ -110,7 +110,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       baseItems.push({
         id: 'settings',
         label: 'Configuración',
-        href: '/admin/settings',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Configuración General', href: '/admin/settings/general' },
           { label: 'Permisos', href: '/admin/settings/permissions' }
@@ -161,16 +161,29 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   onMouseEnter={() => setActiveMenu(item.id)}
                   onMouseLeave={() => setActiveMenu(null)}
                 >
-                  <Link
-                    href={item.href}
-                    className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                      isActive(item.href) || isParentActive(item) 
-                        ? 'text-gray-900' 
-                        : 'text-gray-600'
-                    }`}
-                  >
-                    {item.label}
-                  </Link>
+                  {item.href === '#' ? (
+                    <button
+                      className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                        isParentActive(item) 
+                          ? 'text-gray-900' 
+                          : 'text-gray-600'
+                      }`}
+                      onClick={(e) => e.preventDefault()}
+                    >
+                      {item.label}
+                    </button>
+                  ) : (
+                    <Link
+                      href={item.href}
+                      className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                        isActive(item.href) || isParentActive(item) 
+                          ? 'text-gray-900' 
+                          : 'text-gray-600'
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
+                  )}
 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (

@@ -78,7 +78,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {
         id: 'calculator',
         label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
-        href: userRole === 'modelo' ? '/model/calculator' : '/admin/calculator/config',
+        href: userRole === 'modelo' ? '#' : '#', // Sin navegación directa
         subItems: userRole === 'modelo' 
           ? [ { label: 'Ingresar Valores', href: '/model/calculator' } ]
           : []
@@ -90,7 +90,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'anticipos',
         label: 'Mis Anticipos',
-        href: '/model/anticipos',
+        href: '#', // Sin navegación directa
         subItems: [
           { label: 'Solicitar Anticipo', href: '/model/anticipos/solicitar' },
           { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
@@ -191,16 +191,29 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     onMouseEnter={() => setActiveMenu(item.id)}
                     onMouseLeave={() => setActiveMenu(null)}
                   >
-                    <Link
-                      href={item.href}
-                      className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
-                        isActive(item.href) || isParentActive(item) 
-                          ? 'text-gray-900' 
-                          : 'text-gray-600'
-                      }`}
-                    >
-                      {item.label}
-                    </Link>
+                    {item.href === '#' ? (
+                      <button
+                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-pointer ${
+                          isParentActive(item) 
+                            ? 'text-gray-900' 
+                            : 'text-gray-600'
+                        }`}
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        {item.label}
+                      </button>
+                    ) : (
+                      <Link
+                        href={item.href}
+                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                          isActive(item.href) || isParentActive(item) 
+                            ? 'text-gray-900' 
+                            : 'text-gray-600'
+                        }`}
+                      >
+                        {item.label}
+                      </Link>
+                    )}
 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (
