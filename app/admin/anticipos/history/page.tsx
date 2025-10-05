@@ -91,21 +91,7 @@ export default function HistorialAnticiposPage() {
     applyFilters();
   }, [anticipos, filters]);
 
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      if (isGrupoDropdownOpen && !target.closest('.grupo-dropdown')) {
-        setIsGrupoDropdownOpen(false);
-      }
-    };
-    if (isGrupoDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isGrupoDropdownOpen]);
+  // Dropdown ahora se controla solo con hover, no necesita click-outside
 
   const loadUser = async () => {
     try {
@@ -546,12 +532,12 @@ export default function HistorialAnticiposPage() {
             {user?.role === 'super_admin' && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Grupo</label>
-                <div className="relative grupo-dropdown">
-                  <button
-                    type="button"
-                    onClick={() => setIsGrupoDropdownOpen(!isGrupoDropdownOpen)}
-                    className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-all duration-200 text-left flex items-center justify-between"
-                  >
+                <div 
+                  className="relative grupo-dropdown"
+                  onMouseEnter={() => setIsGrupoDropdownOpen(true)}
+                  onMouseLeave={() => setIsGrupoDropdownOpen(false)}
+                >
+                  <div className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-200 flex items-center justify-between cursor-default">
                     <span className="text-gray-900">
                       {filters.grupo ? grupos.find(g => g.id === filters.grupo)?.name || 'Seleccionar grupo' : 'Todos los grupos'}
                     </span>
@@ -563,7 +549,7 @@ export default function HistorialAnticiposPage() {
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
-                  </button>
+                  </div>
                   {isGrupoDropdownOpen && (
                     <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
                       <div className="py-1">
@@ -690,14 +676,11 @@ export default function HistorialAnticiposPage() {
           </div>
         )}
 
-        {/* Botones de navegación */}
+        {/* Elementos decorativos de navegación */}
         <div className="mt-8 flex justify-center space-x-4">
-          <button
-            onClick={() => router.push('/admin/anticipos/pending')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200"
-          >
+          <div className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 cursor-default">
             Solicitudes Pendientes
-          </button>
+          </div>
         </div>
       </div>
     </div>

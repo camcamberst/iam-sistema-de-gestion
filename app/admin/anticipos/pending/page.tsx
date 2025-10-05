@@ -365,14 +365,11 @@ export default function SolicitudesPendientesPage() {
           </div>
         )}
 
-        {/* Botón para historial */}
+        {/* Elemento decorativo para historial */}
         <div className="mt-6 text-center">
-          <button
-            onClick={() => router.push('/admin/anticipos/history')}
-            className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 font-medium shadow-sm"
-          >
+          <div className="px-6 py-3 bg-gray-600 text-white rounded-xl hover:bg-gray-700 transition-all duration-200 font-medium shadow-sm cursor-default inline-block">
             Ver Historial
-          </button>
+          </div>
         </div>
       </div>
     </div>

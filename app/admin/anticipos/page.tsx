@@ -125,12 +125,9 @@ export default function GestionAnticiposPage() {
             <p className="text-gray-500 text-sm mb-4 flex-grow">
               Revisa y gestiona las solicitudes pendientes de aprobación
             </p>
-            <button
-              onClick={() => router.push('/admin/anticipos/pending')}
-              className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 mt-auto"
-            >
+            <div className="w-full px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-700 transition-colors duration-200 mt-auto text-center cursor-default">
               Gestionar Solicitudes
-            </button>
+            </div>
           </div>
 
           {/* Historial de Anticipos */}
@@ -146,12 +143,9 @@ export default function GestionAnticiposPage() {
             <p className="text-gray-500 text-sm mb-4 flex-grow">
               Consulta el historial completo de anticipos procesados
             </p>
-            <button
-              onClick={() => router.push('/admin/anticipos/history')}
-              className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 mt-auto"
-            >
+            <div className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 mt-auto text-center cursor-default">
               Ver Historial
-            </button>
+            </div>
           </div>
         </div>
 
