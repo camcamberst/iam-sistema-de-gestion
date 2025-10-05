@@ -371,21 +371,21 @@ export default function AdminViewModelPage() {
                 </p>
               </div>
 
-            {/* Footer actions */}
-            <div className="mt-6 flex justify-end">
-              <button
-                onClick={handleSave}
-                disabled={saving || !hasChanges}
-                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
-                  hasChanges && !saving
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
+              {/* Footer actions */}
+              <div className="flex justify-end">
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !hasChanges}
+                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                    hasChanges && !saving
+                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {saving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
             </div>
-            {/* Botones desplazados al pie para una UI más limpia */}
           </div>
 
           {/* Datos de la calculadora */}
