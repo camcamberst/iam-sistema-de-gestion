@@ -706,13 +706,30 @@ export default function AdminViewModelPage() {
             {/* Filtro por Nombre */}
             <div>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Buscar por Nombre</h2>
-              <input
-                type="text"
-                value={nameFilter}
-                onChange={(e) => handleNameFilter(e.target.value)}
-                placeholder="Buscar modelo..."
-                className="apple-input text-sm"
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={nameFilter}
+                  onChange={(e) => handleNameFilter(e.target.value)}
+                  placeholder="Buscar modelo..."
+                  className="apple-input text-sm pr-10"
+                />
+                {nameFilter && (
+                  <button
+                    onClick={() => handleNameFilter('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+              </div>
+              {nameFilter && (
+                <div className="mt-2 text-xs text-blue-600">
+                  🔍 Filtrando por: "{nameFilter}" - {models.length} resultado{models.length !== 1 ? 's' : ''}
+                </div>
+              )}
             </div>
 
             {/* Selección de Modelo */}
@@ -720,17 +737,21 @@ export default function AdminViewModelPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
               <AppleDropdown
                 options={[
-                  { value: '', label: 'Selecciona un modelo' },
+                  { value: '', label: models.length === 0 ? 'No hay modelos disponibles' : 'Selecciona un modelo' },
                   ...models.map(model => ({
                     value: model.id,
-                    label: model.name || model.email,
+                    label: `${model.name || model.email}${nameFilter ? ` (coincide con "${nameFilter}")` : ''}`,
                     badge: model.currentConfig?.active ? 'Configurada' : 'Sin configurar',
                     badgeColor: model.currentConfig?.active ? 'green' as const : 'gray' as const
                   }))
                 ]}
                 value={selectedModelId}
                 onChange={handleModelDropdownSelect}
-                placeholder="Selecciona un modelo"
+                placeholder={
+                  models.length === 0 
+                    ? (nameFilter ? `No hay modelos que contengan "${nameFilter}"` : 'No hay modelos disponibles')
+                    : `${models.length} modelo${models.length !== 1 ? 's' : ''} disponible${models.length !== 1 ? 's' : ''}`
+                }
               />
 
               {/* Información del modelo seleccionado */}
