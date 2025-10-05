@@ -66,7 +66,7 @@ export default function ConfigCalculatorPage() {
         throw new Error(modelsData.error || 'Error al cargar modelos');
       }
 
-      setModels(modelsData.data);
+      setModels(modelsData.models);
       console.log('🔍 [LOAD] Models set successfully');
 
       // Cargar plataformas disponibles
