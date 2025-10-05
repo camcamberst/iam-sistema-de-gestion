@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from "@supabase/supabase-js";
-import { getCalculatorDate } from '@/utils/calculator-dates';
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface User {
   id: string;

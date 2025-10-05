@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { getCalculatorDate, getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate } from '@/utils/calculator-dates';
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 
 interface User {
@@ -337,7 +337,7 @@ export default function SolicitarAnticipoPage() {
       setSubmitting(true);
       setError(null);
 
-      const periodDate = getCalculatorDate();
+      const periodDate = getColombiaDate();
       const porcentajeSolicitado = calculatePercentage();
 
       const response = await fetch('/api/anticipos', {
