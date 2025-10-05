@@ -86,9 +86,10 @@ export default function AppleSidebar({ user, menuItems, currentPath }: AppleSide
         <div className="p-4 space-y-1">
           {menuItems.map((item) => (
             <div key={item.id}>
-              <button
-                onClick={() => toggleExpanded(item.id)}
-                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+              <div
+                onMouseEnter={() => item.subItems.length > 0 && setExpandedItems([...expandedItems, item.id])}
+                onMouseLeave={() => setExpandedItems(expandedItems.filter(id => id !== item.id))}
+                className={`w-full flex items-center justify-between px-3 py-2 text-sm font-medium rounded-lg transition-colors cursor-default ${
                   isParentActive(item)
                     ? 'bg-blue-50 text-blue-700 border border-blue-200'
                     : 'text-gray-700 hover:bg-gray-50'
@@ -107,7 +108,7 @@ export default function AppleSidebar({ user, menuItems, currentPath }: AppleSide
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 )}
-              </button>
+              </div>
               
               {expandedItems.includes(item.id) && item.subItems.length > 0 && (
                 <div className="ml-4 mt-1 space-y-1">

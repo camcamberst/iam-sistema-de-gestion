@@ -115,11 +115,19 @@ select.apple-input {
 
 /* Apple.com Navigation */
 .apple-nav-item {
-  @apply text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200;
+  @apply text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-default;
 }
 
 .apple-nav-item.active {
   @apply text-gray-900;
+}
+
+/* Remove all focus indicators globally for non-functional elements */
+.apple-nav-item:focus,
+.apple-dropdown-trigger:focus {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
 }
 
 /* Apple.com Dropdown */
