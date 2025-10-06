@@ -969,29 +969,40 @@ export default function ModelCalculatorPage() {
             const hue = Math.round((progressPct / 100) * 120);
             const progressStart = `hsl(${hue} 85% 48%)`;
             const progressEnd = `hsl(${hue} 85% 40%)`;
+            // Estilos dinámicos para fondo del contenedor e icono
+            const cardBgStart = `hsl(${hue} 100% 97%)`;
+            const cardBgEnd = `hsl(${hue} 100% 95%)`;
+            const cardBorder = `hsl(${hue} 70% 85%)`;
+            const iconStart = `hsl(${hue} 85% 55%)`;
+            const iconEnd = `hsl(${hue} 85% 45%)`;
+            const headingColor = `hsl(${hue} 65% 28%)`;
+            const subTextColor = `hsl(${hue} 60% 32%)`;
             
             return (
-              <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
-                estaPorDebajo 
-                  ? 'bg-gradient-to-r from-red-50 to-pink-50 border-red-200' 
-                  : 'bg-gradient-to-r from-green-50 to-emerald-50 border-green-200'
-              }`}>
+              <div
+                className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
+                style={{
+                  background: `linear-gradient(90deg, ${cardBgStart}, ${cardBgEnd})`,
+                  borderColor: cardBorder
+                }}
+              >
                 {/* Efecto de brillo animado */}
-                <div className={`absolute inset-0 opacity-20 ${
-                  estaPorDebajo ? 'bg-gradient-to-r from-red-400 to-pink-400' : 'bg-gradient-to-r from-green-400 to-emerald-400'
-                } animate-pulse`}></div>
+                <div
+                  className="absolute inset-0 opacity-10 animate-pulse"
+                  style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
+                ></div>
                 
                 <div className="relative p-4">
                   <div className="flex items-center space-x-3">
                     {/* Icono animado */}
-                    <div className={`relative flex-shrink-0 ${
-                      estaPorDebajo ? 'animate-bounce' : 'animate-pulse'
-                    }`}>
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        estaPorDebajo 
-                          ? 'bg-gradient-to-r from-red-500 to-pink-500 shadow-md shadow-red-200' 
-                          : 'bg-gradient-to-r from-green-500 to-emerald-500 shadow-md shadow-green-200'
-                      }`}>
+                    <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md`}
+                        style={{
+                          background: `linear-gradient(90deg, ${iconStart}, ${iconEnd})`,
+                          boxShadow: `0 4px 10px ${iconStart}33`
+                        }}
+                      >
                         <span className="text-white text-sm">✓</span>
                       </div>
                     </div>
@@ -999,14 +1010,10 @@ export default function ModelCalculatorPage() {
                     {/* Contenido compacto */}
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <div className={`font-bold text-sm ${
-                          estaPorDebajo ? 'text-red-800' : 'text-green-800'
-                        }`}>
+                        <div className={`font-bold text-sm`} style={{ color: headingColor }}>
                           {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                         </div>
-                        <div className={`text-xs font-medium ${
-                          estaPorDebajo ? 'text-red-700' : 'text-green-700'
-                        }`}>
+                        <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
                           {estaPorDebajo 
                             ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${Math.ceil(100 - porcentajeAlcanzado)}% restante)`
                             : `Excelente +${Math.ceil(porcentajeAlcanzado - 100)}%`
