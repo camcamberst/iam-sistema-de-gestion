@@ -525,6 +525,9 @@ export default function AdminViewModelPage() {
                           )?.value || 0;
                           console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'ID:', platform.id, 'Value:', currentValue);
                           
+                          // Obtener tasas para los cálculos
+                          const rates = selectedModel.calculatorData.rates;
+                          
                           // Calcular USD bruto con fórmulas específicas por plataforma
                           let usdBruto = 0;
                           if (platform.currency === 'EUR') {
@@ -558,7 +561,6 @@ export default function AdminViewModelPage() {
                           }
                           
                           // Aplicar porcentaje de reparto del modelo al USD bruto
-                          const rates = selectedModel.calculatorData.rates;
                           const usdModeloFinal = (usdBruto * platform.percentage) / 100;
                           const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
                           
