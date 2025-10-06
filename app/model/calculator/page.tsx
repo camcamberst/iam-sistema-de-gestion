@@ -100,8 +100,9 @@ export default function ModelCalculatorPage() {
     // Fallback: si no hay IO, activar si es visible en pantalla al montar
     const rect = el.getBoundingClientRect();
     let isVisible = false;
-    if (typeof window !== 'undefined' && typeof window.innerHeight === 'number') {
-      const viewportH: number = window.innerHeight;
+    const gv: any = (typeof globalThis !== 'undefined') ? (globalThis as any) : null;
+    const viewportH: number = gv && typeof gv.innerHeight === 'number' ? gv.innerHeight as number : 0;
+    if (viewportH > 0) {
       isVisible = rect.top < viewportH && rect.bottom > 0;
     }
     if (isVisible) onEnter();
