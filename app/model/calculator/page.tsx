@@ -1012,8 +1012,6 @@ export default function ModelCalculatorPage() {
                 }}
                 id="objective-basic-card"
                 data-milestone={milestone}
-                ref={cardRef}
-                onMouseEnter={(e) => e.currentTarget.classList.add('in-view')}
               >
                 {/* Efecto de brillo animado */}
                 <div
