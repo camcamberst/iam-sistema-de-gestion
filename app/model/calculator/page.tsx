@@ -1054,7 +1054,7 @@ export default function ModelCalculatorPage() {
                 ></div>
 
                 {/* Animaciones de hito (nuevo set, más contundente) */}
-                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                <div className="milestones-overlay pointer-events-none absolute inset-0 overflow-hidden">
                   {/* 25% */}
                   <div className="arrow-25" />
                   <div className="mini-check-25" />
@@ -1130,6 +1130,7 @@ export default function ModelCalculatorPage() {
           })()}
         {/* Estilos de animación para hitos del objetivo */}
         <style jsx>{`
+        .milestones-overlay { z-index: 10; }
         #objective-basic-card.in-view[data-milestone="0"] .milestone-shine { animation: none; }
         #objective-basic-card.in-view[data-milestone="25"] .milestone-shine {
           animation: shine-sweep 1.3s cubic-bezier(0.22, 1, 0.36, 1) 1;
