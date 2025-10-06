@@ -268,7 +268,7 @@ export default function HistorialAnticiposPage() {
     // Filtrar por grupo (solo para super_admin)
     if (user?.role === 'super_admin' && filters.grupo) {
       filtered = filtered.filter(anticipo => 
-        anticipo.model.groups?.some((group: any) => group.id === filters.grupo)
+        anticipo.model.group_id === filters.grupo
       );
       console.log('🔍 [FILTROS] Después de grupo:', filtered.length);
     }
