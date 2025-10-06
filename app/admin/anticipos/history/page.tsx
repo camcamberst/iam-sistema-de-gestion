@@ -719,29 +719,9 @@ export default function HistorialAnticiposPage() {
           </div>
         </div>
 
-        {/* Botón para mostrar resultados cuando están ocultos */}
-        {!showResults && (
-          <div className="apple-card mb-6 text-center py-8">
-            <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-            </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Resultados Ocultos</h3>
-            <p className="text-gray-500 mb-4">Los resultados han sido ocultados. Haz clic en "Mostrar Todos" para ver los anticipos nuevamente.</p>
-            <button
-              onClick={() => {
-                console.log('🔍 [MOSTRAR TODOS] Botón clickeado');
-                setShowResults(true);
-                setSelectedCardType('all');
-              }}
-              className="apple-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
-            >
-              Mostrar Todos
-            </button>
-          </div>
-        )}
 
         {/* Lista de Anticipos */}
-        {filteredAnticipos.length === 0 ? (
+        {!showResults ? null : filteredAnticipos.length === 0 ? (
           <div className="apple-card text-center py-12">
             <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
