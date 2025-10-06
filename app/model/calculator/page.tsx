@@ -94,8 +94,8 @@ export default function ModelCalculatorPage() {
       // Continuar, y si luego se captura el ref, el observer se montará abajo
     }
 
-    const onEnter = () => el.classList.add('in-view');
-    const onExit = () => el.classList.remove('in-view');
+    const onEnter = () => { if (el) el.classList.add('in-view'); };
+    const onExit = () => { if (el) el.classList.remove('in-view'); };
 
     // IntersectionObserver
     if (el && 'IntersectionObserver' in window) {
