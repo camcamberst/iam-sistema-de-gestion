@@ -206,7 +206,7 @@ export default function HistorialAnticiposPage() {
     });
     
     const totalSolicitudes = anticiposData.length;
-    const realizados = anticiposData.filter(a => a.estado === 'realizado').length;
+    const realizados = anticiposData.filter(a => a.estado === 'realizado' || a.estado === 'confirmado').length;
     const pendientes = anticiposData.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado').length;
     const totalPagado = anticiposData
       .filter(a => a.estado === 'realizado' || a.estado === 'confirmado')
@@ -298,9 +298,9 @@ export default function HistorialAnticiposPage() {
       
       if (selectedCardType === 'realizados') {
         const antes = filtered.length;
-        console.log('🔍 [FILTROS] Buscando anticipos con estado "realizado"');
+        console.log('🔍 [FILTROS] Buscando anticipos con estado "realizado" o "confirmado"');
         const realizados = filtered.filter(anticipo => {
-          const matches = anticipo.estado === 'realizado';
+          const matches = anticipo.estado === 'realizado' || anticipo.estado === 'confirmado';
           console.log('🔍 [FILTROS] Anticipo realizado:', { 
             id: anticipo.id, 
             estado: anticipo.estado, 
