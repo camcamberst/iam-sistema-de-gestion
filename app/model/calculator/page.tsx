@@ -99,7 +99,11 @@ export default function ModelCalculatorPage() {
 
     // Fallback: si no hay IO, activar si es visible en pantalla al montar
     const rect = el.getBoundingClientRect();
-    const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+    let isVisible = false;
+    if (typeof window !== 'undefined' && typeof window.innerHeight === 'number') {
+      const viewportH: number = window.innerHeight;
+      isVisible = rect.top < viewportH && rect.bottom > 0;
+    }
     if (isVisible) onEnter();
   }, []);
   // 🔧 HELPER: Funciones de sincronización bidireccional
