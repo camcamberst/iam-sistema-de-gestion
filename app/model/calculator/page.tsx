@@ -964,6 +964,11 @@ export default function ModelCalculatorPage() {
             const cuotaMinima = platforms[0]?.minQuota || 470;
             const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
             const estaPorDebajo = totalUsdBruto < cuotaMinima;
+            // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
+            const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
+            const hue = Math.round((progressPct / 100) * 120);
+            const progressStart = `hsl(${hue} 85% 48%)`;
+            const progressEnd = `hsl(${hue} 85% 40%)`;
             
             return (
               <div className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${
@@ -997,7 +1002,7 @@ export default function ModelCalculatorPage() {
                         <div className={`font-bold text-sm ${
                           estaPorDebajo ? 'text-red-800' : 'text-green-800'
                         }`}>
-                          {estaPorDebajo ? 'Objetivo Básico Pendiente' : 'Objetivo Básico Alcanzado'}
+                          {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                         </div>
                         <div className={`text-xs font-medium ${
                           estaPorDebajo ? 'text-red-700' : 'text-green-700'
@@ -1013,12 +1018,11 @@ export default function ModelCalculatorPage() {
                       <div className="mt-2">
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                           <div 
-                            className={`h-full transition-all duration-1000 ease-out ${
-                              estaPorDebajo 
-                                ? 'bg-gradient-to-r from-red-500 to-pink-500' 
-                                : 'bg-gradient-to-r from-green-500 to-emerald-500'
-                            }`}
-                            style={{ width: `${Math.min(porcentajeAlcanzado, 100)}%` }}
+                            className={`h-full transition-all duration-1000 ease-out`}
+                            style={{ 
+                              width: `${Math.min(porcentajeAlcanzado, 100)}%`,
+                              background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
+                            }}
                           ></div>
                         </div>
                         <div className="text-right text-xs text-gray-600 mt-1">
