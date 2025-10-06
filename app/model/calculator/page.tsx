@@ -491,26 +491,7 @@ export default function ModelCalculatorPage() {
     );
   }
 
-  // Activar animaciones del objetivo cuando el bloque entra en viewport
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const el = document.getElementById('objective-basic-card');
-    if (!el || !('IntersectionObserver' in window)) return;
-    const obs = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            el.classList.add('in-view');
-          } else {
-            el.classList.remove('in-view');
-          }
-        });
-      },
-      { root: null, threshold: 0.3 }
-    );
-    obs.observe(el);
-    return () => obs.disconnect();
-  }, []);
+  
 
   return (
     <div className="min-h-screen bg-white">
@@ -1028,6 +1009,8 @@ export default function ModelCalculatorPage() {
                 }}
                 id="objective-basic-card"
                 data-milestone={milestone}
+                onMouseEnter={(e) => e.currentTarget.classList.add('in-view')}
+                onMouseLeave={(e) => e.currentTarget.classList.remove('in-view')}
               >
                 {/* Efecto de brillo animado */}
                 <div
