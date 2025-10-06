@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import AppleDropdown from '@/components/ui/AppleDropdown';
 
@@ -55,6 +55,7 @@ export default function AdminViewModelPage() {
   const [selectedModelId, setSelectedModelId] = useState<string>('');
   
   const router = useRouter();
+  const searchParams = useSearchParams();
   
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -104,6 +105,16 @@ export default function AdminViewModelPage() {
         // Load models according to hierarchy
         await loadModels(uid);
         
+        // 🔧 UX FIX: Restaurar modelo seleccionada desde URL
+        const modelIdFromUrl = searchParams.get('modelId');
+        if (modelIdFromUrl) {
+          console.log('🔍 [UX-FIX] Restaurando modelo desde URL:', modelIdFromUrl);
+          // Esperar un poco para que los modelos se carguen primero
+          setTimeout(async () => {
+            await restoreSelectedModel(modelIdFromUrl, uid);
+          }, 500);
+        }
+        
       } catch (err: any) {
         console.error('Error loading user:', err);
         setError(err.message || 'Error al cargar usuario');
@@ -112,7 +123,7 @@ export default function AdminViewModelPage() {
       }
     };
     load();
-  }, []);
+  }, [searchParams]);
 
   const loadModels = async (adminId: string) => {
     try {
@@ -153,10 +164,40 @@ export default function AdminViewModelPage() {
     }
   };
 
-  const handleModelSelect = async (model: Model) => {
+  // 🔧 UX FIX: Función para restaurar modelo desde URL
+  const restoreSelectedModel = async (modelId: string, adminId: string) => {
+    try {
+      console.log('🔍 [UX-FIX] Buscando modelo con ID:', modelId);
+      
+      // Buscar el modelo en la lista cargada
+      const model = allModels.find(m => m.id === modelId);
+      if (!model) {
+        console.warn('⚠️ [UX-FIX] Modelo no encontrado en la lista:', modelId);
+        // Limpiar URL si el modelo no existe
+        router.replace('/admin/calculator/view-model', { scroll: false });
+        return;
+      }
+      
+      console.log('✅ [UX-FIX] Modelo encontrado, cargando datos:', model.name);
+      await handleModelSelect(model, false); // false = no actualizar URL
+      
+    } catch (error) {
+      console.error('❌ [UX-FIX] Error restaurando modelo:', error);
+      router.replace('/admin/calculator/view-model', { scroll: false });
+    }
+  };
+
+  const handleModelSelect = async (model: Model, updateUrl: boolean = true) => {
     try {
       setLoading(true);
       setError(null);
+      
+      // 🔧 UX FIX: Actualizar URL para persistir selección
+      if (updateUrl) {
+        const url = new URL(window.location.href);
+        url.searchParams.set('modelId', model.id);
+        router.replace(url.pathname + url.search, { scroll: false });
+      }
       
       // Cargar datos de la calculadora del modelo
       const response = await fetch(`/api/calculator/admin-view?modelId=${model.id}&adminId=${user?.id}`);
@@ -186,6 +227,9 @@ export default function AdminViewModelPage() {
     setSelectedModelId('');
     setEditValues({});
     setHasChanges(false);
+    
+    // 🔧 UX FIX: Limpiar URL al volver a la lista
+    router.replace('/admin/calculator/view-model', { scroll: false });
   };
 
   // Función para filtrar por grupo
