@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ModelCalculatorNew from '../../../../components/ModelCalculatorNew';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 
