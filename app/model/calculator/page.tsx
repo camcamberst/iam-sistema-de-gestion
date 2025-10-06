@@ -1065,16 +1065,24 @@ export default function ModelCalculatorPage() {
                         <div className={`font-bold text-sm milestone-title`} style={{ color: headingColor }}>
                           {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                         </div>
-                        <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
-                          {estaPorDebajo 
-                            ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${Math.ceil(100 - porcentajeAlcanzado)}% restante)`
-                            : `Excelente +${Math.ceil(porcentajeAlcanzado - 100)}%`
-                          }
-                        </div>
+                        {(() => {
+                          const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
+                          const remainingPct = Math.max(0, 100 - roundedProgress);
+                          return (
+                            <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
+                              {estaPorDebajo
+                                ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
+                                : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
+                            </div>
+                          );
+                        })()}
                       </div>
                       
                       {/* Mensaje de progreso por hito */}
-                      <ProgressMilestone progress={Math.min(Math.max(Math.ceil(porcentajeAlcanzado), 0), 100)} />
+                      {(() => {
+                        const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
+                        return <ProgressMilestone progress={roundedProgress} />;
+                      })()}
                       {/* Barra de progreso compacta */}
                       <div className="mt-2">
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
@@ -1086,9 +1094,14 @@ export default function ModelCalculatorPage() {
                             }}
                           ></div>
                         </div>
-                        <div className="text-right text-xs text-gray-600 mt-1 milestone-percent">
-                          {Math.ceil(porcentajeAlcanzado)}%
-                        </div>
+                        {(() => {
+                          const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
+                          return (
+                            <div className="text-right text-xs text-gray-600 mt-1 milestone-percent">
+                              {roundedProgress}%
+                            </div>
+                          );
+                        })()}
                       </div>
                     </div>
                   </div>
