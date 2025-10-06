@@ -124,11 +124,13 @@ export async function GET(request: NextRequest) {
       }));
     }
 
-    // 6. Obtener tasas actualizadas
+    // 6. Obtener tasas actualizadas usando la misma lógica que Mi Calculadora
     const { data: ratesData, error: ratesError } = await supabase
       .from('rates')
       .select('kind, value')
-      .eq('active', true);
+      .eq('active', true)
+      .is('valid_to', null)  // 🔧 FIX: Solo tasas activas sin fecha de vencimiento
+      .order('valid_from', { ascending: false });
 
     let rates = null;
     if (!ratesError && ratesData) {
@@ -137,6 +139,9 @@ export async function GET(request: NextRequest) {
         eur_usd: ratesData.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
         gbp_usd: ratesData.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20
       };
+      console.log('🔍 [ADMIN-VIEW] Loaded rates:', rates);
+    } else if (ratesError) {
+      console.error('❌ [ADMIN-VIEW] Error loading rates:', ratesError);
     }
 
     // 7. Obtener valores actuales del modelo (solo lectura)
