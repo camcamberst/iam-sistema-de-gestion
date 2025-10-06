@@ -76,8 +76,8 @@ export default function ModelCalculatorPage() {
     const newInputValues: Record<string, string> = {};
     platforms.forEach(p => {
       if (p.enabled) {
-        // 🔧 FIX: Mostrar vacío para valores 0, mantener valores reales
-        newInputValues[p.id] = (p.value !== undefined && p.value !== null && p.value !== 0) ? String(p.value) : '';
+        // 🔧 FIX: Mostrar todos los valores reales, incluyendo 0
+        newInputValues[p.id] = (p.value !== undefined && p.value !== null) ? String(p.value) : '';
       }
     });
     setInputValues(prev => ({ ...prev, ...newInputValues }));
@@ -275,7 +275,8 @@ export default function ModelCalculatorPage() {
             }
           }
           
-          console.log('🔍 [CALCULATOR] Cargando valores guardados');
+          console.log('🔍 [CALCULATOR] Valores encontrados en API:', platformToValue);
+          console.log('🔍 [CALCULATOR] Plataformas habilitadas:', enabledPlatforms.map(p => ({ id: p.id, name: p.name })));
           
           // 🔧 NUEVO ENFOQUE: Usar enabledPlatforms directamente (no el estado platforms)
           const updatedPlatforms = enabledPlatforms.map((p: Platform) => ({
@@ -283,15 +284,23 @@ export default function ModelCalculatorPage() {
             value: platformToValue[p.id] ?? p.value
           }));
           
-          console.log('🔍 [CALCULATOR] updatedPlatforms with saved values:', updatedPlatforms.length);
+          console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map(p => ({ id: p.id, name: p.name, value: p.value })));
           setPlatforms(updatedPlatforms);
           
           // Sincronizar manualmente
           syncPlatformsToInputs(updatedPlatforms);
-          console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados manualmente');
+          console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados');
+        } else {
+          console.log('🔍 [CALCULATOR] No se encontraron valores guardados o API falló:', savedJson);
+          // Asegurar que las plataformas se muestren aunque no haya valores guardados
+          setPlatforms(enabledPlatforms);
+          syncPlatformsToInputs(enabledPlatforms);
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
+        // Asegurar que las plataformas se muestren aunque haya error
+        setPlatforms(enabledPlatforms);
+        syncPlatformsToInputs(enabledPlatforms);
       }
 
     } catch (err: any) {
