@@ -134,7 +134,7 @@ export default function ModelCalculatorPage() {
     setTimeout(() => {
       try {
         console.log('[OBJETIVO] in-view activado (garantía inicial)');
-        el.classList.add('in-view');
+        if (el) el.classList.add('in-view');
       } catch {}
     }, 200);
   }, []);
