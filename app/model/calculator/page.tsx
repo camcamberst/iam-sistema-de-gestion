@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
@@ -71,73 +71,8 @@ export default function ModelCalculatorPage() {
   // Sistema V2 siempre activo (sin flags de entorno)
   // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
   const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
-  const cardRef = useRef<HTMLDivElement | null>(null);
-
-  // Activación automática al entrar en viewport (segura)
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    let el = cardRef.current as HTMLElement | null;
-    // Reintentos si el nodo aún no existe al montar (datos async)
-    if (!el) {
-      let tries = 0;
-      const int = setInterval(() => {
-        tries += 1;
-        el = document.getElementById('objective-basic-card') as HTMLElement | null;
-        if (el || tries >= 10) {
-          clearInterval(int);
-          if (el) {
-            // Adjuntar y activar
-            el.classList.add('in-view');
-          }
-        }
-      }, 200);
-      // Continuar, y si luego se captura el ref, el observer se montará abajo
-    }
-
-    const onEnter = () => { if (el) el.classList.add('in-view'); };
-    const onExit = () => { if (el) el.classList.remove('in-view'); };
-
-    // IntersectionObserver
-    if (el && 'IntersectionObserver' in window) {
-      const obs = new IntersectionObserver(
-        (entries) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              console.log('[OBJETIVO] in-view activado (IO)');
-              onEnter();
-            } else {
-              onExit();
-            }
-          });
-        },
-        { root: null, threshold: 0.25 }
-      );
-      obs.observe(el);
-      return () => obs.disconnect();
-    }
-
-    // Fallback: si no hay IO, activar si es visible en pantalla al montar
-    if (!el) return;
-    const rect = el.getBoundingClientRect();
-    let isVisible = false;
-    const gv: any = (typeof globalThis !== 'undefined') ? (globalThis as any) : null;
-    const viewportH: number = gv && typeof gv.innerHeight === 'number' ? gv.innerHeight as number : 0;
-    if (viewportH > 0) {
-      isVisible = rect.top < viewportH && rect.bottom > 0;
-    }
-    if (isVisible) {
-      console.log('[OBJETIVO] in-view activado (fallback)');
-      onEnter();
-    }
-
-    // Garantía: activar una vez al montar para comprobar capas (se elimina automáticamente por CSS)
-    setTimeout(() => {
-      try {
-        console.log('[OBJETIVO] in-view activado (garantía inicial)');
-        if (el) el.classList.add('in-view');
-      } catch {}
-    }, 200);
-  }, []);
+  // Animaciones deshabilitadas: sin lógica extra
+  useEffect(() => {}, []);
   // 🔧 HELPER: Funciones de sincronización bidireccional
   const syncPlatformsToInputs = (platforms: Platform[]) => {
     const newInputValues: Record<string, string> = {};
