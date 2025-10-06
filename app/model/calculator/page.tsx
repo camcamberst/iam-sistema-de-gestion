@@ -1093,11 +1093,8 @@ export default function ModelCalculatorPage() {
               </div>
             );
           })()}
-        </div>
-      </div>
-    </div>
-      {/* Estilos de animación para hitos del objetivo */}
-      <style jsx>{`
+        {/* Estilos de animación para hitos del objetivo */}
+        <style jsx>{`
         #objective-basic-card.in-view[data-milestone="0"] .milestone-shine { animation: none; }
         #objective-basic-card.in-view[data-milestone="25"] .milestone-shine {
           animation: shine-sweep 1.2s ease-out 1;
@@ -1137,6 +1134,9 @@ export default function ModelCalculatorPage() {
           #objective-basic-card .milestone-wave,
           #objective-basic-card .milestone-particles { animation: none !important; }
         }
-      `}</style>
+        `}</style>
+        </div>
+      </div>
+    </div>
   );
 }
