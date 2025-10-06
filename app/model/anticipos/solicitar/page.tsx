@@ -486,7 +486,7 @@ export default function SolicitarAnticipoPage() {
               {
                 value: `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
                 label: 'Ya Pagados',
-                color: 'orange'
+                color: 'purple'
               }
             ]}
             columns={3}
