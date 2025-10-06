@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
   id: string;
@@ -39,9 +40,7 @@ export default function SolicitarAnticipoPage() {
     medio_pago: 'nequi'
   });
   
-  // Estado para dropdowns personalizados
-  const [isBankDropdownOpen, setIsBankDropdownOpen] = useState(false);
-  const [isAccountTypeDropdownOpen, setIsAccountTypeDropdownOpen] = useState(false);
+  // AppleDropdown maneja automáticamente el estado de apertura
   
   // Datos de productividad
   const [productivityData, setProductivityData] = useState({
@@ -99,23 +98,7 @@ export default function SolicitarAnticipoPage() {
     }
   }, []);
 
-  // Cerrar dropdowns cuando se hace click fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      
-      if (isBankDropdownOpen && !target.closest('.bank-dropdown')) {
-        setIsBankDropdownOpen(false);
-      }
-      
-      if (isAccountTypeDropdownOpen && !target.closest('.account-type-dropdown')) {
-        setIsAccountTypeDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [isBankDropdownOpen, isAccountTypeDropdownOpen]);
+  // AppleDropdown maneja automáticamente el click-outside
 
   const loadUser = async () => {
     try {
@@ -660,45 +643,19 @@ export default function SolicitarAnticipoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Banco
                     </label>
-                    <div className="relative bank-dropdown">
-                      <button
-                        type="button"
-                        onClick={() => setIsBankDropdownOpen(!isBankDropdownOpen)}
-                        className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300 text-left flex items-center justify-between"
-                      >
-                        <span className={anticipoData.banco ? 'text-gray-900' : 'text-gray-500'}>
-                          {anticipoData.banco || 'Selecciona un banco'}
-                        </span>
-                        <svg 
-                          className={`w-4 h-4 transition-transform duration-200 ${isBankDropdownOpen ? 'rotate-180' : ''}`} 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {isBankDropdownOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50 max-h-32 overflow-y-auto">
-                          <div className="py-1">
-                            {bancosColombia.map((banco) => (
-                              <button
-                                key={banco}
-                                type="button"
-                                onClick={() => {
-                                  handleInputChange('banco', banco);
-                                  setIsBankDropdownOpen(false);
-                                }}
-                                className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
-                              >
-                                {banco}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <AppleDropdown
+                      options={[
+                        { value: '', label: 'Selecciona un banco' },
+                        ...bancosColombia.map(banco => ({
+                          value: banco,
+                          label: banco
+                        }))
+                      ]}
+                      value={anticipoData.banco || ''}
+                      onChange={(value) => handleInputChange('banco', value)}
+                      placeholder="Selecciona un banco"
+                      maxHeight="max-h-32"
+                    />
                   </div>
                 </div>
 
@@ -725,45 +682,18 @@ export default function SolicitarAnticipoPage() {
                     <label className="block text-sm font-medium text-gray-700 mb-3">
                       Tipo de Cuenta
                     </label>
-                    <div className="relative account-type-dropdown">
-                      <button
-                        type="button"
-                        onClick={() => setIsAccountTypeDropdownOpen(!isAccountTypeDropdownOpen)}
-                        className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 shadow-sm transition-all duration-200 hover:border-gray-300 text-left flex items-center justify-between"
-                      >
-                        <span className={anticipoData.tipo_cuenta ? 'text-gray-900' : 'text-gray-500'}>
-                          {anticipoData.tipo_cuenta ? (anticipoData.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente') : 'Selecciona tipo de cuenta'}
-                        </span>
-                        <svg 
-                          className={`w-4 h-4 transition-transform duration-200 ${isAccountTypeDropdownOpen ? 'rotate-180' : ''}`} 
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
-                      
-                      {isAccountTypeDropdownOpen && (
-                        <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-xl shadow-lg z-50">
-                          <div className="py-1">
-                            {tiposCuenta.map((tipo) => (
-                              <button
-                                key={tipo}
-                                type="button"
-                                onClick={() => {
-                                  handleInputChange('tipo_cuenta', tipo.toLowerCase());
-                                  setIsAccountTypeDropdownOpen(false);
-                                }}
-                                className="w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150"
-                              >
-                                {tipo}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    <AppleDropdown
+                      options={[
+                        { value: '', label: 'Selecciona tipo de cuenta' },
+                        ...tiposCuenta.map(tipo => ({
+                          value: tipo.toLowerCase(),
+                          label: tipo
+                        }))
+                      ]}
+                      value={anticipoData.tipo_cuenta || ''}
+                      onChange={(value) => handleInputChange('tipo_cuenta', value)}
+                      placeholder="Selecciona tipo de cuenta"
+                    />
                   </div>
 
                   <div>

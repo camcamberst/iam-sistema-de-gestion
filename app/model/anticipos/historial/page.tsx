@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
   id: string;
@@ -50,7 +51,7 @@ export default function MiHistorialPage() {
   const [totalRealizado, setTotalRealizado] = useState(0);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
   const [availablePeriods, setAvailablePeriods] = useState<Array<{key: string, label: string}>>([]);
-  const [isPeriodDropdownOpen, setIsPeriodDropdownOpen] = useState(false);
+  // AppleDropdown maneja automáticamente el estado de apertura
 
   const router = useRouter();
   const supabase = createClient(
@@ -62,24 +63,7 @@ export default function MiHistorialPage() {
     loadUser();
   }, []);
 
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement;
-      
-      if (isPeriodDropdownOpen && !target.closest('.period-dropdown')) {
-        setIsPeriodDropdownOpen(false);
-      }
-    };
-
-    if (isPeriodDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [isPeriodDropdownOpen]);
+  // AppleDropdown maneja automáticamente el click-outside
 
   const loadUser = async () => {
     try {
@@ -399,47 +383,18 @@ export default function MiHistorialPage() {
               <p className="text-gray-600">Anticipos realizados y pagados</p>
             </div>
             
-            {/* Filtro por Período - Apple Style */}
-            <div className="relative period-dropdown">
-              <button
-                type="button"
-                onClick={() => setIsPeriodDropdownOpen(!isPeriodDropdownOpen)}
-                className="px-4 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 transition-all duration-200 text-left flex items-center justify-between min-w-[200px] shadow-sm"
-              >
-                <span className="text-gray-900 font-medium">
-                  {getSelectedPeriodLabel()}
-                </span>
-                <svg 
-                  className={`w-4 h-4 transition-transform duration-200 ${isPeriodDropdownOpen ? 'rotate-180' : ''}`} 
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              
-              {isPeriodDropdownOpen && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                  <div className="py-1">
-                    {availablePeriods.map((period) => (
-                      <button
-                        key={period.key}
-                        type="button"
-                        onClick={() => handlePeriodChange(period.key)}
-                        className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150 ${
-                          selectedPeriod === period.key 
-                            ? 'bg-blue-50 text-blue-700 font-medium' 
-                            : 'text-gray-900'
-                        }`}
-                      >
-                        {period.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+            {/* Filtro por Período - AppleDropdown */}
+            <AppleDropdown
+              options={availablePeriods.map(period => ({
+                value: period.key,
+                label: period.label
+              }))}
+              value={selectedPeriod}
+              onChange={handlePeriodChange}
+              placeholder="Selecciona período"
+              className="min-w-[200px]"
+              maxHeight="max-h-48"
+            />
           </div>
         </div>
 

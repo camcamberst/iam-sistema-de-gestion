@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -15,8 +16,6 @@ export default function CreateUserPage() {
   const [groups, setGroups] = useState<Array<{id:string; name:string}>>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
-  const [openRole, setOpenRole] = useState(false);
-  const roleDropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -32,25 +31,7 @@ export default function CreateUserPage() {
     loadGroups();
   }, []);
 
-  // Cerrar dropdown de Rol al hacer clic fuera o con Escape
-  useEffect(() => {
-    function handleClickOutside(ev: MouseEvent) {
-      if (!openRole) return;
-      const target = ev.target as Node;
-      if (roleDropdownRef.current && !roleDropdownRef.current.contains(target)) {
-        setOpenRole(false);
-      }
-    }
-    function handleKey(ev: KeyboardEvent) {
-      if (openRole && ev.key === 'Escape') setOpenRole(false);
-    }
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('keydown', handleKey);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('keydown', handleKey);
-    };
-  }, [openRole]);
+  // AppleDropdown maneja automáticamente el click-outside y escape
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -134,35 +115,19 @@ export default function CreateUserPage() {
               {showPassword ? 'Ocultar' : 'Ver'}
             </button>
           </div>
-        {/* Rol - Dropdown Apple-like */}
-        <div ref={roleDropdownRef}>
-          <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Rol</div>
-          <div style={{ position:'relative' }}>
-            <button
-              type="button"
-              onClick={()=> setOpenRole(v=>!v)}
-              style={{
-                width:'100%', textAlign:'left', border:'1px solid #d1d5db', borderRadius:12,
-                padding:'10px 12px', background:'#ffffff', color:'#111827', display:'flex', alignItems:'center', justifyContent:'space-between'
-              }}
-            >
-              <span style={{ textTransform:'capitalize' }}>{form.role.replace('_',' ')}</span>
-              <span>▾</span>
-            </button>
-            {openRole && (
-              <div className="apple-scroll" style={{
-                position:'absolute', zIndex:50, width:'100%', marginTop:6, background:'#ffffff',
-                border:'1px solid #e5e7eb', borderRadius:12, boxShadow:'0 10px 25px rgba(0,0,0,0.08)'
-              }}>
-                {['modelo','admin','super_admin'].map(r => (
-                  <button key={r} type="button"
-                    onClick={()=> { setForm({ ...form, role:r as any }); setOpenRole(false); }}
-                    style={{ display:'block', width:'100%', textAlign:'left', padding:10, background: form.role===r? '#f3f4f6':'#ffffff', border:'none', cursor:'pointer' }}
-                  >{r.replace('_',' ')}</button>
-                ))}
-              </div>
-            )}
-          </div>
+        {/* Rol - AppleDropdown */}
+        <div>
+          <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
+          <AppleDropdown
+            options={[
+              { value: 'modelo', label: 'Modelo' },
+              { value: 'admin', label: 'Admin' },
+              { value: 'super_admin', label: 'Super Admin' }
+            ]}
+            value={form.role}
+            onChange={(value) => setForm({ ...form, role: value as any })}
+            placeholder="Selecciona un rol"
+          />
         </div>
         <div>
           <div style={{ marginBottom: 6, color: '#111827', fontSize: 14, fontWeight: 500 }}>Grupos</div>
