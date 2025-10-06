@@ -71,7 +71,37 @@ export default function ModelCalculatorPage() {
   // Sistema V2 siempre activo (sin flags de entorno)
   // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
   const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
-  
+  const cardRef = useRef<HTMLDivElement | null>(null);
+
+  // Activación automática al entrar en viewport (segura)
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const el = cardRef.current;
+    if (!el) return;
+
+    const onEnter = () => el.classList.add('in-view');
+    const onExit = () => el.classList.remove('in-view');
+
+    // IntersectionObserver
+    if ('IntersectionObserver' in window) {
+      const obs = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) onEnter();
+            else onExit();
+          });
+        },
+        { root: null, threshold: 0.25 }
+      );
+      obs.observe(el);
+      return () => obs.disconnect();
+    }
+
+    // Fallback: si no hay IO, activar si es visible en pantalla al montar
+    const rect = el.getBoundingClientRect();
+    const isVisible = rect.top < window.innerHeight && rect.bottom > 0;
+    if (isVisible) onEnter();
+  }, []);
   // 🔧 HELPER: Funciones de sincronización bidireccional
   const syncPlatformsToInputs = (platforms: Platform[]) => {
     const newInputValues: Record<string, string> = {};
@@ -1009,8 +1039,8 @@ export default function ModelCalculatorPage() {
                 }}
                 id="objective-basic-card"
                 data-milestone={milestone}
+                ref={cardRef}
                 onMouseEnter={(e) => e.currentTarget.classList.add('in-view')}
-                onMouseLeave={(e) => e.currentTarget.classList.remove('in-view')}
               >
                 {/* Efecto de brillo animado */}
                 <div
