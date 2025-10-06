@@ -151,6 +151,34 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Fallback final: si aún no hay valores, buscar los más recientes de los últimos 7 días
+    if (!values || values.length === 0) {
+      console.log('🔍 [MI-CALCULADORA-REAL] Fallback final: buscando últimos 7 días (dedupe por plataforma)');
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+      const { data: recentValues, error: recentError } = await supabase
+        .from('model_values')
+        .select('platform_id, value, period_date, updated_at')
+        .eq('model_id', modelId)
+        .gte('period_date', sevenDaysAgoStr)
+        .order('updated_at', { ascending: false });
+
+      if (recentError) {
+        valuesError = recentError;
+      } else {
+        const platformMap = new Map<string, any>();
+        recentValues?.forEach((value: any) => {
+          if (!platformMap.has(value.platform_id)) {
+            platformMap.set(value.platform_id, value);
+          }
+        });
+        values = Array.from(platformMap.values());
+        console.log('🔍 [MI-CALCULADORA-REAL] Valores últimos 7 días:', values?.length || 0);
+      }
+    }
+
     if (valuesError) {
       console.error('❌ [MI-CALCULADORA-REAL] Error al obtener valores:', valuesError);
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
