@@ -575,165 +575,101 @@ export default function AdminViewModelPage() {
                 )}
               </div>
 
-              {/* Totales y Alertas - COMPACTO */}
-              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
-                <div className="apple-card">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
+              {/* Totales y Alertas - OPTIMIZADO */}
+              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (() => {
+                // 🔧 OPTIMIZACIÓN: Calcular todos los totales en una sola iteración
+                const rates = selectedModel.calculatorData.rates;
+                const totals = selectedModel.calculatorData.platforms.reduce((acc: any, platform: any) => {
+                  const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                    v.platform_id === platform.id || v.platform === platform.name
+                  )?.value || 0;
                   
-                  {/* Totales principales - COMPACTO */}
-                  <div className="grid grid-cols-3 gap-3 mb-4">
-                    <div className="text-center p-3 bg-blue-50 rounded-md">
-                      <div className="text-xl font-bold text-blue-600 mb-1">
-                        ${selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
-                            v.platform_id === platform.id || v.platform === platform.name
-                          )?.value || 0;
-                          // 🔧 FIX: Usar tasas actualizadas en lugar de hardcodeadas
-                          const rates = selectedModel.calculatorData.rates;
-                          let usdBruto = 0;
-                          if (platform.currency === 'EUR') {
-                            usdBruto = currentValue * (rates?.eur_usd || 1.01);
-                          } else if (platform.currency === 'GBP') {
-                            usdBruto = currentValue * (rates?.gbp_usd || 1.20);
-                          } else {
-                            usdBruto = currentValue;
-                          }
-                          return sum + usdBruto;
-                        }, 0).toFixed(2)}
+                  // Calcular USD bruto
+                  let usdBruto = 0;
+                  if (platform.currency === 'EUR') {
+                    usdBruto = currentValue * (rates?.eur_usd || 1.01);
+                  } else if (platform.currency === 'GBP') {
+                    usdBruto = currentValue * (rates?.gbp_usd || 1.20);
+                  } else {
+                    usdBruto = currentValue;
+                  }
+                  
+                  // Calcular USD modelo con fórmulas específicas
+                  let usdModelo = 0;
+                  if (platform.currency === 'EUR') {
+                    if (platform.id === 'big7') {
+                      usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (platform.id === 'mondo') {
+                      usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else {
+                      usdModelo = currentValue * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (platform.currency === 'GBP') {
+                    if (platform.id === 'aw') {
+                      usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = currentValue * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (platform.currency === 'USD') {
+                    if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                      usdModelo = currentValue * 0.75;
+                    } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                      usdModelo = currentValue * 0.05;
+                    } else if (platform.id === 'dxlive') {
+                      usdModelo = currentValue * 0.60;
+                    } else if (platform.id === 'secretfriends') {
+                      usdModelo = currentValue * 0.5;
+                    } else if (platform.id === 'superfoon') {
+                      usdModelo = currentValue;
+                    } else {
+                      usdModelo = currentValue;
+                    }
+                  }
+                  
+                  const usdModeloFinal = usdModelo * platform.percentage / 100;
+                  
+                  return {
+                    usdBruto: acc.usdBruto + usdBruto,
+                    usdModelo: acc.usdModelo + usdModeloFinal,
+                    copModelo: acc.copModelo + (usdModeloFinal * (rates?.usd_cop || 3900))
+                  };
+                }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
+                
+                return (
+                  <div className="apple-card">
+                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
+                    
+                    {/* Totales principales - OPTIMIZADO */}
+                    <div className="grid grid-cols-3 gap-3 mb-4">
+                      <div className="text-center p-3 bg-blue-50 rounded-md">
+                        <div className="text-xl font-bold text-blue-600 mb-1">
+                          ${totals.usdBruto.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-600">USD Bruto</div>
                       </div>
-                      <div className="text-xs text-gray-600">USD Bruto</div>
+                      <div className="text-center p-3 bg-green-50 rounded-md">
+                        <div className="text-xl font-bold text-green-600 mb-1">
+                          ${totals.usdModelo.toFixed(2)}
+                        </div>
+                        <div className="text-xs text-gray-600">USD Modelo</div>
+                      </div>
+                      <div className="text-center p-3 bg-purple-50 rounded-md">
+                        <div className="text-xl font-bold text-purple-600 mb-1">
+                          ${totals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        </div>
+                        <div className="text-xs text-gray-600">COP Modelo</div>
+                      </div>
                     </div>
-                    <div className="text-center p-3 bg-green-50 rounded-md">
-                      <div className="text-xl font-bold text-green-600 mb-1">
-                        ${selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
-                            v.platform_id === platform.id || v.platform === platform.name
-                          )?.value || 0;
-                          // 🔧 FIX: Usar tasas actualizadas y fórmulas específicas por plataforma
-                          const rates = selectedModel.calculatorData.rates;
-                          let usdModelo = 0;
-                          if (platform.currency === 'EUR') {
-                            if (platform.id === 'big7') {
-                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
-                            } else if (platform.id === 'mondo') {
-                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
-                            } else {
-                              usdModelo = currentValue * (rates?.eur_usd || 1.01);
-                            }
-                          } else if (platform.currency === 'GBP') {
-                            if (platform.id === 'aw') {
-                              usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
-                            } else {
-                              usdModelo = currentValue * (rates?.gbp_usd || 1.20);
-                            }
-                          } else if (platform.currency === 'USD') {
-                            if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                              usdModelo = currentValue * 0.75;
-                            } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                              usdModelo = currentValue * 0.05;
-                            } else if (platform.id === 'dxlive') {
-                              usdModelo = currentValue * 0.60;
-                            } else if (platform.id === 'secretfriends') {
-                              usdModelo = currentValue * 0.5;
-                            } else if (platform.id === 'superfoon') {
-                              usdModelo = currentValue;
-                            } else {
-                              usdModelo = currentValue;
-                            }
-                          }
-                          return sum + (usdModelo * platform.percentage / 100);
-                        }, 0).toFixed(2)}
+                    
+                    {/* 90% de anticipo - OPTIMIZADO */}
+                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                      <div className="text-sm text-gray-600">
+                        <strong>90% de anticipo disponible:</strong> ${(totals.copModelo * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                       </div>
-                      <div className="text-xs text-gray-600">USD Modelo</div>
-                    </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-md">
-                      <div className="text-xl font-bold text-purple-600 mb-1">
-                        ${(selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
-                            v.platform_id === platform.id || v.platform === platform.name
-                          )?.value || 0;
-                          // 🔧 FIX: Usar tasas actualizadas y fórmulas específicas por plataforma
-                          const rates = selectedModel.calculatorData.rates;
-                          let usdModelo = 0;
-                          if (platform.currency === 'EUR') {
-                            if (platform.id === 'big7') {
-                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
-                            } else if (platform.id === 'mondo') {
-                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
-                            } else {
-                              usdModelo = currentValue * (rates?.eur_usd || 1.01);
-                            }
-                          } else if (platform.currency === 'GBP') {
-                            if (platform.id === 'aw') {
-                              usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
-                            } else {
-                              usdModelo = currentValue * (rates?.gbp_usd || 1.20);
-                            }
-                          } else if (platform.currency === 'USD') {
-                            if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                              usdModelo = currentValue * 0.75;
-                            } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                              usdModelo = currentValue * 0.05;
-                            } else if (platform.id === 'dxlive') {
-                              usdModelo = currentValue * 0.60;
-                            } else if (platform.id === 'secretfriends') {
-                              usdModelo = currentValue * 0.5;
-                            } else if (platform.id === 'superfoon') {
-                              usdModelo = currentValue;
-                            } else {
-                              usdModelo = currentValue;
-                            }
-                          }
-                          return sum + (usdModelo * platform.percentage / 100);
-                        }, 0) * (selectedModel.calculatorData.rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                      </div>
-                      <div className="text-xs text-gray-600">COP Modelo</div>
                     </div>
                   </div>
-                  
-                  {/* 90% de anticipo */}
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-600">
-                      <strong>90% de anticipo disponible:</strong> ${(selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
-                        const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
-                        // 🔧 FIX: Usar tasas actualizadas y fórmulas específicas por plataforma
-                        const rates = selectedModel.calculatorData.rates;
-                        let usdModelo = 0;
-                        if (platform.currency === 'EUR') {
-                          if (platform.id === 'big7') {
-                            usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
-                          } else if (platform.id === 'mondo') {
-                            usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
-                          } else {
-                            usdModelo = currentValue * (rates?.eur_usd || 1.01);
-                          }
-                        } else if (platform.currency === 'GBP') {
-                          if (platform.id === 'aw') {
-                            usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
-                          } else {
-                            usdModelo = currentValue * (rates?.gbp_usd || 1.20);
-                          }
-                        } else if (platform.currency === 'USD') {
-                          if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                            usdModelo = currentValue * 0.75;
-                          } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                            usdModelo = currentValue * 0.05;
-                          } else if (platform.id === 'dxlive') {
-                            usdModelo = currentValue * 0.60;
-                          } else if (platform.id === 'secretfriends') {
-                            usdModelo = currentValue * 0.5;
-                          } else if (platform.id === 'superfoon') {
-                            usdModelo = currentValue;
-                          } else {
-                            usdModelo = currentValue;
-                          }
-                        }
-                        return sum + (usdModelo * platform.percentage / 100);
-                      }, 0) * (selectedModel.calculatorData.rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
-                    </div>
-                  </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           ) : (
             <div className="apple-card">
