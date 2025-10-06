@@ -195,26 +195,56 @@ export default function HistorialAnticiposPage() {
   const calculateStats = (anticiposData: Anticipo[]) => {
     console.log('🔍 [ESTADÍSTICAS] Calculando estadísticas para:', anticiposData.length, 'anticipos');
     
-    // Log detallado de todos los estados disponibles
-    const estadosDisponibles = anticiposData.map(a => ({ id: a.id, estado: a.estado, model: a.model.name }));
-    console.log('🔍 [ESTADÍSTICAS] Estados disponibles en la BD:', estadosDisponibles);
-    console.log('🔍 [ESTADÍSTICAS] Conteo por estado:', {
-      pendiente: anticiposData.filter(a => a.estado === 'pendiente').length,
-      aprobado: anticiposData.filter(a => a.estado === 'aprobado').length,
-      realizado: anticiposData.filter(a => a.estado === 'realizado').length,
-      confirmado: anticiposData.filter(a => a.estado === 'confirmado').length,
-      rechazado: anticiposData.filter(a => a.estado === 'rechazado').length,
-      cancelado: anticiposData.filter(a => a.estado === 'cancelado').length
+    // Filtrar por período quincenal actual
+    const today = new Date();
+    const day = today.getDate();
+    const isFirstQuincena = day >= 1 && day <= 15;
+    
+    console.log('🔍 [ESTADÍSTICAS] Período quincenal actual:', { 
+      day, 
+      isFirstQuincena,
+      period: isFirstQuincena ? '1-15' : '16-fin de mes'
     });
     
-    const totalSolicitudes = anticiposData.length;
-    const realizados = anticiposData.filter(a => a.estado === 'realizado' || a.estado === 'confirmado').length;
-    const pendientes = anticiposData.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado').length;
-    const totalPagado = anticiposData
+    const anticiposDelPeriodo = anticiposData.filter(anticipo => {
+      const anticipoDate = new Date(anticipo.created_at);
+      const anticipoDay = anticipoDate.getDate();
+      const isInCurrentPeriod = isFirstQuincena 
+        ? (anticipoDay >= 1 && anticipoDay <= 15)
+        : (anticipoDay >= 16);
+      
+      console.log('🔍 [ESTADÍSTICAS] Anticipo período:', {
+        id: anticipo.id,
+        created_at: anticipo.created_at,
+        anticipoDay,
+        isInCurrentPeriod
+      });
+      
+      return isInCurrentPeriod;
+    });
+    
+    console.log('🔍 [ESTADÍSTICAS] Anticipos del período actual:', anticiposDelPeriodo.length);
+    
+    // Log detallado de todos los estados disponibles
+    const estadosDisponibles = anticiposDelPeriodo.map(a => ({ id: a.id, estado: a.estado, model: a.model.name }));
+    console.log('🔍 [ESTADÍSTICAS] Estados disponibles en el período:', estadosDisponibles);
+    console.log('🔍 [ESTADÍSTICAS] Conteo por estado en el período:', {
+      pendiente: anticiposDelPeriodo.filter(a => a.estado === 'pendiente').length,
+      aprobado: anticiposDelPeriodo.filter(a => a.estado === 'aprobado').length,
+      realizado: anticiposDelPeriodo.filter(a => a.estado === 'realizado').length,
+      confirmado: anticiposDelPeriodo.filter(a => a.estado === 'confirmado').length,
+      rechazado: anticiposDelPeriodo.filter(a => a.estado === 'rechazado').length,
+      cancelado: anticiposDelPeriodo.filter(a => a.estado === 'cancelado').length
+    });
+    
+    const totalSolicitudes = anticiposDelPeriodo.length;
+    const realizados = anticiposDelPeriodo.filter(a => a.estado === 'realizado' || a.estado === 'confirmado').length;
+    const pendientes = anticiposDelPeriodo.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado').length;
+    const totalPagado = anticiposDelPeriodo
       .filter(a => a.estado === 'realizado' || a.estado === 'confirmado')
       .reduce((sum, a) => sum + a.monto_solicitado, 0);
 
-    console.log('🔍 [ESTADÍSTICAS] Resultados:', {
+    console.log('🔍 [ESTADÍSTICAS] Resultados del período:', {
       totalSolicitudes,
       realizados,
       pendientes,
@@ -309,6 +339,36 @@ export default function HistorialAnticiposPage() {
     if (selectedCardType !== 'all') {
       console.log('🔍 [FILTROS] Filtrando por card type PRIMERO:', selectedCardType);
       console.log('🔍 [FILTROS] Estados disponibles antes del filtro:', filtered.map(a => ({ id: a.id, estado: a.estado })));
+      
+      // Filtrar por período quincenal actual PRIMERO
+      const today = new Date();
+      const day = today.getDate();
+      const isFirstQuincena = day >= 1 && day <= 15;
+      
+      console.log('🔍 [FILTROS] Filtro por período quincenal:', { 
+        day, 
+        isFirstQuincena,
+        period: isFirstQuincena ? '1-15' : '16-fin de mes'
+      });
+      
+      filtered = filtered.filter(anticipo => {
+        const anticipoDate = new Date(anticipo.created_at);
+        const anticipoDay = anticipoDate.getDate();
+        const isInCurrentPeriod = isFirstQuincena 
+          ? (anticipoDay >= 1 && anticipoDay <= 15)
+          : (anticipoDay >= 16);
+        
+        console.log('🔍 [FILTROS] Anticipo período:', {
+          id: anticipo.id,
+          created_at: anticipo.created_at,
+          anticipoDay,
+          isInCurrentPeriod
+        });
+        
+        return isInCurrentPeriod;
+      });
+      
+      console.log('🔍 [FILTROS] Después de filtro de período:', filtered.length);
       
       if (selectedCardType === 'realizados') {
         const antes = filtered.length;
