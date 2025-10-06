@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
+import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
 interface User {
   id: string;
@@ -1074,6 +1075,8 @@ export default function ModelCalculatorPage() {
                         </div>
                       </div>
                       
+                      {/* Mensaje de progreso por hito */}
+                      <ProgressMilestone progress={Math.min(Math.max(Math.ceil(porcentajeAlcanzado), 0), 100)} />
                       {/* Barra de progreso compacta */}
                       <div className="mt-2">
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
