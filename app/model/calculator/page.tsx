@@ -76,14 +76,29 @@ export default function ModelCalculatorPage() {
   // Activación automática al entrar en viewport (segura)
   useEffect(() => {
     if (typeof window === 'undefined') return;
-    const el = cardRef.current;
-    if (!el) return;
+    let el = cardRef.current as HTMLElement | null;
+    // Reintentos si el nodo aún no existe al montar (datos async)
+    if (!el) {
+      let tries = 0;
+      const int = setInterval(() => {
+        tries += 1;
+        el = document.getElementById('objective-basic-card') as HTMLElement | null;
+        if (el || tries >= 10) {
+          clearInterval(int);
+          if (el) {
+            // Adjuntar y activar
+            el.classList.add('in-view');
+          }
+        }
+      }, 200);
+      // Continuar, y si luego se captura el ref, el observer se montará abajo
+    }
 
     const onEnter = () => el.classList.add('in-view');
     const onExit = () => el.classList.remove('in-view');
 
     // IntersectionObserver
-    if ('IntersectionObserver' in window) {
+    if (el && 'IntersectionObserver' in window) {
       const obs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
@@ -102,6 +117,7 @@ export default function ModelCalculatorPage() {
     }
 
     // Fallback: si no hay IO, activar si es visible en pantalla al montar
+    if (!el) return;
     const rect = el.getBoundingClientRect();
     let isVisible = false;
     const gv: any = (typeof globalThis !== 'undefined') ? (globalThis as any) : null;
