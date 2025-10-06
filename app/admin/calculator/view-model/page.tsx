@@ -124,16 +124,18 @@ export default function AdminViewModelPage() {
         setAllModels(modelsData);
         setModels(modelsData);
         
-        // Extraer grupos únicos para el filtro
-        const groupsSet = new Set<{id: string, name: string}>();
+        // Extraer grupos únicos para el filtro (usando Map para evitar duplicados por ID)
+        const groupsMap = new Map<string, {id: string, name: string}>();
         modelsData.forEach((model: Model) => {
           model.groups.forEach(group => {
-            groupsSet.add(group);
+            if (group && group.id && group.name) {
+              groupsMap.set(group.id, group);
+            }
           });
         });
         
         // Filtrar grupos según el rol del usuario
-        let filteredGroups = Array.from(groupsSet);
+        let filteredGroups = Array.from(groupsMap.values());
         if (user && user.role === 'admin') {
           // Admin solo ve sus grupos asignados
           filteredGroups = filteredGroups.filter(group => 

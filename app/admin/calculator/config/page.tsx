@@ -82,18 +82,18 @@ export default function ConfigCalculatorPage() {
       setAllModels(modelsData.models);
       setModels(modelsData.models);
       
-      // Extraer grupos únicos de los modelos
-      const groups = new Set<string>();
-      const groupsData: Array<{id: string, name: string}> = [];
+      // Extraer grupos únicos de los modelos (usando Map para evitar duplicados por ID)
+      const groupsMap = new Map<string, {id: string, name: string}>();
       
       modelsData.models.forEach((model: Model) => {
         model.groups.forEach(group => {
-          if (!groups.has(group.id)) {
-            groups.add(group.id);
-            groupsData.push({id: group.id, name: group.name});
+          if (group && group.id && group.name) {
+            groupsMap.set(group.id, group);
           }
         });
       });
+      
+      const groupsData = Array.from(groupsMap.values());
       
       // Filtrar grupos según permisos del usuario
       let filteredGroups = groupsData;
