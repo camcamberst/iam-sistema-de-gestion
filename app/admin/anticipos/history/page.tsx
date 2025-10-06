@@ -760,7 +760,7 @@ export default function HistorialAnticiposPage() {
                 value={filters.modelo}
                 onChange={(e) => setFilters(prev => ({ ...prev, modelo: e.target.value }))}
                 placeholder="Buscar por nombre o email"
-                className="apple-input w-full"
+                className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white text-sm text-gray-900"
                 list="modelos-suggestions"
               />
               <datalist id="modelos-suggestions">
