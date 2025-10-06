@@ -485,20 +485,22 @@ export default function AdminViewModelPage() {
                           let usdBruto = currentValue;
                           
                           // Aplicar fórmula específica según la plataforma
+                          // 🔧 FIX: Usar tasas actualizadas en lugar de valores hardcodeados
+                          const rates = selectedModel.calculatorData.rates;
                           let usdModelo = 0;
                           if (platform.currency === 'EUR') {
                             if (platform.id === 'big7') {
-                              usdModelo = (currentValue * 1.01) * 0.84; // 16% impuesto
+                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84; // 16% impuesto
                             } else if (platform.id === 'mondo') {
-                              usdModelo = (currentValue * 1.01) * 0.78; // 22% descuento
+                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78; // 22% descuento
                             } else {
-                              usdModelo = currentValue * 1.01; // EUR directo
+                              usdModelo = currentValue * (rates?.eur_usd || 1.01); // EUR directo
                             }
                           } else if (platform.currency === 'GBP') {
                             if (platform.id === 'aw') {
-                              usdModelo = (currentValue * 1.20) * 0.677; // 32.3% descuento
+                              usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677; // 32.3% descuento
                             } else {
-                              usdModelo = currentValue * 1.20; // GBP directo
+                              usdModelo = currentValue * (rates?.gbp_usd || 1.20); // GBP directo
                             }
                           } else if (platform.currency === 'USD') {
                             if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
@@ -518,7 +520,7 @@ export default function AdminViewModelPage() {
                           
                           // Aplicar porcentaje de reparto del modelo
                           const usdModeloFinal = (usdModelo * platform.percentage) / 100;
-                          const copModelo = usdModeloFinal * 3900; // Tasa fija por ahora
+                          const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // 🔧 FIX: Usar tasa actualizada
                           
                           return (
                             <tr key={platform.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 group">
