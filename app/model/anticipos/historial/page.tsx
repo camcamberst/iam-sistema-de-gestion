@@ -256,7 +256,7 @@ export default function MiHistorialPage() {
   const handlePeriodChange = (periodKey: string) => {
     setSelectedPeriod(periodKey);
     filterAnticiposByPeriod(allAnticipos, periodKey);
-    setIsPeriodDropdownOpen(false);
+    // AppleDropdown maneja automáticamente el cierre
   };
 
   const getSelectedPeriodLabel = () => {
