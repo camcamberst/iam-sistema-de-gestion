@@ -193,8 +193,20 @@ export default function HistorialAnticiposPage() {
   const calculateStats = (anticiposData: Anticipo[]) => {
     console.log('🔍 [ESTADÍSTICAS] Calculando estadísticas para:', anticiposData.length, 'anticipos');
     
+    // Log detallado de todos los estados disponibles
+    const estadosDisponibles = anticiposData.map(a => ({ id: a.id, estado: a.estado, model: a.model.name }));
+    console.log('🔍 [ESTADÍSTICAS] Estados disponibles en la BD:', estadosDisponibles);
+    console.log('🔍 [ESTADÍSTICAS] Conteo por estado:', {
+      pendiente: anticiposData.filter(a => a.estado === 'pendiente').length,
+      aprobado: anticiposData.filter(a => a.estado === 'aprobado').length,
+      realizado: anticiposData.filter(a => a.estado === 'realizado').length,
+      confirmado: anticiposData.filter(a => a.estado === 'confirmado').length,
+      rechazado: anticiposData.filter(a => a.estado === 'rechazado').length,
+      cancelado: anticiposData.filter(a => a.estado === 'cancelado').length
+    });
+    
     const totalSolicitudes = anticiposData.length;
-    const realizados = anticiposData.filter(a => a.estado === 'realizado' || a.estado === 'confirmado').length;
+    const realizados = anticiposData.filter(a => a.estado === 'realizado').length;
     const pendientes = anticiposData.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado').length;
     const totalPagado = anticiposData
       .filter(a => a.estado === 'realizado' || a.estado === 'confirmado')
@@ -217,6 +229,8 @@ export default function HistorialAnticiposPage() {
 
   const handleCardClick = (cardType: 'all' | 'realizados' | 'pendientes' | 'pagados') => {
     console.log('🔍 [CARD CLICK] Card clicked:', cardType);
+    console.log('🔍 [CARD CLICK] Anticipos disponibles:', anticipos.length);
+    console.log('🔍 [CARD CLICK] Estados de anticipos:', anticipos.map(a => ({ id: a.id, estado: a.estado, model: a.model.name })));
     setSelectedCardType(cardType);
   };
 
@@ -284,12 +298,20 @@ export default function HistorialAnticiposPage() {
       
       if (selectedCardType === 'realizados') {
         const antes = filtered.length;
-        filtered = filtered.filter(anticipo => {
+        console.log('🔍 [FILTROS] Buscando anticipos con estado "realizado"');
+        const realizados = filtered.filter(anticipo => {
           const matches = anticipo.estado === 'realizado';
-          console.log('🔍 [FILTROS] Anticipo realizado:', { id: anticipo.id, estado: anticipo.estado, matches });
+          console.log('🔍 [FILTROS] Anticipo realizado:', { 
+            id: anticipo.id, 
+            estado: anticipo.estado, 
+            matches,
+            model: anticipo.model.name 
+          });
           return matches;
         });
-        console.log('🔍 [FILTROS] Realizados - Antes:', antes, 'Después:', filtered.length);
+        console.log('🔍 [FILTROS] Realizados encontrados:', realizados.length);
+        console.log('🔍 [FILTROS] Realizados - Antes:', antes, 'Después:', realizados.length);
+        filtered = realizados;
       } else if (selectedCardType === 'pendientes') {
         filtered = filtered.filter(anticipo => anticipo.estado === 'pendiente' || anticipo.estado === 'aprobado');
       } else if (selectedCardType === 'pagados') {
