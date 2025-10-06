@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { InfoCardGrid } from '@/components/ui/InfoCard';
+import AppleDropdown from '@/components/AppleSelect';
 
 interface User {
   id: string;
