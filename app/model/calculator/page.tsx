@@ -87,8 +87,12 @@ export default function ModelCalculatorPage() {
       const obs = new IntersectionObserver(
         (entries) => {
           entries.forEach((entry) => {
-            if (entry.isIntersecting) onEnter();
-            else onExit();
+            if (entry.isIntersecting) {
+              console.log('[OBJETIVO] in-view activado (IO)');
+              onEnter();
+            } else {
+              onExit();
+            }
           });
         },
         { root: null, threshold: 0.25 }
@@ -105,7 +109,18 @@ export default function ModelCalculatorPage() {
     if (viewportH > 0) {
       isVisible = rect.top < viewportH && rect.bottom > 0;
     }
-    if (isVisible) onEnter();
+    if (isVisible) {
+      console.log('[OBJETIVO] in-view activado (fallback)');
+      onEnter();
+    }
+
+    // Garantía: activar una vez al montar para comprobar capas (se elimina automáticamente por CSS)
+    setTimeout(() => {
+      try {
+        console.log('[OBJETIVO] in-view activado (garantía inicial)');
+        el.classList.add('in-view');
+      } catch {}
+    }, 200);
   }, []);
   // 🔧 HELPER: Funciones de sincronización bidireccional
   const syncPlatformsToInputs = (platforms: Platform[]) => {
@@ -1130,7 +1145,9 @@ export default function ModelCalculatorPage() {
           })()}
         {/* Estilos de animación para hitos del objetivo */}
         <style jsx>{`
-        .milestones-overlay { z-index: 10; }
+        .milestones-overlay { z-index: 10; pointer-events: none; }
+        /* Borde temporal de diagnóstico: comentar cuando confirmemos */
+        /* .milestones-overlay { outline: 1px dashed rgba(255,255,255,0.5); } */
         #objective-basic-card.in-view[data-milestone="0"] .milestone-shine { animation: none; }
         #objective-basic-card.in-view[data-milestone="25"] .milestone-shine {
           animation: shine-sweep 1.3s cubic-bezier(0.22, 1, 0.36, 1) 1;
