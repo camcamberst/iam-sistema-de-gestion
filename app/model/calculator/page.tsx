@@ -1029,7 +1029,7 @@ export default function ModelCalculatorPage() {
                 <div className="relative p-4">
                   <div className="flex items-center space-x-3">
                     {/* Icono animado */}
-                    <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
+                    <div className={`relative flex-shrink-0 milestone-icon ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
                       <div
                         className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md`}
                         style={{
@@ -1044,7 +1044,7 @@ export default function ModelCalculatorPage() {
                     {/* Contenido compacto */}
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <div className={`font-bold text-sm`} style={{ color: headingColor }}>
+                        <div className={`font-bold text-sm milestone-title`} style={{ color: headingColor }}>
                           {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                         </div>
                         <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
@@ -1080,18 +1080,18 @@ export default function ModelCalculatorPage() {
         <style jsx>{`
         #objective-basic-card.in-view[data-milestone="0"] .milestone-shine { animation: none; }
         #objective-basic-card.in-view[data-milestone="25"] .milestone-shine {
-          animation: shine-sweep 1.2s ease-out 1;
+          animation: shine-sweep 1.3s cubic-bezier(0.22, 1, 0.36, 1) 1;
           background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
-          position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+          position: absolute; top: 0; left: -35%; width: 45%; height: 100%;
         }
         #objective-basic-card.in-view[data-milestone="50"] .milestone-wave {
-          animation: wave-run 1.4s ease-out 1;
-          position: absolute; inset: 0; opacity: 0.15;
-          background: radial-gradient(120% 60% at 0% 50%, rgba(255,255,255,0.6), transparent 60%);
+          animation: wave-run 1.6s cubic-bezier(0.22, 1, 0.36, 1) 1;
+          position: absolute; inset: 0; opacity: 0.22;
+          background: radial-gradient(120% 60% at 0% 50%, rgba(255,255,255,0.75), transparent 60%);
         }
         #objective-basic-card.in-view[data-milestone="100"] .milestone-particles {
           position: absolute; inset: 0; pointer-events: none;
-          animation: particles-pop 0.9s ease-out 1;
+          animation: particles-pop 1s cubic-bezier(0.16, 1, 0.3, 1) 1;
           background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.6) 0 2px, transparent 3px),
                       radial-gradient(circle at 50% 30%, rgba(255,255,255,0.6) 0 2px, transparent 3px),
                       radial-gradient(circle at 70% 60%, rgba(255,255,255,0.6) 0 2px, transparent 3px);
@@ -1099,18 +1099,38 @@ export default function ModelCalculatorPage() {
         }
 
         @keyframes shine-sweep {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(260%); }
+          0% { transform: translateX(0) skewX(-10deg); }
+          100% { transform: translateX(280%) skewX(-10deg); }
         }
         @keyframes wave-run {
-          0% { background-position: -200% 0; }
-          100% { background-position: 200% 0; }
+          0% { background-position: -220% 0; }
+          100% { background-position: 220% 0; }
         }
         @keyframes particles-pop {
-          0% { opacity: 0; transform: scale(0.9); }
-          30% { opacity: 1; transform: scale(1.02); }
+          0% { opacity: 0; transform: scale(0.9); filter: blur(1px); }
+          25% { opacity: 1; transform: scale(1.06); filter: blur(0); }
           100% { opacity: 0; transform: scale(1); }
         }
+
+          /* Refuerzos por hito */
+          #objective-basic-card.in-view[data-milestone="25"] .milestone-icon { animation: icon-tilt 600ms ease-out 1; }
+          @keyframes icon-tilt {
+            0% { transform: rotate(0deg); }
+            40% { transform: rotate(-8deg); }
+            100% { transform: rotate(0deg); }
+          }
+          #objective-basic-card.in-view[data-milestone="50"] .milestone-title { animation: title-glow 900ms ease-out 1; }
+          @keyframes title-glow {
+            0% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+            40% { text-shadow: 0 2px 10px rgba(255,255,255,0.45); }
+            100% { text-shadow: 0 0 0 rgba(255,255,255,0); }
+          }
+          #objective-basic-card.in-view[data-milestone="100"] .milestone-icon { animation: icon-pop 700ms ease-out 1; }
+          @keyframes icon-pop {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+          }
 
         @media (prefers-reduced-motion: reduce) {
           #objective-basic-card .milestone-shine,
