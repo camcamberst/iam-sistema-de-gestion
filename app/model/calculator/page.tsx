@@ -999,7 +999,7 @@ export default function ModelCalculatorPage() {
             const headingColor = rgbToHex(shade(base, 0.55));
             const subTextColor = rgbToHex(shade(base, 0.45));
             
-            const milestone = progressPct >= 100 ? 100 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
+            const milestone = progressPct >= 100 ? 100 : progressPct >= 75 ? 75 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
             return (
               <div
                 className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
@@ -1024,6 +1024,7 @@ export default function ModelCalculatorPage() {
                   <div className="milestone-shine" />
                   <div className="milestone-wave" />
                   <div className="milestone-particles" />
+                  <div className="milestone-sparkle" />
                 </div>
                 
                 <div className="relative p-4">
@@ -1097,6 +1098,15 @@ export default function ModelCalculatorPage() {
                       radial-gradient(circle at 70% 60%, rgba(255,255,255,0.6) 0 2px, transparent 3px);
           background-repeat: no-repeat;
         }
+          /* 75%: sparkle trail y pulso de barra */
+          #objective-basic-card.in-view[data-milestone="75"] .milestone-sparkle {
+            position: absolute; inset: 0; pointer-events: none; opacity: 0.25;
+            animation: sparkle-run 1.2s ease-out 1;
+            background: radial-gradient(circle at 30% 60%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 60% 40%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 80% 55%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px);
+            background-repeat: no-repeat;
+          }
 
         @keyframes shine-sweep {
           0% { transform: translateX(0) skewX(-10deg); }
@@ -1111,6 +1121,14 @@ export default function ModelCalculatorPage() {
           25% { opacity: 1; transform: scale(1.06); filter: blur(0); }
           100% { opacity: 0; transform: scale(1); }
         }
+          @keyframes sparkle-run {
+            0% { transform: translateX(-10%); opacity: 0; }
+            40% { opacity: 0.25; }
+            100% { transform: translateX(30%); opacity: 0; }
+          }
+
+          /* Refuerzo visual en barra al 75% */
+          #objective-basic-card.in-view[data-milestone="75"] .milestone-title { animation: title-glow 1000ms ease-out 1; }
 
           /* Refuerzos por hito */
           #objective-basic-card.in-view[data-milestone="25"] .milestone-icon { animation: icon-tilt 600ms ease-out 1; }
