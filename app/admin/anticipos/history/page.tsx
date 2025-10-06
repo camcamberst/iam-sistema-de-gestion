@@ -84,7 +84,7 @@ export default function HistorialAnticiposPage() {
     pendientes: 0,
     totalPagado: 0
   });
-  const [showPendientes, setShowPendientes] = useState(false);
+  const [selectedCardType, setSelectedCardType] = useState<'all' | 'realizados' | 'pendientes' | 'pagados'>('all');
 
   const router = useRouter();
   const supabase = createClient(
@@ -100,10 +100,11 @@ export default function HistorialAnticiposPage() {
   useEffect(() => {
     console.log('🔍 [USE EFFECT] Aplicando filtros automáticamente:', {
       anticipos: anticipos.length,
-      filters: filters
+      filters: filters,
+      selectedCardType: selectedCardType
     });
     applyFilters();
-  }, [anticipos, filters]);
+  }, [anticipos, filters, selectedCardType]);
 
   // Dropdown ahora se controla solo con hover, no necesita click-outside
 
@@ -214,18 +215,9 @@ export default function HistorialAnticiposPage() {
     });
   };
 
-  const handlePendientesClick = () => {
-    console.log('🔍 [BOTÓN PENDIENTES] Mostrando anticipos pendientes');
-    setShowPendientes(!showPendientes);
-    
-    if (!showPendientes) {
-      // Filtrar solo anticipos pendientes
-      const pendientes = anticipos.filter(a => a.estado === 'pendiente' || a.estado === 'aprobado');
-      setFilteredAnticipos(pendientes);
-    } else {
-      // Volver a aplicar filtros normales
-      applyFilters();
-    }
+  const handleCardClick = (cardType: 'all' | 'realizados' | 'pendientes' | 'pagados') => {
+    console.log('🔍 [CARD CLICK] Card clicked:', cardType);
+    setSelectedCardType(cardType);
   };
 
   const loadGrupos = async () => {
@@ -372,6 +364,19 @@ export default function HistorialAnticiposPage() {
       console.log('🔍 [FILTROS] Después de período:', filtered.length);
     }
 
+
+    // Filtrar por tipo de card seleccionado
+    if (selectedCardType !== 'all') {
+      console.log('🔍 [FILTROS] Filtrando por card type:', selectedCardType);
+      if (selectedCardType === 'realizados') {
+        filtered = filtered.filter(anticipo => anticipo.estado === 'realizado');
+      } else if (selectedCardType === 'pendientes') {
+        filtered = filtered.filter(anticipo => anticipo.estado === 'pendiente' || anticipo.estado === 'aprobado');
+      } else if (selectedCardType === 'pagados') {
+        filtered = filtered.filter(anticipo => anticipo.estado === 'realizado' || anticipo.estado === 'confirmado');
+      }
+      console.log('🔍 [FILTROS] Después de card type:', filtered.length);
+    }
 
     console.log('🔍 [FILTROS] Resultado final:', filtered.length);
     setFilteredAnticipos(filtered);
@@ -544,25 +549,31 @@ export default function HistorialAnticiposPage() {
           cards={[
             {
               value: stats.totalSolicitudes,
-              label: 'Total Solicitudes',
-              color: 'blue'
+              label: selectedCardType === 'all' ? 'Total Solicitudes (Activo)' : 'Total Solicitudes',
+              color: 'blue',
+              onClick: () => handleCardClick('all'),
+              clickable: true
             },
             {
               value: stats.realizados,
-              label: 'Realizados',
-              color: 'green'
+              label: selectedCardType === 'realizados' ? 'Realizados (Activo)' : 'Realizados',
+              color: 'green',
+              onClick: () => handleCardClick('realizados'),
+              clickable: true
             },
             {
               value: stats.pendientes,
-              label: showPendientes ? 'Ocultar Pendientes' : 'Ver Pendientes',
+              label: selectedCardType === 'pendientes' ? 'Ver Pendientes (Activo)' : 'Ver Pendientes',
               color: 'yellow',
-              onClick: handlePendientesClick,
+              onClick: () => handleCardClick('pendientes'),
               clickable: true
             },
             {
               value: `$${stats.totalPagado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-              label: 'Total Pagado (COP)',
-              color: 'green'
+              label: selectedCardType === 'pagados' ? 'Total Pagado (Activo)' : 'Total Pagado (COP)',
+              color: 'green',
+              onClick: () => handleCardClick('pagados'),
+              clickable: true
             }
           ]}
           columns={4}
