@@ -26,14 +26,15 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
     
     // 1. Intentar cargar valores actuales de model_values
+    // 🔧 FIX: No filtrar por period_date para evitar problemas de timezone
+    // En su lugar, obtener los valores más recientes del modelo
     const { data: currentValues, error: currentError } = await supabase
       .from('model_values')
       .select(`
         model_id, platform_id, value, period_date, updated_at
       `)
       .eq('model_id', modelId)
-      .eq('period_date', periodDate)
-      .order('platform_id');
+      .order('updated_at', { ascending: false });
 
     console.log('🔍 [MODEL-VALUES-V2] Current values query completed. Values:', currentValues);
     console.log('🔍 [MODEL-VALUES-V2] Current values count:', currentValues?.length || 0);
