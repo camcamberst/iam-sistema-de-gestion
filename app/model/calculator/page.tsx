@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface User {
   id: string;
@@ -511,32 +512,32 @@ export default function ModelCalculatorPage() {
           </div>
         </div>
 
-        {/* Rates actualizadas - ESTILO APPLE REFINADO */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 hover:shadow-md transition-all duration-300">
-          <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+        {/* Tasas Actualizadas - ESTILO APPLE REFINADO UNIFICADO */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4 hover:shadow-md transition-all duration-300">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
             Tasas Actualizadas
           </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-xl font-bold text-blue-700 mb-1">
-                ${rates?.usd_cop || 3900}
-              </div>
-              <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-xl font-bold text-green-700 mb-1">
-                {rates?.eur_usd || 1.01}
-              </div>
-              <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-xl font-bold text-purple-700 mb-1">
-                {rates?.gbp_usd || 1.20}
-              </div>
-              <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
-            </div>
-          </div>
+          <InfoCardGrid
+            cards={[
+              {
+                value: `$${rates?.usd_cop || 3900}`,
+                label: 'USD→COP',
+                color: 'blue'
+              },
+              {
+                value: rates?.eur_usd || 1.01,
+                label: 'EUR→USD',
+                color: 'green'
+              },
+              {
+                value: rates?.gbp_usd || 1.20,
+                label: 'GBP→USD',
+                color: 'purple'
+              }
+            ]}
+            columns={3}
+          />
           <p className="text-xs text-gray-500 mt-3 text-center font-medium">
             Configuradas por tu administrador
           </p>
@@ -748,11 +749,11 @@ export default function ModelCalculatorPage() {
             </button>
           </div>
           
-          {/* Totales principales - COMPACTO */}
-          <div className="grid grid-cols-3 gap-3 mb-4">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200">
-              <div className="text-xl font-bold text-blue-700 mb-1">
-                ${platforms.reduce((sum, p) => {
+          {/* Totales principales - ESTILO UNIFICADO */}
+          <InfoCardGrid
+            cards={[
+              {
+                value: `$${platforms.reduce((sum, p) => {
                   // Calcular USD bruto usando fórmulas específicas
                   let usdBruto = 0;
                   if (p.currency === 'EUR') {
@@ -789,13 +790,12 @@ export default function ModelCalculatorPage() {
                     }
                   }
                   return sum + usdBruto;
-                }, 0).toFixed(2)}
-              </div>
-              <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full inline-block">USD Bruto</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200">
-              <div className="text-xl font-bold text-green-700 mb-1">
-                ${platforms.reduce((sum, p) => {
+                }, 0).toFixed(2)}`,
+                label: 'USD Bruto',
+                color: 'blue'
+              },
+              {
+                value: `$${platforms.reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
                   if (p.currency === 'EUR') {
@@ -803,6 +803,8 @@ export default function ModelCalculatorPage() {
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (p.id === 'mondo') {
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
                     } else {
                       usdModelo = p.value * (rates?.eur_usd || 1.01);
                     }
@@ -823,18 +825,19 @@ export default function ModelCalculatorPage() {
                       usdModelo = p.value * 0.5;
                     } else if (p.id === 'superfoon') {
                       usdModelo = p.value;
+                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                      usdModelo = p.value;
                     } else {
                       usdModelo = p.value;
                     }
                   }
                   return sum + (usdModelo * p.percentage / 100);
-                }, 0).toFixed(2)}
-              </div>
-              <div className="text-xs font-medium text-green-700 bg-green-200 px-2 py-1 rounded-full inline-block">USD Modelo</div>
-            </div>
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200">
-              <div className="text-xl font-bold text-purple-700 mb-1">
-                ${(platforms.reduce((sum, p) => {
+                }, 0).toFixed(2)}`,
+                label: 'USD Modelo',
+                color: 'green'
+              },
+              {
+                value: `$${(platforms.reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
                   if (p.currency === 'EUR') {
@@ -842,6 +845,8 @@ export default function ModelCalculatorPage() {
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (p.id === 'mondo') {
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
                     } else {
                       usdModelo = p.value * (rates?.eur_usd || 1.01);
                     }
@@ -862,16 +867,21 @@ export default function ModelCalculatorPage() {
                       usdModelo = p.value * 0.5;
                     } else if (p.id === 'superfoon') {
                       usdModelo = p.value;
+                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                      usdModelo = p.value;
                     } else {
                       usdModelo = p.value;
                     }
                   }
                   return sum + (usdModelo * p.percentage / 100);
-                }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-              <div className="text-xs font-medium text-purple-700 bg-purple-200 px-2 py-1 rounded-full inline-block">COP Modelo</div>
-            </div>
-          </div>
+                }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: 'COP Modelo',
+                color: 'purple'
+              }
+            ]}
+            columns={3}
+            className="mb-4"
+          />
           
           {/* 90% de anticipo - estilo sutil */}
           <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">

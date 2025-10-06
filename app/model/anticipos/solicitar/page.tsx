@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface User {
   id: string;
@@ -469,33 +470,34 @@ export default function SolicitarAnticipoPage() {
           )}
         </div>
 
-        {/* Resumen de Productividad */}
-        <div className="apple-card mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg border border-blue-200">
-              <div className="text-lg font-bold text-blue-700 mb-1">
-                ${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-              <div className="text-xs font-medium text-blue-600">COP Modelo</div>
-            </div>
-            <div 
-              className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 rounded-lg border border-green-200 cursor-pointer hover:from-green-100 hover:to-green-200 hover:shadow-md transition-all duration-200"
-              onClick={handleAnticipoDisponibleClick}
-              title="Hacer clic para cargar este monto"
-            >
-              <div className="text-lg font-bold text-green-700 mb-1">
-                ${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-              <div className="text-xs font-medium text-green-600">Anticipo Disponible</div>
-            </div>
-            <div className="text-center p-3 bg-gradient-to-br from-orange-50 to-orange-100 rounded-lg border border-orange-200">
-              <div className="text-lg font-bold text-orange-700 mb-1">
-                ${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-              <div className="text-xs font-medium text-orange-600">Ya Pagados</div>
-            </div>
-          </div>
+        {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 hover:shadow-md transition-all duration-300">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+            Resumen de Productividad
+          </h2>
+          <InfoCardGrid
+            cards={[
+              {
+                value: `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: 'COP Modelo',
+                color: 'blue'
+              },
+              {
+                value: `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: 'Anticipo Disponible',
+                color: 'green',
+                onClick: handleAnticipoDisponibleClick,
+                clickable: true
+              },
+              {
+                value: `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: 'Ya Pagados',
+                color: 'orange'
+              }
+            ]}
+            columns={3}
+          />
         </div>
 
         {/* Formulario */}
