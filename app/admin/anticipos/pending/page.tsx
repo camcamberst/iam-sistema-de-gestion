@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
   id: string;
@@ -31,6 +32,10 @@ interface Anticipo {
     id: string;
     name: string;
     email: string;
+    groups?: Array<{
+      id: string;
+      name: string;
+    }>;
   };
   period: {
     id: string;
@@ -49,6 +54,8 @@ export default function SolicitudesPendientesPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado'>('todos');
+  const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
+  const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
 
   const router = useRouter();
   const supabase = createClient(
@@ -103,6 +110,34 @@ export default function SolicitudesPendientesPage() {
         const anticiposData = data.anticipos || data.data || [];
         console.log('🔍 [ADMIN] Anticipos cargados:', anticiposData.length);
         setAnticipos(anticiposData);
+        
+        // Extraer grupos únicos de los anticipos
+        const groupsSet = new Map<string, {id: string, name: string}>();
+        anticiposData.forEach((anticipo: Anticipo) => {
+          // Los grupos vienen anidados desde la API como user_groups.group
+          if (anticipo.model.groups) {
+            anticipo.model.groups.forEach((userGroup: any) => {
+              const group = userGroup.group || userGroup; // Manejar ambos formatos
+              if (group && group.id && group.name) {
+                groupsSet.set(group.id, group);
+              }
+            });
+          }
+        });
+        
+        // También procesar los grupos para que estén en el formato correcto en las tarjetas
+        const processedAnticipos = anticiposData.map((anticipo: Anticipo) => ({
+          ...anticipo,
+          model: {
+            ...anticipo.model,
+            groups: anticipo.model.groups?.map((userGroup: any) => 
+              userGroup.group || userGroup
+            ) || []
+          }
+        }));
+        
+        setAnticipos(processedAnticipos);
+        setAvailableGroups(Array.from(groupsSet.values()));
       } else {
         console.error('❌ [ADMIN] Error en respuesta:', data.error);
         setError(data.error || 'Error al cargar solicitudes');
@@ -113,12 +148,23 @@ export default function SolicitudesPendientesPage() {
     }
   };
 
-  // Filtrar anticipos por estado
+  // Filtrar anticipos por estado y grupo
   const getAnticiposFiltrados = () => {
-    if (estadoFiltro === 'todos') {
-      return anticipos;
+    let filtered = anticipos;
+    
+    // Filtrar por estado
+    if (estadoFiltro !== 'todos') {
+      filtered = filtered.filter(anticipo => anticipo.estado === estadoFiltro);
     }
-    return anticipos.filter(anticipo => anticipo.estado === estadoFiltro);
+    
+    // Filtrar por grupo (solo para super admin)
+    if (user?.role === 'super_admin' && grupoFiltro !== 'todos') {
+      filtered = filtered.filter(anticipo => 
+        anticipo.model.groups?.some(group => group.id === grupoFiltro)
+      );
+    }
+    
+    return filtered;
   };
 
   const handleAction = async (anticipoId: string, action: 'aprobado' | 'rechazado' | 'realizado', comentarios?: string) => {
@@ -209,20 +255,45 @@ export default function SolicitudesPendientesPage() {
           <h1 className="text-2xl font-semibold text-gray-900 mb-2">Gestión de Solicitudes</h1>
           <p className="text-gray-600">Gestiona las solicitudes de anticipo de tu grupo</p>
           
-          {/* Filtro de Estado */}
-          <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-2">Filtrar por estado:</label>
-            <select
-              value={estadoFiltro}
-              onChange={(e) => setEstadoFiltro(e.target.value as 'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado')}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="todos">Todos</option>
-              <option value="pendiente">Pendientes</option>
-              <option value="aprobado">Aprobadas</option>
-              <option value="realizado">Realizadas</option>
-              <option value="confirmado">Confirmadas</option>
-            </select>
+          {/* Filtros */}
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Filtro por Grupo (solo para super admin) */}
+            {user?.role === 'super_admin' && availableGroups.length > 0 && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Filtrar por grupo:</label>
+                <AppleDropdown
+                  options={[
+                    { value: 'todos', label: 'Todos los grupos' },
+                    ...availableGroups.map(group => ({
+                      value: group.id,
+                      label: group.name
+                    }))
+                  ]}
+                  value={grupoFiltro}
+                  onChange={setGrupoFiltro}
+                  placeholder="Selecciona un grupo"
+                />
+              </div>
+            )}
+            
+            {/* Filtro de Estado */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                {user?.role === 'super_admin' ? 'Filtrar por estado:' : 'Filtrar por estado:'}
+              </label>
+              <AppleDropdown
+                options={[
+                  { value: 'todos', label: 'Todos' },
+                  { value: 'pendiente', label: 'Pendientes' },
+                  { value: 'aprobado', label: 'Aprobadas' },
+                  { value: 'realizado', label: 'Realizadas' },
+                  { value: 'confirmado', label: 'Confirmadas' }
+                ]}
+                value={estadoFiltro}
+                onChange={(value) => setEstadoFiltro(value as 'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado')}
+                placeholder="Selecciona un estado"
+              />
+            </div>
           </div>
         </div>
 
@@ -275,6 +346,19 @@ export default function SolicitudesPendientesPage() {
                           <h3 className="text-base font-semibold text-gray-900">
                             {anticipo.model.name}
                           </h3>
+                          {/* Mostrar grupos del modelo */}
+                          {anticipo.model.groups && anticipo.model.groups.length > 0 && (
+                            <div className="flex flex-wrap gap-1 mt-1">
+                              {anticipo.model.groups.map((group) => (
+                                <span
+                                  key={group.id}
+                                  className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full"
+                                >
+                                  {group.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="text-right">
                           <div className="text-base font-bold text-gray-900">
