@@ -276,7 +276,7 @@ export default function ModelCalculatorPage() {
           }
           
           console.log('🔍 [CALCULATOR] Valores encontrados en API:', platformToValue);
-          console.log('🔍 [CALCULATOR] Plataformas habilitadas:', enabledPlatforms.map(p => ({ id: p.id, name: p.name })));
+          console.log('🔍 [CALCULATOR] Plataformas habilitadas:', enabledPlatforms.map((p: Platform) => ({ id: p.id, name: p.name })));
           
           // 🔧 NUEVO ENFOQUE: Usar enabledPlatforms directamente (no el estado platforms)
           const updatedPlatforms = enabledPlatforms.map((p: Platform) => ({
@@ -284,7 +284,7 @@ export default function ModelCalculatorPage() {
             value: platformToValue[p.id] ?? p.value
           }));
           
-          console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map(p => ({ id: p.id, name: p.name, value: p.value })));
+          console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map((p: Platform) => ({ id: p.id, name: p.name, value: p.value })));
           setPlatforms(updatedPlatforms);
           
           // Sincronizar manualmente
