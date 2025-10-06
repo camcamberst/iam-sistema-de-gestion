@@ -1327,22 +1327,5 @@ export default function ModelCalculatorPage() {
         </div>
       </div>
     </div>
-      {/* Global overrides to ensure animations apply in production (styled-jsx scope escape) */}
-      <style jsx global>{`
-        #objective-basic-card.in-view[data-milestone="25"] .banner-25 { position: absolute; left: 8px; bottom: 8px; padding: 6px 10px; border-radius: 8px; background: rgba(255,255,255,0.95); color: #111827; font-weight: 800; font-size: 12px; animation: banner-slide-25-g 300ms cubic-bezier(0.22,1,0.36,1) 1; }
-        #objective-basic-card.in-view[data-milestone="25"] .banner-25::after { content: '¡Primer 25% alcanzado!'; }
-        @keyframes banner-slide-25-g { 0% { transform: translateX(-16px); opacity: 0; } 60% { opacity: 1; } 100% { transform: translateX(0); } }
-
-        #objective-basic-card.in-view[data-milestone="50"] .underline-50 { position: absolute; top: 30px; left: 16px; height: 3px; width: 55%; background: rgba(255,255,255,0.95); animation: underline-slide-g 700ms cubic-bezier(0.22,1,0.36,1) 1; }
-        @keyframes underline-slide-g { 0% { transform: translateX(-20%); opacity: 0; } 100% { transform: translateX(0); opacity: 1; } }
-
-        #objective-basic-card.in-view[data-milestone="75"] .toast-75 { position: absolute; left: 50%; transform: translateX(-50%); top: -6px; padding: 6px 10px; background: rgba(255,255,255,0.95); color: #111827; border-radius: 10px; font-weight: 800; font-size: 12px; animation: toast-pop-g 900ms ease-out 1; }
-        #objective-basic-card.in-view[data-milestone="75"] .toast-75::after { content: '¡Estás muy cerca, un poco más!'; }
-        @keyframes toast-pop-g { 0% { transform: translate(-50%,-8px) scale(0.96); opacity: 0; } 50% { opacity: 1; } 100% { transform: translate(-50%,0) scale(1); } }
-
-        #objective-basic-card.in-view[data-milestone="100"] .stamp-100 { position: absolute; left: 50%; transform: translateX(-50%); bottom: 6px; padding: 8px 12px; border-radius: 10px; font-weight: 900; font-size: 12px; background: rgba(255,255,255,0.95); color: #111827; animation: stamp-win-g 800ms cubic-bezier(0.22,1,0.36,1) 1; }
-        #objective-basic-card.in-view[data-milestone="100"] .stamp-100::after { content: 'OBJETIVO ALCANZADO'; }
-        @keyframes stamp-win-g { 0% { transform: translate(-50%, 8px) scale(0.96); opacity: 0; } 60% { opacity: 1; } 100% { transform: translate(-50%, 0) scale(1); } }
-      `}</style>
   );
 }
