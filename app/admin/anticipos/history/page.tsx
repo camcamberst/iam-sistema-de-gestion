@@ -61,6 +61,7 @@ export default function HistorialAnticiposPage() {
   const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     modelo: '',
+    mes: '',
     periodo: '',
     grupo: ''
   });
@@ -264,14 +265,15 @@ export default function HistorialAnticiposPage() {
       modelosPorGrupo: modelosPorGrupo
     });
 
-    // Si no hay filtro de grupo seleccionado, no mostrar resultados
-    if (!filters.grupo) {
-      console.log('🔍 [FILTROS] No hay grupo seleccionado, mostrando 0 resultados');
-      setFilteredAnticipos([]);
-      return;
+    // Filtrar por grupo (solo para super_admin)
+    if (user?.role === 'super_admin' && filters.grupo) {
+      filtered = filtered.filter(anticipo => 
+        anticipo.model.groups?.some((group: any) => group.id === filters.grupo)
+      );
+      console.log('🔍 [FILTROS] Después de grupo:', filtered.length);
     }
 
-
+    // Filtrar por modelo
     if (filters.modelo) {
       filtered = filtered.filter(anticipo => 
         anticipo.model.name.toLowerCase().includes(filters.modelo.toLowerCase()) ||
@@ -280,34 +282,38 @@ export default function HistorialAnticiposPage() {
       console.log('🔍 [FILTROS] Después de modelo:', filtered.length);
     }
 
+    // Filtrar por mes
+    if (filters.mes) {
+      const monthNames = {
+        'enero': 0, 'febrero': 1, 'marzo': 2, 'abril': 3, 'mayo': 4, 'junio': 5,
+        'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
+      };
+      const targetMonth = monthNames[filters.mes as keyof typeof monthNames];
+      filtered = filtered.filter(anticipo => {
+        const anticipoDate = new Date(anticipo.created_at);
+        return anticipoDate.getMonth() === targetMonth;
+      });
+      console.log('🔍 [FILTROS] Después de mes:', filtered.length);
+    }
+
+    // Filtrar por período
     if (filters.periodo) {
-      filtered = filtered.filter(anticipo => 
-        anticipo.period.name.toLowerCase().includes(filters.periodo.toLowerCase())
-      );
+      if (filters.periodo === 'periodo-1') {
+        // Periodo 1: días 1-15
+        filtered = filtered.filter(anticipo => {
+          const date = new Date(anticipo.created_at);
+          return date.getDate() >= 1 && date.getDate() <= 15;
+        });
+      } else if (filters.periodo === 'periodo-2') {
+        // Periodo 2: días 16-fin de mes
+        filtered = filtered.filter(anticipo => {
+          const date = new Date(anticipo.created_at);
+          return date.getDate() >= 16;
+        });
+      }
       console.log('🔍 [FILTROS] Después de período:', filtered.length);
     }
 
-    if (filters.grupo) {
-      // Filtrar por grupo usando los modelos del grupo seleccionado
-      const modelosDelGrupo = modelosPorGrupo[filters.grupo] || [];
-      console.log('🔍 [FILTROS] Modelos del grupo:', {
-        grupoId: filters.grupo,
-        modelosDelGrupo,
-        totalModelos: modelosDelGrupo.length
-      });
-      
-      filtered = filtered.filter(anticipo => {
-        const pertenece = modelosDelGrupo.includes(anticipo.model.id);
-        console.log('🔍 [FILTROS] Anticipo:', {
-          id: anticipo.id,
-          modelId: anticipo.model.id,
-          modelName: anticipo.model.name,
-          pertenece
-        });
-        return pertenece;
-      });
-      console.log('🔍 [FILTROS] Después de grupo:', filtered.length);
-    }
 
     console.log('🔍 [FILTROS] Resultado final:', filtered.length);
     setFilteredAnticipos(filtered);
@@ -508,7 +514,64 @@ export default function HistorialAnticiposPage() {
         {/* Filtros */}
         <div className="apple-card mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {/* 1. Grupo (primero) */}
+            {user?.role === 'super_admin' && (
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Grupo</label>
+                <AppleDropdown
+                  options={[
+                    { value: '', label: 'Todos los grupos' },
+                    ...grupos.map(g => ({ value: g.id, label: g.name }))
+                  ]}
+                  value={filters.grupo}
+                  onChange={(value) => setFilters(prev => ({ ...prev, grupo: value }))}
+                  placeholder="Seleccionar grupo"
+                />
+              </div>
+            )}
+            
+            {/* 2. Mes */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Mes</label>
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Todos los meses' },
+                  { value: 'enero', label: 'Enero' },
+                  { value: 'febrero', label: 'Febrero' },
+                  { value: 'marzo', label: 'Marzo' },
+                  { value: 'abril', label: 'Abril' },
+                  { value: 'mayo', label: 'Mayo' },
+                  { value: 'junio', label: 'Junio' },
+                  { value: 'julio', label: 'Julio' },
+                  { value: 'agosto', label: 'Agosto' },
+                  { value: 'septiembre', label: 'Septiembre' },
+                  { value: 'octubre', label: 'Octubre' },
+                  { value: 'noviembre', label: 'Noviembre' },
+                  { value: 'diciembre', label: 'Diciembre' }
+                ]}
+                value={filters.mes}
+                onChange={(value) => setFilters(prev => ({ ...prev, mes: value }))}
+                placeholder="Seleccionar mes"
+              />
+            </div>
+            
+            {/* 3. Periodo */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Periodo</label>
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Todos los periodos' },
+                  { value: 'periodo-1', label: 'Periodo 1' },
+                  { value: 'periodo-2', label: 'Periodo 2' }
+                ]}
+                value={filters.periodo}
+                onChange={(value) => setFilters(prev => ({ ...prev, periodo: value }))}
+                placeholder="Seleccionar periodo"
+              />
+            </div>
+            
+            {/* 4. Modelo (búsqueda con sugerencias) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Modelo</label>
               <input
@@ -517,79 +580,21 @@ export default function HistorialAnticiposPage() {
                 onChange={(e) => setFilters(prev => ({ ...prev, modelo: e.target.value }))}
                 placeholder="Buscar por nombre o email"
                 className="apple-input w-full"
+                list="modelos-suggestions"
               />
+              <datalist id="modelos-suggestions">
+                {anticipos
+                  .filter(anticipo => 
+                    anticipo.model.name.toLowerCase().includes(filters.modelo.toLowerCase()) ||
+                    anticipo.model.email.toLowerCase().includes(filters.modelo.toLowerCase())
+                  )
+                  .slice(0, 10)
+                  .map((anticipo, index) => (
+                    <option key={index} value={anticipo.model.name} />
+                  ))
+                }
+              </datalist>
             </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
-              <input
-                type="text"
-                value={filters.periodo}
-                onChange={(e) => setFilters(prev => ({ ...prev, periodo: e.target.value }))}
-                placeholder="Buscar por período"
-                className="apple-input w-full"
-              />
-            </div>
-            {user?.role === 'super_admin' && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Grupo</label>
-                <div 
-                  className="relative grupo-dropdown"
-                  onMouseEnter={() => setIsGrupoDropdownOpen(true)}
-                  onMouseLeave={() => setIsGrupoDropdownOpen(false)}
-                >
-                  <div className="w-full px-4 py-3 text-sm bg-white border border-gray-200 rounded-lg hover:border-gray-300 transition-all duration-200 flex items-center justify-between cursor-default">
-                    <span className="text-gray-900">
-                      {filters.grupo ? grupos.find(g => g.id === filters.grupo)?.name || 'Seleccionar grupo' : 'Todos los grupos'}
-                    </span>
-                    <svg 
-                      className={`w-4 h-4 transition-transform duration-200 ${isGrupoDropdownOpen ? 'rotate-180' : ''}`} 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </div>
-                  {isGrupoDropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                      <div className="py-1">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setFilters(prev => ({ ...prev, grupo: '' }));
-                            setIsGrupoDropdownOpen(false);
-                          }}
-                          className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150 ${
-                            !filters.grupo 
-                              ? 'bg-blue-50 text-blue-700 font-medium' 
-                              : 'text-gray-900'
-                          }`}
-                        >
-                          Todos los grupos
-                        </button>
-                        {grupos.map((grupo) => (
-                          <button
-                            key={grupo.id}
-                            type="button"
-                            onClick={() => {
-                              setFilters(prev => ({ ...prev, grupo: grupo.id }));
-                              setIsGrupoDropdownOpen(false);
-                            }}
-                            className={`w-full px-4 py-2 text-sm text-left hover:bg-gray-50 transition-colors duration-150 ${
-                              filters.grupo === grupo.id 
-                                ? 'bg-blue-50 text-blue-700 font-medium' 
-                                : 'text-gray-900'
-                            }`}
-                          >
-                            {grupo.name}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
           </div>
         </div>
 
