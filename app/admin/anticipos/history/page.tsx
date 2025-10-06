@@ -277,6 +277,27 @@ export default function HistorialAnticiposPage() {
       return;
     }
 
+    // Filtrar por tipo de card seleccionado PRIMERO
+    if (selectedCardType !== 'all') {
+      console.log('🔍 [FILTROS] Filtrando por card type PRIMERO:', selectedCardType);
+      console.log('🔍 [FILTROS] Estados disponibles antes del filtro:', filtered.map(a => ({ id: a.id, estado: a.estado })));
+      
+      if (selectedCardType === 'realizados') {
+        const antes = filtered.length;
+        filtered = filtered.filter(anticipo => {
+          const matches = anticipo.estado === 'realizado';
+          console.log('🔍 [FILTROS] Anticipo realizado:', { id: anticipo.id, estado: anticipo.estado, matches });
+          return matches;
+        });
+        console.log('🔍 [FILTROS] Realizados - Antes:', antes, 'Después:', filtered.length);
+      } else if (selectedCardType === 'pendientes') {
+        filtered = filtered.filter(anticipo => anticipo.estado === 'pendiente' || anticipo.estado === 'aprobado');
+      } else if (selectedCardType === 'pagados') {
+        filtered = filtered.filter(anticipo => anticipo.estado === 'realizado' || anticipo.estado === 'confirmado');
+      }
+      console.log('🔍 [FILTROS] Después de card type PRIMERO:', filtered.length);
+    }
+
     // Filtrar por grupo (solo para super_admin)
     if (user?.role === 'super_admin' && filters.grupo) {
       console.log('🔍 [FILTROS] Filtrando por grupo:', filters.grupo);
@@ -365,18 +386,6 @@ export default function HistorialAnticiposPage() {
     }
 
 
-    // Filtrar por tipo de card seleccionado
-    if (selectedCardType !== 'all') {
-      console.log('🔍 [FILTROS] Filtrando por card type:', selectedCardType);
-      if (selectedCardType === 'realizados') {
-        filtered = filtered.filter(anticipo => anticipo.estado === 'realizado');
-      } else if (selectedCardType === 'pendientes') {
-        filtered = filtered.filter(anticipo => anticipo.estado === 'pendiente' || anticipo.estado === 'aprobado');
-      } else if (selectedCardType === 'pagados') {
-        filtered = filtered.filter(anticipo => anticipo.estado === 'realizado' || anticipo.estado === 'confirmado');
-      }
-      console.log('🔍 [FILTROS] Después de card type:', filtered.length);
-    }
 
     console.log('🔍 [FILTROS] Resultado final:', filtered.length);
     setFilteredAnticipos(filtered);
