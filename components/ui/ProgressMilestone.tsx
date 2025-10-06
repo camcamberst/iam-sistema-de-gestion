@@ -17,26 +17,21 @@ function getMilestone(progress: number): 0 | 25 | 50 | 75 | 100 {
 export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }) => {
   const milestone = getMilestone(progress);
 
-  const content: Record<0 | 25 | 50 | 75 | 100, { title: string; subtitle: string }> = {
+  const content: Record<0 | 25 | 50 | 75 | 100, { title: string }> = {
     0: {
       title: "Preparada para empezar",
-      subtitle: "Comienza a sumar para alcanzar tu objetivo",
     },
     25: {
       title: "¡Primer 25% alcanzado!",
-      subtitle: "Ya hay progreso visible, continúa así",
     },
     50: {
       title: "Vas a la mitad",
-      subtitle: "Lo estás logrando, mantén el ritmo",
     },
     75: {
       title: "Impulso final",
-      subtitle: "Estás muy cerca, un poco más",
     },
     100: {
       title: "¡Objetivo alcanzado!",
-      subtitle: "Excelente trabajo, ¿vamos por la milla extra?",
     },
   };
 
@@ -65,17 +60,23 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
           shadow: "shadow-blue-100",
         };
 
+  // Fondo cambia con el progreso
+  const bgGradient =
+    milestone === 100
+      ? "from-emerald-50 to-emerald-100"
+      : milestone === 75
+      ? "from-purple-50 to-purple-100"
+      : "from-blue-50 to-blue-100";
+
   return (
-    <div className="mb-3">
-      <div className={`flex items-start gap-3 rounded-xl border border-gray-200 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-200 ${color.shadow}`}>
-        {/* Punto de estado */}
-        <span className={`mt-1 inline-block h-2.5 w-2.5 rounded-full ${color.dot}`} />
-        <div className="flex-1 min-w-0">
-          <div className={`text-sm font-semibold ${color.text} leading-tight truncate`}>{data.title}</div>
-          <div className="text-xs text-gray-600 leading-tight mt-0.5 truncate">{data.subtitle}</div>
-        </div>
-        {/* Insignia de progreso */}
-        <div className={`text-[10px] font-semibold ${color.text} ${color.badgeBg} px-2 py-1 rounded-full`}>{progress}%</div>
+    <div className="mb-2">
+      <div
+        className={`flex items-center gap-3 rounded-xl border border-gray-200 bg-gradient-to-br ${bgGradient} px-3 py-2 shadow-sm`}
+      >
+        <span className={`inline-block h-2.5 w-2.5 rounded-full ${color.dot}`} />
+        <div className={`text-xs sm:text-sm font-semibold ${color.text} truncate`}>{data.title}</div>
+        <div className="flex-1" />
+        <div className={`text-[10px] sm:text-xs font-semibold ${color.text} ${color.badgeBg} px-2 py-0.5 rounded-full`}>{progress}%</div>
       </div>
     </div>
   );
