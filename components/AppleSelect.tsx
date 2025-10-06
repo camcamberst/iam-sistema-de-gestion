@@ -15,6 +15,7 @@ interface AppleSelectProps {
 
 export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "" }: AppleSelectProps) {
   const [open, setOpen] = useState(false);
+  const [isHovering, setIsHovering] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -32,14 +33,29 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     };
   }, []);
 
+  // 🔧 FIX: Zona de tolerancia para evitar cierre accidental
+  useEffect(() => {
+    if (isHovering) {
+      setOpen(true);
+    } else {
+      // Delay para permitir movimiento del cursor
+      const timer = setTimeout(() => {
+        if (!isHovering) {
+          setOpen(false);
+        }
+      }, 150); // 150ms de tolerancia
+      return () => clearTimeout(timer);
+    }
+  }, [isHovering]);
+
   const selected = options.find(o => o.value === value);
 
   return (
     <div 
       className={`relative min-w-0 ${className}`} 
       ref={ref}
-      onMouseEnter={() => setOpen(true)}
-      onMouseLeave={() => setOpen(false)}
+      onMouseEnter={() => setIsHovering(true)}
+      onMouseLeave={() => setIsHovering(false)}
     >
       {label && <div className="text-gray-500 text-xs font-medium mb-1">{label}</div>}
       <div
