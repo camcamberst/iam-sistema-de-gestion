@@ -343,22 +343,24 @@ export default function SolicitudesPendientesPage() {
                       {/* Primera línea: Modelo y monto */}
                       <div className="flex items-center justify-between mb-1">
                         <div>
-                          <h3 className="text-base font-semibold text-gray-900">
-                            {anticipo.model.name}
-                          </h3>
-                          {/* Mostrar grupos del modelo */}
-                          {anticipo.model.groups && anticipo.model.groups.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {anticipo.model.groups.map((group) => (
-                                <span
-                                  key={group.id}
-                                  className="inline-block px-2 py-0.5 bg-blue-100 text-blue-800 text-xs rounded-full"
-                                >
-                                  {group.name}
-                                </span>
-                              ))}
-                            </div>
-                          )}
+                          <div className="flex items-center gap-2">
+                            <h3 className="text-base font-semibold text-gray-900">
+                              {anticipo.model.name}
+                            </h3>
+                            {/* Mostrar grupos del modelo de forma discreta */}
+                            {anticipo.model.groups && anticipo.model.groups.length > 0 && (
+                              <div className="flex gap-1">
+                                {anticipo.model.groups.map((group) => (
+                                  <span
+                                    key={group.id}
+                                    className="text-xs text-gray-500 bg-gray-100 px-1.5 py-0.5 rounded"
+                                  >
+                                    {group.name}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="text-right">
                           <div className="text-base font-bold text-gray-900">
