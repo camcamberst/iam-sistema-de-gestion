@@ -1,30 +1,28 @@
 /**
- * 🕐 UTILIDADES DE FECHAS PARA CALCULADORA
+ * 🕐 UTILIDADES DE FECHAS UNIFICADAS
  * 
- * Este módulo maneja las fechas específicamente para la calculadora,
- * usando el huso horario de Europa Central (Europe/Berlin).
- * 
- * El resto del sistema mantiene el huso horario de Colombia (America/Bogota).
+ * Sistema simplificado: TODO usa timezone de Colombia (America/Bogota)
+ * Eliminamos el sistema híbrido que causaba problemas de inconsistencia.
  */
 
 /**
- * Obtiene la fecha actual en formato YYYY-MM-DD usando Europa Central
- * @returns Fecha en formato YYYY-MM-DD (Europa Central)
+ * Obtiene la fecha actual en formato YYYY-MM-DD usando Colombia
+ * @returns Fecha en formato YYYY-MM-DD (Colombia)
+ * @deprecated Use getColombiaDate() instead
  */
 export const getCalculatorDate = (): string => {
-  return new Date().toLocaleDateString('en-CA', { 
-    timeZone: 'Europe/Berlin' 
-  });
+  console.warn('⚠️ getCalculatorDate() is deprecated. Use getColombiaDate() instead.');
+  return getColombiaDate();
 };
 
 /**
- * Obtiene la fecha y hora actual en formato ISO usando Europa Central
- * @returns Fecha y hora en formato ISO (Europa Central)
+ * Obtiene la fecha y hora actual en formato ISO usando Colombia
+ * @returns Fecha y hora en formato ISO (Colombia)
+ * @deprecated Use getColombiaDateTime() instead
  */
 export const getCalculatorDateTime = (): string => {
-  return new Date().toLocaleString('sv-SE', { 
-    timeZone: 'Europe/Berlin' 
-  });
+  console.warn('⚠️ getCalculatorDateTime() is deprecated. Use getColombiaDateTime() instead.');
+  return getColombiaDateTime();
 };
 
 /**
@@ -43,6 +41,16 @@ export const getSystemDate = (): string => {
  */
 export const getColombiaDate = (): string => {
   return new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'America/Bogota' 
+  });
+};
+
+/**
+ * Obtiene la fecha y hora actual en formato ISO usando Colombia
+ * @returns Fecha y hora en formato ISO (Colombia)
+ */
+export const getColombiaDateTime = (): string => {
+  return new Date().toLocaleString('sv-SE', { 
     timeZone: 'America/Bogota' 
   });
 };

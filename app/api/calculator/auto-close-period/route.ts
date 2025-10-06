@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getCalculatorDate, getCurrentCalculatorPeriod, createPeriodIfNeeded, getNextCalculatorDate } from '@/utils/calculator-dates';
+import { getColombiaDate, getCurrentCalculatorPeriod, createPeriodIfNeeded, getNextCalculatorDate } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔄 [AUTO-CLOSE] Iniciando cierre automático de período...');
     
-    const currentDate = getCalculatorDate();
+    const currentDate = getColombiaDate();
     const period = getCurrentCalculatorPeriod();
     
     console.log('🔄 [AUTO-CLOSE] Fecha actual:', currentDate);
@@ -162,7 +162,7 @@ export async function POST(request: NextRequest) {
 // GET: Verificar estado del sistema
 export async function GET(request: NextRequest) {
   try {
-    const currentDate = getCalculatorDate();
+    const currentDate = getColombiaDate();
     const period = getCurrentCalculatorPeriod();
     
     // Obtener estadísticas del sistema

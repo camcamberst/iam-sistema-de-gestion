@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { getCalculatorDate, getCurrentCalculatorPeriod } from '@/utils/calculator-dates';
+import { getColombiaDate, getCurrentCalculatorPeriod } from '@/utils/calculator-dates';
 
 // CRON JOB: Cierre automático de calculadora
 // Se ejecuta los días 1 y 16 a las 00:00 Europa Central
@@ -7,7 +7,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🕐 [CRON] Iniciando cierre automático de calculadora...');
     
-    const currentDate = getCalculatorDate();
+    const currentDate = getColombiaDate();
     const period = getCurrentCalculatorPeriod();
     
     console.log('🕐 [CRON] Fecha actual:', currentDate);
@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔄 [CRON-MANUAL] Ejecutando cierre manual...');
     
-    const currentDate = getCalculatorDate();
+    const currentDate = getColombiaDate();
     const period = getCurrentCalculatorPeriod();
     
     // Llamar al endpoint de cierre automático
