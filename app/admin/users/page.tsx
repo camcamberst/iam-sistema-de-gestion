@@ -719,50 +719,19 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-3">Grupos</label>
-            <div className="space-y-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50">
-              {groups.map((group) => {
-                const isChecked = formData.group_ids.includes(group.id);
-                const isDisabled = formData.role === 'modelo' && 
-                                 formData.group_ids.length > 0 && 
-                                 !isChecked;
-                
-                return (
-                  <div 
-                    key={group.id} 
-                    className={`flex items-center justify-between p-2 rounded-lg transition-all duration-200 ${
-                      isDisabled 
-                        ? 'opacity-50 bg-gray-100 cursor-not-allowed' 
-                        : 'hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className={`text-[13px] font-medium ${
-                      isDisabled ? 'text-gray-400' : 'text-gray-700'
-                    }`}>
-                      {group.name}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={isDisabled}
-                      onClick={() => {
-                        if (!isChecked) {
-                          setFormData({ ...formData, group_ids: [...formData.group_ids, group.id] });
-                        } else {
-                          setFormData({ ...formData, group_ids: formData.group_ids.filter(id => id !== group.id) });
-                        }
-                      }}
-                      className="relative w-9 h-5 rounded-full transition-colors duration-200"
-                      style={{ background: isChecked ? '#111827' : '#e5e7eb' }}
-                    >
-                      <span
-                        className="absolute top-[2px] rounded-full bg-white shadow"
-                        style={{ left: isChecked ? 18 : 2, width: 16, height: 16 }}
-                      />
-                    </button>
-                  </div>
-                );
-              })}
-            </div>
+            <label className="block text-gray-700 text-sm font-medium mb-2">Grupos</label>
+            <AppleDropdown
+              options={groups.map(group => ({
+                value: group.id,
+                label: group.name
+              }))}
+              value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
+              onChange={(value) => {
+                // Para simplificar, todos los roles usan selección única por ahora
+                setFormData({ ...formData, group_ids: value ? [value] : [] });
+              }}
+              placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
+            />
             {restrictionMessage && (
               <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
                 {restrictionMessage}
