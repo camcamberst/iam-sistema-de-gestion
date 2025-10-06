@@ -102,7 +102,7 @@ export async function getAnticiposPorPeriodo(
       .select('monto_solicitado, estado, period_id, created_at, realized_at')
       .eq('model_id', modelId)
       .eq('period_id', periodId)
-      .eq('estado', 'confirmado');
+      .in('estado', ['confirmado', 'realizado']);
     
     if (anticiposError) {
       console.error('❌ [ANTICIPOS-UTILS] Error al obtener anticipos por período:', anticiposError);
@@ -118,6 +118,40 @@ export async function getAnticiposPorPeriodo(
       periodIds: [periodId]
     };
     
+  } catch (error: any) {
+    console.error('❌ [ANTICIPOS-UTILS] Error general:', error);
+    throw error;
+  }
+}
+
+/**
+ * Obtener anticipos pagados del período actual (realizado + confirmado)
+ */
+export async function getAnticiposPagadosPeriodo(
+  modelId: string,
+  periodId: string
+): Promise<AnticipoResult> {
+  try {
+    const { data: anticipos, error } = await supabase
+      .from('anticipos')
+      .select('monto_solicitado, estado, period_id, created_at, realized_at')
+      .eq('model_id', modelId)
+      .eq('period_id', periodId)
+      .in('estado', ['confirmado', 'realizado']);
+
+    if (error) {
+      console.error('❌ [ANTICIPOS-UTILS] Error al obtener anticipos pagados del período:', error);
+      throw new Error('Error al obtener anticipos pagados del período');
+    }
+
+    const total = anticipos?.reduce((sum, a) => sum + (a.monto_solicitado || 0), 0) || 0;
+
+    return {
+      anticipos: anticipos || [],
+      total,
+      count: anticipos?.length || 0,
+      periodIds: [periodId]
+    };
   } catch (error: any) {
     console.error('❌ [ANTICIPOS-UTILS] Error general:', error);
     throw error;

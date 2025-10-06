@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
-import { getAnticiposConfirmadosDelMes, getAnticiposPorPeriodo } from '@/lib/anticipos/anticipos-utils';
+import { getAnticiposConfirmadosDelMes, getAnticiposPorPeriodo, getAnticiposPagadosPeriodo } from '@/lib/anticipos/anticipos-utils';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -43,9 +43,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
     }
 
-    // 2. Obtener anticipos confirmados SOLO del período actual
-    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos CONFIRMADOS del período actual:', { modelId, periodId: period.id, periodDate });
-    const anticiposPeriodo = await getAnticiposPorPeriodo(modelId, period.id);
+    // 2. Obtener anticipos pagados del período actual (realizado + confirmado)
+    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos PAGADOS (realizado+confirmado) del período actual:', { modelId, periodId: period.id, periodDate });
+    const anticiposPeriodo = await getAnticiposPagadosPeriodo(modelId, period.id);
     const anticiposPagados = anticiposPeriodo.total;
     
     console.log('🔍 [MI-CALCULADORA-REAL] Anticipos pagados calculados:', anticiposPagados);
