@@ -42,11 +42,40 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
 
   const data = content[milestone];
 
+  // Paleta sutil tipo Apple: azul en 25/50, morado en 75, esmeralda en 100
+  const color =
+    milestone === 100
+      ? {
+          dot: "bg-emerald-500",
+          text: "text-emerald-700",
+          badgeBg: "bg-emerald-100",
+          shadow: "shadow-emerald-100",
+        }
+      : milestone === 75
+      ? {
+          dot: "bg-purple-500",
+          text: "text-purple-700",
+          badgeBg: "bg-purple-100",
+          shadow: "shadow-purple-100",
+        }
+      : {
+          dot: "bg-blue-500",
+          text: "text-blue-700",
+          badgeBg: "bg-blue-100",
+          shadow: "shadow-blue-100",
+        };
+
   return (
     <div className="mb-3">
-      <div className="rounded-xl bg-white/80 text-gray-900 border border-gray-200 shadow-sm px-4 py-3">
-        <div className="text-sm font-extrabold tracking-wide">{data.title}</div>
-        <div className="text-xs opacity-80">{data.subtitle}</div>
+      <div className={`flex items-start gap-3 rounded-xl border border-gray-200 bg-gradient-to-br from-white/90 to-white/70 backdrop-blur-sm px-4 py-3 shadow-sm hover:shadow-md transition-shadow duration-200 ${color.shadow}`}>
+        {/* Punto de estado */}
+        <span className={`mt-1 inline-block h-2.5 w-2.5 rounded-full ${color.dot}`} />
+        <div className="flex-1 min-w-0">
+          <div className={`text-sm font-semibold ${color.text} leading-tight truncate`}>{data.title}</div>
+          <div className="text-xs text-gray-600 leading-tight mt-0.5 truncate">{data.subtitle}</div>
+        </div>
+        {/* Insignia de progreso */}
+        <div className={`text-[10px] font-semibold ${color.text} ${color.badgeBg} px-2 py-1 rounded-full`}>{progress}%</div>
       </div>
     </div>
   );
