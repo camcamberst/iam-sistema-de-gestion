@@ -91,6 +91,10 @@ export default function HistorialAnticiposPage() {
   }, []);
 
   useEffect(() => {
+    console.log('🔍 [USE EFFECT] Aplicando filtros automáticamente:', {
+      anticipos: anticipos.length,
+      filters: filters
+    });
     applyFilters();
   }, [anticipos, filters]);
 
@@ -263,14 +267,30 @@ export default function HistorialAnticiposPage() {
     console.log('🔍 [FILTROS] Aplicando filtros:', {
       totalAnticipos: anticipos.length,
       filtros: filters,
+      userRole: user?.role,
       modelosPorGrupo: modelosPorGrupo
     });
 
+    // Si no hay anticipos, no aplicar filtros
+    if (anticipos.length === 0) {
+      console.log('🔍 [FILTROS] No hay anticipos para filtrar');
+      setFilteredAnticipos([]);
+      return;
+    }
+
     // Filtrar por grupo (solo para super_admin)
     if (user?.role === 'super_admin' && filters.grupo) {
-      filtered = filtered.filter(anticipo => 
-        anticipo.model.group_id === filters.grupo
-      );
+      console.log('🔍 [FILTROS] Filtrando por grupo:', filters.grupo);
+      filtered = filtered.filter(anticipo => {
+        const matches = anticipo.model.group_id === filters.grupo;
+        console.log('🔍 [FILTROS] Anticipo:', {
+          id: anticipo.id,
+          modelGroupId: anticipo.model.group_id,
+          filterGrupo: filters.grupo,
+          matches
+        });
+        return matches;
+      });
       console.log('🔍 [FILTROS] Después de grupo:', filtered.length);
     }
 
@@ -290,26 +310,53 @@ export default function HistorialAnticiposPage() {
         'julio': 6, 'agosto': 7, 'septiembre': 8, 'octubre': 9, 'noviembre': 10, 'diciembre': 11
       };
       const targetMonth = monthNames[filters.mes as keyof typeof monthNames];
+      console.log('🔍 [FILTROS] Filtrando por mes:', { mes: filters.mes, targetMonth });
       filtered = filtered.filter(anticipo => {
         const anticipoDate = new Date(anticipo.created_at);
-        return anticipoDate.getMonth() === targetMonth;
+        const anticipoMonth = anticipoDate.getMonth();
+        const matches = anticipoMonth === targetMonth;
+        console.log('🔍 [FILTROS] Anticipo mes:', {
+          id: anticipo.id,
+          created_at: anticipo.created_at,
+          anticipoMonth,
+          targetMonth,
+          matches
+        });
+        return matches;
       });
       console.log('🔍 [FILTROS] Después de mes:', filtered.length);
     }
 
     // Filtrar por período
     if (filters.periodo) {
+      console.log('🔍 [FILTROS] Filtrando por período:', filters.periodo);
       if (filters.periodo === 'periodo-1') {
         // Periodo 1: días 1-15
         filtered = filtered.filter(anticipo => {
           const date = new Date(anticipo.created_at);
-          return date.getDate() >= 1 && date.getDate() <= 15;
+          const day = date.getDate();
+          const matches = day >= 1 && day <= 15;
+          console.log('🔍 [FILTROS] Anticipo período 1:', {
+            id: anticipo.id,
+            created_at: anticipo.created_at,
+            day,
+            matches
+          });
+          return matches;
         });
       } else if (filters.periodo === 'periodo-2') {
         // Periodo 2: días 16-fin de mes
         filtered = filtered.filter(anticipo => {
           const date = new Date(anticipo.created_at);
-          return date.getDate() >= 16;
+          const day = date.getDate();
+          const matches = day >= 16;
+          console.log('🔍 [FILTROS] Anticipo período 2:', {
+            id: anticipo.id,
+            created_at: anticipo.created_at,
+            day,
+            matches
+          });
+          return matches;
         });
       }
       console.log('🔍 [FILTROS] Después de período:', filtered.length);
