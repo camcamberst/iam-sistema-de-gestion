@@ -88,12 +88,30 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener plataformas' }, { status: 500 });
     }
 
-    // 5. Obtener valores del modelo
-    const { data: values, error: valuesError } = await supabase
+    // 5. Obtener valores del modelo usando búsqueda flexible (igual que model-values-v2)
+    // Buscar los valores más recientes de los últimos 7 días para evitar problemas de timezone
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    const { data: allRecentValues, error: valuesError } = await supabase
       .from('model_values')
-      .select('platform_id, value, period_date')
+      .select('platform_id, value, period_date, updated_at')
       .eq('model_id', modelId)
-      .eq('period_date', periodDate);
+      .gte('period_date', sevenDaysAgoStr) // Últimos 7 días
+      .order('updated_at', { ascending: false })
+      .limit(200);
+
+    // Obtener solo el valor más reciente por plataforma
+    const platformMap = new Map<string, any>();
+    allRecentValues?.forEach((value: any) => {
+      if (!platformMap.has(value.platform_id)) {
+        platformMap.set(value.platform_id, value);
+      }
+    });
+
+    const values = Array.from(platformMap.values());
+    console.log('🔍 [MI-CALCULADORA-REAL] Valores encontrados:', values?.length || 0);
 
     if (valuesError) {
       console.error('❌ [MI-CALCULADORA-REAL] Error al obtener valores:', valuesError);
