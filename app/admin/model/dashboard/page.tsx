@@ -233,21 +233,27 @@ export default function ModelDashboard() {
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="p-4 rounded-md bg-blue-50 text-center">
-                  <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-blue-600 mb-1">
                     {productivityData ? `$${productivityData.usdBruto.toFixed(2)}` : '—'}
+                  </div>
+                  <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full inline-block">
+                    USD Bruto (hoy)
                   </div>
                 </div>
                 <div className="p-4 rounded-md bg-green-50 text-center">
-                  <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
-                  <div className="text-2xl font-bold text-green-600">
+                  <div className="text-2xl font-bold text-green-600 mb-1">
                     {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
+                  </div>
+                  <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full inline-block">
+                    USD Modelo (hoy)
                   </div>
                 </div>
                 <div className="p-4 rounded-md bg-purple-50 text-center">
-                  <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {productivityData ? `$${productivityData.copModelo.toFixed(2)}` : '—'}
+                  <div className="text-2xl font-bold text-purple-600 mb-1">
+                    {productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
+                  </div>
+                  <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full inline-block">
+                    COP Modelo (hoy)
                   </div>
                 </div>
               </div>
