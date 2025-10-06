@@ -43,6 +43,13 @@ interface Anticipo {
       id: string;
       name: string;
     };
+    user_groups?: Array<{
+      group_id: string;
+      groups: {
+        id: string;
+        name: string;
+      };
+    }>;
   };
   period: {
     id: string;
