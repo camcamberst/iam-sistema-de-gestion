@@ -157,3 +157,67 @@ export async function getAnticiposPagadosPeriodo(
     throw error;
   }
 }
+
+/**
+ * Obtener anticipos pagados (realizado + confirmado) del corte vigente (1–15 o 16–fin) dado un período de referencia
+ */
+export async function getAnticiposPagadosDelCorte(
+  modelId: string,
+  periodDate?: string
+): Promise<AnticipoResult> {
+  try {
+    const reference = new Date(periodDate || new Date().toISOString().split('T')[0]);
+    const year = reference.getFullYear();
+    const month = reference.getMonth() + 1; // 1-12
+    const day = reference.getDate();
+
+    const startDay = day <= 15 ? 1 : 16;
+    const endDay = day <= 15 ? 15 : new Date(year, month, 0).getDate();
+
+    const startDate = `${year}-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-${String(endDay).padStart(2, '0')}`;
+
+    // Obtener todos los períodos del corte (cada día es un período)
+    const { data: cutPeriods, error: cutPeriodsError } = await supabase
+      .from('periods')
+      .select('id, start_date')
+      .gte('start_date', startDate)
+      .lte('start_date', endDate);
+
+    if (cutPeriodsError) {
+      console.error('❌ [ANTICIPOS-UTILS] Error al obtener períodos del corte:', cutPeriodsError);
+      throw new Error('Error al obtener períodos del corte');
+    }
+
+    const periodIds = (cutPeriods || []).map(p => p.id);
+
+    if (periodIds.length === 0) {
+      return { anticipos: [], total: 0, count: 0, periodIds: [] };
+    }
+
+    // Anticipos pagados en el corte
+    const { data: anticipos, error } = await supabase
+      .from('anticipos')
+      .select('monto_solicitado, estado, period_id, created_at, realized_at')
+      .eq('model_id', modelId)
+      .in('period_id', periodIds)
+      .in('estado', ['confirmado', 'realizado']);
+
+    if (error) {
+      console.error('❌ [ANTICIPOS-UTILS] Error al obtener anticipos pagados del corte:', error);
+      throw new Error('Error al obtener anticipos pagados del corte');
+    }
+
+    const total = anticipos?.reduce((sum, a) => sum + (a.monto_solicitado || 0), 0) || 0;
+
+    return {
+      anticipos: anticipos || [],
+      total,
+      count: anticipos?.length || 0,
+      periodIds
+    };
+  } catch (error: any) {
+    console.error('❌ [ANTICIPOS-UTILS] Error general:', error);
+    throw error;
+  }
+}
