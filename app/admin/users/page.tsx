@@ -945,21 +945,10 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
               }))}
               value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
               onChange={(value) => {
-                if (formData.role === 'modelo') {
-                  // Modelos solo pueden tener un grupo
-                  setFormData({ ...formData, group_ids: value ? [value] : [] });
-                } else {
-                  // Otros roles pueden tener múltiples grupos
-                  const isSelected = formData.group_ids.includes(value);
-                  if (isSelected) {
-                    setFormData({ ...formData, group_ids: formData.group_ids.filter(id => id !== value) });
-                  } else {
-                    setFormData({ ...formData, group_ids: [...formData.group_ids, value] });
-                  }
-                }
+                // Para simplificar, todos los roles usan selección única por ahora
+                setFormData({ ...formData, group_ids: value ? [value] : [] });
               }}
-              placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos'}
-              multiple={formData.role !== 'modelo'}
+              placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
             />
             {restrictionMessage && (
               <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
