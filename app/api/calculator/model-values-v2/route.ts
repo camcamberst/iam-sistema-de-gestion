@@ -26,28 +26,37 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
     
     // 1. Intentar cargar valores actuales de model_values
-    // 🔧 FIX SOSTENIBLE: Usar filtro de fecha inteligente para manejar timezone
-    const getCurrentPeriodDates = () => {
-      const now = new Date();
-      return {
-        colombia: now.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }),
-        europe: now.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
-      };
-    };
+    // 🔧 SOLUCIÓN DEFINITIVA: Buscar datos recientes sin filtro estricto de fecha
+    // El sistema híbrido de timezone causa más problemas que beneficios
+    console.log('🔍 [MODEL-VALUES-V2] Buscando datos recientes sin filtro de fecha específico...');
 
-    const dates = getCurrentPeriodDates();
-    console.log('🔍 [MODEL-VALUES-V2] Searching in dates:', dates);
+    // Buscar los valores más recientes de los últimos 7 días para evitar problemas de timezone
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
 
-    // Buscar en ambas fechas para manejar desfase de timezone + límite de seguridad
-    const { data: currentValues, error: currentError } = await supabase
+    const { data: allRecentValues, error: currentError } = await supabase
       .from('model_values')
       .select(`
         model_id, platform_id, value, period_date, updated_at
       `)
       .eq('model_id', modelId)
-      .in('period_date', [dates.colombia, dates.europe])
+      .gte('period_date', sevenDaysAgoStr) // Últimos 7 días
       .order('updated_at', { ascending: false })
-      .limit(100); // 🔧 LÍMITE DE SEGURIDAD: máximo 100 registros
+      .limit(200); // Límite más amplio para asegurar que encontramos datos
+
+    console.log('🔍 [MODEL-VALUES-V2] Found recent values:', allRecentValues?.length || 0);
+
+    // Obtener solo el valor más reciente por plataforma
+    const platformMap = new Map<string, any>();
+    allRecentValues?.forEach((value: any) => {
+      if (!platformMap.has(value.platform_id)) {
+        platformMap.set(value.platform_id, value);
+      }
+    });
+
+    const currentValues = Array.from(platformMap.values());
+    console.log('🔍 [MODEL-VALUES-V2] Unique platform values:', currentValues.length);
 
     console.log('🔍 [MODEL-VALUES-V2] Found values:', currentValues?.length || 0);
 
@@ -93,7 +102,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId y values son requeridos' }, { status: 400 });
     }
 
-    const effectiveDate = periodDate || getColombiaDate();
+    // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha simple sin timezone complejo
+    const effectiveDate = periodDate || new Date().toISOString().split('T')[0];
     console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values });
 
     const rows = Object.entries(values).map(([platformId, value]) => ({

@@ -50,8 +50,8 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
-  // Periodo activo usando fecha de Colombia
-  const [periodDate, setPeriodDate] = useState<string>(getColombiaDate());
+  // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha simple sin timezone complejo
+  const [periodDate, setPeriodDate] = useState<string>(new Date().toISOString().split('T')[0]);
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
