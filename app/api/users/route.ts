@@ -49,18 +49,28 @@ export async function GET(request: NextRequest) {
     }
 
     // Formatear usuarios con grupos
-    const formattedUsers = (users || []).map(user => ({
-      id: user.id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      is_active: user.is_active,
-      created_at: user.created_at,
-      groups: user.user_groups?.map((ug: any) => ({
+    const formattedUsers = (users || []).map(user => {
+      const userGroups = user.user_groups?.map((ug: any) => ({
         id: ug.groups.id,
         name: ug.groups.name
-      })) || []
-    }));
+      })) || [];
+      
+      console.log(`🔍 [DEBUG] Usuario ${user.name} (${user.email}):`, {
+        user_groups_raw: user.user_groups,
+        formatted_groups: userGroups,
+        groups_count: userGroups.length
+      });
+      
+      return {
+        id: user.id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        is_active: user.is_active,
+        created_at: user.created_at,
+        groups: userGroups
+      };
+    });
 
     console.log('✅ [API] Usuarios obtenidos:', formattedUsers.length);
 
@@ -189,6 +199,28 @@ export async function POST(request: NextRequest) {
         })) || [];
         console.log('✅ [API] Grupos asignados:', assignedGroups.length);
         console.log('🔍 [DEBUG] Grupos asignados:', JSON.stringify(assignedGroups, null, 2));
+        
+        // Verificación post-asignación: consultar grupos del usuario recién creado
+        console.log('🔍 [DEBUG] Verificando grupos asignados en BD...');
+        const { data: verifyGroups, error: verifyError } = await supabase
+          .from('user_groups')
+          .select(`
+            groups!inner(
+              id,
+              name
+            )
+          `)
+          .eq('user_id', authData.user.id);
+          
+        if (verifyError) {
+          console.error('❌ [DEBUG] Error verificando grupos:', verifyError);
+        } else {
+          const verifiedGroups = verifyGroups?.map((ug: any) => ({
+            id: ug.groups.id,
+            name: ug.groups.name
+          })) || [];
+          console.log('🔍 [DEBUG] Grupos verificados en BD:', JSON.stringify(verifiedGroups, null, 2));
+        }
       }
     } else {
       console.log('🔍 [DEBUG] No se proporcionaron grupos o están vacíos');
