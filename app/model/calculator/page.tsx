@@ -491,6 +491,27 @@ export default function ModelCalculatorPage() {
     );
   }
 
+  // Activar animaciones del objetivo cuando el bloque entra en viewport
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const el = document.getElementById('objective-basic-card');
+    if (!el || !('IntersectionObserver' in window)) return;
+    const obs = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            el.classList.add('in-view');
+          } else {
+            el.classList.remove('in-view');
+          }
+        });
+      },
+      { root: null, threshold: 0.3 }
+    );
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, []);
+
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -966,23 +987,38 @@ export default function ModelCalculatorPage() {
             const estaPorDebajo = totalUsdBruto < cuotaMinima;
             // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
             const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
-            // Evitar amarillo: usar dos tramos de tono
-            // 0–60%: de rojo (0) a rojo-anaranjado (30)
-            // 60–100%: salto a verde/teal (140) y terminar en verde (120)
-            const hue = progressPct <= 60
-              ? Math.round((progressPct / 60) * 30)
-              : Math.round(140 - ((progressPct - 60) / 40) * 20);
-            const progressStart = `hsl(${hue} 85% 48%)`;
-            const progressEnd = `hsl(${hue} 85% 40%)`;
+            // Paleta: Rojo -> Púrpura -> Esmeralda (sin amarillos)
+            const RED = { r: 229, g: 57, b: 53 };     // #E53935
+            const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
+            const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
+
+            const mix = (a: any, b: any, t: number) => ({
+              r: Math.round(a.r + (b.r - a.r) * t),
+              g: Math.round(a.g + (b.g - a.g) * t),
+              b: Math.round(a.b + (b.b - a.b) * t)
+            });
+            const rgbToHex = (c: any) => `#${[c.r, c.g, c.b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+            const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
+            const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
+
+            const t = progressPct / 100;
+            // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
+            const base = t <= 0.6
+              ? mix(RED, PURPLE, t / 0.6)
+              : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
+
+            const progressStart = rgbToHex(shade(base, 0.05));
+            const progressEnd = rgbToHex(shade(base, 0.15));
             // Estilos dinámicos para fondo del contenedor e icono
-            const cardBgStart = `hsl(${hue} 100% 97%)`;
-            const cardBgEnd = `hsl(${hue} 100% 95%)`;
-            const cardBorder = `hsl(${hue} 70% 85%)`;
-            const iconStart = `hsl(${hue} 85% 55%)`;
-            const iconEnd = `hsl(${hue} 85% 45%)`;
-            const headingColor = `hsl(${hue} 65% 28%)`;
-            const subTextColor = `hsl(${hue} 60% 32%)`;
+            const cardBgStart = rgbToHex(tint(base, 0.92));
+            const cardBgEnd = rgbToHex(tint(base, 0.88));
+            const cardBorder = rgbToHex(tint(base, 0.7));
+            const iconStart = rgbToHex(shade(base, 0.0));
+            const iconEnd = rgbToHex(shade(base, 0.2));
+            const headingColor = rgbToHex(shade(base, 0.55));
+            const subTextColor = rgbToHex(shade(base, 0.45));
             
+            const milestone = progressPct >= 100 ? 100 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
             return (
               <div
                 className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
@@ -990,12 +1026,22 @@ export default function ModelCalculatorPage() {
                   background: `linear-gradient(90deg, ${cardBgStart}, ${cardBgEnd})`,
                   borderColor: cardBorder
                 }}
+                id="objective-basic-card"
+                data-milestone={milestone}
               >
                 {/* Efecto de brillo animado */}
                 <div
                   className="absolute inset-0 opacity-10 animate-pulse"
                   style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
                 ></div>
+
+                {/* Animaciones de hito (se habilitan con .in-view) */}
+                {/* 25% Shine */}
+                <div className="pointer-events-none absolute inset-0 overflow-hidden">
+                  <div className="milestone-shine" />
+                  <div className="milestone-wave" />
+                  <div className="milestone-particles" />
+                </div>
                 
                 <div className="relative p-4">
                   <div className="flex items-center space-x-3">
@@ -1050,5 +1096,47 @@ export default function ModelCalculatorPage() {
         </div>
       </div>
     </div>
+      {/* Estilos de animación para hitos del objetivo */}
+      <style jsx>{`
+        #objective-basic-card.in-view[data-milestone="0"] .milestone-shine { animation: none; }
+        #objective-basic-card.in-view[data-milestone="25"] .milestone-shine {
+          animation: shine-sweep 1.2s ease-out 1;
+          background: linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.35) 50%, transparent 100%);
+          position: absolute; top: 0; left: -40%; width: 40%; height: 100%;
+        }
+        #objective-basic-card.in-view[data-milestone="50"] .milestone-wave {
+          animation: wave-run 1.4s ease-out 1;
+          position: absolute; inset: 0; opacity: 0.15;
+          background: radial-gradient(120% 60% at 0% 50%, rgba(255,255,255,0.6), transparent 60%);
+        }
+        #objective-basic-card.in-view[data-milestone="100"] .milestone-particles {
+          position: absolute; inset: 0; pointer-events: none;
+          animation: particles-pop 0.9s ease-out 1;
+          background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.6) 0 2px, transparent 3px),
+                      radial-gradient(circle at 50% 30%, rgba(255,255,255,0.6) 0 2px, transparent 3px),
+                      radial-gradient(circle at 70% 60%, rgba(255,255,255,0.6) 0 2px, transparent 3px);
+          background-repeat: no-repeat;
+        }
+
+        @keyframes shine-sweep {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(260%); }
+        }
+        @keyframes wave-run {
+          0% { background-position: -200% 0; }
+          100% { background-position: 200% 0; }
+        }
+        @keyframes particles-pop {
+          0% { opacity: 0; transform: scale(0.9); }
+          30% { opacity: 1; transform: scale(1.02); }
+          100% { opacity: 0; transform: scale(1); }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+          #objective-basic-card .milestone-shine,
+          #objective-basic-card .milestone-wave,
+          #objective-basic-card .milestone-particles { animation: none !important; }
+        }
+      `}</style>
   );
 }
