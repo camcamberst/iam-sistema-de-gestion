@@ -966,7 +966,12 @@ export default function ModelCalculatorPage() {
             const estaPorDebajo = totalUsdBruto < cuotaMinima;
             // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
             const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
-            const hue = Math.round((progressPct / 100) * 120);
+            // Evitar amarillo: usar dos tramos de tono
+            // 0–60%: de rojo (0) a rojo-anaranjado (30)
+            // 60–100%: salto a verde/teal (140) y terminar en verde (120)
+            const hue = progressPct <= 60
+              ? Math.round((progressPct / 60) * 30)
+              : Math.round(140 - ((progressPct - 60) / 40) * 20);
             const progressStart = `hsl(${hue} 85% 48%)`;
             const progressEnd = `hsl(${hue} 85% 40%)`;
             // Estilos dinámicos para fondo del contenedor e icono
