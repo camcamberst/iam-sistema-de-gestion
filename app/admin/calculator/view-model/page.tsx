@@ -588,11 +588,13 @@ export default function AdminViewModelPage() {
                           const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
                             v.platform_id === platform.id || v.platform === platform.name
                           )?.value || 0;
+                          // 🔧 FIX: Usar tasas actualizadas en lugar de hardcodeadas
+                          const rates = selectedModel.calculatorData.rates;
                           let usdBruto = 0;
                           if (platform.currency === 'EUR') {
-                            usdBruto = currentValue * 1.01;
+                            usdBruto = currentValue * (rates?.eur_usd || 1.01);
                           } else if (platform.currency === 'GBP') {
-                            usdBruto = currentValue * 1.20;
+                            usdBruto = currentValue * (rates?.gbp_usd || 1.20);
                           } else {
                             usdBruto = currentValue;
                           }
@@ -607,13 +609,37 @@ export default function AdminViewModelPage() {
                           const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
                             v.platform_id === platform.id || v.platform === platform.name
                           )?.value || 0;
+                          // 🔧 FIX: Usar tasas actualizadas y fórmulas específicas por plataforma
+                          const rates = selectedModel.calculatorData.rates;
                           let usdModelo = 0;
                           if (platform.currency === 'EUR') {
-                            usdModelo = currentValue * 1.01;
+                            if (platform.id === 'big7') {
+                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                            } else if (platform.id === 'mondo') {
+                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                            } else {
+                              usdModelo = currentValue * (rates?.eur_usd || 1.01);
+                            }
                           } else if (platform.currency === 'GBP') {
-                            usdModelo = currentValue * 1.20;
-                          } else {
-                            usdModelo = currentValue;
+                            if (platform.id === 'aw') {
+                              usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                            } else {
+                              usdModelo = currentValue * (rates?.gbp_usd || 1.20);
+                            }
+                          } else if (platform.currency === 'USD') {
+                            if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                              usdModelo = currentValue * 0.75;
+                            } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                              usdModelo = currentValue * 0.05;
+                            } else if (platform.id === 'dxlive') {
+                              usdModelo = currentValue * 0.60;
+                            } else if (platform.id === 'secretfriends') {
+                              usdModelo = currentValue * 0.5;
+                            } else if (platform.id === 'superfoon') {
+                              usdModelo = currentValue;
+                            } else {
+                              usdModelo = currentValue;
+                            }
                           }
                           return sum + (usdModelo * platform.percentage / 100);
                         }, 0).toFixed(2)}
@@ -626,16 +652,40 @@ export default function AdminViewModelPage() {
                           const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
                             v.platform_id === platform.id || v.platform === platform.name
                           )?.value || 0;
+                          // 🔧 FIX: Usar tasas actualizadas y fórmulas específicas por plataforma
+                          const rates = selectedModel.calculatorData.rates;
                           let usdModelo = 0;
                           if (platform.currency === 'EUR') {
-                            usdModelo = currentValue * 1.01;
+                            if (platform.id === 'big7') {
+                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                            } else if (platform.id === 'mondo') {
+                              usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                            } else {
+                              usdModelo = currentValue * (rates?.eur_usd || 1.01);
+                            }
                           } else if (platform.currency === 'GBP') {
-                            usdModelo = currentValue * 1.20;
-                          } else {
-                            usdModelo = currentValue;
+                            if (platform.id === 'aw') {
+                              usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                            } else {
+                              usdModelo = currentValue * (rates?.gbp_usd || 1.20);
+                            }
+                          } else if (platform.currency === 'USD') {
+                            if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                              usdModelo = currentValue * 0.75;
+                            } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                              usdModelo = currentValue * 0.05;
+                            } else if (platform.id === 'dxlive') {
+                              usdModelo = currentValue * 0.60;
+                            } else if (platform.id === 'secretfriends') {
+                              usdModelo = currentValue * 0.5;
+                            } else if (platform.id === 'superfoon') {
+                              usdModelo = currentValue;
+                            } else {
+                              usdModelo = currentValue;
+                            }
                           }
                           return sum + (usdModelo * platform.percentage / 100);
-                        }, 0) * 3900).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                        }, 0) * (selectedModel.calculatorData.rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </div>
                       <div className="text-xs text-gray-600">COP Modelo</div>
                     </div>
@@ -646,16 +696,40 @@ export default function AdminViewModelPage() {
                     <div className="text-sm text-gray-600">
                       <strong>90% de anticipo disponible:</strong> ${(selectedModel.calculatorData.platforms.reduce((sum: number, platform: any) => {
                         const currentValue = selectedModel.calculatorData.values?.find((v: any) => v.platform_id === platform.id)?.value || 0;
+                        // 🔧 FIX: Usar tasas actualizadas y fórmulas específicas por plataforma
+                        const rates = selectedModel.calculatorData.rates;
                         let usdModelo = 0;
                         if (platform.currency === 'EUR') {
-                          usdModelo = currentValue * 1.01;
+                          if (platform.id === 'big7') {
+                            usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                          } else if (platform.id === 'mondo') {
+                            usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                          } else {
+                            usdModelo = currentValue * (rates?.eur_usd || 1.01);
+                          }
                         } else if (platform.currency === 'GBP') {
-                          usdModelo = currentValue * 1.20;
-                        } else {
-                          usdModelo = currentValue;
+                          if (platform.id === 'aw') {
+                            usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                          } else {
+                            usdModelo = currentValue * (rates?.gbp_usd || 1.20);
+                          }
+                        } else if (platform.currency === 'USD') {
+                          if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                            usdModelo = currentValue * 0.75;
+                          } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                            usdModelo = currentValue * 0.05;
+                          } else if (platform.id === 'dxlive') {
+                            usdModelo = currentValue * 0.60;
+                          } else if (platform.id === 'secretfriends') {
+                            usdModelo = currentValue * 0.5;
+                          } else if (platform.id === 'superfoon') {
+                            usdModelo = currentValue;
+                          } else {
+                            usdModelo = currentValue;
+                          }
                         }
                         return sum + (usdModelo * platform.percentage / 100);
-                      }, 0) * 3900 * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                      }, 0) * (selectedModel.calculatorData.rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                     </div>
                   </div>
                 </div>
