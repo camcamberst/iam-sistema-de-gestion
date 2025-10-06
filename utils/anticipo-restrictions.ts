@@ -19,18 +19,7 @@ export interface AnticipoRestriction {
  * @returns Información sobre si está permitido y cuándo será la próxima fecha disponible
  */
 export const canRequestAnticipo = (): AnticipoRestriction => {
-  // 🔧 BYPASS TEMPORAL: Activar para pruebas e implementaciones
-  const BYPASS_ANTICIPOS = process.env.NEXT_PUBLIC_BYPASS_ANTICIPOS === 'true';
-  
-  // 🔧 BYPASS HARDCODED TEMPORAL: Activar inmediatamente para pruebas
-  const BYPASS_HARDCODED = false; // CAMBIAR A false CUANDO SE QUIERA DESACTIVAR
-  
-  if (BYPASS_ANTICIPOS || BYPASS_HARDCODED) {
-    console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS ACTIVADO - Restricciones deshabilitadas para pruebas');
-    console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS_ANTICIPOS:', BYPASS_ANTICIPOS);
-    console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS_HARDCODED:', BYPASS_HARDCODED);
-    return { allowed: true };
-  }
+  // Validación estricta sin bypass
   // Obtener fecha actual en Colombia
   const now = new Date();
   const colombiaDate = new Date(now.toLocaleString("en-US", { timeZone: "America/Bogota" }));
@@ -103,7 +92,6 @@ export const getRestrictionInfo = () => {
   return {
     currentDate: colombiaDate,
     restriction,
-    timezone: 'America/Bogota',
-    bypassActive: process.env.NEXT_PUBLIC_BYPASS_ANTICIPOS === 'true'
+    timezone: 'America/Bogota'
   };
 };
