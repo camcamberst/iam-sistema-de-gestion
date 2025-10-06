@@ -59,14 +59,14 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
       : "from-blue-50 to-blue-100";
 
   return (
-    <div className="mb-1.5">
+    <div className="mb-1">
       <div
-        className={`flex items-center gap-2.5 rounded-xl border border-gray-200 bg-gradient-to-br ${bgGradient} px-3 py-1.5 shadow-sm`}
+        className={`flex items-center gap-2 rounded-xl border border-gray-200 bg-gradient-to-br ${bgGradient} px-2.5 py-1 shadow-sm`}
       >
-        <span className={`inline-block h-2 w-2 rounded-full ${color.dot}`} />
-        <div className={`text-xs sm:text-[13px] font-semibold ${color.text} truncate`}>{data.title}</div>
+        <span className={`inline-block h-1.5 w-1.5 rounded-full ${color.dot}`} />
+        <div className={`text-[11px] sm:text-[12px] font-semibold ${color.text} truncate leading-none`}>{data.title}</div>
         <div className="flex-1" />
-        <div className={`text-[10px] sm:text-[11px] font-semibold ${color.text} ${color.badgeBg} px-2 py-0.5 rounded-full`}>{progress}%</div>
+        <div className={`text-[10px] sm:text-[11px] font-semibold ${color.text} ${color.badgeBg} px-1.5 py-0.5 rounded-full leading-none`}>{progress}%</div>
       </div>
     </div>
   );
