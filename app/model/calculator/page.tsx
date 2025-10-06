@@ -1020,13 +1020,20 @@ export default function ModelCalculatorPage() {
 
                 {/* Animaciones de hito (nuevo set, más contundente) */}
                 <div className="pointer-events-none absolute inset-0 overflow-hidden">
-                  <div className="milestone-stamp" />
-                  <div className="milestone-ticks" />
-                  <div className="milestone-skipper" />
-                  <div className="milestone-sweep" />
-                  <div className="milestone-comet" />
-                  <div className="milestone-ribbon" />
-                  <div className="milestone-confetti" />
+                  {/* 25% */}
+                  <div className="arrow-25" />
+                  <div className="mini-check-25" />
+                  <div className="bonus-count-25" />
+                  {/* 50% */}
+                  <div className="arrows-50" />
+                  <div className="underline-50" />
+                  {/* 75% */}
+                  <div className="aura-75" />
+                  <div className="badge-75" />
+                  {/* 100% */}
+                  <div className="crown-100" />
+                  <div className="filllock-100" />
+                  <div className="confetti-100" />
                 </div>
                 
                 <div className="relative p-4">
@@ -1069,7 +1076,7 @@ export default function ModelCalculatorPage() {
                             }}
                           ></div>
                         </div>
-                        <div className="text-right text-xs text-gray-600 mt-1">
+                        <div className="text-right text-xs text-gray-600 mt-1 milestone-percent">
                           {Math.ceil(porcentajeAlcanzado)}%
                         </div>
                       </div>
