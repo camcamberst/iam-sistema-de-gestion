@@ -88,30 +88,55 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener plataformas' }, { status: 500 });
     }
 
-    // 5. Obtener valores del modelo usando búsqueda flexible (igual que model-values-v2)
-    // Buscar los valores más recientes de los últimos 7 días para evitar problemas de timezone
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-
-    const { data: allRecentValues, error: valuesError } = await supabase
+    // 5. Obtener valores del modelo - MANTENER FILTRO ESTRICTO POR PERÍODO
+    // CRÍTICO: Los anticipos requieren datos exactos del período específico para integridad financiera
+    
+    // Primero intentar con la fecha exacta del período
+    let { data: values, error: valuesError } = await supabase
       .from('model_values')
-      .select('platform_id, value, period_date, updated_at')
+      .select('platform_id, value, period_date')
       .eq('model_id', modelId)
-      .gte('period_date', sevenDaysAgoStr) // Últimos 7 días
-      .order('updated_at', { ascending: false })
-      .limit(200);
+      .eq('period_date', periodDate);
 
-    // Obtener solo el valor más reciente por plataforma
-    const platformMap = new Map<string, any>();
-    allRecentValues?.forEach((value: any) => {
-      if (!platformMap.has(value.platform_id)) {
-        platformMap.set(value.platform_id, value);
+    console.log('🔍 [MI-CALCULADORA-REAL] Valores con fecha exacta:', values?.length || 0);
+
+    // Si no encuentra datos con fecha exacta, buscar en fechas cercanas (±2 días) para manejar timezone
+    if (!values || values.length === 0) {
+      console.log('🔍 [MI-CALCULADORA-REAL] Buscando en fechas cercanas por timezone...');
+      
+      const currentDate = new Date(periodDate);
+      const dayBefore = new Date(currentDate);
+      dayBefore.setDate(dayBefore.getDate() - 1);
+      const dayAfter = new Date(currentDate);
+      dayAfter.setDate(dayAfter.getDate() + 1);
+      
+      const dates = [
+        dayBefore.toISOString().split('T')[0],
+        periodDate,
+        dayAfter.toISOString().split('T')[0]
+      ];
+
+      const { data: nearbyValues, error: nearbyError } = await supabase
+        .from('model_values')
+        .select('platform_id, value, period_date, updated_at')
+        .eq('model_id', modelId)
+        .in('period_date', dates)
+        .order('updated_at', { ascending: false });
+
+      if (nearbyError) {
+        valuesError = nearbyError;
+      } else {
+        // Obtener solo el valor más reciente por plataforma
+        const platformMap = new Map<string, any>();
+        nearbyValues?.forEach((value: any) => {
+          if (!platformMap.has(value.platform_id)) {
+            platformMap.set(value.platform_id, value);
+          }
+        });
+        values = Array.from(platformMap.values());
+        console.log('🔍 [MI-CALCULADORA-REAL] Valores encontrados en fechas cercanas:', values?.length || 0);
       }
-    });
-
-    const values = Array.from(platformMap.values());
-    console.log('🔍 [MI-CALCULADORA-REAL] Valores encontrados:', values?.length || 0);
+    }
 
     if (valuesError) {
       console.error('❌ [MI-CALCULADORA-REAL] Error al obtener valores:', valuesError);
