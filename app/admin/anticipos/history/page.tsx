@@ -476,35 +476,34 @@ export default function HistorialAnticiposPage() {
         )}
 
         {/* Estadísticas con InfoCardGrid */}
-        <InfoCardGrid>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-blue-600 mb-1">{stats.totalSolicitudes}</div>
-            <div className="text-sm text-gray-600">Total Solicitudes</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">{stats.realizados}</div>
-            <div className="text-sm text-gray-600">Realizados</div>
-          </div>
-          <div 
-            className={`text-center cursor-pointer transition-all duration-200 ${
-              showPendientes 
-                ? 'bg-yellow-50 border-yellow-200 shadow-md' 
-                : 'hover:bg-gray-50 hover:shadow-sm'
-            }`}
-            onClick={handlePendientesClick}
-          >
-            <div className="text-2xl font-bold text-yellow-600 mb-1">{stats.pendientes}</div>
-            <div className="text-sm text-gray-600">
-              {showPendientes ? 'Ocultar Pendientes' : 'Ver Pendientes'}
-            </div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl font-bold text-green-600 mb-1">
-              ${stats.totalPagado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-            </div>
-            <div className="text-sm text-gray-600">Total Pagado (COP)</div>
-          </div>
-        </InfoCardGrid>
+        <InfoCardGrid 
+          cards={[
+            {
+              value: stats.totalSolicitudes,
+              label: 'Total Solicitudes',
+              color: 'blue'
+            },
+            {
+              value: stats.realizados,
+              label: 'Realizados',
+              color: 'green'
+            },
+            {
+              value: stats.pendientes,
+              label: showPendientes ? 'Ocultar Pendientes' : 'Ver Pendientes',
+              color: 'yellow',
+              onClick: handlePendientesClick,
+              clickable: true
+            },
+            {
+              value: `$${stats.totalPagado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+              label: 'Total Pagado (COP)',
+              color: 'green'
+            }
+          ]}
+          columns={4}
+          className="mb-8"
+        />
 
         {/* Filtros */}
         <div className="apple-card mb-6">
