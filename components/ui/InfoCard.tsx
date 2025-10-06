@@ -14,6 +14,7 @@ interface InfoCardProps {
   onClick?: () => void;
   clickable?: boolean;
   className?: string;
+  size?: 'sm' | 'md' | 'lg';
 }
 
 const colorVariants = {
@@ -67,9 +68,13 @@ export default function InfoCard({
   color = 'blue', 
   onClick, 
   clickable = false,
-  className = '' 
+  className = '',
+  size = 'md'
 }: InfoCardProps) {
   const colors = colorVariants[color];
+  const paddingClass = size === 'sm' ? 'p-3' : 'p-4';
+  const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-lg' : 'text-xl');
+  const labelTextClass = size === 'sm' ? 'text-[11px]' : 'text-xs';
   
   const formatValue = (val: string | number): string => {
     if (typeof val === 'number') {
@@ -85,7 +90,7 @@ export default function InfoCard({
   return (
     <div 
       className={`
-        text-center p-4 ${colors.gradient} rounded-xl border ${colors.border} 
+        text-center ${paddingClass} ${colors.gradient} rounded-xl border ${colors.border} 
         hover:shadow-lg ${colors.shadow} transition-all duration-200 transform hover:scale-105
         ${clickable || onClick ? 'cursor-pointer' : ''}
         ${className}
@@ -93,10 +98,10 @@ export default function InfoCard({
       onClick={onClick}
       title={clickable ? 'Hacer clic para interactuar' : undefined}
     >
-      <div className={`text-xl font-bold ${colors.text} mb-1`}>
+      <div className={`${valueTextClass} font-bold ${colors.text} mb-1`}>
         {formatValue(value)}
       </div>
-      <div className={`text-xs font-medium ${colors.badge} px-2 py-1 rounded-full inline-block`}>
+      <div className={`${labelTextClass} font-medium ${colors.badge} px-2 py-1 rounded-full inline-block`}>
         {label}
       </div>
     </div>
@@ -115,6 +120,7 @@ interface InfoCardGridProps {
     color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'yellow';
     onClick?: () => void;
     clickable?: boolean;
+    size?: 'sm' | 'md' | 'lg';
   }>;
   columns?: 1 | 2 | 3 | 4;
   className?: string;
@@ -142,6 +148,7 @@ export function InfoCardGrid({
           color={card.color}
           onClick={card.onClick}
           clickable={card.clickable}
+          size={card.size}
         />
       ))}
     </div>

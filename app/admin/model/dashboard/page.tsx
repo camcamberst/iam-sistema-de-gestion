@@ -232,24 +232,30 @@ export default function ModelDashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-md bg-blue-50 text-center">
-                  <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
-                  <div className="text-2xl font-bold text-blue-600">
-                    {productivityData ? `$${productivityData.usdBruto.toFixed(2)}` : '—'}
-                  </div>
-                </div>
-                <div className="p-4 rounded-md bg-green-50 text-center">
-                  <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
-                  <div className="text-2xl font-bold text-green-600">
-                    {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
-                  </div>
-                </div>
-                <div className="p-4 rounded-md bg-purple-50 text-center">
-                  <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
-                  <div className="text-2xl font-bold text-purple-600">
-                    {productivityData ? `$${productivityData.copModelo.toFixed(2)}` : '—'}
-                  </div>
-                </div>
+                {/* Usar InfoCardGrid con tamaño compacto para mantener alto/ancho actuales */}
+                <InfoCardGrid
+                  cards={[
+                    {
+                      value: productivityData ? `$${productivityData.usdBruto.toFixed(2)}` : '—',
+                      label: 'USD Bruto (hoy)',
+                      color: 'blue',
+                      size: 'sm'
+                    },
+                    {
+                      value: productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—',
+                      label: 'USD Modelo (hoy)',
+                      color: 'green',
+                      size: 'sm'
+                    },
+                    {
+                      value: productivityData ? `$${productivityData.copModelo.toFixed(2)}` : '—',
+                      label: 'COP Modelo (hoy)',
+                      color: 'purple',
+                      size: 'sm'
+                    }
+                  ]}
+                  columns={3}
+                />
               </div>
 
               {/* Barra de alcance de meta (compacta) */}
