@@ -18,21 +18,11 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
   const milestone = getMilestone(progress);
 
   const content: Record<0 | 25 | 50 | 75 | 100, { title: string }> = {
-    0: {
-      title: "Lista para comenzar",
-    },
-    25: {
-      title: "¡Primer avance logrado!",
-    },
-    50: {
-      title: "Vas a mitad de camino",
-    },
-    75: {
-      title: "Impulso final",
-    },
-    100: {
-      title: "¡Objetivo alcanzado!",
-    },
+    0: { title: "Aquí comienza el camino" },
+    25: { title: "¡Ya lograste el primer cuarto!" },
+    50: { title: "Vas a mitad de camino, lo estás logrando" },
+    75: { title: "¡Estás muy cerca, vamos! un poco más" },
+    100: { title: "Lo lograste, muy bien hecho, ¿vamos por la milla extra?" },
   };
 
   const data = content[milestone];
