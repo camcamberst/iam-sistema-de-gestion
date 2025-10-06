@@ -1025,6 +1025,8 @@ export default function ModelCalculatorPage() {
                   <div className="milestone-wave" />
                   <div className="milestone-particles" />
                   <div className="milestone-sparkle" />
+                  <div className="milestone-ripple" />
+                  <div className="milestone-confetti" />
                 </div>
                 
                 <div className="relative p-4">
@@ -1060,7 +1062,7 @@ export default function ModelCalculatorPage() {
                       <div className="mt-2">
                         <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                           <div 
-                            className={`h-full transition-all duration-1000 ease-out`}
+                            className={`h-full transition-all duration-1000 ease-out progress-inner`}
                             style={{ 
                               width: `${Math.min(porcentajeAlcanzado, 100)}%`,
                               background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
@@ -1106,6 +1108,43 @@ export default function ModelCalculatorPage() {
                         radial-gradient(circle at 60% 40%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px),
                         radial-gradient(circle at 80% 55%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px);
             background-repeat: no-repeat;
+          }
+          /* Ripple en el 50%-100% al pasar umbral 75% */
+          #objective-basic-card.in-view[data-milestone="75"] .milestone-ripple {
+            position: absolute; inset: 0; pointer-events: none;
+            animation: ripple-pop 900ms ease-out 1;
+            background: radial-gradient(circle at 15% 50%, rgba(255,255,255,0.35) 0 30px, transparent 31px),
+                        radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0 24px, transparent 25px),
+                        radial-gradient(circle at 85% 50%, rgba(255,255,255,0.35) 0 30px, transparent 31px);
+            background-repeat: no-repeat;
+          }
+          @keyframes ripple-pop {
+            0% { transform: scale(0.9); opacity: 0; }
+            50% { opacity: 0.35; }
+            100% { transform: scale(1.05); opacity: 0; }
+          }
+
+          /* Confetti suave al 100% adicional */
+          #objective-basic-card.in-view[data-milestone="100"] .milestone-confetti {
+            position: absolute; inset: 0; pointer-events: none;
+            animation: confetti-fall 900ms ease-out 1;
+            background: radial-gradient(circle at 25% 20%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 65% 10%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px),
+                        radial-gradient(circle at 80% 30%, rgba(255,255,255,0.9) 0 1.5px, transparent 2px);
+            background-repeat: no-repeat;
+          }
+          @keyframes confetti-fall {
+            0% { transform: translateY(-10px); opacity: 0; }
+            60% { opacity: 1; }
+            100% { transform: translateY(10px); opacity: 0; }
+          }
+
+          /* Pulso de la barra en 75% */
+          #objective-basic-card.in-view[data-milestone="75"] .progress-inner { animation: bar-pulse 800ms ease-out 1; }
+          @keyframes bar-pulse {
+            0% { filter: brightness(1); }
+            40% { filter: brightness(1.25); }
+            100% { filter: brightness(1); }
           }
 
         @keyframes shine-sweep {
