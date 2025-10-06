@@ -1069,7 +1069,7 @@ export default function ModelCalculatorPage() {
             console.log('[OBJETIVO:TA] render card', { porcentajeAlcanzado: Math.ceil(porcentajeAlcanzado) });
             return (
               <div
-                className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
+                className={`relative overflow-hidden rounded-2xl border transition-all duration-300 in-view`}
                 style={{
                   background: `linear-gradient(90deg, ${cardBgStart}, ${cardBgEnd})`,
                   borderColor: cardBorder
