@@ -19,13 +19,13 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
 
   const content: Record<0 | 25 | 50 | 75 | 100, { title: string }> = {
     0: {
-      title: "Preparada para empezar",
+      title: "Lista para comenzar",
     },
     25: {
-      title: "¡Primer 25% alcanzado!",
+      title: "¡Primer avance logrado!",
     },
     50: {
-      title: "Vas a la mitad",
+      title: "Vas a mitad de camino",
     },
     75: {
       title: "Impulso final",
@@ -69,14 +69,14 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
       : "from-blue-50 to-blue-100";
 
   return (
-    <div className="mb-2">
+    <div className="mb-1.5">
       <div
-        className={`flex items-center gap-3 rounded-xl border border-gray-200 bg-gradient-to-br ${bgGradient} px-3 py-2 shadow-sm`}
+        className={`flex items-center gap-2.5 rounded-xl border border-gray-200 bg-gradient-to-br ${bgGradient} px-3 py-1.5 shadow-sm`}
       >
-        <span className={`inline-block h-2.5 w-2.5 rounded-full ${color.dot}`} />
-        <div className={`text-xs sm:text-sm font-semibold ${color.text} truncate`}>{data.title}</div>
+        <span className={`inline-block h-2 w-2 rounded-full ${color.dot}`} />
+        <div className={`text-xs sm:text-[13px] font-semibold ${color.text} truncate`}>{data.title}</div>
         <div className="flex-1" />
-        <div className={`text-[10px] sm:text-xs font-semibold ${color.text} ${color.badgeBg} px-2 py-0.5 rounded-full`}>{progress}%</div>
+        <div className={`text-[10px] sm:text-[11px] font-semibold ${color.text} ${color.badgeBg} px-2 py-0.5 rounded-full`}>{progress}%</div>
       </div>
     </div>
   );
