@@ -233,8 +233,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido en PUT:', JSON.stringify(body, null, 2));
     
-    const { id, name, email, role, is_active, group_ids } = body;
-    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, role, is_active, group_ids });
+    const { id, name, email, password, role, is_active, group_ids } = body;
+    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, password: !!password, role, is_active, group_ids });
 
     if (!id || !name || !email || !role) {
       console.log('❌ [DEBUG] Datos faltantes en PUT:', { 
@@ -271,6 +271,25 @@ export async function PUT(request: NextRequest) {
     }
 
     console.log('✅ [API] Usuario actualizado exitosamente:', id);
+
+    // Actualizar contraseña si se proporcionó
+    if (password && password.trim().length >= 6) {
+      console.log('🔍 [DEBUG] Actualizando contraseña para usuario:', id);
+      const { error: passwordError } = await supabase.auth.admin.updateUserById(
+        id,
+        { password: password.trim() }
+      );
+
+      if (passwordError) {
+        console.error('❌ [API] Error actualizando contraseña:', passwordError);
+        // No fallar la actualización del usuario por esto, solo logear
+        console.log('⚠️ [WARNING] Contraseña no actualizada, pero usuario sí');
+      } else {
+        console.log('✅ [API] Contraseña actualizada exitosamente');
+      }
+    } else if (password && password.trim().length < 6) {
+      console.log('⚠️ [WARNING] Contraseña muy corta, no se actualiza');
+    }
 
     // Actualizar grupos si se proporcionaron
     if (group_ids !== undefined) {
