@@ -65,9 +65,9 @@ export async function GET(request: NextRequest) {
             name, 
             email, 
             role,
-            group_id,
-            groups:user_groups(
-              group:groups(id, name)
+            user_groups!user_groups_user_id_fkey(
+              group_id,
+              groups!user_groups_group_id_fkey(id, name)
             )
           ),
           period:periods(id, name, start_date, end_date)

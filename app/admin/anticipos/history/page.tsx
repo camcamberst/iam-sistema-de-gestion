@@ -282,12 +282,15 @@ export default function HistorialAnticiposPage() {
     if (user?.role === 'super_admin' && filters.grupo) {
       console.log('🔍 [FILTROS] Filtrando por grupo:', filters.grupo);
       filtered = filtered.filter(anticipo => {
-        const matches = anticipo.model.group_id === filters.grupo;
+        // Obtener el group_id del primer grupo de la modelo
+        const modelGroupId = anticipo.model.user_groups?.[0]?.group_id;
+        const matches = modelGroupId === filters.grupo;
         console.log('🔍 [FILTROS] Anticipo:', {
           id: anticipo.id,
-          modelGroupId: anticipo.model.group_id,
+          modelGroupId,
           filterGrupo: filters.grupo,
-          matches
+          matches,
+          userGroups: anticipo.model.user_groups
         });
         return matches;
       });
