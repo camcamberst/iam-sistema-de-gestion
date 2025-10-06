@@ -1024,16 +1024,23 @@ export default function ModelCalculatorPage() {
                   <div className="arrow-25" />
                   <div className="mini-check-25" />
                   <div className="bonus-count-25" />
+                  <div className="streak-25" />
+                  <div className="banner-25" />
                   {/* 50% */}
                   <div className="arrows-50" />
                   <div className="underline-50" />
+                  <div className="split-50" />
                   {/* 75% */}
                   <div className="aura-75" />
                   <div className="badge-75" />
+                  <div className="surge-75" />
+                  <div className="toast-75" />
                   {/* 100% */}
                   <div className="crown-100" />
                   <div className="filllock-100" />
                   <div className="confetti-100" />
+                  <div className="stamp-100" />
+                  <div className="cta-100" />
                 </div>
                 
                 <div className="relative p-4">
