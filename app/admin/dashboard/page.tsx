@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { createClient } from "@supabase/supabase-js";
+import { getColombiaDate } from '@/utils/calculator-dates';
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 
@@ -102,9 +103,9 @@ export default function AdminDashboard() {
         const percentage = (enabled[0]?.percentage_override || enabled[0]?.group_percentage || 80) as number;
         const goalUsd = (enabled[0]?.min_quota_override || enabled[0]?.group_min_quota || 470) as number;
 
-        // 3) Valores del día (v2)
-        const today = new Date().toISOString().split('T')[0];
-        const valuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${today}`);
+        // 3) Valores del día usando timezone de Colombia
+        const periodDate = getColombiaDate();
+        const valuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${periodDate}`);
         const valuesJson = await valuesRes.json();
         const rows: Array<{ platform_id: string; value: number }> = valuesJson?.data || [];
         const idToValue: Record<string, number> = {};

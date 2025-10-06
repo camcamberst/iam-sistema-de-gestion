@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
+import { getColombiaDate } from '@/utils/calculator-dates';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
@@ -214,6 +215,23 @@ export default function MiHistorialPage() {
     return label;
   };
 
+  // Función auxiliar para generar clave de período consistente
+  const generatePeriodKey = (dateString: string): string => {
+    try {
+      // Usar timezone de Colombia para consistencia
+      const date = new Date(dateString + 'T12:00:00-05:00'); // Mediodía Colombia para evitar problemas de timezone
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1; // getMonth() es 0-based
+      const day = date.getDate();
+      
+      const periodNumber = day <= 15 ? '1' : '2';
+      return `${year}-${month.toString().padStart(2, '0')}-${periodNumber}`;
+    } catch (error) {
+      console.error('Error generando clave de período:', error, dateString);
+      return '';
+    }
+  };
+
   const filterAnticiposByPeriod = (anticiposData: Anticipo[], periodKey: string) => {
     console.log('🔍 [FILTRO PERÍODOS] Filtrando por período específico:', periodKey);
     console.log('🔍 [FILTRO PERÍODOS] Total anticipos disponibles:', anticiposData.length);
@@ -221,25 +239,17 @@ export default function MiHistorialPage() {
     const filteredAnticipos = anticiposData.filter(anticipo => {
       if (!anticipo.period?.start_date) return false;
       
-      // Corregir parseo de fecha histórica
-      const correctedDate = new Date(anticipo.period.start_date + 'T00:00:00-05:00');
-      const year = correctedDate.getFullYear();
-      const month = correctedDate.getMonth();
-      const day = correctedDate.getDate();
+      const anticipoPeriodKey = generatePeriodKey(anticipo.period.start_date);
+      const matches = anticipoPeriodKey === periodKey;
       
-      // Generar clave de período corregida
-      const periodNumber = day <= 15 ? '1' : '2';
-      const correctedPeriodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
-      
-      const matches = correctedPeriodKey === periodKey;
-      console.log('🔍 [FILTRO PERÍODOS] Anticipo corregido:', {
+      console.log('🔍 [FILTRO PERÍODOS] Anticipo:', {
         id: anticipo.id,
         original_start_date: anticipo.period.start_date,
-        corrected_date: correctedDate.toISOString().split('T')[0],
-        correctedPeriodKey,
+        anticipoPeriodKey,
         periodKey,
         matches
       });
+      
       return matches;
     });
     

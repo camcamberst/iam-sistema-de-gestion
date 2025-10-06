@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ModelCalculatorNew from '../../../../components/ModelCalculatorNew';
 import { createClient } from "@supabase/supabase-js";
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface User {
   id: string;
@@ -106,9 +107,9 @@ export default function ModelDashboard() {
       const percentage = (enabled[0]?.percentage_override || enabled[0]?.group_percentage || 80) as number;
       const goalUsd = (enabled[0]?.min_quota_override || enabled[0]?.group_min_quota || 470) as number;
 
-      // 3) Valores del día (v2)
-      const today = new Date().toISOString().split('T')[0];
-      const valuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${today}`);
+      // 3) Valores del día usando timezone de Colombia
+      const periodDate = getColombiaDate();
+      const valuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
       const valuesJson = await valuesRes.json();
       const rows: Array<{ platform_id: string; value: number }> = valuesJson?.data || [];
       const idToValue: Record<string, number> = {};
@@ -123,28 +124,35 @@ export default function ModelDashboard() {
         const value = idToValue[p.id] || 0;
         if (value <= 0) continue;
 
+        // Calcular USD bruto con fórmulas específicas por plataforma (igual que Mi Calculadora)
         let usdFromPlatform = 0;
-        if (p.currency === 'USD') {
-          if (p.direct_payout) {
-            usdFromPlatform = value;
-          } else if (p.discount_factor) {
-            usdFromPlatform = value * p.discount_factor;
+        if (p.currency === 'EUR') {
+          if (p.id === 'big7') {
+            usdFromPlatform = (value * rates.eur_usd) * 0.84; // 16% impuesto
+          } else if (p.id === 'mondo') {
+            usdFromPlatform = (value * rates.eur_usd) * 0.78; // 22% descuento
           } else {
-            usdFromPlatform = value;
-          }
-        } else if (p.currency === 'EUR') {
-          const eurToUsd = value * rates.eur_usd;
-          if (p.tax_rate) {
-            usdFromPlatform = eurToUsd * (1 - p.tax_rate);
-          } else {
-            usdFromPlatform = eurToUsd;
+            usdFromPlatform = value * rates.eur_usd; // EUR directo
           }
         } else if (p.currency === 'GBP') {
-          const gbpToUsd = value * rates.gbp_usd;
-          if (p.discount_factor) {
-            usdFromPlatform = gbpToUsd * p.discount_factor;
+          if (p.id === 'aw') {
+            usdFromPlatform = (value * rates.gbp_usd) * 0.677; // 32.3% descuento
           } else {
-            usdFromPlatform = gbpToUsd;
+            usdFromPlatform = value * rates.gbp_usd; // GBP directo
+          }
+        } else if (p.currency === 'USD') {
+          if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+            usdFromPlatform = value * 0.75; // 25% descuento
+          } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+            usdFromPlatform = value * 0.05; // 100 tokens = 5 USD
+          } else if (p.id === 'dxlive') {
+            usdFromPlatform = value * 0.60; // 100 pts = 60 USD
+          } else if (p.id === 'secretfriends') {
+            usdFromPlatform = value * 0.5; // 50% descuento
+          } else if (p.id === 'superfoon') {
+            usdFromPlatform = value; // 100% directo
+          } else {
+            usdFromPlatform = value; // USD directo por defecto
           }
         }
 
