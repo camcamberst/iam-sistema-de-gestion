@@ -26,31 +26,30 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
     
     // 1. Intentar cargar valores actuales de model_values
-    // 🔧 FIX: No filtrar por period_date para evitar problemas de timezone
-    // En su lugar, obtener los valores más recientes del modelo
-    const { data: allValues, error: currentError } = await supabase
+    // 🔧 FIX SOSTENIBLE: Usar filtro de fecha inteligente para manejar timezone
+    const getCurrentPeriodDates = () => {
+      const now = new Date();
+      return {
+        colombia: now.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }),
+        europe: now.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+      };
+    };
+
+    const dates = getCurrentPeriodDates();
+    console.log('🔍 [MODEL-VALUES-V2] Searching in dates:', dates);
+
+    // Buscar en ambas fechas para manejar desfase de timezone + límite de seguridad
+    const { data: currentValues, error: currentError } = await supabase
       .from('model_values')
       .select(`
         model_id, platform_id, value, period_date, updated_at
       `)
       .eq('model_id', modelId)
-      .order('updated_at', { ascending: false });
+      .in('period_date', [dates.colombia, dates.europe])
+      .order('updated_at', { ascending: false })
+      .limit(100); // 🔧 LÍMITE DE SEGURIDAD: máximo 100 registros
 
-    // 🔧 FIX: Obtener solo el valor más reciente por plataforma
-    let currentValues = [];
-    if (allValues && allValues.length > 0) {
-      const platformMap = new Map();
-      
-      // Procesar valores ordenados por fecha más reciente
-      allValues.forEach(value => {
-        if (!platformMap.has(value.platform_id)) {
-          platformMap.set(value.platform_id, value);
-        }
-      });
-      
-      currentValues = Array.from(platformMap.values());
-      console.log('🔍 [MODEL-VALUES-V2] Processed unique values per platform:', currentValues.length);
-    }
+    console.log('🔍 [MODEL-VALUES-V2] Found values:', currentValues?.length || 0);
 
     console.log('🔍 [MODEL-VALUES-V2] Current values query completed. Values:', currentValues);
     console.log('🔍 [MODEL-VALUES-V2] Current values count:', currentValues?.length || 0);
