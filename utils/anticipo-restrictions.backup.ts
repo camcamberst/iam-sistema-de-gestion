@@ -23,7 +23,7 @@ export const canRequestAnticipo = (): AnticipoRestriction => {
   const BYPASS_ANTICIPOS = process.env.NEXT_PUBLIC_BYPASS_ANTICIPOS === 'true';
   
   // 🔧 BYPASS HARDCODED TEMPORAL: Activar inmediatamente para pruebas
-  const BYPASS_HARDCODED = false; // CAMBIAR A false CUANDO SE QUIERA DESACTIVAR
+  const BYPASS_HARDCODED = true; // CAMBIAR A false CUANDO SE QUIERA DESACTIVAR
   
   if (BYPASS_ANTICIPOS || BYPASS_HARDCODED) {
     console.log('🔓 [ANTICIPO-RESTRICTIONS] BYPASS ACTIVADO - Restricciones deshabilitadas para pruebas');
