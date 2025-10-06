@@ -92,13 +92,26 @@ export async function GET(request: NextRequest) {
     // CRÍTICO: Los anticipos requieren datos exactos del período específico para integridad financiera
     
     // Primero intentar con la fecha exacta del período
-    let { data: values, error: valuesError } = await supabase
+    let { data: exactValues, error: valuesError } = await supabase
       .from('model_values')
-      .select('platform_id, value, period_date')
+      .select('platform_id, value, period_date, updated_at')
       .eq('model_id', modelId)
-      .eq('period_date', periodDate);
+      .eq('period_date', periodDate)
+      .order('updated_at', { ascending: false });
 
-    console.log('🔍 [MI-CALCULADORA-REAL] Valores con fecha exacta:', values?.length || 0);
+    // Dedupe por plataforma tomando el más reciente
+    let values: any[] | null = null;
+    if (exactValues && exactValues.length > 0) {
+      const platformMap = new Map<string, any>();
+      for (const v of exactValues) {
+        if (!platformMap.has(v.platform_id)) {
+          platformMap.set(v.platform_id, v);
+        }
+      }
+      values = Array.from(platformMap.values());
+    }
+
+    console.log('🔍 [MI-CALCULADORA-REAL] Valores con fecha exacta (dedupe):', values?.length || 0);
 
     // Si no encuentra datos con fecha exacta, buscar en fechas cercanas (±2 días) para manejar timezone
     if (!values || values.length === 0) {
@@ -177,11 +190,18 @@ export async function GET(request: NextRequest) {
     // 8. MAPEAR VALORES A PLATAFORMAS
     const platformsWithValues = platforms?.map(platform => {
       const value = values?.find(v => v.platform_id === platform.id);
+      // Usar porcentaje por plataforma si existe; fallback a override o grupo
+      const platformPercentage = (platform as any).percentage;
+      const effectivePercentage =
+        (typeof platformPercentage === 'number' && !Number.isNaN(platformPercentage))
+          ? platformPercentage
+          : (config.percentage_override || config.group_percentage || 80);
+
       return {
         ...platform,
         value: value ? Number(value.value) || 0 : 0,
         enabled: config.enabled_platforms.includes(platform.id),
-        percentage: config.percentage_override || config.group_percentage || 80
+        percentage: effectivePercentage
       };
     }) || [];
 
