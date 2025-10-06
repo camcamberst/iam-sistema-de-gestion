@@ -85,6 +85,7 @@ export default function HistorialAnticiposPage() {
     totalPagado: 0
   });
   const [selectedCardType, setSelectedCardType] = useState<'all' | 'realizados' | 'pendientes' | 'pagados'>('all');
+  const [showResults, setShowResults] = useState(true);
 
   const router = useRouter();
   const supabase = createClient(
@@ -101,10 +102,11 @@ export default function HistorialAnticiposPage() {
     console.log('🔍 [USE EFFECT] Aplicando filtros automáticamente:', {
       anticipos: anticipos.length,
       filters: filters,
-      selectedCardType: selectedCardType
+      selectedCardType: selectedCardType,
+      showResults: showResults
     });
     applyFilters();
-  }, [anticipos, filters, selectedCardType]);
+  }, [anticipos, filters, selectedCardType, showResults]);
 
   // Dropdown ahora se controla solo con hover, no necesita click-outside
 
@@ -230,16 +232,19 @@ export default function HistorialAnticiposPage() {
   const handleCardClick = (cardType: 'all' | 'realizados' | 'pendientes' | 'pagados') => {
     console.log('🔍 [CARD CLICK] Card clicked:', cardType);
     console.log('🔍 [CARD CLICK] Current selectedCardType:', selectedCardType);
+    console.log('🔍 [CARD CLICK] Current showResults:', showResults);
     console.log('🔍 [CARD CLICK] Anticipos disponibles:', anticipos.length);
     console.log('🔍 [CARD CLICK] Estados de anticipos:', anticipos.map(a => ({ id: a.id, estado: a.estado, model: a.model.name })));
     
-    // Si se hace clic en el mismo card type, deseleccionar (volver a 'all')
+    // Si se hace clic en el mismo card type, ocultar resultados
     if (selectedCardType === cardType) {
-      console.log('🔍 [CARD CLICK] Deseleccionando card, volviendo a "all"');
+      console.log('🔍 [CARD CLICK] Segundo clic en el mismo card, ocultando resultados');
+      setShowResults(false);
       setSelectedCardType('all');
     } else {
       console.log('🔍 [CARD CLICK] Seleccionando nuevo card type:', cardType);
       setSelectedCardType(cardType);
+      setShowResults(true);
     }
   };
 
@@ -417,6 +422,13 @@ export default function HistorialAnticiposPage() {
     }
 
 
+
+    // Si showResults es false, no mostrar ningún resultado
+    if (!showResults) {
+      console.log('🔍 [FILTROS] showResults es false, ocultando todos los resultados');
+      setFilteredAnticipos([]);
+      return;
+    }
 
     console.log('🔍 [FILTROS] Resultado final:', filtered.length);
     setFilteredAnticipos(filtered);
@@ -706,6 +718,27 @@ export default function HistorialAnticiposPage() {
             </div>
           </div>
         </div>
+
+        {/* Botón para mostrar resultados cuando están ocultos */}
+        {!showResults && (
+          <div className="apple-card mb-6 text-center py-8">
+            <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
+            </svg>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Resultados Ocultos</h3>
+            <p className="text-gray-500 mb-4">Los resultados han sido ocultados. Haz clic en "Mostrar Todos" para ver los anticipos nuevamente.</p>
+            <button
+              onClick={() => {
+                console.log('🔍 [MOSTRAR TODOS] Botón clickeado');
+                setShowResults(true);
+                setSelectedCardType('all');
+              }}
+              className="apple-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
+            >
+              Mostrar Todos
+            </button>
+          </div>
+        )}
 
         {/* Lista de Anticipos */}
         {filteredAnticipos.length === 0 ? (
