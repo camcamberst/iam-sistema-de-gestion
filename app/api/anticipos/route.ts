@@ -65,6 +65,7 @@ export async function GET(request: NextRequest) {
             name, 
             email, 
             role,
+            group_id,
             groups:user_groups(
               group:groups(id, name)
             )
