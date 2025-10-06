@@ -229,9 +229,18 @@ export default function HistorialAnticiposPage() {
 
   const handleCardClick = (cardType: 'all' | 'realizados' | 'pendientes' | 'pagados') => {
     console.log('🔍 [CARD CLICK] Card clicked:', cardType);
+    console.log('🔍 [CARD CLICK] Current selectedCardType:', selectedCardType);
     console.log('🔍 [CARD CLICK] Anticipos disponibles:', anticipos.length);
     console.log('🔍 [CARD CLICK] Estados de anticipos:', anticipos.map(a => ({ id: a.id, estado: a.estado, model: a.model.name })));
-    setSelectedCardType(cardType);
+    
+    // Si se hace clic en el mismo card type, deseleccionar (volver a 'all')
+    if (selectedCardType === cardType) {
+      console.log('🔍 [CARD CLICK] Deseleccionando card, volviendo a "all"');
+      setSelectedCardType('all');
+    } else {
+      console.log('🔍 [CARD CLICK] Seleccionando nuevo card type:', cardType);
+      setSelectedCardType(cardType);
+    }
   };
 
   const loadGrupos = async () => {
