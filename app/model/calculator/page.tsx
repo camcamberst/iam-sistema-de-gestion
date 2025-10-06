@@ -1050,6 +1050,7 @@ export default function ModelCalculatorPage() {
             const subTextColor = rgbToHex(shade(base, 0.45));
             
             const milestone = progressPct >= 100 ? 100 : progressPct >= 75 ? 75 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
+            console.log('[OBJETIVO:TA] render card', { porcentajeAlcanzado: Math.ceil(porcentajeAlcanzado) });
             return (
               <div
                 className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
