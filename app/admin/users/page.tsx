@@ -471,6 +471,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
   });
 
   const [restrictionMessage, setRestrictionMessage] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const [validation, setValidation] = useState({
     name: { isValid: true, errors: [] as string[] },
