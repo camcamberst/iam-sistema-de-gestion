@@ -46,8 +46,8 @@ export default function CalculatorHistory() {
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   
-  // Estado para coordinación de dropdowns (principio estético)
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  // Estado para coordinación de dropdowns (principio estético) - removido temporalmente
+  // const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -217,10 +217,10 @@ export default function CalculatorHistory() {
     '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
   };
 
-  // Coordinación de dropdowns (principio estético)
-  const handleFilterFocus = (filterId: string) => {
-    setActiveDropdown(filterId); // Cerrar otros dropdowns
-  };
+  // Coordinación de dropdowns (principio estético) - removido temporalmente
+  // const handleFilterFocus = (filterId: string) => {
+  //   setActiveDropdown(filterId); // Cerrar otros dropdowns
+  // };
 
   // Preparar opciones para AppleDropdown
   const yearOptions = [
@@ -329,7 +329,6 @@ export default function CalculatorHistory() {
                 value={selectedYear}
                 onChange={setSelectedYear}
                 placeholder="Seleccionar año"
-                onFocus={() => handleFilterFocus('year')}
                 className="w-full"
               />
             </div>
@@ -342,7 +341,6 @@ export default function CalculatorHistory() {
                 value={selectedMonth}
                 onChange={setSelectedMonth}
                 placeholder="Seleccionar mes"
-                onFocus={() => handleFilterFocus('month')}
                 className="w-full"
               />
             </div>
@@ -355,7 +353,6 @@ export default function CalculatorHistory() {
                 value={selectedType}
                 onChange={setSelectedType}
                 placeholder="Seleccionar tipo"
-                onFocus={() => handleFilterFocus('type')}
                 className="w-full"
               />
             </div>
