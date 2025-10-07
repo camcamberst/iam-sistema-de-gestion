@@ -42,6 +42,7 @@ export default function CalculatorHistory() {
   // Estado local para funcionalidades mejoradas
   const [expandedPeriod, setExpandedPeriod] = useState<string | null>(null);
   const [selectedYear, setSelectedYear] = useState<string>('all');
+  const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
   
   const supabase = createClient(
@@ -183,16 +184,34 @@ export default function CalculatorHistory() {
 
   // Filtrar períodos según selección
   const filteredPeriods = historicalPeriods.filter(period => {
-    const periodYear = new Date(period.period_date).getFullYear().toString();
+    const periodDate = new Date(period.period_date);
+    const periodYear = periodDate.getFullYear().toString();
+    const periodMonth = (periodDate.getMonth() + 1).toString().padStart(2, '0');
+    
     const yearMatch = selectedYear === 'all' || periodYear === selectedYear;
+    const monthMatch = selectedMonth === 'all' || periodMonth === selectedMonth;
     const typeMatch = selectedType === 'all' || period.period_type === selectedType;
-    return yearMatch && typeMatch;
+    
+    return yearMatch && monthMatch && typeMatch;
   });
 
   // Obtener años únicos para filtro
   const availableYears = Array.from(new Set(historicalPeriods.map(period => 
     new Date(period.period_date).getFullYear().toString()
   ))).sort((a, b) => b.localeCompare(a));
+
+  // Obtener meses únicos para filtro
+  const availableMonths = Array.from(new Set(historicalPeriods.map(period => {
+    const month = new Date(period.period_date).getMonth() + 1;
+    return month.toString().padStart(2, '0');
+  }))).sort((a, b) => a.localeCompare(b));
+
+  // Nombres de meses en español
+  const monthNames = {
+    '01': 'Enero', '02': 'Febrero', '03': 'Marzo', '04': 'Abril',
+    '05': 'Mayo', '06': 'Junio', '07': 'Julio', '08': 'Agosto',
+    '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
+  };
 
   if (loading) {
     return (
@@ -284,6 +303,23 @@ export default function CalculatorHistory() {
                 <option value="all">Todos los años</option>
                 {availableYears.map(year => (
                   <option key={year} value={year}>{year}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Filtrar por mes
+              </label>
+              <select
+                value={selectedMonth}
+                onChange={(e) => setSelectedMonth(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              >
+                <option value="all">Todos los meses</option>
+                {availableMonths.map(month => (
+                  <option key={month} value={month}>
+                    {monthNames[month as keyof typeof monthNames]}
+                  </option>
                 ))}
               </select>
             </div>
