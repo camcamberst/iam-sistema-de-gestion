@@ -24,6 +24,21 @@ interface Platform {
   direct_payout: boolean;
 }
 
+// Porcentajes estandarizados por grupos
+const getStandardPercentageByGroup = (groupName: string): number => {
+  const standardPercentages: Record<string, number> = {
+    'Cabecera': 60,
+    'Diamante': 60,
+    'Sede MP': 60,
+    'Terrazas': 60,
+    'Victoria': 60,
+    'Satélites': 80,
+    'Otros': 70
+  };
+  
+  return standardPercentages[groupName] || 80; // Fallback a 80%
+};
+
 export default function ConfigCalculatorPage() {
   const router = useRouter();
   
@@ -148,11 +163,19 @@ export default function ConfigCalculatorPage() {
       setGroupPercentage(config.group_percentage?.toString() || '');
       setGroupMinQuota(config.group_min_quota?.toString() || '');
     } else {
-      // Resetear formulario
+      // Resetear formulario y cargar porcentaje estándar del grupo
       setEnabledPlatforms([]);
       setPercentageOverride('');
       setMinQuotaOverride('');
-      setGroupPercentage('');
+      
+      // Cargar porcentaje estándar del grupo
+      const groupName = model.groups[0]?.name;
+      if (groupName) {
+        const standardPercentage = getStandardPercentageByGroup(groupName);
+        setGroupPercentage(standardPercentage.toString());
+      } else {
+        setGroupPercentage('');
+      }
       setGroupMinQuota('');
     }
   };
@@ -370,60 +393,105 @@ export default function ConfigCalculatorPage() {
               </div>
 
               {/* Configuración de reparto */}
-              <div>
-                <h3 className="text-base font-medium text-gray-900 mb-3">Configuración de Reparto</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label htmlFor="percentageOverride" className="block text-sm font-medium text-gray-700">
-                      % de Reparto (Override)
-                    </label>
-                    <input
-                      type="number"
-                      id="percentageOverride"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={percentageOverride}
-                      onChange={(e) => setPercentageOverride(e.target.value)}
-                      placeholder="Ej: 70"
-                    />
+              <div className="bg-gray-50 rounded-lg p-4">
+                <h3 className="text-lg font-medium text-gray-900 mb-4">Configuración de Reparto</h3>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Columna Grupo */}
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Configuración del Grupo</h4>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label htmlFor="groupPercentage" className="block text-sm font-medium text-gray-600 mb-1">
+                            Porcentaje Grupo
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              id="groupPercentage"
+                              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              value={groupPercentage}
+                              onChange={(e) => setGroupPercentage(e.target.value)}
+                              placeholder="Ej: 60"
+                            />
+                            <span className="text-xs text-gray-500">%</span>
+                          </div>
+                          {selectedModel?.groups?.[0] && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Estándar: {getStandardPercentageByGroup(selectedModel.groups[0].name)}%
+                            </p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="groupMinQuota" className="block text-sm font-medium text-gray-600 mb-1">
+                            Objetivo Grupo
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              id="groupMinQuota"
+                              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              value={groupMinQuota}
+                              onChange={(e) => setGroupMinQuota(e.target.value)}
+                              placeholder="Ej: 500000"
+                            />
+                            <span className="text-xs text-gray-500">USD</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label htmlFor="minQuotaOverride" className="block text-sm font-medium text-gray-700">
-                      Cuota Mínima (Override)
-                    </label>
-                    <input
-                      type="number"
-                      id="minQuotaOverride"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={minQuotaOverride}
-                      onChange={(e) => setMinQuotaOverride(e.target.value)}
-                      placeholder="Ej: 1000000"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="groupPercentage" className="block text-sm font-medium text-gray-700">
-                      % de Reparto (Grupo)
-                    </label>
-                    <input
-                      type="number"
-                      id="groupPercentage"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={groupPercentage}
-                      onChange={(e) => setGroupPercentage(e.target.value)}
-                      placeholder="Ej: 60"
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="groupMinQuota" className="block text-sm font-medium text-gray-700">
-                      Cuota Mínima (Grupo)
-                    </label>
-                    <input
-                      type="number"
-                      id="groupMinQuota"
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      value={groupMinQuota}
-                      onChange={(e) => setGroupMinQuota(e.target.value)}
-                      placeholder="Ej: 500000"
-                    />
+                  
+                  {/* Columna Modelo */}
+                  <div className="space-y-4">
+                    <div className="bg-white rounded-lg p-4 border border-gray-200">
+                      <h4 className="text-sm font-medium text-gray-700 mb-3">Configuración del Modelo</h4>
+                      
+                      <div className="space-y-3">
+                        <div>
+                          <label htmlFor="percentageOverride" className="block text-sm font-medium text-gray-600 mb-1">
+                            Porcentaje Modelo
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              id="percentageOverride"
+                              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              value={percentageOverride}
+                              onChange={(e) => setPercentageOverride(e.target.value)}
+                              placeholder="Ej: 70"
+                            />
+                            <span className="text-xs text-gray-500">%</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Dejar vacío para usar el porcentaje del grupo
+                          </p>
+                        </div>
+                        
+                        <div>
+                          <label htmlFor="minQuotaOverride" className="block text-sm font-medium text-gray-600 mb-1">
+                            Objetivo Modelo
+                          </label>
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="number"
+                              id="minQuotaOverride"
+                              className="flex-1 rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                              value={minQuotaOverride}
+                              onChange={(e) => setMinQuotaOverride(e.target.value)}
+                              placeholder="Ej: 300000"
+                            />
+                            <span className="text-xs text-gray-500">USD</span>
+                          </div>
+                          <p className="text-xs text-gray-500 mt-1">
+                            Dejar vacío para usar el objetivo del grupo
+                          </p>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
