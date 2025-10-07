@@ -186,97 +186,20 @@ export default function CalculatorHistory() {
   // Obtener valor real del período actual desde model_values
   const [currentPeriodUSD, setCurrentPeriodUSD] = useState(0);
   
-  // Cargar valor del período actual usando la misma lógica que Mi Calculadora
+  // Obtener valor en tiempo real de USD Modelo desde Mi Calculadora
   useEffect(() => {
     const loadCurrentPeriodValue = async () => {
       if (!user) return;
       
       try {
-        // Obtener valores actuales de model_values
-        const { data: currentValues, error } = await supabase
-          .from('model_values')
-          .select('value, platform_id')
-          .eq('model_id', user.id);
+        // Llamar al endpoint que calcula el valor real de USD Modelo
+        const response = await fetch(`/api/calculator/mi-calculadora-real?modelId=${user.id}`);
+        const data = await response.json();
         
-        if (error) {
-          console.error('Error loading current period value:', error);
-          return;
-        }
-        
-        if (currentValues && currentValues.length > 0) {
-          // Obtener configuración de plataformas para aplicar fórmulas correctas
-          const { data: platforms, error: platformsError } = await supabase
-            .from('calculator_platforms')
-            .select('id, currency, percentage')
-            .eq('enabled', true);
-          
-          if (platformsError) {
-            console.error('Error loading platforms:', platformsError);
-            return;
-          }
-          
-          // Obtener tasas de cambio
-          const { data: rates, error: ratesError } = await supabase
-            .from('calculator_rates')
-            .select('*')
-            .eq('is_active', true)
-            .single();
-          
-          if (ratesError) {
-            console.error('Error loading rates:', ratesError);
-            return;
-          }
-          
-          // Aplicar la misma lógica de cálculo que Mi Calculadora
-          let totalUSD = 0;
-          
-          currentValues.forEach(item => {
-            const platform = platforms?.find(p => p.id === item.platform_id);
-            if (!platform) return;
-            
-            // Excluir plataformas COP/pesos
-            if (platform.id.toLowerCase().includes('cop') || 
-                platform.id.toLowerCase().includes('pesos')) {
-              return;
-            }
-            
-            let usdModelo = 0;
-            const value = item.value || 0;
-            
-            // Aplicar fórmulas específicas por plataforma (misma lógica que calculator)
-            if (platform.currency === 'EUR') {
-              if (platform.id === 'big7') {
-                usdModelo = (value * (rates?.eur_usd || 1.01)) * 0.84;
-              } else if (platform.id === 'mondo') {
-                usdModelo = (value * (rates?.eur_usd || 1.01)) * 0.78;
-              } else {
-                usdModelo = value * (rates?.eur_usd || 1.01);
-              }
-            } else if (platform.currency === 'GBP') {
-              if (platform.id === 'aw') {
-                usdModelo = (value * (rates?.gbp_usd || 1.20)) * 0.677;
-              } else {
-                usdModelo = value * (rates?.gbp_usd || 1.20);
-              }
-            } else if (platform.currency === 'USD') {
-              if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                usdModelo = value * 0.75;
-              } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                usdModelo = value * 0.05;
-              } else if (platform.id === 'dxlive') {
-                usdModelo = value * 0.60;
-              } else if (platform.id === 'secretfriends') {
-                usdModelo = value * 0.5;
-              } else {
-                usdModelo = value;
-              }
-            }
-            
-            // Aplicar porcentaje de la plataforma
-            totalUSD += usdModelo * (platform.percentage / 100);
-          });
-          
-          setCurrentPeriodUSD(totalUSD);
+        if (data.success && data.usdModelo !== undefined) {
+          setCurrentPeriodUSD(data.usdModelo);
+        } else {
+          console.error('Error loading USD Modelo value:', data.error);
         }
       } catch (error) {
         console.error('Error loading current period value:', error);
