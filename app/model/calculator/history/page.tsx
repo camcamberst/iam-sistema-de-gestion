@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface User {
   id: string;
@@ -44,6 +45,9 @@ export default function CalculatorHistory() {
   const [selectedYear, setSelectedYear] = useState<string>('all');
   const [selectedMonth, setSelectedMonth] = useState<string>('all');
   const [selectedType, setSelectedType] = useState<string>('all');
+  
+  // Estado para coordinación de dropdowns (principio estético)
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -213,6 +217,31 @@ export default function CalculatorHistory() {
     '09': 'Septiembre', '10': 'Octubre', '11': 'Noviembre', '12': 'Diciembre'
   };
 
+  // Coordinación de dropdowns (principio estético)
+  const handleFilterFocus = (filterId: string) => {
+    setActiveDropdown(filterId); // Cerrar otros dropdowns
+  };
+
+  // Preparar opciones para AppleDropdown
+  const yearOptions = [
+    { value: 'all', label: 'Todos los años' },
+    ...availableYears.map(year => ({ value: year, label: year }))
+  ];
+
+  const monthOptions = [
+    { value: 'all', label: 'Todos los meses' },
+    ...availableMonths.map(month => ({ 
+      value: month, 
+      label: monthNames[month as keyof typeof monthNames] 
+    }))
+  ];
+
+  const typeOptions = [
+    { value: 'all', label: 'Todos los tipos' },
+    { value: '1-15', label: 'Período 1 (1-15)' },
+    { value: '16-31', label: 'Período 2 (16-31)' }
+  ];
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -288,54 +317,47 @@ export default function CalculatorHistory() {
           </div>
         )}
 
-        {/* Filtros */}
+        {/* Filtros con AppleDropdown (principio estético) */}
         {historicalPeriods.length > 0 && (
           <div className="mb-6 flex flex-wrap gap-4">
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Filtrar por año
               </label>
-              <select
+              <AppleDropdown
+                options={yearOptions}
                 value={selectedYear}
-                onChange={(e) => setSelectedYear(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los años</option>
-                {availableYears.map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
+                onChange={setSelectedYear}
+                placeholder="Seleccionar año"
+                onFocus={() => handleFilterFocus('year')}
+                className="w-full"
+              />
             </div>
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Filtrar por mes
               </label>
-              <select
+              <AppleDropdown
+                options={monthOptions}
                 value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los meses</option>
-                {availableMonths.map(month => (
-                  <option key={month} value={month}>
-                    {monthNames[month as keyof typeof monthNames]}
-                  </option>
-                ))}
-              </select>
+                onChange={setSelectedMonth}
+                placeholder="Seleccionar mes"
+                onFocus={() => handleFilterFocus('month')}
+                className="w-full"
+              />
             </div>
             <div className="flex-1 min-w-[200px]">
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Filtrar por tipo
               </label>
-              <select
+              <AppleDropdown
+                options={typeOptions}
                 value={selectedType}
-                onChange={(e) => setSelectedType(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="all">Todos los tipos</option>
-                <option value="1-15">Período 1 (1-15)</option>
-                <option value="16-31">Período 2 (16-31)</option>
-              </select>
+                onChange={setSelectedType}
+                placeholder="Seleccionar tipo"
+                onFocus={() => handleFilterFocus('type')}
+                className="w-full"
+              />
             </div>
           </div>
         )}
