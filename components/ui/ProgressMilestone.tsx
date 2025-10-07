@@ -20,9 +20,9 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
   const content: Record<0 | 25 | 50 | 75 | 100, { title: string }> = {
     0: { title: "Aquí comienza el camino" },
     25: { title: "¡Ya lograste el primer cuarto!" },
-    50: { title: "Vas a mitad de camino, lo estás logrando" },
-    75: { title: "¡Estás muy cerca, vamos! un poco más" },
-    100: { title: "Lo lograste, muy bien hecho, ¿vamos por la milla extra?" },
+    50: { title: "Vas a mitad de camino" },
+    75: { title: "¡Estás muy cerca!" },
+    100: { title: "Lo lograste, muy bien hecho" },
   };
 
   const data = content[milestone];
@@ -64,7 +64,7 @@ export const ProgressMilestone: React.FC<ProgressMilestoneProps> = ({ progress }
         className={`flex items-center gap-2 rounded-xl border border-gray-200 bg-gradient-to-br ${bgGradient} px-2.5 py-1 shadow-sm`}
       >
         <span className={`inline-block h-1.5 w-1.5 rounded-full ${color.dot}`} />
-        <div className={`text-[11px] sm:text-[12px] font-semibold ${color.text} truncate leading-none`}>{data.title}</div>
+        <div className={`text-[11px] sm:text-[12px] font-semibold ${color.text} leading-tight`}>{data.title}</div>
         <div className="flex-1" />
         <div className={`text-[10px] sm:text-[11px] font-semibold ${color.text} ${color.badgeBg} px-1.5 py-0.5 rounded-full leading-none`}>{progress}%</div>
       </div>
