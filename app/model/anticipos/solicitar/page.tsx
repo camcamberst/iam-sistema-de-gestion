@@ -212,21 +212,27 @@ export default function SolicitarAnticipoPage() {
   };
 
 
-  // Manejar cambio en el input de monto
+  // Manejar cambio en el input de monto (sin forzar aún el múltiplo)
   const handleMontoChange = (value: string) => {
     const numericValue = parseFormattedNumber(value);
-    // Forzar múltiplos de 10.000 automáticamente
-    const adjustedValue = Math.floor(numericValue / 10000) * 10000;
 
-    // Actualizar el valor numérico
-    setAnticipoData(prev => ({ ...prev, monto_solicitado: adjustedValue }));
-    
-    // Formatear para mostrar
-    setMontoFormatted(formatNumber(adjustedValue));
-    
-    // Validar
-    const error = validateMonto(adjustedValue);
+    // Actualizar el valor numérico mientras escribe
+    setAnticipoData(prev => ({ ...prev, monto_solicitado: numericValue }));
+
+    // Formatear para mostrar lo que escribe
+    setMontoFormatted(value.replace(/[^0-9.,]/g, ''));
+
+    // Validar en vivo (puede mostrar error de múltiplo hasta que salga del campo)
+    const error = validateMonto(numericValue);
     setMontoError(error);
+  };
+
+  // Al salir del campo, ajustar al múltiplo de 10.000 hacia abajo
+  const handleMontoBlur = () => {
+    const adjustedValue = roundDownToNearestTenThousand(anticipoData.monto_solicitado || 0);
+    setAnticipoData(prev => ({ ...prev, monto_solicitado: adjustedValue }));
+    setMontoFormatted(formatNumber(adjustedValue));
+    setMontoError(validateMonto(adjustedValue));
   };
 
   // Función para redondear a la baja al múltiplo de 10.000 más cercano
@@ -540,6 +546,7 @@ export default function SolicitarAnticipoPage() {
                     type="text"
                     value={montoFormatted}
                     onChange={(e) => handleMontoChange(e.target.value)}
+                    onBlur={handleMontoBlur}
                     placeholder="0"
                     className={`apple-input w-full pr-20 ${montoError ? 'border-red-500 focus:ring-red-500' : ''}`}
                   />
@@ -551,7 +558,7 @@ export default function SolicitarAnticipoPage() {
                   <p className="text-red-500 text-xs mt-1">{montoError}</p>
                 )}
                 <p className="text-xs text-gray-500 mt-2">
-                  Máximo disponible: ${productivityData.anticipoDisponible.toLocaleString('es-CO')} COP
+                  Máximo disponible: ${roundDownToNearestTenThousand(productivityData.anticipoDisponible).toLocaleString('es-CO')} COP (múltiplos de 10.000)
                 </p>
               </div>
 
