@@ -145,7 +145,15 @@ export async function GET(request: NextRequest) {
     }
 
     // 7. Obtener valores actuales del modelo (solo lectura)
-    const { data: modelValues, error: valuesError } = await supabase
+    // 🔧 FIX: Usar la misma lógica que model-values-v2 para consistencia
+    const today = new Date().toISOString().split('T')[0];
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    console.log('🔍 [ADMIN-VIEW] Loading values with date filter:', { modelId, today, sevenDaysAgoStr });
+
+    const { data: allRecentValues, error: valuesError } = await supabase
       .from('model_values')
       .select(`
         platform_id,
@@ -153,11 +161,24 @@ export async function GET(request: NextRequest) {
         tokens,
         value_usd,
         platform,
+        period_date,
         created_at,
         updated_at
       `)
       .eq('model_id', modelId)
-      .order('created_at', { ascending: false });
+      .gte('period_date', sevenDaysAgoStr) // Últimos 7 días
+      .order('updated_at', { ascending: false });
+
+    // Obtener solo el valor más reciente por plataforma (misma lógica que model-values-v2)
+    const platformMap = new Map<string, any>();
+    allRecentValues?.forEach((value: any) => {
+      if (!platformMap.has(value.platform_id)) {
+        platformMap.set(value.platform_id, value);
+      }
+    });
+
+    const modelValues = Array.from(platformMap.values());
+    console.log('🔍 [ADMIN-VIEW] Found unique values:', modelValues.length);
 
     if (valuesError) {
       console.error('❌ [ADMIN-VIEW] Error al obtener valores:', valuesError);
@@ -192,6 +213,7 @@ export async function GET(request: NextRequest) {
         currency: p.currency
       })),
       values: modelValues || [],
+      periodDate: today, // 🔧 FIX: Incluir periodDate en la respuesta
       rates: rates,
       isConfigured: !!config
     };
