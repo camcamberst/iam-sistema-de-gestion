@@ -52,7 +52,7 @@ export default function SolicitarAnticipoPage() {
   
   // Estados para validación y formato de monto
   const [montoError, setMontoError] = useState('');
-  const [montoFormatted, setMontoFormatted] = useState('0');
+  const [montoFormatted, setMontoFormatted] = useState('');
   const [telefonoError, setTelefonoError] = useState('');
   
   // Estado para restricciones temporales
