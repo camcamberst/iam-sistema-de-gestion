@@ -1220,50 +1220,128 @@ export default function ModelCalculatorPage() {
           #objective-basic-card .milestone-particles { animation: none !important; }
         }
 
-        /* ================= NEW STRONGER MILESTONES ================ */
-        /* 0% Focus-in (no color changes) */
-        #objective-basic-card.in-view[data-milestone="0"] { animation: focus-in 600ms cubic-bezier(0.22,1,0.36,1) 1; }
-        @keyframes focus-in { 0% { filter: blur(1px); box-shadow: 0 0 0 rgba(0,0,0,0); } 100% { filter: blur(0); box-shadow: 0 8px 18px rgba(0,0,0,0.06); } }
+        /* ================= EFECTOS VISUALES PROGRESIVOS POR HITO ================ */
+        
+        /* 0% - Efecto sutil de enfoque */
+        #objective-basic-card.in-view[data-milestone="0"] { 
+          animation: focus-in 600ms cubic-bezier(0.22,1,0.36,1) 1; 
+        }
+        @keyframes focus-in { 
+          0% { filter: blur(1px); box-shadow: 0 0 0 rgba(0,0,0,0); } 
+          100% { filter: blur(0); box-shadow: 0 8px 18px rgba(0,0,0,0.06); 
+        } }
 
-        /* 25%: Stamp + Ticks */
+        /* 25% - Efecto de sello con brillo suave */
         #objective-basic-card.in-view[data-milestone="25"] .milestone-stamp {
           position: absolute; top: -18%; left: 18%; width: 110px; height: 66px; opacity: 0.9;
           background: radial-gradient(closest-side, rgba(255,255,255,0.85), transparent 70%);
           transform: rotate(-8deg);
           animation: stamp-drop 800ms cubic-bezier(0.22,1,0.36,1) 1;
         }
-        @keyframes stamp-drop { 0% { transform: translateY(-24px) rotate(-8deg); opacity: 0; } 60% { transform: translateY(0) rotate(-8deg); opacity: 0.95; } 100% { opacity: 0; } }
+        @keyframes stamp-drop { 
+          0% { transform: translateY(-24px) rotate(-8deg); opacity: 0; } 
+          60% { transform: translateY(0) rotate(-8deg); opacity: 0.95; } 
+          100% { opacity: 0; } 
+        }
         #objective-basic-card.in-view[data-milestone="25"] .milestone-ticks {
-          position: absolute; inset: 0; background: repeating-linear-gradient(90deg, rgba(255,255,255,0.9) 0 5px, transparent 5px 12px);
+          position: absolute; inset: 0; 
+          background: repeating-linear-gradient(90deg, rgba(255,255,255,0.9) 0 5px, transparent 5px 12px);
           -webkit-mask-image: linear-gradient(90deg, black 0% 35%, transparent 36%);
           mask-image: linear-gradient(90deg, black 0% 35%, transparent 36%);
           animation: ticks-burst 520ms steps(6) 1;
         }
-        @keyframes ticks-burst { 0% { opacity: 0; } 100% { opacity: 1; } }
+        @keyframes ticks-burst { 
+          0% { opacity: 0; } 
+          100% { opacity: 1; } 
+        }
 
-        /* 50%: Title pivot + skipper + sweep */
-        #objective-basic-card.in-view[data-milestone="50"] .milestone-title { animation: title-pivot 700ms cubic-bezier(0.22,1,0.36,1) 1; transform-origin: left center; }
-        @keyframes title-pivot { 0% { transform: perspective(500px) rotateY(0deg); } 50% { transform: perspective(500px) rotateY(8deg); } 100% { transform: perspective(500px) rotateY(0deg); } }
-        #objective-basic-card.in-view[data-milestone="50"] .milestone-skipper { position: absolute; top: 42%; left: 0; width: 10px; height: 10px; border-radius: 999px; background: rgba(255,255,255,0.95); animation: skipper-run 700ms cubic-bezier(0.22,1,0.36,1) 1; }
-        @keyframes skipper-run { 0% { transform: translateX(0) translateY(0); filter: blur(0); } 50% { transform: translateX(45%) translateY(-4px); filter: blur(1px); } 100% { transform: translateX(60%) translateY(0); opacity: 0; } }
-        #objective-basic-card.in-view[data-milestone="50"] .milestone-sweep { position: absolute; inset: 0; background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%); animation: sweep-run 900ms cubic-bezier(0.22,1,0.36,1) 1; }
+        /* 50% - Efecto de rotación 3D y partículas */
+        #objective-basic-card.in-view[data-milestone="50"] .milestone-title { 
+          animation: title-pivot 700ms cubic-bezier(0.22,1,0.36,1) 1; 
+          transform-origin: left center; 
+        }
+        @keyframes title-pivot { 
+          0% { transform: perspective(500px) rotateY(0deg); } 
+          50% { transform: perspective(500px) rotateY(8deg); } 
+          100% { transform: perspective(500px) rotateY(0deg); } 
+        }
+        #objective-basic-card.in-view[data-milestone="50"] .milestone-skipper { 
+          position: absolute; top: 42%; left: 0; width: 10px; height: 10px; 
+          border-radius: 999px; background: rgba(255,255,255,0.95); 
+          animation: skipper-run 700ms cubic-bezier(0.22,1,0.36,1) 1; 
+        }
+        @keyframes skipper-run { 
+          0% { transform: translateX(0) translateY(0); filter: blur(0); } 
+          50% { transform: translateX(45%) translateY(-4px); filter: blur(1px); } 
+          100% { transform: translateX(60%) translateY(0); opacity: 0; } 
+        }
+        #objective-basic-card.in-view[data-milestone="50"] .milestone-sweep { 
+          position: absolute; inset: 0; 
+          background: linear-gradient(90deg, rgba(255,255,255,0) 0%, rgba(255,255,255,0.55) 50%, rgba(255,255,255,0) 100%); 
+          animation: sweep-run 900ms cubic-bezier(0.22,1,0.36,1) 1; 
+        }
         @keyframes sweep-run { 0% { transform: translateX(-120%); } 100% { transform: translateX(120%); } }
 
-        /* 75%: Comet + elevation + bar pulse */
-        #objective-basic-card.in-view[data-milestone="75"] { animation: elevate-75 600ms cubic-bezier(0.16,1,0.3,1) 1; }
-        @keyframes elevate-75 { 0% { box-shadow: 0 6px 10px rgba(0,0,0,0.04); } 50% { box-shadow: 0 14px 24px rgba(0,0,0,0.08); } 100% { box-shadow: 0 10px 16px rgba(0,0,0,0.06); } }
-        #objective-basic-card.in-view[data-milestone="75"] .milestone-comet { position: absolute; top: 44%; left: -5%; width: 120px; height: 3px; background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.95)); filter: blur(0.6px); animation: comet-run 900ms cubic-bezier(0.16,1,0.3,1) 1; }
-        @keyframes comet-run { 0% { transform: translateX(0); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateX(110%); opacity: 0; } }
-        #objective-basic-card.in-view[data-milestone="75"] .progress-inner { animation: bar-pulse-strong 820ms ease-out 1; }
-        @keyframes bar-pulse-strong { 0% { filter: brightness(1); } 40% { filter: brightness(1.3); } 100% { filter: brightness(1); } }
+        /* 75% - Efecto de cometa con elevación y pulso de barra */
+        #objective-basic-card.in-view[data-milestone="75"] { 
+          animation: elevate-75 600ms cubic-bezier(0.16,1,0.3,1) 1; 
+        }
+        @keyframes elevate-75 { 
+          0% { box-shadow: 0 6px 10px rgba(0,0,0,0.04); } 
+          50% { box-shadow: 0 14px 24px rgba(0,0,0,0.08); } 
+          100% { box-shadow: 0 10px 16px rgba(0,0,0,0.06); } 
+        }
+        #objective-basic-card.in-view[data-milestone="75"] .milestone-comet { 
+          position: absolute; top: 44%; left: -5%; width: 120px; height: 3px; 
+          background: linear-gradient(90deg, rgba(255,255,255,0.0), rgba(255,255,255,0.95)); 
+          filter: blur(0.6px); 
+          animation: comet-run 900ms cubic-bezier(0.16,1,0.3,1) 1; 
+        }
+        @keyframes comet-run { 
+          0% { transform: translateX(0); opacity: 0; } 
+          20% { opacity: 1; } 
+          100% { transform: translateX(110%); opacity: 0; } 
+        }
+        #objective-basic-card.in-view[data-milestone="75"] .progress-inner { 
+          animation: bar-pulse-strong 820ms ease-out 1; 
+        }
+        @keyframes bar-pulse-strong { 
+          0% { filter: brightness(1); } 
+          40% { filter: brightness(1.3); } 
+          100% { filter: brightness(1); } 
+        }
 
-        /* 100%: Ribbon + trophy pop + confetti lines */
-        #objective-basic-card.in-view[data-milestone="100"] .milestone-ribbon { position: absolute; right: -2%; top: 36%; height: 10px; width: 0; background: rgba(255,255,255,0.95); border-radius: 6px; animation: ribbon-open 1000ms cubic-bezier(0.22,1,0.36,1) 1 forwards; }
-        @keyframes ribbon-open { 0% { width: 0; } 60% { width: 38%; } 100% { width: 34%; } }
-        #objective-basic-card.in-view[data-milestone="100"] .milestone-icon { animation: trophy-pop 700ms ease-out 1; }
-        @keyframes trophy-pop { 0% { transform: scale(1) rotate(0); } 40% { transform: scale(1.18) rotate(-6deg); } 100% { transform: scale(1) rotate(0); } }
-        #objective-basic-card.in-view[data-milestone="100"] .milestone-confetti { position: absolute; inset: 0; background: repeating-linear-gradient(180deg, rgba(255,255,255,0.9) 0 2px, transparent 2px 6px); -webkit-mask-image: linear-gradient(180deg, black 0 60%, transparent 60%); mask-image: linear-gradient(180deg, black 0 60%, transparent 60%); animation: confetti-lines 820ms ease-out 1; }
-        @keyframes confetti-lines { 0% { transform: translateY(-12px); opacity: 0; } 40% { opacity: 1; } 100% { transform: translateY(8px); opacity: 0; } }
+        /* 100% - Efecto espectacular de celebración */
+        #objective-basic-card.in-view[data-milestone="100"] .milestone-ribbon { 
+          position: absolute; right: -2%; top: 36%; height: 10px; width: 0; 
+          background: rgba(255,255,255,0.95); border-radius: 6px; 
+          animation: ribbon-open 1000ms cubic-bezier(0.22,1,0.36,1) 1 forwards; 
+        }
+        @keyframes ribbon-open { 
+          0% { width: 0; } 
+          60% { width: 38%; } 
+          100% { width: 34%; } 
+        }
+        #objective-basic-card.in-view[data-milestone="100"] .milestone-icon { 
+          animation: trophy-pop 700ms ease-out 1; 
+        }
+        @keyframes trophy-pop { 
+          0% { transform: scale(1) rotate(0); } 
+          40% { transform: scale(1.18) rotate(-6deg); } 
+          100% { transform: scale(1) rotate(0); } 
+        }
+        #objective-basic-card.in-view[data-milestone="100"] .milestone-confetti { 
+          position: absolute; inset: 0; 
+          background: repeating-linear-gradient(180deg, rgba(255,255,255,0.9) 0 2px, transparent 2px 6px); 
+          -webkit-mask-image: linear-gradient(180deg, black 0 60%, transparent 60%); 
+          mask-image: linear-gradient(180deg, black 0 60%, transparent 60%); 
+          animation: confetti-lines 820ms ease-out 1; 
+        }
+        @keyframes confetti-lines { 
+          0% { transform: translateY(-12px); opacity: 0; } 
+          40% { opacity: 1; } 
+          100% { transform: translateY(8px); opacity: 0; } 
+        }
         `}</style>
         </div>
       </div>
