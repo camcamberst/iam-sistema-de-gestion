@@ -190,9 +190,9 @@ export default function CalculatorHistory() {
   });
 
   // Obtener años únicos para filtro
-  const availableYears = [...new Set(historicalPeriods.map(period => 
+  const availableYears = Array.from(new Set(historicalPeriods.map(period => 
     new Date(period.period_date).getFullYear().toString()
-  ))].sort((a, b) => b.localeCompare(a));
+  ))).sort((a, b) => b.localeCompare(a));
 
   if (loading) {
     return (
