@@ -201,6 +201,10 @@ export default function SolicitarAnticipoPage() {
     if (monto <= 0) {
       return 'El monto debe ser mayor a 0';
     }
+    // Regla: el monto debe ser múltiplo de 10.000 COP
+    if (monto % 10000 !== 0) {
+      return 'El monto debe ser múltiplo de 10.000 COP';
+    }
     if (monto > productivityData.anticipoDisponible) {
       return `El monto no puede superar $${formatNumber(productivityData.anticipoDisponible)} COP`;
     }
@@ -211,15 +215,17 @@ export default function SolicitarAnticipoPage() {
   // Manejar cambio en el input de monto
   const handleMontoChange = (value: string) => {
     const numericValue = parseFormattedNumber(value);
-    
+    // Forzar múltiplos de 10.000 automáticamente
+    const adjustedValue = Math.floor(numericValue / 10000) * 10000;
+
     // Actualizar el valor numérico
-    setAnticipoData(prev => ({ ...prev, monto_solicitado: numericValue }));
+    setAnticipoData(prev => ({ ...prev, monto_solicitado: adjustedValue }));
     
     // Formatear para mostrar
-    setMontoFormatted(formatNumber(numericValue));
+    setMontoFormatted(formatNumber(adjustedValue));
     
     // Validar
-    const error = validateMonto(numericValue);
+    const error = validateMonto(adjustedValue);
     setMontoError(error);
   };
 
