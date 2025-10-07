@@ -400,98 +400,97 @@ export default function ConfigCalculatorPage() {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Columna Grupo */}
-                  <div className="space-y-4">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                      <h4 className="text-base font-medium text-gray-900 mb-4">Configuración del Grupo</h4>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-full">
+                    <h4 className="text-base font-medium text-gray-900 mb-6">Configuración del Grupo</h4>
+                    
+                    <div className="space-y-6">
+                      <div>
+                        <label htmlFor="groupPercentage" className="block text-sm font-medium text-gray-700 mb-2">
+                          Porcentaje Grupo
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="number"
+                            id="groupPercentage"
+                            className="apple-input flex-1"
+                            value={groupPercentage}
+                            onChange={(e) => setGroupPercentage(e.target.value)}
+                            placeholder="60"
+                          />
+                          <span className="text-sm text-gray-500 font-medium">%</span>
+                        </div>
+                        {selectedModel?.groups?.[0] && (
+                          <p className="text-xs text-gray-500 mt-2">
+                            Estándar: {getStandardPercentageByGroup(selectedModel.groups[0].name)}%
+                          </p>
+                        )}
+                      </div>
                       
-                      <div className="space-y-4">
-                        <div>
-                          <label htmlFor="groupPercentage" className="block text-sm font-medium text-gray-700 mb-2">
-                            Porcentaje Grupo
-                          </label>
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="number"
-                              id="groupPercentage"
-                              className="apple-input flex-1"
-                              value={groupPercentage}
-                              onChange={(e) => setGroupPercentage(e.target.value)}
-                              placeholder="60"
-                            />
-                            <span className="text-sm text-gray-500 font-medium">%</span>
-                          </div>
-                          {selectedModel?.groups?.[0] && (
-                            <p className="text-xs text-gray-500 mt-2">
-                              Estándar: {getStandardPercentageByGroup(selectedModel.groups[0].name)}%
-                            </p>
-                          )}
+                      <div>
+                        <label htmlFor="groupMinQuota" className="block text-sm font-medium text-gray-700 mb-2">
+                          Objetivo Grupo
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="number"
+                            id="groupMinQuota"
+                            className="apple-input flex-1"
+                            value={groupMinQuota}
+                            onChange={(e) => setGroupMinQuota(e.target.value)}
+                            placeholder="500000"
+                          />
+                          <span className="text-sm text-gray-500 font-medium">USD</span>
                         </div>
-                        
-                        <div>
-                          <label htmlFor="groupMinQuota" className="block text-sm font-medium text-gray-700 mb-2">
-                            Objetivo Grupo
-                          </label>
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="number"
-                              id="groupMinQuota"
-                              className="apple-input flex-1"
-                              value={groupMinQuota}
-                              onChange={(e) => setGroupMinQuota(e.target.value)}
-                              placeholder="500000"
-                            />
-                            <span className="text-sm text-gray-500 font-medium">USD</span>
-                          </div>
-                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          &nbsp;
+                        </p>
                       </div>
                     </div>
                   </div>
                   
                   {/* Columna Modelo */}
-                  <div className="space-y-4">
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-                      <h4 className="text-base font-medium text-gray-900 mb-4">Configuración del Modelo</h4>
+                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-full">
+                    <h4 className="text-base font-medium text-gray-900 mb-6">Configuración del Modelo</h4>
+                    
+                    <div className="space-y-6">
+                      <div>
+                        <label htmlFor="percentageOverride" className="block text-sm font-medium text-gray-700 mb-2">
+                          Porcentaje Modelo
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="number"
+                            id="percentageOverride"
+                            className="apple-input flex-1"
+                            value={percentageOverride}
+                            onChange={(e) => setPercentageOverride(e.target.value)}
+                            placeholder="70"
+                          />
+                          <span className="text-sm text-gray-500 font-medium">%</span>
+                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Dejar vacío para usar el porcentaje del grupo
+                        </p>
+                      </div>
                       
-                      <div className="space-y-4">
-                        <div>
-                          <label htmlFor="percentageOverride" className="block text-sm font-medium text-gray-700 mb-2">
-                            Porcentaje Modelo
-                          </label>
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="number"
-                              id="percentageOverride"
-                              className="apple-input flex-1"
-                              value={percentageOverride}
-                              onChange={(e) => setPercentageOverride(e.target.value)}
-                              placeholder="70"
-                            />
-                            <span className="text-sm text-gray-500 font-medium">%</span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Dejar vacío para usar el porcentaje del grupo
-                          </p>
+                      <div>
+                        <label htmlFor="minQuotaOverride" className="block text-sm font-medium text-gray-700 mb-2">
+                          Objetivo Modelo
+                        </label>
+                        <div className="flex items-center space-x-3">
+                          <input
+                            type="number"
+                            id="minQuotaOverride"
+                            className="apple-input flex-1"
+                            value={minQuotaOverride}
+                            onChange={(e) => setMinQuotaOverride(e.target.value)}
+                            placeholder="300000"
+                          />
+                          <span className="text-sm text-gray-500 font-medium">USD</span>
                         </div>
-                        
-                        <div>
-                          <label htmlFor="minQuotaOverride" className="block text-sm font-medium text-gray-700 mb-2">
-                            Objetivo Modelo
-                          </label>
-                          <div className="flex items-center space-x-3">
-                            <input
-                              type="number"
-                              id="minQuotaOverride"
-                              className="apple-input flex-1"
-                              value={minQuotaOverride}
-                              onChange={(e) => setMinQuotaOverride(e.target.value)}
-                              placeholder="300000"
-                            />
-                            <span className="text-sm text-gray-500 font-medium">USD</span>
-                          </div>
-                          <p className="text-xs text-gray-500 mt-2">
-                            Dejar vacío para usar el objetivo del grupo
-                          </p>
-                        </div>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Dejar vacío para usar el objetivo del grupo
+                        </p>
                       </div>
                     </div>
                   </div>
