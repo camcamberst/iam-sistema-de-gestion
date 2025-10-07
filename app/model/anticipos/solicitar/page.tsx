@@ -548,9 +548,10 @@ export default function SolicitarAnticipoPage() {
                     onChange={(e) => handleMontoChange(e.target.value)}
                     onBlur={handleMontoBlur}
                     placeholder=""
-                    className={`apple-input w-full pr-20 pl-16 ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    className={`apple-input w-full pr-20 ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    style={{ paddingLeft: '2.75rem' }}
                   />
-                  <div className="absolute left-6 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium select-none pointer-events-none">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium select-none pointer-events-none">
                     $
                   </div>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-blue-600">
