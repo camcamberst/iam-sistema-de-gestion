@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import AppleSelect from './AppleSelect';
 
 // ===========================================
@@ -30,6 +30,8 @@ export default function AppleSearchBar({
   const [query, setQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [isExpanded, setIsExpanded] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const searchBarRef = useRef<HTMLDivElement>(null);
 
   // ===========================================
   // 🔧 HELPER FUNCTIONS
@@ -66,7 +68,27 @@ export default function AppleSearchBar({
       ...prev,
       [filterId]: value
     }));
+    // Cerrar dropdown después de selección
+    setActiveDropdown(null);
   };
+
+  const handleFilterFocus = (filterId: string) => {
+    // Cerrar otros dropdowns activos
+    setActiveDropdown(filterId);
+  };
+
+  // 🔧 FIX: Manejar clicks fuera del área de búsqueda
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+        setActiveDropdown(null);
+        setIsExpanded(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const clearFilters = () => {
     setSelectedFilters({});
@@ -87,6 +109,11 @@ export default function AppleSearchBar({
         options={[{ label: 'Todos', value: '' }, ...filter.options]}
         onChange={(v) => handleFilterChange(filter.id, v)}
         className="text-[13px]"
+        onFocus={() => handleFilterFocus(filter.id)}
+        onBlur={() => {
+          // Delay para permitir selección
+          setTimeout(() => setActiveDropdown(null), 100);
+        }}
       />
     </div>
   );
@@ -95,7 +122,7 @@ export default function AppleSearchBar({
   // 🎨 MAIN RENDER
   // ===========================================
   return (
-    <div className={`apple-card ${className}`}>
+    <div ref={searchBarRef} className={`apple-card ${className}`}>
       {/* Search Input */}
       <div className="flex items-center space-x-2">
         <div className="flex-1 relative">
@@ -119,7 +146,13 @@ export default function AppleSearchBar({
         {/* Filters Toggle */}
         {filters.length > 0 && (
           <button
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => {
+              setIsExpanded(!isExpanded);
+              // Cerrar dropdowns activos al colapsar
+              if (isExpanded) {
+                setActiveDropdown(null);
+              }
+            }}
             className={`px-2 py-1.5 rounded-md text-xs border ${isExpanded ? 'bg-gray-900 text-white border-gray-900' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
             title={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'}
           >

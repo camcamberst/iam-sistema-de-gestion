@@ -11,9 +11,11 @@ interface AppleSelectProps {
   placeholder?: string;
   onChange: (value: string) => void;
   className?: string;
+  onFocus?: () => void;
+  onBlur?: () => void;
 }
 
-export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "" }: AppleSelectProps) {
+export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "", onFocus, onBlur }: AppleSelectProps) {
   const [open, setOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
@@ -48,6 +50,22 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     }
   }, [isHovering]);
 
+  // 🔧 FIX: Manejar focus/blur para coordinación entre dropdowns
+  const handleFocus = () => {
+    onFocus?.();
+    setOpen(true);
+  };
+
+  const handleBlur = () => {
+    onBlur?.();
+    // Delay para permitir selección
+    setTimeout(() => {
+      if (!isHovering) {
+        setOpen(false);
+      }
+    }, 100);
+  };
+
   const selected = options.find(o => o.value === value);
 
   return (
@@ -60,6 +78,8 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       {label && <div className="text-gray-500 text-xs font-medium mb-1">{label}</div>}
       <div
         className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white text-sm text-gray-900 flex items-center justify-between cursor-default"
+        onFocus={handleFocus}
+        onBlur={handleBlur}
       >
         <span className="truncate">{selected ? selected.label : placeholder}</span>
         <svg className={`w-4 h-4 text-gray-400 ml-2 flex-none transition-transform duration-200 ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.855a.75.75 0 111.08 1.04l-4.24 4.41a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"/></svg>
