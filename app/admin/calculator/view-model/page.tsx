@@ -114,26 +114,28 @@ export default function AdminViewModelPage() {
     load();
   }, []);
 
-  // 🔧 UX FIX: Restaurar modelo seleccionada después de cargar modelos
+  // 🔧 UX FIX: Restaurar modelo seleccionada solo si hay modelId en URL (navegación/refresh)
   useEffect(() => {
     if (allModels.length > 0 && !selectedModel && user) {
       const modelIdFromUrl = new URLSearchParams(window.location.search).get('modelId');
-      const modelIdFromStorage = localStorage.getItem('admin-selected-model-id');
-      const modelIdToRestore = modelIdFromUrl || modelIdFromStorage;
       
-      if (modelIdToRestore) {
-        console.log('🔍 [UX-FIX] Restaurando modelo:', modelIdToRestore);
-        const model = allModels.find(m => m.id === modelIdToRestore);
+      // Solo restaurar si hay modelId en la URL (indica navegación o refresh durante gestión)
+      if (modelIdFromUrl) {
+        console.log('🔍 [UX-FIX] Restaurando modelo desde URL:', modelIdFromUrl);
+        const model = allModels.find(m => m.id === modelIdFromUrl);
         if (model) {
           console.log('✅ [UX-FIX] Modelo encontrado, restaurando:', model.name);
           handleModelSelect(model, false); // false = no actualizar URL/storage
         } else {
-          console.warn('⚠️ [UX-FIX] Modelo no encontrado, limpiando storage');
-          localStorage.removeItem('admin-selected-model-id');
+          console.warn('⚠️ [UX-FIX] Modelo no encontrado, limpiando URL');
           const url = new URL(window.location.href);
           url.searchParams.delete('modelId');
           window.history.replaceState({}, '', url.pathname + url.search);
         }
+      } else {
+        // Si no hay modelId en URL, limpiar localStorage para entrada directa
+        console.log('🔍 [UX-FIX] Entrada directa detectada, limpiando localStorage');
+        localStorage.removeItem('admin-selected-model-id');
       }
     }
   }, [allModels, selectedModel, user]);
