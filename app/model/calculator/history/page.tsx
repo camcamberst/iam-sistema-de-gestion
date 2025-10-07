@@ -181,7 +181,40 @@ export default function CalculatorHistory() {
   };
 
   // Calcular estadísticas específicas solicitadas
-  const totalPeriodsSaved = historicalPeriods.length;
+  const totalPeriodsSaved = historicalPeriods.length; // Períodos archivados
+  
+  // Obtener valor real del período actual desde model_values
+  const [currentPeriodUSD, setCurrentPeriodUSD] = useState(0);
+  
+  // Cargar valor del período actual
+  useEffect(() => {
+    const loadCurrentPeriodValue = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: currentValues, error } = await supabase
+          .from('model_values')
+          .select('value')
+          .eq('model_id', user.id);
+        
+        if (error) {
+          console.error('Error loading current period value:', error);
+          return;
+        }
+        
+        if (currentValues && currentValues.length > 0) {
+          const totalValue = currentValues.reduce((sum, item) => sum + (item.value || 0), 0);
+          setCurrentPeriodUSD(totalValue);
+        }
+      } catch (error) {
+        console.error('Error loading current period value:', error);
+      }
+    };
+    
+    loadCurrentPeriodValue();
+  }, [user]);
+  
+  // Promedios solo de períodos archivados (historial)
   const averageUSDPerPeriod = historicalPeriods.length > 0 ? 
     historicalPeriods.reduce((sum, period) => sum + period.total_value, 0) / historicalPeriods.length : 0;
   
@@ -308,7 +341,7 @@ export default function CalculatorHistory() {
                 color: "blue"
               },
               {
-                value: "$0.00 USD",
+                value: `$${currentPeriodUSD.toFixed(2)} USD`,
                 label: "USD Período Actual",
                 color: "green"
               },
