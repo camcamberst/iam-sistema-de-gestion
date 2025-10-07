@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface User {
   id: string;
@@ -422,29 +423,27 @@ export default function MiHistorialPage() {
         )}
 
         {/* Resumen */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-green-50 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 mb-1">
-                ${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-              </div>
-              <div className="text-sm text-gray-600">Total Realizado</div>
-            </div>
-            <div className="text-center p-4 bg-blue-50 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 mb-1">
-                {anticipos.length}
-              </div>
-              <div className="text-sm text-gray-600">Anticipos Pagados</div>
-            </div>
-            <div className="text-center p-4 bg-purple-50 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 mb-1">
-                {anticipos.length > 0 ? (totalRealizado / anticipos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : 0}
-              </div>
-              <div className="text-sm text-gray-600">Promedio por Anticipo</div>
-            </div>
-          </div>
-        </div>
+        <InfoCardGrid 
+          cards={[
+            {
+              value: `$${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+              label: 'Total Realizado',
+              color: 'green'
+            },
+            {
+              value: anticipos.length.toString(),
+              label: 'Anticipos Pagados',
+              color: 'blue'
+            },
+            {
+              value: anticipos.length > 0 ? (totalRealizado / anticipos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0',
+              label: 'Promedio por Anticipo',
+              color: 'purple'
+            }
+          ]}
+          columns={3}
+          className="mb-6"
+        />
 
         {/* Lista de Anticipos por Período (Realizados y Confirmados) */}
         {anticipos.length === 0 ? (
