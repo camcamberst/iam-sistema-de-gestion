@@ -102,15 +102,26 @@ export async function GET(request: NextRequest) {
     }
 
     // Procesar datos para incluir configuración actual
-    const processedModels = models?.map(model => ({
-      id: model.id,
-      email: model.email,
-      name: model.name,
-      role: model.role,
-      groups: model.groups?.map((g: any) => g.group).filter(Boolean) || [{ id: 'default', name: 'Sin grupo asignado' }],
-      hasConfig: model.calculator_config && model.calculator_config.length > 0,
-      currentConfig: model.calculator_config?.[0] || null
-    })) || [];
+    const processedModels = models?.map(model => {
+      // Buscar configuración activa (active = true)
+      const activeConfig = model.calculator_config?.find((config: any) => config.active === true);
+      
+      console.log(`🔍 [CONFIG CHECK] Modelo ${model.email}:`, {
+        totalConfigs: model.calculator_config?.length || 0,
+        activeConfig: !!activeConfig,
+        configs: model.calculator_config?.map((c: any) => ({ id: c.id, active: c.active })) || []
+      });
+      
+      return {
+        id: model.id,
+        email: model.email,
+        name: model.name,
+        role: model.role,
+        groups: model.groups?.map((g: any) => g.group).filter(Boolean) || [{ id: 'default', name: 'Sin grupo asignado' }],
+        hasConfig: !!activeConfig,
+        currentConfig: activeConfig || null
+      };
+    }) || [];
 
     return NextResponse.json({
       success: true,
