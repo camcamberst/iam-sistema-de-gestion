@@ -289,15 +289,24 @@ export default function AdminViewModelPage() {
   };
 
   const handleValueChange = (platformId: string, value: string) => {
-    setEditValues(prev => ({
-      ...prev,
-      [platformId]: value
-    }));
+    console.log('🔍 [VALUE-CHANGE] Platform:', platformId, 'Value:', value);
+    setEditValues(prev => {
+      const newValues = {
+        ...prev,
+        [platformId]: value
+      };
+      console.log('🔍 [VALUE-CHANGE] Updated editValues:', newValues);
+      return newValues;
+    });
     setHasChanges(true);
   };
 
   const handleSave = async () => {
     if (!selectedModel || !user) return;
+
+    console.log('🔍 [ADMIN-SAVE] Starting save process');
+    console.log('🔍 [ADMIN-SAVE] Current editValues:', editValues);
+    console.log('🔍 [ADMIN-SAVE] Has changes:', hasChanges);
 
     try {
       setSaving(true);
@@ -307,9 +316,8 @@ export default function AdminViewModelPage() {
       const valuesToSave: Record<string, number> = {};
       Object.entries(editValues).forEach(([platformId, value]) => {
         const numericValue = Number.parseFloat(value) || 0;
-        if (numericValue > 0) {
-          valuesToSave[platformId] = numericValue;
-        }
+        // 🔧 FIX: Guardar todos los valores, incluyendo 0
+        valuesToSave[platformId] = numericValue;
       });
 
       console.log('🔍 [ADMIN-EDIT] Saving values:', valuesToSave);
