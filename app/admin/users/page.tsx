@@ -65,7 +65,7 @@ export default function UsersListPage() {
 
       if (usersData.success) {
         setUsers(usersData.users);
-        setFilteredUsers(usersData.users);
+        setFilteredUsers([]); // Inicialmente vacío, solo mostrar con filtros
         
         // Obtener usuario actual para jerarquía (simular super_admin por ahora)
         setCurrentUser({
@@ -95,6 +95,14 @@ export default function UsersListPage() {
   const handleSearch = (query: string, filters: Record<string, string>) => {
     setSearchQuery(query);
     setSearchFilters(filters);
+    
+    // Solo mostrar resultados si hay al menos un filtro activo
+    const hasActiveFilters = query.trim() || filters.role || filters.group || filters.status;
+    
+    if (!hasActiveFilters) {
+      setFilteredUsers([]);
+      return;
+    }
     
     let filtered = users;
 
@@ -313,6 +321,16 @@ export default function UsersListPage() {
                 >
                   Crear Primer Usuario
                 </button>
+              </div>
+            ) : filteredUsers.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="text-gray-400 text-lg">No hay resultados</div>
+                <div className="text-gray-500 text-sm mt-2">
+                  {searchQuery.trim() || Object.values(searchFilters).some(f => f) 
+                    ? 'Intenta ajustar los filtros de búsqueda' 
+                    : 'Usa los filtros de búsqueda para encontrar usuarios'
+                  }
+                </div>
               </div>
             ) : (
               <div className="overflow-x-auto">
