@@ -113,16 +113,19 @@ export async function POST(request: NextRequest) {
       period_date: effectiveDate
     }));
 
+    console.log('🔍 [MODEL-VALUES-V2] Rows to upsert:', rows);
+
     const { data, error } = await supabase
       .from('model_values')
       .upsert(rows, { onConflict: 'model_id,platform_id,period_date' })
       .select();
 
     if (error) {
-      console.error('Error al guardar valores:', error);
+      console.error('❌ [MODEL-VALUES-V2] Error al guardar valores:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
+    console.log('✅ [MODEL-VALUES-V2] Values saved successfully:', data);
     return NextResponse.json({ success: true, data: data || [], message: 'Valores guardados correctamente' });
 
   } catch (error: any) {

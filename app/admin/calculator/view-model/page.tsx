@@ -204,6 +204,9 @@ export default function AdminViewModelPage() {
         console.log('🔍 [ADMIN-VIEW] Calculator data received:', data);
         console.log('🔍 [ADMIN-VIEW] Platforms:', data.platforms);
         console.log('🔍 [ADMIN-VIEW] Values:', data.values);
+        console.log('🔍 [ADMIN-VIEW] Values count:', data.values?.length || 0);
+        console.log('🔍 [ADMIN-VIEW] Period date:', data.periodDate);
+        
         setSelectedModel({
           ...model,
           calculatorData: data
@@ -330,11 +333,14 @@ export default function AdminViewModelPage() {
         throw new Error(data.error || 'Error al guardar');
       }
 
-      // Recargar datos de la calculadora
-      await handleModelSelect(selectedModel);
-      
+      console.log('✅ [ADMIN-EDIT] Values saved successfully');
+
+      // 🔧 FIX: Limpiar estado de edición ANTES de recargar
       setEditValues({});
       setHasChanges(false);
+      
+      // Recargar datos de la calculadora
+      await handleModelSelect(selectedModel);
       
       // Notificación elegante estilo Apple
       const notification = document.createElement('div');
