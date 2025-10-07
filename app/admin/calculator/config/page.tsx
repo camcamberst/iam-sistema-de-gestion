@@ -162,7 +162,19 @@ export default function ConfigCalculatorPage() {
       setEnabledPlatforms(config.enabled_platforms || []);
       setPercentageOverride(config.percentage_override?.toString() || '');
       setMinQuotaOverride(config.min_quota_override?.toString() || '');
-      setGroupPercentage(config.group_percentage?.toString() || '');
+      
+      // Si no hay group_percentage o es 0, usar el estándar del grupo
+      const groupName = model.groups[0]?.name;
+      if (config.group_percentage && config.group_percentage > 0) {
+        setGroupPercentage(config.group_percentage.toString());
+      } else if (groupName) {
+        const standardPercentage = getStandardPercentageByGroup(groupName);
+        setGroupPercentage(standardPercentage.toString());
+        console.log(`🔍 [EXISTING CONFIG] Usando porcentaje estándar para ${groupName}: ${standardPercentage}%`);
+      } else {
+        setGroupPercentage('');
+      }
+      
       setGroupMinQuota(config.group_min_quota?.toString() || '');
     } else {
       // Resetear formulario y cargar porcentaje estándar del grupo
@@ -170,11 +182,12 @@ export default function ConfigCalculatorPage() {
       setPercentageOverride('');
       setMinQuotaOverride('');
       
-      // Cargar porcentaje estándar del grupo
+      // Cargar porcentaje estándar del grupo como valor por defecto
       const groupName = model.groups[0]?.name;
       if (groupName) {
         const standardPercentage = getStandardPercentageByGroup(groupName);
         setGroupPercentage(standardPercentage.toString());
+        console.log(`🔍 [DEFAULT PERCENTAGE] Cargando porcentaje estándar para ${groupName}: ${standardPercentage}%`);
       } else {
         setGroupPercentage('');
       }
@@ -421,7 +434,7 @@ export default function ConfigCalculatorPage() {
                         </div>
                         {selectedModel?.groups?.[0] && (
                           <p className="text-xs text-gray-500 mt-2">
-                            Estándar: {getStandardPercentageByGroup(selectedModel.groups[0].name)}%
+                            Valor por defecto: {getStandardPercentageByGroup(selectedModel.groups[0].name)}%
                           </p>
                         )}
                       </div>
