@@ -194,7 +194,7 @@ export default function CalculatorHistory() {
       try {
         const { data: currentValues, error } = await supabase
           .from('model_values')
-          .select('value')
+          .select('value, platform_id')
           .eq('model_id', user.id);
         
         if (error) {
@@ -203,7 +203,12 @@ export default function CalculatorHistory() {
         }
         
         if (currentValues && currentValues.length > 0) {
-          const totalValue = currentValues.reduce((sum, item) => sum + (item.value || 0), 0);
+          // Sumar solo valores USD (excluir COP)
+          const usdValues = currentValues.filter(item => 
+            !item.platform_id.toLowerCase().includes('cop') && 
+            !item.platform_id.toLowerCase().includes('pesos')
+          );
+          const totalValue = usdValues.reduce((sum, item) => sum + (item.value || 0), 0);
           setCurrentPeriodUSD(totalValue);
         }
       } catch (error) {
