@@ -289,6 +289,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       data: {
+        usdModelo: Math.round(totalUsdModelo * 100) / 100,
         copModelo: copModelo,
         anticipoDisponible: Math.max(0, anticipoDisponible - anticiposPagados),
         anticiposPagados: anticiposPagados

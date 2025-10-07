@@ -196,8 +196,8 @@ export default function CalculatorHistory() {
         const response = await fetch(`/api/calculator/mi-calculadora-real?modelId=${user.id}`);
         const data = await response.json();
         
-        if (data.success && data.usdModelo !== undefined) {
-          setCurrentPeriodUSD(data.usdModelo);
+        if (data.success && data.data?.usdModelo !== undefined) {
+          setCurrentPeriodUSD(data.data.usdModelo);
         } else {
           console.error('Error loading USD Modelo value:', data.error);
         }
