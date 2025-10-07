@@ -304,22 +304,22 @@ export default function CalculatorHistory() {
             cards={[
               {
                 value: totalPeriodsSaved,
-                label: "Total Períodos Guardados",
+                label: "Total Períodos",
                 color: "blue"
               },
               {
                 value: "$0.00 USD",
-                label: "Total USD Modelo Período Actual",
+                label: "USD Período Actual",
                 color: "green"
               },
               {
                 value: `$${averageUSDPerPeriod.toFixed(2)} USD`,
-                label: "Promedio USD Modelo Entre Períodos",
+                label: "USD Promedio",
                 color: "purple"
               },
               {
                 value: `$${Math.round(averageCOPerPeriod).toLocaleString('es-CO')} COP`,
-                label: "Promedio COP Modelo Entre Períodos",
+                label: "COP Promedio",
                 color: "orange"
               }
             ]}
