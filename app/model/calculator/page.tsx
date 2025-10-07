@@ -1094,14 +1094,6 @@ export default function ModelCalculatorPage() {
                             }}
                           ></div>
                         </div>
-                        {(() => {
-                          const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                          return (
-                            <div className="text-right text-xs text-gray-600 mt-1 milestone-percent">
-                              {roundedProgress}%
-                            </div>
-                          );
-                        })()}
                       </div>
                     </div>
                   </div>
