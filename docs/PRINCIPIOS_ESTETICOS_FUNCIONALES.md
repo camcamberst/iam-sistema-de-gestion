@@ -281,3 +281,53 @@ console.log('🔍 [ADMIN-VIEW] Period date:', data.periodDate);
 ---
 
 **Estos principios garantizan un sistema coherente, funcional y mantenible.** 🚀
+
+---
+
+## 📆 Actualización de hoy (Políticas, aciertos y lecciones)
+
+### ✅ Aciertos implementados
+- Mi Historial: el card "USD Período Actual" se alimenta en tiempo real desde el endpoint `GET /api/calculator/mi-calculadora-real?modelId=...` (sin cálculos locales). Fuente única de verdad.
+- Anticipos – Monto Solicitado (COP):
+  - Validación de múltiplos de 10.000 COP.
+  - Autoajuste al múltiplo inferior al salir del campo (onBlur).
+  - El texto de “Máximo disponible” se muestra redondeado al múltiplo de 10.000 y comunica la política.
+  - Prefijo monetario `$` fijo dentro del input, con el cursor inmediatamente a la derecha del prefijo y sin superposiciones.
+  - No se muestra error cuando el valor es 0; la validación solo aplica a valores > 0.
+
+### ⚠️ Errores detectados y cómo evitarlos
+- Sobre-ingeniería del cálculo de "USD Período Actual":
+  - Intentar replicar la lógica completa en el cliente produjo discrepancias. Lección: consumir siempre la fuente ya validada del backend (`mi-calculadora-real`).
+- Cambios arquitectónicos durante un hotfix:
+  - Intento de consolidar múltiples instancias de Supabase provocó advertencias y fallos de build (exports duplicados). Lección: no cambiar arquitectura en caliente; preferir revertir y aislar la corrección.
+- Estructura de respuesta del endpoint:
+  - El endpoint no retornaba `usdModelo` inicialmente; el cliente esperaba ese campo. Lección: alinear contrato API/cliente y testear con `data.data.usdModelo`.
+- Cache del navegador:
+  - Asumir que el warning era cache llevó a pérdida de tiempo. Lección: validar primero el contrato del código y los puntos únicos de inicialización.
+- UI del prefijo monetario:
+  - Superposición del `$` con el cursor/valor. Lección: reservar padding y fijar el prefijo con `pointer-events: none`.
+
+### 📐 Nuevas políticas incorporadas
+1. Mi Historial – Datos base
+   - "USD Período Actual" debe obtenerse exclusivamente del endpoint `mi-calculadora-real`.
+   - Promedios: usar únicamente valores archivados; COP promedio se calcula sobre valores COP archivados.
+
+2. Anticipos – Campo "Monto Solicitado (COP)"
+   - Regla de múltiplos: solo múltiplos de 10.000 COP.
+   - Autoajuste al salir del campo (redondeo hacia abajo al múltiplo más cercano).
+   - El texto “Máximo disponible” debe mostrarse ya redondeado al múltiplo de 10.000 e indicar explícitamente la política.
+   - Prefijo `$` fijo y el cursor inmediatamente a su derecha; sin errores visuales con el valor 0.
+
+3. APIs – Contratos
+   - `mi-calculadora-real` debe retornar: `{ data: { usdModelo, copModelo, anticipoDisponible, anticiposPagados } }`.
+   - Cualquier consumidor debe leer `data.data.<campo>` y manejar errores.
+
+4. Supabase – Inicialización
+   - Evitar cambios arquitectónicos sin plan; si se requiere unificar clientes, hacerlo en una tarea separada y probada. No durante un hotfix.
+
+---
+
+## 📑 Checklist rápido (futuras tareas)
+- [ ] Al agregar nuevas métricas al Historial, confirmar la fuente (endpoint) antes de calcular en cliente.
+- [ ] Reutilizar el patrón del input con prefijo monetario para cualquier campo de dinero.
+- [ ] Mantener contratos API documentados y versionados al cambiar respuestas.
