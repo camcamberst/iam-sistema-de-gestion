@@ -72,7 +72,7 @@ export default function InfoCard({
   size = 'md'
 }: InfoCardProps) {
   const colors = colorVariants[color];
-  const paddingClass = size === 'sm' ? 'p-3' : 'p-4';
+  const paddingClass = size === 'sm' ? 'p-4' : (size === 'lg' ? 'p-6' : 'p-5');
   const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-lg' : 'text-xl');
   const labelTextClass = size === 'sm' ? 'text-[11px]' : 'text-xs';
   
@@ -139,7 +139,7 @@ export function InfoCardGrid({
   };
 
   return (
-    <div className={`grid ${gridCols[columns]} gap-3 ${className}`}>
+    <div className={`grid ${gridCols[columns]} gap-4 ${className}`}>
       {cards.map((card, index) => (
         <InfoCard
           key={index}
