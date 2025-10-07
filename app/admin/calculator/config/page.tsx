@@ -326,7 +326,7 @@ export default function ConfigCalculatorPage() {
                   { value: '', label: 'Selecciona un modelo' },
                   ...models.map(model => ({
                     value: model.id,
-                    label: model.name || model.email,
+                    label: model.email ? model.email.split('@')[0] : model.name,
                     badge: model.hasConfig ? 'Configurado' : undefined,
                     badgeColor: model.hasConfig ? 'green' as const : undefined
                   }))
