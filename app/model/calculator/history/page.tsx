@@ -34,24 +34,10 @@ interface HistoricalPeriod {
   total_value: number;
 }
 
-interface CurrentPeriodValue {
-  platform_id: string;
-  value: number;
-  updated_at: string;
-}
-
-interface CurrentPeriod {
-  period_date: string;
-  period_type: '1-15' | '16-31';
-  values: CurrentPeriodValue[];
-  total_value: number;
-  is_current: boolean;
-}
 
 export default function CalculatorHistory() {
   const [user, setUser] = useState<User | null>(null);
   const [historicalPeriods, setHistoricalPeriods] = useState<HistoricalPeriod[]>([]);
-  const [currentPeriod, setCurrentPeriod] = useState<CurrentPeriod | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -111,9 +97,8 @@ export default function CalculatorHistory() {
         
         setUser(current);
         
-        // Load historical data and current period
+        // Load historical data
         await loadHistoricalData(uid);
-        await loadCurrentPeriod(uid);
         
       } catch (error) {
         console.error('Error loading data:', error);
@@ -177,43 +162,6 @@ export default function CalculatorHistory() {
     }
   };
 
-  const loadCurrentPeriod = async (userId: string) => {
-    try {
-      // Obtener el período actual de la calculadora
-      const { data: currentValues, error } = await supabase
-        .from('model_values')
-        .select('*')
-        .eq('model_id', userId)
-        .order('updated_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error loading current period:', error);
-        return;
-      }
-      
-      if (currentValues && currentValues.length > 0) {
-        // Agrupar valores del período actual
-        const totalValue = currentValues.reduce((sum, item) => sum + (item.value || 0), 0);
-        
-        const currentPeriodData: CurrentPeriod = {
-          period_date: currentValues[0].period_date,
-          period_type: currentValues[0].period_type,
-          values: currentValues.map(item => ({
-            platform_id: item.platform_id,
-            value: item.value || 0,
-            updated_at: item.updated_at
-          })),
-          total_value: totalValue,
-          is_current: true
-        };
-        
-        setCurrentPeriod(currentPeriodData);
-      }
-      
-    } catch (error) {
-      console.error('Error loading current period:', error);
-    }
-  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CO', {
@@ -234,7 +182,6 @@ export default function CalculatorHistory() {
 
   // Calcular estadísticas específicas solicitadas
   const totalPeriodsSaved = historicalPeriods.length;
-  const currentPeriodUSD = currentPeriod ? currentPeriod.total_value : 0;
   const averageUSDPerPeriod = historicalPeriods.length > 0 ? 
     historicalPeriods.reduce((sum, period) => sum + period.total_value, 0) / historicalPeriods.length : 0;
   
@@ -349,47 +296,6 @@ export default function CalculatorHistory() {
           </div>
         </div>
 
-        {/* Período Actual en Progreso - Solo mostrar si hay datos */}
-        {currentPeriod && currentPeriod.total_value > 0 && (
-          <div className="mb-8">
-            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">Período Actual en Progreso</h2>
-                <div className="flex items-center space-x-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-sm text-gray-600">En desarrollo</span>
-                </div>
-              </div>
-              
-              <InfoCardGrid 
-                cards={[
-                  {
-                    value: formatCurrency(currentPeriod.total_value),
-                    label: `Total Acumulado (${currentPeriod.period_type === '1-15' ? '1-15' : '16-31'})`,
-                    color: "blue"
-                  },
-                  {
-                    value: currentPeriod.values.length,
-                    label: "Plataformas Activas",
-                    color: "green"
-                  },
-                  {
-                    value: formatDate(currentPeriod.period_date),
-                    label: "Fecha del Período",
-                    color: "purple"
-                  },
-                  {
-                    value: "En Progreso",
-                    label: "Estado",
-                    color: "orange"
-                  }
-                ]}
-                columns={4}
-                className="mb-4"
-              />
-            </div>
-          </div>
-        )}
 
         {/* Resumen con InfoCardGrid - Cuadros específicos solicitados */}
         <div className="mb-8">
@@ -402,7 +308,7 @@ export default function CalculatorHistory() {
                 color: "blue"
               },
               {
-                value: `$${currentPeriodUSD.toFixed(2)} USD`,
+                value: "$0.00 USD",
                 label: "Total USD Modelo Período Actual",
                 color: "green"
               },
