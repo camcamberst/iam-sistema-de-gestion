@@ -826,7 +826,7 @@ export default function AdminViewModelPage() {
                   { value: '', label: models.length === 0 ? 'No hay modelos disponibles' : 'Selecciona un modelo' },
                   ...models.map(model => ({
                     value: model.id,
-                    label: `${model.email.split('@')[0]}${nameFilter ? ` (coincide con "${nameFilter}")` : ''}`,
+                    label: model.email.split('@')[0],
                     badge: model.currentConfig?.active ? 'Configurada' : 'Sin configurar',
                     badgeColor: model.currentConfig?.active ? 'green' as const : 'gray' as const
                   }))
