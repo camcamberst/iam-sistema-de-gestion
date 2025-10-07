@@ -34,9 +34,24 @@ interface HistoricalPeriod {
   total_value: number;
 }
 
+interface CurrentPeriodValue {
+  platform_id: string;
+  value: number;
+  updated_at: string;
+}
+
+interface CurrentPeriod {
+  period_date: string;
+  period_type: '1-15' | '16-31';
+  values: CurrentPeriodValue[];
+  total_value: number;
+  is_current: boolean;
+}
+
 export default function CalculatorHistory() {
   const [user, setUser] = useState<User | null>(null);
   const [historicalPeriods, setHistoricalPeriods] = useState<HistoricalPeriod[]>([]);
+  const [currentPeriod, setCurrentPeriod] = useState<CurrentPeriod | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -96,8 +111,9 @@ export default function CalculatorHistory() {
         
         setUser(current);
         
-        // Load historical data
+        // Load historical data and current period
         await loadHistoricalData(uid);
+        await loadCurrentPeriod(uid);
         
       } catch (error) {
         console.error('Error loading data:', error);
@@ -161,6 +177,44 @@ export default function CalculatorHistory() {
     }
   };
 
+  const loadCurrentPeriod = async (userId: string) => {
+    try {
+      // Obtener el período actual de la calculadora
+      const { data: currentValues, error } = await supabase
+        .from('model_values')
+        .select('*')
+        .eq('model_id', userId)
+        .order('updated_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error loading current period:', error);
+        return;
+      }
+      
+      if (currentValues && currentValues.length > 0) {
+        // Agrupar valores del período actual
+        const totalValue = currentValues.reduce((sum, item) => sum + (item.value || 0), 0);
+        
+        const currentPeriodData: CurrentPeriod = {
+          period_date: currentValues[0].period_date,
+          period_type: currentValues[0].period_type,
+          values: currentValues.map(item => ({
+            platform_id: item.platform_id,
+            value: item.value || 0,
+            updated_at: item.updated_at
+          })),
+          total_value: totalValue,
+          is_current: true
+        };
+        
+        setCurrentPeriod(currentPeriodData);
+      }
+      
+    } catch (error) {
+      console.error('Error loading current period:', error);
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('es-CO', {
       year: 'numeric',
@@ -178,13 +232,23 @@ export default function CalculatorHistory() {
     }).format(amount);
   };
 
-  // Calcular estadísticas locales
-  const totalEarnings = historicalPeriods.reduce((sum, period) => sum + period.total_value, 0);
-  const averagePerPeriod = historicalPeriods.length > 0 ? totalEarnings / historicalPeriods.length : 0;
-  const bestPeriod = historicalPeriods.reduce((best, current) => 
-    current.total_value > best.total_value ? current : best, 
-    historicalPeriods[0] || { total_value: 0 }
-  );
+  // Calcular estadísticas específicas solicitadas
+  const totalPeriodsSaved = historicalPeriods.length;
+  const currentPeriodUSD = currentPeriod ? currentPeriod.total_value : 0;
+  const averageUSDPerPeriod = historicalPeriods.length > 0 ? 
+    historicalPeriods.reduce((sum, period) => sum + period.total_value, 0) / historicalPeriods.length : 0;
+  
+  // Calcular promedio COP real de períodos archivados
+  const averageCOPerPeriod = historicalPeriods.length > 0 ? 
+    historicalPeriods.reduce((sum, period) => {
+      // Buscar valores COP en el período
+      const copValues = period.values.filter(value => 
+        value.platform_id.toLowerCase().includes('cop') || 
+        value.platform_id.toLowerCase().includes('pesos')
+      );
+      const copTotal = copValues.reduce((total, value) => total + value.value, 0);
+      return sum + copTotal;
+    }, 0) / historicalPeriods.length : 0;
 
   // Filtrar períodos según selección
   const filteredPeriods = historicalPeriods.filter(period => {
@@ -273,7 +337,7 @@ export default function CalculatorHistory() {
             <div>
               <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mi Historial de Calculadora</h1>
               <p className="text-gray-500 text-sm">
-                Valores archivados de períodos anteriores
+                Período actual en progreso y valores archivados
               </p>
             </div>
             <button
@@ -285,37 +349,91 @@ export default function CalculatorHistory() {
           </div>
         </div>
 
-        {/* Resumen con InfoCardGrid */}
-        {historicalPeriods.length > 0 && (
+        {/* Período Actual en Progreso */}
+        {currentPeriod && (
           <div className="mb-8">
-            <InfoCardGrid 
-              cards={[
-                {
-                  value: historicalPeriods.length,
-                  label: "Períodos Archivados",
-                  color: "blue"
-                },
-                {
-                  value: formatCurrency(totalEarnings),
-                  label: "Total Histórico",
-                  color: "green"
-                },
-                {
-                  value: formatCurrency(averagePerPeriod),
-                  label: "Promedio por Período",
-                  color: "purple"
-                },
-                {
-                  value: formatCurrency(bestPeriod.total_value),
-                  label: "Mejor Período",
-                  color: "orange"
-                }
-              ]}
-              columns={4}
-              className="mb-6"
-            />
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold text-blue-900">Período Actual en Progreso</h2>
+                <div className="flex items-center space-x-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm font-medium text-green-700">En desarrollo</span>
+                </div>
+              </div>
+              
+              <InfoCardGrid 
+                cards={[
+                  {
+                    value: formatCurrency(currentPeriod.total_value),
+                    label: `Total Acumulado (${currentPeriod.period_type === '1-15' ? '1-15' : '16-31'})`,
+                    color: "blue"
+                  },
+                  {
+                    value: currentPeriod.values.length,
+                    label: "Plataformas Activas",
+                    color: "green"
+                  },
+                  {
+                    value: formatDate(currentPeriod.period_date),
+                    label: "Fecha del Período",
+                    color: "purple"
+                  },
+                  {
+                    value: "En Progreso",
+                    label: "Estado",
+                    color: "orange"
+                  }
+                ]}
+                columns={4}
+                className="mb-4"
+              />
+              
+              {/* Detalles del período actual */}
+              <div className="mt-4">
+                <h4 className="text-sm font-medium text-blue-800 mb-3">Valores por plataforma:</h4>
+                <InfoCardGrid 
+                  cards={currentPeriod.values.map(value => ({
+                    value: formatCurrency(value.value),
+                    label: value.platform_id.replace('_', ' '),
+                    color: "green"
+                  }))}
+                  columns={3}
+                />
+              </div>
+            </div>
           </div>
         )}
+
+        {/* Resumen con InfoCardGrid - Cuadros específicos solicitados */}
+        <div className="mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Estadísticas de Rendimiento</h3>
+          <InfoCardGrid 
+            cards={[
+              {
+                value: totalPeriodsSaved,
+                label: "Total Períodos Guardados",
+                color: "blue"
+              },
+              {
+                value: `$${currentPeriodUSD.toFixed(2)} USD`,
+                label: "Total USD Modelo Período Actual",
+                color: "green"
+              },
+              {
+                value: `$${averageUSDPerPeriod.toFixed(2)} USD`,
+                label: "Promedio USD Modelo Entre Períodos",
+                color: "purple"
+              },
+              {
+                value: `$${Math.round(averageCOPerPeriod).toLocaleString('es-CO')} COP`,
+                label: "Promedio COP Modelo Entre Períodos",
+                color: "orange"
+              }
+            ]}
+            columns={4}
+            className="mb-6"
+          />
+        </div>
 
         {/* Filtros con AppleDropdown (principio estético) */}
         {historicalPeriods.length > 0 && (
@@ -384,7 +502,7 @@ export default function CalculatorHistory() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {historicalPeriods.length === 0 ? 'No hay historial disponible' : 'No hay períodos que coincidan con los filtros'}
+              {historicalPeriods.length === 0 ? 'No hay períodos archivados' : 'No hay períodos que coincidan con los filtros'}
             </h3>
             <p className="text-gray-500 text-sm">
               {historicalPeriods.length === 0 
