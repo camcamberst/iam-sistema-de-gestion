@@ -323,7 +323,7 @@ export default function ConfigCalculatorPage() {
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
               <AppleDropdown
                 options={[
-                  { value: '', label: 'Selecciona un modelo' },
+                  { value: '', label: 'Seleccionar modelo' },
                   ...models.map(model => ({
                     value: model.id,
                     label: model.email ? model.email.split('@')[0] : model.name,
@@ -333,7 +333,7 @@ export default function ConfigCalculatorPage() {
                 ]}
                 value={selectedModel?.id || ''}
                 onChange={(value) => value ? handleModelSelect(value) : setSelectedModel(null)}
-                placeholder="Selecciona un modelo"
+                placeholder="Seleccionar modelo"
               />
               
               {/* Información del grupo del modelo seleccionado */}
