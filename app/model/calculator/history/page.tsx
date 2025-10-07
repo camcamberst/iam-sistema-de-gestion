@@ -349,15 +349,15 @@ export default function CalculatorHistory() {
           </div>
         </div>
 
-        {/* Período Actual en Progreso */}
-        {currentPeriod && (
+        {/* Período Actual en Progreso - Solo mostrar si hay datos */}
+        {currentPeriod && currentPeriod.total_value > 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-200 p-6">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-blue-900">Período Actual en Progreso</h2>
+                <h2 className="text-lg font-semibold text-gray-900">Período Actual en Progreso</h2>
                 <div className="flex items-center space-x-2">
-                  <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm font-medium text-green-700">En desarrollo</span>
+                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                  <span className="text-sm text-gray-600">En desarrollo</span>
                 </div>
               </div>
               
@@ -387,19 +387,6 @@ export default function CalculatorHistory() {
                 columns={4}
                 className="mb-4"
               />
-              
-              {/* Detalles del período actual */}
-              <div className="mt-4">
-                <h4 className="text-sm font-medium text-blue-800 mb-3">Valores por plataforma:</h4>
-                <InfoCardGrid 
-                  cards={currentPeriod.values.map(value => ({
-                    value: formatCurrency(value.value),
-                    label: value.platform_id.replace('_', ' '),
-                    color: "green"
-                  }))}
-                  columns={3}
-                />
-              </div>
             </div>
           </div>
         )}
@@ -437,42 +424,45 @@ export default function CalculatorHistory() {
 
         {/* Filtros con AppleDropdown (principio estético) */}
         {historicalPeriods.length > 0 && (
-          <div className="mb-6 flex flex-wrap gap-4">
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por año
-              </label>
-              <AppleDropdown
-                options={yearOptions}
-                value={selectedYear}
-                onChange={setSelectedYear}
-                placeholder="Seleccionar año"
-                className="w-full"
-              />
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por mes
-              </label>
-              <AppleDropdown
-                options={monthOptions}
-                value={selectedMonth}
-                onChange={setSelectedMonth}
-                placeholder="Seleccionar mes"
-                className="w-full"
-              />
-            </div>
-            <div className="flex-1 min-w-[200px]">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Filtrar por tipo
-              </label>
-              <AppleDropdown
-                options={typeOptions}
-                value={selectedType}
-                onChange={setSelectedType}
-                placeholder="Seleccionar tipo"
-                className="w-full"
-              />
+          <div className="mb-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Filtrar Períodos Archivados</h3>
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filtrar por año
+                </label>
+                <AppleDropdown
+                  options={yearOptions}
+                  value={selectedYear}
+                  onChange={setSelectedYear}
+                  placeholder="Seleccionar año"
+                  className="w-full"
+                />
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filtrar por mes
+                </label>
+                <AppleDropdown
+                  options={monthOptions}
+                  value={selectedMonth}
+                  onChange={setSelectedMonth}
+                  placeholder="Seleccionar mes"
+                  className="w-full"
+                />
+              </div>
+              <div className="flex-1 min-w-[200px]">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Filtrar por tipo
+                </label>
+                <AppleDropdown
+                  options={typeOptions}
+                  value={selectedType}
+                  onChange={setSelectedType}
+                  placeholder="Seleccionar tipo"
+                  className="w-full"
+                />
+              </div>
             </div>
           </div>
         )}
@@ -513,6 +503,7 @@ export default function CalculatorHistory() {
           </div>
         ) : (
           <div className="space-y-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Períodos Archivados</h3>
             {filteredPeriods.map((period, index) => {
               const periodKey = `${period.period_date}-${period.period_type}`;
               const isExpanded = expandedPeriod === periodKey;
