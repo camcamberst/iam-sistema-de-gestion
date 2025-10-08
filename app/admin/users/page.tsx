@@ -1081,22 +1081,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
             <>
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Jornada <span className="text-red-500">*</span>
-                </label>
-                <AppleDropdown
-                  options={[
-                    { value: 'MAÑANA', label: 'Mañana' },
-                    { value: 'TARDE', label: 'Tarde' },
-                    { value: 'NOCHE', label: 'Noche' }
-                  ]}
-                  value={formData.jornada}
-                  onChange={(value) => setFormData({ ...formData, jornada: value })}
-                  placeholder="Selecciona una jornada"
-                />
-              </div>
-
-              <div>
-                <label className="block text-gray-700 text-sm font-medium mb-1">
                   Room <span className="text-red-500">*</span>
                 </label>
                 <AppleDropdown
@@ -1113,6 +1097,22 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                 {formData.group_ids.length === 0 && (
                   <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
                 )}
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-1">
+                  Jornada <span className="text-red-500">*</span>
+                </label>
+                <AppleDropdown
+                  options={[
+                    { value: 'MAÑANA', label: 'Mañana' },
+                    { value: 'TARDE', label: 'Tarde' },
+                    { value: 'NOCHE', label: 'Noche' }
+                  ]}
+                  value={formData.jornada}
+                  onChange={(value) => setFormData({ ...formData, jornada: value })}
+                  placeholder="Selecciona una jornada"
+                />
               </div>
             </>
           )}
