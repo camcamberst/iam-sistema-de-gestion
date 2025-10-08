@@ -280,6 +280,34 @@ export async function POST(request: NextRequest) {
     if (role === 'modelo' && jornada && room_id && group_ids && group_ids.length > 0) {
       console.log('📋 [API] Creando asignación de modelo:', { jornada, room_id, group_id: group_ids[0] });
       
+      // Validar que no existe otra asignación activa para el mismo room/jornada/grupo
+      console.log('🔍 [API] Validando conflicto de asignación...');
+      const { data: existingAssignments, error: checkError } = await supabase
+        .from('modelo_assignments')
+        .select('id, model_id')
+        .eq('group_id', group_ids[0])
+        .eq('room_id', room_id)
+        .eq('jornada', jornada)
+        .eq('is_active', true);
+      
+      if (checkError) {
+        console.error('❌ [API] Error verificando asignaciones existentes:', checkError);
+        return NextResponse.json(
+          { success: false, error: 'Error verificando disponibilidad' },
+          { status: 500 }
+        );
+      }
+      
+      if (existingAssignments && existingAssignments.length > 0) {
+        console.log('❌ [API] Conflicto detectado:', existingAssignments);
+        return NextResponse.json(
+          { success: false, error: 'Este room ya está ocupado en la jornada seleccionada para este grupo' },
+          { status: 400 }
+        );
+      }
+      
+      console.log('✅ [API] No hay conflictos, procediendo con la asignación');
+      
       try {
         const { error: assignmentError } = await supabase
           .from('modelo_assignments')
@@ -465,6 +493,36 @@ export async function PUT(request: NextRequest) {
     // Actualizar asignación de modelo (solo si es modelo y se proporcionaron jornada/room)
     if (role === 'modelo' && jornada && room_id && group_ids && group_ids.length > 0) {
       console.log('📋 [API] Actualizando asignación de modelo:', { jornada, room_id, group_id: group_ids[0] });
+      
+      // Validar que no existe otra asignación activa para el mismo room/jornada/grupo
+      // (excluyendo las asignaciones del usuario actual)
+      console.log('🔍 [API] Validando conflicto de asignación en edición...');
+      const { data: existingAssignments, error: checkError } = await supabase
+        .from('modelo_assignments')
+        .select('id, model_id')
+        .eq('group_id', group_ids[0])
+        .eq('room_id', room_id)
+        .eq('jornada', jornada)
+        .eq('is_active', true)
+        .neq('model_id', id); // Excluir asignaciones del usuario actual
+      
+      if (checkError) {
+        console.error('❌ [API] Error verificando asignaciones existentes:', checkError);
+        return NextResponse.json(
+          { success: false, error: 'Error verificando disponibilidad' },
+          { status: 500 }
+        );
+      }
+      
+      if (existingAssignments && existingAssignments.length > 0) {
+        console.log('❌ [API] Conflicto detectado en edición:', existingAssignments);
+        return NextResponse.json(
+          { success: false, error: 'Este room ya está ocupado en la jornada seleccionada para este grupo' },
+          { status: 400 }
+        );
+      }
+      
+      console.log('✅ [API] No hay conflictos, procediendo con la actualización');
       
       try {
         // Eliminar asignaciones existentes
