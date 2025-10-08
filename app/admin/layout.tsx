@@ -122,6 +122,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       });
 
       baseItems.push({
+        id: 'sedes',
+        label: 'Gestión Sedes',
+        href: '#', // Sin navegación directa
+        subItems: [
+          { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar' },
+          { label: 'Gestionar Rooms', href: '/admin/sedes/rooms' },
+          { label: 'Gestionar Jornadas', href: '/admin/sedes/jornadas' },
+          { label: 'Asignaciones', href: '/admin/sedes/asignaciones' },
+          { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard' }
+        ]
+      });
+
+      baseItems.push({
         id: 'reports',
         label: 'Reportes',
         href: '#', // Sin navegación directa
