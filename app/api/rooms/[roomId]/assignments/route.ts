@@ -56,8 +56,8 @@ export async function GET(
       assigned_at: assignment.assigned_at,
       is_active: assignment.is_active,
       model_id: assignment.model_id,
-      modelo_name: assignment.users?.name || 'Modelo no especificada',
-      modelo_email: assignment.users?.email || 'Email no disponible'
+      modelo_name: assignment.users?.[0]?.name || 'Modelo no especificada',
+      modelo_email: assignment.users?.[0]?.email || 'Email no disponible'
     })) || [];
 
     console.log('✅ [API] Asignaciones obtenidas:', formattedAssignments.length);
