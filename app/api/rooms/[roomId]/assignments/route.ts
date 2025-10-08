@@ -22,7 +22,7 @@ export async function GET(
     
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Obtener asignaciones del room con información de la modelo
+    // Obtener asignaciones del room
     const { data: assignments, error } = await supabase
       .from('modelo_assignments')
       .select(`
@@ -31,11 +31,7 @@ export async function GET(
         assigned_at,
         is_active,
         model_id,
-        users!inner(
-          id,
-          name,
-          email
-        )
+        room_id
       `)
       .eq('room_id', params.roomId)
       .eq('is_active', true)
@@ -49,16 +45,44 @@ export async function GET(
       );
     }
 
-    // Formatear datos para el frontend
-    const formattedAssignments = assignments?.map(assignment => ({
-      id: assignment.id,
-      jornada: assignment.jornada,
-      assigned_at: assignment.assigned_at,
-      is_active: assignment.is_active,
-      model_id: assignment.model_id,
-      modelo_name: assignment.users?.[0]?.name || 'Modelo no especificada',
-      modelo_email: assignment.users?.[0]?.email || 'Email no disponible'
-    })) || [];
+    console.log('🔍 [API] Asignaciones encontradas:', assignments?.length || 0);
+
+    // Obtener información de las modelos por separado
+    const formattedAssignments = [];
+    
+    if (assignments && assignments.length > 0) {
+      for (const assignment of assignments) {
+        // Obtener información de la modelo
+        const { data: userData, error: userError } = await supabase
+          .from('users')
+          .select('id, name, email')
+          .eq('id', assignment.model_id)
+          .single();
+
+        if (!userError && userData) {
+          formattedAssignments.push({
+            id: assignment.id,
+            jornada: assignment.jornada,
+            assigned_at: assignment.assigned_at,
+            is_active: assignment.is_active,
+            model_id: assignment.model_id,
+            modelo_name: userData.name || 'Modelo no especificada',
+            modelo_email: userData.email || 'Email no disponible'
+          });
+        } else {
+          console.warn('⚠️ [API] No se pudo obtener info de la modelo:', assignment.model_id);
+          formattedAssignments.push({
+            id: assignment.id,
+            jornada: assignment.jornada,
+            assigned_at: assignment.assigned_at,
+            is_active: assignment.is_active,
+            model_id: assignment.model_id,
+            modelo_name: 'Modelo no especificada',
+            modelo_email: 'Email no disponible'
+          });
+        }
+      }
+    }
 
     console.log('✅ [API] Asignaciones obtenidas:', formattedAssignments.length);
 
