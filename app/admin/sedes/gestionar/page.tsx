@@ -29,6 +29,10 @@ export default function GestionarSedesPage() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newRoomName, setNewRoomName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  
+  // Estados para admin
+  const [userRole, setUserRole] = useState<string>('admin');
+  const [selectedSedeForAdmin, setSelectedSedeForAdmin] = useState<string>('');
   const router = useRouter();
 
   // Cargar datos iniciales
@@ -62,6 +66,13 @@ export default function GestionarSedesPage() {
       
       if (groupsData.success) {
         setGroups(groupsData.groups);
+        setUserRole(groupsData.userRole || 'admin');
+        
+        // Si es admin y tiene grupos, seleccionar el primero por defecto
+        if (groupsData.userRole === 'admin' && groupsData.groups.length > 0) {
+          setSelectedSedeForAdmin(groupsData.groups[0].id);
+          setSelectedGroup(groupsData.groups[0].id); // También para el modal de crear room
+        }
       } else {
         setError('Error cargando grupos: ' + groupsData.error);
       }
@@ -212,16 +223,48 @@ export default function GestionarSedesPage() {
 
         {/* Acciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Crear Sede */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nueva Sede</h2>
-            <button
-              onClick={() => setShowCreateGroup(true)}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              + Crear Sede
-            </button>
-          </div>
+          {/* Para Super Admin: Crear Sede */}
+          {userRole === 'super_admin' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nueva Sede</h2>
+              <button
+                onClick={() => setShowCreateGroup(true)}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                + Crear Sede
+              </button>
+            </div>
+          )}
+
+          {/* Para Admin: Selector de Sede */}
+          {userRole === 'admin' && groups.length > 1 && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Sede</h2>
+              <AppleDropdown
+                options={groups.map(group => ({
+                  value: group.id,
+                  label: group.name
+                }))}
+                value={selectedSedeForAdmin}
+                onChange={(value) => {
+                  setSelectedSedeForAdmin(value);
+                  setSelectedGroup(value); // También actualizar para el modal de crear room
+                }}
+                placeholder="Selecciona una sede"
+              />
+            </div>
+          )}
+
+          {/* Para Admin con una sola sede: Mostrar sede actual */}
+          {userRole === 'admin' && groups.length === 1 && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Sede Asignada</h2>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-gray-700 font-medium">{groups[0]?.name}</span>
+              </div>
+            </div>
+          )}
 
           {/* Crear Room */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -341,17 +384,23 @@ export default function GestionarSedesPage() {
               <form onSubmit={handleCreateRoom} className="space-y-4">
                 <div>
                   <label className="block text-gray-700 text-sm font-medium mb-1">
-                    Seleccionar Sede
+                    {userRole === 'admin' ? 'Sede' : 'Seleccionar Sede'}
                   </label>
-                  <AppleDropdown
-                    options={groups.map(group => ({
-                      value: group.id,
-                      label: group.name
-                    }))}
-                    value={selectedGroup}
-                    onChange={setSelectedGroup}
-                    placeholder="Selecciona una sede"
-                  />
+                  {userRole === 'admin' ? (
+                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-gray-50">
+                      {groups.find(g => g.id === selectedGroup)?.name || 'Sede no seleccionada'}
+                    </div>
+                  ) : (
+                    <AppleDropdown
+                      options={groups.map(group => ({
+                        value: group.id,
+                        label: group.name
+                      }))}
+                      value={selectedGroup}
+                      onChange={setSelectedGroup}
+                      placeholder="Selecciona una sede"
+                    />
+                  )}
                 </div>
 
                 <div>
