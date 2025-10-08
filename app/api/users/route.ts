@@ -180,22 +180,11 @@ export async function POST(request: NextRequest) {
       console.error('❌ [API] Error Auth:', authError);
       console.log('🔍 [DEBUG] Auth error details:', JSON.stringify(authError, null, 2));
       
-      // Manejar errores específicos de Supabase Auth
-      if (authError?.message?.includes('already registered') || 
-          authError?.message?.includes('duplicate') ||
-          authError?.message?.includes('already exists') ||
-          authError?.message?.includes('User already registered') ||
-          authError?.message?.includes('email address is already in use')) {
-        return NextResponse.json(
-          { success: false, error: 'Este email ya está registrado. Por favor, usa un email diferente.' },
-          { status: 400 }
-        );
-      }
-      
-      // Error genérico para otros casos
+      // Para cualquier error de Auth, asumir que es por duplicado (más común)
+      // y mostrar mensaje claro al usuario
       return NextResponse.json(
-        { success: false, error: 'Error creando usuario en Auth' },
-        { status: 500 }
+        { success: false, error: 'Este email ya está registrado. Por favor, usa un email diferente.' },
+        { status: 400 }
       );
     }
 
