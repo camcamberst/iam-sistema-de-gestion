@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
 
     const { data: groups, error } = await supabase
       .from('groups')
-      .select('id, name, is_manager')
+      .select('id, name, is_active, description, created_at')
       .order('name', { ascending: true });
 
     if (error) {
@@ -85,9 +85,10 @@ export async function POST(request: NextRequest) {
       .from('groups')
       .insert({
         name: name.trim(),
-        is_manager: false
+        organization_id: '00000000-0000-0000-0000-000000000000', // UUID por defecto
+        is_active: true
       })
-      .select('id, name, is_manager')
+      .select('id, name, is_active, description, created_at')
       .single();
 
     if (error) {
