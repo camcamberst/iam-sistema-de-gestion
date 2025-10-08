@@ -202,10 +202,7 @@ export default function UsersListPage() {
       return;
     }
     
-    setSelectedUser(user);
-    setShowEditModal(true);
-    
-    // Cargar asignaciones si es un modelo
+    // Cargar asignaciones si es un modelo ANTES de abrir el modal
     if (user.role === 'modelo') {
       try {
         const response = await fetch(`/api/assignments/${user.id}`);
@@ -215,18 +212,31 @@ export default function UsersListPage() {
           const assignment = result.assignments[0]; // Tomar la primera asignación activa
           console.log('🔍 [FRONTEND] Asignación cargada:', assignment);
           
-          // Actualizar el usuario con los datos de asignación
-          setSelectedUser({
+          // Actualizar el usuario con los datos de asignación ANTES de abrir el modal
+          const userWithAssignment = {
             ...user,
             jornada: assignment.jornada,
             room_id: assignment.room_id,
             room_name: assignment.room_name
-          });
+          };
+          
+          setSelectedUser(userWithAssignment);
+          setShowEditModal(true);
+        } else {
+          // No hay asignaciones, abrir modal con usuario normal
+          setSelectedUser(user);
+          setShowEditModal(true);
         }
       } catch (error) {
         console.error('❌ [FRONTEND] Error cargando asignaciones:', error);
-        // No mostrar error al usuario, solo logear
+        // En caso de error, abrir modal con usuario normal
+        setSelectedUser(user);
+        setShowEditModal(true);
       }
+    } else {
+      // No es modelo, abrir modal directamente
+      setSelectedUser(user);
+      setShowEditModal(true);
     }
   };
 
