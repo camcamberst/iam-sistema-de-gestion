@@ -5,10 +5,22 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🏢 [API] Obteniendo grupos...');
     
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Verificar variables de entorno
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ [API] Variables de entorno faltantes:', {
+        url: !!supabaseUrl,
+        key: !!supabaseKey
+      });
+      return NextResponse.json(
+        { success: false, error: 'Configuración de base de datos faltante' },
+        { status: 500 }
+      );
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: groups, error } = await supabase
       .from('groups')
@@ -18,7 +30,7 @@ export async function GET(request: NextRequest) {
     if (error) {
       console.error('❌ [API] Error obteniendo grupos:', error);
       return NextResponse.json(
-        { success: false, error: 'Error obteniendo grupos' },
+        { success: false, error: `Error obteniendo grupos: ${error.message}` },
         { status: 500 }
       );
     }
@@ -33,7 +45,7 @@ export async function GET(request: NextRequest) {
   } catch (error) {
     console.error('❌ [API] Error general:', error);
     return NextResponse.json(
-      { success: false, error: 'Error interno' },
+      { success: false, error: `Error interno: ${(error as Error).message}` },
       { status: 500 }
     );
   }
@@ -52,10 +64,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    // Verificar variables de entorno
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ [API] Variables de entorno faltantes:', {
+        url: !!supabaseUrl,
+        key: !!supabaseKey
+      });
+      return NextResponse.json(
+        { success: false, error: 'Configuración de base de datos faltante' },
+        { status: 500 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
     const { data: group, error } = await supabase
       .from('groups')
