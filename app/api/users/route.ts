@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
       const activeAssignment = user.modelo_assignments?.find((ma: any) => ma.is_active !== false);
       const jornada = activeAssignment?.jornada || null;
       const room_id = activeAssignment?.room_id || null;
-      const room_name = activeAssignment?.group_rooms?.room_name || null;
+      const room_name = activeAssignment?.group_rooms?.[0]?.room_name || null;
       
       console.log(`🔍 [DEBUG] Usuario ${user.name} (${user.email}):`, {
         user_groups_raw: user.user_groups,
