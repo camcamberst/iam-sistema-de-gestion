@@ -46,18 +46,28 @@ export async function GET(
     }
 
     console.log('🔍 [API] Asignaciones encontradas:', assignments?.length || 0);
+    console.log('🔍 [API] Asignaciones raw:', assignments);
 
     // Obtener información de las modelos por separado
     const formattedAssignments = [];
     
     if (assignments && assignments.length > 0) {
       for (const assignment of assignments) {
+        console.log('🔍 [API] Procesando asignación:', {
+          id: assignment.id,
+          model_id: assignment.model_id,
+          jornada: assignment.jornada,
+          is_active: assignment.is_active
+        });
+
         // Obtener información de la modelo
         const { data: userData, error: userError } = await supabase
           .from('users')
           .select('id, name, email')
           .eq('id', assignment.model_id)
           .single();
+
+        console.log('🔍 [API] Info de modelo obtenida:', { userData, userError });
 
         if (!userError && userData) {
           formattedAssignments.push({
@@ -70,7 +80,7 @@ export async function GET(
             modelo_email: userData.email || 'Email no disponible'
           });
         } else {
-          console.warn('⚠️ [API] No se pudo obtener info de la modelo:', assignment.model_id);
+          console.warn('⚠️ [API] No se pudo obtener info de la modelo:', assignment.model_id, userError);
           formattedAssignments.push({
             id: assignment.id,
             jornada: assignment.jornada,
