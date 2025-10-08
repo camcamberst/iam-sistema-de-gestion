@@ -10,12 +10,16 @@ export default function CreateUserPage() {
     email: "", 
     password: "", 
     role: "modelo", 
-    groups: [] as string[] 
+    groups: [] as string[],
+    room_id: "",
+    jornada: ""
   });
   const [submitting, setSubmitting] = useState(false);
   const [groups, setGroups] = useState<Array<{id:string; name:string}>>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
+  const [loadingRooms, setLoadingRooms] = useState(false);
 
   useEffect(() => {
     const loadGroups = async () => {
@@ -30,6 +34,41 @@ export default function CreateUserPage() {
     };
     loadGroups();
   }, []);
+
+  // Función para cargar rooms por grupo
+  const loadRoomsForGroup = async (groupId: string) => {
+    if (!groupId) {
+      setAvailableRooms([]);
+      return;
+    }
+
+    setLoadingRooms(true);
+    try {
+      const response = await fetch(`/api/groups/rooms?groupId=${groupId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setAvailableRooms(data.rooms);
+      } else {
+        console.error('Error loading rooms:', data.error);
+        setAvailableRooms([]);
+      }
+    } catch (error) {
+      console.error('Error loading rooms:', error);
+      setAvailableRooms([]);
+    } finally {
+      setLoadingRooms(false);
+    }
+  };
+
+  // Cargar rooms cuando se selecciona un grupo
+  useEffect(() => {
+    if (form.groups.length > 0) {
+      loadRoomsForGroup(form.groups[0]);
+    } else {
+      setAvailableRooms([]);
+    }
+  }, [form.groups]);
 
   // AppleDropdown maneja automáticamente el click-outside y escape
 
@@ -247,6 +286,48 @@ export default function CreateUserPage() {
             )}
           </div>
         </div>
+
+        {/* Campos adicionales para modelos */}
+        {form.role === 'modelo' && (
+          <>
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Room <span className="text-red-500">*</span>
+              </label>
+              <AppleDropdown
+                options={availableRooms.map(room => ({
+                  value: room.id,
+                  label: room.room_name
+                }))}
+                value={form.room_id}
+                onChange={(value) => setForm({ ...form, room_id: value })}
+                placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
+                disabled={loadingRooms || availableRooms.length === 0}
+                maxHeight="max-h-40"
+              />
+              {form.groups.length === 0 && (
+                <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-gray-700 text-sm font-medium mb-2">
+                Jornada <span className="text-red-500">*</span>
+              </label>
+              <AppleDropdown
+                options={[
+                  { value: 'MAÑANA', label: 'Mañana' },
+                  { value: 'TARDE', label: 'Tarde' },
+                  { value: 'NOCHE', label: 'Noche' }
+                ]}
+                value={form.jornada}
+                onChange={(value) => setForm({ ...form, jornada: value })}
+                placeholder="Selecciona una jornada"
+              />
+            </div>
+          </>
+        )}
+
         <button disabled={submitting} type="submit">
           {submitting? "Creando...":"Crear"}
         </button>
