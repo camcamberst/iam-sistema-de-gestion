@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { getUsers, getGroups, createUser, updateUser, deleteUser } from '../../../lib/api-client';
 import { 
   canAssignRole, 
@@ -52,10 +52,23 @@ export default function UsersListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Detectar parámetro create=true y abrir modal automáticamente
+  useEffect(() => {
+    const createParam = searchParams.get('create');
+    if (createParam === 'true') {
+      setShowCreateModal(true);
+      // Limpiar el parámetro de la URL sin recargar la página
+      const url = new URL(window.location.href);
+      url.searchParams.delete('create');
+      window.history.replaceState({}, '', url.toString());
+    }
+  }, [searchParams]);
 
   const loadData = async () => {
     try {
@@ -552,6 +565,13 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Cargar rooms iniciales si ya hay un grupo seleccionado
+  useEffect(() => {
+    if (formData.group_ids.length > 0) {
+      loadRoomsForGroup(formData.group_ids[0]);
+    }
+  }, [formData.group_ids]);
 
   // Cargar rooms cuando se selecciona un grupo
   const loadRoomsForGroup = async (groupId: string) => {
