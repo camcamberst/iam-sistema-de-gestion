@@ -324,20 +324,6 @@ export default function GestionarSedesPage() {
                       {getRoomsForGroup(group.id).length} rooms configurados
                     </p>
                   </div>
-                  <div className="flex space-x-2">
-                    <button
-                      onClick={() => router.push(`/admin/sedes/rooms?group=${group.id}`)}
-                      className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                    >
-                      Ver Rooms
-                    </button>
-                    <button
-                      onClick={() => router.push(`/admin/sedes/asignaciones?group=${group.id}`)}
-                      className="text-green-600 hover:text-green-800 text-sm font-medium"
-                    >
-                      Ver Asignaciones
-                    </button>
-                  </div>
                 </div>
                 
                 {/* Rooms de esta sede */}
