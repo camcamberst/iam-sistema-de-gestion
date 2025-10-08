@@ -178,6 +178,18 @@ export async function POST(request: NextRequest) {
 
     if (authError || !authData.user) {
       console.error('❌ [API] Error Auth:', authError);
+      
+      // Manejar errores específicos de Supabase Auth
+      if (authError?.message?.includes('already registered') || 
+          authError?.message?.includes('duplicate') ||
+          authError?.message?.includes('already exists')) {
+        return NextResponse.json(
+          { success: false, error: 'Este email ya está registrado. Por favor, usa un email diferente.' },
+          { status: 400 }
+        );
+      }
+      
+      // Error genérico para otros casos
       return NextResponse.json(
         { success: false, error: 'Error creando usuario en Auth' },
         { status: 500 }

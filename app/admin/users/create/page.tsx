@@ -15,6 +15,8 @@ export default function CreateUserPage() {
     jornada: ""
   });
   const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
   const [groups, setGroups] = useState<Array<{id:string; name:string}>>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [openGroups, setOpenGroups] = useState(false);
@@ -73,6 +75,9 @@ export default function CreateUserPage() {
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setSubmitting(true);
+    setError(null);
+    setSuccess(null);
+    
     try {
       // Preparar datos para la API - cambiar 'groups' por 'group_ids'
       const apiData = {
@@ -93,7 +98,28 @@ export default function CreateUserPage() {
       const result = await res.json();
       console.log('🔍 [FRONTEND] Respuesta de la API:', result);
       
-      if (res.ok) router.push("/admin/users");
+      if (res.ok && result.success) {
+        setSuccess('Usuario creado exitosamente');
+        // Limpiar formulario
+        setForm({
+          name: "",
+          email: "",
+          password: "",
+          role: "modelo",
+          groups: [],
+          room_id: "",
+          jornada: ""
+        });
+        // Redirigir después de 2 segundos
+        setTimeout(() => {
+          router.push("/admin/users");
+        }, 2000);
+      } else {
+        setError(result.error || 'Error creando usuario');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      setError('Error de conexión. Por favor, intenta nuevamente.');
     } finally {
       setSubmitting(false);
     }
@@ -106,6 +132,38 @@ export default function CreateUserPage() {
       <div className="w-full max-w-md">
         <div className="apple-card" style={{ padding: 24 }}>
         <h1 className="text-xl font-semibold text-gray-900 mb-4">Crear Usuario</h1>
+        
+        {/* Mensajes de error y éxito */}
+        {error && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {success && (
+          <div className="mb-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-green-800">{success}</p>
+              </div>
+            </div>
+          </div>
+        )}
+        
         <form onSubmit={onSubmit} style={{ display: "grid", gap: 16 }}>
           <input
           placeholder="Nombre"
