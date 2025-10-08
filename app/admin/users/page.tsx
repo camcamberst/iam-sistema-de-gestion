@@ -455,9 +455,12 @@ export default function UsersListPage() {
             user={selectedUser}
             groups={groups}
             currentUser={currentUser}
+            modalError={modalError}
+            setModalError={setModalError}
             onClose={() => {
               setShowEditModal(false);
               setSelectedUser(null);
+              setModalError(null); // Limpiar error del modal al cerrar
             }}
             onSubmit={async (userData) => {
               try {
@@ -477,6 +480,7 @@ export default function UsersListPage() {
                   console.log('✅ [PARENT] Usuario actualizado exitosamente');
                   setShowEditModal(false);
                   setSelectedUser(null);
+                  setModalError(null); // Limpiar error del modal al actualizar exitosamente
                   
                   // Actualizar solo el usuario específico en la lista local sin perder filtros
                   setUsers(prevUsers => 
@@ -488,11 +492,12 @@ export default function UsersListPage() {
                   console.log('✅ [FRONTEND] Usuario actualizado en la lista local');
                 } else {
                   console.error('❌ [PARENT] Error de la API:', result.error);
-                  setError('Error actualizando usuario: ' + result.error);
+                  // Usar el estado de error del modal en lugar del estado de la página principal
+                  setModalError('Error actualizando usuario: ' + result.error);
                 }
               } catch (err) {
                 console.error('❌ [PARENT] Error en la petición:', err);
-                setError('Error actualizando usuario');
+                setModalError('Error actualizando usuario');
               }
             }}
           />
@@ -503,12 +508,14 @@ export default function UsersListPage() {
 }
 
 // Componente para crear usuario
-function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
+function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalError, setModalError }: {
   user: User;
   groups: Group[];
   onClose: () => void;
   onSubmit: (userData: any) => void;
   currentUser: CurrentUser | null;
+  modalError: string | null;
+  setModalError: (error: string | null) => void;
 }) {
   const [formData, setFormData] = useState({
     id: user?.id || '', // ✅ AGREGAR ID DEL USUARIO con validación
@@ -526,6 +533,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
   const [restrictionMessage, setRestrictionMessage] = useState('');
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
@@ -632,6 +640,22 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col">
         <h2 className="text-lg font-semibold text-gray-900 mb-3">Editar Usuario</h2>
+
+        {/* Mensaje de error del modal */}
+        {modalError && (
+          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800">{modalError}</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-y-auto pr-2">
           <div>
