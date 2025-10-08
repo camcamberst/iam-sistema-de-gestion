@@ -50,6 +50,7 @@ export default function UsersListPage() {
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
+  const [modalError, setModalError] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
