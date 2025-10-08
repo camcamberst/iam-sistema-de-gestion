@@ -126,7 +126,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Verificar IDs de modelos inválidos
-    const uniqueModelIds = [...new Set(allAssignments?.map(a => a.model_id) || [])];
+    const uniqueModelIds = Array.from(new Set(allAssignments?.map(a => a.model_id) || []));
     for (const modelId of uniqueModelIds) {
       const { data: userData, error: userError } = await supabase
         .from('users')
