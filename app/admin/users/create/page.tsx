@@ -74,11 +74,25 @@ export default function CreateUserPage() {
     e.preventDefault();
     setSubmitting(true);
     try {
+      // Preparar datos para la API - cambiar 'groups' por 'group_ids'
+      const apiData = {
+        ...form,
+        group_ids: form.groups, // Mapear groups a group_ids
+        groups: undefined // Eliminar el campo groups
+      };
+      delete apiData.groups; // Limpiar el campo groups
+      
+      console.log('🔍 [FRONTEND] Enviando datos a la API:', apiData);
+      
       const res = await fetch("/api/users", { 
         method: "POST", 
         headers: { "Content-Type": "application/json" }, 
-        body: JSON.stringify(form) 
+        body: JSON.stringify(apiData) 
       });
+      
+      const result = await res.json();
+      console.log('🔍 [FRONTEND] Respuesta de la API:', result);
+      
       if (res.ok) router.push("/admin/users");
     } finally {
       setSubmitting(false);
