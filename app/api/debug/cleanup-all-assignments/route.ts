@@ -79,14 +79,14 @@ export async function DELETE(request: NextRequest) {
 
       // Para cada combinación jornada-modelo, mantener solo la más reciente
       for (const [key, modelAssignments] of Object.entries(groupedByJornadaModel)) {
-        if (modelAssignments.length > 1) {
+        if ((modelAssignments as any[]).length > 1) {
           // Ordenar por fecha (más reciente primero)
-          modelAssignments.sort((a, b) => 
+          (modelAssignments as any[]).sort((a, b) => 
             new Date(b.assigned_at).getTime() - new Date(a.assigned_at).getTime()
           );
           
           // Agregar todos excepto el primero (más reciente) a la lista de eliminación
-          const duplicates = modelAssignments.slice(1);
+          const duplicates = (modelAssignments as any[]).slice(1);
           idsToDelete.push(...duplicates.map(a => a.id));
           
           cleanupResults.duplicates_removed += duplicates.length;
