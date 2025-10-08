@@ -533,7 +533,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   const [restrictionMessage, setRestrictionMessage] = useState('');
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
-  const [modalError, setModalError] = useState<string | null>(null);
 
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
