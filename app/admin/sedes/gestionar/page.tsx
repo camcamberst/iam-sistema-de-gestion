@@ -177,21 +177,26 @@ export default function GestionarSedesPage() {
 
   const handleRoomClick = async (room: Room) => {
     try {
+      console.log('🔍 [FRONTEND] Haciendo clic en room:', room.room_name);
       setSelectedRoom(room);
       setShowRoomConfig(true);
       
       // Cargar asignaciones del room
+      console.log('🔍 [FRONTEND] Cargando asignaciones para room ID:', room.id);
       const response = await fetch(`/api/rooms/${room.id}/assignments`);
       const data = await response.json();
       
+      console.log('🔍 [FRONTEND] Respuesta del endpoint:', data);
+      
       if (data.success) {
         setRoomAssignments(data.assignments || []);
+        console.log('🔍 [FRONTEND] Asignaciones cargadas:', data.assignments?.length || 0);
       } else {
-        console.error('Error cargando asignaciones:', data.error);
+        console.error('❌ [FRONTEND] Error cargando asignaciones:', data.error);
         setRoomAssignments([]);
       }
     } catch (error) {
-      console.error('Error:', error);
+      console.error('❌ [FRONTEND] Error en handleRoomClick:', error);
       setRoomAssignments([]);
     }
   };
