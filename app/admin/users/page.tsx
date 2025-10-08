@@ -831,6 +831,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                   onChange={(value) => handleFieldChange('room_id', value)}
                   placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
                   disabled={loadingRooms || availableRooms.length === 0}
+                  maxHeight="max-h-32"
                 />
                 {formData.group_ids.length === 0 && (
                   <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
@@ -1107,6 +1108,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                   onChange={(value) => setFormData({ ...formData, room_id: value })}
                   placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
                   disabled={loadingRooms || availableRooms.length === 0}
+                  maxHeight="max-h-32"
                 />
                 {formData.group_ids.length === 0 && (
                   <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
