@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Obtener usuarios con datos vitales + asignaciones
+    // Obtener usuarios con datos vitales (SIN asignaciones por ahora)
     const { data: users, error } = await supabase
       .from('users')
       .select(`
@@ -36,13 +36,6 @@ export async function GET(request: NextRequest) {
             id,
             name
           )
-        ),
-        modelo_assignments(
-          jornada,
-          room_id,
-          group_rooms(
-            room_name
-          )
         )
       `)
       .order('created_at', { ascending: false });
@@ -55,28 +48,17 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Formatear usuarios con grupos + asignaciones
+    // Formatear usuarios con grupos (SIN asignaciones por ahora)
     const formattedUsers = (users || []).map(user => {
       const userGroups = user.user_groups?.map((ug: any) => ({
         id: ug.groups.id,
         name: ug.groups.name
       })) || [];
       
-      // Obtener asignación activa (primera asignación activa)
-      const activeAssignment = user.modelo_assignments?.find((ma: any) => ma.is_active !== false);
-      const jornada = activeAssignment?.jornada || null;
-      const room_id = activeAssignment?.room_id || null;
-      const room_name = activeAssignment?.group_rooms?.[0]?.room_name || null;
-      
       console.log(`🔍 [DEBUG] Usuario ${user.name} (${user.email}):`, {
         user_groups_raw: user.user_groups,
         formatted_groups: userGroups,
-        groups_count: userGroups.length,
-        assignments_raw: user.modelo_assignments,
-        active_assignment: activeAssignment,
-        jornada,
-        room_id,
-        room_name
+        groups_count: userGroups.length
       });
       
       return {
@@ -86,10 +68,7 @@ export async function GET(request: NextRequest) {
         role: user.role,
         is_active: user.is_active,
         created_at: user.created_at,
-        groups: userGroups,
-        jornada,
-        room_id,
-        room_name
+        groups: userGroups
       };
     });
 
