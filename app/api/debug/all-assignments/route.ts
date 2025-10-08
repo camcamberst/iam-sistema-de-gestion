@@ -49,10 +49,10 @@ export async function GET(request: NextRequest) {
     const analysis = {
       total_assignments: allAssignments?.length || 0,
       rooms_with_assignments: new Set(),
-      duplicates_by_room_jornada: {},
-      duplicates_by_room_jornada_model: {},
-      invalid_model_ids: [],
-      summary: {}
+      duplicates_by_room_jornada: {} as Record<string, any>,
+      duplicates_by_room_jornada_model: {} as Record<string, any>,
+      invalid_model_ids: [] as any[],
+      summary: {} as Record<string, any>
     };
 
     // Agrupar por room_id
