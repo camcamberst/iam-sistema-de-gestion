@@ -37,10 +37,10 @@ export async function GET(request: NextRequest) {
             name
           )
         ),
-        modelo_assignments!modelo_assignments_model_id_fkey(
+        modelo_assignments(
           jornada,
           room_id,
-          group_rooms!inner(
+          group_rooms(
             room_name
           )
         )
