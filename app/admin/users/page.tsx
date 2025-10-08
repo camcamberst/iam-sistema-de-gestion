@@ -1117,7 +1117,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
             </>
           )}
 
-          <div className="flex space-x-3 pt-6">
+          <div className="flex space-x-3 pt-10">
             <button
               type="button"
               onClick={onClose}
