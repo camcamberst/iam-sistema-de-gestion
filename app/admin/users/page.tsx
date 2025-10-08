@@ -482,6 +482,7 @@ export default function UsersListPage() {
             }}
             onSubmit={async (userData) => {
               try {
+                console.log('🔍 [PARENT] Recibiendo datos del formulario:', userData);
                 const response = await fetch('/api/users', {
                   method: 'PUT',
                   headers: {
@@ -491,16 +492,19 @@ export default function UsersListPage() {
                 });
 
                 const result = await response.json();
+                console.log('🔍 [PARENT] Respuesta de la API:', result);
                 
                 if (result.success) {
+                  console.log('✅ [PARENT] Usuario actualizado exitosamente');
                   setShowEditModal(false);
                   setSelectedUser(null);
                   loadData();
                 } else {
+                  console.error('❌ [PARENT] Error de la API:', result.error);
                   setError('Error actualizando usuario: ' + result.error);
                 }
               } catch (err) {
-                console.error('❌ Error actualizando usuario:', err);
+                console.error('❌ [PARENT] Error en la petición:', err);
                 setError('Error actualizando usuario');
               }
             }}
@@ -638,6 +642,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
     const userValidation = validateUser(formData);
 
     if (!userValidation.isValid) {
+      console.log('❌ [FRONTEND] Error de validación:', userValidation.errors);
       setValidation(prev => ({
         ...prev,
         name: { isValid: true, errors: [] },
@@ -691,7 +696,11 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
     }
 
     try {
+      console.log('🔍 [FRONTEND] Enviando datos al onSubmit:', formData);
       await onSubmit(formData);
+      console.log('✅ [FRONTEND] onSubmit completado exitosamente');
+    } catch (error) {
+      console.error('❌ [FRONTEND] Error en onSubmit:', error);
     } finally {
       setIsSubmitting(false);
     }
