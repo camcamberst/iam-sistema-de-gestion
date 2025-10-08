@@ -80,12 +80,12 @@ export async function GET(request: NextRequest) {
 
       // Verificar duplicados por jornada (múltiples modelos en la misma jornada)
       for (const [jornada, jornadaAssignments] of Object.entries(groupedByJornada)) {
-        if (jornadaAssignments.length > 1) {
+        if ((jornadaAssignments as any[]).length > 1) {
           const key = `${roomId}-${jornada}`;
           analysis.duplicates_by_room_jornada[key] = {
             room_id: roomId,
             jornada,
-            count: jornadaAssignments.length,
+            count: (jornadaAssignments as any[]).length,
             assignments: jornadaAssignments
           };
         }
