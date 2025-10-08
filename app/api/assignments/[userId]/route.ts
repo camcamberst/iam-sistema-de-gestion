@@ -53,7 +53,7 @@ export async function GET(
       room_id: assignment.room_id,
       room_name: assignment.group_rooms?.[0]?.room_name || null,
       group_id: assignment.group_id,
-      group_name: assignment.groups?.name || null,
+      group_name: assignment.groups?.[0]?.name || null,
       assigned_at: assignment.assigned_at,
       is_active: assignment.is_active
     }));
