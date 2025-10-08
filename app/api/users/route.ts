@@ -282,6 +282,8 @@ export async function POST(request: NextRequest) {
       
       // Validar que no existe otra asignación activa para el mismo room/jornada/grupo
       console.log('🔍 [API] Validando conflicto de asignación...');
+      
+      // 1. Verificar que no haya otra modelo en el mismo room/jornada
       const { data: existingAssignments, error: checkError } = await supabase
         .from('modelo_assignments')
         .select('id, model_id')
@@ -302,6 +304,31 @@ export async function POST(request: NextRequest) {
         console.log('❌ [API] Conflicto detectado:', existingAssignments);
         return NextResponse.json(
           { success: false, error: 'Este room ya está ocupado en la jornada seleccionada para este grupo' },
+          { status: 400 }
+        );
+      }
+
+      // 2. Verificar que la misma modelo no esté ya asignada en otra jornada del mismo room
+      const { data: sameModelAssignments, error: sameModelError } = await supabase
+        .from('modelo_assignments')
+        .select('id, jornada')
+        .eq('model_id', authData.user.id)
+        .eq('room_id', room_id)
+        .eq('is_active', true);
+      
+      if (sameModelError) {
+        console.error('❌ [API] Error verificando asignaciones de la misma modelo:', sameModelError);
+        return NextResponse.json(
+          { success: false, error: 'Error verificando asignaciones de la modelo' },
+          { status: 500 }
+        );
+      }
+      
+      if (sameModelAssignments && sameModelAssignments.length > 0) {
+        const existingJornadas = sameModelAssignments.map(a => a.jornada);
+        console.log('❌ [API] Modelo ya asignada a este room en otras jornadas:', existingJornadas);
+        return NextResponse.json(
+          { success: false, error: `Esta modelo ya está asignada a este room en la(s) jornada(s): ${existingJornadas.join(', ')}` },
           { status: 400 }
         );
       }
@@ -497,6 +524,8 @@ export async function PUT(request: NextRequest) {
       // Validar que no existe otra asignación activa para el mismo room/jornada/grupo
       // (excluyendo las asignaciones del usuario actual)
       console.log('🔍 [API] Validando conflicto de asignación en edición...');
+      
+      // 1. Verificar que no haya otra modelo en el mismo room/jornada (excluyendo la actual)
       const { data: existingAssignments, error: checkError } = await supabase
         .from('modelo_assignments')
         .select('id, model_id')
@@ -518,6 +547,33 @@ export async function PUT(request: NextRequest) {
         console.log('❌ [API] Conflicto detectado en edición:', existingAssignments);
         return NextResponse.json(
           { success: false, error: 'Este room ya está ocupado en la jornada seleccionada para este grupo' },
+          { status: 400 }
+        );
+      }
+
+      // 2. Verificar que la misma modelo no esté ya asignada en otra jornada del mismo room
+      // (excluyendo la jornada actual que se está editando)
+      const { data: sameModelAssignments, error: sameModelError } = await supabase
+        .from('modelo_assignments')
+        .select('id, jornada')
+        .eq('model_id', id)
+        .eq('room_id', room_id)
+        .eq('is_active', true)
+        .neq('jornada', jornada); // Excluir la jornada que se está editando
+      
+      if (sameModelError) {
+        console.error('❌ [API] Error verificando asignaciones de la misma modelo:', sameModelError);
+        return NextResponse.json(
+          { success: false, error: 'Error verificando asignaciones de la modelo' },
+          { status: 500 }
+        );
+      }
+      
+      if (sameModelAssignments && sameModelAssignments.length > 0) {
+        const existingJornadas = sameModelAssignments.map(a => a.jornada);
+        console.log('❌ [API] Modelo ya asignada a este room en otras jornadas:', existingJornadas);
+        return NextResponse.json(
+          { success: false, error: `Esta modelo ya está asignada a este room en la(s) jornada(s): ${existingJornadas.join(', ')}` },
           { status: 400 }
         );
       }
