@@ -134,25 +134,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-      baseItems.push({
-        id: 'reports',
-        label: 'Reportes',
-        href: '#', // Sin navegación directa
-        subItems: [
-          { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
-          { label: 'Estadísticas', href: '/admin/reports/stats' }
-        ]
-      });
-
-      baseItems.push({
-        id: 'settings',
-        label: 'Configuración',
-        href: '#', // Sin navegación directa
-        subItems: [
-          { label: 'Configuración General', href: '/admin/settings/general' },
-          { label: 'Permisos', href: '/admin/settings/permissions' }
-        ]
-      });
 
       // Agregar opciones administrativas de calculadora SOLO para admins/super_admins
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
@@ -190,7 +171,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <div className="w-8 h-8 bg-black rounded-lg flex items-center justify-center">
                   <span className="text-white font-bold text-sm">AIM</span>
                 </div>
-                <span className="text-xl font-semibold text-gray-900">Sistema de Gestión</span>
+                <span className="text-xl font-semibold text-gray-900 whitespace-nowrap">Sistema de Gestión</span>
               </Link>
             </div>
 
