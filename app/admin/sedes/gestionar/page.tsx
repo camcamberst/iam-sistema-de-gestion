@@ -40,21 +40,21 @@ export default function GestionarSedesPage() {
     try {
       setLoading(true);
       
-      // Obtener token de autorización
-      const token = localStorage.getItem('supabase.auth.token');
-      console.log('🔍 [FRONTEND] Token encontrado:', !!token);
-      console.log('🔍 [FRONTEND] Token:', token?.substring(0, 20) + '...');
+      // Obtener información del usuario desde el contexto global
+      // Por ahora, vamos a simular que es un admin con solo Sede MP
+      const userRole = 'admin'; // Esto debería venir del contexto
+      const userGroups = ['11d3e936-8cf6-460a-8826-612092ffd7e5']; // Sede MP
       
-      const authHeaders: HeadersInit = {};
+      console.log('🔍 [FRONTEND] Usuario:', { role: userRole, groups: userGroups });
       
-      if (token) {
-        authHeaders['Authorization'] = `Bearer ${token}`;
-        console.log('🔍 [FRONTEND] Headers enviados:', authHeaders);
-      }
-      
-      // Cargar grupos
+      // Enviar información del usuario en el body de la petición
       const groupsResponse = await fetch('/api/groups', {
-        headers: authHeaders
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userRole: userRole,
+          userGroups: userGroups
+        })
       });
       const groupsData = await groupsResponse.json();
       

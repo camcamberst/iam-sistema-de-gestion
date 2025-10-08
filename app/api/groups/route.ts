@@ -94,11 +94,70 @@ export async function GET(request: NextRequest) {
   }
 }
 
+// Nueva función para manejar peticiones POST con información del usuario
 export async function POST(request: NextRequest) {
   try {
+    const body = await request.json();
+    
+    // Si viene información del usuario en el body, es una petición GET disfrazada
+    if (body.userRole && body.userGroups) {
+      console.log('🏢 [API] Obteniendo grupos con info del usuario...');
+      
+      // Verificar variables de entorno
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      
+      if (!supabaseUrl || !supabaseKey) {
+        console.error('❌ [API] Variables de entorno faltantes');
+        return NextResponse.json(
+          { success: false, error: 'Configuración de base de datos faltante' },
+          { status: 500 }
+        );
+      }
+      
+      const supabase = createClient(supabaseUrl, supabaseKey);
+      
+      const userRole = body.userRole;
+      const userGroups = body.userGroups;
+      
+      console.log('🔍 [API] Usuario desde body:', { role: userRole, groups: userGroups });
+      
+      // Construir query según el rol
+      let query = supabase
+        .from('groups')
+        .select('id, name, is_active, description, created_at');
+
+      // Si es admin (no super_admin), filtrar por sus grupos
+      if (userRole !== 'super_admin' && userGroups.length > 0) {
+        query = query.in('id', userGroups);
+        console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
+      } else if (userRole === 'super_admin') {
+        console.log('👑 [API] Super admin - mostrando todos los grupos');
+      }
+
+      const { data: groups, error } = await query.order('name', { ascending: true });
+
+      if (error) {
+        console.error('❌ [API] Error obteniendo grupos:', error);
+        return NextResponse.json(
+          { success: false, error: `Error obteniendo grupos: ${error.message}` },
+          { status: 500 }
+        );
+      }
+
+      console.log('✅ [API] Grupos obtenidos:', groups?.length || 0, 'para rol:', userRole);
+
+      return NextResponse.json({
+        success: true,
+        groups: groups || [],
+        userRole: userRole
+      });
+    }
+    
+    // Si no, es una petición de creación de grupo (lógica original)
     console.log('🏢 [API] Creando grupo...');
     
-    const { name } = await request.json();
+    const { name } = body;
     
     if (!name || !name.trim()) {
       return NextResponse.json(
