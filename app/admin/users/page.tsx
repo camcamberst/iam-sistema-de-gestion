@@ -527,6 +527,21 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
 
+  // Función para determinar si un grupo requiere rooms obligatorios
+  const groupRequiresRooms = (groupName: string): boolean => {
+    // Solo "Sede MP" requiere rooms obligatorios
+    return groupName === 'Sede MP';
+  };
+
+  // Función para determinar si un grupo requiere jornada obligatoria
+  const groupRequiresJornada = (groupName: string): boolean => {
+    // Solo "Sede MP" requiere jornada obligatoria
+    return groupName === 'Sede MP';
+  };
+
+  // Obtener el nombre del grupo seleccionado
+  const selectedGroupName = groups.find(g => g.id === formData.group_ids[0])?.name || '';
+
   // 🔧 ACTUALIZAR FORMULARIO CUANDO CAMBIE EL USUARIO (con asignaciones)
   useEffect(() => {
     if (!user) return; // Validar que user existe
@@ -725,9 +740,10 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           {/* Campos específicos para modelos */}
           {formData.role === 'modelo' && (
             <>
+              {/* Campo Room - solo obligatorio para Sede MP */}
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Room <span className="text-red-500">*</span>
+                  Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}
                 </label>
                 <AppleDropdown
                   options={availableRooms.map(room => ({
@@ -743,11 +759,15 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                 {formData.group_ids.length === 0 && (
                   <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
                 )}
+                {!groupRequiresRooms(selectedGroupName) && selectedGroupName && (
+                  <p className="mt-1 text-sm text-gray-500">Opcional para {selectedGroupName}</p>
+                )}
               </div>
 
+              {/* Campo Jornada - solo obligatorio para Sede MP */}
               <div>
                 <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Jornada <span className="text-red-500">*</span>
+                  Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}
                 </label>
                 <AppleDropdown
                   options={[
@@ -759,6 +779,9 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                   onChange={(value) => setFormData({ ...formData, jornada: value })}
                   placeholder="Selecciona una jornada"
                 />
+                {!groupRequiresJornada(selectedGroupName) && selectedGroupName && (
+                  <p className="mt-1 text-sm text-gray-500">Opcional para {selectedGroupName}</p>
+                )}
               </div>
             </>
           )}
