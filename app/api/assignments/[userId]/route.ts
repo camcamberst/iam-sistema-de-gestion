@@ -38,7 +38,16 @@ export async function GET(
       .eq('is_active', true)
       .order('assigned_at', { ascending: false });
 
-    let formattedAssignments = [];
+    let formattedAssignments: Array<{
+      id: string;
+      jornada: string;
+      room_id: string;
+      room_name: string | null;
+      group_id: string;
+      group_name: string | null;
+      assigned_at: string;
+      is_active: boolean;
+    }> = [];
 
     if (assignmentsError) {
       console.error('❌ [ASSIGNMENTS API] Error en modelo_assignments:', assignmentsError);
