@@ -275,7 +275,10 @@ export default function UsersListPage() {
       const result = await response.json();
       
       if (result.success) {
-        loadData(); // Recargar datos
+        // Actualizar solo la lista local sin perder filtros
+        setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
+        setFilteredUsers(prevFiltered => prevFiltered.filter(u => u.id !== userId));
+        console.log('✅ [FRONTEND] Usuario eliminado de la lista local');
       } else {
         setError('Error eliminando usuario: ' + result.error);
       }
@@ -508,7 +511,15 @@ export default function UsersListPage() {
                   console.log('✅ [PARENT] Usuario actualizado exitosamente');
                   setShowEditModal(false);
                   setSelectedUser(null);
-                  loadData();
+                  
+                  // Actualizar solo el usuario específico en la lista local sin perder filtros
+                  setUsers(prevUsers => 
+                    prevUsers.map(u => u.id === userData.id ? { ...u, ...result.user } : u)
+                  );
+                  setFilteredUsers(prevFiltered => 
+                    prevFiltered.map(u => u.id === userData.id ? { ...u, ...result.user } : u)
+                  );
+                  console.log('✅ [FRONTEND] Usuario actualizado en la lista local');
                 } else {
                   console.error('❌ [PARENT] Error de la API:', result.error);
                   setError('Error actualizando usuario: ' + result.error);
