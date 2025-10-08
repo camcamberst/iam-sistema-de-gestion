@@ -22,10 +22,52 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const { data: groups, error } = await supabase
+    // Obtener información del usuario desde el token
+    const authHeader = request.headers.get('authorization');
+    let userRole = 'admin'; // Por defecto
+    let userGroups: string[] = [];
+
+    if (authHeader) {
+      try {
+        // Crear cliente con token de usuario para obtener su información
+        const userSupabase = createClient(supabaseUrl, supabaseKey);
+        const token = authHeader.replace('Bearer ', '');
+        
+        const { data: { user }, error: userError } = await userSupabase.auth.getUser(token);
+        
+        if (!userError && user) {
+          // Obtener información completa del usuario
+          const { data: userData, error: userDataError } = await userSupabase
+            .from('users')
+            .select('role, groups')
+            .eq('id', user.id)
+            .single();
+
+          if (!userDataError && userData) {
+            userRole = userData.role;
+            userGroups = userData.groups || [];
+            console.log('🔍 [API] Usuario:', { role: userRole, groups: userGroups });
+          }
+        }
+      } catch (authError) {
+        console.log('⚠️ [API] No se pudo obtener info del usuario, usando defaults');
+      }
+    }
+
+    // Construir query según el rol
+    let query = supabase
       .from('groups')
-      .select('id, name, is_active, description, created_at')
-      .order('name', { ascending: true });
+      .select('id, name, is_active, description, created_at');
+
+    // Si es admin (no super_admin), filtrar por sus grupos
+    if (userRole !== 'super_admin' && userGroups.length > 0) {
+      query = query.in('id', userGroups);
+      console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
+    } else if (userRole === 'super_admin') {
+      console.log('👑 [API] Super admin - mostrando todos los grupos');
+    }
+
+    const { data: groups, error } = await query.order('name', { ascending: true });
 
     if (error) {
       console.error('❌ [API] Error obteniendo grupos:', error);
@@ -35,11 +77,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log('✅ [API] Grupos obtenidos:', groups?.length || 0);
+    console.log('✅ [API] Grupos obtenidos:', groups?.length || 0, 'para rol:', userRole);
 
     return NextResponse.json({
       success: true,
-      groups: groups || []
+      groups: groups || [],
+      userRole: userRole
     });
 
   } catch (error) {
@@ -80,6 +123,41 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Obtener información del usuario para verificar permisos
+    const authHeader = request.headers.get('authorization');
+    let userRole = 'admin'; // Por defecto
+
+    if (authHeader) {
+      try {
+        const userSupabase = createClient(supabaseUrl, supabaseKey);
+        const token = authHeader.replace('Bearer ', '');
+        
+        const { data: { user }, error: userError } = await userSupabase.auth.getUser(token);
+        
+        if (!userError && user) {
+          const { data: userData, error: userDataError } = await userSupabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+
+          if (!userDataError && userData) {
+            userRole = userData.role;
+          }
+        }
+      } catch (authError) {
+        console.log('⚠️ [API] No se pudo obtener info del usuario');
+      }
+    }
+
+    // Solo super_admin puede crear grupos
+    if (userRole !== 'super_admin') {
+      return NextResponse.json(
+        { success: false, error: 'Solo los super administradores pueden crear grupos' },
+        { status: 403 }
+      );
+    }
 
     const { data: group, error } = await supabase
       .from('groups')
