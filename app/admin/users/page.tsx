@@ -927,14 +927,29 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
     role: user.role,
     is_active: user.is_active,
     group_ids: user.groups.map(g => g.id),
-    jornada: '', // 🆕 Campo para jornada
-    room_id: ''  // 🆕 Campo para room
+    jornada: user.jornada || '', // 🆕 Campo para jornada (usar datos del usuario)
+    room_id: user.room_id || ''  // 🆕 Campo para room (usar datos del usuario)
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [restrictionMessage, setRestrictionMessage] = useState('');
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
+
+  // 🔧 ACTUALIZAR FORMULARIO CUANDO CAMBIE EL USUARIO (con asignaciones)
+  useEffect(() => {
+    setFormData({
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.role,
+      is_active: user.is_active,
+      group_ids: user.groups.map(g => g.id),
+      jornada: user.jornada || '',
+      room_id: user.room_id || ''
+    });
+  }, [user]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
