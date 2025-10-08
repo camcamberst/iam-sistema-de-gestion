@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Obtener usuarios con datos vitales (SIN asignaciones por ahora)
+    // Obtener usuarios con datos vitales Y asignaciones
     const { data: users, error } = await supabase
       .from('users')
       .select(`
@@ -36,6 +36,11 @@ export async function GET(request: NextRequest) {
             id,
             name
           )
+        ),
+        modelo_assignments!modelo_assignments_model_id_fkey(
+          jornada,
+          room_id,
+          is_active
         )
       `)
       .order('created_at', { ascending: false });
@@ -48,17 +53,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Formatear usuarios con grupos (SIN asignaciones por ahora)
+    // Formatear usuarios con grupos Y asignaciones
     const formattedUsers = (users || []).map(user => {
       const userGroups = user.user_groups?.map((ug: any) => ({
         id: ug.groups.id,
         name: ug.groups.name
       })) || [];
       
+      // Obtener asignación activa (si existe)
+      const activeAssignment = user.modelo_assignments?.find((ma: any) => ma.is_active) || null;
+      
       console.log(`🔍 [DEBUG] Usuario ${user.name} (${user.email}):`, {
         user_groups_raw: user.user_groups,
         formatted_groups: userGroups,
-        groups_count: userGroups.length
+        groups_count: userGroups.length,
+        assignments_raw: user.modelo_assignments,
+        active_assignment: activeAssignment
       });
       
       return {
@@ -68,7 +78,10 @@ export async function GET(request: NextRequest) {
         role: user.role,
         is_active: user.is_active,
         created_at: user.created_at,
-        groups: userGroups
+        groups: userGroups,
+        // Campos de asignación (solo para modelos con asignaciones)
+        jornada: activeAssignment?.jornada || undefined,
+        room_id: activeAssignment?.room_id || undefined
       };
     });
 
