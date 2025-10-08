@@ -196,6 +196,13 @@ export default function UsersListPage() {
   };
 
   const handleEditUser = async (user: User) => {
+    // Validar que el usuario existe
+    if (!user || !user.id) {
+      console.error('❌ [FRONTEND] Usuario inválido:', user);
+      setError('Usuario inválido');
+      return;
+    }
+    
     // Verificar permisos de jerarquía
     if (!currentUser || !canEditUser(currentUser, user)) {
       setError('No tienes permisos para editar este usuario');
@@ -937,15 +944,15 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
   currentUser: CurrentUser | null;
 }) {
   const [formData, setFormData] = useState({
-    id: user.id, // ✅ AGREGAR ID DEL USUARIO
-    name: user.name,
-    email: user.email,
+    id: user?.id || '', // ✅ AGREGAR ID DEL USUARIO con validación
+    name: user?.name || '',
+    email: user?.email || '',
     password: '', // Nueva contraseña (opcional)
-    role: user.role,
-    is_active: user.is_active,
-    group_ids: user.groups.map(g => g.id),
-    jornada: user.jornada || '', // 🆕 Campo para jornada (usar datos del usuario)
-    room_id: user.room_id || ''  // 🆕 Campo para room (usar datos del usuario)
+    role: user?.role || 'modelo',
+    is_active: user?.is_active ?? true,
+    group_ids: user?.groups?.map(g => g.id) || [],
+    jornada: user?.jornada || '', // 🆕 Campo para jornada (usar datos del usuario)
+    room_id: user?.room_id || ''  // 🆕 Campo para room (usar datos del usuario)
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -955,6 +962,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
 
   // 🔧 ACTUALIZAR FORMULARIO CUANDO CAMBIE EL USUARIO (con asignaciones)
   useEffect(() => {
+    if (!user) return; // Validar que user existe
+    
     setFormData({
       id: user.id,
       name: user.name,
@@ -962,7 +971,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
       password: '',
       role: user.role,
       is_active: user.is_active,
-      group_ids: user.groups.map(g => g.id),
+      group_ids: user.groups?.map(g => g.id) || [],
       jornada: user.jornada || '',
       room_id: user.room_id || ''
     });
