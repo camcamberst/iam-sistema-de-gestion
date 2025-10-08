@@ -52,26 +52,39 @@ export async function GET(request: NextRequest) {
     const modelUserIds = (users || []).filter(u => u.role === 'modelo').map(u => u.id);
     let assignmentsMap: Record<string, any> = {};
     
+    console.log(`🔍 [DEBUG] Usuarios totales: ${(users || []).length}`);
+    console.log(`🔍 [DEBUG] Usuarios modelo: ${modelUserIds.length}`);
+    console.log(`🔍 [DEBUG] IDs de usuarios modelo:`, modelUserIds);
+    
     if (modelUserIds.length > 0) {
       console.log(`🔍 [DEBUG] Obteniendo asignaciones para ${modelUserIds.length} usuarios modelo`);
       
-      const { data: assignments, error: assignmentsError } = await supabase
-        .from('modelo_assignments')
-        .select('model_id, jornada, room_id, is_active')
-        .in('model_id', modelUserIds)
-        .eq('is_active', true);
-      
-      if (assignmentsError) {
-        console.error('❌ [API] Error obteniendo asignaciones:', assignmentsError);
-      } else {
-        // Crear mapa de asignaciones por user_id
-        assignmentsMap = (assignments || []).reduce((acc, assignment) => {
-          acc[assignment.model_id] = assignment;
-          return acc;
-        }, {} as Record<string, any>);
+      try {
+        const { data: assignments, error: assignmentsError } = await supabase
+          .from('modelo_assignments')
+          .select('model_id, jornada, room_id, is_active')
+          .in('model_id', modelUserIds)
+          .eq('is_active', true);
         
-        console.log(`✅ [API] Asignaciones obtenidas: ${Object.keys(assignmentsMap).length}`);
+        if (assignmentsError) {
+          console.error('❌ [API] Error obteniendo asignaciones:', assignmentsError);
+          console.log('🔍 [DEBUG] Error details:', JSON.stringify(assignmentsError, null, 2));
+        } else {
+          console.log(`🔍 [DEBUG] Asignaciones raw:`, assignments);
+          
+          // Crear mapa de asignaciones por user_id
+          assignmentsMap = (assignments || []).reduce((acc, assignment) => {
+            acc[assignment.model_id] = assignment;
+            return acc;
+          }, {} as Record<string, any>);
+          
+          console.log(`✅ [API] Asignaciones obtenidas: ${Object.keys(assignmentsMap).length}`);
+        }
+      } catch (error) {
+        console.error('❌ [API] Error en try-catch de asignaciones:', error);
       }
+    } else {
+      console.log('🔍 [DEBUG] No hay usuarios modelo, saltando consulta de asignaciones');
     }
 
     // Formatear usuarios con grupos Y asignaciones
