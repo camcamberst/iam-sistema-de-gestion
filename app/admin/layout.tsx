@@ -206,7 +206,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   >
                     {item.href === '#' ? (
                       <span
-                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-default ${
+                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 cursor-default whitespace-nowrap ${
                           isParentActive(item) 
                             ? 'text-gray-900' 
                             : 'text-gray-600'
@@ -217,7 +217,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     ) : (
                       <Link
                         href={item.href}
-                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 ${
+                        className={`text-gray-700 hover:text-gray-900 px-3 py-2 text-sm font-medium transition-colors duration-200 whitespace-nowrap ${
                           isActive(item.href) || isParentActive(item) 
                             ? 'text-gray-900' 
                             : 'text-gray-600'
