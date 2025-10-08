@@ -102,11 +102,11 @@ export async function GET(request: NextRequest) {
       }, {} as Record<string, any[]>);
 
       for (const [key, modelAssignments] of Object.entries(groupedByJornadaModel)) {
-        if (modelAssignments.length > 1) {
+        if ((modelAssignments as any[]).length > 1) {
           analysis.duplicates_by_room_jornada_model[key] = {
             room_id: roomId,
             key,
-            count: modelAssignments.length,
+            count: (modelAssignments as any[]).length,
             assignments: modelAssignments
           };
         }
