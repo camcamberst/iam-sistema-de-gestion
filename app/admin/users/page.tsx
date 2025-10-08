@@ -56,30 +56,6 @@ export default function UsersListPage() {
     loadData();
   }, []);
 
-  // Recargar datos cuando se regresa a la página (después de crear/editar usuario)
-  useEffect(() => {
-    const handleFocus = () => {
-      console.log('🔄 [FRONTEND] Página enfocada, recargando datos...');
-      loadData();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    
-    // También recargar cuando se monta el componente (navegación directa)
-    const handleVisibilityChange = () => {
-      if (!document.hidden) {
-        console.log('🔄 [FRONTEND] Página visible, recargando datos...');
-        loadData();
-      }
-    };
-
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, []);
 
 
   const loadData = async () => {
@@ -327,23 +303,13 @@ export default function UsersListPage() {
             <p className="text-gray-500">Administra usuarios del sistema</p>
           </div>
 
-          <div className="flex space-x-3">
-            <button
-              onClick={loadData}
-              disabled={loading}
-              className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 transition-all duration-200 flex items-center space-x-2"
-            >
-              <span className="text-sm">🔄</span>
-              <span className="text-sm font-medium">{loading ? 'Cargando...' : 'Actualizar'}</span>
-            </button>
-            <button
-              onClick={() => router.push('/admin/users/create')}
-              className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition-all duration-200 flex items-center space-x-2"
-            >
-              <span className="text-sm">+</span>
-              <span className="text-sm font-medium">Nuevo Usuario</span>
-            </button>
-          </div>
+          <button
+            onClick={() => router.push('/admin/users/create')}
+            className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition-all duration-200 flex items-center space-x-2"
+          >
+            <span className="text-sm">+</span>
+            <span className="text-sm font-medium">Nuevo Usuario</span>
+          </button>
         </div>
 
         {/* Error Message */}
