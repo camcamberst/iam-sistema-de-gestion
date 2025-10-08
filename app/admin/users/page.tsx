@@ -27,6 +27,10 @@ interface User {
     id: string;
     name: string;
   }>;
+  // Campos de asignación (opcionales)
+  jornada?: string;
+  room_id?: string;
+  room_name?: string;
 }
 
 interface Group {
