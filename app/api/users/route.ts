@@ -104,8 +104,8 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido:', JSON.stringify(body, null, 2));
     
-    const { email, password, name, role, group_ids } = body;
-    console.log('🔍 [DEBUG] Datos extraídos:', { email, name, role, group_ids });
+    const { email, password, name, role, group_ids, jornada, room_id } = body;
+    console.log('🔍 [DEBUG] Datos extraídos:', { email, name, role, group_ids, jornada, room_id });
 
     // Validación de datos vitales
     if (!email || !password || !name || !role) {
@@ -226,6 +226,60 @@ export async function POST(request: NextRequest) {
       console.log('🔍 [DEBUG] No se proporcionaron grupos o están vacíos');
     }
 
+    // 4. Crear asignación de modelo (solo si es modelo y se proporcionaron jornada/room)
+    if (role === 'modelo' && jornada && room_id && group_ids && group_ids.length > 0) {
+      console.log('📋 [API] Creando asignación de modelo:', { jornada, room_id, group_id: group_ids[0] });
+      
+      try {
+        const { error: assignmentError } = await supabase
+          .from('modelo_assignments')
+          .insert({
+            model_id: authData.user.id,
+            group_id: group_ids[0], // Usar el primer grupo
+            room_id: room_id,
+            jornada: jornada,
+            assigned_by: authData.user.id, // Auto-asignado
+            is_active: true
+          });
+
+        if (assignmentError) {
+          console.error('❌ [API] Error creando asignación:', assignmentError);
+          // No fallar la creación del usuario por esto, solo logear
+          console.log('⚠️ [WARNING] Asignación no creada, pero usuario sí');
+        } else {
+          console.log('✅ [API] Asignación de modelo creada exitosamente');
+          
+          // Actualizar estado de jornada
+          const { error: stateError } = await supabase
+            .from('jornada_states')
+            .update({
+              state: 'OCUPADA',
+              model_id: authData.user.id,
+              updated_at: new Date().toISOString(),
+              updated_by: authData.user.id
+            })
+            .eq('group_id', group_ids[0])
+            .eq('room_id', room_id)
+            .eq('jornada', jornada);
+
+          if (stateError) {
+            console.error('❌ [API] Error actualizando estado de jornada:', stateError);
+          } else {
+            console.log('✅ [API] Estado de jornada actualizado a OCUPADA');
+          }
+        }
+      } catch (assignmentError) {
+        console.error('❌ [API] Error general en asignación:', assignmentError);
+        console.log('⚠️ [WARNING] Asignación no creada, pero usuario sí');
+      }
+    } else if (role === 'modelo') {
+      console.log('🔍 [DEBUG] Usuario modelo creado sin asignación (datos faltantes):', {
+        jornada: !!jornada,
+        room_id: !!room_id,
+        group_ids: group_ids?.length || 0
+      });
+    }
+
     console.log('✅ [API] Usuario creado completamente:', authData.user.id);
 
     return NextResponse.json({
@@ -265,8 +319,8 @@ export async function PUT(request: NextRequest) {
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido en PUT:', JSON.stringify(body, null, 2));
     
-    const { id, name, email, password, role, is_active, group_ids } = body;
-    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, password: !!password, role, is_active, group_ids });
+    const { id, name, email, password, role, is_active, group_ids, jornada, room_id } = body;
+    console.log('🔍 [DEBUG] Datos extraídos en PUT:', { id, name, email, password: !!password, role, is_active, group_ids, jornada, room_id });
 
     if (!id || !name || !email || !role) {
       console.log('❌ [DEBUG] Datos faltantes en PUT:', { 
@@ -356,6 +410,67 @@ export async function PUT(request: NextRequest) {
           console.log('✅ [API] Grupos actualizados exitosamente');
         }
       }
+    }
+
+    // Actualizar asignación de modelo (solo si es modelo y se proporcionaron jornada/room)
+    if (role === 'modelo' && jornada && room_id && group_ids && group_ids.length > 0) {
+      console.log('📋 [API] Actualizando asignación de modelo:', { jornada, room_id, group_id: group_ids[0] });
+      
+      try {
+        // Eliminar asignaciones existentes
+        await supabase
+          .from('modelo_assignments')
+          .delete()
+          .eq('model_id', id);
+
+        // Crear nueva asignación
+        const { error: assignmentError } = await supabase
+          .from('modelo_assignments')
+          .insert({
+            model_id: id,
+            group_id: group_ids[0], // Usar el primer grupo
+            room_id: room_id,
+            jornada: jornada,
+            assigned_by: id, // Auto-asignado
+            is_active: true
+          });
+
+        if (assignmentError) {
+          console.error('❌ [API] Error actualizando asignación:', assignmentError);
+          console.log('⚠️ [WARNING] Asignación no actualizada, pero usuario sí');
+        } else {
+          console.log('✅ [API] Asignación de modelo actualizada exitosamente');
+          
+          // Actualizar estado de jornada
+          const { error: stateError } = await supabase
+            .from('jornada_states')
+            .update({
+              state: 'OCUPADA',
+              model_id: id,
+              updated_at: new Date().toISOString(),
+              updated_by: id
+            })
+            .eq('group_id', group_ids[0])
+            .eq('room_id', room_id)
+            .eq('jornada', jornada);
+
+          if (stateError) {
+            console.error('❌ [API] Error actualizando estado de jornada:', stateError);
+          } else {
+            console.log('✅ [API] Estado de jornada actualizado a OCUPADA');
+          }
+        }
+      } catch (assignmentError) {
+        console.error('❌ [API] Error general en actualización de asignación:', assignmentError);
+        console.log('⚠️ [WARNING] Asignación no actualizada, pero usuario sí');
+      }
+    } else if (role === 'modelo') {
+      // Si es modelo pero no tiene jornada/room, eliminar asignaciones existentes
+      console.log('🔍 [DEBUG] Eliminando asignaciones existentes para modelo sin jornada/room');
+      await supabase
+        .from('modelo_assignments')
+        .delete()
+        .eq('model_id', id);
     }
 
     console.log('✅ [API] Usuario actualizado:', id);
