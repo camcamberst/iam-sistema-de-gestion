@@ -42,10 +42,14 @@ export default function GestionarSedesPage() {
       
       // Obtener token de autorización
       const token = localStorage.getItem('supabase.auth.token');
+      console.log('🔍 [FRONTEND] Token encontrado:', !!token);
+      console.log('🔍 [FRONTEND] Token:', token?.substring(0, 20) + '...');
+      
       const authHeaders: HeadersInit = {};
       
       if (token) {
         authHeaders['Authorization'] = `Bearer ${token}`;
+        console.log('🔍 [FRONTEND] Headers enviados:', authHeaders);
       }
       
       // Cargar grupos
@@ -53,6 +57,8 @@ export default function GestionarSedesPage() {
         headers: authHeaders
       });
       const groupsData = await groupsResponse.json();
+      
+      console.log('🔍 [FRONTEND] Respuesta de la API:', groupsData);
       
       if (groupsData.success) {
         setGroups(groupsData.groups);
