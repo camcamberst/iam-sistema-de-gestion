@@ -338,7 +338,7 @@ export default function UsersListPage() {
               <div className="text-center py-12">
                 <div className="text-gray-400 text-lg">No hay usuarios registrados</div>
                 <button
-                  onClick={() => setShowCreateModal(true)}
+                  onClick={() => router.push('/admin/users/create')}
                   className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
                 >
                   Crear Primer Usuario
