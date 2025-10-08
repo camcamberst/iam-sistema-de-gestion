@@ -485,11 +485,15 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
     email: '',
     password: '',
     role: 'modelo',
-    group_ids: getDefaultGroups('modelo', groups)
+    group_ids: getDefaultGroups('modelo', groups),
+    jornada: '',
+    room_id: ''
   });
 
   const [restrictionMessage, setRestrictionMessage] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
+  const [loadingRooms, setLoadingRooms] = useState(false);
 
   const [validation, setValidation] = useState({
     name: { isValid: true, errors: [] as string[] },
@@ -499,6 +503,32 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
   });
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Cargar rooms cuando se selecciona un grupo
+  const loadRoomsForGroup = async (groupId: string) => {
+    if (!groupId) {
+      setAvailableRooms([]);
+      return;
+    }
+
+    setLoadingRooms(true);
+    try {
+      const response = await fetch(`/api/groups/rooms?groupId=${groupId}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setAvailableRooms(data.rooms);
+      } else {
+        console.error('Error loading rooms:', data.error);
+        setAvailableRooms([]);
+      }
+    } catch (error) {
+      console.error('Error loading rooms:', error);
+      setAvailableRooms([]);
+    } finally {
+      setLoadingRooms(false);
+    }
+  };
 
   // Validación en tiempo real
   const validateField = async (field: string, value: string) => {
@@ -543,6 +573,21 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
       } else if (value === 'super_admin') {
         setRestrictionMessage('💡 Los super administradores tienen acceso a todos los grupos');
       }
+    }
+  };
+
+  const handleGroupChange = (value: string) => {
+    setFormData(prev => ({ 
+      ...prev, 
+      group_ids: value ? [value] : [],
+      room_id: '' // Reset room when group changes
+    }));
+    
+    // Cargar rooms para el grupo seleccionado
+    if (value) {
+      loadRoomsForGroup(value);
+    } else {
+      setAvailableRooms([]);
     }
   };
 
@@ -744,10 +789,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                 label: group.name
               }))}
               value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
-              onChange={(value) => {
-                // Para simplificar, todos los roles usan selección única por ahora
-                setFormData({ ...formData, group_ids: value ? [value] : [] });
-              }}
+              onChange={handleGroupChange}
               placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
             />
             {restrictionMessage && (
@@ -756,6 +798,46 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
               </div>
             )}
           </div>
+
+          {/* Campos adicionales para modelos */}
+          {formData.role === 'modelo' && (
+            <>
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Jornada <span className="text-red-500">*</span>
+                </label>
+                <AppleDropdown
+                  options={[
+                    { value: 'MAÑANA', label: 'Mañana' },
+                    { value: 'TARDE', label: 'Tarde' },
+                    { value: 'NOCHE', label: 'Noche' }
+                  ]}
+                  value={formData.jornada}
+                  onChange={(value) => handleFieldChange('jornada', value)}
+                  placeholder="Selecciona una jornada"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 text-sm font-medium mb-2">
+                  Room <span className="text-red-500">*</span>
+                </label>
+                <AppleDropdown
+                  options={availableRooms.map(room => ({
+                    value: room.id,
+                    label: room.room_name
+                  }))}
+                  value={formData.room_id}
+                  onChange={(value) => handleFieldChange('room_id', value)}
+                  placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
+                  disabled={loadingRooms || availableRooms.length === 0}
+                />
+                {formData.group_ids.length === 0 && (
+                  <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
+                )}
+              </div>
+            </>
+          )}
 
           <div className="flex space-x-3 pt-6">
             <button
