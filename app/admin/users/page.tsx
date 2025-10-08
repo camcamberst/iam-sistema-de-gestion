@@ -289,7 +289,7 @@ export default function UsersListPage() {
         {/* Error Message */}
         {/* Search and Filters */}
         <div className="mb-6">
-          <div className="grid grid-cols-1 gap-2 mb-2">
+          <div className="grid grid-cols-1 gap-2 mb-1">
             <span className="text-xs text-gray-500 font-medium">Búsqueda</span>
           </div>
           <AppleSearchBar
@@ -300,7 +300,7 @@ export default function UsersListPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mb-6">
             {error}
           </div>
         )}
@@ -666,14 +666,14 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
         
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
               Nombre <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => handleFieldChange('name', e.target.value)}
-              className={`w-full border rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 validation.name.errors.length > 0 
                   ? 'border-red-500 focus:ring-red-500' 
                   : 'border-gray-300 focus:border-blue-500'
@@ -691,14 +691,14 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
               Email <span className="text-red-500">*</span>
             </label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => handleFieldChange('email', e.target.value)}
-              className={`w-full border rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+              className={`w-full border rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                 validation.email.errors.length > 0 
                   ? 'border-red-500 focus:ring-red-500' 
                   : 'border-gray-300 focus:border-blue-500'
@@ -716,7 +716,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
               Contraseña <span className="text-red-500">*</span>
             </label>
             <div className="relative">
@@ -724,7 +724,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
                 onChange={(e) => handleFieldChange('password', e.target.value)}
-                className={`w-full border rounded-lg px-4 py-3 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
+                className={`w-full border rounded-lg px-3 py-2 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors ${
                   validation.password.errors.length > 0 
                     ? 'border-red-500 focus:ring-red-500' 
                     : validation.password.warnings && validation.password.warnings.length > 0
@@ -768,7 +768,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Rol</label>
             <AppleDropdown
               options={[
                 { value: 'modelo', label: 'Modelo' },
@@ -782,7 +782,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Grupos</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Grupos</label>
             <AppleDropdown
               options={groups.map(group => ({
                 value: group.id,
@@ -803,7 +803,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
           {formData.role === 'modelo' && (
             <>
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
                   Jornada <span className="text-red-500">*</span>
                 </label>
                 <AppleDropdown
@@ -819,7 +819,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
                   Room <span className="text-red-500">*</span>
                 </label>
                 <AppleDropdown
@@ -831,7 +831,7 @@ function CreateUserModal({ groups, onClose, onSubmit, currentUser }: {
                   onChange={(value) => handleFieldChange('room_id', value)}
                   placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
                   disabled={loadingRooms || availableRooms.length === 0}
-                  maxHeight="max-h-32"
+                  maxHeight="max-h-40"
                 />
                 {formData.group_ids.length === 0 && (
                   <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
@@ -967,34 +967,34 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-5 w-full max-w-md max-h-[80vh] flex flex-col">
-        <h2 className="text-lg font-semibold text-gray-900 mb-4">Editar Usuario</h2>
+      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[80vh] flex flex-col">
+        <h2 className="text-lg font-semibold text-gray-900 mb-3">Editar Usuario</h2>
 
-        <form onSubmit={handleSubmit} className="space-y-6 flex-1 overflow-y-auto pr-2">
+        <form onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-y-auto pr-2">
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Nombre</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Nombre</label>
             <input
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Email</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">
+            <label className="block text-gray-700 text-sm font-medium mb-1">
               Nueva Contraseña 
               <span className="text-gray-500 text-xs ml-1">(opcional - dejar vacío para mantener actual)</span>
             </label>
@@ -1004,7 +1004,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="Ingresa nueva contraseña"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="button"
@@ -1029,7 +1029,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Rol</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Rol</label>
             <AppleDropdown
               options={[
                 { value: 'modelo', label: 'Modelo' },
@@ -1043,7 +1043,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Usuario Activo</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Usuario Activo</label>
             <button
               type="button"
               onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
@@ -1059,7 +1059,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-2">Grupos</label>
+            <label className="block text-gray-700 text-sm font-medium mb-1">Grupos</label>
             <AppleDropdown
               options={groups.map(group => ({
                 value: group.id,
@@ -1080,7 +1080,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
           {formData.role === 'modelo' && (
             <>
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
                   Jornada <span className="text-red-500">*</span>
                 </label>
                 <AppleDropdown
@@ -1096,7 +1096,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
               </div>
 
               <div>
-                <label className="block text-gray-700 text-sm font-medium mb-2">
+                <label className="block text-gray-700 text-sm font-medium mb-1">
                   Room <span className="text-red-500">*</span>
                 </label>
                 <AppleDropdown
@@ -1108,7 +1108,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
                   onChange={(value) => setFormData({ ...formData, room_id: value })}
                   placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
                   disabled={loadingRooms || availableRooms.length === 0}
-                  maxHeight="max-h-32"
+                  maxHeight="max-h-40"
                 />
                 {formData.group_ids.length === 0 && (
                   <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
@@ -1117,7 +1117,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser }: {
             </>
           )}
 
-          <div className="flex space-x-3 pt-4">
+          <div className="flex space-x-3 pt-3">
             <button
               type="button"
               onClick={onClose}
