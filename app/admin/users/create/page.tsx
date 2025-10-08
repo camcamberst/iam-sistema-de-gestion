@@ -26,12 +26,14 @@ export default function CreateUserPage() {
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
     // Solo "Sede MP" requiere rooms obligatorios
+    // Otros grupos (Cabecera, Victoria, Terrazas, Diamante) omitidos por ahora
     return groupName === 'Sede MP';
   };
 
   // Función para determinar si un grupo requiere jornada obligatoria
   const groupRequiresJornada = (groupName: string): boolean => {
     // Solo "Sede MP" requiere jornada obligatoria
+    // Otros grupos (Cabecera, Victoria, Terrazas, Diamante) omitidos por ahora
     return groupName === 'Sede MP';
   };
 
