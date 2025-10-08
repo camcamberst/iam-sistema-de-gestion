@@ -40,8 +40,18 @@ export default function GestionarSedesPage() {
     try {
       setLoading(true);
       
+      // Obtener token de autorización
+      const token = localStorage.getItem('supabase.auth.token');
+      const authHeaders: HeadersInit = {};
+      
+      if (token) {
+        authHeaders['Authorization'] = `Bearer ${token}`;
+      }
+      
       // Cargar grupos
-      const groupsResponse = await fetch('/api/groups');
+      const groupsResponse = await fetch('/api/groups', {
+        headers: authHeaders
+      });
       const groupsData = await groupsResponse.json();
       
       if (groupsData.success) {
@@ -74,9 +84,17 @@ export default function GestionarSedesPage() {
 
     setSubmitting(true);
     try {
+      // Obtener token de autorización
+      const token = localStorage.getItem('supabase.auth.token');
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/groups', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({ name: newGroupName.trim() })
       });
 
