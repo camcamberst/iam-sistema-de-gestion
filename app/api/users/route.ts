@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    // Obtener usuarios con datos vitales Y asignaciones
+    // Obtener usuarios con datos vitales (SIN JOIN problemático)
     const { data: users, error } = await supabase
       .from('users')
       .select(`
@@ -36,11 +36,6 @@ export async function GET(request: NextRequest) {
             id,
             name
           )
-        ),
-        modelo_assignments!modelo_assignments_model_id_fkey(
-          jornada,
-          room_id,
-          is_active
         )
       `)
       .order('created_at', { ascending: false });
@@ -53,6 +48,32 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Obtener asignaciones por separado para usuarios modelo
+    const modelUserIds = (users || []).filter(u => u.role === 'modelo').map(u => u.id);
+    let assignmentsMap: Record<string, any> = {};
+    
+    if (modelUserIds.length > 0) {
+      console.log(`🔍 [DEBUG] Obteniendo asignaciones para ${modelUserIds.length} usuarios modelo`);
+      
+      const { data: assignments, error: assignmentsError } = await supabase
+        .from('modelo_assignments')
+        .select('model_id, jornada, room_id, is_active')
+        .in('model_id', modelUserIds)
+        .eq('is_active', true);
+      
+      if (assignmentsError) {
+        console.error('❌ [API] Error obteniendo asignaciones:', assignmentsError);
+      } else {
+        // Crear mapa de asignaciones por user_id
+        assignmentsMap = (assignments || []).reduce((acc, assignment) => {
+          acc[assignment.model_id] = assignment;
+          return acc;
+        }, {} as Record<string, any>);
+        
+        console.log(`✅ [API] Asignaciones obtenidas: ${Object.keys(assignmentsMap).length}`);
+      }
+    }
+
     // Formatear usuarios con grupos Y asignaciones
     const formattedUsers = (users || []).map(user => {
       const userGroups = user.user_groups?.map((ug: any) => ({
@@ -61,13 +82,12 @@ export async function GET(request: NextRequest) {
       })) || [];
       
       // Obtener asignación activa (si existe)
-      const activeAssignment = user.modelo_assignments?.find((ma: any) => ma.is_active) || null;
+      const activeAssignment = assignmentsMap[user.id] || null;
       
       console.log(`🔍 [DEBUG] Usuario ${user.name} (${user.email}):`, {
         user_groups_raw: user.user_groups,
         formatted_groups: userGroups,
         groups_count: userGroups.length,
-        assignments_raw: user.modelo_assignments,
         active_assignment: activeAssignment
       });
       
