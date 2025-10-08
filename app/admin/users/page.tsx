@@ -191,7 +191,7 @@ export default function UsersListPage() {
     }
   };
 
-  const handleEditUser = (user: User) => {
+  const handleEditUser = async (user: User) => {
     // Verificar permisos de jerarquía
     if (!currentUser || !canEditUser(currentUser, user)) {
       setError('No tienes permisos para editar este usuario');
@@ -200,6 +200,30 @@ export default function UsersListPage() {
     
     setSelectedUser(user);
     setShowEditModal(true);
+    
+    // Cargar asignaciones si es un modelo
+    if (user.role === 'modelo') {
+      try {
+        const response = await fetch(`/api/assignments/${user.id}`);
+        const result = await response.json();
+        
+        if (result.success && result.assignments.length > 0) {
+          const assignment = result.assignments[0]; // Tomar la primera asignación activa
+          console.log('🔍 [FRONTEND] Asignación cargada:', assignment);
+          
+          // Actualizar el usuario con los datos de asignación
+          setSelectedUser({
+            ...user,
+            jornada: assignment.jornada,
+            room_id: assignment.room_id,
+            room_name: assignment.room_name
+          });
+        }
+      } catch (error) {
+        console.error('❌ [FRONTEND] Error cargando asignaciones:', error);
+        // No mostrar error al usuario, solo logear
+      }
+    }
   };
 
   const handleDeleteUser = async (userId: string) => {
