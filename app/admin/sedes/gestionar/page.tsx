@@ -38,6 +38,15 @@ export default function GestionarSedesPage() {
   const [showRoomConfig, setShowRoomConfig] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
   const [roomAssignments, setRoomAssignments] = useState<any[]>([]);
+  
+  // NUEVOS ESTADOS para funcionalidad de asignación
+  const [showModelSelector, setShowModelSelector] = useState(false);
+  const [selectedJornada, setSelectedJornada] = useState<string>('');
+  const [availableModels, setAvailableModels] = useState<any[]>([]);
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [selectedModel, setSelectedModel] = useState<any>(null);
+  const [conflictInfo, setConflictInfo] = useState<any>(null);
+  
   const router = useRouter();
 
   // Cargar datos iniciales
@@ -198,6 +207,98 @@ export default function GestionarSedesPage() {
     } catch (error) {
       console.error('❌ [FRONTEND] Error en handleRoomClick:', error);
       setRoomAssignments([]);
+    }
+  };
+
+  // NUEVA FUNCIÓN: Manejar clic en jornada
+  const handleJornadaClick = async (jornada: string) => {
+    if (!selectedRoom) return;
+    
+    console.log('🔍 [FRONTEND] Clic en jornada:', jornada);
+    setSelectedJornada(jornada);
+    
+    // Cargar modelos disponibles del grupo
+    try {
+      const response = await fetch(`/api/groups/${selectedRoom.group_id}/models`);
+      const data = await response.json();
+      
+      if (data.success) {
+        setAvailableModels(data.models || []);
+        setShowModelSelector(true);
+      } else {
+        setError('Error cargando modelos: ' + data.error);
+      }
+    } catch (error) {
+      console.error('❌ [FRONTEND] Error cargando modelos:', error);
+      setError('Error de conexión');
+    }
+  };
+
+  // NUEVA FUNCIÓN: Manejar selección de modelo
+  const handleModelSelect = async (model: any) => {
+    setSelectedModel(model);
+    
+    // Verificar si la modelo ya tiene asignaciones
+    try {
+      const response = await fetch(`/api/models/${model.id}/assignments`);
+      const data = await response.json();
+      
+      if (data.success && data.assignments.length > 0) {
+        // Hay conflictos, mostrar modal de confirmación
+        setConflictInfo({
+          model: model,
+          existingAssignments: data.assignments,
+          newAssignment: {
+            room_id: selectedRoom?.id,
+            room_name: selectedRoom?.room_name,
+            jornada: selectedJornada
+          }
+        });
+        setShowConflictModal(true);
+        setShowModelSelector(false);
+      } else {
+        // No hay conflictos, asignar directamente
+        await assignModel(model, 'assign');
+      }
+    } catch (error) {
+      console.error('❌ [FRONTEND] Error verificando asignaciones:', error);
+      setError('Error verificando asignaciones');
+    }
+  };
+
+  // NUEVA FUNCIÓN: Asignar modelo (mover o doblar)
+  const assignModel = async (model: any, action: 'move' | 'assign') => {
+    try {
+      const response = await fetch('/api/assignments', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model_id: model.id,
+          room_id: selectedRoom?.id,
+          jornada: selectedJornada,
+          action: action // 'move' o 'assign'
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        setSuccess(`Modelo ${action === 'move' ? 'movida' : 'asignada'} exitosamente`);
+        
+        // Recargar asignaciones del room
+        await handleRoomClick(selectedRoom!);
+        
+        // Cerrar modales
+        setShowModelSelector(false);
+        setShowConflictModal(false);
+        setSelectedModel(null);
+        setConflictInfo(null);
+      } else {
+        setError('Error asignando modelo: ' + data.error);
+      }
+    } catch (error) {
+      console.error('❌ [FRONTEND] Error asignando modelo:', error);
+      setError('Error de conexión');
     }
   };
 
@@ -524,13 +625,17 @@ export default function GestionarSedesPage() {
                           ))}
                         </div>
                       ) : (
-                        <div className="text-center py-4">
+                        <div 
+                          className="text-center py-4 cursor-pointer hover:bg-gray-50 rounded-lg transition-colors"
+                          onClick={() => handleJornadaClick(jornada)}
+                        >
                           <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2">
                             <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                             </svg>
                           </div>
                           <p className="text-sm text-gray-500">No hay modelos asignadas</p>
+                          <p className="text-xs text-gray-400 mt-1">Haz clic para asignar</p>
                         </div>
                       )}
                     </div>
@@ -549,6 +654,131 @@ export default function GestionarSedesPage() {
                 >
                   Cerrar
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal Selector de Modelos */}
+        {showModelSelector && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Seleccionar Modelo para {selectedJornada}
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowModelSelector(false);
+                    setAvailableModels([]);
+                    setSelectedJornada('');
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="space-y-2">
+                {availableModels.map((model) => (
+                  <button
+                    key={model.id}
+                    onClick={() => handleModelSelect(model)}
+                    className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">
+                          {model.name || 'Nombre no disponible'}
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          {model.email || 'Email no disponible'}
+                        </p>
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+              
+              {availableModels.length === 0 && (
+                <div className="text-center py-8">
+                  <p className="text-sm text-gray-500">No hay modelos disponibles</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmación de Conflicto */}
+        {showConflictModal && conflictInfo && (
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-md">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-gray-900">
+                  Conflicto de Asignación
+                </h2>
+                <button
+                  onClick={() => {
+                    setShowConflictModal(false);
+                    setConflictInfo(null);
+                    setSelectedModel(null);
+                  }}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              
+              <div className="mb-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  <strong>{conflictInfo.model.name}</strong> ya está asignada en:
+                </p>
+                
+                <div className="space-y-2">
+                  {conflictInfo.existingAssignments.map((assignment: any, index: number) => (
+                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                      <div className="flex items-center space-x-2">
+                        <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
+                        <span className="text-sm font-medium text-gray-900">
+                          {assignment.room_name} - {assignment.jornada}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                
+                <p className="text-sm text-gray-600 mt-3">
+                  ¿Qué deseas hacer?
+                </p>
+              </div>
+              
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => assignModel(conflictInfo.model, 'move')}
+                  className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-lg hover:bg-orange-700 transition-colors"
+                >
+                  Mover
+                </button>
+                <button
+                  onClick={() => assignModel(conflictInfo.model, 'assign')}
+                  className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Doblar
+                </button>
+              </div>
+              
+              <div className="mt-3 text-xs text-gray-500">
+                <p><strong>Mover:</strong> Desasigna de ubicación actual y asigna aquí</p>
+                <p><strong>Doblar:</strong> Mantiene ubicación actual y asigna también aquí</p>
               </div>
             </div>
           </div>
