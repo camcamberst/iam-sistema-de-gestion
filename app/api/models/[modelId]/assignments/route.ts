@@ -28,13 +28,7 @@ export async function GET(
         room_id,
         jornada,
         assigned_at,
-        is_active,
-        group_rooms!inner(
-          room_name,
-          groups!inner(
-            name
-          )
-        )
+        is_active
       `)
       .eq('model_id', modelId)
       .eq('is_active', true);
@@ -47,15 +41,36 @@ export async function GET(
       );
     }
 
-    // Formatear los datos
-    const formattedAssignments = assignments?.map(assignment => ({
-      id: assignment.id,
-      room_id: assignment.room_id,
-      room_name: assignment.group_rooms?.[0]?.room_name || 'Room desconocido',
-      group_name: assignment.group_rooms?.[0]?.groups?.[0]?.name || 'Grupo desconocido',
-      jornada: assignment.jornada,
-      assigned_at: assignment.assigned_at
-    })) || [];
+    // Obtener información de rooms por separado
+    const formattedAssignments = [];
+    if (assignments && assignments.length > 0) {
+      for (const assignment of assignments) {
+        // Obtener información del room
+        const { data: roomData, error: roomError } = await supabase
+          .from('group_rooms')
+          .select(`
+            room_name,
+            groups!inner(
+              name
+            )
+          `)
+          .eq('id', assignment.room_id)
+          .single();
+
+        if (roomError) {
+          console.warn('Error obteniendo información del room:', roomError);
+        }
+
+        formattedAssignments.push({
+          id: assignment.id,
+          room_id: assignment.room_id,
+          room_name: roomData?.room_name || 'Room desconocido',
+          group_name: roomData?.groups?.name || 'Grupo desconocido',
+          jornada: assignment.jornada,
+          assigned_at: assignment.assigned_at
+        });
+      }
+    }
 
     console.log(`✅ [API] Asignaciones encontradas para modelo ${modelId}:`, formattedAssignments.length);
 
