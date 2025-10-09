@@ -982,19 +982,10 @@ export default function GestionarSedesPage() {
                                 </span>
                                 <button
                                   onClick={() => confirmDeleteAssignment(assignment)}
-                                  disabled={!assignment.is_active}
-                                  className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors group ${
-                                    assignment.is_active
-                                      ? 'bg-red-100 hover:bg-red-200 cursor-pointer'
-                                      : 'bg-gray-100 cursor-not-allowed opacity-50'
-                                  }`}
-                                  title={assignment.is_active ? "Eliminar modelo de esta jornada" : "Asignación ya eliminada"}
+                                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors group bg-red-100 hover:bg-red-200 cursor-pointer"
+                                  title="Eliminar modelo de esta jornada"
                                 >
-                                  <svg className={`w-4 h-4 ${
-                                    assignment.is_active
-                                      ? 'text-red-600 group-hover:text-red-700'
-                                      : 'text-gray-400'
-                                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 text-red-600 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                   </svg>
                                 </button>
