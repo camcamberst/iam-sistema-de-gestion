@@ -474,12 +474,12 @@ export default function UsersListPage() {
                   <tbody className="bg-white/30 backdrop-blur-sm divide-y divide-white/20">
                     {filteredUsers.map((user) => (
                       <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-12 group">
-                        <td className="px-4 py-2">
-                          <div className="flex items-center justify-center space-x-2 overflow-hidden">
+                        <td className="px-4 py-2 text-center">
+                          <div className="flex items-center space-x-2 overflow-hidden justify-start max-w-fit mx-auto">
                             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-none shadow-sm border border-white/20">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
-                            <div className="min-w-0">
+                            <div className="min-w-0 text-left">
                               <div className="text-gray-900 font-medium truncate text-xs" title={user.name}>{user.name}</div>
                               <div className="text-gray-400 text-xs truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
                             </div>
