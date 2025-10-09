@@ -58,7 +58,7 @@ export async function GET(
     const assignedModelIds = assignments?.map(a => a.model_id) || [];
 
     // 3. Obtener información de los modelos asignados
-    let models = [];
+    let models: any[] = [];
     if (assignedModelIds.length > 0) {
       const { data: assignedModels, error: modelsError } = await supabase
         .from('users')
