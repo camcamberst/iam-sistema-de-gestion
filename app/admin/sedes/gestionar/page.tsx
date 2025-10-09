@@ -621,10 +621,10 @@ export default function GestionarSedesPage() {
         {/* Acciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Columna Izquierda: Selector de Sedes */}
-          <div className="space-y-6">
-            <div className="relative">
+          <div className="flex flex-col h-full">
+            <div className="relative flex-1">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+              <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 h-full flex flex-col">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -661,11 +661,11 @@ export default function GestionarSedesPage() {
           </div>
 
           {/* Columna Derecha: Crear Sede y Crear Room */}
-          <div className="space-y-6">
+          <div className="flex flex-col space-y-6 h-full">
             {/* Crear Nueva Sede */}
-            <div className="relative">
+            <div className="relative flex-1">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-slate-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+              <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 h-full flex flex-col">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-slate-700 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -674,20 +674,22 @@ export default function GestionarSedesPage() {
                   </div>
                   <h2 className="text-base font-semibold text-gray-900">Crear Nueva Sede</h2>
                 </div>
-                <button
-                  onClick={() => setShowCreateGroup(true)}
-                  className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-2 px-3 rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                >
-                  + Crear Sede
-                </button>
+                <div className="mt-auto">
+                  <button
+                    onClick={() => setShowCreateGroup(true)}
+                    className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-2 px-3 rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  >
+                    + Crear Sede
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Crear Room */}
             {selectedSede && (
-              <div className="relative">
+              <div className="relative flex-1">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 h-full flex flex-col">
                   <div className="flex items-center space-x-2 mb-4">
                     <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -696,12 +698,14 @@ export default function GestionarSedesPage() {
                     </div>
                     <h2 className="text-base font-semibold text-gray-900">Crear Room</h2>
                   </div>
-                  <button
-                    onClick={() => setShowCreateRoom(true)}
-                    className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                  >
-                    + Crear Room
-                  </button>
+                  <div className="mt-auto">
+                    <button
+                      onClick={() => setShowCreateRoom(true)}
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                      + Crear Room
+                    </button>
+                  </div>
                 </div>
               </div>
             )}
