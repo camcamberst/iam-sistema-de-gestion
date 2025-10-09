@@ -145,7 +145,7 @@ export default function GestionarSedesPage() {
             console.log('🔍 [DEBUG] Solo un admin asignado:', adminAsignado.name);
           } else {
             // Múltiples admins: elegir el que tenga menos sedes asignadas
-            adminAsignado = adminsAsignados.reduce((menor, actual) => {
+            adminAsignado = adminsAsignados.reduce((menor: any, actual: any) => {
               const sedesMenor = menor.user_groups?.length || 0;
               const sedesActual = actual.user_groups?.length || 0;
               console.log(`🔍 [DEBUG] Comparando: ${menor.name} (${sedesMenor} sedes) vs ${actual.name} (${sedesActual} sedes)`);
