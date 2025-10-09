@@ -70,7 +70,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar si el mismo modelo ya está asignado en la misma jornada (evitar duplicados exactos)
+    // TEMPORALMENTE DESHABILITADO: Verificar si el mismo modelo ya está asignado en la misma jornada
+    // Esta validación está causando problemas con asignaciones fantasma
+    console.log('⚠️ [API] Validación de duplicados deshabilitada temporalmente');
+    
+    // TODO: Rehabilitar esta validación una vez que se resuelva el problema de asignaciones fantasma
+    /*
     const { data: sameModelAssignment, error: sameModelError } = await supabase
       .from('modelo_assignments')
       .select('id, model_id')
@@ -94,6 +99,7 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+    */
 
     // Crear nueva asignación
     const { data: newAssignment, error: insertError } = await supabase
