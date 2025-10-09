@@ -51,8 +51,8 @@ export async function GET(
     const formattedAssignments = assignments?.map(assignment => ({
       id: assignment.id,
       room_id: assignment.room_id,
-      room_name: assignment.group_rooms?.room_name || 'Room desconocido',
-      group_name: assignment.group_rooms?.groups?.name || 'Grupo desconocido',
+      room_name: assignment.group_rooms?.[0]?.room_name || 'Room desconocido',
+      group_name: assignment.group_rooms?.[0]?.groups?.[0]?.name || 'Grupo desconocido',
       jornada: assignment.jornada,
       assigned_at: assignment.assigned_at
     })) || [];
