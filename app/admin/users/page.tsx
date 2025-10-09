@@ -103,7 +103,7 @@ export default function UsersListPage() {
     setSearchFilters(filters);
     
     // Solo mostrar resultados si hay al menos un filtro activo
-    const hasActiveFilters = query.trim() || filters.role || filters.group || filters.status;
+    const hasActiveFilters = query.trim() || filters.role || filters.group || filters.status || filters.login_status || filters.creation_period;
     
     if (!hasActiveFilters) {
       setFilteredUsers([]);
@@ -138,6 +138,50 @@ export default function UsersListPage() {
       filtered = filtered.filter(user => user.is_active === isActive);
     }
 
+    // Login status filter
+    if (filters.login_status) {
+      const now = new Date();
+      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+      
+      filtered = filtered.filter(user => {
+        if (filters.login_status === 'never') {
+          return !user.last_login;
+        } else if (filters.login_status === 'recent') {
+          return user.last_login && new Date(user.last_login) > thirtyDaysAgo;
+        } else if (filters.login_status === 'old') {
+          return user.last_login && new Date(user.last_login) <= thirtyDaysAgo;
+        }
+        return true;
+      });
+    }
+
+    // Creation period filter
+    if (filters.creation_period) {
+      const now = new Date();
+      let cutoffDate: Date;
+      
+      switch (filters.creation_period) {
+        case 'week':
+          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+          break;
+        case 'month':
+          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          break;
+        case 'quarter':
+          cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
+          break;
+        case 'old':
+          cutoffDate = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
+          filtered = filtered.filter(user => new Date(user.created_at) <= cutoffDate);
+          setFilteredUsers(filtered);
+          return;
+        default:
+          cutoffDate = now;
+      }
+      
+      filtered = filtered.filter(user => new Date(user.created_at) >= cutoffDate);
+    }
+
     setFilteredUsers(filtered);
   };
 
@@ -145,7 +189,7 @@ export default function UsersListPage() {
   const searchFiltersConfig = [
     {
       id: 'role',
-      label: 'Rol',
+      label: 'Rol del Usuario',
       value: searchFilters.role || '',
       options: [
         { label: 'Super Admin', value: 'super_admin' },
@@ -155,7 +199,7 @@ export default function UsersListPage() {
     },
     {
       id: 'group',
-      label: 'Grupo',
+      label: 'Sede/Grupo',
       value: searchFilters.group || '',
       options: groups.map(group => ({
         label: group.name,
@@ -164,11 +208,32 @@ export default function UsersListPage() {
     },
     {
       id: 'status',
-      label: 'Estado',
+      label: 'Estado de Cuenta',
       value: searchFilters.status || '',
       options: [
         { label: 'Activo', value: 'active' },
         { label: 'Inactivo', value: 'inactive' }
+      ]
+    },
+    {
+      id: 'login_status',
+      label: 'Actividad Reciente',
+      value: searchFilters.login_status || '',
+      options: [
+        { label: 'Con acceso reciente', value: 'recent' },
+        { label: 'Sin acceso reciente', value: 'old' },
+        { label: 'Nunca ha ingresado', value: 'never' }
+      ]
+    },
+    {
+      id: 'creation_period',
+      label: 'Período de Creación',
+      value: searchFilters.creation_period || '',
+      options: [
+        { label: 'Última semana', value: 'week' },
+        { label: 'Último mes', value: 'month' },
+        { label: 'Últimos 3 meses', value: 'quarter' },
+        { label: 'Más de 6 meses', value: 'old' }
       ]
     }
   ];
@@ -332,19 +397,54 @@ export default function UsersListPage() {
 
         {/* Search and Filters */}
         <div className="mb-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+              <span className="text-base font-semibold text-gray-900">Búsqueda y Filtros</span>
             </div>
-            <span className="text-base font-semibold text-gray-900">Búsqueda</span>
+            {filteredUsers.length > 0 && (
+              <div className="flex items-center space-x-2 text-sm text-gray-600">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>{filteredUsers.length} resultado(s) encontrado(s)</span>
+              </div>
+            )}
           </div>
           <AppleSearchBar
             onSearch={handleSearch}
-            placeholder="Buscar por nombre o email..."
+            placeholder="Buscar por nombre, email o ID de usuario..."
             filters={searchFiltersConfig}
           />
+          {(searchQuery || Object.values(searchFilters).some(v => v)) && (
+            <div className="mt-4 p-3 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/30">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2 text-sm text-blue-700">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>
+                    {filteredUsers.length === 0 
+                      ? 'No se encontraron usuarios con los criterios especificados'
+                      : `Mostrando ${filteredUsers.length} de ${users.length} usuarios`
+                    }
+                  </span>
+                </div>
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSearchFilters({});
+                    setFilteredUsers([]);
+                  }}
+                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
+                >
+                  Limpiar búsqueda
+                </button>
+              </div>
+            </div>
+          )}
         </div>
 
         {error && (
