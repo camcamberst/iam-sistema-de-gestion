@@ -580,7 +580,8 @@ export default function GestionarSedesPage() {
           </div>
         </div>
 
-        {/* Lista de Sedes */}
+        {/* Lista de Sedes - OCULTA: La información está en el dropdown "Tus Sedes" */}
+        {/* 
         <div className="bg-white rounded-lg shadow-sm border border-gray-200">
           <div className="px-6 py-4 border-b border-gray-200">
             <h2 className="text-lg font-semibold text-gray-900">Sedes Agencia Innova</h2>
@@ -597,7 +598,6 @@ export default function GestionarSedesPage() {
                   </div>
                 </div>
                 
-                {/* Rooms de esta sede */}
                 {getRoomsForGroup(group.id).length > 0 && (
                   <div className="mt-3">
                     <p className="text-sm text-gray-600 mb-2">Rooms disponibles:</p>
@@ -618,6 +618,7 @@ export default function GestionarSedesPage() {
             ))}
           </div>
         </div>
+        */}
 
         {/* Modal Crear Sede */}
         {showCreateGroup && (
