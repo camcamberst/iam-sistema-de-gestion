@@ -22,19 +22,39 @@ export default function DashboardSedesPage() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userRole, setUserRole] = useState<string>('admin');
+  const [userGroups, setUserGroups] = useState<string[]>([]);
 
   useEffect(() => {
+    loadUserInfo();
     loadDashboardData();
   }, []);
+
+  const loadUserInfo = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        setUserRole(parsed.role || 'admin');
+        setUserGroups(parsed.groups?.map((g: any) => g.id) || []);
+      }
+    } catch (error) {
+      console.warn('Error parsing user data from localStorage:', error);
+    }
+  };
 
   const loadDashboardData = async () => {
     try {
       setLoading(true);
       setError(null);
 
-      // Cargar datos reales desde la API
+      // Cargar datos reales desde la API con filtrado por rol
       const [groupsResponse, roomsResponse, usersResponse, assignmentsResponse] = await Promise.all([
-        fetch('/api/groups'),
+        fetch('/api/groups', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ userRole, userGroups })
+        }),
         fetch('/api/groups/rooms'),
         fetch('/api/users'),
         fetch('/api/assignments/all')
@@ -47,17 +67,27 @@ export default function DashboardSedesPage() {
         assignmentsResponse.json()
       ]);
 
+      // Filtrar datos según el rol del usuario
+      let filteredGroups = groupsData.success ? groupsData.groups || [] : [];
+      let filteredRooms = roomsData.success ? roomsData.rooms || [] : [];
+      let filteredAssignments = assignmentsData.success ? assignmentsData.assignments || [] : [];
+
+      // Si es admin (no super_admin), filtrar por sus grupos
+      if (userRole !== 'super_admin' && userGroups.length > 0) {
+        filteredRooms = filteredRooms.filter((room: any) => userGroups.includes(room.group_id));
+        filteredAssignments = filteredAssignments.filter((assignment: any) => userGroups.includes(assignment.group_id));
+      }
+
       // Calcular estadísticas reales
-      const totalSedes = groupsData.success ? groupsData.groups?.length || 0 : 0;
-      const totalRooms = roomsData.success ? roomsData.rooms?.length || 0 : 0;
+      const totalSedes = filteredGroups.length;
+      const totalRooms = filteredRooms.length;
       const totalModelos = usersData.success ? usersData.users?.filter((u: any) => u.role === 'modelo' && u.is_active).length || 0 : 0;
-      const asignacionesActivas = assignmentsData.success ? assignmentsData.assignments?.length || 0 : 0;
+      const asignacionesActivas = filteredAssignments.length;
       
       // Calcular sedes con y sin rooms
-      const sedesConRooms = groupsData.success && roomsData.success ? 
-        groupsData.groups?.filter((group: any) => 
-          roomsData.rooms?.some((room: any) => room.group_id === group.id)
-        ).length || 0 : 0;
+      const sedesConRooms = filteredGroups.filter((group: any) => 
+        filteredRooms.some((room: any) => room.group_id === group.id)
+      ).length;
       
       const sedesSinRooms = totalSedes - sedesConRooms;
 
@@ -94,9 +124,22 @@ export default function DashboardSedesPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard Sedes</h1>
-            <p className="mt-2 text-gray-600">Vista general del estado de todas las sedes</p>
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Dashboard Sedes</h1>
+              <p className="mt-2 text-gray-600">
+                {userRole === 'super_admin' 
+                  ? 'Vista global del estado de todas las sedes y asignaciones' 
+                  : 'Vista del estado de tus sedes asignadas'
+                }
+              </p>
+            </div>
+            {userRole === 'super_admin' && (
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <span className="text-sm font-medium text-purple-700">Super Admin</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -217,30 +260,72 @@ export default function DashboardSedesPage() {
             </div>
             <div className="p-6">
               <div className="space-y-3">
-                <button className="w-full text-left px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                    <span className="text-sm font-medium text-blue-900">Crear Nueva Sede</span>
-                  </div>
-                </button>
-                <button className="w-full text-left px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
-                    </svg>
-                    <span className="text-sm font-medium text-green-900">Agregar Rooms</span>
-                  </div>
-                </button>
-                <button className="w-full text-left px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors">
-                  <div className="flex items-center">
-                    <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                    </svg>
-                    <span className="text-sm font-medium text-purple-900">Ver Asignaciones</span>
-                  </div>
-                </button>
+                {/* Acciones para Super Admin */}
+                {userRole === 'super_admin' && (
+                  <>
+                    <button 
+                      onClick={() => window.location.href = '/admin/sedes/gestionar'}
+                      className="w-full text-left px-4 py-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-blue-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                        <span className="text-sm font-medium text-blue-900">Crear Nueva Sede</span>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => window.location.href = '/admin/sedes/gestionar'}
+                      className="w-full text-left px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                        </svg>
+                        <span className="text-sm font-medium text-green-900">Gestionar Todas las Sedes</span>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => window.location.href = '/admin/sedes/asignaciones'}
+                      className="w-full text-left px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span className="text-sm font-medium text-purple-900">Ver Todas las Asignaciones</span>
+                      </div>
+                    </button>
+                  </>
+                )}
+
+                {/* Acciones para Admin */}
+                {userRole === 'admin' && (
+                  <>
+                    <button 
+                      onClick={() => window.location.href = '/admin/sedes/gestionar'}
+                      className="w-full text-left px-4 py-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-green-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2H5a2 2 0 00-2-2z" />
+                        </svg>
+                        <span className="text-sm font-medium text-green-900">Gestionar Mis Sedes</span>
+                      </div>
+                    </button>
+                    <button 
+                      onClick={() => window.location.href = '/admin/sedes/asignaciones'}
+                      className="w-full text-left px-4 py-3 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors"
+                    >
+                      <div className="flex items-center">
+                        <svg className="w-5 h-5 text-purple-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                        </svg>
+                        <span className="text-sm font-medium text-purple-900">Ver Mis Asignaciones</span>
+                      </div>
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>

@@ -22,10 +22,28 @@ export default function AsignacionesPage() {
   const [error, setError] = useState<string | null>(null);
   const [filterGroup, setFilterGroup] = useState<string>('');
   const [filterJornada, setFilterJornada] = useState<string>('');
+  const [userRole, setUserRole] = useState<string>('admin');
+  const [userGroups, setUserGroups] = useState<string[]>([]);
+  const [availableGroups, setAvailableGroups] = useState<string[]>([]);
 
   useEffect(() => {
+    loadUserInfo();
     loadAssignments();
   }, []);
+
+  const loadUserInfo = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        setUserRole(parsed.role || 'admin');
+        setUserGroups(parsed.groups?.map((g: any) => g.id) || []);
+        setAvailableGroups(parsed.groups?.map((g: any) => g.name) || []);
+      }
+    } catch (error) {
+      console.warn('Error parsing user data from localStorage:', error);
+    }
+  };
 
   const loadAssignments = async () => {
     try {
@@ -50,8 +68,17 @@ export default function AsignacionesPage() {
   };
 
   const filteredAssignments = assignments.filter(assignment => {
+    // Filtrar por rol del usuario
+    if (userRole !== 'super_admin' && userGroups.length > 0) {
+      if (!userGroups.includes(assignment.group_id)) return false;
+    }
+    
+    // Filtrar por grupo seleccionado
     if (filterGroup && assignment.grupo_name !== filterGroup) return false;
+    
+    // Filtrar por jornada
     if (filterJornada && assignment.jornada !== filterJornada) return false;
+    
     return true;
   });
 
@@ -74,8 +101,19 @@ export default function AsignacionesPage() {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Asignaciones</h1>
-              <p className="mt-2 text-gray-600">Vista de asignaciones actuales de modelos</p>
+              <p className="mt-2 text-gray-600">
+                {userRole === 'super_admin' 
+                  ? 'Vista global de todas las asignaciones de modelos' 
+                  : 'Vista de asignaciones de tus sedes asignadas'
+                }
+              </p>
             </div>
+            {userRole === 'super_admin' && (
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-purple-500 rounded-full"></div>
+                <span className="text-sm font-medium text-purple-700">Super Admin</span>
+              </div>
+            )}
           </div>
         </div>
 
@@ -108,14 +146,24 @@ export default function AsignacionesPage() {
                 onChange={(e) => setFilterGroup(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">Todas las sedes</option>
-                <option value="Sede MP">Sede MP</option>
-                <option value="Cabecera">Cabecera</option>
-                <option value="Victoria">Victoria</option>
-                <option value="Terrazas">Terrazas</option>
-                <option value="Diamante">Diamante</option>
-                <option value="Satélites">Satélites</option>
-                <option value="Otros">Otros</option>
+                <option value="">
+                  {userRole === 'super_admin' ? 'Todas las sedes' : 'Todas mis sedes'}
+                </option>
+                {userRole === 'super_admin' ? (
+                  <>
+                    <option value="Sede MP">Sede MP</option>
+                    <option value="Cabecera">Cabecera</option>
+                    <option value="Victoria">Victoria</option>
+                    <option value="Terrazas">Terrazas</option>
+                    <option value="Diamante">Diamante</option>
+                    <option value="Satélites">Satélites</option>
+                    <option value="Otros">Otros</option>
+                  </>
+                ) : (
+                  availableGroups.map(groupName => (
+                    <option key={groupName} value={groupName}>{groupName}</option>
+                  ))
+                )}
               </select>
             </div>
             <div>
