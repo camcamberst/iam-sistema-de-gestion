@@ -268,10 +268,10 @@ export default function RatesPage() {
 	// ===========================================
 	if (authLoading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
-				<div className="text-center">
-					<div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-					<p className="mt-4 text-gray-600">Verificando permisos...</p>
+			<div className="p-6 space-y-6">
+				<div className="apple-card text-center py-12">
+					<div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
+					<p className="text-gray-600">Verificando permisos...</p>
 				</div>
 			</div>
 		);
@@ -279,76 +279,47 @@ export default function RatesPage() {
 
 	if (!userInfo) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
-				<div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
-					<div className="text-center">
-						<div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-							<svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-							</svg>
-						</div>
-						<h2 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h2>
-						<p className="text-sm text-gray-600 mb-4">
-							No tienes permisos para acceder a esta función.
-						</p>
-						<button 
-							onClick={() => router.push('/admin/dashboard')}
-							className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
-						>
-							Volver al Dashboard
-						</button>
+			<div className="p-6 space-y-6">
+				<div className="apple-card text-center py-12">
+					<div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
+						<span className="text-red-600 text-2xl">🚫</span>
 					</div>
+					<h2 className="text-xl font-semibold text-gray-900 mb-2">Acceso Denegado</h2>
+					<p className="text-gray-600 mb-4">
+						No tienes permisos para acceder a esta función.
+					</p>
+					<button 
+						onClick={() => router.push('/admin/dashboard')}
+						className="apple-button"
+					>
+						Volver al Dashboard
+					</button>
 				</div>
 			</div>
 		);
-  }
+	}
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      Definir RATES
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {userInfo.role === 'super_admin' 
-                        ? 'Puedes gestionar RATES globales y por grupo'
-                        : 'Solo puedes gestionar RATES de tus grupos asignados'
-                      }
-                    </p>
-                  </div>
-                </div>
-                <div className="text-xs text-gray-500 bg-blue-50/50 px-3 py-1 rounded-full">
-                  Acceso: <span className="font-medium text-blue-600">
-                    {userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+	return (
+		<div className="p-6 space-y-6">
+			<div className="flex items-center justify-between">
+				<div>
+					<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
+					<p className="text-sm text-gray-500 mt-1">
+						{userInfo.role === 'super_admin' 
+							? 'Puedes gestionar RATES globales y por grupo'
+							: 'Solo puedes gestionar RATES de tus grupos asignados'
+						}
+					</p>
+				</div>
+				<div className="text-sm text-gray-500">
+					Acceso: <span className="font-medium text-blue-600">
+						{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+					</span>
+				</div>
+			</div>
 
-        <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            </div>
-            <h2 className="text-base font-semibold text-gray-900">Establecer rates manual</h2>
-          </div>
+			<div className="apple-card">
+				<h2 className="text-base font-medium mb-3">Establecer rates manual</h2>
 				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 					<div>
 						<label className="block text-xs text-gray-500 mb-2">Aplicar a</label>
