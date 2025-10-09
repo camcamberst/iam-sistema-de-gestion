@@ -150,7 +150,10 @@ export async function DELETE(request: NextRequest) {
     const body = await request.json();
     const { assignment_id } = body;
 
+    console.log('🗑️ [API] DELETE request recibido:', { body, assignment_id });
+
     if (!assignment_id) {
+      console.log('❌ [API] ID de asignación faltante');
       return NextResponse.json(
         { success: false, error: 'ID de asignación requerido' },
         { status: 400 }
@@ -161,29 +164,57 @@ export async function DELETE(request: NextRequest) {
 
     console.log(`🗑️ [API] Eliminando asignación ID: ${assignment_id}`);
 
+    // Primero verificar que la asignación existe y está activa
+    const { data: existingAssignment, error: checkError } = await supabase
+      .from('modelo_assignments')
+      .select('id, is_active, model_id, jornada')
+      .eq('id', assignment_id)
+      .single();
+
+    if (checkError) {
+      console.error('❌ [API] Error verificando asignación:', checkError);
+      return NextResponse.json(
+        { success: false, error: 'Asignación no encontrada' },
+        { status: 404 }
+      );
+    }
+
+    console.log('🔍 [API] Asignación encontrada:', existingAssignment);
+
+    if (!existingAssignment.is_active) {
+      console.log('⚠️ [API] Asignación ya está inactiva');
+      return NextResponse.json(
+        { success: false, error: 'Asignación ya está eliminada' },
+        { status: 400 }
+      );
+    }
+
     // Desactivar la asignación (soft delete)
-    const { error: deactivateError } = await supabase
+    const { data: updateResult, error: deactivateError } = await supabase
       .from('modelo_assignments')
       .update({ is_active: false })
-      .eq('id', assignment_id);
+      .eq('id', assignment_id)
+      .select();
 
     if (deactivateError) {
-      console.error('Error desactivando asignación:', deactivateError);
+      console.error('❌ [API] Error desactivando asignación:', deactivateError);
       return NextResponse.json(
         { success: false, error: 'Error eliminando asignación' },
         { status: 500 }
       );
     }
 
+    console.log('✅ [API] Asignación desactivada:', updateResult);
     console.log(`✅ [API] Asignación ${assignment_id} eliminada exitosamente`);
 
     return NextResponse.json({
       success: true,
-      message: 'Asignación eliminada exitosamente'
+      message: 'Asignación eliminada exitosamente',
+      deleted_assignment: updateResult
     });
 
   } catch (error) {
-    console.error('Error en DELETE /api/assignments:', error);
+    console.error('❌ [API] Error en DELETE /api/assignments:', error);
     return NextResponse.json(
       { success: false, error: 'Error interno del servidor' },
       { status: 500 }
