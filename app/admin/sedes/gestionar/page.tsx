@@ -307,7 +307,12 @@ export default function GestionarSedesPage() {
           selectedSede ? loadSedeInfo(selectedSede) : Promise.resolve() // Actualizar info de sede seleccionada
         ]);
       } else {
-        setError('Error creando room: ' + result.error);
+        // Personalizar mensaje de error para duplicados
+        if (result.error && result.error.includes('ya existe')) {
+          setError('Este Room ya existe');
+        } else {
+          setError('Error creando room: ' + result.error);
+        }
       }
     } catch (err) {
       console.error('Error:', err);
