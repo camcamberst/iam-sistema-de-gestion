@@ -716,41 +716,36 @@ export default function GestionarSedesPage() {
         {selectedSedeInfo && (
           <div className="relative mb-10">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-xl blur-sm"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-white/20 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-xl font-semibold text-gray-900">{selectedSedeInfo.name}</h2>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h2 className="text-lg font-semibold text-gray-900">{selectedSedeInfo.name}</h2>
+                    <p className="text-xs text-gray-500">
                       {selectedSedeInfo.rooms?.length || 0} rooms configurados
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-2 bg-blue-100 px-3 py-1.5 rounded-full">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-sm text-blue-700 font-medium">Activa</span>
+                <div className="flex items-center space-x-1.5 bg-blue-100 px-2 py-1 rounded-full">
+                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                  <span className="text-xs text-blue-700 font-medium">Activa</span>
                 </div>
               </div>
 
             {/* Información del Admin Asignado */}
             {sedeAdminInfo ? (
-              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-blue-200/30">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
+              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-lg p-4 mb-4 border border-blue-200/30">
+                <div className="mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">Admin Asignado</h3>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-semibold text-lg">
+                <div className="flex items-center space-x-3">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <span className="text-white font-semibold text-sm">
                       {sedeAdminInfo.name?.charAt(0) || 'A'}
                     </span>
                   </div>
@@ -778,23 +773,23 @@ export default function GestionarSedesPage() {
 
             {/* Rooms de la Sede */}
             <div>
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center space-x-2 mb-3">
+                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
                 <h3 className="text-sm font-semibold text-gray-900">Rooms Disponibles</h3>
               </div>
               {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap gap-2">
                   {selectedSedeInfo.rooms.map((room: any) => (
                     <button
                       key={room.id}
                       onClick={() => handleRoomClick(room)}
-                      className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 hover:from-gray-200 hover:to-slate-200 hover:text-gray-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50"
+                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 hover:from-gray-200 hover:to-slate-200 hover:text-gray-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50"
                     >
-                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                       {room.room_name}
