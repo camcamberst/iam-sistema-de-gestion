@@ -609,46 +609,6 @@ export default function GestionarSedesPage() {
           </div>
         </div>
 
-        {/* Mensajes de error y éxito */}
-        {error && (
-          <div className="mb-6 relative">
-            <div className="absolute inset-0 bg-red-500/10 rounded-2xl blur-sm"></div>
-            <div className="relative bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl p-4 shadow-lg">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
-                    <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-red-800">{error}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {success && (
-          <div className="mb-6 relative">
-            <div className="absolute inset-0 bg-green-500/10 rounded-2xl blur-sm"></div>
-            <div className="relative bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-2xl p-4 shadow-lg">
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                    <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                    </svg>
-                  </div>
-                </div>
-                <div className="ml-3">
-                  <p className="text-sm font-medium text-green-800">{success}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Acciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -901,6 +861,33 @@ export default function GestionarSedesPage() {
                 </div>
               
               <form onSubmit={handleCreateGroup} className="space-y-6">
+                {/* Mensajes de estado dentro del modal */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-red-700 font-medium">{error}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-green-700 font-medium">{success}</p>
+                    </div>
+                  </div>
+                )}
+              
                 <div>
                   <label className="block text-gray-700 text-sm font-semibold mb-2">
                     Nombre de la Sede
@@ -956,6 +943,33 @@ export default function GestionarSedesPage() {
                 </div>
               
               <form onSubmit={handleCreateRoom} className="space-y-6">
+                {/* Mensajes de estado dentro del modal */}
+                {error && (
+                  <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-red-700 font-medium">{error}</p>
+                    </div>
+                  </div>
+                )}
+                
+                {success && (
+                  <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                      <p className="text-sm text-green-700 font-medium">{success}</p>
+                    </div>
+                  </div>
+                )}
+              
                 <div>
                   <label className="block text-gray-700 text-sm font-semibold mb-2">
                     Sede Seleccionada
