@@ -85,6 +85,14 @@ export default function GestionarSedesPage() {
         group.name !== 'Satélites'
       );
       setAvailableSedes(sedesOperativas);
+      
+      // Auto-seleccionar "Sede MP" como estado inicial ideal
+      const sedeMP = sedesOperativas.find((group: any) => group.name === 'Sede MP');
+      if (sedeMP) {
+        setSelectedSede(sedeMP.id);
+        setSelectedGroup(sedeMP.id);
+        loadSedeInfo(sedeMP.id);
+      }
     } catch (error) {
       console.error('Error cargando sedes disponibles:', error);
     }
