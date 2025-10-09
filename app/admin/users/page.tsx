@@ -286,38 +286,59 @@ export default function UsersListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{
-        background: 'radial-gradient(1200px 800px at 10% -10%, rgba(255,255,255,0.08), transparent), linear-gradient(180deg, rgb(16 18 27), rgb(16 18 27))'
-      }}>
-        <div className="text-white text-xl">Cargando usuarios...</div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando usuarios...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8">
-          <div>
-            <h1 className="text-3xl font-semibold text-gray-900 mb-1">Gestión de Usuarios</h1>
-            <p className="text-gray-500">Administra usuarios del sistema</p>
-          </div>
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      Gestión de Usuarios
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600">Administra usuarios del sistema</p>
+                  </div>
+                </div>
 
-          <button
-            onClick={() => router.push('/admin/users/create')}
-            className="px-4 py-2 rounded-lg bg-gray-900 text-white hover:bg-black transition-all duration-200 flex items-center space-x-2"
-          >
-            <span className="text-sm">+</span>
-            <span className="text-sm font-medium">Nuevo Usuario</span>
-          </button>
+                <button
+                  onClick={() => router.push('/admin/users/create')}
+                  className="px-3 py-2 rounded-lg bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 flex items-center space-x-2 shadow-md hover:shadow-lg transform hover:scale-105"
+                >
+                  <span className="text-sm">+</span>
+                  <span className="text-xs font-medium">Nuevo Usuario</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Error Message */}
         {/* Search and Filters */}
-        <div className="mb-6">
-          <div className="grid grid-cols-1 gap-2 mb-1">
-            <span className="text-xs text-gray-500 font-medium">Búsqueda</span>
+        <div className="mb-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </div>
+            <span className="text-base font-semibold text-gray-900">Búsqueda</span>
           </div>
           <AppleSearchBar
             onSearch={handleSearch}
@@ -327,32 +348,56 @@ export default function UsersListPage() {
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded-lg mb-6">
-            {error}
+          <div className="mb-6 relative bg-red-50/80 backdrop-blur-sm border border-red-200/50 text-red-700 px-4 py-3 rounded-xl shadow-md">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
+                <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <span className="text-sm">{error}</span>
+            </div>
           </div>
         )}
 
         {/* Users Table */}
-        <div className="bg-white border border-gray-200 rounded-xl shadow-sm transition-all duration-200 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0">
+        <div className="relative bg-white/70 backdrop-blur-sm border border-white/20 rounded-xl shadow-md transition-all duration-200 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0">
           <div className="pt-6 px-6 pb-0">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">
-              Usuarios del Sistema ({users.length})
-            </h2>
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                </svg>
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">
+                Usuarios del Sistema ({users.length})
+              </h2>
+            </div>
             
             {users.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-lg">No hay usuarios registrados</div>
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
+                  </svg>
+                </div>
+                <div className="text-gray-400 text-base font-medium">No hay usuarios registrados</div>
                 <button
                   onClick={() => router.push('/admin/users/create')}
-                  className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition-colors"
+                  className="mt-4 px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
                 >
                   Crear Primer Usuario
                 </button>
               </div>
             ) : filteredUsers.length === 0 ? (
               <div className="text-center py-12">
-                <div className="text-gray-400 text-lg">No hay resultados</div>
-                <div className="text-gray-500 text-sm mt-2">
+                <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                  </svg>
+                </div>
+                <div className="text-gray-400 text-base font-medium">No hay resultados</div>
+                <div className="text-gray-500 text-xs mt-2">
                   {searchQuery.trim() || Object.values(searchFilters).some(f => f) 
                     ? 'Intenta ajustar los filtros de búsqueda' 
                     : 'Usa los filtros de búsqueda para encontrar usuarios'
@@ -361,54 +406,54 @@ export default function UsersListPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-[13px] table-fixed">
-                  <thead className="border-b border-gray-200">
+                <table className="min-w-full text-left text-xs table-fixed">
+                  <thead className="border-b border-gray-200/50 bg-gray-50/50 backdrop-blur-sm">
                     <tr>
-                      <th className="px-6 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
-                      <th className="px-6 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Email</th>
-                      <th className="px-6 py-3 w-[10%] text-gray-600 font-medium text-xs uppercase tracking-wide">Rol</th>
-                      <th className="px-6 py-3 w-[20%] text-gray-600 font-medium text-xs uppercase tracking-wide">Grupos</th>
-                      <th className="px-6 py-3 w-[8%] text-gray-600 font-medium text-xs uppercase tracking-wide">Estado</th>
-                      <th className="px-6 py-3 w-[6%] text-gray-600 font-medium text-xs uppercase tracking-wide">Acciones</th>
+                      <th className="px-4 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
+                      <th className="px-4 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Email</th>
+                      <th className="px-4 py-3 w-[10%] text-gray-600 font-medium text-xs uppercase tracking-wide">Rol</th>
+                      <th className="px-4 py-3 w-[20%] text-gray-600 font-medium text-xs uppercase tracking-wide">Grupos</th>
+                      <th className="px-4 py-3 w-[8%] text-gray-600 font-medium text-xs uppercase tracking-wide">Estado</th>
+                      <th className="px-4 py-3 w-[6%] text-gray-600 font-medium text-xs uppercase tracking-wide">Acciones</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="bg-white/50 divide-y divide-gray-200/50">
                     {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors h-14">
-                        <td className="px-6 py-2">
-                          <div className="flex items-center space-x-3 overflow-hidden">
-                            <div className="w-7 h-7 bg-gray-900 rounded-full flex items-center justify-center text-white text-[12px] font-semibold flex-none">
+                      <tr key={user.id} className="border-b border-gray-100/50 hover:bg-white/80 transition-colors h-12">
+                        <td className="px-4 py-2">
+                          <div className="flex items-center space-x-2 overflow-hidden">
+                            <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-slate-700 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-none">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <div className="text-gray-900 font-medium truncate" title={user.name}>{user.name}</div>
-                              <div className="text-gray-400 text-[11px] truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
+                              <div className="text-gray-900 font-medium truncate text-xs" title={user.name}>{user.name}</div>
+                              <div className="text-gray-400 text-xs truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-2 text-gray-800 truncate max-w-[220px]" title={user.email}>{user.email}</td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-[2px] rounded-full text-[11px] font-medium whitespace-nowrap ${
+                        <td className="px-4 py-2 text-gray-800 truncate max-w-[220px] text-xs" title={user.email}>{user.email}</td>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap border ${
                             user.role === 'super_admin'
-                              ? 'bg-gray-900 text-white'
+                              ? 'bg-gray-900/80 text-white border-gray-700/50'
                               : user.role === 'admin'
-                                ? 'bg-blue-100 text-blue-800'
-                                : 'bg-green-100 text-green-800'
+                                ? 'bg-blue-100/80 text-blue-800 border-blue-200/50'
+                                : 'bg-green-100/80 text-green-800 border-green-200/50'
                           }`}>
                             {user.role.replace('_', ' ').toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-6 py-4">
+                        <td className="px-4 py-2">
                           {user.groups.length > 0 ? (
                             <div className="flex items-center gap-1 overflow-hidden">
                               {user.groups.slice(0,2).map((group) => (
-                                <span key={group.id} className="bg-gray-100 text-gray-700 px-2 py-[2px] rounded text-[11px] whitespace-nowrap">
+                                <span key={group.id} className="bg-gray-100/80 text-gray-700 px-2 py-1 rounded text-xs whitespace-nowrap border border-gray-200/50">
                                   {group.name}
                                 </span>
                               ))}
                               {user.groups.length > 2 && (
                                 <span
-                                  className="text-gray-500 text-[11px] whitespace-nowrap cursor-help"
+                                  className="text-gray-500 text-xs whitespace-nowrap cursor-help"
                                   title={user.groups.map(g=>g.name).join(', ')}
                                 >
                                   +{user.groups.length - 2}
@@ -416,30 +461,30 @@ export default function UsersListPage() {
                               )}
                             </div>
                           ) : (
-                            <span className="text-gray-400 text-[12px]">Sin grupos</span>
+                            <span className="text-gray-400 text-xs">Sin grupos</span>
                           )}
                         </td>
-                        <td className="px-6 py-4">
-                          <span className={`px-2 py-[2px] rounded-full text-[11px] font-medium ${user.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+                        <td className="px-4 py-2">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${user.is_active ? 'bg-green-100/80 text-green-800 border-green-200/50' : 'bg-gray-100/80 text-gray-700 border-gray-200/50'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
-                         <td className="px-6 py-4">
-                           <div className="flex space-x-2">
+                         <td className="px-4 py-2">
+                           <div className="flex space-x-1">
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="px-2.5 py-1 text-[12px] rounded-md border border-blue-300 text-blue-700 hover:bg-blue-50 transition-colors"
+                              className="px-2 py-1 text-xs rounded-md bg-blue-50/80 border border-blue-200/50 text-blue-700 hover:bg-blue-100/80 transition-all duration-300"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
-                              className="px-2.5 py-1 text-[12px] rounded-md border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                              className="px-2 py-1 text-xs rounded-md bg-red-50/80 border border-red-200/50 text-red-600 hover:bg-red-100/80 transition-all duration-300"
                             >
                               Eliminar
                             </button>
-                           </div>
-                         </td>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
