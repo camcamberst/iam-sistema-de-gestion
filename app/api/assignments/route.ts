@@ -197,7 +197,7 @@ export async function DELETE(request: NextRequest) {
     // Primero verificar que la asignación existe y está activa
     const { data: existingAssignment, error: checkError } = await supabase
       .from('modelo_assignments')
-      .select('id, is_active, model_id, jornada')
+      .select('id, is_active, model_id, jornada, room_id, assigned_at')
       .eq('id', assignment_id)
       .single();
 
@@ -209,7 +209,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    console.log('🔍 [API] Asignación encontrada:', existingAssignment);
+    console.log('🔍 [API] Asignación encontrada:', {
+      id: existingAssignment.id,
+      is_active: existingAssignment.is_active,
+      model_id: existingAssignment.model_id,
+      jornada: existingAssignment.jornada,
+      room_id: existingAssignment.room_id,
+      assigned_at: existingAssignment.assigned_at
+    });
 
     if (!existingAssignment.is_active) {
       console.log('⚠️ [API] Asignación ya está inactiva');

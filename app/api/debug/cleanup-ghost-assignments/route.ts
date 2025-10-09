@@ -26,7 +26,7 @@ export async function POST(request: NextRequest) {
 
     console.log('🔍 [CLEANUP] Estado actual de asignaciones:', allAssignments);
 
-    // 2. Eliminar físicamente todas las asignaciones inactivas
+    // 2. Eliminar físicamente todas las asignaciones inactivas (limpieza agresiva)
     const { data: deleteResult, error: deleteError } = await supabase
       .from('modelo_assignments')
       .delete()

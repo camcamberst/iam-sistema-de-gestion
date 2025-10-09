@@ -516,6 +516,15 @@ export default function GestionarSedesPage() {
       return;
     }
 
+    // VALIDACIÓN ESTRICTA: Verificar que la asignación esté realmente activa
+    if (!assignmentToDelete.is_active) {
+      console.log('⚠️ [FRONTEND] Asignación ya está inactiva, no se puede eliminar');
+      setRoomConfigError('Esta asignación ya está eliminada');
+      setShowDeleteConfirm(false);
+      setAssignmentToDelete(null);
+      return;
+    }
+
     // Marcar como en proceso de eliminación
     setAssignmentToDelete({ ...assignmentToDelete, isDeleting: true });
 
