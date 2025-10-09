@@ -79,8 +79,10 @@ export default function GestionarSedesPage() {
       
       if (!roomsData.success) return;
       
-      // Filtrar sedes que tienen rooms
+      // Filtrar sedes que tienen rooms, excluyendo "Otros" y "Satélites"
       const sedesConRooms = groupsData.groups.filter((group: any) => 
+        group.name !== 'Otros' && 
+        group.name !== 'Satélites' &&
         roomsData.rooms?.some((room: any) => room.group_id === group.id)
       );
       
@@ -158,13 +160,18 @@ export default function GestionarSedesPage() {
       console.log('🔍 [FRONTEND] Respuesta de la API:', groupsData);
       
       if (groupsData.success) {
-        setGroups(groupsData.groups || []);
+        // Filtrar grupos excluyendo "Otros" y "Satélites"
+        const filteredGroups = (groupsData.groups || []).filter((group: any) => 
+          group.name !== 'Otros' && group.name !== 'Satélites'
+        );
+        
+        setGroups(filteredGroups);
         setUserRole(groupsData.userRole || 'admin');
         
         // Si es admin y tiene grupos, seleccionar el primero por defecto
-        if (groupsData.userRole === 'admin' && groupsData.groups && groupsData.groups.length > 0) {
-          setSelectedSedeForAdmin(groupsData.groups[0].id);
-          setSelectedGroup(groupsData.groups[0].id); // También para el modal de crear room
+        if (groupsData.userRole === 'admin' && filteredGroups.length > 0) {
+          setSelectedSedeForAdmin(filteredGroups[0].id);
+          setSelectedGroup(filteredGroups[0].id); // También para el modal de crear room
         }
       } else {
         setError('Error cargando grupos: ' + (groupsData.error || 'Error desconocido'));
