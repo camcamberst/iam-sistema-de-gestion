@@ -29,7 +29,8 @@ export async function GET(
         name,
         email,
         role,
-        is_active
+        is_active,
+        groups
       `)
       .eq('role', 'modelo')
       .eq('is_active', true);
