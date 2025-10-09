@@ -250,6 +250,48 @@ export async function POST(request: NextRequest) {
         console.log('✅ [API] Grupos asignados:', assignedGroups.length);
         console.log('🔍 [DEBUG] Grupos asignados:', JSON.stringify(assignedGroups, null, 2));
         
+        // 3.1. REGLA AUTOMÁTICA: Si es admin y se le asignó un grupo que cumple ROOM + Jornada,
+        // crear automáticamente la sede con un room por defecto
+        if (role === 'admin' && assignedGroups.length > 0) {
+          console.log('🏗️ [API] Verificando si se debe crear sede automáticamente...');
+          
+          for (const group of assignedGroups) {
+            // Verificar si este grupo ya tiene rooms
+            const { data: existingRooms, error: roomsError } = await supabase
+              .from('group_rooms')
+              .select('id, room_name')
+              .eq('group_id', group.id);
+              
+            if (roomsError) {
+              console.error(`❌ [API] Error verificando rooms para ${group.name}:`, roomsError);
+              continue;
+            }
+            
+            // Si no tiene rooms, crear uno por defecto
+            if (!existingRooms || existingRooms.length === 0) {
+              console.log(`🏗️ [API] Creando room por defecto para ${group.name}...`);
+              
+              const { data: newRoom, error: createRoomError } = await supabase
+                .from('group_rooms')
+                .insert({
+                  group_id: group.id,
+                  room_name: 'ROOM01',
+                  is_active: true
+                })
+                .select()
+                .single();
+                
+              if (createRoomError) {
+                console.error(`❌ [API] Error creando room para ${group.name}:`, createRoomError);
+              } else {
+                console.log(`✅ [API] Room creado automáticamente: ${newRoom.room_name} para ${group.name}`);
+              }
+            } else {
+              console.log(`ℹ️ [API] ${group.name} ya tiene ${existingRooms.length} rooms configurados`);
+            }
+          }
+        }
+        
         // Verificación post-asignación: consultar grupos del usuario recién creado
         console.log('🔍 [DEBUG] Verificando grupos asignados en BD...');
         const { data: verifyGroups, error: verifyError } = await supabase

@@ -35,6 +35,8 @@ export default function GestionarSedesPage() {
   const [selectedSedeForAdmin, setSelectedSedeForAdmin] = useState<string>('');
   const [selectedSedeForSuperAdmin, setSelectedSedeForSuperAdmin] = useState<string>('');
   const [sedesConRoomsJornadas, setSedesConRoomsJornadas] = useState<any[]>([]);
+  const [selectedSedeInfo, setSelectedSedeInfo] = useState<any>(null);
+  const [sedeAdminInfo, setSedeAdminInfo] = useState<any>(null);
   
   // Estados para configuración de rooms
   const [showRoomConfig, setShowRoomConfig] = useState(false);
@@ -88,6 +90,40 @@ export default function GestionarSedesPage() {
       setSedesConRoomsJornadas(sedesFiltradas);
     } catch (error) {
       console.error('Error cargando sedes con rooms y jornadas:', error);
+    }
+  };
+
+  const loadSedeInfo = async (sedeId: string) => {
+    try {
+      // Obtener información de la sede
+      const sede = sedesConRoomsJornadas.find(s => s.id === sedeId);
+      if (!sede) return;
+
+      // Obtener rooms de esta sede
+      const roomsResponse = await fetch('/api/groups/rooms');
+      const roomsData = await roomsResponse.json();
+      
+      if (roomsData.success) {
+        const sedeRooms = roomsData.rooms.filter((room: any) => room.group_id === sedeId);
+        setSelectedSedeInfo({
+          ...sede,
+          rooms: sedeRooms
+        });
+      }
+
+      // Obtener información del admin asignado a esta sede
+      const usersResponse = await fetch('/api/users');
+      const usersData = await usersResponse.json();
+      
+      if (usersData.success) {
+        const adminAsignado = usersData.users.find((user: any) => 
+          user.role === 'admin' && 
+          user.user_groups?.some((ug: any) => ug.groups.id === sedeId)
+        );
+        setSedeAdminInfo(adminAsignado || null);
+      }
+    } catch (error) {
+      console.error('Error cargando información de la sede:', error);
     }
   };
 
@@ -483,6 +519,12 @@ export default function GestionarSedesPage() {
                   onChange={(value) => {
                     setSelectedSedeForSuperAdmin(value);
                     setSelectedGroup(value);
+                    if (value) {
+                      loadSedeInfo(value);
+                    } else {
+                      setSelectedSedeInfo(null);
+                      setSedeAdminInfo(null);
+                    }
                   }}
                   placeholder="Selecciona una sede para gestionar"
                 />
@@ -554,6 +596,72 @@ export default function GestionarSedesPage() {
             )}
           </div>
         </div>
+
+        {/* Información de la Sede Seleccionada */}
+        {selectedSedeInfo && (
+          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h2 className="text-xl font-semibold text-gray-900">{selectedSedeInfo.name}</h2>
+                <p className="text-sm text-gray-500 mt-1">
+                  {selectedSedeInfo.rooms?.length || 0} rooms configurados
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <span className="text-sm text-gray-600">Activa</span>
+              </div>
+            </div>
+
+            {/* Información del Admin Asignado */}
+            {sedeAdminInfo ? (
+              <div className="bg-gray-50 rounded-lg p-4 mb-6">
+                <h3 className="text-sm font-medium text-gray-900 mb-3">Admin Asignado</h3>
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="text-blue-600 font-medium text-sm">
+                      {sedeAdminInfo.name?.charAt(0) || 'A'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">{sedeAdminInfo.name}</p>
+                    <p className="text-xs text-gray-500">{sedeAdminInfo.email}</p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-yellow-50 rounded-lg p-4 mb-6">
+                <div className="flex items-center space-x-2">
+                  <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
+                  <p className="text-sm text-yellow-800">No hay admin asignado a esta sede</p>
+                </div>
+              </div>
+            )}
+
+            {/* Rooms de la Sede */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-900 mb-3">Rooms Disponibles</h3>
+              {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {selectedSedeInfo.rooms.map((room: any) => (
+                    <button
+                      key={room.id}
+                      onClick={() => handleRoomClick(room)}
+                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      {room.room_name}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="bg-gray-50 rounded-lg p-4 text-center">
+                  <p className="text-sm text-gray-500">No hay rooms configurados en esta sede</p>
+                  <p className="text-xs text-gray-400 mt-1">Usa el botón "Crear Room" para agregar rooms</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Lista de Sedes - OCULTA: La información está en el dropdown "Tus Sedes" */}
         {/* 
