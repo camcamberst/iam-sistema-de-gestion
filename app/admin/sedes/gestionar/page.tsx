@@ -501,6 +501,15 @@ export default function GestionarSedesPage() {
   const deleteModelAssignment = async () => {
     if (!assignmentToDelete) return;
 
+    // Prevenir múltiples llamadas simultáneas
+    if (assignmentToDelete.isDeleting) {
+      console.log('⚠️ [FRONTEND] Eliminación ya en progreso, ignorando...');
+      return;
+    }
+
+    // Marcar como en proceso de eliminación
+    setAssignmentToDelete({ ...assignmentToDelete, isDeleting: true });
+
     try {
       console.log('🔍 [FRONTEND] Eliminando asignación:', {
         assignment_id: assignmentToDelete.id,
@@ -1356,9 +1365,14 @@ export default function GestionarSedesPage() {
                   </button>
                   <button
                     onClick={deleteModelAssignment}
-                    className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 text-white py-3 px-4 rounded-xl hover:from-red-700 hover:to-orange-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    disabled={assignmentToDelete?.isDeleting}
+                    className={`flex-1 py-3 px-4 rounded-xl transition-all duration-200 font-medium shadow-lg ${
+                      assignmentToDelete?.isDeleting
+                        ? 'bg-gray-400 text-gray-200 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-700 hover:to-orange-700 hover:shadow-xl transform hover:-translate-y-0.5'
+                    }`}
                   >
-                    Eliminar
+                    {assignmentToDelete?.isDeleting ? 'Eliminando...' : 'Eliminar'}
                   </button>
                 </div>
               </div>
