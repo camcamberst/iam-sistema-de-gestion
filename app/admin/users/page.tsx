@@ -103,7 +103,7 @@ export default function UsersListPage() {
     setSearchFilters(filters);
     
     // Solo mostrar resultados si hay al menos un filtro activo
-    const hasActiveFilters = query.trim() || filters.role || filters.group || filters.status || filters.login_status || filters.creation_period;
+    const hasActiveFilters = query.trim() || filters.role || filters.group || filters.status;
     
     if (!hasActiveFilters) {
       setFilteredUsers([]);
@@ -138,50 +138,6 @@ export default function UsersListPage() {
       filtered = filtered.filter(user => user.is_active === isActive);
     }
 
-    // Login status filter
-    if (filters.login_status) {
-      const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-      
-      filtered = filtered.filter(user => {
-        if (filters.login_status === 'never') {
-          return !user.last_login;
-        } else if (filters.login_status === 'recent') {
-          return user.last_login && new Date(user.last_login) > thirtyDaysAgo;
-        } else if (filters.login_status === 'old') {
-          return user.last_login && new Date(user.last_login) <= thirtyDaysAgo;
-        }
-        return true;
-      });
-    }
-
-    // Creation period filter
-    if (filters.creation_period) {
-      const now = new Date();
-      let cutoffDate: Date;
-      
-      switch (filters.creation_period) {
-        case 'week':
-          cutoffDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-          break;
-        case 'month':
-          cutoffDate = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-          break;
-        case 'quarter':
-          cutoffDate = new Date(now.getTime() - 90 * 24 * 60 * 60 * 1000);
-          break;
-        case 'old':
-          cutoffDate = new Date(now.getTime() - 180 * 24 * 60 * 60 * 1000);
-          filtered = filtered.filter(user => new Date(user.created_at) <= cutoffDate);
-          setFilteredUsers(filtered);
-          return;
-        default:
-          cutoffDate = now;
-      }
-      
-      filtered = filtered.filter(user => new Date(user.created_at) >= cutoffDate);
-    }
-
     setFilteredUsers(filtered);
   };
 
@@ -189,7 +145,7 @@ export default function UsersListPage() {
   const searchFiltersConfig = [
     {
       id: 'role',
-      label: 'Rol del Usuario',
+      label: 'Rol',
       value: searchFilters.role || '',
       options: [
         { label: 'Super Admin', value: 'super_admin' },
@@ -199,7 +155,7 @@ export default function UsersListPage() {
     },
     {
       id: 'group',
-      label: 'Sede/Grupo',
+      label: 'Grupo',
       value: searchFilters.group || '',
       options: groups.map(group => ({
         label: group.name,
@@ -208,32 +164,11 @@ export default function UsersListPage() {
     },
     {
       id: 'status',
-      label: 'Estado de Cuenta',
+      label: 'Estado',
       value: searchFilters.status || '',
       options: [
         { label: 'Activo', value: 'active' },
         { label: 'Inactivo', value: 'inactive' }
-      ]
-    },
-    {
-      id: 'login_status',
-      label: 'Actividad Reciente',
-      value: searchFilters.login_status || '',
-      options: [
-        { label: 'Con acceso reciente', value: 'recent' },
-        { label: 'Sin acceso reciente', value: 'old' },
-        { label: 'Nunca ha ingresado', value: 'never' }
-      ]
-    },
-    {
-      id: 'creation_period',
-      label: 'Período de Creación',
-      value: searchFilters.creation_period || '',
-      options: [
-        { label: 'Última semana', value: 'week' },
-        { label: 'Último mes', value: 'month' },
-        { label: 'Últimos 3 meses', value: 'quarter' },
-        { label: 'Más de 6 meses', value: 'old' }
       ]
     }
   ];
