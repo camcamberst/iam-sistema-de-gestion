@@ -449,22 +449,52 @@ export default function UsersListPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left text-xs table-fixed">
-                  <thead className="border-b border-gray-200/50 bg-gray-50/50 backdrop-blur-sm">
+                  <thead className="border-b border-white/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 backdrop-blur-sm">
                     <tr>
-                      <th className="px-4 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Usuario</th>
-                      <th className="px-4 py-3 w-[28%] text-gray-600 font-medium text-xs uppercase tracking-wide">Email</th>
-                      <th className="px-4 py-3 w-[10%] text-gray-600 font-medium text-xs uppercase tracking-wide">Rol</th>
-                      <th className="px-4 py-3 w-[20%] text-gray-600 font-medium text-xs uppercase tracking-wide">Grupos</th>
-                      <th className="px-4 py-3 w-[8%] text-gray-600 font-medium text-xs uppercase tracking-wide">Estado</th>
-                      <th className="px-4 py-3 w-[6%] text-gray-600 font-medium text-xs uppercase tracking-wide">Acciones</th>
+                      <th className="px-4 py-4 w-[28%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
+                          <span>Usuario</span>
+                        </div>
+                      </th>
+                      <th className="px-4 py-4 w-[28%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
+                          <span>Email</span>
+                        </div>
+                      </th>
+                      <th className="px-4 py-4 w-[10%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
+                          <span>Rol</span>
+                        </div>
+                      </th>
+                      <th className="px-4 py-4 w-[20%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
+                          <span>Grupos</span>
+                        </div>
+                      </th>
+                      <th className="px-4 py-4 w-[8%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
+                          <span>Estado</span>
+                        </div>
+                      </th>
+                      <th className="px-4 py-4 w-[6%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
+                          <span>Acciones</span>
+                        </div>
+                      </th>
                     </tr>
                   </thead>
-                  <tbody className="bg-white/50 divide-y divide-gray-200/50">
+                  <tbody className="bg-white/30 backdrop-blur-sm divide-y divide-white/20">
                     {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-gray-100/50 hover:bg-white/80 transition-colors h-12">
+                      <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-12 group">
                         <td className="px-4 py-2">
                           <div className="flex items-center space-x-2 overflow-hidden">
-                            <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-slate-700 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-none">
+                            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-semibold flex-none shadow-sm border border-white/20">
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -475,12 +505,12 @@ export default function UsersListPage() {
                         </td>
                         <td className="px-4 py-2 text-gray-800 truncate max-w-[220px] text-xs" title={user.email}>{user.email}</td>
                         <td className="px-4 py-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap border ${
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap border shadow-sm backdrop-blur-sm ${
                             user.role === 'super_admin'
-                              ? 'bg-gray-900/80 text-white border-gray-700/50'
+                              ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-gray-600/30'
                               : user.role === 'admin'
-                                ? 'bg-blue-100/80 text-blue-800 border-blue-200/50'
-                                : 'bg-green-100/80 text-green-800 border-green-200/50'
+                                ? 'bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-blue-200/50'
+                                : 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200/50'
                           }`}>
                             {user.role.replace('_', ' ').toUpperCase()}
                           </span>
@@ -489,7 +519,7 @@ export default function UsersListPage() {
                           {user.groups.length > 0 ? (
                             <div className="flex items-center gap-1 overflow-hidden">
                               {user.groups.slice(0,2).map((group) => (
-                                <span key={group.id} className="bg-gray-100/80 text-gray-700 px-2 py-1 rounded text-xs whitespace-nowrap border border-gray-200/50">
+                                <span key={group.id} className="bg-gradient-to-r from-gray-50 to-slate-50 text-gray-700 px-2 py-1 rounded-md text-xs whitespace-nowrap border border-gray-200/30 shadow-sm backdrop-blur-sm">
                                   {group.name}
                                 </span>
                               ))}
@@ -507,21 +537,21 @@ export default function UsersListPage() {
                           )}
                         </td>
                         <td className="px-4 py-2">
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium border ${user.is_active ? 'bg-green-100/80 text-green-800 border-green-200/50' : 'bg-gray-100/80 text-gray-700 border-gray-200/50'}`}>
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-600 border-gray-200/50'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
                          <td className="px-4 py-2">
-                           <div className="flex space-x-1">
+                           <div className="flex space-x-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="px-2 py-1 text-xs rounded-md bg-blue-50/80 border border-blue-200/50 text-blue-700 hover:bg-blue-100/80 transition-all duration-300"
+                              className="px-2.5 py-1.5 text-xs rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/30 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
-                              className="px-2 py-1 text-xs rounded-md bg-red-50/80 border border-red-200/50 text-red-600 hover:bg-red-100/80 transition-all duration-300"
+                              className="px-2.5 py-1.5 text-xs rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/30 text-red-700 hover:from-red-100 hover:to-rose-100 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                             >
                               Eliminar
                             </button>
