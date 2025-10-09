@@ -86,30 +86,9 @@ export default function GestionarSedesPage() {
         roomsData.rooms?.some((room: any) => room.group_id === group.id)
       );
       
-      // Verificar que tengan jornadas configuradas (rooms con asignaciones)
-      const sedesConJornadas = await Promise.all(
-        sedesConRooms.map(async (sede: any) => {
-          // Obtener rooms de esta sede
-          const sedeRooms = roomsData.rooms.filter((room: any) => room.group_id === sede.id);
-          
-          // Verificar si alguna room tiene asignaciones
-          for (const room of sedeRooms) {
-            try {
-              const assignmentsResponse = await fetch(`/api/rooms/${room.id}/assignments`);
-              const assignmentsData = await assignmentsResponse.json();
-              
-              if (assignmentsData.success && assignmentsData.assignments?.length > 0) {
-                return sede;
-              }
-            } catch (error) {
-              console.error(`Error verificando asignaciones para room ${room.id}:`, error);
-            }
-          }
-          return null;
-        })
-      );
-      
-      const sedesFiltradas = sedesConJornadas.filter(sede => sede !== null);
+      // Para Super Admin, mostrar todas las sedes que tienen rooms configurados
+      // (no necesariamente con asignaciones activas)
+      const sedesFiltradas = sedesConRooms;
       setSedesConRoomsJornadas(sedesFiltradas);
     } catch (error) {
       console.error('Error cargando sedes con rooms y jornadas:', error);
