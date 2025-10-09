@@ -451,41 +451,23 @@ export default function UsersListPage() {
                 <table className="min-w-full text-left text-xs table-fixed">
                   <thead className="border-b border-white/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 backdrop-blur-sm">
                     <tr>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
-                          <span>Usuario</span>
-                        </div>
+                      <th className="px-4 py-4 w-[28%] text-gray-800 font-bold text-sm uppercase tracking-widest">
+                        Usuario
                       </th>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
-                          <span>Email</span>
-                        </div>
+                      <th className="px-4 py-4 w-[28%] text-gray-800 font-bold text-sm uppercase tracking-widest">
+                        Email
                       </th>
-                      <th className="px-4 py-4 w-[10%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
-                          <span>Rol</span>
-                        </div>
+                      <th className="px-4 py-4 w-[10%] text-gray-800 font-bold text-sm uppercase tracking-widest">
+                        Rol
                       </th>
-                      <th className="px-4 py-4 w-[20%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
-                          <span>Grupos</span>
-                        </div>
+                      <th className="px-4 py-4 w-[20%] text-gray-800 font-bold text-sm uppercase tracking-widest">
+                        Grupos
                       </th>
-                      <th className="px-4 py-4 w-[8%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
-                          <span>Estado</span>
-                        </div>
+                      <th className="px-4 py-4 w-[8%] text-gray-800 font-bold text-sm uppercase tracking-widest">
+                        Estado
                       </th>
-                      <th className="px-4 py-4 w-[6%] text-gray-700 font-semibold text-xs uppercase tracking-wider">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-3 h-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm"></div>
-                          <span>Acciones</span>
-                        </div>
+                      <th className="px-4 py-4 w-[6%] text-gray-800 font-bold text-sm uppercase tracking-widest">
+                        Acciones
                       </th>
                     </tr>
                   </thead>
