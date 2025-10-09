@@ -20,69 +20,30 @@ export async function GET(
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Obtener modelos del grupo específico
-    // Como la columna groups no existe, vamos a filtrar por asignaciones existentes
-    // Solo mostrar modelos que ya están asignados a rooms de este grupo
-    
-    // 1. Obtener rooms del grupo
-    const { data: groupRooms, error: roomsError } = await supabase
-      .from('group_rooms')
-      .select('id')
-      .eq('group_id', groupId);
+    // Obtener TODAS las modelos disponibles para asignación
+    // (no solo las ya asignadas)
+    const { data: allModels, error: modelsError } = await supabase
+      .from('users')
+      .select(`
+        id,
+        name,
+        email,
+        role,
+        is_active
+      `)
+      .eq('role', 'modelo')
+      .eq('is_active', true)
+      .order('name', { ascending: true });
 
-    if (roomsError) {
-      console.error('Error obteniendo rooms del grupo:', roomsError);
+    if (modelsError) {
+      console.error('Error obteniendo modelos:', modelsError);
       return NextResponse.json(
-        { success: false, error: 'Error obteniendo rooms del grupo' },
+        { success: false, error: 'Error obteniendo modelos' },
         { status: 500 }
       );
     }
 
-    const roomIds = groupRooms?.map(room => room.id) || [];
-
-    // 2. Obtener modelos que están asignados a rooms de este grupo
-    const { data: assignments, error: assignmentsError } = await supabase
-      .from('modelo_assignments')
-      .select('model_id')
-      .in('room_id', roomIds)
-      .eq('is_active', true);
-
-    if (assignmentsError) {
-      console.error('Error obteniendo asignaciones:', assignmentsError);
-      return NextResponse.json(
-        { success: false, error: 'Error obteniendo asignaciones' },
-        { status: 500 }
-      );
-    }
-
-    const assignedModelIds = assignments?.map(a => a.model_id) || [];
-
-    // 3. Obtener información de los modelos asignados
-    let models: any[] = [];
-    if (assignedModelIds.length > 0) {
-      const { data: assignedModels, error: modelsError } = await supabase
-        .from('users')
-        .select(`
-          id,
-          name,
-          email,
-          role,
-          is_active
-        `)
-        .in('id', assignedModelIds)
-        .eq('role', 'modelo')
-        .eq('is_active', true);
-
-      if (modelsError) {
-        console.error('Error obteniendo modelos asignados:', modelsError);
-        return NextResponse.json(
-          { success: false, error: 'Error obteniendo modelos asignados' },
-          { status: 500 }
-        );
-      }
-
-      models = assignedModels || [];
-    }
+    const models = allModels || [];
 
     console.log(`✅ [API] Modelos encontrados para grupo ${groupId}:`, models?.length || 0);
 
