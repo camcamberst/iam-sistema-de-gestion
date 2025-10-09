@@ -251,9 +251,9 @@ export default function GestionarSedesPage() {
       setRoomConfigError(''); // Limpiar mensajes previos
       setRoomConfigSuccess(''); // Limpiar mensajes previos
       
-      // Cargar asignaciones del room
+      // Cargar asignaciones del room usando nueva API
       console.log('🔍 [FRONTEND] Cargando asignaciones para room ID:', room.id);
-      const response = await fetch(`/api/rooms/${room.id}/assignments`);
+      const response = await fetch(`/api/room-assignments?roomId=${room.id}`);
       const data = await response.json();
       
       console.log('🔍 [FRONTEND] Respuesta del endpoint:', data);
@@ -299,8 +299,9 @@ export default function GestionarSedesPage() {
   const handleModelSelect = async (model: any) => {
     setSelectedModel(model);
     
-    // Verificar si la modelo ya tiene asignaciones
+    // Verificar si la modelo ya tiene asignaciones usando nueva API
     try {
+      // Obtener todas las asignaciones de la modelo
       const response = await fetch(`/api/models/${model.id}/assignments`);
       const data = await response.json();
       
@@ -328,28 +329,26 @@ export default function GestionarSedesPage() {
   };
 
   // NUEVA FUNCIÓN: Recargar solo las asignaciones del room (sin cerrar modal)
-  const reloadRoomAssignments = async (room: Room, delay: number = 500) => {
+  const reloadRoomAssignments = async (room: Room, delay: number = 0) => {
     try {
-      // Pequeño delay para asegurar que la base de datos se haya actualizado
+      // Delay opcional para casos específicos
       if (delay > 0) {
         console.log(`⏳ [FRONTEND] Esperando ${delay}ms para sincronización...`);
         await new Promise(resolve => setTimeout(resolve, delay));
       }
       
       console.log('🔍 [FRONTEND] Recargando asignaciones para room ID:', room.id);
-      const response = await fetch(`/api/rooms/${room.id}/assignments`);
+      const response = await fetch(`/api/room-assignments?roomId=${room.id}`);
       const data = await response.json();
       
       console.log('🔍 [FRONTEND] Respuesta del endpoint:', data);
       console.log('🔍 [FRONTEND] Asignaciones raw:', data.assignments);
       
       if (data.success) {
-        // FILTRAR SOLO ASIGNACIONES ACTIVAS para evitar mostrar asignaciones eliminadas
-        const activeAssignments = (data.assignments || []).filter((assignment: any) => assignment.is_active === true);
-        setRoomAssignments(activeAssignments);
-        console.log('🔍 [FRONTEND] Asignaciones totales recibidas:', data.assignments?.length || 0);
-        console.log('🔍 [FRONTEND] Asignaciones activas filtradas:', activeAssignments.length);
-        console.log('🔍 [FRONTEND] Estado actualizado con:', activeAssignments);
+        // Nueva API ya devuelve solo asignaciones válidas (no hay is_active)
+        setRoomAssignments(data.assignments || []);
+        console.log('🔍 [FRONTEND] Asignaciones recibidas:', data.assignments?.length || 0);
+        console.log('🔍 [FRONTEND] Estado actualizado con:', data.assignments);
       } else {
         console.error('❌ [FRONTEND] Error recargando asignaciones:', data.error);
         setRoomAssignments([]);
@@ -360,7 +359,7 @@ export default function GestionarSedesPage() {
     }
   };
 
-  // NUEVA FUNCIÓN: Asignar modelo (mover o doblar)
+  // NUEVA FUNCIÓN: Asignar modelo (assign o move)
   const assignModel = async (model: any, action: 'move' | 'assign') => {
     try {
       console.log('🔍 [FRONTEND] Asignando modelo:', {
@@ -372,15 +371,25 @@ export default function GestionarSedesPage() {
         action: action
       });
 
-      const response = await fetch('/api/assignments', {
+      // Preparar payload para nueva API
+      const payload: any = {
+        action: action,
+        model_id: model.id,
+        room_id: selectedRoom?.id,
+        jornada: selectedJornada
+      };
+
+      // Si es 'move', necesitamos datos de origen (de conflictInfo)
+      if (action === 'move' && conflictInfo?.existingAssignments?.length > 0) {
+        const existingAssignment = conflictInfo.existingAssignments[0];
+        payload.from_room_id = existingAssignment.room_id;
+        payload.from_jornada = existingAssignment.jornada;
+      }
+
+      const response = await fetch('/api/room-assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          model_id: model.id,
-          room_id: selectedRoom?.id,
-          jornada: selectedJornada,
-          action: action // 'move' o 'assign'
-        })
+        body: JSON.stringify(payload)
       });
       
       const data = await response.json();
@@ -393,7 +402,7 @@ export default function GestionarSedesPage() {
         setRoomConfigSuccess(`Modelo ${action === 'move' ? 'movida' : 'asignada'} exitosamente`);
         setRoomConfigError(''); // Limpiar errores previos
         
-        // Recargar solo las asignaciones del room (sin cerrar el modal)
+        // Recargar asignaciones inmediatamente (sin delay)
         if (selectedRoom) {
           console.log('🔍 [FRONTEND] Llamando a reloadRoomAssignments...');
           await reloadRoomAssignments(selectedRoom);
@@ -425,20 +434,11 @@ export default function GestionarSedesPage() {
 
   // NUEVA FUNCIÓN: Eliminar asignación de modelo (ejecutada después de confirmación)
   const deleteModelAssignment = async () => {
-    if (!assignmentToDelete) return;
+    if (!assignmentToDelete || !selectedRoom) return;
 
     // Prevenir múltiples llamadas simultáneas
     if (assignmentToDelete.isDeleting) {
       console.log('⚠️ [FRONTEND] Eliminación ya en progreso, ignorando...');
-      return;
-    }
-
-    // VALIDACIÓN ESTRICTA: Verificar que la asignación esté realmente activa
-    if (!assignmentToDelete.is_active) {
-      console.log('⚠️ [FRONTEND] Asignación ya está inactiva, no se puede eliminar');
-      setRoomConfigError('Esta asignación ya está eliminada');
-      setShowDeleteConfirm(false);
-      setAssignmentToDelete(null);
       return;
     }
 
@@ -447,17 +447,21 @@ export default function GestionarSedesPage() {
 
     try {
       console.log('🔍 [FRONTEND] Eliminando asignación:', {
-        assignment_id: assignmentToDelete.id,
-        model_name: assignmentToDelete.modelo_name,
-        room_name: selectedRoom?.room_name,
+        model_id: assignmentToDelete.model_id,
+        model_name: assignmentToDelete.model_name,
+        room_id: selectedRoom.id,
+        room_name: selectedRoom.room_name,
         jornada: assignmentToDelete.jornada
       });
 
-      const response = await fetch('/api/assignments', {
-        method: 'DELETE',
+      const response = await fetch('/api/room-assignments', {
+        method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          assignment_id: assignmentToDelete.id
+          action: 'remove',
+          model_id: assignmentToDelete.model_id,
+          room_id: selectedRoom.id,
+          jornada: assignmentToDelete.jornada
         })
       });
       
@@ -470,18 +474,15 @@ export default function GestionarSedesPage() {
         // Mostrar mensaje de éxito en el modal de configuración
         setRoomConfigSuccess(`Modelo eliminada exitosamente de ${assignmentToDelete.jornada}`);
         setRoomConfigError(''); // Limpiar errores previos
+        
+        // Recargar asignaciones inmediatamente
+        console.log('🔄 [FRONTEND] Recargando asignaciones para sincronizar UI...');
+        await reloadRoomAssignments(selectedRoom);
+        console.log('✅ [FRONTEND] Sincronización completada');
       } else {
         console.error('❌ [FRONTEND] Error en eliminación:', data.error);
         setRoomConfigError('Error eliminando modelo: ' + data.error);
         setRoomConfigSuccess(''); // Limpiar mensajes de éxito previos
-      }
-      
-      // SIEMPRE recargar las asignaciones después de cualquier intento de eliminación
-      // Esto asegura que la UI refleje el estado real de la base de datos
-      if (selectedRoom) {
-        console.log('🔄 [FRONTEND] Recargando asignaciones para sincronizar UI...');
-        await reloadRoomAssignments(selectedRoom);
-        console.log('✅ [FRONTEND] Sincronización completada');
       }
     } catch (error) {
       console.error('❌ [FRONTEND] Error eliminando modelo:', error);
@@ -968,10 +969,10 @@ export default function GestionarSedesPage() {
                                 </div>
                                 <div>
                                   <p className="text-sm font-medium text-gray-900">
-                                    {assignment.modelo_name || 'Modelo no especificada'}
+                                    {assignment.model_name || 'Modelo no especificada'}
                                   </p>
                                   <p className="text-xs text-gray-500">
-                                    {assignment.modelo_email || 'Email no disponible'}
+                                    {assignment.model_email || 'Email no disponible'}
                                   </p>
                                 </div>
                               </div>
@@ -1187,7 +1188,7 @@ export default function GestionarSedesPage() {
                 
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 mb-4">
-                    ¿Estás seguro de que deseas eliminar a <strong>{assignmentToDelete.modelo_name}</strong> de la jornada <strong>{assignmentToDelete.jornada}</strong>?
+                    ¿Estás seguro de que deseas eliminar a <strong>{assignmentToDelete.model_name}</strong> de la jornada <strong>{assignmentToDelete.jornada}</strong>?
                   </p>
                   <div className="bg-gray-50 rounded-lg p-4">
                     <div className="flex items-center space-x-3">
@@ -1197,8 +1198,8 @@ export default function GestionarSedesPage() {
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{assignmentToDelete.modelo_name}</p>
-                        <p className="text-xs text-gray-500">{assignmentToDelete.modelo_email}</p>
+                        <p className="text-sm font-medium text-gray-900">{assignmentToDelete.model_name}</p>
+                        <p className="text-xs text-gray-500">{assignmentToDelete.model_email}</p>
                       </div>
                     </div>
                   </div>
