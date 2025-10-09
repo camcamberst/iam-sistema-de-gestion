@@ -112,6 +112,7 @@ export async function GET(request: NextRequest) {
         is_active: user.is_active,
         created_at: user.created_at,
         groups: userGroups,
+        user_groups: userGroups, // AGREGAR ESTA LÍNEA para compatibilidad con frontend
         // Campos de asignación (solo para modelos con asignaciones)
         jornada: activeAssignment?.jornada || undefined,
         room_id: activeAssignment?.room_id || undefined
