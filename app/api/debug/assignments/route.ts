@@ -52,15 +52,18 @@ export async function GET(request: NextRequest) {
         
       result.activeAssignments = { data: activeAssignments, error: activeError };
 
-      // Verificar duplicados
-      const { data: duplicates, error: duplicatesError } = await supabase
-        .from('modelo_assignments')
-        .select('model_id, room_id, jornada, is_active, COUNT(*)')
-        .eq('room_id', roomId)
-        .group('model_id, room_id, jornada, is_active')
-        .having('COUNT(*) > 1');
-        
-      result.duplicates = { data: duplicates, error: duplicatesError };
+      // Verificar duplicados manualmente
+      const duplicateCheck = allAssignments?.reduce((acc: any, assignment: any) => {
+        const key = `${assignment.model_id}-${assignment.jornada}`;
+        if (!acc[key]) {
+          acc[key] = [];
+        }
+        acc[key].push(assignment);
+        return acc;
+      }, {});
+      
+      const duplicates = Object.values(duplicateCheck || {}).filter((group: any) => group.length > 1);
+      result.duplicates = { data: duplicates, error: null };
     }
 
     return NextResponse.json({
