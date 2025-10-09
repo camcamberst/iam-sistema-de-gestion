@@ -10,6 +10,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
+  const [isClient, setIsClient] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     id: string;
     name: string;
@@ -22,6 +23,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
+
+  // Manejar hidratación del cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   const loadUser = async () => {
     try {
@@ -61,9 +67,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
   // ===========================================
   const getMenuItems = () => {
-    // Obtener el rol del usuario desde localStorage
-    const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    const userRole = userData ? JSON.parse(userData).role : 'modelo';
+    // Obtener el rol del usuario desde localStorage de forma segura
+    let userRole = 'modelo';
+    let userData = null;
+    
+    if (isClient) {
+      try {
+        userData = localStorage.getItem('user');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          userRole = parsed.role || 'modelo';
+        }
+      } catch (error) {
+        console.warn('Error parsing user data from localStorage:', error);
+        userRole = 'modelo';
+      }
+    }
     
     console.log('🔍 [MENU] User role:', userRole);
     console.log('🔍 [MENU] User data:', userData);
@@ -103,7 +122,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     if (userRole === 'super_admin' || userRole === 'admin') {
       baseItems.unshift({
         id: 'users',
-        label: 'Gestión Usarios',
+        label: 'Gestión Usuarios',
         href: '#', // Sin navegación directa
         subItems: [
           { label: 'Crear Usuario', href: '/admin/users/create' },

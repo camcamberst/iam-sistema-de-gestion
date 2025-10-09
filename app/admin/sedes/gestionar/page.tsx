@@ -57,6 +57,7 @@ export default function GestionarSedesPage() {
   const loadData = async () => {
     try {
       setLoading(true);
+      setError(''); // Limpiar errores previos
       
       // Obtener información del usuario desde el contexto global
       // Por ahora, vamos a simular que es un admin con solo Sede MP
@@ -74,36 +75,46 @@ export default function GestionarSedesPage() {
           userGroups: userGroups
         })
       });
+      
+      if (!groupsResponse.ok) {
+        throw new Error(`HTTP error! status: ${groupsResponse.status}`);
+      }
+      
       const groupsData = await groupsResponse.json();
       
       console.log('🔍 [FRONTEND] Respuesta de la API:', groupsData);
       
       if (groupsData.success) {
-        setGroups(groupsData.groups);
+        setGroups(groupsData.groups || []);
         setUserRole(groupsData.userRole || 'admin');
         
         // Si es admin y tiene grupos, seleccionar el primero por defecto
-        if (groupsData.userRole === 'admin' && groupsData.groups.length > 0) {
+        if (groupsData.userRole === 'admin' && groupsData.groups && groupsData.groups.length > 0) {
           setSelectedSedeForAdmin(groupsData.groups[0].id);
           setSelectedGroup(groupsData.groups[0].id); // También para el modal de crear room
         }
       } else {
-        setError('Error cargando grupos: ' + groupsData.error);
+        setError('Error cargando grupos: ' + (groupsData.error || 'Error desconocido'));
       }
 
       // Cargar rooms
       const roomsResponse = await fetch('/api/groups/rooms');
+      
+      if (!roomsResponse.ok) {
+        throw new Error(`HTTP error! status: ${roomsResponse.status}`);
+      }
+      
       const roomsData = await roomsResponse.json();
       
       if (roomsData.success) {
-        setRooms(roomsData.rooms);
+        setRooms(roomsData.rooms || []);
       } else {
-        setError('Error cargando rooms: ' + roomsData.error);
+        setError('Error cargando rooms: ' + (roomsData.error || 'Error desconocido'));
       }
 
     } catch (err) {
       console.error('Error cargando datos:', err);
-      setError('Error de conexión');
+      setError('Error de conexión: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
       setLoading(false);
     }
