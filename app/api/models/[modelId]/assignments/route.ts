@@ -32,7 +32,7 @@ export async function GET(
         group_rooms!inner(
           room_name,
           groups!inner(
-            name as group_name
+            name
           )
         )
       `)
@@ -52,7 +52,7 @@ export async function GET(
       id: assignment.id,
       room_id: assignment.room_id,
       room_name: assignment.group_rooms?.room_name || 'Room desconocido',
-      group_name: assignment.group_rooms?.groups?.group_name || 'Grupo desconocido',
+      group_name: assignment.group_rooms?.groups?.name || 'Grupo desconocido',
       jornada: assignment.jornada,
       assigned_at: assignment.assigned_at
     })) || [];
