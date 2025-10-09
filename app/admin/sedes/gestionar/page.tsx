@@ -35,6 +35,7 @@ export default function GestionarSedesPage() {
   const [selectedSede, setSelectedSede] = useState<string>('');
   const [availableSedes, setAvailableSedes] = useState<any[]>([]);
   const [selectedSedeInfo, setSelectedSedeInfo] = useState<any>(null);
+  const [sedeAdminInfo, setSedeAdminInfo] = useState<any>(null);
   
   // Estados para configuración de rooms
   const [showRoomConfig, setShowRoomConfig] = useState(false);
@@ -102,6 +103,54 @@ export default function GestionarSedesPage() {
           ...sede,
           rooms: sedeRooms
         });
+      }
+
+      // Obtener información del admin asignado a esta sede
+      const usersResponse = await fetch('/api/users');
+      const usersData = await usersResponse.json();
+      
+      if (usersData.success) {
+        console.log('🔍 [DEBUG] Buscando admin para sede:', sedeId);
+        console.log('🔍 [DEBUG] Todos los usuarios:', usersData.users.length);
+        
+        // Filtrar solo admins (no super_admins)
+        const admins = usersData.users.filter((user: any) => user.role === 'admin');
+        console.log('🔍 [DEBUG] Solo admins:', admins.length);
+        
+        // Buscar TODOS los admins asignados a esta sede específica
+        const adminsAsignados = admins.filter((user: any) => {
+          const tieneEstaSede = user.user_groups?.some((ug: any) => ug.id === sedeId);
+          console.log(`🔍 [DEBUG] Admin ${user.name}:`, {
+            user_groups: user.user_groups,
+            tieneEstaSede,
+            sedeId,
+            sedesAsignadas: user.user_groups?.length || 0
+          });
+          return tieneEstaSede;
+        });
+        
+        console.log('🔍 [DEBUG] Admins asignados a esta sede:', adminsAsignados.length);
+        
+        // REGLA INTELIGENTE: Si hay múltiples admins, elegir el que tenga menos sedes asignadas
+        let adminAsignado = null;
+        if (adminsAsignados.length > 0) {
+          if (adminsAsignados.length === 1) {
+            adminAsignado = adminsAsignados[0];
+            console.log('🔍 [DEBUG] Solo un admin asignado:', adminAsignado.name);
+          } else {
+            // Múltiples admins: elegir el que tenga menos sedes asignadas
+            adminAsignado = adminsAsignados.reduce((menor: any, actual: any) => {
+              const sedesMenor = menor.user_groups?.length || 0;
+              const sedesActual = actual.user_groups?.length || 0;
+              console.log(`🔍 [DEBUG] Comparando: ${menor.name} (${sedesMenor} sedes) vs ${actual.name} (${sedesActual} sedes)`);
+              return sedesActual < sedesMenor ? actual : menor;
+            });
+            console.log('🔍 [DEBUG] Admin seleccionado (menos sedes):', adminAsignado.name, `(${adminAsignado.user_groups?.length || 0} sedes)`);
+          }
+        }
+        
+        console.log('🔍 [DEBUG] Admin final seleccionado:', adminAsignado);
+        setSedeAdminInfo(adminAsignado);
       }
     } catch (error) {
       console.error('Error cargando información de la sede:', error);
@@ -600,6 +649,7 @@ export default function GestionarSedesPage() {
                     loadSedeInfo(value);
                   } else {
                     setSelectedSedeInfo(null);
+                    setSedeAdminInfo(null);
                   }
                 }}
                 placeholder="Selecciona una sede para gestionar"
@@ -686,6 +736,44 @@ export default function GestionarSedesPage() {
                 </div>
               </div>
 
+            {/* Información del Admin Asignado */}
+            {sedeAdminInfo ? (
+              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-blue-200/30">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900">Admin Asignado</h3>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-semibold text-lg">
+                      {sedeAdminInfo.name?.charAt(0) || 'A'}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-gray-900">{sedeAdminInfo.name}</p>
+                    <p className="text-xs text-gray-600">{sedeAdminInfo.email}</p>
+                    <p className="text-xs text-blue-600 font-medium">
+                      {sedeAdminInfo.user_groups?.length || 0} sede{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''} asignada{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-yellow-200/30">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-yellow-800">No hay admin asignado a esta sede</p>
+                </div>
+              </div>
+            )}
 
             {/* Rooms de la Sede */}
             <div>
