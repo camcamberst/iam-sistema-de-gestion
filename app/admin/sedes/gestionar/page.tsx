@@ -87,6 +87,30 @@ export default function GestionarSedesPage() {
     }
   };
 
+  const loadRoomsData = async () => {
+    try {
+      console.log('🔄 [FRONTEND] Recargando solo rooms...');
+      
+      // Cargar rooms
+      const roomsResponse = await fetch('/api/groups/rooms');
+      
+      if (!roomsResponse.ok) {
+        throw new Error(`HTTP error! status: ${roomsResponse.status}`);
+      }
+      
+      const roomsData = await roomsResponse.json();
+      
+      if (roomsData.success) {
+        setRooms(roomsData.rooms || []);
+        console.log('✅ [FRONTEND] Rooms actualizados:', roomsData.rooms?.length || 0);
+      } else {
+        console.error('❌ [FRONTEND] Error cargando rooms:', roomsData.error);
+      }
+    } catch (err) {
+      console.error('❌ [FRONTEND] Error recargando rooms:', err);
+    }
+  };
+
   const loadSedeInfo = async (sedeId: string) => {
     try {
       // Obtener información de la sede
@@ -276,7 +300,12 @@ export default function GestionarSedesPage() {
         setSuccess('Room creado exitosamente');
         setNewRoomName('');
         setShowCreateRoom(false);
-        loadData(); // Recargar datos
+        
+        // Actualización optimizada: solo recargar rooms y sede info
+        await Promise.all([
+          loadRoomsData(), // Recargar lista de rooms
+          selectedSede ? loadSedeInfo(selectedSede) : Promise.resolve() // Actualizar info de sede seleccionada
+        ]);
       } else {
         setError('Error creando room: ' + result.error);
       }
