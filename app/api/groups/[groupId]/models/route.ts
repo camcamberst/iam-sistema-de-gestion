@@ -21,7 +21,8 @@ export async function GET(
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Obtener modelos del grupo específico
-    const { data: models, error } = await supabase
+    // Primero obtener todos los usuarios modelo activos
+    const { data: allModels, error: modelsError } = await supabase
       .from('users')
       .select(`
         id,
@@ -31,16 +32,21 @@ export async function GET(
         is_active
       `)
       .eq('role', 'modelo')
-      .eq('is_active', true)
-      .in('groups', [groupId]);
+      .eq('is_active', true);
 
-    if (error) {
-      console.error('Error obteniendo modelos del grupo:', error);
+    if (modelsError) {
+      console.error('Error obteniendo modelos:', modelsError);
       return NextResponse.json(
-        { success: false, error: 'Error obteniendo modelos del grupo' },
+        { success: false, error: 'Error obteniendo modelos' },
         { status: 500 }
       );
     }
+
+    // Filtrar modelos que pertenecen al grupo específico
+    const models = allModels?.filter(user => {
+      // Verificar si el usuario tiene el grupo en su array de groups
+      return user.groups && user.groups.includes(groupId);
+    }) || [];
 
     console.log(`✅ [API] Modelos encontrados para grupo ${groupId}:`, models?.length || 0);
 
