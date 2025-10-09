@@ -144,3 +144,49 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function DELETE(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { assignment_id } = body;
+
+    if (!assignment_id) {
+      return NextResponse.json(
+        { success: false, error: 'ID de asignación requerido' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    console.log(`🗑️ [API] Eliminando asignación ID: ${assignment_id}`);
+
+    // Desactivar la asignación (soft delete)
+    const { error: deactivateError } = await supabase
+      .from('modelo_assignments')
+      .update({ is_active: false })
+      .eq('id', assignment_id);
+
+    if (deactivateError) {
+      console.error('Error desactivando asignación:', deactivateError);
+      return NextResponse.json(
+        { success: false, error: 'Error eliminando asignación' },
+        { status: 500 }
+      );
+    }
+
+    console.log(`✅ [API] Asignación ${assignment_id} eliminada exitosamente`);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Asignación eliminada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error en DELETE /api/assignments:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno del servidor' },
+      { status: 500 }
+    );
+  }
+}

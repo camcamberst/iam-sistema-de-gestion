@@ -53,6 +53,10 @@ export default function GestionarSedesPage() {
   const [selectedModel, setSelectedModel] = useState<any>(null);
   const [conflictInfo, setConflictInfo] = useState<any>(null);
   
+  // Estados para confirmación de eliminación
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [assignmentToDelete, setAssignmentToDelete] = useState<any>(null);
+  
   const router = useRouter();
 
   // Cargar datos iniciales
@@ -484,6 +488,64 @@ export default function GestionarSedesPage() {
       console.error('❌ [FRONTEND] Error asignando modelo:', error);
       setRoomConfigError('Error de conexión');
       setRoomConfigSuccess(''); // Limpiar mensajes de éxito previos
+    }
+  };
+
+  // NUEVA FUNCIÓN: Mostrar confirmación de eliminación
+  const confirmDeleteAssignment = (assignment: any) => {
+    setAssignmentToDelete(assignment);
+    setShowDeleteConfirm(true);
+  };
+
+  // NUEVA FUNCIÓN: Eliminar asignación de modelo (ejecutada después de confirmación)
+  const deleteModelAssignment = async () => {
+    if (!assignmentToDelete) return;
+
+    try {
+      console.log('🔍 [FRONTEND] Eliminando asignación:', {
+        assignment_id: assignmentToDelete.id,
+        model_name: assignmentToDelete.modelo_name,
+        room_name: selectedRoom?.room_name,
+        jornada: assignmentToDelete.jornada
+      });
+
+      const response = await fetch('/api/assignments', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assignment_id: assignmentToDelete.id
+        })
+      });
+      
+      const data = await response.json();
+      console.log('🔍 [FRONTEND] Respuesta de eliminación:', data);
+      
+      if (data.success) {
+        console.log('✅ [FRONTEND] Eliminación exitosa, recargando asignaciones...');
+        
+        // Mostrar mensaje de éxito en el modal de configuración
+        setRoomConfigSuccess(`Modelo eliminada exitosamente de ${assignmentToDelete.jornada}`);
+        setRoomConfigError(''); // Limpiar errores previos
+        
+        // Recargar solo las asignaciones del room (sin cerrar el modal)
+        if (selectedRoom) {
+          console.log('🔍 [FRONTEND] Llamando a reloadRoomAssignments...');
+          await reloadRoomAssignments(selectedRoom);
+          console.log('✅ [FRONTEND] reloadRoomAssignments completado');
+        }
+      } else {
+        console.error('❌ [FRONTEND] Error en eliminación:', data.error);
+        setRoomConfigError('Error eliminando modelo: ' + data.error);
+        setRoomConfigSuccess(''); // Limpiar mensajes de éxito previos
+      }
+    } catch (error) {
+      console.error('❌ [FRONTEND] Error eliminando modelo:', error);
+      setRoomConfigError('Error de conexión');
+      setRoomConfigSuccess(''); // Limpiar mensajes de éxito previos
+    } finally {
+      // Cerrar modal de confirmación
+      setShowDeleteConfirm(false);
+      setAssignmentToDelete(null);
     }
   };
 
@@ -1055,10 +1117,10 @@ export default function GestionarSedesPage() {
                       {assignmentsForJornada.length > 0 ? (
                         <div className="space-y-2">
                           {assignmentsForJornada.map((assignment, index) => (
-                            <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3">
+                            <div key={index} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
                               <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                  <svg className="w-4 h-4 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                   </svg>
                                 </div>
@@ -1071,10 +1133,19 @@ export default function GestionarSedesPage() {
                                   </p>
                                 </div>
                               </div>
-                              <div className="text-right">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              <div className="flex items-center space-x-2">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                                   Asignada
                                 </span>
+                                <button
+                                  onClick={() => confirmDeleteAssignment(assignment)}
+                                  className="w-8 h-8 bg-red-100 hover:bg-red-200 rounded-full flex items-center justify-center transition-colors group"
+                                  title="Eliminar modelo de esta jornada"
+                                >
+                                  <svg className="w-4 h-4 text-red-600 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                </button>
                               </div>
                             </div>
                           ))}
@@ -1234,6 +1305,62 @@ export default function GestionarSedesPage() {
               <div className="mt-3 text-xs text-gray-500">
                 <p><strong>Mover:</strong> Desasigna de ubicación actual y asigna aquí</p>
                 <p><strong>Doblar:</strong> Mantiene ubicación actual y asigna también aquí</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmación de Eliminación */}
+        {showDeleteConfirm && assignmentToDelete && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
+              <div className="relative bg-white/90 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Confirmar Eliminación</h2>
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600 mb-4">
+                    ¿Estás seguro de que deseas eliminar a <strong>{assignmentToDelete.modelo_name}</strong> de la jornada <strong>{assignmentToDelete.jornada}</strong>?
+                  </p>
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-900">{assignmentToDelete.modelo_name}</p>
+                        <p className="text-xs text-gray-500">{assignmentToDelete.modelo_email}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setAssignmentToDelete(null);
+                    }}
+                    className="flex-1 bg-gray-100/80 backdrop-blur-sm text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200/80 transition-all duration-200 font-medium border border-gray-200/50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={deleteModelAssignment}
+                    className="flex-1 bg-gradient-to-r from-red-600 to-orange-600 text-white py-3 px-4 rounded-xl hover:from-red-700 hover:to-orange-700 transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    Eliminar
+                  </button>
+                </div>
               </div>
             </div>
           </div>
