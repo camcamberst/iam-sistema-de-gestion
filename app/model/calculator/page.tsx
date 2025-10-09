@@ -470,10 +470,10 @@ export default function ModelCalculatorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando calculadora...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando calculadora...</p>
         </div>
       </div>
     );
@@ -484,10 +484,17 @@ export default function ModelCalculatorPage() {
 
   if (!allowed) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4">Acceso Denegado</h1>
-          <p className="text-gray-600">No tienes permisos para acceder a esta página.</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
+        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <h1 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h1>
+            <p className="text-sm text-gray-600">No tienes permisos para acceder a esta página.</p>
+          </div>
         </div>
       </div>
     );
@@ -496,32 +503,52 @@ export default function ModelCalculatorPage() {
   
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
         {/* Header */}
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-semibold text-gray-900 mb-1">Mi Calculadora</h1>
-            <p className="text-gray-500 text-sm">
-              Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
-            </p>
-          </div>
-          <div className="flex items-center space-x-4">
-            <button
-              onClick={() => window.history.back()}
-              className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors duration-200 text-sm font-medium"
-            >
-              ← Volver
-            </button>
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      Mi Calculadora
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600">
+                      Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <button
+                    onClick={() => window.history.back()}
+                    className="px-3 py-2 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-white/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 shadow-sm hover:shadow-md"
+                  >
+                    ← Volver
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
         {/* Tasas Actualizadas - ESTILO APPLE REFINADO UNIFICADO */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4 hover:shadow-md transition-all duration-300">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-            <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
-            Tasas Actualizadas
-          </h2>
+        <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6 hover:shadow-lg transition-all duration-300">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold text-gray-900">Tasas Actualizadas</h2>
+          </div>
           <InfoCardGrid
             cards={[
               {
@@ -549,13 +576,15 @@ export default function ModelCalculatorPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="apple-card mb-6">
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-red-500 text-2xl">⚠️</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
               </div>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">Error al cargar calculadora</h4>
-              <p className="text-gray-500 mb-4">{error}</p>
+              <h4 className="text-base font-semibold text-gray-900 mb-2">Error al cargar calculadora</h4>
+              <p className="text-gray-500 mb-4 text-sm">{error}</p>
               <button
                 onClick={() => {
                   if (user?.id) {
@@ -564,7 +593,7 @@ export default function ModelCalculatorPage() {
                     loadCalculatorConfig(user.id);
                   }
                 }}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
               >
                 Reintentar
               </button>
@@ -573,8 +602,15 @@ export default function ModelCalculatorPage() {
         )}
 
         {/* Tabla de Calculadora */}
-        <div className="apple-card mb-4">
-          <h2 className="text-base font-semibold text-gray-900 mb-3">Calculadora de Ingresos</h2>
+        <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold text-gray-900">Calculadora de Ingresos</h2>
+          </div>
           
           {(() => {
             console.log('🔍 [RENDER] platforms.length:', platforms.length);
@@ -583,14 +619,16 @@ export default function ModelCalculatorPage() {
             return platforms.filter(p => p.enabled).length === 0;
           })() ? (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span className="text-gray-400 text-2xl">📊</span>
+              <div className="w-12 h-12 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
-              <h4 className="text-lg font-medium text-gray-900 mb-2">No hay plataformas habilitadas</h4>
-              <p className="text-gray-500 mb-4">
+              <h4 className="text-base font-semibold text-gray-900 mb-2">No hay plataformas habilitadas</h4>
+              <p className="text-gray-500 mb-4 text-sm">
                 Tu administrador aún no ha configurado las plataformas para tu calculadora.
               </p>
-              <p className="text-sm text-gray-400">
+              <p className="text-xs text-gray-400">
                 Contacta a tu administrador para que habilite las plataformas que usarás.
               </p>
             </div>
@@ -598,11 +636,11 @@ export default function ModelCalculatorPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">PLATAFORMAS</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">VALORES</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">DÓLARES</th>
-                    <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">COP MODELO</th>
+                  <tr className="border-b border-gray-200/50 bg-gray-50/50 backdrop-blur-sm">
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">PLATAFORMAS</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">VALORES</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">DÓLARES</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">COP MODELO</th>
                   </tr>
                 </thead>
                 <tbody>
