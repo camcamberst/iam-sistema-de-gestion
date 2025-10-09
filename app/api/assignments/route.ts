@@ -45,6 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificar si ya existe una asignación activa en el mismo room/jornada
+    // PERO solo si es de un modelo DIFERENTE (para permitir "doblar" del mismo modelo)
     const { data: existingAssignment, error: checkError } = await supabase
       .from('modelo_assignments')
       .select('id, model_id')
@@ -61,9 +62,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Solo rechazar si hay OTRA modelo (diferente) asignada en el mismo room/jornada
     if (existingAssignment && existingAssignment.length > 0) {
       return NextResponse.json(
         { success: false, error: 'Ya hay otra modelo asignada en este room y jornada' },
+        { status: 400 }
+      );
+    }
+
+    // Verificar si el mismo modelo ya está asignado en la misma jornada (evitar duplicados exactos)
+    const { data: sameModelAssignment, error: sameModelError } = await supabase
+      .from('modelo_assignments')
+      .select('id, model_id')
+      .eq('room_id', room_id)
+      .eq('jornada', jornada)
+      .eq('model_id', model_id)
+      .eq('is_active', true);
+
+    if (sameModelError) {
+      console.error('Error verificando asignación del mismo modelo:', sameModelError);
+      return NextResponse.json(
+        { success: false, error: 'Error verificando asignación del mismo modelo' },
+        { status: 500 }
+      );
+    }
+
+    // Si el mismo modelo ya está asignado en la misma jornada, rechazar
+    if (sameModelAssignment && sameModelAssignment.length > 0) {
+      return NextResponse.json(
+        { success: false, error: 'Esta modelo ya está asignada en esta jornada' },
         { status: 400 }
       );
     }

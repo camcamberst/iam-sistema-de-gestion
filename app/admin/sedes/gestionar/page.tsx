@@ -289,10 +289,12 @@ export default function GestionarSedesPage() {
       const data = await response.json();
       
       console.log('🔍 [FRONTEND] Respuesta del endpoint:', data);
+      console.log('🔍 [FRONTEND] Asignaciones raw:', data.assignments);
       
       if (data.success) {
         setRoomAssignments(data.assignments || []);
         console.log('🔍 [FRONTEND] Asignaciones recargadas:', data.assignments?.length || 0);
+        console.log('🔍 [FRONTEND] Estado actualizado con:', data.assignments);
       } else {
         console.error('❌ [FRONTEND] Error recargando asignaciones:', data.error);
         setRoomAssignments([]);
@@ -306,6 +308,15 @@ export default function GestionarSedesPage() {
   // NUEVA FUNCIÓN: Asignar modelo (mover o doblar)
   const assignModel = async (model: any, action: 'move' | 'assign') => {
     try {
+      console.log('🔍 [FRONTEND] Asignando modelo:', {
+        model_id: model.id,
+        model_name: model.name,
+        room_id: selectedRoom?.id,
+        room_name: selectedRoom?.room_name,
+        jornada: selectedJornada,
+        action: action
+      });
+
       const response = await fetch('/api/assignments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -318,15 +329,20 @@ export default function GestionarSedesPage() {
       });
       
       const data = await response.json();
+      console.log('🔍 [FRONTEND] Respuesta de asignación:', data);
       
       if (data.success) {
+        console.log('✅ [FRONTEND] Asignación exitosa, recargando asignaciones...');
+        
         // Mostrar mensaje de éxito en el modal de configuración
         setRoomConfigSuccess(`Modelo ${action === 'move' ? 'movida' : 'asignada'} exitosamente`);
         setRoomConfigError(''); // Limpiar errores previos
         
         // Recargar solo las asignaciones del room (sin cerrar el modal)
         if (selectedRoom) {
+          console.log('🔍 [FRONTEND] Llamando a reloadRoomAssignments...');
           await reloadRoomAssignments(selectedRoom);
+          console.log('✅ [FRONTEND] reloadRoomAssignments completado');
         }
         
         // Cerrar modales de selección y conflicto
@@ -335,6 +351,7 @@ export default function GestionarSedesPage() {
         setSelectedModel(null);
         setConflictInfo(null);
       } else {
+        console.error('❌ [FRONTEND] Error en asignación:', data.error);
         setRoomConfigError('Error asignando modelo: ' + data.error);
         setRoomConfigSuccess(''); // Limpiar mensajes de éxito previos
       }
