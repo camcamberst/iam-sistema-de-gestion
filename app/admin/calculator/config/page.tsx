@@ -265,10 +265,10 @@ export default function ConfigCalculatorPage() {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-lg text-gray-700">Cargando configuración...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Cargando configuración...</p>
         </div>
       </div>
     );
@@ -276,33 +276,66 @@ export default function ConfigCalculatorPage() {
 
   if (error) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="text-center p-8 bg-red-100 border border-red-400 text-red-700 rounded-md">
-          <h2 className="text-xl font-bold mb-4">Error</h2>
-          <p>{error}</p>
-          <button
-            onClick={loadData}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
-          >
-            Reintentar
-          </button>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
+        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+          <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-bold text-gray-900 mb-2">Error</h2>
+            <p className="text-sm text-gray-600 mb-4">{error}</p>
+            <button
+              onClick={loadData}
+              className="px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+            >
+              Reintentar
+            </button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Gestión de Calculadora</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6 pt-24">
+      <div className="mb-12">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+          <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  Gestión de Calculadora
+                </h1>
+                <p className="mt-1 text-sm text-gray-600">Configura las tasas y parámetros de cálculo para cada modelo</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Panel izquierdo: Filtros y Selección de modelo */}
         <div className="md:col-span-1">
-          <div className="apple-card space-y-6">
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 space-y-6">
             {/* Filtro por Grupo */}
             {availableGroups.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
+                <div className="flex items-center space-x-2 mb-4">
+                  <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-base font-semibold text-gray-900">Filtrar por Grupo</h2>
+                </div>
                 <AppleDropdown
                   options={[
                     { value: 'all', label: 'Todos los grupos' },
@@ -320,7 +353,14 @@ export default function ConfigCalculatorPage() {
             
             {/* Selección de Modelo */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h2 className="text-base font-semibold text-gray-900">Seleccionar Modelo</h2>
+              </div>
               <AppleDropdown
                 options={[
                   { value: '', label: 'Seleccionar modelo' },
@@ -338,8 +378,8 @@ export default function ConfigCalculatorPage() {
               
               {/* Información del grupo del modelo seleccionado */}
               {selectedModel && selectedModel.groups.length > 0 && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                  <p className="text-xs text-gray-600 mb-2">Grupos:</p>
+                <div className="mt-4 p-3 bg-gray-50/80 backdrop-blur-sm rounded-lg border border-gray-200/50">
+                  <p className="text-xs text-gray-600 mb-2 font-medium">Grupos:</p>
                   <div className="flex flex-wrap gap-1">
                     {selectedModel.groups.map((group) => (
                       <span 
@@ -358,30 +398,50 @@ export default function ConfigCalculatorPage() {
 
         {/* Panel derecho: Configuración */}
         {selectedModel && (
-          <div className="md:col-span-2 apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">
-              Configurar: {selectedModel.name || selectedModel.email}
-            </h2>
+          <div className="md:col-span-2 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <div className="flex items-center space-x-2 mb-6">
+              <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+              </div>
+              <h2 className="text-base font-semibold text-gray-900">
+                Configurar: {selectedModel.name || selectedModel.email}
+              </h2>
+            </div>
 
             <div className="space-y-6">
               {/* Plataformas habilitadas */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-base font-medium text-gray-900">Seleccionar Páginas</h3>
-                  <span className="text-sm text-gray-500">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
+                      <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-900">Seleccionar Páginas</h3>
+                  </div>
+                  <span className="text-xs text-gray-500 bg-gray-100/80 px-2 py-1 rounded-full border border-gray-200/50">
                     {platforms.length} plataformas disponibles
                   </span>
                 </div>
-                <div className="border border-gray-200 rounded-lg p-4 max-h-80 overflow-y-auto">
+                <div className="border border-gray-200/50 rounded-lg p-4 max-h-80 overflow-y-auto bg-gray-50/30 backdrop-blur-sm">
                   <div className="space-y-3">
                     {platforms.length === 0 ? (
                       <div className="text-center py-8 text-gray-500">
-                        <p>No hay plataformas disponibles</p>
-                        <p className="text-sm">Cargando datos...</p>
+                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                          </svg>
+                        </div>
+                        <p className="text-sm font-medium">No hay plataformas disponibles</p>
+                        <p className="text-xs">Cargando datos...</p>
                       </div>
                     ) : (
                       platforms.map(platform => (
-                        <div key={platform.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div key={platform.id} className="flex items-center justify-between p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50">
                           <div className="flex-1">
                             <span className="text-sm font-medium text-gray-900">{platform.name}</span>
                             <p className="text-xs text-gray-500">{platform.description}</p>
@@ -389,14 +449,14 @@ export default function ConfigCalculatorPage() {
                           <button
                             type="button"
                             onClick={() => handlePlatformToggle(platform.id)}
-                            className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              enabledPlatforms.includes(platform.id) ? 'bg-blue-600' : 'bg-gray-200'
+                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
+                              enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gray-200'
                             }`}
                           >
                             <span className="sr-only">Enable platform</span>
                             <span
-                              className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                                enabledPlatforms.includes(platform.id) ? 'translate-x-6' : 'translate-x-1'
+                              className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform shadow-sm ${
+                                enabledPlatforms.includes(platform.id) ? 'translate-x-5' : 'translate-x-1'
                               }`}
                             />
                           </button>
@@ -408,13 +468,27 @@ export default function ConfigCalculatorPage() {
               </div>
 
               {/* Configuración de reparto */}
-              <div className="apple-card">
-                <h3 className="text-lg font-semibold text-gray-900 mb-6">Configuración de Reparto</h3>
+              <div className="relative bg-white/50 backdrop-blur-sm rounded-xl shadow-sm border border-white/30 p-6">
+                <div className="flex items-center space-x-2 mb-6">
+                  <div className="w-5 h-5 bg-gradient-to-br from-orange-500 to-amber-600 rounded-md flex items-center justify-center">
+                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                    </svg>
+                  </div>
+                  <h3 className="text-base font-semibold text-gray-900">Configuración de Reparto</h3>
+                </div>
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Columna Grupo */}
-                  <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 h-full">
-                    <h4 className="text-base font-medium text-gray-900 mb-6">Configuración Grupo</h4>
+                  <div className="bg-white/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 p-6 h-full">
+                    <div className="flex items-center space-x-2 mb-6">
+                      <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
+                        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                        </svg>
+                      </div>
+                      <h4 className="text-sm font-semibold text-gray-900">Configuración Grupo</h4>
+                    </div>
                     
                     <div className="space-y-6">
                       <div>
