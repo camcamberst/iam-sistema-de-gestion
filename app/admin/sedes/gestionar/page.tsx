@@ -486,16 +486,27 @@ export default function GestionarSedesPage() {
 
         {/* Acciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Para Super Admin: Crear Sede */}
+          {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
           {userRole === 'super_admin' && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nueva Sede</h2>
-              <button
-                onClick={() => setShowCreateGroup(true)}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                + Crear Sede
-              </button>
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tus Sedes</h2>
+              <AppleDropdown
+                options={sedesConRoomsJornadas.map(sede => ({
+                  value: sede.id,
+                  label: sede.name
+                }))}
+                value={selectedSedeForSuperAdmin}
+                onChange={(value) => {
+                  setSelectedSedeForSuperAdmin(value);
+                  setSelectedGroup(value); // También actualizar para el modal de crear room
+                }}
+                placeholder="Selecciona una sede con rooms y jornadas"
+              />
+              {sedesConRoomsJornadas.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  No hay sedes con rooms y jornadas configurados
+                </p>
+              )}
             </div>
           )}
 
@@ -529,27 +540,16 @@ export default function GestionarSedesPage() {
             </div>
           )}
 
-          {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
+          {/* Para Super Admin: Crear Sede */}
           {userRole === 'super_admin' && (
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tus Sedes</h2>
-              <AppleDropdown
-                options={sedesConRoomsJornadas.map(sede => ({
-                  value: sede.id,
-                  label: sede.name
-                }))}
-                value={selectedSedeForSuperAdmin}
-                onChange={(value) => {
-                  setSelectedSedeForSuperAdmin(value);
-                  setSelectedGroup(value); // También actualizar para el modal de crear room
-                }}
-                placeholder="Selecciona una sede con rooms y jornadas"
-              />
-              {sedesConRoomsJornadas.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
-                  No hay sedes con rooms y jornadas configurados
-                </p>
-              )}
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nueva Sede</h2>
+              <button
+                onClick={() => setShowCreateGroup(true)}
+                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                + Crear Sede
+              </button>
             </div>
           )}
 
