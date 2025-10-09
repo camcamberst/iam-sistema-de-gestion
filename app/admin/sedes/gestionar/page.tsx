@@ -553,16 +553,18 @@ export default function GestionarSedesPage() {
             </div>
           )}
 
-          {/* Crear Room */}
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Room</h2>
-            <button
-              onClick={() => setShowCreateRoom(true)}
-              className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
-            >
-              + Crear Room
-            </button>
-          </div>
+          {/* Crear Room - Solo para Super Admin o Admin con sede seleccionada */}
+          {(userRole === 'super_admin' || (userRole === 'admin' && (selectedSedeForAdmin || groups.length === 1))) && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Room</h2>
+              <button
+                onClick={() => setShowCreateRoom(true)}
+                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
+              >
+                + Crear Room
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Lista de Sedes */}
