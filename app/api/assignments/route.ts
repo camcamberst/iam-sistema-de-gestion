@@ -26,22 +26,52 @@ export async function POST(request: NextRequest) {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     if (action === 'move') {
-      // MOVER: Desactivar todas las asignaciones existentes del modelo
+      // MOVER: Desactivar únicamente asignaciones activas del MISMO MODELO y MISMA JORNADA
+      // (no tocar otras jornadas). Esto permite que "doblar" mantenga múltiples jornadas activas.
+
+      // Snapshot previo
+      const { data: beforeSnapshot, error: beforeErr } = await supabase
+        .from('modelo_assignments')
+        .select('id, room_id, jornada, is_active')
+        .eq('model_id', model_id)
+        .eq('is_active', true);
+
+      if (beforeErr) {
+        console.warn('⚠️ [API] No se pudo obtener snapshot previo:', beforeErr);
+      } else {
+        console.log('🔍 [API] Snapshot PRE (activas por modelo):', beforeSnapshot);
+      }
+
       const { error: deactivateError } = await supabase
         .from('modelo_assignments')
         .update({ is_active: false })
         .eq('model_id', model_id)
+        .eq('room_id', room_id)
+        .eq('jornada', jornada)
         .eq('is_active', true);
 
       if (deactivateError) {
-        console.error('Error desactivando asignaciones existentes:', deactivateError);
+        console.error('Error desactivando asignaciones existentes (misma jornada):', deactivateError);
         return NextResponse.json(
           { success: false, error: 'Error desactivando asignaciones existentes' },
           { status: 500 }
         );
       }
 
-      console.log(`✅ [API] Asignaciones existentes desactivadas para modelo ${model_id}`);
+      // Snapshot posterior
+      const { data: afterSnapshot, error: afterErr } = await supabase
+        .from('modelo_assignments')
+        .select('id, room_id, jornada, is_active')
+        .eq('model_id', model_id)
+        .eq('is_active', true);
+
+      if (afterErr) {
+        console.warn('⚠️ [API] No se pudo obtener snapshot posterior:', afterErr);
+      } else {
+        console.log('🔍 [API] Snapshot POST (activas por modelo):', afterSnapshot);
+      }
+
+      console.log(`✅ [API] Asignaciones (misma jornada) desactivadas para modelo ${model_id}, jornada ${jornada}`);
     }
 
     // Verificar si ya existe una asignación activa en el mismo room/jornada
