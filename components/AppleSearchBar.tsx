@@ -207,7 +207,7 @@ export default function AppleSearchBar({
 
       {/* Filters Panel */}
       {filters.length > 0 && isExpanded && (
-        <div className="mt-3 relative bg-white/60 backdrop-blur-sm rounded-lg border border-white/30 shadow-sm p-4 animate-in slide-in-from-top-2 duration-200">
+        <div className="mt-3 relative bg-white/90 backdrop-blur-sm rounded-lg border border-white/30 shadow-lg p-4 animate-in slide-in-from-top-2 duration-200 z-50">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
               <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
