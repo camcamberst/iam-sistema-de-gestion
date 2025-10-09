@@ -486,85 +486,91 @@ export default function GestionarSedesPage() {
 
         {/* Acciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
-          {userRole === 'super_admin' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tus Sedes</h2>
-              <AppleDropdown
-                options={sedesConRoomsJornadas.map(sede => ({
-                  value: sede.id,
-                  label: sede.name
-                }))}
-                value={selectedSedeForSuperAdmin}
-                onChange={(value) => {
-                  setSelectedSedeForSuperAdmin(value);
-                  setSelectedGroup(value); // También actualizar para el modal de crear room
-                }}
-                placeholder="Selecciona una sede con rooms y jornadas"
-              />
-              {sedesConRoomsJornadas.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
-                  No hay sedes con rooms y jornadas configurados
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Para Admin: Selector de Sede */}
-          {userRole === 'admin' && groups.length > 1 && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Sede</h2>
-              <AppleDropdown
-                options={groups.map(group => ({
-                  value: group.id,
-                  label: group.name
-                }))}
-                value={selectedSedeForAdmin}
-                onChange={(value) => {
-                  setSelectedSedeForAdmin(value);
-                  setSelectedGroup(value); // También actualizar para el modal de crear room
-                }}
-                placeholder="Selecciona una sede"
-              />
-            </div>
-          )}
-
-          {/* Para Admin con una sola sede: Mostrar sede actual */}
-          {userRole === 'admin' && groups.length === 1 && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Sede Asignada</h2>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-gray-700 font-medium">{groups[0]?.name}</span>
+          {/* Columna Izquierda: Selector de Sedes */}
+          <div className="space-y-6">
+            {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
+            {userRole === 'super_admin' && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Tus Sedes</h2>
+                <AppleDropdown
+                  options={sedesConRoomsJornadas.map(sede => ({
+                    value: sede.id,
+                    label: sede.name
+                  }))}
+                  value={selectedSedeForSuperAdmin}
+                  onChange={(value) => {
+                    setSelectedSedeForSuperAdmin(value);
+                    setSelectedGroup(value);
+                  }}
+                  placeholder="Selecciona una sede con rooms y jornadas"
+                />
+                {sedesConRoomsJornadas.length === 0 && (
+                  <p className="text-sm text-gray-500 mt-2">
+                    No hay sedes con rooms y jornadas configurados
+                  </p>
+                )}
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Para Super Admin: Crear Sede */}
-          {userRole === 'super_admin' && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nueva Sede</h2>
-              <button
-                onClick={() => setShowCreateGroup(true)}
-                className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                + Crear Sede
-              </button>
-            </div>
-          )}
+            {/* Para Admin: Selector de Sede */}
+            {userRole === 'admin' && groups.length > 1 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Seleccionar Sede</h2>
+                <AppleDropdown
+                  options={groups.map(group => ({
+                    value: group.id,
+                    label: group.name
+                  }))}
+                  value={selectedSedeForAdmin}
+                  onChange={(value) => {
+                    setSelectedSedeForAdmin(value);
+                    setSelectedGroup(value);
+                  }}
+                  placeholder="Selecciona una sede"
+                />
+              </div>
+            )}
 
-          {/* Crear Room - Solo para Super Admin o Admin con sede seleccionada */}
-          {(userRole === 'super_admin' || (userRole === 'admin' && (selectedSedeForAdmin || groups.length === 1))) && (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Room</h2>
-              <button
-                onClick={() => setShowCreateRoom(true)}
-                className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors"
-              >
-                + Crear Room
-              </button>
-            </div>
-          )}
+            {/* Para Admin con una sola sede: Mostrar sede actual */}
+            {userRole === 'admin' && groups.length === 1 && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Sede Asignada</h2>
+                <div className="flex items-center space-x-3">
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
+                  <span className="text-gray-700 font-medium text-sm">{groups[0]?.name}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Columna Derecha: Crear Sede y Crear Room */}
+          <div className="space-y-6">
+            {/* Para Super Admin: Crear Sede */}
+            {userRole === 'super_admin' && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Crear Nueva Sede</h2>
+                <button
+                  onClick={() => setShowCreateGroup(true)}
+                  className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium"
+                >
+                  + Crear Sede
+                </button>
+              </div>
+            )}
+
+            {/* Crear Room - Solo para Super Admin o Admin con sede seleccionada */}
+            {((userRole === 'super_admin' && selectedSedeForSuperAdmin) || (userRole === 'admin' && (selectedSedeForAdmin || groups.length === 1))) && (
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+                <h2 className="text-lg font-semibold text-gray-900 mb-3">Crear Room</h2>
+                <button
+                  onClick={() => setShowCreateRoom(true)}
+                  className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg hover:bg-green-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium"
+                >
+                  + Crear Room
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Lista de Sedes */}
