@@ -20,30 +20,33 @@ export async function GET(
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Obtener TODAS las modelos disponibles para asignación
-    // (no solo las ya asignadas)
-    const { data: allModels, error: modelsError } = await supabase
+    // Obtener solo las modelos que pertenecen a este grupo/sede
+    const { data: groupModels, error: modelsError } = await supabase
       .from('users')
       .select(`
         id,
         name,
         email,
         role,
-        is_active
+        is_active,
+        user_groups!inner(
+          group_id
+        )
       `)
       .eq('role', 'modelo')
       .eq('is_active', true)
+      .eq('user_groups.group_id', groupId)
       .order('name', { ascending: true });
 
     if (modelsError) {
-      console.error('Error obteniendo modelos:', modelsError);
+      console.error('Error obteniendo modelos del grupo:', modelsError);
       return NextResponse.json(
-        { success: false, error: 'Error obteniendo modelos' },
+        { success: false, error: 'Error obteniendo modelos del grupo' },
         { status: 500 }
       );
     }
 
-    const models = allModels || [];
+    const models = groupModels || [];
 
     console.log(`✅ [API] Modelos encontrados para grupo ${groupId}:`, models?.length || 0);
 
