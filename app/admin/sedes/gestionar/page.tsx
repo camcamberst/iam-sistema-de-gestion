@@ -118,7 +118,7 @@ export default function GestionarSedesPage() {
       if (usersData.success) {
         const adminAsignado = usersData.users.find((user: any) => 
           user.role === 'admin' && 
-          user.user_groups?.some((ug: any) => ug.groups.id === sedeId)
+          user.user_groups?.some((ug: any) => ug.id === sedeId)
         );
         setSedeAdminInfo(adminAsignado || null);
       }
