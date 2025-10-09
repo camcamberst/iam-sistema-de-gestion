@@ -33,6 +33,8 @@ export default function GestionarSedesPage() {
   // Estados para admin
   const [userRole, setUserRole] = useState<string>('admin');
   const [selectedSedeForAdmin, setSelectedSedeForAdmin] = useState<string>('');
+  const [selectedSedeForSuperAdmin, setSelectedSedeForSuperAdmin] = useState<string>('');
+  const [sedesConRoomsJornadas, setSedesConRoomsJornadas] = useState<any[]>([]);
   
   // Estados para configuración de rooms
   const [showRoomConfig, setShowRoomConfig] = useState(false);
@@ -54,17 +56,86 @@ export default function GestionarSedesPage() {
   // Cargar datos iniciales
   useEffect(() => {
     loadData();
-  }, []);
+    if (userRole === 'super_admin') {
+      loadSedesConRoomsJornadas();
+    }
+  }, [userRole]);
+
+  const loadSedesConRoomsJornadas = async () => {
+    try {
+      // Obtener todas las sedes
+      const groupsResponse = await fetch('/api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userRole: 'super_admin', userGroups: [] })
+      });
+      const groupsData = await groupsResponse.json();
+      
+      if (!groupsData.success) return;
+      
+      // Obtener todas las rooms
+      const roomsResponse = await fetch('/api/groups/rooms');
+      const roomsData = await roomsResponse.json();
+      
+      if (!roomsData.success) return;
+      
+      // Filtrar sedes que tienen rooms
+      const sedesConRooms = groupsData.groups.filter((group: any) => 
+        roomsData.rooms?.some((room: any) => room.group_id === group.id)
+      );
+      
+      // Verificar que tengan jornadas configuradas (rooms con asignaciones)
+      const sedesConJornadas = await Promise.all(
+        sedesConRooms.map(async (sede: any) => {
+          // Obtener rooms de esta sede
+          const sedeRooms = roomsData.rooms.filter((room: any) => room.group_id === sede.id);
+          
+          // Verificar si alguna room tiene asignaciones
+          for (const room of sedeRooms) {
+            try {
+              const assignmentsResponse = await fetch(`/api/rooms/${room.id}/assignments`);
+              const assignmentsData = await assignmentsResponse.json();
+              
+              if (assignmentsData.success && assignmentsData.assignments?.length > 0) {
+                return sede;
+              }
+            } catch (error) {
+              console.error(`Error verificando asignaciones para room ${room.id}:`, error);
+            }
+          }
+          return null;
+        })
+      );
+      
+      const sedesFiltradas = sedesConJornadas.filter(sede => sede !== null);
+      setSedesConRoomsJornadas(sedesFiltradas);
+    } catch (error) {
+      console.error('Error cargando sedes con rooms y jornadas:', error);
+    }
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
       setError(''); // Limpiar errores previos
       
-      // Obtener información del usuario desde el contexto global
-      // Por ahora, vamos a simular que es un admin con solo Sede MP
-      const userRole = 'admin'; // Esto debería venir del contexto
-      const userGroups = ['11d3e936-8cf6-460a-8826-612092ffd7e5']; // Sede MP
+      // Obtener información del usuario desde localStorage
+      let userRole = 'admin';
+      let userGroups: string[] = [];
+      
+      try {
+        const userData = localStorage.getItem('user');
+        if (userData) {
+          const parsed = JSON.parse(userData);
+          userRole = parsed.role || 'admin';
+          userGroups = parsed.groups?.map((g: any) => g.id) || [];
+        }
+      } catch (error) {
+        console.warn('Error parsing user data from localStorage:', error);
+      }
+      
+      // Actualizar el estado del rol
+      setUserRole(userRole);
       
       console.log('🔍 [FRONTEND] Usuario:', { role: userRole, groups: userGroups });
       
@@ -455,6 +526,30 @@ export default function GestionarSedesPage() {
                 <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                 <span className="text-gray-700 font-medium">{groups[0]?.name}</span>
               </div>
+            </div>
+          )}
+
+          {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
+          {userRole === 'super_admin' && (
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Tus Sedes</h2>
+              <AppleDropdown
+                options={sedesConRoomsJornadas.map(sede => ({
+                  value: sede.id,
+                  label: sede.name
+                }))}
+                value={selectedSedeForSuperAdmin}
+                onChange={(value) => {
+                  setSelectedSedeForSuperAdmin(value);
+                  setSelectedGroup(value); // También actualizar para el modal de crear room
+                }}
+                placeholder="Selecciona una sede con rooms y jornadas"
+              />
+              {sedesConRoomsJornadas.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  No hay sedes con rooms y jornadas configurados
+                </p>
+              )}
             </div>
           )}
 
