@@ -148,28 +148,54 @@ export default function AdminDashboard() {
   }, [user]);
 
   return (
-    <div className="min-h-screen bg-white">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Dashboard</h1>
-        {user && (
-          <p className="text-gray-500 mb-6 text-sm">
-            Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
-            {user.role !== 'super_admin' && user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
-          </p>
-        )}
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Dashboard
+                  </h1>
+                  {user && (
+                    <p className="mt-1 text-sm text-gray-600">
+                      Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
+                      {user.role !== 'super_admin' && user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
         {/* Panel de Tasas Activas para Super Admin y Admin */}
         {(user?.role === 'super_admin' || user?.role === 'admin') && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
             <ActiveRatesPanel compact={true} />
-            <div className="apple-card">
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Calculadora</h3>
-              <p className="text-xs text-gray-500 mb-3">Gestiona las tasas de cambio para la calculadora</p>
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <h3 className="text-base font-semibold text-gray-900">Calculadora</h3>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Gestiona las tasas de cambio para la calculadora</p>
               <Link 
                 href="/admin/rates" 
-                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800"
+                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 font-medium"
               >
                 Ver todas las tasas →
               </Link>
@@ -182,45 +208,61 @@ export default function AdminDashboard() {
         {user?.role === 'modelo' && (
           <div className="space-y-6">
             {/* Panel de perfil */}
-            <div className="apple-card">
-              <h2 className="text-lg font-semibold text-gray-900 mb-1">Mi perfil</h2>
-              <p className="text-sm text-gray-500">Revisa tu información</p>
-              <div className="mt-4 text-sm text-gray-700">Email: {user.email}</div>
-              <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                </div>
+                <h2 className="text-base font-semibold text-gray-900">Mi perfil</h2>
+              </div>
+              <p className="text-xs text-gray-500 mb-4">Revisa tu información</p>
+              <div className="space-y-2">
+                <div className="text-sm text-gray-700">Email: {user.email}</div>
+                <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
+              </div>
             </div>
 
             {/* Resumen de productividad y progreso de meta */}
-            <div className="apple-card py-3">
-              <h2 className="text-sm font-semibold text-gray-900 mb-3">Resumen de Productividad</h2>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-2">
-                <div className="p-3 rounded-md bg-blue-50 text-center">
-                  <div className="text-[11px] text-gray-600">USD Bruto (hoy)</div>
-                  <div className="text-xl font-bold text-blue-600">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
                 </div>
-                <div className="p-3 rounded-md bg-green-50 text-center">
-                  <div className="text-[11px] text-gray-600">USD Modelo (hoy)</div>
-                  <div className="text-xl font-bold text-green-600">${summary ? summary.usdModelo.toFixed(2) : '—'}</div>
+                <h2 className="text-base font-semibold text-gray-900">Resumen de Productividad</h2>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div className="p-3 rounded-lg bg-blue-50 text-center">
+                  <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
+                  <div className="text-lg font-bold text-blue-600">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
                 </div>
-                <div className="p-3 rounded-md bg-purple-50 text-center">
-                  <div className="text-[11px] text-gray-600">COP Modelo (hoy)</div>
-                  <div className="text-xl font-bold text-purple-600">{summary ? summary.copModelo.toLocaleString('es-CO', {maximumFractionDigits:0}) : '—'}</div>
+                <div className="p-3 rounded-lg bg-green-50 text-center">
+                  <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
+                  <div className="text-lg font-bold text-green-600">${summary ? summary.usdModelo.toFixed(2) : '—'}</div>
+                </div>
+                <div className="p-3 rounded-lg bg-purple-50 text-center">
+                  <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
+                  <div className="text-lg font-bold text-purple-600">{summary ? summary.copModelo.toLocaleString('es-CO', {maximumFractionDigits:0}) : '—'}</div>
                 </div>
               </div>
 
               {/* Barra de alcance de meta (compacta) */}
-              <div className="mt-1">
-                <div className="flex items-center justify-between mb-1">
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-medium text-gray-700">Objetivo Básico</span>
                   <span className="text-xs text-gray-600">${summary ? summary.usdBruto.toFixed(0) : '—'} / ${summary ? summary.goalUsd.toFixed(0) : '—'} USD</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-1.5 overflow-hidden">
-                  <div className="h-1.5 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" style={{ width: `${summary ? Math.min(100, summary.pct).toFixed(0) : 0}%` }}></div>
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" style={{ width: `${summary ? Math.min(100, summary.pct).toFixed(0) : 0}%` }}></div>
                 </div>
-                <div className="text-right text-[11px] text-gray-600 mt-1">{summary ? Math.min(100, summary.pct).toFixed(0) : 0}%</div>
+                <div className="text-right text-xs text-gray-600 mt-1">{summary ? Math.min(100, summary.pct).toFixed(0) : 0}%</div>
               </div>
 
-              <div className="mt-3 text-xs text-gray-500">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline">Mi Calculadora</a>.
+              <div className="mt-4 text-xs text-gray-500">
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline font-medium">Mi Calculadora</a>.
               </div>
             </div>
           </div>
