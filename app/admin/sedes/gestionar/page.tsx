@@ -79,16 +79,12 @@ export default function GestionarSedesPage() {
       
       if (!roomsData.success) return;
       
-      // Filtrar sedes que tienen rooms, excluyendo "Otros" y "Satélites"
-      const sedesConRooms = groupsData.groups.filter((group: any) => 
+      // Para Super Admin, mostrar TODAS las sedes (excepto Otros y Satélites)
+      // para que pueda gestionar cualquier sede: agregar rooms, quitar rooms, etc.
+      const sedesFiltradas = groupsData.groups.filter((group: any) => 
         group.name !== 'Otros' && 
-        group.name !== 'Satélites' &&
-        roomsData.rooms?.some((room: any) => room.group_id === group.id)
+        group.name !== 'Satélites'
       );
-      
-      // Para Super Admin, mostrar todas las sedes que tienen rooms configurados
-      // (no necesariamente con asignaciones activas)
-      const sedesFiltradas = sedesConRooms;
       setSedesConRoomsJornadas(sedesFiltradas);
     } catch (error) {
       console.error('Error cargando sedes con rooms y jornadas:', error);
@@ -488,11 +484,11 @@ export default function GestionarSedesPage() {
                     setSelectedSedeForSuperAdmin(value);
                     setSelectedGroup(value);
                   }}
-                  placeholder="Selecciona una sede con rooms y jornadas"
+                  placeholder="Selecciona una sede para gestionar"
                 />
                 {sedesConRoomsJornadas.length === 0 && (
                   <p className="text-sm text-gray-500 mt-2">
-                    No hay sedes con rooms y jornadas configurados
+                    No hay sedes disponibles para gestionar
                   </p>
                 )}
               </div>
