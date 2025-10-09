@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Limpieza automática completada',
-      deleted_count: deleteResult?.length || 0,
+      deleted_count: Array.isArray(deleteResult) ? deleteResult.length : 0,
       current_state: {
         active: activeCount,
         inactive: inactiveCount,
