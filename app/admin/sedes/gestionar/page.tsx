@@ -499,40 +499,66 @@ export default function GestionarSedesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Sedes</h1>
-          <p className="mt-2 text-gray-600">Administra las sedes, rooms y configuraciones del sistema</p>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-2xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-white/20 shadow-xl">
+              <div className="flex items-center space-x-4">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Gestión de Sedes
+                  </h1>
+                  <p className="mt-2 text-gray-600 font-medium">Administra las sedes, rooms y configuraciones del sistema</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* Mensajes de error y éxito */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+          <div className="mb-6 relative">
+            <div className="absolute inset-0 bg-red-500/10 rounded-2xl blur-sm"></div>
+            <div className="relative bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-2xl p-4 shadow-lg">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-red-100 rounded-full flex items-center justify-center">
+                    <svg className="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-red-800">{error}</p>
+                </div>
               </div>
             </div>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-green-800">{success}</p>
+          <div className="mb-6 relative">
+            <div className="absolute inset-0 bg-green-500/10 rounded-2xl blur-sm"></div>
+            <div className="relative bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-2xl p-4 shadow-lg">
+              <div className="flex items-center">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                    <svg className="h-5 w-5 text-green-500" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm font-medium text-green-800">{success}</p>
+                </div>
               </div>
             </div>
           </div>
@@ -544,8 +570,17 @@ export default function GestionarSedesPage() {
           <div className="space-y-6">
             {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
             {userRole === 'super_admin' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Tus Sedes</h2>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Tus Sedes</h2>
+                  </div>
                 <AppleDropdown
                   options={sedesConRoomsJornadas.map(sede => ({
                     value: sede.id,
@@ -569,13 +604,23 @@ export default function GestionarSedesPage() {
                     No hay sedes disponibles para gestionar
                   </p>
                 )}
+                </div>
               </div>
             )}
 
             {/* Para Admin: Selector de Sede */}
             {userRole === 'admin' && groups.length > 1 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Seleccionar Sede</h2>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-2xl blur-sm"></div>
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Seleccionar Sede</h2>
+                  </div>
                 <AppleDropdown
                   options={groups.map(group => ({
                     value: group.id,
@@ -588,16 +633,27 @@ export default function GestionarSedesPage() {
                   }}
                   placeholder="Selecciona una sede"
                 />
+                </div>
               </div>
             )}
 
             {/* Para Admin con una sola sede: Mostrar sede actual */}
             {userRole === 'admin' && groups.length === 1 && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Sede Asignada</h2>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-2xl blur-sm"></div>
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Sede Asignada</h2>
+                  </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full"></div>
                   <span className="text-gray-700 font-medium text-sm">{groups[0]?.name}</span>
+                </div>
                 </div>
               </div>
             )}
@@ -607,27 +663,47 @@ export default function GestionarSedesPage() {
           <div className="space-y-6">
             {/* Para Super Admin: Crear Sede */}
             {userRole === 'super_admin' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Crear Nueva Sede</h2>
-                <button
-                  onClick={() => setShowCreateGroup(true)}
-                  className="w-full bg-blue-600 text-white py-2.5 px-4 rounded-lg hover:bg-blue-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium"
-                >
-                  + Crear Sede
-                </button>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 rounded-2xl blur-sm"></div>
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Crear Nueva Sede</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateGroup(true)}
+                    className="w-full bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 text-sm font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    + Crear Sede
+                  </button>
+                </div>
               </div>
             )}
 
             {/* Crear Room - Solo para Super Admin o Admin con sede seleccionada */}
             {((userRole === 'super_admin' && selectedSedeForSuperAdmin) || (userRole === 'admin' && (selectedSedeForAdmin || groups.length === 1))) && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
-                <h2 className="text-lg font-semibold text-gray-900 mb-3">Crear Room</h2>
-                <button
-                  onClick={() => setShowCreateRoom(true)}
-                  className="w-full bg-green-600 text-white py-2.5 px-4 rounded-lg hover:bg-green-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 text-sm font-medium"
-                >
-                  + Crear Room
-                </button>
+              <div className="relative">
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 rounded-2xl blur-sm"></div>
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                  <div className="flex items-center space-x-3 mb-4">
+                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
+                    </div>
+                    <h2 className="text-lg font-semibold text-gray-900">Crear Room</h2>
+                  </div>
+                  <button
+                    onClick={() => setShowCreateRoom(true)}
+                    className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 px-4 rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 text-sm font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                  >
+                    + Crear Room
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -635,66 +711,102 @@ export default function GestionarSedesPage() {
 
         {/* Información de la Sede Seleccionada */}
         {selectedSedeInfo && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-8">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h2 className="text-xl font-semibold text-gray-900">{selectedSedeInfo.name}</h2>
-                <p className="text-sm text-gray-500 mt-1">
-                  {selectedSedeInfo.rooms?.length || 0} rooms configurados
-                </p>
+          <div className="relative mb-8">
+            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 p-8">
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900">{selectedSedeInfo.name}</h2>
+                    <p className="text-sm text-gray-500 mt-1">
+                      {selectedSedeInfo.rooms?.length || 0} rooms configurados
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2 bg-green-100 px-3 py-1.5 rounded-full">
+                  <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                  <span className="text-sm text-green-700 font-medium">Activa</span>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                <span className="text-sm text-gray-600">Activa</span>
-              </div>
-            </div>
 
             {/* Información del Admin Asignado */}
             {sedeAdminInfo ? (
-              <div className="bg-gray-50 rounded-lg p-4 mb-6">
-                <h3 className="text-sm font-medium text-gray-900 mb-3">Admin Asignado</h3>
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                    <span className="text-blue-600 font-medium text-sm">
+              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-blue-200/30">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                    </svg>
+                  </div>
+                  <h3 className="text-sm font-semibold text-gray-900">Admin Asignado</h3>
+                </div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-white font-semibold text-lg">
                       {sedeAdminInfo.name?.charAt(0) || 'A'}
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium text-gray-900">{sedeAdminInfo.name}</p>
-                    <p className="text-xs text-gray-500">{sedeAdminInfo.email}</p>
+                    <p className="text-sm font-semibold text-gray-900">{sedeAdminInfo.name}</p>
+                    <p className="text-xs text-gray-600">{sedeAdminInfo.email}</p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-yellow-50 rounded-lg p-4 mb-6">
-                <div className="flex items-center space-x-2">
-                  <div className="w-4 h-4 bg-yellow-400 rounded-full"></div>
-                  <p className="text-sm text-yellow-800">No hay admin asignado a esta sede</p>
+              <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-yellow-200/30">
+                <div className="flex items-center space-x-3">
+                  <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-yellow-800">No hay admin asignado a esta sede</p>
                 </div>
               </div>
             )}
 
             {/* Rooms de la Sede */}
             <div>
-              <h3 className="text-sm font-medium text-gray-900 mb-3">Rooms Disponibles</h3>
+              <div className="flex items-center space-x-3 mb-4">
+                <div className="w-6 h-6 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <h3 className="text-sm font-semibold text-gray-900">Rooms Disponibles</h3>
+              </div>
               {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-3">
                   {selectedSedeInfo.rooms.map((room: any) => (
                     <button
                       key={room.id}
                       onClick={() => handleRoomClick(room)}
-                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      className="inline-flex items-center px-4 py-2.5 rounded-xl text-sm font-medium bg-gradient-to-r from-blue-100 to-indigo-100 text-blue-800 hover:from-blue-200 hover:to-indigo-200 hover:text-blue-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-blue-200/50"
                     >
+                      <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                      </svg>
                       {room.room_name}
                     </button>
                   ))}
                 </div>
               ) : (
-                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                  <p className="text-sm text-gray-500">No hay rooms configurados en esta sede</p>
-                  <p className="text-xs text-gray-400 mt-1">Usa el botón "Crear Room" para agregar rooms</p>
+                <div className="bg-gradient-to-r from-gray-50/80 to-slate-50/80 backdrop-blur-sm rounded-xl p-6 text-center border border-gray-200/30">
+                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <p className="text-sm font-medium text-gray-600">No hay rooms configurados en esta sede</p>
+                  <p className="text-xs text-gray-500 mt-1">Usa el botón "Crear Room" para agregar rooms</p>
                 </div>
               )}
+            </div>
             </div>
           </div>
         )}
@@ -741,62 +853,81 @@ export default function GestionarSedesPage() {
 
         {/* Modal Crear Sede */}
         {showCreateGroup && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-md">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Nueva Sede</h2>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-3xl blur-xl"></div>
+              <div className="relative bg-white/90 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Crear Nueva Sede</h2>
+                </div>
               
-              <form onSubmit={handleCreateGroup} className="space-y-4">
+              <form onSubmit={handleCreateGroup} className="space-y-6">
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
+                  <label className="block text-gray-700 text-sm font-semibold mb-2">
                     Nombre de la Sede
                   </label>
                   <input
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 backdrop-blur-sm transition-all duration-200"
                     placeholder="Ej: Sede Norte"
                     required
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-4">
+                <div className="flex space-x-3 pt-2">
                   <button
                     type="button"
                     onClick={() => {
                       setShowCreateGroup(false);
                       setNewGroupName('');
                     }}
-                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="flex-1 bg-gray-100/80 backdrop-blur-sm text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200/80 transition-all duration-200 font-medium border border-gray-200/50"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-3 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     {submitting ? 'Creando...' : 'Crear Sede'}
                   </button>
                 </div>
               </form>
+              </div>
             </div>
           </div>
         )}
 
         {/* Modal Crear Room */}
         {showCreateRoom && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-md">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Crear Room</h2>
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/10 to-teal-500/10 rounded-3xl blur-xl"></div>
+              <div className="relative bg-white/90 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900">Crear Room</h2>
+                </div>
               
-              <form onSubmit={handleCreateRoom} className="space-y-4">
+              <form onSubmit={handleCreateRoom} className="space-y-6">
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
+                  <label className="block text-gray-700 text-sm font-semibold mb-2">
                     {userRole === 'admin' ? 'Sede' : 'Seleccionar Sede'}
                   </label>
                   {userRole === 'admin' ? (
-                    <div className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 bg-gray-50">
+                    <div className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white/50 backdrop-blur-sm">
                       {groups.find(g => g.id === selectedGroup)?.name || 'Sede no seleccionada'}
                     </div>
                   ) : (
@@ -813,20 +944,20 @@ export default function GestionarSedesPage() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 text-sm font-medium mb-1">
+                  <label className="block text-gray-700 text-sm font-semibold mb-2">
                     Nombre del Room
                   </label>
                   <input
                     type="text"
                     value={newRoomName}
                     onChange={(e) => setNewRoomName(e.target.value)}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 backdrop-blur-sm transition-all duration-200"
                     placeholder="Ej: ROOM01"
                     required
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-4">
+                <div className="flex space-x-3 pt-2">
                   <button
                     type="button"
                     onClick={() => {
@@ -834,19 +965,20 @@ export default function GestionarSedesPage() {
                       setNewRoomName('');
                       setSelectedGroup('');
                     }}
-                    className="flex-1 bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                    className="flex-1 bg-gray-100/80 backdrop-blur-sm text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200/80 transition-all duration-200 font-medium border border-gray-200/50"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting || !selectedGroup}
-                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+                    className="flex-1 bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 px-4 rounded-xl hover:from-emerald-700 hover:to-teal-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                   >
                     {submitting ? 'Creando...' : 'Crear Room'}
                   </button>
                 </div>
               </form>
+              </div>
             </div>
           </div>
         )}
