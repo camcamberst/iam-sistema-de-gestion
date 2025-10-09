@@ -123,19 +123,40 @@ export default function GestionarSedesPage() {
         const admins = usersData.users.filter((user: any) => user.role === 'admin');
         console.log('🔍 [DEBUG] Solo admins:', admins.length);
         
-        // Buscar admin asignado a esta sede específica
-        const adminAsignado = admins.find((user: any) => {
+        // Buscar TODOS los admins asignados a esta sede específica
+        const adminsAsignados = admins.filter((user: any) => {
           const tieneEstaSede = user.user_groups?.some((ug: any) => ug.id === sedeId);
           console.log(`🔍 [DEBUG] Admin ${user.name}:`, {
             user_groups: user.user_groups,
             tieneEstaSede,
-            sedeId
+            sedeId,
+            sedesAsignadas: user.user_groups?.length || 0
           });
           return tieneEstaSede;
         });
         
-        console.log('🔍 [DEBUG] Admin encontrado:', adminAsignado);
-        setSedeAdminInfo(adminAsignado || null);
+        console.log('🔍 [DEBUG] Admins asignados a esta sede:', adminsAsignados.length);
+        
+        // REGLA: Si hay múltiples admins, elegir el que tenga menos sedes asignadas
+        let adminAsignado = null;
+        if (adminsAsignados.length > 0) {
+          if (adminsAsignados.length === 1) {
+            adminAsignado = adminsAsignados[0];
+            console.log('🔍 [DEBUG] Solo un admin asignado:', adminAsignado.name);
+          } else {
+            // Múltiples admins: elegir el que tenga menos sedes asignadas
+            adminAsignado = adminsAsignados.reduce((menor, actual) => {
+              const sedesMenor = menor.user_groups?.length || 0;
+              const sedesActual = actual.user_groups?.length || 0;
+              console.log(`🔍 [DEBUG] Comparando: ${menor.name} (${sedesMenor} sedes) vs ${actual.name} (${sedesActual} sedes)`);
+              return sedesActual < sedesMenor ? actual : menor;
+            });
+            console.log('🔍 [DEBUG] Admin seleccionado (menos sedes):', adminAsignado.name, `(${adminAsignado.user_groups?.length || 0} sedes)`);
+          }
+        }
+        
+        console.log('🔍 [DEBUG] Admin final seleccionado:', adminAsignado);
+        setSedeAdminInfo(adminAsignado);
       }
     } catch (error) {
       console.error('Error cargando información de la sede:', error);
