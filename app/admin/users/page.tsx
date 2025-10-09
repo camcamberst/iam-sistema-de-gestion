@@ -475,15 +475,13 @@ export default function UsersListPage() {
                     {filteredUsers.map((user) => (
                       <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-12 group">
                         <td className="px-4 py-2">
-                          <div className="flex items-center justify-center">
-                            <div className="flex items-center space-x-3">
-                              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-semibold shadow-sm border border-white/20">
-                                {user.name.charAt(0).toUpperCase()}
-                              </div>
-                              <div className="text-center">
-                                <div className="text-gray-900 font-medium text-xs">{user.name}</div>
-                                <div className="text-gray-400 text-xs">ID: {user.id.slice(0, 8)}...</div>
-                              </div>
+                          <div className="flex items-center space-x-2">
+                            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-semibold shadow-sm border border-white/20">
+                              {user.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-gray-900 font-medium text-xs truncate" title={user.name}>{user.name}</div>
+                              <div className="text-gray-400 text-xs truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
                             </div>
                           </div>
                         </td>
