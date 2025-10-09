@@ -65,7 +65,7 @@ export async function GET(
           id: assignment.id,
           room_id: assignment.room_id,
           room_name: roomData?.room_name || 'Room desconocido',
-          group_name: roomData?.groups?.name || 'Grupo desconocido',
+          group_name: roomData?.groups?.[0]?.name || 'Grupo desconocido',
           jornada: assignment.jornada,
           assigned_at: assignment.assigned_at
         });
