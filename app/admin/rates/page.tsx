@@ -301,54 +301,54 @@ export default function RatesPage() {
 				</div>
 			</div>
 		);
-	}
+  }
 
-	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
-				{/* Header */}
-				<div className="mb-12">
-					<div className="relative">
-						<div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-						<div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
-							<div className="flex items-center justify-between">
-								<div className="flex items-center space-x-3">
-									<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-										<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-											<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-										</svg>
-									</div>
-									<div>
-										<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-											Definir RATES
-										</h1>
-										<p className="mt-1 text-sm text-gray-600">
-											{userInfo.role === 'super_admin' 
-												? 'Puedes gestionar RATES globales y por grupo'
-												: 'Solo puedes gestionar RATES de tus grupos asignados'
-											}
-										</p>
-									</div>
-								</div>
-								<div className="text-xs text-gray-500 bg-blue-50/50 px-3 py-1 rounded-full">
-									Acceso: <span className="font-medium text-blue-600">
-										{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-									</span>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                      Definir RATES
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-600">
+                      {userInfo.role === 'super_admin' 
+                        ? 'Puedes gestionar RATES globales y por grupo'
+                        : 'Solo puedes gestionar RATES de tus grupos asignados'
+                      }
+                    </p>
+                  </div>
+                </div>
+                <div className="text-xs text-gray-500 bg-blue-50/50 px-3 py-1 rounded-full">
+                  Acceso: <span className="font-medium text-blue-600">
+                    {userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-			<div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
-				<div className="flex items-center space-x-2 mb-4">
-					<div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-						<svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-							<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-						</svg>
-					</div>
-					<h2 className="text-base font-semibold text-gray-900">Establecer rates manual</h2>
-				</div>
+        <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold text-gray-900">Establecer rates manual</h2>
+          </div>
 				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 					<div>
 						<label className="block text-xs text-gray-500 mb-2">Aplicar a</label>
