@@ -411,8 +411,14 @@ export default function GestionarSedesPage() {
   };
 
   // NUEVA FUNCIÓN: Recargar solo las asignaciones del room (sin cerrar modal)
-  const reloadRoomAssignments = async (room: Room) => {
+  const reloadRoomAssignments = async (room: Room, delay: number = 500) => {
     try {
+      // Pequeño delay para asegurar que la base de datos se haya actualizado
+      if (delay > 0) {
+        console.log(`⏳ [FRONTEND] Esperando ${delay}ms para sincronización...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+      
       console.log('🔍 [FRONTEND] Recargando asignaciones para room ID:', room.id);
       const response = await fetch(`/api/rooms/${room.id}/assignments`);
       const data = await response.json();
@@ -535,17 +541,18 @@ export default function GestionarSedesPage() {
         // Mostrar mensaje de éxito en el modal de configuración
         setRoomConfigSuccess(`Modelo eliminada exitosamente de ${assignmentToDelete.jornada}`);
         setRoomConfigError(''); // Limpiar errores previos
-        
-        // Recargar solo las asignaciones del room (sin cerrar el modal)
-        if (selectedRoom) {
-          console.log('🔍 [FRONTEND] Llamando a reloadRoomAssignments...');
-          await reloadRoomAssignments(selectedRoom);
-          console.log('✅ [FRONTEND] reloadRoomAssignments completado');
-        }
       } else {
         console.error('❌ [FRONTEND] Error en eliminación:', data.error);
         setRoomConfigError('Error eliminando modelo: ' + data.error);
         setRoomConfigSuccess(''); // Limpiar mensajes de éxito previos
+      }
+      
+      // SIEMPRE recargar las asignaciones después de cualquier intento de eliminación
+      // Esto asegura que la UI refleje el estado real de la base de datos
+      if (selectedRoom) {
+        console.log('🔄 [FRONTEND] Recargando asignaciones para sincronizar UI...');
+        await reloadRoomAssignments(selectedRoom);
+        console.log('✅ [FRONTEND] Sincronización completada');
       }
     } catch (error) {
       console.error('❌ [FRONTEND] Error eliminando modelo:', error);
