@@ -79,7 +79,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     if (userRole === 'super_admin' || userRole === 'admin') {
       baseItems.unshift({
         id: 'users',
-        label: 'Gestión Usarios',
+        label: 'Gestión Usuarios',
         href: '#', // Sin navegación directa
         subItems: [
           { label: 'Crear Usuario', href: '/admin/users/create' },
@@ -98,22 +98,13 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       });
 
       baseItems.push({
-        id: 'reports',
-        label: 'Reportes',
+        id: 'sedes',
+        label: 'Gestión Sedes',
         href: '#', // Sin navegación directa
         subItems: [
-          { label: 'Reportes de Usuarios', href: '/admin/reports/users' },
-          { label: 'Estadísticas', href: '/admin/reports/stats' }
-        ]
-      });
-
-      baseItems.push({
-        id: 'settings',
-        label: 'Configuración',
-        href: '#', // Sin navegación directa
-        subItems: [
-          { label: 'Configuración General', href: '/admin/settings/general' },
-          { label: 'Permisos', href: '/admin/settings/permissions' }
+          { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar' },
+          { label: 'Asignaciones', href: '/admin/sedes/asignaciones' },
+          { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard' }
         ]
       });
 

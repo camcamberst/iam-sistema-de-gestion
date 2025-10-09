@@ -32,12 +32,18 @@ export default function AsignacionesPage() {
       setLoading(true);
       setError(null);
 
-      // Por ahora, mostraremos un mensaje de que está en desarrollo
-      setAssignments([]);
+      const response = await fetch('/api/assignments/all');
+      const data = await response.json();
+      
+      if (data.success) {
+        setAssignments(data.assignments || []);
+      } else {
+        setError(data.error || 'Error cargando asignaciones');
+      }
 
     } catch (err) {
       console.error('Error cargando asignaciones:', err);
-      setError('Error cargando asignaciones');
+      setError('Error de conexión al cargar asignaciones');
     } finally {
       setLoading(false);
     }

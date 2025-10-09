@@ -32,14 +32,42 @@ export default function DashboardSedesPage() {
       setLoading(true);
       setError(null);
 
-      // Por ahora, usaremos datos de ejemplo
+      // Cargar datos reales desde la API
+      const [groupsResponse, roomsResponse, usersResponse, assignmentsResponse] = await Promise.all([
+        fetch('/api/groups'),
+        fetch('/api/groups/rooms'),
+        fetch('/api/users'),
+        fetch('/api/assignments/all')
+      ]);
+
+      const [groupsData, roomsData, usersData, assignmentsData] = await Promise.all([
+        groupsResponse.json(),
+        roomsResponse.json(),
+        usersResponse.json(),
+        assignmentsResponse.json()
+      ]);
+
+      // Calcular estadísticas reales
+      const totalSedes = groupsData.success ? groupsData.groups?.length || 0 : 0;
+      const totalRooms = roomsData.success ? roomsData.rooms?.length || 0 : 0;
+      const totalModelos = usersData.success ? usersData.users?.filter((u: any) => u.role === 'modelo' && u.is_active).length || 0 : 0;
+      const asignacionesActivas = assignmentsData.success ? assignmentsData.assignments?.length || 0 : 0;
+      
+      // Calcular sedes con y sin rooms
+      const sedesConRooms = groupsData.success && roomsData.success ? 
+        groupsData.groups?.filter((group: any) => 
+          roomsData.rooms?.some((room: any) => room.group_id === group.id)
+        ).length || 0 : 0;
+      
+      const sedesSinRooms = totalSedes - sedesConRooms;
+
       setStats({
-        totalSedes: 7,
-        totalRooms: 27,
-        totalModelos: 0,
-        asignacionesActivas: 0,
-        sedesConRooms: 1,
-        sedesSinRooms: 6
+        totalSedes,
+        totalRooms,
+        totalModelos,
+        asignacionesActivas,
+        sedesConRooms,
+        sedesSinRooms
       });
 
     } catch (err) {
