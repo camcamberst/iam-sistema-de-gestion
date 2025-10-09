@@ -51,12 +51,12 @@ export async function GET() {
     const formattedAssignments = assignments?.map(assignment => ({
       id: assignment.id,
       model_id: assignment.model_id,
-      modelo_name: assignment.users?.name || 'Modelo desconocido',
-      modelo_email: assignment.users?.email || '',
-      group_id: assignment.group_rooms?.groups?.id || '',
-      grupo_name: assignment.group_rooms?.groups?.name || 'Grupo desconocido',
+      modelo_name: (assignment.users as any)?.name || 'Modelo desconocido',
+      modelo_email: (assignment.users as any)?.email || '',
+      group_id: (assignment.group_rooms as any)?.groups?.id || '',
+      grupo_name: (assignment.group_rooms as any)?.groups?.name || 'Grupo desconocido',
       room_id: assignment.room_id,
-      room_name: assignment.group_rooms?.room_name || 'Room desconocido',
+      room_name: (assignment.group_rooms as any)?.room_name || 'Room desconocido',
       jornada: assignment.jornada,
       assigned_at: assignment.assigned_at,
       is_active: assignment.is_active
