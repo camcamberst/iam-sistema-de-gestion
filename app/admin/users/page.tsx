@@ -51,6 +51,7 @@ export default function UsersListPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFilters, setSearchFilters] = useState<Record<string, string>>({});
   const [modalError, setModalError] = useState<string | null>(null);
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -139,6 +140,11 @@ export default function UsersListPage() {
     }
 
     setFilteredUsers(filtered);
+  };
+
+  // Manejar cambios en el estado de dropdowns
+  const handleDropdownStateChange = (isOpen: boolean) => {
+    setIsDropdownOpen(isOpen);
   };
 
   // Search filters configuration
@@ -352,6 +358,7 @@ export default function UsersListPage() {
             onSearch={handleSearch}
             placeholder="Buscar por nombre, email o ID de usuario..."
             filters={searchFiltersConfig}
+            onDropdownStateChange={handleDropdownStateChange}
           />
           {(searchQuery || Object.values(searchFilters).some(v => v)) && (
             <div className="mt-4 p-3 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/30">
@@ -396,7 +403,7 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className="relative bg-white/70 backdrop-blur-sm border border-white/20 rounded-xl shadow-md transition-all duration-200 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0">
+        <div className={`relative bg-white/70 backdrop-blur-sm border border-white/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0 ${isDropdownOpen ? 'mt-32' : 'mt-0'}`}>
           <div className="pt-6 px-6 pb-0">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">

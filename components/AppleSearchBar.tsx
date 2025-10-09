@@ -19,13 +19,15 @@ interface AppleSearchBarProps {
   placeholder?: string;
   filters?: SearchFilter[];
   className?: string;
+  onDropdownStateChange?: (isOpen: boolean) => void;
 }
 
 export default function AppleSearchBar({ 
   onSearch, 
   placeholder = "Buscar...", 
   filters = [],
-  className = ""
+  className = "",
+  onDropdownStateChange
 }: AppleSearchBarProps) {
   const [query, setQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
@@ -89,6 +91,14 @@ export default function AppleSearchBar({
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Notificar cambios en el estado de dropdowns
+  useEffect(() => {
+    if (onDropdownStateChange) {
+      const hasOpenDropdown = isExpanded || activeDropdown !== null;
+      onDropdownStateChange(hasOpenDropdown);
+    }
+  }, [isExpanded, activeDropdown, onDropdownStateChange]);
 
   const clearFilters = () => {
     setSelectedFilters({});
