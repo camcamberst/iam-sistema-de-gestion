@@ -30,13 +30,11 @@ export default function GestionarSedesPage() {
   const [newRoomName, setNewRoomName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
-  // Estados para admin
-  const [userRole, setUserRole] = useState<string>('admin');
-  const [selectedSedeForAdmin, setSelectedSedeForAdmin] = useState<string>('');
-  const [selectedSedeForSuperAdmin, setSelectedSedeForSuperAdmin] = useState<string>('');
-  const [sedesConRoomsJornadas, setSedesConRoomsJornadas] = useState<any[]>([]);
+  // Estados simplificados (sin distinción de roles)
+  const [userRole, setUserRole] = useState<string>('super_admin');
+  const [selectedSede, setSelectedSede] = useState<string>('');
+  const [availableSedes, setAvailableSedes] = useState<any[]>([]);
   const [selectedSedeInfo, setSelectedSedeInfo] = useState<any>(null);
-  const [sedeAdminInfo, setSedeAdminInfo] = useState<any>(null);
   
   // Estados para configuración de rooms
   const [showRoomConfig, setShowRoomConfig] = useState(false);
@@ -62,14 +60,12 @@ export default function GestionarSedesPage() {
   // Cargar datos iniciales
   useEffect(() => {
     loadData();
-    if (userRole === 'super_admin') {
-      loadSedesConRoomsJornadas();
-    }
-  }, [userRole]);
+    loadAvailableSedes();
+  }, []);
 
-  const loadSedesConRoomsJornadas = async () => {
+  const loadAvailableSedes = async () => {
     try {
-      // Obtener todas las sedes
+      // Obtener todas las sedes disponibles
       const groupsResponse = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -79,28 +75,21 @@ export default function GestionarSedesPage() {
       
       if (!groupsData.success) return;
       
-      // Obtener todas las rooms
-      const roomsResponse = await fetch('/api/groups/rooms');
-      const roomsData = await roomsResponse.json();
-      
-      if (!roomsData.success) return;
-      
-      // Para Super Admin, mostrar TODAS las sedes (excepto Otros y Satélites)
-      // para que pueda gestionar cualquier sede: agregar rooms, quitar rooms, etc.
-      const sedesFiltradas = groupsData.groups.filter((group: any) => 
+      // Filtrar sedes operativas (excluir Otros y Satélites)
+      const sedesOperativas = groupsData.groups.filter((group: any) => 
         group.name !== 'Otros' && 
         group.name !== 'Satélites'
       );
-      setSedesConRoomsJornadas(sedesFiltradas);
+      setAvailableSedes(sedesOperativas);
     } catch (error) {
-      console.error('Error cargando sedes con rooms y jornadas:', error);
+      console.error('Error cargando sedes disponibles:', error);
     }
   };
 
   const loadSedeInfo = async (sedeId: string) => {
     try {
       // Obtener información de la sede
-      const sede = sedesConRoomsJornadas.find(s => s.id === sedeId);
+      const sede = availableSedes.find(s => s.id === sedeId);
       if (!sede) return;
 
       // Obtener rooms de esta sede
@@ -114,54 +103,6 @@ export default function GestionarSedesPage() {
           rooms: sedeRooms
         });
       }
-
-      // Obtener información del admin asignado a esta sede
-      const usersResponse = await fetch('/api/users');
-      const usersData = await usersResponse.json();
-      
-      if (usersData.success) {
-        console.log('🔍 [DEBUG] Buscando admin para sede:', sedeId);
-        console.log('🔍 [DEBUG] Todos los usuarios:', usersData.users.length);
-        
-        // Filtrar solo admins (no super_admins)
-        const admins = usersData.users.filter((user: any) => user.role === 'admin');
-        console.log('🔍 [DEBUG] Solo admins:', admins.length);
-        
-        // Buscar TODOS los admins asignados a esta sede específica
-        const adminsAsignados = admins.filter((user: any) => {
-          const tieneEstaSede = user.user_groups?.some((ug: any) => ug.id === sedeId);
-          console.log(`🔍 [DEBUG] Admin ${user.name}:`, {
-            user_groups: user.user_groups,
-            tieneEstaSede,
-            sedeId,
-            sedesAsignadas: user.user_groups?.length || 0
-          });
-          return tieneEstaSede;
-        });
-        
-        console.log('🔍 [DEBUG] Admins asignados a esta sede:', adminsAsignados.length);
-        
-        // REGLA: Si hay múltiples admins, elegir el que tenga menos sedes asignadas
-        let adminAsignado = null;
-        if (adminsAsignados.length > 0) {
-          if (adminsAsignados.length === 1) {
-            adminAsignado = adminsAsignados[0];
-            console.log('🔍 [DEBUG] Solo un admin asignado:', adminAsignado.name);
-          } else {
-            // Múltiples admins: elegir el que tenga menos sedes asignadas
-            adminAsignado = adminsAsignados.reduce((menor: any, actual: any) => {
-              const sedesMenor = menor.user_groups?.length || 0;
-              const sedesActual = actual.user_groups?.length || 0;
-              console.log(`🔍 [DEBUG] Comparando: ${menor.name} (${sedesMenor} sedes) vs ${actual.name} (${sedesActual} sedes)`);
-              return sedesActual < sedesMenor ? actual : menor;
-            });
-            console.log('🔍 [DEBUG] Admin seleccionado (menos sedes):', adminAsignado.name, `(${adminAsignado.user_groups?.length || 0} sedes)`);
-          }
-        }
-        
-        console.log('🔍 [DEBUG] Admin final seleccionado:', adminAsignado);
-        setSedeAdminInfo(adminAsignado);
-      }
     } catch (error) {
       console.error('Error cargando información de la sede:', error);
     }
@@ -172,33 +113,13 @@ export default function GestionarSedesPage() {
       setLoading(true);
       setError(''); // Limpiar errores previos
       
-      // Obtener información del usuario desde localStorage
-      let userRole = 'admin';
-      let userGroups: string[] = [];
-      
-      try {
-        const userData = localStorage.getItem('user');
-        if (userData) {
-          const parsed = JSON.parse(userData);
-          userRole = parsed.role || 'admin';
-          userGroups = parsed.groups?.map((g: any) => g.id) || [];
-        }
-      } catch (error) {
-        console.warn('Error parsing user data from localStorage:', error);
-      }
-      
-      // Actualizar el estado del rol
-      setUserRole(userRole);
-      
-      console.log('🔍 [FRONTEND] Usuario:', { role: userRole, groups: userGroups });
-      
-      // Enviar información del usuario en el body de la petición
+      // Cargar grupos (sedes)
       const groupsResponse = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          userRole: userRole,
-          userGroups: userGroups
+          userRole: 'super_admin',
+          userGroups: []
         })
       });
       
@@ -208,24 +129,20 @@ export default function GestionarSedesPage() {
       
       const groupsData = await groupsResponse.json();
       
-      console.log('🔍 [FRONTEND] Respuesta de la API:', groupsData);
-      
       if (groupsData.success) {
-        // Filtrar grupos excluyendo "Otros" y "Satélites"
+        // Filtrar grupos operativos
         const filteredGroups = (groupsData.groups || []).filter((group: any) => 
           group.name !== 'Otros' && group.name !== 'Satélites'
         );
         
         setGroups(filteredGroups);
-        setUserRole(groupsData.userRole || 'admin');
         
-        // Si es admin y tiene grupos, seleccionar el primero por defecto
-        if (groupsData.userRole === 'admin' && filteredGroups.length > 0) {
-          setSelectedSedeForAdmin(filteredGroups[0].id);
-          setSelectedGroup(filteredGroups[0].id); // También para el modal de crear room
+        // Seleccionar primera sede por defecto
+        if (filteredGroups.length > 0) {
+          setSelectedGroup(filteredGroups[0].id);
         }
       } else {
-        setError('Error cargando grupos: ' + (groupsData.error || 'Error desconocido'));
+        setError('Error cargando sedes: ' + (groupsData.error || 'Error desconocido'));
       }
 
       // Cargar rooms
@@ -658,124 +575,68 @@ export default function GestionarSedesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           {/* Columna Izquierda: Selector de Sedes */}
           <div className="space-y-6">
-            {/* Para Super Admin: Selector de sedes con rooms y jornadas */}
-            {userRole === 'super_admin' && (
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Tus Sedes</h2>
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
+              <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
                   </div>
-                <AppleDropdown
-                  options={sedesConRoomsJornadas.map(sede => ({
-                    value: sede.id,
-                    label: sede.name
-                  }))}
-                  value={selectedSedeForSuperAdmin}
-                  onChange={(value) => {
-                    setSelectedSedeForSuperAdmin(value);
-                    setSelectedGroup(value);
-                    if (value) {
-                      loadSedeInfo(value);
-                    } else {
-                      setSelectedSedeInfo(null);
-                      setSedeAdminInfo(null);
-                    }
-                  }}
-                  placeholder="Selecciona una sede para gestionar"
-                />
-                {sedesConRoomsJornadas.length === 0 && (
-                  <p className="text-sm text-gray-500 mt-2">
-                    No hay sedes disponibles para gestionar
-                  </p>
-                )}
+                  <h2 className="text-lg font-semibold text-gray-900">Seleccionar Sede</h2>
                 </div>
+              <AppleDropdown
+                options={availableSedes.map(sede => ({
+                  value: sede.id,
+                  label: sede.name
+                }))}
+                value={selectedSede}
+                onChange={(value) => {
+                  setSelectedSede(value);
+                  setSelectedGroup(value);
+                  if (value) {
+                    loadSedeInfo(value);
+                  } else {
+                    setSelectedSedeInfo(null);
+                  }
+                }}
+                placeholder="Selecciona una sede para gestionar"
+              />
+              {availableSedes.length === 0 && (
+                <p className="text-sm text-gray-500 mt-2">
+                  No hay sedes disponibles para gestionar
+                </p>
+              )}
               </div>
-            )}
-
-            {/* Para Admin: Selector de Sede */}
-            {userRole === 'admin' && groups.length > 1 && (
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Seleccionar Sede</h2>
-                  </div>
-                <AppleDropdown
-                  options={groups.map(group => ({
-                    value: group.id,
-                    label: group.name
-                  }))}
-                  value={selectedSedeForAdmin}
-                  onChange={(value) => {
-                    setSelectedSedeForAdmin(value);
-                    setSelectedGroup(value);
-                  }}
-                  placeholder="Selecciona una sede"
-                />
-                </div>
-              </div>
-            )}
-
-            {/* Para Admin con una sola sede: Mostrar sede actual */}
-            {userRole === 'admin' && groups.length === 1 && (
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                      </svg>
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Sede Asignada</h2>
-                  </div>
-                <div className="flex items-center space-x-3">
-                  <div className="w-2.5 h-2.5 bg-blue-500 rounded-full"></div>
-                  <span className="text-gray-700 font-medium text-sm">{groups[0]?.name}</span>
-                </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
 
           {/* Columna Derecha: Crear Sede y Crear Room */}
           <div className="space-y-6">
-            {/* Para Super Admin: Crear Sede */}
-            {userRole === 'super_admin' && (
-              <div className="relative">
-                <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-slate-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
-                  <div className="flex items-center space-x-3 mb-4">
-                    <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-slate-700 rounded-lg flex items-center justify-center">
-                      <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
-                    </div>
-                    <h2 className="text-lg font-semibold text-gray-900">Crear Nueva Sede</h2>
+            {/* Crear Nueva Sede */}
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-slate-500/5 rounded-2xl blur-sm"></div>
+              <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
+                <div className="flex items-center space-x-3 mb-4">
+                  <div className="w-8 h-8 bg-gradient-to-br from-gray-600 to-slate-700 rounded-lg flex items-center justify-center">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
                   </div>
-                  <button
-                    onClick={() => setShowCreateGroup(true)}
-                    className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-3 px-4 rounded-xl hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                  >
-                    + Crear Sede
-                  </button>
+                  <h2 className="text-lg font-semibold text-gray-900">Crear Nueva Sede</h2>
                 </div>
+                <button
+                  onClick={() => setShowCreateGroup(true)}
+                  className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-3 px-4 rounded-xl hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                >
+                  + Crear Sede
+                </button>
               </div>
-            )}
+            </div>
 
-            {/* Crear Room - Solo para Super Admin o Admin con sede seleccionada */}
-            {((userRole === 'super_admin' && selectedSedeForSuperAdmin) || (userRole === 'admin' && (selectedSedeForAdmin || groups.length === 1))) && (
+            {/* Crear Room */}
+            {selectedSede && (
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
                 <div className="relative bg-white/70 backdrop-blur-sm rounded-2xl shadow-lg border border-white/20 p-6">
@@ -824,41 +685,6 @@ export default function GestionarSedesPage() {
                 </div>
               </div>
 
-            {/* Información del Admin Asignado */}
-            {sedeAdminInfo ? (
-              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-blue-200/30">
-                <div className="flex items-center space-x-3 mb-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                    </svg>
-                  </div>
-                  <h3 className="text-sm font-semibold text-gray-900">Admin Asignado</h3>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span className="text-white font-semibold text-lg">
-                      {sedeAdminInfo.name?.charAt(0) || 'A'}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-gray-900">{sedeAdminInfo.name}</p>
-                    <p className="text-xs text-gray-600">{sedeAdminInfo.email}</p>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-yellow-200/30">
-                <div className="flex items-center space-x-3">
-                  <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
-                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <p className="text-sm font-medium text-yellow-800">No hay admin asignado a esta sede</p>
-                </div>
-              </div>
-            )}
 
             {/* Rooms de la Sede */}
             <div>
@@ -1014,23 +840,11 @@ export default function GestionarSedesPage() {
               <form onSubmit={handleCreateRoom} className="space-y-6">
                 <div>
                   <label className="block text-gray-700 text-sm font-semibold mb-2">
-                    {userRole === 'admin' ? 'Sede' : 'Seleccionar Sede'}
+                    Sede Seleccionada
                   </label>
-                  {userRole === 'admin' ? (
-                    <div className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white/50 backdrop-blur-sm">
-                      {groups.find(g => g.id === selectedGroup)?.name || 'Sede no seleccionada'}
-                    </div>
-                  ) : (
-                    <AppleDropdown
-                      options={groups.map(group => ({
-                        value: group.id,
-                        label: group.name
-                      }))}
-                      value={selectedGroup}
-                      onChange={setSelectedGroup}
-                      placeholder="Selecciona una sede"
-                    />
-                  )}
+                  <div className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white/50 backdrop-blur-sm">
+                    {groups.find(g => g.id === selectedGroup)?.name || 'Ninguna sede seleccionada'}
+                  </div>
                 </div>
 
                 <div>
