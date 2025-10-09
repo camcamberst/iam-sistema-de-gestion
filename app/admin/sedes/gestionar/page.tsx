@@ -116,10 +116,25 @@ export default function GestionarSedesPage() {
       const usersData = await usersResponse.json();
       
       if (usersData.success) {
-        const adminAsignado = usersData.users.find((user: any) => 
-          user.role === 'admin' && 
-          user.user_groups?.some((ug: any) => ug.id === sedeId)
-        );
+        console.log('🔍 [DEBUG] Buscando admin para sede:', sedeId);
+        console.log('🔍 [DEBUG] Todos los usuarios:', usersData.users.length);
+        
+        // Filtrar solo admins (no super_admins)
+        const admins = usersData.users.filter((user: any) => user.role === 'admin');
+        console.log('🔍 [DEBUG] Solo admins:', admins.length);
+        
+        // Buscar admin asignado a esta sede específica
+        const adminAsignado = admins.find((user: any) => {
+          const tieneEstaSede = user.user_groups?.some((ug: any) => ug.id === sedeId);
+          console.log(`🔍 [DEBUG] Admin ${user.name}:`, {
+            user_groups: user.user_groups,
+            tieneEstaSede,
+            sedeId
+          });
+          return tieneEstaSede;
+        });
+        
+        console.log('🔍 [DEBUG] Admin encontrado:', adminAsignado);
         setSedeAdminInfo(adminAsignado || null);
       }
     } catch (error) {
