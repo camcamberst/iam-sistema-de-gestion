@@ -194,7 +194,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
               </div>
 
               {/* Línea 2: Timeline visual compacto */}
-              <div className="flex items-center space-x-3">
+              <div className="flex items-center justify-end space-x-3 ml-8">
                 {/* Solicitada - siempre visible */}
                 <div className="flex items-center space-x-1">
                   <div className="relative group">
@@ -205,9 +205,9 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                       {getStatusIcon('solicitada')}
                     </div>
                         {/* Tooltip personalizado */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
                           Solicitada: {new Date(request.requested_at).toLocaleDateString()}
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                   </div>
                   <span className="text-xs text-gray-600">Solicitada</span>
@@ -226,9 +226,9 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           {getStatusIcon('pendiente')}
                         </div>
                         {/* Tooltip personalizado */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
                           Pendiente: {request.updated_at ? new Date(request.updated_at).toLocaleDateString() : 'Sin fecha'}
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
                       <span className="text-xs text-gray-600">Pendiente</span>
@@ -249,7 +249,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           {getStatusIcon(request.status)}
                         </div>
                         {/* Tooltip personalizado */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
                           {request.status === 'entregada' ? 'Entregada' : 'Inviable'}: {
                             request.status === 'entregada' && request.delivered_at 
                               ? new Date(request.delivered_at).toLocaleDateString()
@@ -257,7 +257,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                               ? new Date(request.reverted_at).toLocaleDateString()
                               : 'Finalizado'
                           }
-                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
                       <span className="text-xs text-gray-600 capitalize">
