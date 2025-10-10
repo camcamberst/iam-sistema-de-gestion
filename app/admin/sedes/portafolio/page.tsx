@@ -125,14 +125,14 @@ export default function PortafolioModelos() {
       const groupsResponse = await fetch('/api/groups');
       if (groupsResponse.ok) {
         const groupsData = await groupsResponse.json();
-        setGroups(groupsData);
+        setGroups(Array.isArray(groupsData) ? groupsData : []);
       }
 
       // Cargar catálogo de plataformas
       const platformsResponse = await fetch('/api/plataformas-catalogo');
       if (platformsResponse.ok) {
         const platformsData = await platformsResponse.json();
-        setAllPlatforms(platformsData);
+        setAllPlatforms(Array.isArray(platformsData) ? platformsData : []);
       }
 
       // Cargar plataformas iniciales
@@ -159,7 +159,7 @@ export default function PortafolioModelos() {
       const response = await fetch(`/api/modelo-plataformas?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setPlatforms(data);
+        setPlatforms(Array.isArray(data) ? data : []);
       } else {
         setError('Error al cargar las plataformas');
       }
@@ -174,7 +174,7 @@ export default function PortafolioModelos() {
       const response = await fetch(`/api/groups/${groupId}/models`);
       if (response.ok) {
         const data = await response.json();
-        setModels(data);
+        setModels(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Error loading models:', error);
@@ -183,10 +183,10 @@ export default function PortafolioModelos() {
 
   const loadRoomsForGroup = async (groupId: string) => {
     try {
-      const response = await fetch(`/api/groups/${groupId}/rooms`);
+      const response = await fetch(`/api/groups/rooms?group_id=${groupId}`);
       if (response.ok) {
         const data = await response.json();
-        setRooms(data);
+        setRooms(Array.isArray(data) ? data : []);
       }
     } catch (error) {
       console.error('Error loading rooms:', error);
