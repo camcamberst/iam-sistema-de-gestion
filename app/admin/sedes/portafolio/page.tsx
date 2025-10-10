@@ -67,6 +67,7 @@ export default function PortafolioModelos() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [allPlatforms, setAllPlatforms] = useState<Platform[]>([]);
+  const [allowedModelIds, setAllowedModelIds] = useState<string[]>([]);
   
   // Estados de filtros
   const [selectedModel, setSelectedModel] = useState('');
@@ -136,6 +137,14 @@ export default function PortafolioModelos() {
       if (platformsResponse.ok) {
         const platformsData = await platformsResponse.json();
         setAllPlatforms(Array.isArray(platformsData) ? platformsData : []);
+      }
+
+      // Cargar IDs de usuarios con rol 'modelo' para filtrar panel
+      const usersRes = await fetch('/api/users?role=modelo');
+      if (usersRes.ok) {
+        const raw = await usersRes.json();
+        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.users) ? raw.users : []);
+        setAllowedModelIds(list.map((u: any) => u.id));
       }
 
       // Cargar plataformas iniciales
@@ -311,7 +320,10 @@ export default function PortafolioModelos() {
     }
   };
 
-  const filteredPlatforms = platforms;
+  // Filtrar para mostrar únicamente usuarios con rol 'modelo'
+  const filteredPlatforms = platforms.filter(p =>
+    allowedModelIds.length === 0 ? true : allowedModelIds.includes(p.model_id)
+  );
 
   // Agrupar plataformas por modelo
   const modelGroups = filteredPlatforms.reduce((acc, platform) => {
