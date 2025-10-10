@@ -141,27 +141,26 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
           <p className="text-gray-500">No hay solicitudes de plataformas activas</p>
         </div>
       ) : (
-        <div className="space-y-4">
-          {requests.map((request) => (
+        <div className="max-h-80 overflow-y-auto space-y-3">
+          {requests.slice(0, 5).map((request) => (
             <div
               key={request.id}
-              className="bg-white/80 backdrop-blur-sm rounded-lg border border-white/30 p-4"
+              className="bg-white/80 backdrop-blur-sm rounded-lg border border-white/30 p-3"
             >
-              <div className="flex items-center justify-between mb-3">
-                <div className="flex items-center space-x-3">
-                  <div className="flex items-center space-x-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: getStatusColor(request.status) }}
-                    />
-                    <span className="text-sm font-medium text-gray-900">
-                      {getModelDisplayName(request.model_email)}
-                    </span>
-                  </div>
-                  <span className="text-sm text-gray-500">•</span>
-                  <span className="text-sm text-gray-600">{request.platform_name}</span>
-                  <span className="text-sm text-gray-500">•</span>
-                  <span className="text-sm text-gray-600">{request.group_name}</span>
+              {/* Línea 1: Información del modelo y plataforma */}
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center space-x-2">
+                  <div
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: getStatusColor(request.status) }}
+                  />
+                  <span className="text-sm font-medium text-gray-900">
+                    {getModelDisplayName(request.model_email)}
+                  </span>
+                  <span className="text-xs text-gray-500">•</span>
+                  <span className="text-xs text-gray-600">{request.platform_name}</span>
+                  <span className="text-xs text-gray-500">•</span>
+                  <span className="text-xs text-gray-600">{request.group_name}</span>
                 </div>
                 
                 {canClose(request.status) && (
@@ -170,74 +169,78 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                     className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
                     title="Cerrar solicitud"
                   >
-                    <X className="w-4 h-4" />
+                    <X className="w-3 h-3" />
                   </button>
                 )}
               </div>
 
-              {/* Timeline visual */}
-              <div className="flex items-center space-x-4">
-                {/* Solicitada */}
-                <div className="flex items-center space-x-2">
+              {/* Línea 2: Timeline visual compacto */}
+              <div className="flex items-center space-x-3">
+                {/* Solicitada - siempre visible */}
+                <div className="flex items-center space-x-1">
                   <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
+                    className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs relative group"
                     style={{ backgroundColor: getStatusColor('solicitada') }}
+                    title={`Solicitada: ${new Date(request.requested_at).toLocaleDateString()}`}
                   >
                     {getStatusIcon('solicitada')}
                   </div>
                   <span className="text-xs text-gray-600">Solicitada</span>
                 </div>
 
-                {/* Flecha */}
-                <div className="w-8 h-0.5 bg-gray-300"></div>
+                {/* Mostrar Pendiente solo si el estado es pendiente, entregada o inviable */}
+                {['pendiente', 'entregada', 'inviable'].includes(request.status) && (
+                  <>
+                    <div className="w-6 h-0.5 bg-gray-300"></div>
+                    <div className="flex items-center space-x-1">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs relative group"
+                        style={{ backgroundColor: getStatusColor('pendiente') }}
+                        title={`Pendiente: ${request.delivered_at ? new Date(request.delivered_at).toLocaleDateString() : 'Pendiente'}`}
+                      >
+                        {getStatusIcon('pendiente')}
+                      </div>
+                      <span className="text-xs text-gray-600">Pendiente</span>
+                    </div>
+                  </>
+                )}
 
-                {/* Pendiente */}
-                <div className="flex items-center space-x-2">
-                  <div
-                    className={`w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium ${
-                      ['pendiente', 'entregada', 'inviable'].includes(request.status) 
-                        ? '' : 'opacity-50'
-                    }`}
-                    style={{ 
-                      backgroundColor: ['pendiente', 'entregada', 'inviable'].includes(request.status) 
-                        ? getStatusColor('pendiente') : '#e2e8f0'
-                    }}
-                  >
-                    {getStatusIcon('pendiente')}
-                  </div>
-                  <span className="text-xs text-gray-600">Pendiente</span>
-                </div>
-
-                {/* Flecha */}
-                <div className="w-8 h-0.5 bg-gray-300"></div>
-
-                {/* Estado Final */}
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-medium"
-                    style={{ backgroundColor: getStatusColor(request.status) }}
-                  >
-                    {getStatusIcon(request.status)}
-                  </div>
-                  <span className="text-xs text-gray-600 capitalize">
-                    {request.status === 'entregada' ? 'Entregada' : 'Inviable'}
-                  </span>
-                </div>
-              </div>
-
-              {/* Información adicional */}
-              <div className="mt-3 pt-3 border-t border-gray-200/50">
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>Solicitada: {new Date(request.requested_at).toLocaleDateString()}</span>
-                  {request.notes && (
-                    <span className="truncate max-w-xs" title={request.notes}>
-                      {request.notes}
-                    </span>
-                  )}
-                </div>
+                {/* Mostrar estado final solo si es entregada o inviable */}
+                {['entregada', 'inviable'].includes(request.status) && (
+                  <>
+                    <div className="w-6 h-0.5 bg-gray-300"></div>
+                    <div className="flex items-center space-x-1">
+                      <div
+                        className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs relative group"
+                        style={{ backgroundColor: getStatusColor(request.status) }}
+                        title={`${request.status === 'entregada' ? 'Entregada' : 'Inviable'}: ${
+                          request.status === 'entregada' && request.confirmed_at 
+                            ? new Date(request.confirmed_at).toLocaleDateString()
+                            : request.status === 'inviable' && request.reverted_at
+                            ? new Date(request.reverted_at).toLocaleDateString()
+                            : 'Finalizado'
+                        }`}
+                      >
+                        {getStatusIcon(request.status)}
+                      </div>
+                      <span className="text-xs text-gray-600 capitalize">
+                        {request.status === 'entregada' ? 'Entregada' : 'Inviable'}
+                      </span>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           ))}
+          
+          {/* Indicador si hay más de 5 registros */}
+          {requests.length > 5 && (
+            <div className="text-center py-2">
+              <span className="text-xs text-gray-500">
+                Y {requests.length - 5} solicitud{requests.length - 5 !== 1 ? 'es' : ''} más...
+              </span>
+            </div>
+          )}
         </div>
       )}
     </div>
