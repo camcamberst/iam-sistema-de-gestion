@@ -614,12 +614,12 @@ export default function PortafolioModelos() {
                   value={modalStatus}
                   onChange={(v) => setModalStatus(v as any)}
                   options={[
-                    { label: 'Disponible', value: 'disponible', color: '#ffffff' },
-                    { label: 'Solicitada', value: 'solicitada', color: '#3b82f6' },
-                    { label: 'Pendiente', value: 'pendiente', color: '#eab308' },
-                    { label: 'Entregada', value: 'entregada', color: '#22c55e' },
-                    { label: 'Desactivada', value: 'desactivada', color: '#000000' },
-                    { label: 'Inviable', value: 'inviable', color: '#ef4444' }
+                    { label: 'Disponible', value: 'disponible', color: '#f8fafc' },
+                    { label: 'Solicitada', value: 'solicitada', color: '#dbeafe' },
+                    { label: 'Pendiente', value: 'pendiente', color: '#fef3c7' },
+                    { label: 'Entregada', value: 'entregada', color: '#dcfce7' },
+                    { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
+                    { label: 'Inviable', value: 'inviable', color: '#fee2e2' }
                   ]}
                 />
               </div>
