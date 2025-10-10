@@ -177,7 +177,16 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                     {getModelDisplayName(request.model_email)}
                   </span>
                   <span className="text-xs text-gray-500">•</span>
-                  <span className="text-xs text-gray-600">{request.platform_name}</span>
+                  <span 
+                    className="text-xs font-medium px-2 py-1 rounded-full"
+                    style={{ 
+                      backgroundColor: getStatusColor(request.status),
+                      color: 'white',
+                      textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                    }}
+                  >
+                    {request.platform_name}
+                  </span>
                   <span className="text-xs text-gray-500">•</span>
                   <span className="text-xs text-gray-600">{request.group_name}</span>
                 </div>
