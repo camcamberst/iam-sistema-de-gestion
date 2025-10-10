@@ -246,9 +246,29 @@ export default function PortafolioModelos() {
       case 'solicitada': return 'bg-blue-50 border-blue-200 text-blue-700';
       case 'pendiente': return 'bg-yellow-50 border-yellow-200 text-yellow-700';
       case 'entregada': return 'bg-green-50 border-green-200 text-green-700';
-      case 'desactivada': return 'bg-gray-800 border-gray-700 text-white';
+      case 'desactivada': return 'bg-gray-900 border-gray-900 text-white';
       case 'inviable': return 'bg-red-50 border-red-200 text-red-700';
       default: return 'bg-gray-50 border-gray-200 text-gray-500';
+    }
+  };
+
+  // Estilo tipo etiqueta (pill) como los ROOMs de Gestionar Sedes
+  const getTagClasses = (status: string) => {
+    switch (status) {
+      case 'disponible':
+        return 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
+      case 'solicitada':
+        return 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100';
+      case 'pendiente':
+        return 'bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100';
+      case 'entregada':
+        return 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100';
+      case 'desactivada':
+        return 'bg-gray-900 text-white border border-gray-900 hover:opacity-90';
+      case 'inviable':
+        return 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100';
+      default:
+        return 'bg-gray-50 text-gray-600 border border-gray-200';
     }
   };
 
@@ -499,28 +519,57 @@ export default function PortafolioModelos() {
                     </div>
                   </div>
 
-                  {/* Grid de Plataformas */}
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
-                    {model.platforms.map((platform) => (
-                      <div
-                        key={`${platform.model_id}-${platform.platform_id}`}
-                        className={`${getStatusColor(platform.status)} border rounded-lg p-3 text-center hover:shadow-md transition-all duration-200 cursor-pointer`}
-                        onClick={() => handlePlatformAction(platform, 'request')}
-                      >
-                        <div className="flex flex-col items-center space-y-2">
-                          {getStatusIcon(platform.status)}
-                          <span className="text-xs font-medium truncate w-full">
-                            {platform.platform_name}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
+                  {/* Grid de Plataformas como etiquetas (todas las plataformas del catálogo) */}
+                  <div className="flex flex-wrap gap-2">
+                    {(allPlatforms || []).map((p) => {
+                      const found = model.platforms.find(mp => mp.platform_id === p.id);
+                      const tag = found || {
+                        id: null,
+                        model_id: model.model_id,
+                        model_name: model.model_name,
+                        model_email: model.model_email,
+                        platform_id: p.id,
+                        platform_name: p.name,
+                        platform_code: p.id,
+                        status: 'disponible',
+                        requested_at: null,
+                        delivered_at: null,
+                        confirmed_at: null,
+                        deactivated_at: null,
+                        reverted_at: null,
+                        requested_by_name: null,
+                        delivered_by_name: null,
+                        confirmed_by_name: null,
+                        deactivated_by_name: null,
+                        reverted_by_name: null,
+                        notes: null,
+                        revert_reason: null,
+                        is_initial_config: false,
+                        calculator_sync: false,
+                        calculator_activated_at: null,
+                        group_name: model.group_name,
+                        group_id: model.group_id,
+                        created_at: null,
+                        updated_at: null
+                      } as ModeloPlatform;
+
+                      return (
+                        <button
+                          key={`${model.model_id}-${p.id}`}
+                          type="button"
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${getTagClasses(tag.status)}`}
+                          onClick={() => handlePlatformAction(tag, 'request')}
+                        >
+                          {tag.platform_name}
+                        </button>
+                      );
+                    })}
                   </div>
 
                   {/* Estadísticas del Modelo */}
                   <div className="mt-4 pt-4 border-t border-gray-200/50">
                     <div className="flex items-center justify-between text-xs text-gray-600">
-                      <span>Total: {model.platforms.length} plataformas</span>
+                      <span>Total: {allPlatforms.length} plataformas</span>
                       <div className="flex space-x-4">
                         <span className="text-green-600">
                           Entregadas: {model.platforms.filter(p => p.status === 'entregada').length}
@@ -529,7 +578,7 @@ export default function PortafolioModelos() {
                           Solicitadas: {model.platforms.filter(p => p.status === 'solicitada').length}
                         </span>
                         <span className="text-gray-500">
-                          Disponibles: {model.platforms.filter(p => p.status === 'disponible').length}
+                          Disponibles: {allPlatforms.length - model.platforms.length}
                         </span>
                       </div>
                     </div>
