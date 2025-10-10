@@ -113,7 +113,12 @@ export default function PortafolioModelos() {
   // Cargar plataformas cuando cambien los filtros
   useEffect(() => {
     if (!loading) {
-      loadPlatforms();
+      const hasAnyFilter = !!(selectedGroup || selectedModel || selectedRoom || selectedJornada || selectedPlatform);
+      if (hasAnyFilter) {
+        loadPlatforms();
+      } else {
+        setPlatforms([]);
+      }
     }
   }, [selectedModel, selectedGroup, selectedRoom, selectedJornada, selectedPlatform]);
 
@@ -147,8 +152,7 @@ export default function PortafolioModelos() {
         setAllowedModelIds(list.map((u: any) => u.id));
       }
 
-      // Cargar plataformas iniciales
-      await loadPlatforms();
+      // No cargar plataformas inicialmente; esperar a que se apliquen filtros
       
     } catch (error) {
       console.error('Error loading initial data:', error);
@@ -460,7 +464,7 @@ export default function PortafolioModelos() {
           {modelsList.length === 0 ? (
             <div className="text-center py-12">
               <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No se encontraron modelos</p>
+              <p className="text-gray-500">Aplica un filtro de Grupo, Modelo, Room, Jornada o Plataforma para ver resultados.</p>
             </div>
           ) : (
             <div className="space-y-6">
