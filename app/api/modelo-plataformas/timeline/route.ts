@@ -32,6 +32,8 @@ export async function POST(request: NextRequest) {
       `)
       .in('status', ['solicitada', 'pendiente', 'entregada', 'inviable'])
       .is('closed_at', null) // Solo solicitudes no cerradas
+      .not('is_initial_config', true) // Excluir configuraciones iniciales automáticas
+      .not('requested_at', 'is', null) // Solo registros que fueron realmente solicitados
       .order('requested_at', { ascending: false });
 
     // Filtrar por grupos si es admin (no super_admin)
