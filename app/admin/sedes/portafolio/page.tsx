@@ -120,9 +120,11 @@ export default function PortafolioModelos() {
     const modelId = searchParams.get('model');
     const modelEmail = searchParams.get('email');
     
-    if (modelId && modelEmail) {
+    if (modelId && modelEmail && !loading) {
+      console.log('🔍 Aplicando filtro automático por modelo:', { modelId, modelEmail });
+      
       // Aplicar filtro automático por modelo
-      setSelectedModel(modelId);
+      applyModelFilter(modelId);
       
       // Limpiar parámetros de URL después de aplicarlos
       const newUrl = new URL(window.location.href);
@@ -130,7 +132,7 @@ export default function PortafolioModelos() {
       newUrl.searchParams.delete('email');
       router.replace(newUrl.pathname + newUrl.search, { scroll: false });
     }
-  }, [searchParams, router]);
+  }, [searchParams, router, loading]);
 
   // Cargar plataformas cuando cambien los filtros
   useEffect(() => {
@@ -252,6 +254,31 @@ export default function PortafolioModelos() {
     if (groupId) {
       loadModelsForGroup(groupId);
     }
+  };
+
+  // Función para aplicar filtro automático por modelo
+  const applyModelFilter = async (modelId: string) => {
+    console.log('🔍 Aplicando filtro por modelo:', modelId);
+    
+    // Buscar el grupo de la modelo
+    const response = await fetch(`/api/modelo-plataformas?model_id=${modelId}`);
+    if (response.ok) {
+      const data = await response.json();
+      const platforms = Array.isArray(data) ? data : (Array.isArray(data?.platforms) ? data.platforms : []);
+      
+      if (platforms.length > 0) {
+        const firstPlatform = platforms[0];
+        const groupId = firstPlatform.group_id;
+        
+        if (groupId) {
+          console.log('🔍 Encontrado grupo para modelo:', groupId);
+          setSelectedGroup(groupId);
+          await loadModelsForGroup(groupId);
+        }
+      }
+    }
+    
+    setSelectedModel(modelId);
   };
 
   const getStatusColor = (status: string) => {
