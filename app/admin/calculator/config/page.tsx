@@ -238,6 +238,17 @@ export default function ConfigCalculatorPage() {
       return;
     }
 
+    // Verificar si es configuración inicial (modelo sin configuración previa)
+    const isInitialConfig = !selectedModel.hasConfig;
+    
+    if (isInitialConfig) {
+      // Para configuración inicial, permitir cualquier plataforma
+      console.log('🔍 [INITIAL CONFIG] Permitir plataforma para configuración inicial:', platformId);
+      setEnabledPlatforms(prev => [...prev, platformId]);
+      return;
+    }
+
+    // Para configuraciones posteriores, validar estado del Portafolio
     try {
       // Consultar el estado de la plataforma en el Portafolio
       const response = await fetch(`/api/modelo-plataformas?model_id=${selectedModel.id}&platform_id=${platformId}`);
@@ -505,9 +516,14 @@ export default function ConfigCalculatorPage() {
                           <div className="flex-1">
                             <div className="flex items-center space-x-2 mb-1">
                               <span className="text-sm font-medium text-gray-900">{platform.name}</span>
-                              {portfolioData[platform.id] && (
+                              {portfolioData[platform.id] && selectedModel?.hasConfig && (
                                 <span className={`text-xs px-2 py-1 rounded-full border ${getPortfolioStatusColor(portfolioData[platform.id].status)}`}>
                                   {portfolioData[platform.id].status}
+                                </span>
+                              )}
+                              {!selectedModel?.hasConfig && (
+                                <span className="text-xs px-2 py-1 rounded-full border bg-green-100 text-green-800 border-green-200">
+                                  Disponible
                                 </span>
                               )}
                             </div>
