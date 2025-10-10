@@ -7,8 +7,11 @@ CREATE INDEX IF NOT EXISTS idx_modelo_plataformas_closed_at
 ON modelo_plataformas(closed_at) 
 WHERE closed_at IS NULL;
 
--- Actualizar la vista modelo_plataformas_detailed para incluir closed_at
-CREATE OR REPLACE VIEW modelo_plataformas_detailed AS
+-- Eliminar la vista existente y recrearla con closed_at
+DROP VIEW IF EXISTS modelo_plataformas_detailed;
+
+-- Recrear la vista modelo_plataformas_detailed para incluir closed_at
+CREATE VIEW modelo_plataformas_detailed AS
 SELECT 
   mp.id,
   mp.model_id,
