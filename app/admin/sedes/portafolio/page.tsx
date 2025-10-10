@@ -398,9 +398,9 @@ export default function PortafolioModelos() {
             {showFilters && (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <AppleSelect
-                  label="Sede"
+                  label="Grupo"
                   value={selectedGroup}
-                  options={[{ label: 'Todas las sedes', value: '' }, ...groups.map(g => ({ label: g.name, value: g.id }))]}
+                  options={[{ label: 'Todos los grupos', value: '' }, ...groups.map(g => ({ label: g.name, value: g.id }))]}
                   onChange={(val) => handleGroupChange(val)}
                 />
                 <AppleSelect
