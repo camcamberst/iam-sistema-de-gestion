@@ -123,8 +123,11 @@ export default function PortafolioModelos() {
       // Cargar grupos
       const groupsResponse = await fetch('/api/groups');
       if (groupsResponse.ok) {
-        const groupsData = await groupsResponse.json();
-        const clean = (Array.isArray(groupsData) ? groupsData : []).filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites');
+        const groupsRaw = await groupsResponse.json();
+        const list = Array.isArray(groupsRaw)
+          ? groupsRaw
+          : (Array.isArray(groupsRaw?.groups) ? groupsRaw.groups : []);
+        const clean = list.filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites');
         setGroups(clean);
       }
 
@@ -187,8 +190,9 @@ export default function PortafolioModelos() {
     try {
       const response = await fetch(`/api/groups/${groupId}/models`);
       if (response.ok) {
-        const data = await response.json();
-        setModels(Array.isArray(data) ? data : []);
+        const raw = await response.json();
+        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.models) ? raw.models : []);
+        setModels(list);
       }
     } catch (error) {
       console.error('Error loading models:', error);
@@ -199,8 +203,9 @@ export default function PortafolioModelos() {
     try {
       const response = await fetch(`/api/groups/rooms?group_id=${groupId}`);
       if (response.ok) {
-        const data = await response.json();
-        setRooms(Array.isArray(data) ? data : []);
+        const raw = await response.json();
+        const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.rooms) ? raw.rooms : []);
+        setRooms(list);
       }
     } catch (error) {
       console.error('Error loading rooms:', error);
