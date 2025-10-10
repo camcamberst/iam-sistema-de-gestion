@@ -257,17 +257,17 @@ export default function PortafolioModelos() {
   const getTagClasses = (status: string) => {
     switch (status) {
       case 'disponible':
-        return 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50';
+        return 'bg-slate-200 text-slate-700 border border-slate-300 hover:bg-slate-300';
       case 'solicitada':
-        return 'bg-blue-50 text-blue-700 border border-blue-200 hover:bg-blue-100';
+        return 'bg-blue-300 text-blue-800 border border-blue-400 hover:bg-blue-400';
       case 'pendiente':
-        return 'bg-yellow-50 text-yellow-700 border border-yellow-200 hover:bg-yellow-100';
+        return 'bg-yellow-300 text-yellow-800 border border-yellow-400 hover:bg-yellow-400';
       case 'entregada':
-        return 'bg-green-50 text-green-700 border border-green-200 hover:bg-green-100';
+        return 'bg-green-300 text-green-800 border border-green-400 hover:bg-green-400';
       case 'desactivada':
-        return 'bg-gray-900 text-white border border-gray-900 hover:opacity-90';
+        return 'bg-gray-800 text-white border border-gray-800 hover:opacity-90';
       case 'inviable':
-        return 'bg-red-50 text-red-700 border border-red-200 hover:bg-red-100';
+        return 'bg-red-300 text-red-800 border border-red-400 hover:bg-red-400';
       default:
         return 'bg-gray-50 text-gray-600 border border-gray-200';
     }
