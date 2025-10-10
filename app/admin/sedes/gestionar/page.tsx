@@ -93,13 +93,9 @@ export default function GestionarSedesPage() {
       );
       setAvailableSedes(sedesOperativas);
       
-      // Auto-seleccionar "Sede MP" como estado inicial ideal
-      const sedeMP = sedesOperativas.find((group: any) => group.name === 'Sede MP');
-      if (sedeMP) {
-        setSelectedSede(sedeMP.id);
-        setSelectedGroup(sedeMP.id);
-        loadSedeInfo(sedeMP.id);
-      }
+      // Iniciar sin sede seleccionada (estado "Todas las sedes")
+      setSelectedSede('');
+      setSelectedGroup('');
     } catch (error) {
       console.error('Error cargando sedes disponibles:', error);
     }
