@@ -178,11 +178,11 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                   </span>
                   <span className="text-xs text-gray-500">•</span>
                   <span 
-                    className="text-xs font-medium px-2 py-1 rounded-full"
+                    className="text-xs font-medium px-2 py-1 rounded-full text-white"
                     style={{ 
                       backgroundColor: getStatusColor(request.status),
-                      color: 'white',
-                      textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+                      textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                      display: 'inline-block'
                     }}
                   >
                     {request.platform_name}
