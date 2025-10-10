@@ -39,8 +39,8 @@ BEGIN
     UPDATE modelo_plataformas SET
       status = p_new_status,
       notes = COALESCE(p_reason, notes),
-      delivered_at = CASE WHEN p_new_status IN ('pendiente', 'entregada') THEN now() ELSE delivered_at END,
-      delivered_by = CASE WHEN p_new_status IN ('pendiente', 'entregada') THEN p_changed_by ELSE delivered_by END,
+      delivered_at = CASE WHEN p_new_status = 'entregada' THEN now() ELSE delivered_at END,
+      delivered_by = CASE WHEN p_new_status = 'entregada' THEN p_changed_by ELSE delivered_by END,
       deactivated_at = CASE WHEN p_new_status = 'desactivada' THEN now() ELSE deactivated_at END,
       deactivated_by = CASE WHEN p_new_status = 'desactivada' THEN p_changed_by ELSE deactivated_by END,
       reverted_at = CASE WHEN platform_record.status = 'inviable' AND p_new_status != 'inviable' THEN now() ELSE reverted_at END,
@@ -58,13 +58,9 @@ $$ LANGUAGE plpgsql;
 -- 🔄 ACTUALIZAR REGISTROS EXISTENTES
 -- =====================================================
 
--- Actualizar registros existentes que están en estado 'pendiente' pero no tienen delivered_at
-UPDATE modelo_plataformas 
-SET delivered_at = updated_at
-WHERE status = 'pendiente' 
-AND delivered_at IS NULL;
+-- No actualizar registros en 'pendiente' - delivered_at debe ser NULL para este estado
 
--- Verificar la corrección
+-- Verificar que la lógica es correcta
 SELECT 
   id,
   model_id,
@@ -75,6 +71,6 @@ SELECT
   confirmed_at,
   updated_at
 FROM modelo_plataformas 
-WHERE status = 'pendiente'
+WHERE status IN ('pendiente', 'entregada')
 ORDER BY updated_at DESC
-LIMIT 5;
+LIMIT 10;
