@@ -2,13 +2,17 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 // GET - Obtener catálogo completo de plataformas disponibles
 export async function GET(request: NextRequest) {
   try {
+    // Verificar variables de entorno durante el build
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Configuración de base de datos no disponible' }, { status: 503 });
+    }
     const { searchParams } = new URL(request.url);
     const includeStats = searchParams.get('include_stats') === 'true';
 
@@ -70,6 +74,10 @@ export async function GET(request: NextRequest) {
 // POST - Agregar nueva plataforma al catálogo (solo Super Admin)
 export async function POST(request: NextRequest) {
   try {
+    // Verificar variables de entorno durante el build
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Configuración de base de datos no disponible' }, { status: 503 });
+    }
     const body = await request.json();
     const { id, name, created_by } = body;
 

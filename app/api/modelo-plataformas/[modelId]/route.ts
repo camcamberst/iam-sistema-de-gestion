@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.NEXT_PUBLIC_SUPABASE_URL || '',
+  process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
 // GET - Obtener todas las plataformas de una modelo específica
@@ -12,6 +12,10 @@ export async function GET(
   { params }: { params: { modelId: string } }
 ) {
   try {
+    // Verificar variables de entorno durante el build
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Configuración de base de datos no disponible' }, { status: 503 });
+    }
     const { modelId } = params;
 
     if (!modelId) {
@@ -97,6 +101,10 @@ export async function PUT(
   { params }: { params: { modelId: string } }
 ) {
   try {
+    // Verificar variables de entorno durante el build
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+      return NextResponse.json({ error: 'Configuración de base de datos no disponible' }, { status: 503 });
+    }
     const { modelId } = params;
     const body = await request.json();
     const { platforms, changed_by } = body;
