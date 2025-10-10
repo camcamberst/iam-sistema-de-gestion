@@ -41,6 +41,18 @@ const getStandardPercentageByGroup = (groupName: string): number => {
   return result;
 };
 
+// Función para obtener el color del estado del Portafolio
+const getPortfolioStatusColor = (status: string): string => {
+  switch (status) {
+    case 'entregada': return 'bg-green-100 text-green-800 border-green-200';
+    case 'pendiente': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+    case 'solicitada': return 'bg-blue-100 text-blue-800 border-blue-200';
+    case 'inviable': return 'bg-red-100 text-red-800 border-red-200';
+    case 'desactivada': return 'bg-gray-100 text-gray-800 border-gray-200';
+    default: return 'bg-gray-100 text-gray-800 border-gray-200';
+  }
+};
+
 export default function ConfigCalculatorPage() {
   const router = useRouter();
   
@@ -65,6 +77,7 @@ export default function ConfigCalculatorPage() {
   const [minQuotaOverride, setMinQuotaOverride] = useState<string>('');
   const [groupPercentage, setGroupPercentage] = useState<string>('');
   const [groupMinQuota, setGroupMinQuota] = useState<string>('');
+  const [portfolioData, setPortfolioData] = useState<Record<string, any>>({});
 
   useEffect(() => {
     loadData();
@@ -193,14 +206,61 @@ export default function ConfigCalculatorPage() {
       }
       setGroupMinQuota('');
     }
+    
+    // Cargar datos del Portafolio para este modelo
+    try {
+      const response = await fetch(`/api/modelo-plataformas?model_id=${model.id}`);
+      const portfolioData = await response.json();
+      
+      // Crear un mapa de platform_id -> datos del portafolio
+      const portfolioMap: Record<string, any> = {};
+      portfolioData.forEach((item: any) => {
+        portfolioMap[item.platform_id] = item;
+      });
+      
+      setPortfolioData(portfolioMap);
+    } catch (error) {
+      console.error('Error cargando datos del Portafolio:', error);
+      setPortfolioData({});
+    }
   };
 
-  const handlePlatformToggle = (platformId: string) => {
-    setEnabledPlatforms(prev =>
-      prev.includes(platformId)
-        ? prev.filter(id => id !== platformId)
-        : [...prev, platformId]
-    );
+  const handlePlatformToggle = async (platformId: string) => {
+    // Si se está desactivando, permitir siempre
+    if (enabledPlatforms.includes(platformId)) {
+      setEnabledPlatforms(prev => prev.filter(id => id !== platformId));
+      return;
+    }
+
+    // Si se está activando, validar estado del Portafolio
+    if (!selectedModel) {
+      console.error('No hay modelo seleccionado');
+      return;
+    }
+
+    try {
+      // Consultar el estado de la plataforma en el Portafolio
+      const response = await fetch(`/api/modelo-plataformas?model_id=${selectedModel.id}&platform_id=${platformId}`);
+      const portfolioData = await response.json();
+      
+      if (portfolioData && portfolioData.length > 0) {
+        const platformStatus = portfolioData[0].status;
+        
+        // Solo permitir activar si está en estado 'entregada' o es configuración inicial
+        if (platformStatus === 'entregada' || portfolioData[0].is_initial_config) {
+          setEnabledPlatforms(prev => [...prev, platformId]);
+        } else {
+          // Mostrar mensaje de error
+          alert(`No se puede activar esta plataforma. Estado actual en Portafolio: ${platformStatus}. Debe estar en estado "Entregada" para poder activarla.`);
+        }
+      } else {
+        // Si no existe en el Portafolio, es una plataforma nueva que no se puede activar
+        alert('Esta plataforma no está disponible. Debe ser solicitada a través del Portafolio Modelos primero.');
+      }
+    } catch (error) {
+      console.error('Error validando estado del Portafolio:', error);
+      alert('Error al validar el estado de la plataforma. Intenta nuevamente.');
+    }
   };
 
   const handleGroupFilter = (groupId: string) => {
@@ -443,7 +503,14 @@ export default function ConfigCalculatorPage() {
                       platforms.map(platform => (
                         <div key={platform.id} className="flex items-center justify-between p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50">
                           <div className="flex-1">
-                            <span className="text-sm font-medium text-gray-900">{platform.name}</span>
+                            <div className="flex items-center space-x-2 mb-1">
+                              <span className="text-sm font-medium text-gray-900">{platform.name}</span>
+                              {portfolioData[platform.id] && (
+                                <span className={`text-xs px-2 py-1 rounded-full border ${getPortfolioStatusColor(portfolioData[platform.id].status)}`}>
+                                  {portfolioData[platform.id].status}
+                                </span>
+                              )}
+                            </div>
                             <p className="text-xs text-gray-500">{platform.description}</p>
                           </div>
                           <button
