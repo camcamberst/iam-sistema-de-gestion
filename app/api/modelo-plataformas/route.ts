@@ -56,19 +56,6 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Restringir SIEMPRE a usuarios con rol 'modelo'
-    const { data: onlyModels } = await supabase
-      .from('users')
-      .select('id')
-      .eq('role', 'modelo');
-
-    const modelIdsAllow = (onlyModels || []).map((u: any) => u.id);
-    if (modelIdsAllow.length > 0) {
-      query = query.in('model_id', modelIdsAllow);
-    } else {
-      return NextResponse.json([]);
-    }
-
     const { data, error } = await query.order('model_name', { ascending: true });
 
     if (error) {

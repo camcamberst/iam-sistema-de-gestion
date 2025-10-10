@@ -148,9 +148,12 @@ export default function PortafolioModelos() {
 
   const loadPlatforms = async () => {
     try {
-      // Si hay un grupo seleccionado, cargar modelos de ese grupo
+      // Si hay un grupo seleccionado, cargar modelos/rooms de ese grupo
       if (selectedGroup) {
-        await loadModelsForGroup(selectedGroup);
+        await Promise.all([
+          loadModelsForGroup(selectedGroup),
+          loadRoomsForGroup(selectedGroup)
+        ]);
       }
 
       const params = new URLSearchParams();
