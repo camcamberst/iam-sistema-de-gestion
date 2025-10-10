@@ -148,6 +148,11 @@ export default function PortafolioModelos() {
 
   const loadPlatforms = async () => {
     try {
+      // Si hay un grupo seleccionado, cargar modelos de ese grupo
+      if (selectedGroup) {
+        await loadModelsForGroup(selectedGroup);
+      }
+
       const params = new URLSearchParams();
       if (selectedModel) params.append('model_id', selectedModel);
       if (selectedGroup) params.append('group_id', selectedGroup);
@@ -159,7 +164,14 @@ export default function PortafolioModelos() {
       const response = await fetch(`/api/modelo-plataformas?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setPlatforms(Array.isArray(data) ? data : []);
+        // Filtrar solo modelos reales (role = 'modelo'), no admin ni super_admin
+        const filteredData = Array.isArray(data) ? data.filter(platform => {
+          // Filtrar por nombres que no sean administradores
+          return platform.model_name && 
+                 !platform.model_name.includes('Administrator') &&
+                 !platform.model_name.includes('Super Administrator');
+        }) : [];
+        setPlatforms(filteredData);
       } else {
         setError('Error al cargar las plataformas');
       }
@@ -303,6 +315,32 @@ export default function PortafolioModelos() {
     }
     return true;
   });
+
+  // Agrupar plataformas por modelo
+  const modelGroups = filteredPlatforms.reduce((acc, platform) => {
+    const modelKey = platform.model_id;
+    if (!acc[modelKey]) {
+      acc[modelKey] = {
+        model_id: platform.model_id,
+        model_name: platform.model_name,
+        model_email: platform.model_email,
+        group_name: platform.group_name,
+        group_id: platform.group_id,
+        platforms: []
+      };
+    }
+    acc[modelKey].platforms.push(platform);
+    return acc;
+  }, {} as Record<string, {
+    model_id: string;
+    model_name: string;
+    model_email: string;
+    group_name: string;
+    group_id: string;
+    platforms: ModeloPlatform[];
+  }>);
+
+  const modelsList = Object.values(modelGroups);
 
   if (loading) {
     return (
@@ -509,105 +547,71 @@ export default function PortafolioModelos() {
         <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              Plataformas ({filteredPlatforms.length})
+              Modelos ({modelsList.length})
             </h3>
-            <div className="flex items-center space-x-2">
-              <button
-                onClick={() => setViewMode('grid')}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'grid'
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <Grid3X3 className="w-4 h-4" />
-              </button>
-              <button
-                onClick={() => setViewMode('list')}
-                className={`p-2 rounded-lg transition-colors ${
-                  viewMode === 'list'
-                    ? 'bg-blue-100 text-blue-600'
-                    : 'text-gray-400 hover:text-gray-600'
-                }`}
-              >
-                <Users className="w-4 h-4" />
-              </button>
-            </div>
           </div>
 
-          {filteredPlatforms.length === 0 ? (
+          {modelsList.length === 0 ? (
             <div className="text-center py-12">
-              <Grid3X3 className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">No se encontraron plataformas</p>
+              <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-500">No se encontraron modelos</p>
             </div>
           ) : (
-            <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4' : 'space-y-3'}>
-              {filteredPlatforms.map((platform, index) => (
+            <div className="space-y-6">
+              {modelsList.map((model) => (
                 <div
-                  key={`${platform.model_id}-${platform.platform_id}-${index}`}
-                  className={`${getStatusColor(platform.status)} border-2 rounded-lg p-4 hover:shadow-md transition-all duration-200 ${
-                    viewMode === 'list' ? 'flex items-center justify-between' : ''
-                  }`}
+                  key={model.model_id}
+                  className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg p-6"
                 >
-                  <div className={viewMode === 'list' ? 'flex items-center space-x-4' : ''}>
-                    <div className="flex items-center space-x-2 mb-2">
-                      {getStatusIcon(platform.status)}
-                      <span className="font-semibold text-sm">
-                        {platform.platform_name}
-                      </span>
+                  {/* Header del Modelo */}
+                  <div className="flex items-center space-x-4 mb-6">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                      <User className="w-6 h-6 text-white" />
                     </div>
-                    
-                    <div className={viewMode === 'grid' ? 'space-y-1' : 'space-y-0'}>
-                      <p className="text-xs text-gray-600">
-                        <User className="w-3 h-3 inline mr-1" />
-                        {platform.model_name}
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        <Building2 className="w-3 h-3 inline mr-1" />
-                        {platform.group_name}
-                      </p>
-                      <p className="text-xs font-medium">
-                        {getStatusText(platform.status)}
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900">{model.model_name}</h4>
+                      <p className="text-sm text-gray-600 flex items-center">
+                        <Building2 className="w-4 h-4 mr-1" />
+                        {model.group_name}
                       </p>
                     </div>
                   </div>
 
-                  {viewMode === 'list' && (
-                    <div className="flex items-center space-x-2">
-                      {platform.status === 'disponible' && (
-                        <button
-                          onClick={() => handlePlatformAction(platform, 'request')}
-                          className="px-3 py-1 bg-blue-100 text-blue-700 rounded-md text-xs hover:bg-blue-200 transition-colors"
-                        >
-                          Solicitar
-                        </button>
-                      )}
-                      {platform.status === 'solicitada' && (
-                        <button
-                          onClick={() => handlePlatformAction(platform, 'deliver')}
-                          className="px-3 py-1 bg-green-100 text-green-700 rounded-md text-xs hover:bg-green-200 transition-colors"
-                        >
-                          Entregar
-                        </button>
-                      )}
-                      {platform.status === 'entregada' && (
-                        <button
-                          onClick={() => handlePlatformAction(platform, 'deactivate')}
-                          className="px-3 py-1 bg-gray-100 text-gray-700 rounded-md text-xs hover:bg-gray-200 transition-colors"
-                        >
-                          Desactivar
-                        </button>
-                      )}
-                      {platform.status === 'inviable' && userRole === 'super_admin' && (
-                        <button
-                          onClick={() => handlePlatformAction(platform, 'revert')}
-                          className="px-3 py-1 bg-yellow-100 text-yellow-700 rounded-md text-xs hover:bg-yellow-200 transition-colors"
-                        >
-                          Revertir
-                        </button>
-                      )}
+                  {/* Grid de Plataformas */}
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-8 gap-3">
+                    {model.platforms.map((platform) => (
+                      <div
+                        key={`${platform.model_id}-${platform.platform_id}`}
+                        className={`${getStatusColor(platform.status)} border rounded-lg p-3 text-center hover:shadow-md transition-all duration-200 cursor-pointer`}
+                        onClick={() => handlePlatformAction(platform, 'request')}
+                      >
+                        <div className="flex flex-col items-center space-y-2">
+                          {getStatusIcon(platform.status)}
+                          <span className="text-xs font-medium truncate w-full">
+                            {platform.platform_name}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Estadísticas del Modelo */}
+                  <div className="mt-4 pt-4 border-t border-gray-200/50">
+                    <div className="flex items-center justify-between text-xs text-gray-600">
+                      <span>Total: {model.platforms.length} plataformas</span>
+                      <div className="flex space-x-4">
+                        <span className="text-green-600">
+                          Entregadas: {model.platforms.filter(p => p.status === 'entregada').length}
+                        </span>
+                        <span className="text-blue-600">
+                          Solicitadas: {model.platforms.filter(p => p.status === 'solicitada').length}
+                        </span>
+                        <span className="text-gray-500">
+                          Disponibles: {model.platforms.filter(p => p.status === 'disponible').length}
+                        </span>
+                      </div>
                     </div>
-                  )}
+                  </div>
                 </div>
               ))}
             </div>
