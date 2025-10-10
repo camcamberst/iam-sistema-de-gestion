@@ -328,12 +328,10 @@ export async function POST(request: NextRequest) {
       
       // 1. Verificar que no haya otra modelo en el mismo room/jornada
       const { data: existingAssignments, error: checkError } = await supabase
-        .from('modelo_assignments')
+        .from('room_assignments')
         .select('id, model_id')
-        .eq('group_id', group_ids[0])
         .eq('room_id', room_id)
-        .eq('jornada', jornada)
-        .eq('is_active', true);
+        .eq('jornada', jornada);
       
       if (checkError) {
         console.error('❌ [API] Error verificando asignaciones existentes:', checkError);
@@ -353,11 +351,10 @@ export async function POST(request: NextRequest) {
 
       // 2. Verificar que la misma modelo no esté ya asignada en otra jornada del mismo room
       const { data: sameModelAssignments, error: sameModelError } = await supabase
-        .from('modelo_assignments')
+        .from('room_assignments')
         .select('id, jornada')
         .eq('model_id', authData.user.id)
-        .eq('room_id', room_id)
-        .eq('is_active', true);
+        .eq('room_id', room_id);
       
       if (sameModelError) {
         console.error('❌ [API] Error verificando asignaciones de la misma modelo:', sameModelError);
@@ -380,14 +377,12 @@ export async function POST(request: NextRequest) {
       
       try {
         const { error: assignmentError } = await supabase
-          .from('modelo_assignments')
+          .from('room_assignments')
           .insert({
             model_id: authData.user.id,
-            group_id: group_ids[0], // Usar el primer grupo
             room_id: room_id,
             jornada: jornada,
-            assigned_by: authData.user.id, // Auto-asignado
-            is_active: true
+            assigned_by: authData.user.id
           });
 
         if (assignmentError) {
@@ -570,12 +565,10 @@ export async function PUT(request: NextRequest) {
       
       // 1. Verificar que no haya otra modelo en el mismo room/jornada (excluyendo la actual)
       const { data: existingAssignments, error: checkError } = await supabase
-        .from('modelo_assignments')
+        .from('room_assignments')
         .select('id, model_id')
-        .eq('group_id', group_ids[0])
         .eq('room_id', room_id)
         .eq('jornada', jornada)
-        .eq('is_active', true)
         .neq('model_id', id); // Excluir asignaciones del usuario actual
       
       if (checkError) {
@@ -597,11 +590,10 @@ export async function PUT(request: NextRequest) {
       // 2. Verificar que la misma modelo no esté ya asignada en otra jornada del mismo room
       // (excluyendo la jornada actual que se está editando)
       const { data: sameModelAssignments, error: sameModelError } = await supabase
-        .from('modelo_assignments')
+        .from('room_assignments')
         .select('id, jornada')
         .eq('model_id', id)
         .eq('room_id', room_id)
-        .eq('is_active', true)
         .neq('jornada', jornada); // Excluir la jornada que se está editando
       
       if (sameModelError) {
@@ -626,20 +618,18 @@ export async function PUT(request: NextRequest) {
       try {
         // Eliminar asignaciones existentes
         await supabase
-          .from('modelo_assignments')
+          .from('room_assignments')
           .delete()
           .eq('model_id', id);
 
         // Crear nueva asignación
         const { error: assignmentError } = await supabase
-          .from('modelo_assignments')
+          .from('room_assignments')
           .insert({
             model_id: id,
-            group_id: group_ids[0], // Usar el primer grupo
             room_id: room_id,
             jornada: jornada,
-            assigned_by: id, // Auto-asignado
-            is_active: true
+            assigned_by: id
           });
 
         if (assignmentError) {
@@ -675,7 +665,7 @@ export async function PUT(request: NextRequest) {
       // Si es modelo pero no tiene jornada/room, eliminar asignaciones existentes
       console.log('🔍 [DEBUG] Eliminando asignaciones existentes para modelo sin jornada/room');
       await supabase
-        .from('modelo_assignments')
+        .from('room_assignments')
         .delete()
         .eq('model_id', id);
     }
