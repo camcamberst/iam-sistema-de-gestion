@@ -16,7 +16,7 @@ SELECT
   u.email as model_email,
   mp.platform_id,
   cp.name as platform_name,
-  cp.code as platform_code,
+  cp.id as platform_code,
   mp.status,
   mp.requested_at,
   mp.delivered_at,
