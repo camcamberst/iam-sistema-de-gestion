@@ -2,7 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 
-interface Option { label: string; value: string }
+interface Option { 
+  label: string; 
+  value: string; 
+  color?: string; 
+}
 
 interface AppleSelectProps {
   label?: string;
@@ -91,9 +95,15 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full text-left px-3 py-2.5 text-sm ${value === opt.value ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'}`}
+              className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between ${value === opt.value ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'}`}
             >
-              {opt.label}
+              <span>{opt.label}</span>
+              {opt.color && (
+                <div 
+                  className="w-3 h-3 rounded-full flex-shrink-0 ml-2"
+                  style={{ backgroundColor: opt.color }}
+                />
+              )}
             </button>
           ))}
         </div>
