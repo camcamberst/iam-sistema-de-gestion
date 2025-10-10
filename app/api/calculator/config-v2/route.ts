@@ -262,7 +262,7 @@ export async function POST(request: NextRequest) {
         console.log('🔍 [CONFIG-V2] No existe Portafolio, creando automáticamente...');
         
         // Crear entradas en modelo_plataformas para cada plataforma habilitada
-        const portfolioEntries = enabledPlatforms.map(platformId => ({
+        const portfolioEntries = enabledPlatforms.map((platformId: string) => ({
           model_id: modelId,
           platform_id: platformId,
           status: 'entregada', // Estado inicial para configuración automática
