@@ -268,10 +268,12 @@ export default function RatesPage() {
 	// ===========================================
 	if (authLoading) {
 		return (
-			<div className="p-6 space-y-6">
-				<div className="apple-card text-center py-12">
-					<div className="animate-spin w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"></div>
-					<p className="text-gray-600">Verificando permisos...</p>
+			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24">
+				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+					<div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 shadow-lg text-center">
+						<div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
+						<p className="text-sm text-gray-600">Verificando permisos...</p>
+					</div>
 				</div>
 			</div>
 		);
@@ -279,108 +281,139 @@ export default function RatesPage() {
 
 	if (!userInfo) {
 		return (
-			<div className="p-6 space-y-6">
-				<div className="apple-card text-center py-12">
-					<div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
-						<span className="text-red-600 text-2xl">🚫</span>
+			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24">
+				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+					<div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 shadow-lg text-center">
+						<div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+							<svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+							</svg>
+						</div>
+						<h2 className="text-lg font-semibold text-gray-900 mb-2">Acceso Denegado</h2>
+						<p className="text-sm text-gray-600 mb-6">
+							No tienes permisos para acceder a esta función.
+						</p>
+						<button 
+							onClick={() => router.push('/admin/dashboard')}
+							className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+						>
+							Volver al Dashboard
+						</button>
 					</div>
-					<h2 className="text-xl font-semibold text-gray-900 mb-2">Acceso Denegado</h2>
-					<p className="text-gray-600 mb-4">
-						No tienes permisos para acceder a esta función.
-					</p>
-					<button 
-						onClick={() => router.push('/admin/dashboard')}
-						className="apple-button"
-					>
-						Volver al Dashboard
-					</button>
 				</div>
 			</div>
 		);
 	}
 
 	return (
-		<div className="p-6 space-y-6">
-			<div className="flex items-center justify-between">
-				<div>
-					<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
-					<p className="text-sm text-gray-500 mt-1">
-						{userInfo.role === 'super_admin' 
-							? 'Puedes gestionar RATES globales y por grupo'
-							: 'Solo puedes gestionar RATES de tus grupos asignados'
-						}
-					</p>
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24">
+			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+				{/* Header */}
+				<div className="mb-10">
+					<div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+						<div className="flex items-center justify-between">
+							<div className="flex items-center space-x-3">
+								<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+									<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+									</svg>
+								</div>
+								<div>
+									<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
+									<p className="text-sm text-gray-600 mt-1">
+										{userInfo.role === 'super_admin' 
+											? 'Puedes gestionar RATES globales y por grupo'
+											: 'Solo puedes gestionar RATES de tus grupos asignados'
+										}
+									</p>
+								</div>
+							</div>
+							<div className="text-sm text-gray-500">
+								Acceso: <span className="font-medium text-blue-600">
+									{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
+								</span>
+							</div>
+						</div>
+					</div>
 				</div>
-				<div className="text-sm text-gray-500">
-					Acceso: <span className="font-medium text-blue-600">
-						{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-					</span>
+
+				{/* Formulario Establecer rates manual */}
+				<div className="mb-8">
+					<div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-md">
+						<div className="flex items-center space-x-2 mb-4">
+							<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+							</svg>
+							<h2 className="text-base font-semibold text-gray-900">Establecer rates manual</h2>
+						</div>
+						<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+							<div>
+								<label className="block text-xs font-medium text-gray-600 mb-2">Aplicar a</label>
+								<AppleDropdown
+									options={availableScopes.map(scope => ({
+										value: scope.value,
+										label: scope.label
+									}))}
+									value={form.scope}
+									onChange={(value) => setForm({ ...form, scope: value })}
+									placeholder="Selecciona alcance"
+									className="text-sm"
+								/>
+							</div>
+							<div>
+								<label className="block text-xs font-medium text-gray-600 mb-2">Divisa</label>
+								<AppleDropdown
+									options={[
+										{ value: 'USD→COP', label: 'USD → COP' },
+										{ value: 'EUR→USD', label: 'EUR → USD' },
+										{ value: 'GBP→USD', label: 'GBP → USD' }
+									]}
+									value={form.kind}
+									onChange={(value) => setForm({ ...form, kind: value as RateKind })}
+									placeholder="Selecciona divisa"
+									className="text-sm"
+								/>
+							</div>
+							<div>
+								<label className="block text-xs font-medium text-gray-600 mb-2">Valor</label>
+								<input
+									type="number"
+									step="any"
+									className="w-full px-3 py-2 text-sm border border-gray-200/50 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+									value={form.value}
+									onChange={(e) => setForm({ ...form, value: e.target.value })}
+									required
+								/>
+							</div>
+							<div className="flex gap-2">
+								<button 
+									type="submit" 
+									className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+								>
+									Guardar
+								</button>
+								<button 
+									type="button" 
+									className="flex-1 px-4 py-2 text-sm font-medium text-blue-600 bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg hover:bg-blue-50/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+									onClick={loadRates}
+								>
+									Refrescar
+								</button>
+							</div>
+						</form>
+						{error && (
+							<div className="mt-4 p-3 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg">
+								<p className="text-red-600 text-xs">{error}</p>
+							</div>
+						)}
+					</div>
 				</div>
-			</div>
 
-			<div className="apple-card">
-				<h2 className="text-base font-medium mb-3">Establecer rates manual</h2>
-				<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
-					<div>
-						<label className="block text-xs text-gray-500 mb-2">Aplicar a</label>
-						<AppleDropdown
-							options={availableScopes.map(scope => ({
-								value: scope.value,
-								label: scope.label
-							}))}
-							value={form.scope}
-							onChange={(value) => setForm({ ...form, scope: value })}
-							placeholder="Selecciona alcance"
-							className="text-sm"
-						/>
-					</div>
-					<div>
-						<label className="block text-xs text-gray-500 mb-2">Divisa</label>
-						<AppleDropdown
-							options={[
-								{ value: 'USD→COP', label: 'USD → COP' },
-								{ value: 'EUR→USD', label: 'EUR → USD' },
-								{ value: 'GBP→USD', label: 'GBP → USD' }
-							]}
-							value={form.kind}
-							onChange={(value) => setForm({ ...form, kind: value as RateKind })}
-							placeholder="Selecciona divisa"
-							className="text-sm"
-						/>
-					</div>
-					<div>
-						<label className="block text-xs text-gray-500 mb-2">Valor</label>
-						<input
-							type="number"
-							step="any"
-							className="w-full px-4 py-3 text-sm border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-							value={form.value}
-							onChange={(e) => setForm({ ...form, value: e.target.value })}
-							required
-						/>
-					</div>
-					<div className="flex gap-3">
-						<button 
-							type="submit" 
-							className="flex-1 px-6 py-3 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-						>
-							Guardar
-						</button>
-						<button 
-							type="button" 
-							className="flex-1 px-6 py-3 text-sm font-medium text-blue-600 bg-white border border-blue-600 rounded-lg hover:bg-blue-50 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors"
-							onClick={loadRates}
-						>
-							Refrescar
-						</button>
-					</div>
-				</form>
-				{error && <p className="text-red-600 text-xs mt-2">{error}</p>}
-			</div>
-
-			<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-				<ActiveRatesPanel refreshTrigger={refreshTrigger} />
-				<ReferenceRatesPanel />
+				{/* Paneles de Tasas */}
+				<div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+					<ActiveRatesPanel refreshTrigger={refreshTrigger} />
+					<ReferenceRatesPanel />
+				</div>
 			</div>
 		</div>
 	);
