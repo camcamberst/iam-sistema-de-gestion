@@ -32,22 +32,6 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
     loadTimelineData();
   }, [userRole, userGroups]);
 
-  // Debug: Log de datos para verificar fechas
-  useEffect(() => {
-    if (requests.length > 0) {
-      console.log('🔍 Timeline requests data:', requests);
-      requests.forEach((req, index) => {
-        console.log(`Request ${index}:`, {
-          id: req.id,
-          status: req.status,
-          requested_at: req.requested_at,
-          delivered_at: req.delivered_at,
-          confirmed_at: req.confirmed_at,
-          reverted_at: req.reverted_at
-        });
-      });
-    }
-  }, [requests]);
 
   const loadTimelineData = async () => {
     try {
