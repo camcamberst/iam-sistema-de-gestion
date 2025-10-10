@@ -301,4 +301,3 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     </div>
   );
 }
-}
