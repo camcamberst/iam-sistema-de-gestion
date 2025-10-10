@@ -194,42 +194,17 @@ export default function UsersListPage() {
       return;
     }
     
-    // Cargar asignaciones si es un modelo ANTES de abrir el modal
-    if (user.role === 'modelo') {
-      try {
-        const response = await fetch(`/api/assignments/${user.id}`);
-        const result = await response.json();
-        
-        if (result.success && result.assignments.length > 0) {
-          const assignment = result.assignments[0]; // Tomar la primera asignación activa
-          console.log('🔍 [FRONTEND] Asignación cargada:', assignment);
-          
-          // Actualizar el usuario con los datos de asignación ANTES de abrir el modal
-          const userWithAssignment = {
-            ...user,
-            jornada: assignment.jornada,
-            room_id: assignment.room_id,
-            room_name: assignment.room_name
-          };
-          
-          setSelectedUser(userWithAssignment);
-          setShowEditModal(true);
-        } else {
-          // No hay asignaciones, abrir modal con usuario normal
-          setSelectedUser(user);
-          setShowEditModal(true);
-        }
-      } catch (error) {
-        console.error('❌ [FRONTEND] Error cargando asignaciones:', error);
-        // En caso de error, abrir modal con usuario normal
-        setSelectedUser(user);
-        setShowEditModal(true);
-      }
-    } else {
-      // No es modelo, abrir modal directamente
-      setSelectedUser(user);
-      setShowEditModal(true);
-    }
+    // Los datos de room y jornada ya vienen incluidos en el objeto user
+    // desde la API /api/users que acabamos de corregir
+    console.log('🔍 [FRONTEND] Abriendo modal para usuario:', user);
+    console.log('🔍 [FRONTEND] Datos de asignación:', {
+      jornada: user.jornada,
+      room_id: user.room_id,
+      room_name: user.room_name
+    });
+    
+    setSelectedUser(user);
+    setShowEditModal(true);
   };
 
   const handleDeleteUser = async (userId: string) => {
