@@ -204,7 +204,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         href: '#', // Sin navegación directa
         subItems: [
           { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar' },
-          { label: 'Asignaciones', href: '/admin/sedes/asignaciones' },
+          { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio' },
           { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard' }
         ]
       });
