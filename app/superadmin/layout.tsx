@@ -17,6 +17,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     role: 'super_admin' | 'admin' | 'modelo' | string;
     groups: string[];
   } | null>(null);
+  const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -56,6 +57,45 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       setLoadingUser(false);
     }
   };
+
+  // Funciones para manejar el dropdown con delay
+  const handleMenuEnter = (itemId: string) => {
+    if (menuTimeout) {
+      clearTimeout(menuTimeout);
+      setMenuTimeout(null);
+    }
+    setActiveMenu(itemId);
+  };
+
+  const handleMenuLeave = () => {
+    const timeout = setTimeout(() => {
+      setActiveMenu(null);
+    }, 300); // 300ms de delay antes de cerrar
+    setMenuTimeout(timeout);
+  };
+
+  const handleDropdownEnter = () => {
+    if (menuTimeout) {
+      clearTimeout(menuTimeout);
+      setMenuTimeout(null);
+    }
+  };
+
+  const handleDropdownLeave = () => {
+    const timeout = setTimeout(() => {
+      setActiveMenu(null);
+    }, 150); // Delay más corto cuando se sale del dropdown
+    setMenuTimeout(timeout);
+  };
+
+  // Cleanup timeout al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (menuTimeout) {
+        clearTimeout(menuTimeout);
+      }
+    };
+  }, [menuTimeout]);
 
   // ===========================================
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
@@ -152,8 +192,8 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                 <div
                   key={item.id}
                   className="relative"
-                  onMouseEnter={() => setActiveMenu(item.id)}
-                  onMouseLeave={() => setActiveMenu(null)}
+                  onMouseEnter={() => handleMenuEnter(item.id)}
+                  onMouseLeave={handleMenuLeave}
                 >
                   {item.href === '#' ? (
                     <span
@@ -180,7 +220,11 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (
-                    <div className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200">
+                    <div 
+                      className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
+                      onMouseEnter={handleDropdownEnter}
+                      onMouseLeave={handleDropdownLeave}
+                    >
                       <div className="p-2">
                         {item.subItems.map((subItem) => (
                           <Link
