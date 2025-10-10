@@ -150,7 +150,8 @@ export default function PortafolioModelos() {
       if (usersRes.ok) {
         const raw = await usersRes.json();
         const list = Array.isArray(raw) ? raw : (Array.isArray(raw?.users) ? raw.users : []);
-        setAllowedModelIds(list.map((u: any) => u.id));
+        const onlyModels = list.filter((u: any) => (u.role === 'modelo'));
+        setAllowedModelIds(onlyModels.map((u: any) => u.id));
       }
 
       // No cargar plataformas inicialmente; esperar a que se apliquen filtros

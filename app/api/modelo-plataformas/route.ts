@@ -56,6 +56,21 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Forzar filtro por rol 'modelo' en servidor usando join implícito del view
+    if (!modelId) {
+      // Cuando no pedimos un modelo específico, filtramos por ids de usuarios con rol 'modelo'
+      const { data: idsRes } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'modelo');
+      const ids = (idsRes || []).map((r: any) => r.id);
+      if (ids.length > 0) {
+        query = query.in('model_id', ids);
+      } else {
+        return NextResponse.json([]);
+      }
+    }
+
     const { data, error } = await query.order('model_name', { ascending: true });
 
     if (error) {
