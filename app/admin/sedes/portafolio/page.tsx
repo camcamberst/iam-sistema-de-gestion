@@ -73,7 +73,6 @@ export default function PortafolioModelos() {
   // Estados de filtros
   const [selectedModel, setSelectedModel] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
-  const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedJornada, setSelectedJornada] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
   
@@ -116,14 +115,14 @@ export default function PortafolioModelos() {
   // Cargar plataformas cuando cambien los filtros
   useEffect(() => {
     if (!loading) {
-      const hasAnyFilter = !!(selectedGroup || selectedModel || selectedRoom || selectedJornada || selectedPlatform);
+      const hasAnyFilter = !!(selectedGroup || selectedModel || selectedJornada || selectedPlatform);
       if (hasAnyFilter) {
         loadPlatforms();
       } else {
         setPlatforms([]);
       }
     }
-  }, [selectedModel, selectedGroup, selectedRoom, selectedJornada, selectedPlatform]);
+  }, [selectedModel, selectedGroup, selectedJornada, selectedPlatform]);
 
   const loadInitialData = async () => {
     try {
@@ -168,18 +167,14 @@ export default function PortafolioModelos() {
 
   const loadPlatforms = async () => {
     try {
-      // Si hay un grupo seleccionado, cargar modelos/rooms de ese grupo
+      // Si hay un grupo seleccionado, cargar modelos de ese grupo
       if (selectedGroup) {
-        await Promise.all([
-          loadModelsForGroup(selectedGroup),
-          loadRoomsForGroup(selectedGroup)
-        ]);
+        await loadModelsForGroup(selectedGroup);
       }
 
       const params = new URLSearchParams();
       if (selectedModel) params.append('model_id', selectedModel);
       if (selectedGroup) params.append('group_id', selectedGroup);
-      if (selectedRoom) params.append('room_id', selectedRoom);
       if (selectedJornada) params.append('jornada', selectedJornada);
       if (selectedPlatform) params.append('platform_id', selectedPlatform);
 
@@ -232,13 +227,10 @@ export default function PortafolioModelos() {
   const handleGroupChange = (groupId: string) => {
     setSelectedGroup(groupId);
     setSelectedModel('');
-    setSelectedRoom('');
     setModels([]);
-    setRooms([]);
     
     if (groupId) {
       loadModelsForGroup(groupId);
-      loadRoomsForGroup(groupId);
     }
   };
 
@@ -436,7 +428,7 @@ export default function PortafolioModelos() {
             </div>
 
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                 <AppleSelect
                   label="Grupo"
                   value={selectedGroup}
@@ -450,14 +442,6 @@ export default function PortafolioModelos() {
                   value={selectedModel}
                   options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: getModelDisplayName(m.email), value: m.id }))]}
                   onChange={(val) => setSelectedModel(val)}
-                  onFocus={() => setOpenFiltersCount(c => c + 1)}
-                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
-                />
-                <AppleSelect
-                  label="Room"
-                  value={selectedRoom}
-                  options={[{ label: 'Todos los rooms', value: '' }, ...rooms.map(r => ({ label: r.name, value: r.id }))]}
-                  onChange={(val) => setSelectedRoom(val)}
                   onFocus={() => setOpenFiltersCount(c => c + 1)}
                   onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
                 />
