@@ -61,10 +61,9 @@ export async function GET(request: NextRequest) {
       
       try {
         const { data: assignments, error: assignmentsError } = await supabase
-          .from('modelo_assignments')
-          .select('model_id, jornada, room_id, is_active')
-          .in('model_id', modelUserIds)
-          .eq('is_active', true);
+          .from('room_assignments_detailed')
+          .select('model_id, jornada, room_id, room_name')
+          .in('model_id', modelUserIds);
         
         if (assignmentsError) {
           console.error('❌ [API] Error obteniendo asignaciones:', assignmentsError);
