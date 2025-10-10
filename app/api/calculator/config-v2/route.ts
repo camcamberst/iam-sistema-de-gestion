@@ -244,6 +244,54 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 6. CREAR PORTAFOLIO AUTOMÁTICAMENTE para configuración inicial
+    console.log('🔍 [CONFIG-V2] Creando Portafolio automáticamente para configuración inicial...');
+    
+    try {
+      // Verificar si ya existe Portafolio para esta modelo
+      const { data: existingPortfolio, error: portfolioCheckError } = await supabase
+        .from('modelo_plataformas')
+        .select('id')
+        .eq('model_id', modelId)
+        .limit(1);
+
+      if (portfolioCheckError) {
+        console.error('Error al verificar Portafolio existente:', portfolioCheckError);
+      } else if (!existingPortfolio || existingPortfolio.length === 0) {
+        // No existe Portafolio, crear uno automáticamente
+        console.log('🔍 [CONFIG-V2] No existe Portafolio, creando automáticamente...');
+        
+        // Crear entradas en modelo_plataformas para cada plataforma habilitada
+        const portfolioEntries = enabledPlatforms.map(platformId => ({
+          model_id: modelId,
+          platform_id: platformId,
+          status: 'entregada', // Estado inicial para configuración automática
+          is_initial_config: true, // Marcar como configuración inicial
+          requested_at: new Date().toISOString(),
+          delivered_at: new Date().toISOString(), // Entregada inmediatamente
+          requested_by: adminId,
+          delivered_by: adminId,
+          notes: 'Configuración inicial automática'
+        }));
+
+        const { error: portfolioError } = await supabase
+          .from('modelo_plataformas')
+          .insert(portfolioEntries);
+
+        if (portfolioError) {
+          console.error('Error al crear Portafolio automáticamente:', portfolioError);
+          // No fallar la operación principal, solo loggear el error
+        } else {
+          console.log('✅ [CONFIG-V2] Portafolio creado automáticamente con', portfolioEntries.length, 'plataformas');
+        }
+      } else {
+        console.log('🔍 [CONFIG-V2] Portafolio ya existe para esta modelo, saltando creación automática');
+      }
+    } catch (portfolioError) {
+      console.error('Error en creación automática de Portafolio:', portfolioError);
+      // No fallar la operación principal
+    }
+
     console.log('🔍 [CONFIG-V2] Created config:', data);
     return NextResponse.json({ success: true, config: data });
 
