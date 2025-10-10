@@ -178,12 +178,18 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
               <div className="flex items-center space-x-3">
                 {/* Solicitada - siempre visible */}
                 <div className="flex items-center space-x-1">
-                  <div
-                    className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs relative group"
-                    style={{ backgroundColor: getStatusColor('solicitada') }}
-                    title={`Solicitada: ${new Date(request.requested_at).toLocaleDateString()}`}
-                  >
-                    {getStatusIcon('solicitada')}
+                  <div className="relative group">
+                    <div
+                      className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help"
+                      style={{ backgroundColor: getStatusColor('solicitada') }}
+                    >
+                      {getStatusIcon('solicitada')}
+                    </div>
+                    {/* Tooltip personalizado */}
+                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                      Solicitada: {new Date(request.requested_at).toLocaleDateString()}
+                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                    </div>
                   </div>
                   <span className="text-xs text-gray-600">Solicitada</span>
                 </div>
@@ -193,12 +199,18 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                   <>
                     <div className="w-6 h-0.5 bg-gray-300"></div>
                     <div className="flex items-center space-x-1">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs relative group"
-                        style={{ backgroundColor: getStatusColor('pendiente') }}
-                        title={`Pendiente: ${request.delivered_at ? new Date(request.delivered_at).toLocaleDateString() : 'Pendiente'}`}
-                      >
-                        {getStatusIcon('pendiente')}
+                      <div className="relative group">
+                        <div
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help"
+                          style={{ backgroundColor: getStatusColor('pendiente') }}
+                        >
+                          {getStatusIcon('pendiente')}
+                        </div>
+                        {/* Tooltip personalizado */}
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          Pendiente: {request.delivered_at ? new Date(request.delivered_at).toLocaleDateString() : 'Pendiente'}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
                       </div>
                       <span className="text-xs text-gray-600">Pendiente</span>
                     </div>
@@ -210,18 +222,24 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                   <>
                     <div className="w-6 h-0.5 bg-gray-300"></div>
                     <div className="flex items-center space-x-1">
-                      <div
-                        className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs relative group"
-                        style={{ backgroundColor: getStatusColor(request.status) }}
-                        title={`${request.status === 'entregada' ? 'Entregada' : 'Inviable'}: ${
-                          request.status === 'entregada' && request.confirmed_at 
-                            ? new Date(request.confirmed_at).toLocaleDateString()
-                            : request.status === 'inviable' && request.reverted_at
-                            ? new Date(request.reverted_at).toLocaleDateString()
-                            : 'Finalizado'
-                        }`}
-                      >
-                        {getStatusIcon(request.status)}
+                      <div className="relative group">
+                        <div
+                          className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help"
+                          style={{ backgroundColor: getStatusColor(request.status) }}
+                        >
+                          {getStatusIcon(request.status)}
+                        </div>
+                        {/* Tooltip personalizado */}
+                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-10">
+                          {request.status === 'entregada' ? 'Entregada' : 'Inviable'}: {
+                            request.status === 'entregada' && request.confirmed_at 
+                              ? new Date(request.confirmed_at).toLocaleDateString()
+                              : request.status === 'inviable' && request.reverted_at
+                              ? new Date(request.reverted_at).toLocaleDateString()
+                              : 'Finalizado'
+                          }
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
                       </div>
                       <span className="text-xs text-gray-600 capitalize">
                         {request.status === 'entregada' ? 'Entregada' : 'Inviable'}
