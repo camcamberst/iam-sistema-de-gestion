@@ -61,6 +61,12 @@ interface Platform {
 export default function PortafolioModelos() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  // Función para redirigir a la calculadora de la modelo
+  const handleModelNameClick = (modelId: string, modelEmail: string) => {
+    // Redirigir a "Ver Calculadora de Modelo" con filtro por modelo
+    router.push(`/admin/calculator/view-model?modelId=${modelId}`);
+  };
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -539,7 +545,13 @@ export default function PortafolioModelos() {
                       <User className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">{getModelDisplayName(model.model_email)}</h4>
+                      <h4 
+                        className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-700 transition-colors"
+                        onClick={() => handleModelNameClick(model.model_id, model.model_email)}
+                        title="Ver calculadora de la modelo"
+                      >
+                        {getModelDisplayName(model.model_email)}
+                      </h4>
                       <p className="text-sm text-gray-600 flex items-center">
                         <Building2 className="w-4 h-4 mr-1" />
                         {model.group_name}
