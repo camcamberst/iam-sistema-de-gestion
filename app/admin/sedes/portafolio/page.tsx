@@ -84,6 +84,7 @@ export default function PortafolioModelos() {
   const [actionType, setActionType] = useState<'request' | 'deliver' | 'deactivate' | 'revert'>('request');
   const [actionNotes, setActionNotes] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
+  const [openFiltersCount, setOpenFiltersCount] = useState(0);
 
   // Información del usuario
   const [userRole, setUserRole] = useState('');
@@ -401,7 +402,7 @@ export default function PortafolioModelos() {
         )}
 
         {/* Filters */}
-        <div className="mb-8">
+        <div className="mb-8 z-50 relative">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-lg font-semibold text-gray-900 flex items-center">
@@ -423,30 +424,40 @@ export default function PortafolioModelos() {
                   value={selectedGroup}
                   options={[{ label: 'Todos los grupos', value: '' }, ...groups.map(g => ({ label: g.name, value: g.id }))]}
                   onChange={(val) => handleGroupChange(val)}
+                  onFocus={() => setOpenFiltersCount(c => c + 1)}
+                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
                 />
                 <AppleSelect
                   label="Modelo"
                   value={selectedModel}
                   options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: m.name, value: m.id }))]}
                   onChange={(val) => setSelectedModel(val)}
+                  onFocus={() => setOpenFiltersCount(c => c + 1)}
+                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
                 />
                 <AppleSelect
                   label="Room"
                   value={selectedRoom}
                   options={[{ label: 'Todos los rooms', value: '' }, ...rooms.map(r => ({ label: r.name, value: r.id }))]}
                   onChange={(val) => setSelectedRoom(val)}
+                  onFocus={() => setOpenFiltersCount(c => c + 1)}
+                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
                 />
                 <AppleSelect
                   label="Jornada"
                   value={selectedJornada}
                   options={[{ label: 'Todas las jornadas', value: '' }, ...jornadas.map(j => ({ label: j, value: j }))]}
                   onChange={(val) => setSelectedJornada(val)}
+                  onFocus={() => setOpenFiltersCount(c => c + 1)}
+                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
                 />
                 <AppleSelect
                   label="Plataforma"
                   value={selectedPlatform}
                   options={[{ label: 'Todas las plataformas', value: '' }, ...allPlatforms.map(p => ({ label: p.name, value: p.id }))]}
                   onChange={(val) => setSelectedPlatform(val)}
+                  onFocus={() => setOpenFiltersCount(c => c + 1)}
+                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
                 />
               </div>
             )}
@@ -454,7 +465,7 @@ export default function PortafolioModelos() {
         </div>
 
         {/* Results */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+        <div className={`bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 transition-all ${openFiltersCount > 0 ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100'}`}>
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
               Modelos ({modelsList.length})
