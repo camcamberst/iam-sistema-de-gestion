@@ -193,8 +193,8 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                 )}
               </div>
 
-              {/* Línea 2: Timeline visual compacto - justo debajo de Sede MP */}
-              <div className="flex items-center space-x-3" style={{ marginLeft: 'calc(2rem + 1.5rem + 0.5rem + 1.5rem + 0.5rem + 1.5rem)' }}>
+              {/* Línea 2: Timeline visual compacto - centrado debajo de CMD */}
+              <div className="flex items-center space-x-3" style={{ marginLeft: 'calc(2rem + 1.5rem + 0.5rem + 1.5rem + 0.5rem + 0.75rem)' }}>
                 {/* Solicitada - siempre visible */}
                 <div className="flex items-center space-x-1">
                   <div className="relative group">
