@@ -26,7 +26,9 @@ export async function POST(request: NextRequest) {
         requested_at,
         delivered_at,
         confirmed_at,
+        deactivated_at,
         reverted_at,
+        updated_at,
         notes,
         group_name
       `)

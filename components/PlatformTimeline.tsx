@@ -13,7 +13,9 @@ interface PlatformRequest {
   requested_at: string;
   delivered_at?: string;
   confirmed_at?: string;
+  deactivated_at?: string;
   reverted_at?: string;
+  updated_at: string;
   notes?: string;
   group_name: string;
 }
@@ -31,6 +33,22 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
   useEffect(() => {
     loadTimelineData();
   }, [userRole, userGroups]);
+
+  // Debug temporal: verificar fechas
+  useEffect(() => {
+    if (requests.length > 0) {
+      console.log('🔍 Timeline requests con fechas:', requests.map(req => ({
+        id: req.id,
+        status: req.status,
+        requested_at: req.requested_at,
+        delivered_at: req.delivered_at,
+        confirmed_at: req.confirmed_at,
+        deactivated_at: req.deactivated_at,
+        reverted_at: req.reverted_at,
+        updated_at: req.updated_at
+      })));
+    }
+  }, [requests]);
 
 
   const loadTimelineData = async () => {
@@ -233,8 +251,8 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                         {/* Tooltip personalizado */}
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999]">
                           {request.status === 'entregada' ? 'Entregada' : 'Inviable'}: {
-                            request.status === 'entregada' && request.confirmed_at 
-                              ? new Date(request.confirmed_at).toLocaleDateString()
+                            request.status === 'entregada' && request.delivered_at 
+                              ? new Date(request.delivered_at).toLocaleDateString()
                               : request.status === 'inviable' && request.reverted_at
                               ? new Date(request.reverted_at).toLocaleDateString()
                               : 'Finalizado'
