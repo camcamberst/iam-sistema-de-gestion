@@ -306,8 +306,8 @@ BEGIN
     UPDATE modelo_plataformas SET
       status = p_new_status,
       notes = COALESCE(p_reason, notes),
-      delivered_at = CASE WHEN p_new_status = 'entregada' THEN now() ELSE delivered_at END,
-      delivered_by = CASE WHEN p_new_status = 'entregada' THEN p_changed_by ELSE delivered_by END,
+      delivered_at = CASE WHEN p_new_status IN ('pendiente', 'entregada') THEN now() ELSE delivered_at END,
+      delivered_by = CASE WHEN p_new_status IN ('pendiente', 'entregada') THEN p_changed_by ELSE delivered_by END,
       deactivated_at = CASE WHEN p_new_status = 'desactivada' THEN now() ELSE deactivated_at END,
       deactivated_by = CASE WHEN p_new_status = 'desactivada' THEN p_changed_by ELSE deactivated_by END,
       reverted_at = CASE WHEN platform_record.status = 'inviable' AND p_new_status != 'inviable' THEN now() ELSE reverted_at END,
