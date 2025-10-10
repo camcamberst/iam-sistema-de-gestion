@@ -84,6 +84,7 @@ export default function PortafolioModelos() {
   const [actionType, setActionType] = useState<'request' | 'deliver' | 'deactivate' | 'revert'>('request');
   const [actionNotes, setActionNotes] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
+  const [modalStatus, setModalStatus] = useState<'disponible' | 'solicitada' | 'pendiente' | 'entregada' | 'desactivada' | 'inviable'>('disponible');
   const [openFiltersCount, setOpenFiltersCount] = useState(0);
 
   // Información del usuario
@@ -300,6 +301,7 @@ export default function PortafolioModelos() {
     setSelectedPlatformForAction(platform);
     setActionType(action as any);
     setActionNotes('');
+    setModalStatus((platform.status as any) || 'disponible');
     setShowActionModal(true);
   };
 
@@ -310,13 +312,7 @@ export default function PortafolioModelos() {
       setProcessingAction(true);
       setError('');
 
-      let newStatus = '';
-      switch (actionType) {
-        case 'request': newStatus = 'solicitada'; break;
-        case 'deliver': newStatus = 'entregada'; break;
-        case 'deactivate': newStatus = 'desactivada'; break;
-        case 'revert': newStatus = 'disponible'; break;
-      }
+      const newStatus = modalStatus;
 
       const response = await fetch('/api/modelo-plataformas', {
         method: 'POST',
@@ -610,6 +606,22 @@ export default function PortafolioModelos() {
                 <p className="text-sm text-gray-600">
                   <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
                 </p>
+              </div>
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <AppleSelect
+                  value={modalStatus}
+                  onChange={(v) => setModalStatus(v as any)}
+                  options={[
+                    { label: 'Disponible', value: 'disponible' },
+                    { label: 'Solicitada', value: 'solicitada' },
+                    { label: 'Pendiente', value: 'pendiente' },
+                    { label: 'Entregada', value: 'entregada' },
+                    { label: 'Desactivada', value: 'desactivada' },
+                    { label: 'Inviable', value: 'inviable' }
+                  ]}
+                />
               </div>
 
               <div className="mb-4">
