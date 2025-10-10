@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { User, Building2, Users, Grid3X3, Filter, Search, Eye, Edit3, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle } from 'lucide-react';
+import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle } from 'lucide-react';
+import AppleSelect from '@/components/AppleSelect';
 
 interface ModeloPlatform {
   id: string | null;
@@ -73,8 +74,6 @@ export default function PortafolioModelos() {
   const [selectedRoom, setSelectedRoom] = useState('');
   const [selectedJornada, setSelectedJornada] = useState('');
   const [selectedPlatform, setSelectedPlatform] = useState('');
-  const [selectedStatus, setSelectedStatus] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
   
   // Estados de UI
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -115,7 +114,7 @@ export default function PortafolioModelos() {
     if (!loading) {
       loadPlatforms();
     }
-  }, [selectedModel, selectedGroup, selectedRoom, selectedJornada, selectedPlatform, selectedStatus]);
+  }, [selectedModel, selectedGroup, selectedRoom, selectedJornada, selectedPlatform]);
 
   const loadInitialData = async () => {
     try {
@@ -125,7 +124,8 @@ export default function PortafolioModelos() {
       const groupsResponse = await fetch('/api/groups');
       if (groupsResponse.ok) {
         const groupsData = await groupsResponse.json();
-        setGroups(Array.isArray(groupsData) ? groupsData : []);
+        const clean = (Array.isArray(groupsData) ? groupsData : []).filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites');
+        setGroups(clean);
       }
 
       // Cargar catálogo de plataformas
@@ -159,7 +159,6 @@ export default function PortafolioModelos() {
       if (selectedRoom) params.append('room_id', selectedRoom);
       if (selectedJornada) params.append('jornada', selectedJornada);
       if (selectedPlatform) params.append('platform_id', selectedPlatform);
-      if (selectedStatus) params.append('status', selectedStatus);
 
       const response = await fetch(`/api/modelo-plataformas?${params.toString()}`);
       if (response.ok) {
@@ -304,17 +303,7 @@ export default function PortafolioModelos() {
     }
   };
 
-  const filteredPlatforms = platforms.filter(platform => {
-    if (searchTerm) {
-      const search = searchTerm.toLowerCase();
-      return (
-        platform.platform_name.toLowerCase().includes(search) ||
-        platform.model_name.toLowerCase().includes(search) ||
-        platform.group_name.toLowerCase().includes(search)
-      );
-    }
-    return true;
-  });
+  const filteredPlatforms = platforms;
 
   // Agrupar plataformas por modelo
   const modelGroups = filteredPlatforms.reduce((acc, platform) => {
@@ -404,140 +393,37 @@ export default function PortafolioModelos() {
             </div>
 
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                {/* Sede */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Sede
-                  </label>
-                  <select
-                    value={selectedGroup}
-                    onChange={(e) => handleGroupChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                  >
-                    <option value="">Todas las sedes</option>
-                    {groups.map(group => (
-                      <option key={group.id} value={group.id}>
-                        {group.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Modelo */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Modelo
-                  </label>
-                  <select
-                    value={selectedModel}
-                    onChange={(e) => setSelectedModel(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                    disabled={!selectedGroup}
-                  >
-                    <option value="">Todas las modelos</option>
-                    {models.map(model => (
-                      <option key={model.id} value={model.id}>
-                        {model.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Room */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Room
-                  </label>
-                  <select
-                    value={selectedRoom}
-                    onChange={(e) => setSelectedRoom(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                    disabled={!selectedGroup}
-                  >
-                    <option value="">Todos los rooms</option>
-                    {rooms.map(room => (
-                      <option key={room.id} value={room.id}>
-                        {room.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Jornada */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Jornada
-                  </label>
-                  <select
-                    value={selectedJornada}
-                    onChange={(e) => setSelectedJornada(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                  >
-                    <option value="">Todas las jornadas</option>
-                    {jornadas.map(jornada => (
-                      <option key={jornada} value={jornada}>
-                        {jornada}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Plataforma */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Plataforma
-                  </label>
-                  <select
-                    value={selectedPlatform}
-                    onChange={(e) => setSelectedPlatform(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                  >
-                    <option value="">Todas las plataformas</option>
-                    {allPlatforms.map(platform => (
-                      <option key={platform.id} value={platform.id}>
-                        {platform.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* Estado */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Estado
-                  </label>
-                  <select
-                    value={selectedStatus}
-                    onChange={(e) => setSelectedStatus(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                  >
-                    <option value="">Todos los estados</option>
-                    <option value="disponible">Disponible</option>
-                    <option value="solicitada">Solicitada</option>
-                    <option value="pendiente">Pendiente</option>
-                    <option value="entregada">Entregada</option>
-                    <option value="desactivada">Desactivada</option>
-                    <option value="inviable">Inviable</option>
-                  </select>
-                </div>
-
-                {/* Búsqueda */}
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Búsqueda
-                  </label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <input
-                      type="text"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      placeholder="Buscar por plataforma, modelo o sede..."
-                      className="w-full pl-10 pr-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/80 backdrop-blur-sm"
-                    />
-                  </div>
-                </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+                <AppleSelect
+                  label="Sede"
+                  value={selectedGroup}
+                  options={[{ label: 'Todas las sedes', value: '' }, ...groups.map(g => ({ label: g.name, value: g.id }))]}
+                  onChange={(val) => handleGroupChange(val)}
+                />
+                <AppleSelect
+                  label="Modelo"
+                  value={selectedModel}
+                  options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: m.name, value: m.id }))]}
+                  onChange={(val) => setSelectedModel(val)}
+                />
+                <AppleSelect
+                  label="Room"
+                  value={selectedRoom}
+                  options={[{ label: 'Todos los rooms', value: '' }, ...rooms.map(r => ({ label: r.name, value: r.id }))]}
+                  onChange={(val) => setSelectedRoom(val)}
+                />
+                <AppleSelect
+                  label="Jornada"
+                  value={selectedJornada}
+                  options={[{ label: 'Todas las jornadas', value: '' }, ...jornadas.map(j => ({ label: j, value: j }))]}
+                  onChange={(val) => setSelectedJornada(val)}
+                />
+                <AppleSelect
+                  label="Plataforma"
+                  value={selectedPlatform}
+                  options={[{ label: 'Todas las plataformas', value: '' }, ...allPlatforms.map(p => ({ label: p.name, value: p.id }))]}
+                  onChange={(val) => setSelectedPlatform(val)}
+                />
               </div>
             )}
           </div>
