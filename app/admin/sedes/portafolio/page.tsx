@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle } from 'lucide-react';
 import AppleSelect from '@/components/AppleSelect';
+import { getModelDisplayName } from '@/utils/model-display';
 
 interface ModeloPlatform {
   id: string | null;
@@ -447,7 +448,7 @@ export default function PortafolioModelos() {
                 <AppleSelect
                   label="Modelo"
                   value={selectedModel}
-                  options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: m.name, value: m.id }))]}
+                  options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: getModelDisplayName(m.email), value: m.id }))]}
                   onChange={(val) => setSelectedModel(val)}
                   onFocus={() => setOpenFiltersCount(c => c + 1)}
                   onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
@@ -507,7 +508,7 @@ export default function PortafolioModelos() {
                       <User className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <h4 className="text-lg font-semibold text-gray-900">{model.model_name}</h4>
+                      <h4 className="text-lg font-semibold text-gray-900">{getModelDisplayName(model.model_email)}</h4>
                       <p className="text-sm text-gray-600 flex items-center">
                         <Building2 className="w-4 h-4 mr-1" />
                         {model.group_name}
@@ -601,7 +602,7 @@ export default function PortafolioModelos() {
                   <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
                 </p>
                 <p className="text-sm text-gray-600 mb-2">
-                  <strong>Modelo:</strong> {selectedPlatformForAction.model_name}
+                  <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
                 </p>
                 <p className="text-sm text-gray-600">
                   <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}

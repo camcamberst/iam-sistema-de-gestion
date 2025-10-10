@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
+import PlatformTimeline from "../../../components/PlatformTimeline";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -200,6 +201,16 @@ export default function AdminDashboard() {
                 Ver todas las tasas →
               </Link>
             </div>
+          </div>
+        )}
+
+        {/* Timeline de Solicitudes de Plataformas para Super Admin y Admin */}
+        {(user?.role === 'super_admin' || user?.role === 'admin') && (
+          <div className="mb-10">
+            <PlatformTimeline 
+              userRole={user.role as 'admin' | 'super_admin'} 
+              userGroups={user.groups}
+            />
           </div>
         )}
 
