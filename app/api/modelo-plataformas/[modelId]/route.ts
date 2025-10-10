@@ -25,6 +25,17 @@ export async function GET(
       );
     }
 
+    // Verificar que el usuario es role 'modelo'
+    const { data: userRoleCheck, error: roleErr } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', modelId)
+      .single();
+
+    if (roleErr || !userRoleCheck || userRoleCheck.role !== 'modelo') {
+      return NextResponse.json([]);
+    }
+
     // Obtener plataformas existentes de la modelo
     const { data: existingPlatforms, error: existingError } = await supabase
       .from('modelo_plataformas_detailed')
