@@ -204,7 +204,7 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Timeline de Solicitudes de Plataformas para Super Admin y Admin */}
+        {/* Timeline Portafolio Modelos de Plataformas para Super Admin y Admin */}
         {(user?.role === 'super_admin' || user?.role === 'admin') && (
           <div className="mb-10">
             <PlatformTimeline 
