@@ -206,7 +206,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                     </div>
                         {/* Tooltip personalizado */}
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
-                          Solicitada: {new Date(request.requested_at).toLocaleDateString()}
+                          {new Date(request.requested_at).toLocaleDateString()} {new Date(request.requested_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                   </div>
@@ -227,7 +227,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                         </div>
                         {/* Tooltip personalizado */}
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
-                          Pendiente: {request.updated_at ? new Date(request.updated_at).toLocaleDateString() : 'Sin fecha'}
+                          {request.updated_at ? `${new Date(request.updated_at).toLocaleDateString()} ${new Date(request.updated_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}` : 'Sin fecha'}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
@@ -250,12 +250,11 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                         </div>
                         {/* Tooltip personalizado */}
                         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-2 py-1 bg-gray-900 text-white text-xs rounded shadow-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[99999]">
-                          {request.status === 'entregada' ? 'Entregada' : 'Inviable'}: {
-                            request.status === 'entregada' && request.delivered_at 
-                              ? new Date(request.delivered_at).toLocaleDateString()
-                              : request.status === 'inviable' && request.reverted_at
-                              ? new Date(request.reverted_at).toLocaleDateString()
-                              : 'Finalizado'
+                          {request.status === 'entregada' && request.delivered_at 
+                            ? `${new Date(request.delivered_at).toLocaleDateString()} ${new Date(request.delivered_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                            : request.status === 'inviable' && request.reverted_at
+                            ? `${new Date(request.reverted_at).toLocaleDateString()} ${new Date(request.reverted_at).toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`
+                            : 'Finalizado'
                           }
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
