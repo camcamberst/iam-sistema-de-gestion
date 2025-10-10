@@ -193,8 +193,8 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                 )}
               </div>
 
-              {/* Línea 2: Timeline visual compacto */}
-              <div className="flex items-center space-x-3">
+              {/* Línea 2: Timeline visual compacto - justo debajo del grupo */}
+              <div className="flex items-center space-x-3 ml-6">
                 {/* Solicitada - siempre visible */}
                 <div className="flex items-center space-x-1">
                   <div className="relative group">
