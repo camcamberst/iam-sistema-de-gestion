@@ -32,6 +32,23 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
     loadTimelineData();
   }, [userRole, userGroups]);
 
+  // Debug: Log de datos para verificar fechas
+  useEffect(() => {
+    if (requests.length > 0) {
+      console.log('🔍 Timeline requests data:', requests);
+      requests.forEach((req, index) => {
+        console.log(`Request ${index}:`, {
+          id: req.id,
+          status: req.status,
+          requested_at: req.requested_at,
+          delivered_at: req.delivered_at,
+          confirmed_at: req.confirmed_at,
+          reverted_at: req.reverted_at
+        });
+      });
+    }
+  }, [requests]);
+
   const loadTimelineData = async () => {
     try {
       setLoading(true);
@@ -185,11 +202,11 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                     >
                       {getStatusIcon('solicitada')}
                     </div>
-                    {/* Tooltip personalizado */}
-                    <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
-                      Solicitada: {new Date(request.requested_at).toLocaleDateString()}
-                      <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
-                    </div>
+                        {/* Tooltip personalizado */}
+                        <div className="fixed bottom-auto left-auto px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999] transform -translate-y-full -translate-x-1/2" style={{ top: '-40px', left: '50%' }}>
+                          Solicitada: {new Date(request.requested_at).toLocaleDateString()}
+                          <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
+                        </div>
                   </div>
                   <span className="text-xs text-gray-600">Solicitada</span>
                 </div>
@@ -207,7 +224,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           {getStatusIcon('pendiente')}
                         </div>
                         {/* Tooltip personalizado */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        <div className="fixed bottom-auto left-auto px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999] transform -translate-y-full -translate-x-1/2" style={{ top: '-40px', left: '50%' }}>
                           Pendiente: {request.delivered_at ? new Date(request.delivered_at).toLocaleDateString() : 'Sin fecha'}
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900"></div>
                         </div>
@@ -230,7 +247,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           {getStatusIcon(request.status)}
                         </div>
                         {/* Tooltip personalizado */}
-                        <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-50">
+                        <div className="fixed bottom-auto left-auto px-3 py-2 bg-gray-900 text-white text-xs rounded-lg shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-nowrap z-[9999] transform -translate-y-full -translate-x-1/2" style={{ top: '-40px', left: '50%' }}>
                           {request.status === 'entregada' ? 'Entregada' : 'Inviable'}: {
                             request.status === 'entregada' && request.confirmed_at 
                               ? new Date(request.confirmed_at).toLocaleDateString()
