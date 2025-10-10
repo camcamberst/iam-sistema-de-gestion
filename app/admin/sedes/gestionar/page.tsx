@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import { getModelDisplayName } from '@/utils/model-display';
 
 interface Group {
   id: string;
@@ -57,6 +58,12 @@ export default function GestionarSedesPage() {
   const [assignmentToDelete, setAssignmentToDelete] = useState<any>(null);
   
   const router = useRouter();
+
+  // Función para redirigir al portafolio de la modelo
+  const handleModelClick = (modelId: string, modelEmail: string) => {
+    // Redirigir al portafolio con filtro de modelo
+    router.push(`/admin/sedes/portafolio?model=${modelId}&email=${encodeURIComponent(modelEmail)}`);
+  };
 
   // Cargar datos iniciales
   useEffect(() => {
@@ -1113,11 +1120,15 @@ export default function GestionarSedesPage() {
                                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                   </svg>
                                 </div>
-                                <div>
-                                  <p className="text-sm font-medium text-gray-900">
-                                    {assignment.model_name || 'Modelo no especificada'}
+                                <div 
+                                  className="cursor-pointer hover:bg-blue-50 rounded-lg p-2 -m-2 transition-colors group"
+                                  onClick={() => handleModelClick(assignment.model_id, assignment.model_email)}
+                                  title="Ver portafolio de la modelo"
+                                >
+                                  <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                                    {getModelDisplayName(assignment.model_email) || assignment.model_name || 'Modelo no especificada'}
                                   </p>
-                                  <p className="text-xs text-gray-500">
+                                  <p className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors">
                                     {assignment.model_email || 'Email no disponible'}
                                   </p>
                                 </div>

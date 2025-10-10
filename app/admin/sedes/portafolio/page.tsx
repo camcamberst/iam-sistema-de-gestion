@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle } from 'lucide-react';
 import AppleSelect from '@/components/AppleSelect';
 import { getModelDisplayName } from '@/utils/model-display';
@@ -58,6 +59,8 @@ interface Platform {
 }
 
 export default function PortafolioModelos() {
+  const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
@@ -111,6 +114,23 @@ export default function PortafolioModelos() {
   useEffect(() => {
     loadInitialData();
   }, []);
+
+  // Procesar parámetros de URL para filtro automático
+  useEffect(() => {
+    const modelId = searchParams.get('model');
+    const modelEmail = searchParams.get('email');
+    
+    if (modelId && modelEmail) {
+      // Aplicar filtro automático por modelo
+      setSelectedModel(modelId);
+      
+      // Limpiar parámetros de URL después de aplicarlos
+      const newUrl = new URL(window.location.href);
+      newUrl.searchParams.delete('model');
+      newUrl.searchParams.delete('email');
+      router.replace(newUrl.pathname + newUrl.search, { scroll: false });
+    }
+  }, [searchParams, router]);
 
   // Cargar plataformas cuando cambien los filtros
   useEffect(() => {
