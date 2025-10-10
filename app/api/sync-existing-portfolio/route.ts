@@ -80,7 +80,7 @@ export async function POST(request: NextRequest) {
       console.log(`🔄 Sincronizando Portafolio para: ${model.email}`);
       
       const config = model.calculator_config[0];
-      const portfolioEntries = config.enabled_platforms.map(platformId => ({
+      const portfolioEntries = config.enabled_platforms.map((platformId: string) => ({
         model_id: model.id,
         platform_id: platformId,
         status: 'entregada',
