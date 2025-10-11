@@ -119,8 +119,8 @@ async function getUserContext(userId: string): Promise<UserContext> {
   const groups = userData.user_groups?.map((ug: any) => ug.groups.name) || [];
 
   // Obtener datos del portafolio si es modelo
-  let portfolio = null;
-  let productivity = null;
+  let portfolio: any[] = [];
+  let productivity: any = null;
   
   if (userData?.role === 'modelo') {
     const { data: portfolioData } = await supabase
