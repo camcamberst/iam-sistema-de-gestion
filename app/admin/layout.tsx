@@ -344,39 +344,39 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-xl border border-gray-200/30 rounded-2xl shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
                     {loadingUser ? (
                       <div className="text-center py-4">
-                        <div className="animate-spin w-4 h-4 border-2 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-2"></div>
-                        <div className="text-xs text-gray-600">Cargando…</div>
+                        <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>
+                        <div className="text-xs text-gray-300">Cargando…</div>
                       </div>
                     ) : userInfo ? (
                       <div className="space-y-3">
                         {/* Header compacto */}
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white flex items-center justify-center shadow-sm">
+                          <div className="w-10 h-10 rounded-md bg-gray-700 text-white flex items-center justify-center shadow-sm">
                             <span className="text-sm font-semibold">{userInfo.name.charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">{userInfo.name}</div>
-                            <div className="text-xs text-gray-500 truncate">{userInfo.email}</div>
+                            <div className="text-sm font-semibold text-gray-100 truncate">{userInfo.name}</div>
+                            <div className="text-xs text-gray-300 truncate">{userInfo.email}</div>
                           </div>
                         </div>
                         
                         {/* Información compacta - Estilo sobrio */}
                         <div className="space-y-2">
                           <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500 font-medium">Rol</span>
-                            <span className="text-gray-900 font-semibold capitalize">
+                            <span className="text-gray-400 font-medium">Rol</span>
+                            <span className="text-gray-200 font-semibold capitalize">
                               {String(userInfo.role).replace('_',' ')}
                             </span>
                           </div>
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-500 font-medium">ID</span>
+                              <span className="text-gray-400 font-medium">ID</span>
                               <button
                                 onClick={() => navigator.clipboard.writeText(userInfo.id)}
-                                className="text-gray-700 font-mono text-xs hover:text-gray-900 transition-colors duration-200 cursor-pointer"
+                                className="text-gray-200 font-mono text-xs hover:text-gray-400 transition-colors duration-200 cursor-pointer"
                                 title="Hacer clic para copiar"
                               >
                                 {userInfo.id}
@@ -385,10 +385,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </div>
                           {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-500 font-medium">Grupos</span>
+                              <span className="text-gray-400 font-medium">Grupos</span>
                               <div className="flex flex-wrap gap-1 justify-end">
                                 {userInfo.groups.map((group, index) => (
-                                  <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
+                                  <span key={index} className="px-2 py-1 bg-gray-800 text-gray-300 rounded-md text-xs font-medium">
                                     {group}
                                   </span>
                                 ))}
@@ -398,14 +398,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         </div>
 
                         {/* Botón de logout compacto */}
-                        <div className="pt-3 border-t border-gray-200/50">
+                        <div className="pt-3 border-t border-gray-700">
                           <button
                             onClick={async () => {
                               await supabase.auth.signOut();
                               setUserInfo(null);
                               location.href = '/';
                             }}
-                            className="w-full px-3 py-2 text-xs rounded-lg bg-gray-50/80 hover:bg-gray-100 border border-gray-200/50 text-gray-700 hover:text-gray-900 transition-all duration-200 font-medium flex items-center justify-center space-x-1.5"
+                            className="w-full px-3 py-2 text-xs rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 hover:text-gray-100 transition-all duration-200 font-medium flex items-center justify-center space-x-1.5"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
