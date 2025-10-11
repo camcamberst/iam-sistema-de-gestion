@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { createClient } from '@supabase/supabase-js';
+import { SecurityFilter } from './SecurityFilter';
 
 interface Message {
   id: string;
@@ -85,16 +86,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const sendMessage = async () => {
     if (!inputMessage.trim() || isLoading || limitReached) return;
 
-    const userMessage = inputMessage.trim();
+    // VERSIÓN ULTRA-SEGURA: Filtrar mensaje antes de enviar
+    const originalMessage = inputMessage.trim();
+    const sanitizedMessage = SecurityFilter.sanitizeMessage(originalMessage);
+    
     setInputMessage('');
     setIsLoading(true);
     setError(null);
 
-    // Add user message to UI immediately
+    // Add user message to UI immediately (mostrar mensaje filtrado)
     const newUserMessage: Message = {
       id: Date.now().toString(),
       sender: 'user',
-      message: userMessage,
+      message: sanitizedMessage, // Mostrar mensaje filtrado
       timestamp: new Date()
     };
     setMessages(prev => [...prev, newUserMessage]);
@@ -113,7 +117,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          message: userMessage,
+          message: sanitizedMessage, // Enviar mensaje filtrado
           sessionId: sessionId
         })
       });
@@ -143,16 +147,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       };
       setMessages(prev => [...prev, botMessage]);
 
-      // Check if escalated
-      if (data.escalated) {
-        setEscalated(true);
-        const escalationMessage: Message = {
-          id: (Date.now() + 2).toString(),
-          sender: 'bot',
-          message: "✅ Tu consulta ha sido escalada a un administrador. Te contactarán pronto.",
-          timestamp: new Date()
-        };
-        setMessages(prev => [...prev, escalationMessage]);
+      // VERSIÓN ULTRA-SEGURA: No hay escalación automática
+      // if (data.escalated) {
+      //   setEscalated(true);
+      //   const escalationMessage: Message = {
+      //     id: (Date.now() + 2).toString(),
+      //     sender: 'bot',
+      //     message: "✅ Tu consulta ha sido escalada a un administrador. Te contactarán pronto.",
+      //     timestamp: new Date()
+      //   };
+      //   setMessages(prev => [...prev, escalationMessage]);
+      // }
+
+      // VERSIÓN ULTRA-SEGURA: Mostrar indicador de seguridad
+      if (data.securityLevel === 'ULTRA_SAFE') {
+        console.log('Chat usando versión ultra-segura - datos protegidos');
       }
 
     } catch (error) {

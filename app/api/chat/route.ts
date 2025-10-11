@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { SecurityFilter } from '@/components/SecurityFilter';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -61,24 +62,27 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
-    // Guardar mensaje del usuario
-    await saveMessage(session.id, 'user', user.id, message);
-
-    // Verificar si debe escalar
-    const shouldEscalate = await checkEscalationConditions(session.id, message, userContext);
+    // VERSIÓN ULTRA-SEGURA: Filtrar mensaje antes de procesar
+    const sanitizedMessage = SecurityFilter.sanitizeMessage(message);
     
-    if (shouldEscalate.should) {
-      await escalateToAdmin(session.id, user.id, message, shouldEscalate.reason);
-      return NextResponse.json({
-        response: "He escalado tu consulta a un administrador. Te contactarán pronto para ayudarte.",
-        escalated: true,
-        sessionId: session.id,
-        ticketId: shouldEscalate.ticketId
-      });
-    }
+    // Guardar mensaje filtrado del usuario
+    await saveMessage(session.id, 'user', user.id, sanitizedMessage);
 
-    // Generar respuesta con Gemini
-    const botResponse = await generateBotResponse(message, userContext, session.id);
+    // VERSIÓN ULTRA-SEGURA: No escalar automáticamente
+    // const shouldEscalate = await checkEscalationConditions(session.id, sanitizedMessage, userContext);
+    
+    // if (shouldEscalate.should) {
+    //   await escalateToAdmin(session.id, user.id, sanitizedMessage, shouldEscalate.reason);
+    //   return NextResponse.json({
+    //     response: "He escalado tu consulta a un administrador. Te contactarán pronto para ayudarte.",
+    //     escalated: true,
+    //     sessionId: session.id,
+    //     ticketId: shouldEscalate.ticketId
+    //   });
+    // }
+
+    // VERSIÓN ULTRA-SEGURA: Generar respuesta con contexto seguro
+    const botResponse = await generateUltraSafeBotResponse(sanitizedMessage, userContext, session.id);
     
     // Guardar respuesta del bot
     await saveMessage(session.id, 'bot', null, botResponse);
@@ -86,7 +90,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       response: botResponse,
       sessionId: session.id,
-      escalated: false
+      escalated: false,
+      securityLevel: 'ULTRA_SAFE' // Informar que se usó versión ultra-segura
     });
 
   } catch (error) {
@@ -285,6 +290,66 @@ async function escalateToAdmin(sessionId: string, userId: string, message: strin
   }
 
   return ticket.id;
+}
+
+async function generateUltraSafeBotResponse(message: string, userContext: UserContext, sessionId: string): Promise<string> {
+  if (!GEMINI_API_KEY) {
+    return "Lo siento, el servicio de chat no está disponible en este momento. Por favor contacta a un administrador.";
+  }
+
+  // VERSIÓN ULTRA-SEGURA: Crear contexto seguro sin datos personales
+  const safeContext = SecurityFilter.createSafeContext({
+    portfolio: userContext.portfolio || [],
+    hasCalculator: true
+  });
+
+  // VERSIÓN ULTRA-SEGURA: Usar prompt ultra-seguro
+  const systemPrompt = SecurityFilter.getUltraSafePrompt(safeContext);
+  
+  const prompt = `${systemPrompt}
+
+Usuario: ${message}
+
+Asistente:`;
+
+  try {
+    const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+        generationConfig: {
+          temperature: 0.7,
+          topK: 40,
+          topP: 0.95,
+          maxOutputTokens: 1024,
+        }
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error(`Gemini API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    let botResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || 
+      "Lo siento, no pude procesar tu mensaje. ¿Podrías reformular tu pregunta?";
+
+    // VERSIÓN ULTRA-SEGURA: Filtrar también la respuesta del bot
+    botResponse = SecurityFilter.sanitizeMessage(botResponse);
+
+    return botResponse.trim();
+
+  } catch (error) {
+    console.error('Error calling Gemini API:', error);
+    return "Lo siento, estoy teniendo dificultades técnicas. Por favor intenta de nuevo o contacta a un administrador.";
+  }
 }
 
 async function generateBotResponse(message: string, userContext: UserContext, sessionId: string): Promise<string> {
