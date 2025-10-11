@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@/hooks/useUser';
+import { createClient } from "@supabase/supabase-js";
 import PortfolioAnalytics from '@/components/PortfolioAnalytics';
 import { 
   Building2, 
@@ -59,12 +59,34 @@ interface PortfolioData {
 }
 
 export default function MiPortafolio() {
-  const { user } = useUser();
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
   const [confirmingPlatform, setConfirmingPlatform] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'platforms' | 'analytics'>('platforms');
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+  );
+
+  // Cargar usuario autenticado
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          setUser(authUser);
+        } else {
+          setError('Usuario no autenticado');
+        }
+      } catch (err) {
+        setError('Error al cargar usuario');
+      }
+    };
+    loadUser();
+  }, []);
 
   // Cargar datos del portafolio
   useEffect(() => {
