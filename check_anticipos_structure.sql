@@ -1,45 +1,17 @@
--- =====================================================
--- 🔍 VERIFICAR ESTRUCTURA DE TABLA ANTICIPOS
--- =====================================================
+-- Script para verificar la estructura real de la tabla 'anticipos'
 
--- 1. Verificar estructura de la tabla anticipos
-SELECT 'ESTRUCTURA TABLA ANTICIPOS:' as info;
+-- 1. Ver la estructura completa de la tabla 'anticipos'
 SELECT 
-  column_name, 
-  data_type, 
-  is_nullable,
-  column_default
+    column_name,
+    data_type,
+    is_nullable,
+    column_default
 FROM information_schema.columns 
-WHERE table_name = 'anticipos' 
-AND table_schema = 'public'
+WHERE table_name = 'anticipos'
 ORDER BY ordinal_position;
 
--- 2. Verificar si existen índices
-SELECT 'ÍNDICES EN ANTICIPOS:' as info;
-SELECT 
-  indexname,
-  indexdef
-FROM pg_indexes 
-WHERE tablename = 'anticipos';
+-- 2. Ver todos los datos de la tabla 'anticipos' (sin especificar columnas)
+SELECT * FROM anticipos;
 
--- 3. Verificar políticas RLS
-SELECT 'POLÍTICAS RLS:' as info;
-SELECT 
-  schemaname,
-  tablename,
-  policyname,
-  permissive,
-  roles,
-  cmd,
-  qual
-FROM pg_policies 
-WHERE tablename = 'anticipos';
-
--- 4. Verificar si RLS está habilitado
-SELECT 'RLS HABILITADO:' as info;
-SELECT 
-  schemaname,
-  tablename,
-  rowsecurity
-FROM pg_tables 
-WHERE tablename = 'anticipos';
+-- 3. Contar registros
+SELECT COUNT(*) as total_registros FROM anticipos;
