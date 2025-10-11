@@ -313,7 +313,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   }
 
                   // Renderizar Mi Calculadora con el componente especial
-                  if (item.id === 'calculator' && userRole === 'modelo') {
+                  if (item.id === 'calculator' && item.label === 'Mi Calculadora') {
                     return (
                       <CalculatorDropdown
                         key={item.id}
