@@ -597,7 +597,9 @@ export default function AdminModelCalculator({
                       <tr key={platform.id} className="border-b border-gray-100">
                         <td className="py-3 px-3">
                           <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
-                          <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
+                          <div className="text-xs text-gray-500">
+                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                          </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="relative">

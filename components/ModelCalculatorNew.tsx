@@ -296,7 +296,7 @@ export default function ModelCalculatorNew() {
                   </div>
                 </div>
                 <div className="text-xs text-gray-500">
-                  Reparto: {platform.percentage}% | Cuota mín: ${platform.minQuota} USD
+                  Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`} | Cuota mín: ${platform.minQuota} USD
                 </div>
               </div>
             ))}
