@@ -76,7 +76,12 @@ export async function POST(request: NextRequest) {
 
     calculatorData.forEach(record => {
       const date = record.period_date.split('T')[0];
-      const platformName = record.calculator_platforms.name;
+      const platformName = record.calculator_platforms?.name;
+      
+      // Saltar si no hay datos de plataforma
+      if (!platformName || !record.calculator_platforms) {
+        return;
+      }
       
       // Estadísticas por plataforma
       if (!platformStats.has(platformName)) {
