@@ -245,6 +245,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const isActive = (href: string) => pathname === href;
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
+  
+  // Función para determinar si el dropdown debe mostrarse
+  const shouldShowDropdown = (item: any) => {
+    // Siempre mostrar dropdown si hay subItems y el menú está activo
+    return item.subItems && item.subItems.length > 0 && activeMenu === item.id;
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
@@ -299,7 +305,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     )}
 
                   {/* Dropdown Menu */}
-                  {activeMenu === item.id && (
+                  {shouldShowDropdown(item) && (
                     <div 
                       className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={handleDropdownEnter}
