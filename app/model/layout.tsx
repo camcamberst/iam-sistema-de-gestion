@@ -130,6 +130,11 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
         ]
       },
       {
+        id: 'portafolio',
+        label: 'Mi Portafolio',
+        href: '/model/portafolio'
+      },
+      {
         id: 'anticipos',
         label: 'Mis Anticipos',
         href: '#', // Sin navegación directa
