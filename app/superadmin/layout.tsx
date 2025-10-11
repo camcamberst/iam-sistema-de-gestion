@@ -318,6 +318,18 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                               {String(userInfo.role).replace('_',' ')}
                             </span>
                           </div>
+                          {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-400 font-medium">{userInfo.role === 'modelo' ? 'Grupo' : 'Grupos'}</span>
+                              <div className="flex flex-wrap gap-1 justify-end">
+                                {userInfo.groups.map((group, index) => (
+                                  <span key={index} className="px-2 py-1 bg-gray-800 text-gray-300 rounded-md text-xs font-medium">
+                                    {group}
+                                  </span>
+                                ))}
+                              </div>
+                            </div>
+                          )}
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-400 font-medium">ID</span>
@@ -330,18 +342,6 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                               </button>
                             </div>
                           </div>
-                          {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400 font-medium">Grupos</span>
-                              <div className="flex flex-wrap gap-1 justify-end">
-                                {userInfo.groups.map((group, index) => (
-                                  <span key={index} className="px-2 py-1 bg-gray-800 text-gray-300 rounded-md text-xs font-medium">
-                                    {group}
-                                  </span>
-                                ))}
-                              </div>
-                            </div>
-                          )}
                         </div>
 
                         {/* Botón de logout compacto */}
