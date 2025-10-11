@@ -46,7 +46,7 @@ export async function POST(request: NextRequest) {
         const config = activeConfigs?.find(c => c.model_id === model.id);
         return config ? { ...model, calculator_config: [config] } : null;
       })
-      .filter(Boolean);
+      .filter((model): model is NonNullable<typeof model> => model !== null);
 
     console.log('📋 Modelos encontrados con configuración:', modelsWithConfig.length);
     
