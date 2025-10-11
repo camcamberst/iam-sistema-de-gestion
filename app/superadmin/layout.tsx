@@ -310,26 +310,32 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                           </div>
                         </div>
                         
-                        {/* Información compacta */}
-                        <div className="space-y-1.5">
+                        {/* Información compacta - Estilo sobrio */}
+                        <div className="space-y-2">
                           <div className="flex items-center justify-between text-xs">
                             <span className="text-gray-500 font-medium">Rol</span>
                             <span className="text-gray-900 font-semibold capitalize">
                               {String(userInfo.role).replace('_',' ')}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-500 font-medium">ID</span>
-                            <span className="text-gray-700 font-mono text-xs truncate max-w-40" title={userInfo.id}>
-                              {userInfo.id}
-                            </span>
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between text-xs">
+                              <span className="text-gray-500 font-medium">ID</span>
+                              <button
+                                onClick={() => navigator.clipboard.writeText(userInfo.id)}
+                                className="text-gray-700 font-mono text-xs hover:text-gray-900 transition-colors duration-200 cursor-pointer"
+                                title="Hacer clic para copiar"
+                              >
+                                {userInfo.id}
+                              </button>
+                            </div>
                           </div>
                           {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-500 font-medium">Grupos</span>
-                              <div className="flex flex-wrap gap-1 justify-end max-w-40">
+                              <div className="flex flex-wrap gap-1 justify-end">
                                 {userInfo.groups.map((group, index) => (
-                                  <span key={index} className="px-1.5 py-0.5 bg-blue-50 text-blue-700 rounded text-xs font-medium">
+                                  <span key={index} className="px-2 py-1 bg-gray-100 text-gray-700 rounded-md text-xs font-medium">
                                     {group}
                                   </span>
                                 ))}
