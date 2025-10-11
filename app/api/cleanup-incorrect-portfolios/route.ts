@@ -40,7 +40,8 @@ export async function POST(request: NextRequest) {
 
     // 2. Agrupar por modelo para mostrar información
     const portfoliosByModel = incorrectPortfolios.reduce((acc, portfolio) => {
-      const email = portfolio.users.email;
+      const email = portfolio.users[0]?.email;
+      if (!email) return acc;
       if (!acc[email]) {
         acc[email] = [];
       }
