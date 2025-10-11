@@ -317,6 +317,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
                   console.log('🔍 [RENDER] Processing item:', item.id, item.label, 'pathname:', pathname);
+                  console.log('🔍 [RENDER] Item details:', JSON.stringify(item));
                   
                   // Renderizar Mi Portafolio con el componente especial
                   if (item.id === 'portafolio') {
