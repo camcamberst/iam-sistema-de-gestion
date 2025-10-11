@@ -22,8 +22,8 @@ interface UserContext {
   email: string;
   role: string;
   groups: string[];
-  portfolio?: any[];
-  productivity?: any;
+  portfolio: any[];
+  productivity: any;
 }
 
 export async function POST(request: NextRequest) {
@@ -419,7 +419,7 @@ Asistente:`;
 }
 
 function buildSystemPrompt(userContext: UserContext): string {
-  const portfolioInfo = userContext.portfolio?.length > 0 
+  const portfolioInfo = userContext.portfolio.length > 0 
     ? `Tienes acceso a las siguientes plataformas en tu portafolio: ${userContext.portfolio.map(p => p.platform_name).join(', ')}.`
     : 'No tienes plataformas configuradas en tu portafolio aún.';
 
