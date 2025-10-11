@@ -377,44 +377,44 @@ export default function MiPortafolio() {
                   {/* Ventana de Visualización con transición */}
                   <div className={`overflow-hidden transition-all duration-500 ease-out transform ${
                     selectedPlatform 
-                      ? 'max-h-[600px] opacity-100 translate-y-0 scale-100' 
+                      ? 'max-h-[400px] opacity-100 translate-y-0 scale-100' 
                       : 'max-h-0 opacity-0 translate-y-0 scale-100'
                   }`}>
                     {selectedPlatform && (
-                      <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 hover:shadow-lg transition-shadow duration-300">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-4">
+                      <div className="border border-gray-200 rounded-lg p-4 bg-gray-50 hover:shadow-lg transition-shadow duration-300">
+                        <div className="flex items-center justify-between mb-3">
+                          <div className="flex items-center space-x-3">
                             <div className="flex items-center space-x-2">
                               {getStatusIcon(selectedPlatform.status)}
                               <div>
-                                <h3 className="text-lg font-semibold text-gray-900">
+                                <h3 className="text-base font-semibold text-gray-900">
                                   {selectedPlatform.calculator_platforms.name}
                                 </h3>
-                                <p className="text-sm text-gray-500">
+                                <p className="text-xs text-gray-500">
                                   {selectedPlatform.calculator_platforms.id} • {selectedPlatform.calculator_platforms.currency}
                                 </p>
                               </div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedPlatform.status)}`}>
+                          <div className="flex items-center space-x-2">
+                            <span className={`px-2 py-1 rounded-full text-xs font-medium border ${getStatusColor(selectedPlatform.status)}`}>
                               {getStatusText(selectedPlatform.status)}
                             </span>
                             {selectedPlatform.status === 'entregada' && (
                               <button
                                 onClick={() => confirmPlatform(selectedPlatform.platform_id)}
                                 disabled={confirmingPlatform === selectedPlatform.platform_id}
-                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
+                                className="px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-1 text-sm"
                               >
                                 {confirmingPlatform === selectedPlatform.platform_id ? (
                                   <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
                                     <span>Confirmando...</span>
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircle className="w-4 h-4" />
-                                    <span>Confirmar Recepción</span>
+                                    <CheckCircle className="w-3 h-3" />
+                                    <span>Confirmar</span>
                                   </>
                                 )}
                               </button>
@@ -423,26 +423,26 @@ export default function MiPortafolio() {
                         </div>
 
                         {/* Estadísticas de la plataforma */}
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Días Activos</p>
-                            <p className="text-lg font-semibold text-gray-900">{selectedPlatform.stats.totalDays}</p>
+                            <p className="text-xs text-gray-500">Días Activos</p>
+                            <p className="text-sm font-semibold text-gray-900">{selectedPlatform.stats.totalDays}</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Promedio Diario</p>
-                            <p className="text-lg font-semibold text-gray-900">
+                            <p className="text-xs text-gray-500">Promedio Diario</p>
+                            <p className="text-sm font-semibold text-gray-900">
                               ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Total (30 días)</p>
-                            <p className="text-lg font-semibold text-gray-900">
+                            <p className="text-xs text-gray-500">Total (30 días)</p>
+                            <p className="text-sm font-semibold text-gray-900">
                               ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
                             </p>
                           </div>
                           <div className="text-center">
-                            <p className="text-sm text-gray-500">Última Actividad</p>
-                            <p className="text-lg font-semibold text-gray-900">
+                            <p className="text-xs text-gray-500">Última Actividad</p>
+                            <p className="text-sm font-semibold text-gray-900">
                               {selectedPlatform.stats.lastActivity ? 
                                 new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
                                 'N/A'
@@ -452,24 +452,24 @@ export default function MiPortafolio() {
                         </div>
 
                         {/* Fechas importantes */}
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <div className="flex items-center justify-between text-sm text-gray-500">
-                            <div className="flex items-center space-x-4">
+                        <div className="mt-3 pt-3 border-t border-gray-200">
+                          <div className="flex items-center justify-between text-xs text-gray-500">
+                            <div className="flex items-center space-x-3">
                               {selectedPlatform.delivered_at && (
                                 <div className="flex items-center space-x-1">
-                                  <Calendar className="w-4 h-4" />
+                                  <Calendar className="w-3 h-3" />
                                   <span>Entregada: {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES')}</span>
                                 </div>
                               )}
                               {selectedPlatform.confirmed_at && (
                                 <div className="flex items-center space-x-1">
-                                  <CheckCircle className="w-4 h-4" />
+                                  <CheckCircle className="w-3 h-3" />
                                   <span>Confirmada: {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES')}</span>
                                 </div>
                               )}
                             </div>
                             <div className="flex items-center space-x-1">
-                              <Target className="w-4 h-4" />
+                              <Target className="w-3 h-3" />
                               <span>Plataforma activa</span>
                             </div>
                           </div>
