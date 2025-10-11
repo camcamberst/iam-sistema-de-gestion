@@ -146,27 +146,34 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // ===========================================
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
   // ===========================================
-  const getMenuItems = () => {
+  // Estado para el menú fijo
+  const [menuItems, setMenuItems] = useState<Array<{
+    id: string;
+    label: string;
+    href: string;
+    subItems: Array<{label: string; href: string}>;
+  }>>([]);
+
+  // Función para inicializar el menú una sola vez
+  const initializeMenu = () => {
+    if (!isClient) return;
+    
     // Obtener el rol del usuario desde localStorage de forma segura
     let userRole = 'modelo';
     let userData = null;
     
-    if (isClient) {
-      try {
-        userData = localStorage.getItem('user');
-        if (userData) {
-          const parsed = JSON.parse(userData);
-          userRole = parsed.role || 'modelo';
-        }
-      } catch (error) {
-        console.warn('Error parsing user data from localStorage:', error);
-        userRole = 'modelo';
+    try {
+      userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        userRole = parsed.role || 'modelo';
       }
+    } catch (error) {
+      console.warn('Error parsing user data from localStorage:', error);
+      userRole = 'modelo';
     }
     
-    console.log('🔍 [MENU] User role:', userRole);
-    console.log('🔍 [MENU] User data:', userData);
-    console.log('🔍 [MENU] isClient:', isClient);
+    console.log('🔍 [MENU-INIT] User role:', userRole);
 
     // Menú base para todos los roles
     const baseItems: Array<{
@@ -178,7 +185,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {
         id: 'calculator',
         label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
-        href: userRole === 'modelo' ? '/model/calculator' : '#', // Navegación directa para modelos
+        href: userRole === 'modelo' ? '/model/calculator' : '#',
         subItems: userRole === 'modelo' 
           ? [ { label: 'Ingresar Valores', href: '/model/calculator' } ]
           : []
@@ -190,7 +197,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'anticipos',
         label: 'Mis Anticipos',
-        href: '/model/anticipos/solicitar', // Navegación directa
+        href: '/model/anticipos/solicitar',
         subItems: [
           { label: 'Solicitar Anticipo', href: '/model/anticipos/solicitar' },
           { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
@@ -198,12 +205,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-      // Agregar Mi Portafolio para modelos - NUEVA IMPLEMENTACIÓN
+      // Agregar Mi Portafolio para modelos
       baseItems.push({
         id: 'portafolio',
         label: 'Mi Portafolio',
-        href: '/model/portafolio', // Navegación directa
-        subItems: [] // Sin subItems por ahora
+        href: '/model/portafolio',
+        subItems: []
       });
     }
 
@@ -212,7 +219,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.unshift({
         id: 'users',
         label: 'Gestión Usuarios',
-        href: '#', // Sin navegación directa
+        href: '#',
         subItems: [
           { label: 'Crear Usuario', href: '/admin/users/create' },
           { label: 'Consultar Usuarios', href: '/admin/users' }
@@ -222,7 +229,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'anticipos',
         label: 'Gestión Anticipos',
-        href: '#', // Sin navegación directa
+        href: '#',
         subItems: [
           { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
           { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
@@ -232,7 +239,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'sedes',
         label: 'Gestión Sedes',
-        href: '#', // Sin navegación directa
+        href: '#',
         subItems: [
           { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar' },
           { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio' },
@@ -240,8 +247,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-
-      // Agregar opciones administrativas de calculadora SOLO para admins/super_admins
+      // Agregar opciones administrativas de calculadora
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
       if (calculatorIndex !== -1) {
         baseItems[calculatorIndex].subItems = [
@@ -252,16 +258,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       }
     }
 
-    console.log('🔍 [MENU] Final menu items:', baseItems);
-    console.log('🔍 [MENU] Portafolio item:', baseItems.find(item => item.id === 'portafolio'));
-    return baseItems;
+    console.log('🔍 [MENU-INIT] Final menu items:', baseItems);
+    setMenuItems(baseItems);
   };
 
-  const menuItems = getMenuItems();
+  // Inicializar el menú solo una vez cuando el cliente esté listo
+  useEffect(() => {
+    if (isClient) {
+      initializeMenu();
+    }
+  }, [isClient]);
   
-  // Debug logs
-  console.log('🔍 [RENDER] Menu items length:', menuItems.length);
-  console.log('🔍 [RENDER] Menu items:', menuItems);
 
   const isActive = (href: string) => {
     if (href === '#') return false;
