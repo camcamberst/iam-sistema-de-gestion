@@ -268,6 +268,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       initializeMenu();
     }
   }, [isClient]);
+
+  // Debug log para el menú
+  useEffect(() => {
+    if (menuItems.length > 0) {
+      console.log('🔍 [NAV] About to render menu with', menuItems.length, 'items');
+      console.log('🔍 [NAV] Menu items:', menuItems);
+    }
+  }, [menuItems]);
   
 
   const isActive = (href: string) => {
@@ -314,7 +322,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* Main Navigation - Apple Style 2 */}
             <nav className="flex items-center space-x-6">
-              {console.log('🔍 [NAV] About to render menu with', menuItems.length, 'items')}
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
                   console.log('🔍 [RENDER] Processing item:', item.id, item.label, 'pathname:', pathname);
