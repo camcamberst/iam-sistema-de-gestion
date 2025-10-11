@@ -218,7 +218,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           aria-label="Abrir chat de soporte"
         >
           <span className="text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity duration-300">AIM</span>
-          <span className="absolute text-xs font-bold opacity-100 group-hover:opacity-0 transition-opacity duration-300">💬</span>
+          <span className="absolute text-xs font-bold opacity-100 group-hover:opacity-0 transition-opacity duration-300">A</span>
         </button>
       )}
 
