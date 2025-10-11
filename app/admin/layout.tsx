@@ -37,6 +37,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setIsClient(true);
   }, []);
 
+  // Cerrar todos los dropdowns al cambiar de página
+  useEffect(() => {
+    setPortfolioDropdownOpen(false);
+    setCalculatorDropdownOpen(false);
+    setAnticiposDropdownOpen(false);
+  }, [pathname]);
+
   // Cleanup timeout al desmontar el componente
   useEffect(() => {
     return () => {
@@ -323,6 +330,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       <PortfolioDropdown
                         key={item.id}
                         isActive={isActive(item.href)}
+                        isOpen={portfolioDropdownOpen}
                         onToggle={() => setPortfolioDropdownOpen(!portfolioDropdownOpen)}
                       />
                     );
@@ -334,6 +342,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       <CalculatorDropdown
                         key={item.id}
                         isActive={isActive(item.href)}
+                        isOpen={calculatorDropdownOpen}
                         onToggle={() => setCalculatorDropdownOpen(!calculatorDropdownOpen)}
                       />
                     );
@@ -345,6 +354,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       <AnticiposDropdown
                         key={item.id}
                         isActive={isActive(item.href)}
+                        isOpen={anticiposDropdownOpen}
                         onToggle={() => setAnticiposDropdownOpen(!anticiposDropdownOpen)}
                       />
                     );

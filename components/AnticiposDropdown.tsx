@@ -7,19 +7,19 @@ import { ChevronDown, CreditCard, FileText, Clock } from 'lucide-react';
 
 interface AnticiposDropdownProps {
   isActive: boolean;
+  isOpen: boolean;
   onToggle: () => void;
 }
 
-export default function AnticiposDropdown({ isActive, onToggle }: AnticiposDropdownProps) {
+export default function AnticiposDropdown({ isActive, isOpen, onToggle }: AnticiposDropdownProps) {
   const pathname = usePathname();
-  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
+        onToggle(); // Cerrar usando el estado del layout
       }
     };
 
@@ -30,11 +30,10 @@ export default function AnticiposDropdown({ isActive, onToggle }: AnticiposDropd
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, onToggle]);
 
   const handleToggle = () => {
-    setIsOpen(!isOpen);
-    onToggle();
+    onToggle(); // Usar el estado del layout
   };
 
   const menuItems = [
