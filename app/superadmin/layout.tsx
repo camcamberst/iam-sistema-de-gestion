@@ -306,18 +306,14 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                           </div>
                           <div className="flex-1 min-w-0">
                             <div className="text-sm font-semibold text-gray-100 truncate">{userInfo.name}</div>
-                            <div className="text-xs text-gray-300 truncate">{userInfo.email}</div>
+                            <div className="text-xs text-gray-300 truncate">
+                              {String(userInfo.role).replace('_',' ').charAt(0).toUpperCase() + String(userInfo.role).replace('_',' ').slice(1)} · {userInfo.email}
+                            </div>
                           </div>
                         </div>
                         
                         {/* Información compacta - Estilo sobrio */}
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-gray-400 font-medium">Rol</span>
-                            <span className="text-gray-200 font-semibold capitalize">
-                              {String(userInfo.role).replace('_',' ')}
-                            </span>
-                          </div>
                           {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-400 font-medium">{userInfo.role === 'modelo' ? 'Grupo' : 'Grupos'}</span>
