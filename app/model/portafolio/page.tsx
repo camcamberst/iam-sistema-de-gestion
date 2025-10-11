@@ -458,10 +458,10 @@ export default function MiPortafolio() {
                           <div className="flex items-center space-x-6">
                             {selectedPlatform.delivered_at && (
                               <div className="flex items-center space-x-2">
-                                <Calendar className="w-4 h-4 text-blue-500" />
+                                <Calendar className="w-3 h-3 text-gray-400" />
                                 <div>
-                                  <p className="text-xs text-gray-500">Entregada</p>
-                                  <p className="text-sm font-medium text-gray-900">
+                                  <p className="text-xs text-gray-400">Entregada</p>
+                                  <p className="text-xs text-gray-500">
                                     {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES')}
                                   </p>
                                 </div>
@@ -469,10 +469,10 @@ export default function MiPortafolio() {
                             )}
                             {selectedPlatform.confirmed_at && (
                               <div className="flex items-center space-x-2">
-                                <CheckCircle className="w-4 h-4 text-green-500" />
+                                <CheckCircle className="w-3 h-3 text-gray-400" />
                                 <div>
-                                  <p className="text-xs text-gray-500">Confirmada</p>
-                                  <p className="text-sm font-medium text-gray-900">
+                                  <p className="text-xs text-gray-400">Confirmada</p>
+                                  <p className="text-xs text-gray-500">
                                     {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES')}
                                   </p>
                                 </div>
@@ -480,8 +480,8 @@ export default function MiPortafolio() {
                             )}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Target className="w-4 h-4 text-green-500" />
-                            <span className="text-sm font-medium text-gray-700">Plataforma activa</span>
+                            <Target className="w-3 h-3 text-gray-400" />
+                            <span className="text-xs text-gray-500">Plataforma activa</span>
                           </div>
                         </div>
                       </div>
