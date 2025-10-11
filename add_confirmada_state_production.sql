@@ -116,7 +116,7 @@ SELECT
     u_confirmed.email as confirmed_by_email
 FROM modelo_plataformas mp
 JOIN calculator_platforms cp ON mp.platform_id = cp.id
-LEFT JOIN auth.users u_confirmed ON mp.confirmed_by = u_confirmed.id
+LEFT JOIN public.users u_confirmed ON mp.confirmed_by = u_confirmed.id
 WHERE mp.status IN ('entregada', 'confirmada', 'desactivada')
 ORDER BY mp.updated_at DESC;
 
