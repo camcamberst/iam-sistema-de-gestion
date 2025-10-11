@@ -246,24 +246,63 @@ export default function ModelDashboard() {
 
               {/* Barra de alcance de meta */}
               <div className="mt-4 animate-fade-in-delay-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-gray-700">Objetivo Básico</span>
-                  <span className="text-sm text-gray-600">
-                    {productivityData ? 
-                      `$${productivityData.usdModelo.toFixed(0)} / $${productivityData.goalUsd} USD` : 
-                      '— / — USD'
-                    }
-                  </span>
-                </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500">
-                  <div 
-                    className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-1000 ease-out" 
-                    style={{ width: `${productivityData ? Math.min(100, productivityData.goalProgress).toFixed(0) : 0}%` }}
-                  ></div>
-                </div>
-                <div className="text-right text-xs text-gray-600 mt-1 transition-colors duration-300">
-                  {productivityData ? `${Math.min(100, productivityData.goalProgress).toFixed(0)}%` : '0%'}
-                </div>
+                {(() => {
+                  const progress = productivityData ? Math.min(100, productivityData.goalProgress) : 0;
+                  
+                  // Sistema de colores dinámicos igual que Mi Calculadora
+                  const RED = { r: 229, g: 57, b: 53 };     // #E53935
+                  const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
+                  const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
+
+                  const mix = (a: any, b: any, t: number) => ({
+                    r: Math.round(a.r + (b.r - a.r) * t),
+                    g: Math.round(a.g + (b.g - a.g) * t),
+                    b: Math.round(a.b + (b.b - a.b) * t)
+                  });
+
+                  const shade = (color: any, amount: number) => ({
+                    r: Math.round(color.r * (1 - amount)),
+                    g: Math.round(color.g * (1 - amount)),
+                    b: Math.round(color.b * (1 - amount))
+                  });
+
+                  const rgbToHex = (color: any) => 
+                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
+
+                  const t = progress / 100;
+                  const base = t <= 0.6
+                    ? mix(RED, PURPLE, t / 0.6)
+                    : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
+
+                  const progressStart = rgbToHex(shade(base, 0.05));
+                  const progressEnd = rgbToHex(shade(base, 0.15));
+
+                  return (
+                    <>
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-gray-700">Objetivo Básico</span>
+                        <span className="text-sm text-gray-600">
+                          {productivityData ? 
+                            `$${productivityData.usdModelo.toFixed(0)} / $${productivityData.goalUsd} USD` : 
+                            '— / — USD'
+                          }
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500">
+                        <div 
+                          className="h-full transition-all duration-1000 ease-out" 
+                          style={{ 
+                            width: `${progress}%`,
+                            background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
+                          }}
+                        ></div>
+                      </div>
+                      <div className="text-right text-xs text-gray-600 mt-1 transition-colors duration-300">
+                        {progress.toFixed(0)}%
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               <div className="mt-4 text-sm text-gray-500 animate-fade-in-delay-5">
