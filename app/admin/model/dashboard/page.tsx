@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import ChatWidget from '@/components/ChatWidget';
+import AIDashboard from '@/components/AIDashboard';
 
 interface User {
   id: string;
@@ -372,6 +373,11 @@ export default function ModelDashboard() {
               </div>
             </>
           )}
+        </div>
+
+        {/* AI Dashboard */}
+        <div className="mt-6">
+          <AIDashboard userId={user.id} userRole={user.role} />
         </div>
 
         {/* Chat Widget */}
