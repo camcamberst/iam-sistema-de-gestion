@@ -214,10 +214,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {!isOpen && (
         <button
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-6 right-6 w-16 h-16 bg-gray-900 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 z-50 flex items-center justify-center"
+          className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 text-white rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 z-50 flex items-center justify-center"
           aria-label="Abrir chat de soporte"
         >
-          <span className="text-lg font-bold">AIM</span>
+          <span className="text-sm font-bold">AIM</span>
         </button>
       )}
 
