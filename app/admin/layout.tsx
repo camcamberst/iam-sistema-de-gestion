@@ -179,7 +179,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'portafolio',
         label: 'Mi Portafolio',
-        href: '/model/portafolio'
+        href: '/model/portafolio',
+        subItems: []
       });
     }
 
