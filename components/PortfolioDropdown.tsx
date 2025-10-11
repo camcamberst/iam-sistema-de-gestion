@@ -88,7 +88,7 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => setIsOpen(false)}
+                  onClick={() => onToggle()}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
                       ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
