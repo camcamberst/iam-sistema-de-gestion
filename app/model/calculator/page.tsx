@@ -111,6 +111,10 @@ export default function ModelCalculatorPage() {
           usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
         } else if (p.id === 'mondo') {
           usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+        } else if (p.id === 'superfoon') {
+          usdModelo = p.value * (rates?.eur_usd || 1.01); // EUR a USD directo
+        } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+          usdModelo = p.value * (rates?.eur_usd || 1.01);
         } else {
           usdModelo = p.value * (rates?.eur_usd || 1.01);
         }
@@ -129,8 +133,8 @@ export default function ModelCalculatorPage() {
           usdModelo = p.value * 0.60;
         } else if (p.id === 'secretfriends') {
           usdModelo = p.value * 0.5;
-        } else if (p.id === 'superfoon') {
-          usdModelo = p.value; // 100% directo
+        } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+          usdModelo = p.value;
         } else {
           usdModelo = p.value;
         }
@@ -158,6 +162,10 @@ export default function ModelCalculatorPage() {
           usdModelo = (yesterdayValue * (rates?.eur_usd || 1.01)) * 0.84;
         } else if (p.id === 'mondo') {
           usdModelo = (yesterdayValue * (rates?.eur_usd || 1.01)) * 0.78;
+        } else if (p.id === 'superfoon') {
+          usdModelo = yesterdayValue * (rates?.eur_usd || 1.01); // EUR a USD directo
+        } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+          usdModelo = yesterdayValue * (rates?.eur_usd || 1.01);
         } else {
           usdModelo = yesterdayValue * (rates?.eur_usd || 1.01);
         }
@@ -176,8 +184,8 @@ export default function ModelCalculatorPage() {
           usdModelo = yesterdayValue * 0.60;
         } else if (p.id === 'secretfriends') {
           usdModelo = yesterdayValue * 0.5;
-        } else if (p.id === 'superfoon') {
-          usdModelo = yesterdayValue; // 100% directo
+        } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+          usdModelo = yesterdayValue;
         } else {
           usdModelo = yesterdayValue;
         }
