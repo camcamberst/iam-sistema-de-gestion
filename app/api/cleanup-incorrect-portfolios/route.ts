@@ -18,8 +18,7 @@ export async function POST(request: NextRequest) {
         model_id,
         platform_id,
         status,
-        notes,
-        users!inner(email)
+        notes
       `)
       .eq('notes', 'Sincronización automática de configuración existente');
 
@@ -38,9 +37,27 @@ export async function POST(request: NextRequest) {
 
     console.log(`📋 Portafolios encontrados para eliminar: ${incorrectPortfolios.length}`);
 
-    // 2. Agrupar por modelo para mostrar información
+    // 2. Obtener emails de los usuarios
+    const modelIds = [...new Set(incorrectPortfolios.map(p => p.model_id))];
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, email')
+      .in('id', modelIds);
+
+    if (usersError) {
+      console.error('Error obteniendo usuarios:', usersError);
+      return NextResponse.json({ success: false, error: usersError.message }, { status: 500 });
+    }
+
+    // 3. Crear mapa de ID a email
+    const userIdToEmail = users?.reduce((acc, user) => {
+      acc[user.id] = user.email;
+      return acc;
+    }, {} as Record<string, string>) || {};
+
+    // 4. Agrupar por modelo para mostrar información
     const portfoliosByModel = incorrectPortfolios.reduce((acc, portfolio) => {
-      const email = portfolio.users[0]?.email;
+      const email = userIdToEmail[portfolio.model_id];
       if (!email) return acc;
       if (!acc[email]) {
         acc[email] = [];
@@ -49,7 +66,7 @@ export async function POST(request: NextRequest) {
       return acc;
     }, {} as Record<string, any[]>);
 
-    // 3. Eliminar todos los portafolios incorrectos
+    // 5. Eliminar todos los portafolios incorrectos
     const { error: deleteError } = await supabase
       .from('modelo_plataformas')
       .delete()
