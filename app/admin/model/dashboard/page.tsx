@@ -204,16 +204,16 @@ export default function ModelDashboard() {
   return (
     <div className="min-h-screen bg-white">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mi Dashboard</h1>
+        <h1 className="text-3xl font-semibold text-gray-900 mb-2 animate-fade-in">Mi Dashboard</h1>
         {user && (
-          <p className="text-gray-500 mb-6 text-sm">
+          <p className="text-gray-500 mb-6 text-sm animate-fade-in-delay">
             Bienvenida, {user.name} · Rol: {String(user.role).replace('_',' ')}
             {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
           </p>
         )}
 
         {/* Resumen de productividad y progreso de meta */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-300 hover:shadow-md hover:scale-[1.01] animate-slide-up">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
           
           {productivityLoading ? (
@@ -224,20 +224,20 @@ export default function ModelDashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-lg bg-blue-50 text-center">
-                  <div className="text-2xl font-bold text-blue-600 mb-1">
+                <div className="p-4 rounded-lg bg-blue-50 text-center transition-all duration-300 hover:bg-blue-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-1">
+                  <div className="text-2xl font-bold text-blue-600 mb-1 transition-colors duration-300">
                     {productivityData ? `$${productivityData.usdBruto.toFixed(2)}` : '—'}
                   </div>
                   <div className="text-sm text-gray-600">USD Bruto (hoy)</div>
                 </div>
-                <div className="p-4 rounded-lg bg-green-50 text-center">
-                  <div className="text-2xl font-bold text-green-600 mb-1">
+                <div className="p-4 rounded-lg bg-green-50 text-center transition-all duration-300 hover:bg-green-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-2">
+                  <div className="text-2xl font-bold text-green-600 mb-1 transition-colors duration-300">
                     {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
                   </div>
                   <div className="text-sm text-gray-600">USD Modelo (hoy)</div>
                 </div>
-                <div className="p-4 rounded-lg bg-purple-50 text-center">
-                  <div className="text-2xl font-bold text-purple-600 mb-1">
+                <div className="p-4 rounded-lg bg-purple-50 text-center transition-all duration-300 hover:bg-purple-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-3">
+                  <div className="text-2xl font-bold text-purple-600 mb-1 transition-colors duration-300">
                     {productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
                   </div>
                   <div className="text-sm text-gray-600">COP Modelo (hoy)</div>
@@ -245,7 +245,7 @@ export default function ModelDashboard() {
               </div>
 
               {/* Barra de alcance de meta */}
-              <div className="mt-4">
+              <div className="mt-4 animate-fade-in-delay-4">
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-sm font-medium text-gray-700">Objetivo Básico</span>
                   <span className="text-sm text-gray-600">
@@ -255,19 +255,19 @@ export default function ModelDashboard() {
                     }
                   </span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500">
                   <div 
-                    className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" 
+                    className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-1000 ease-out" 
                     style={{ width: `${productivityData ? Math.min(100, productivityData.goalProgress).toFixed(0) : 0}%` }}
                   ></div>
                 </div>
-                <div className="text-right text-xs text-gray-600 mt-1">
+                <div className="text-right text-xs text-gray-600 mt-1 transition-colors duration-300">
                   {productivityData ? `${Math.min(100, productivityData.goalProgress).toFixed(0)}%` : '0%'}
                 </div>
               </div>
 
-              <div className="mt-4 text-sm text-gray-500">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline">Mi Calculadora</a>.
+              <div className="mt-4 text-sm text-gray-500 animate-fade-in-delay-5">
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline transition-colors duration-300 hover:scale-105 inline-block">Mi Calculadora</a>.
               </div>
             </>
           )}
