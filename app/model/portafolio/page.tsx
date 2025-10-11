@@ -374,109 +374,107 @@ export default function MiPortafolio() {
                     ))}
                   </div>
 
-                  {/* Ventana de Visualización */}
-                  {selectedPlatform ? (
-                    <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            {getStatusIcon(selectedPlatform.status)}
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {selectedPlatform.calculator_platforms.name}
-                              </h3>
-                              <p className="text-sm text-gray-500">
-                                {selectedPlatform.calculator_platforms.id} • {selectedPlatform.calculator_platforms.currency}
-                              </p>
+                  {/* Ventana de Visualización con transición */}
+                  <div className={`overflow-hidden transition-all duration-500 ease-in-out ${
+                    selectedPlatform ? 'max-h-screen opacity-100' : 'max-h-0 opacity-0'
+                  }`}>
+                    {selectedPlatform && (
+                      <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 transform transition-all duration-300 ease-in-out hover:shadow-lg">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                              {getStatusIcon(selectedPlatform.status)}
+                              <div>
+                                <h3 className="text-lg font-semibold text-gray-900">
+                                  {selectedPlatform.calculator_platforms.name}
+                                </h3>
+                                <p className="text-sm text-gray-500">
+                                  {selectedPlatform.calculator_platforms.id} • {selectedPlatform.calculator_platforms.currency}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-3">
+                            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedPlatform.status)}`}>
+                              {getStatusText(selectedPlatform.status)}
+                            </span>
+                            {selectedPlatform.status === 'entregada' && (
+                              <button
+                                onClick={() => confirmPlatform(selectedPlatform.platform_id)}
+                                disabled={confirmingPlatform === selectedPlatform.platform_id}
+                                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
+                              >
+                                {confirmingPlatform === selectedPlatform.platform_id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <span>Confirmando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>Confirmar Recepción</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Estadísticas de la plataforma */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="text-center">
+                            <p className="text-sm text-gray-500">Días Activos</p>
+                            <p className="text-lg font-semibold text-gray-900">{selectedPlatform.stats.totalDays}</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-gray-500">Promedio Diario</p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-gray-500">Total (30 días)</p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
+                            </p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm text-gray-500">Última Actividad</p>
+                            <p className="text-lg font-semibold text-gray-900">
+                              {selectedPlatform.stats.lastActivity ? 
+                                new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
+                                'N/A'
+                              }
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Fechas importantes */}
+                        <div className="mt-4 pt-4 border-t border-gray-200">
+                          <div className="flex items-center justify-between text-sm text-gray-500">
+                            <div className="flex items-center space-x-4">
+                              {selectedPlatform.delivered_at && (
+                                <div className="flex items-center space-x-1">
+                                  <Calendar className="w-4 h-4" />
+                                  <span>Entregada: {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES')}</span>
+                                </div>
+                              )}
+                              {selectedPlatform.confirmed_at && (
+                                <div className="flex items-center space-x-1">
+                                  <CheckCircle className="w-4 h-4" />
+                                  <span>Confirmada: {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES')}</span>
+                                </div>
+                              )}
+                            </div>
+                            <div className="flex items-center space-x-1">
+                              <Target className="w-4 h-4" />
+                              <span>Plataforma activa</span>
                             </div>
                           </div>
                         </div>
-                        <div className="flex items-center space-x-3">
-                          <span className={`px-3 py-1 rounded-full text-sm font-medium border ${getStatusColor(selectedPlatform.status)}`}>
-                            {getStatusText(selectedPlatform.status)}
-                          </span>
-                          {selectedPlatform.status === 'entregada' && (
-                            <button
-                              onClick={() => confirmPlatform(selectedPlatform.platform_id)}
-                              disabled={confirmingPlatform === selectedPlatform.platform_id}
-                              className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2"
-                            >
-                              {confirmingPlatform === selectedPlatform.platform_id ? (
-                                <>
-                                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                  <span>Confirmando...</span>
-                                </>
-                              ) : (
-                                <>
-                                  <CheckCircle className="w-4 h-4" />
-                                  <span>Confirmar Recepción</span>
-                                </>
-                              )}
-                            </button>
-                          )}
-                        </div>
                       </div>
-
-                      {/* Estadísticas de la plataforma */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <p className="text-sm text-gray-500">Días Activos</p>
-                          <p className="text-lg font-semibold text-gray-900">{selectedPlatform.stats.totalDays}</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-500">Promedio Diario</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-500">Total (30 días)</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
-                          </p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm text-gray-500">Última Actividad</p>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {selectedPlatform.stats.lastActivity ? 
-                              new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
-                              'N/A'
-                            }
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* Fechas importantes */}
-                      <div className="mt-4 pt-4 border-t border-gray-200">
-                        <div className="flex items-center justify-between text-sm text-gray-500">
-                          <div className="flex items-center space-x-4">
-                            {selectedPlatform.delivered_at && (
-                              <div className="flex items-center space-x-1">
-                                <Calendar className="w-4 h-4" />
-                                <span>Entregada: {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES')}</span>
-                              </div>
-                            )}
-                            {selectedPlatform.confirmed_at && (
-                              <div className="flex items-center space-x-1">
-                                <CheckCircle className="w-4 h-4" />
-                                <span>Confirmada: {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES')}</span>
-                              </div>
-                            )}
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Target className="w-4 h-4" />
-                            <span>Plataforma activa</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="border border-gray-200 rounded-lg p-12 bg-gray-50 text-center">
-                      <Eye className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona una plataforma</h3>
-                      <p className="text-gray-500">Haz click en una etiqueta de plataforma para ver su información detallada</p>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </>
               )}
             </div>
