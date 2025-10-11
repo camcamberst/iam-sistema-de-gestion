@@ -271,6 +271,8 @@ export default function ModelDashboard() {
 
                   const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
                   const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
+                  const rgbToHex = (color: any) => 
+                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
 
                   const t = progressPct / 100;
                   // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
@@ -287,9 +289,6 @@ export default function ModelDashboard() {
                   const iconEnd = rgbToHex(shade(base, 0.2));
                   const headingColor = rgbToHex(shade(base, 0.55));
                   const subTextColor = rgbToHex(shade(base, 0.45));
-
-                  const rgbToHex = (color: any) => 
-                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
 
                   const milestone = progressPct >= 100 ? 100 : progressPct >= 75 ? 75 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
 
