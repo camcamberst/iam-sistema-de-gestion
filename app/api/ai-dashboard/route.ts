@@ -60,8 +60,10 @@ async function getUserProductivityData(userId: string) {
   try {
     // Obtener datos de productividad del día actual
     const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
-    const { data: modelValues } = await supabase
+    // Obtener totales acumulados de hoy y ayer
+    const { data: todayTotals } = await supabase
       .from('model_values')
       .select(`
         platform_id,
@@ -73,6 +75,24 @@ async function getUserProductivityData(userId: string) {
       `)
       .eq('model_id', userId)
       .eq('period_date', today);
+
+    const { data: yesterdayTotals } = await supabase
+      .from('model_values')
+      .select(`
+        platform_id,
+        value,
+        calculator_platforms (
+          name,
+          currency
+        )
+      `)
+      .eq('model_id', userId)
+      .eq('period_date', yesterday);
+
+    // Calcular ganancias del día (diferencia entre hoy y ayer)
+    const todayTotal = (todayTotals || []).reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+    const yesterdayTotal = (yesterdayTotals || []).reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+    const todayEarnings = todayTotal - yesterdayTotal;
 
     // Obtener datos históricos de la última semana
     const weekAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -114,7 +134,9 @@ async function getUserProductivityData(userId: string) {
       .in('status', ['entregada', 'confirmada']);
 
     return {
-      todayEarnings: modelValues || [],
+      todayEarnings: todayEarnings, // Ahora es la diferencia, no el total
+      todayTotal: todayTotal, // Total acumulado de hoy
+      yesterdayTotal: yesterdayTotal, // Total acumulado de ayer
       weeklyData: weeklyData || [],
       config: config || {},
       portfolio: portfolio || [],
@@ -132,7 +154,7 @@ async function generateAIInsights(userData: any) {
     const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
     
     // Procesar datos para el análisis
-    const todayTotal = userData.todayEarnings.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+    const todayEarnings = userData.todayEarnings; // Ya es la diferencia calculada
     const weeklyTotal = userData.weeklyData.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
     const avgDaily = weeklyTotal / 7;
     
@@ -163,7 +185,9 @@ Eres un asistente especializado en análisis de rendimiento para modelos de webc
 Genera insights útiles y motivadores con un tono casual y amigable, pero profesional.
 
 DATOS DEL MODELO:
-- Ganancias de hoy: $${todayTotal.toFixed(2)} USD
+- Ganancias del día: $${todayEarnings.toFixed(2)} USD (diferencia entre hoy y ayer)
+- Total acumulado hoy: $${userData.todayTotal.toFixed(2)} USD
+- Total acumulado ayer: $${userData.yesterdayTotal.toFixed(2)} USD
 - Promedio diario (última semana): $${avgDaily.toFixed(2)} USD
 - Total semanal: $${weeklyTotal.toFixed(2)} USD
 - Mejor plataforma: ${bestPlatform}
@@ -193,8 +217,8 @@ Responde en formato JSON:
   "dailyTip": "tip motivador del día",
   "recommendations": ["recomendación 1", "recomendación 2", "recomendación 3"],
   "performanceSummary": {
-    "todayEarnings": ${todayTotal},
-    "weeklyTrend": ${((todayTotal - avgDaily) / avgDaily * 100).toFixed(1)},
+    "todayEarnings": ${todayEarnings},
+    "weeklyTrend": ${((todayEarnings - avgDaily) / (avgDaily || 1) * 100).toFixed(1)},
     "bestPlatform": "${bestPlatform}",
     "goalProgress": 75.0
   }
@@ -226,7 +250,7 @@ Responde en formato JSON:
 }
 
 function getFallbackInsights(userData: any) {
-  const todayTotal = userData.todayEarnings.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+  const todayEarnings = userData.todayEarnings; // Ya es la diferencia calculada
   
   return {
     insights: [
@@ -262,7 +286,7 @@ function getFallbackInsights(userData: any) {
       'Mantén consistencia en tu programación'
     ],
     performanceSummary: {
-      todayEarnings: todayTotal,
+      todayEarnings: todayEarnings,
       weeklyTrend: 0,
       bestPlatform: 'N/A',
       goalProgress: 0
