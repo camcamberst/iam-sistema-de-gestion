@@ -184,7 +184,7 @@ export default function AdminDashboard() {
         {(user?.role === 'super_admin' || user?.role === 'admin') && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
             <ActiveRatesPanel compact={true} />
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -6,6 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
+import ChatWidget from '@/components/ChatWidget';
 
 interface User {
   id: string;
@@ -1395,6 +1396,9 @@ export default function ModelCalculatorPage() {
         }
         `}</style>
         </div>
+
+        {/* Chat Widget */}
+        <ChatWidget userId={user.id} userRole={user.role} />
       </div>
     </div>
   );
