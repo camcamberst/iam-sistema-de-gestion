@@ -263,8 +263,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   console.log('🔍 [RENDER] Menu items length:', menuItems.length);
   console.log('🔍 [RENDER] Menu items:', menuItems);
 
-  const isActive = (href: string) => pathname === href;
-  const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
+  const isActive = (href: string) => {
+    if (href === '#') return false;
+    return pathname === href || pathname.startsWith(href + '/');
+  };
+  const isParentActive = (item: any) => {
+    if (item.href !== '#') {
+      return pathname === item.href || pathname.startsWith(item.href + '/');
+    }
+    return item.subItems?.some((subItem: any) => pathname === subItem.href || pathname.startsWith(subItem.href + '/'));
+  };
   
   // Función para determinar si el dropdown debe mostrarse - SIMPLIFICADA
   const shouldShowDropdown = (item: any) => {
@@ -323,8 +331,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     );
                   }
 
-                  // Renderizar Mis Anticipos con el componente especial
-                  if (item.id === 'anticipos') {
+                  // Renderizar Mis Anticipos con el componente especial (solo para modelos)
+                  if (item.id === 'anticipos' && item.label === 'Mis Anticipos') {
                     return (
                       <AnticiposDropdown
                         key={item.id}
