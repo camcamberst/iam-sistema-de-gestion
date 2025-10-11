@@ -437,8 +437,8 @@ export default function AdminViewModelPage() {
   // Si hay un modelo seleccionado, mostrar su calculadora
   if (selectedModel) {
     return (
-      <div className="min-h-screen bg-white">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-24">
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
@@ -739,7 +739,7 @@ export default function AdminViewModelPage() {
                 }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
                 
                 return (
-                  <div className="apple-card">
+                  <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
                     <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
                     
                     {/* Totales principales - OPTIMIZADO */}
@@ -775,7 +775,7 @@ export default function AdminViewModelPage() {
               })()}
             </div>
           ) : (
-            <div className="apple-card">
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
                   <div className="text-center py-12">
                 <div className="text-gray-400 mb-4"></div>
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
@@ -795,17 +795,40 @@ export default function AdminViewModelPage() {
 
   // Mostrar lista de modelos con panel de filtros
   return (
-    <div className="min-h-screen bg-gray-100 p-6">
-      <h1 className="text-3xl font-bold text-gray-900 mb-6">Ver Calculadora de Modelo</h1>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    Ver Calculadora de Modelo
+                  </h1>
+                  <p className="mt-1 text-sm text-gray-600">
+                    Selecciona un modelo para ver y editar su calculadora
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Panel izquierdo: Filtros */}
-        <div className="md:col-span-1">
-          <div className="apple-card space-y-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Panel izquierdo: Filtros */}
+          <div className="lg:col-span-1">
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 space-y-6">
             {/* Filtro por Grupo */}
             {availableGroups.length > 0 && (
               <div>
-                <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtrar por Grupo</h2>
+                <h2 className="text-base font-semibold text-gray-900 mb-3">Filtrar por Grupo</h2>
                 <AppleDropdown
                   options={[
                     { value: 'all', label: 'Todos los grupos' },
@@ -823,14 +846,14 @@ export default function AdminViewModelPage() {
             
             {/* Filtro por Nombre */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Buscar por Nombre</h2>
+              <h2 className="text-base font-semibold text-gray-900 mb-3">Buscar por Nombre</h2>
               <div className="relative">
                 <input
                   type="text"
                   value={nameFilter}
                   onChange={(e) => handleNameFilter(e.target.value)}
                   placeholder="Buscar modelo..."
-                  className="apple-input text-sm pr-10"
+                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 focus:shadow-lg focus:shadow-blue-100 pr-10"
                 />
                 {nameFilter && (
                   <button
@@ -852,7 +875,7 @@ export default function AdminViewModelPage() {
 
             {/* Selección de Modelo */}
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Seleccionar Modelo</h2>
+              <h2 className="text-base font-semibold text-gray-900 mb-3">Seleccionar Modelo</h2>
               <AppleDropdown
                 options={[
                   { value: '', label: models.length === 0 ? 'No hay modelos disponibles' : 'Selecciona un modelo' },
@@ -945,9 +968,9 @@ export default function AdminViewModelPage() {
         </div>
 
         {/* Panel derecho: Información adicional o vacío */}
-        <div className="md:col-span-2">
-          <div className="apple-card">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Información</h2>
+        <div className="lg:col-span-2">
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <h2 className="text-base font-semibold text-gray-900 mb-4">Información</h2>
             
             {selectedModelId && models.find(m => m.id === selectedModelId) ? (
               <div className="text-center py-8">
@@ -974,6 +997,7 @@ export default function AdminViewModelPage() {
               </div>
             )}
           </div>
+        </div>
         </div>
       </div>
     </div>
