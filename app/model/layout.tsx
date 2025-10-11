@@ -3,6 +3,9 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import PortfolioDropdown from "@/components/PortfolioDropdown";
+import CalculatorDropdown from "@/components/CalculatorDropdown";
+import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { createClient } from "@supabase/supabase-js";
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
@@ -10,6 +13,10 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false);
+  const [calculatorDropdownOpen, setCalculatorDropdownOpen] = useState(false);
+  const [anticiposDropdownOpen, setAnticiposDropdownOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     id: string;
     name: string;
@@ -24,6 +31,27 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
     process.env.NEXT_PUBLIC_SUPABASE_URL as string,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
+
+  // Manejar hidratación del cliente
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  // Cerrar todos los dropdowns al cambiar de página
+  useEffect(() => {
+    setPortfolioDropdownOpen(false);
+    setCalculatorDropdownOpen(false);
+    setAnticiposDropdownOpen(false);
+  }, [pathname]);
+
+  // Cleanup timeout al desmontar el componente
+  useEffect(() => {
+    return () => {
+      if (menuTimeout) {
+        clearTimeout(menuTimeout);
+      }
+    };
+  }, [menuTimeout]);
 
   const loadUser = async () => {
     try {
@@ -59,35 +87,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
     }
   };
 
-  // Funciones para manejar el dropdown con delay
-  const handleMenuEnter = (itemId: string) => {
-    if (menuTimeout) {
-      clearTimeout(menuTimeout);
-      setMenuTimeout(null);
-    }
-    setActiveMenu(itemId);
-  };
-
-  const handleMenuLeave = () => {
-    const timeout = setTimeout(() => {
-      setActiveMenu(null);
-    }, 300); // 300ms de delay antes de cerrar
-    setMenuTimeout(timeout);
-  };
-
-  const handleDropdownEnter = () => {
-    if (menuTimeout) {
-      clearTimeout(menuTimeout);
-      setMenuTimeout(null);
-    }
-  };
-
-  const handleDropdownLeave = () => {
-    const timeout = setTimeout(() => {
-      setActiveMenu(null);
-    }, 150); // Delay más corto cuando se sale del dropdown
-    setMenuTimeout(timeout);
-  };
+  // Funciones de manejo de menú eliminadas - ahora se usan componentes dedicados
 
   // Cleanup timeout al desmontar el componente
   useEffect(() => {
@@ -118,12 +118,31 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   // ===========================================
   // 🍎 APPLE.COM STYLE MENU STRUCTURE FOR MODEL
   // ===========================================
-  const getMenuItems = () => {
-    const items = [
+  // Estado para el menú - PERSISTENTE
+  const [menuItems, setMenuItems] = useState<Array<{
+    id: string;
+    label: string;
+    href: string;
+    subItems: Array<{label: string; href: string}>;
+  }>>([]);
+
+  // Función para inicializar el menú una sola vez
+  const initializeMenu = () => {
+    if (!isClient) return;
+    
+    console.log('🔍 [MENU-INIT] Initializing menu for model');
+    
+    // Menú específico para modelos
+    const baseItems: Array<{
+      id: string;
+      label: string;
+      href: string;
+      subItems: Array<{label: string; href: string}>;
+    }> = [
       {
         id: 'calculator',
         label: 'Mi Calculadora',
-        href: '#', // Sin navegación directa
+        href: '/model/calculator',
         subItems: [
           { label: 'Ingresar Valores', href: '/model/calculator' },
           { label: 'Mi Historial', href: '/model/calculator/history' }
@@ -132,7 +151,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
       {
         id: 'anticipos',
         label: 'Mis Anticipos',
-        href: '#', // Sin navegación directa
+        href: '/model/anticipos/solicitar',
         subItems: [
           { label: 'Solicitar Anticipo', href: '/model/anticipos/solicitar' },
           { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
@@ -142,17 +161,20 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
       {
         id: 'portafolio',
         label: 'Mi Portafolio',
-        href: '/model/portafolio'
+        href: '/model/portafolio',
+        subItems: []
       }
     ];
     
-    // Debug: Verificar que Mi Portafolio está en el menú
-    console.log('🔍 Menu items:', items.map(item => ({ id: item.id, label: item.label })));
-    
-    return items;
+    console.log('🔍 [MENU-INIT] Final menu items:', baseItems);
+    setMenuItems(baseItems);
   };
 
-  const menuItems = getMenuItems();
+  useEffect(() => {
+    if (isClient) {
+      initializeMenu();
+    }
+  }, [isClient]);
   
   const isActive = (href: string) => pathname === href;
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
@@ -179,62 +201,46 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
             {/* Main Navigation - Apple Style 2 */}
             <nav className="flex items-center space-x-6">
               {menuItems.length > 0 ? (
-                menuItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="relative"
-                    onMouseEnter={() => handleMenuEnter(item.id)}
-                    onMouseLeave={handleMenuLeave}
-                  >
-                    {item.href === '#' ? (
-                      <span
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-default whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
-                          isParentActive(item) 
-                            ? 'text-gray-900 bg-white/50 shadow-sm' 
-                            : 'text-gray-700 hover:text-gray-900'
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
-                          isActive(item.href) || isParentActive(item) 
-                            ? 'text-gray-900 bg-white/50 shadow-sm' 
-                            : 'text-gray-700 hover:text-gray-900'
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    )}
+                menuItems.map((item) => {
+                  // Renderizar Mi Portafolio con el componente especial
+                  if (item.id === 'portafolio') {
+                    return (
+                      <PortfolioDropdown
+                        key={item.id}
+                        isActive={isActive(item.href)}
+                        isOpen={portfolioDropdownOpen}
+                        onToggle={() => setPortfolioDropdownOpen(!portfolioDropdownOpen)}
+                      />
+                    );
+                  }
 
-                  {/* Dropdown Menu */}
-                  {activeMenu === item.id && (
-                    <div 
-                      className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
-                      onMouseEnter={handleDropdownEnter}
-                      onMouseLeave={handleDropdownLeave}
-                    >
-                      <div className="p-2">
-                        {item.subItems?.map((subItem) => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg ${
-                              isActive(subItem.href)
-                                ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
-                                : 'text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
-                            }`}
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))
+                  // Renderizar Mi Calculadora con el componente especial
+                  if (item.id === 'calculator' && item.label === 'Mi Calculadora') {
+                    return (
+                      <CalculatorDropdown
+                        key={item.id}
+                        isActive={isActive(item.href)}
+                        isOpen={calculatorDropdownOpen}
+                        onToggle={() => setCalculatorDropdownOpen(!calculatorDropdownOpen)}
+                      />
+                    );
+                  }
+
+                  // Renderizar Mis Anticipos con el componente especial
+                  if (item.id === 'anticipos' && item.label === 'Mis Anticipos') {
+                    return (
+                      <AnticiposDropdown
+                        key={item.id}
+                        isActive={isActive(item.href)}
+                        isOpen={anticiposDropdownOpen}
+                        onToggle={() => setAnticiposDropdownOpen(!anticiposDropdownOpen)}
+                      />
+                    );
+                  }
+
+                  // No debería llegar aquí para modelos, pero por seguridad
+                  return null;
+                })
               ) : (
                 <div className="text-gray-500 text-sm">Cargando menú...</div>
               )}
