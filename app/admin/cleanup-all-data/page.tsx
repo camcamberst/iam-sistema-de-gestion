@@ -43,8 +43,8 @@ export default function CleanupAllDataPage() {
               🧹 Limpieza Completa de Datos de Modelos
             </h1>
             <p className="text-gray-600 mb-8">
-              Esta herramienta elimina COMPLETAMENTE todos los datos de las modelos específicas, 
-              dejándolas listas para configuración inicial como si fueran modelos nuevas.
+              Esta herramienta elimina COMPLETAMENTE todos los datos de TODAS las modelos, 
+              excepto una específica, dejándolas listas para configuración inicial como si fueran modelos nuevas.
             </p>
 
             <div className="space-y-6">
@@ -61,10 +61,8 @@ export default function CleanupAllDataPage() {
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                 <h3 className="font-semibold text-blue-900 mb-2">🎯 Modelos Objetivo</h3>
                 <ul className="text-blue-800 space-y-1 text-sm">
-                  <li>• kendranoa@tuemailya.com</li>
-                  <li>• katienight@tuemailya.com</li>
-                  <li>• hollyrogers@tuemailya.com</li>
-                  <li>• maiteflores@tuemailya.com</li>
+                  <li>• <strong>TODAS las modelos</strong> con rol 'modelo'</li>
+                  <li>• <strong>EXCEPTO</strong> la modelo con ID: fe54995d-1828-4721-8153-53fce6f4fe56</li>
                 </ul>
               </div>
 

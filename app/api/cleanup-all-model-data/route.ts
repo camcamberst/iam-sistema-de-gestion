@@ -8,21 +8,17 @@ const supabase = createClient(
 
 export async function POST(request: NextRequest) {
   try {
-    console.log('🧹 Limpiando completamente los datos de las modelos...');
+    console.log('🧹 Limpiando completamente los datos de las modelos (excluyendo un ID específico)...');
     
-    // 1. Obtener las modelos específicas que necesitan limpieza completa
-    const targetEmails = [
-      'kendranoa@tuemailya.com',
-      'katienight@tuemailya.com', 
-      'hollyrogers@tuemailya.com',
-      'maiteflores@tuemailya.com'
-    ];
+    // ID de la modelo a EXCLUIR de la limpieza
+    const excludedModelId = 'fe54995d-1828-4721-8153-53fce6f4fe56';
 
+    // 1. Obtener todas las modelos con rol 'modelo', excluyendo el ID especificado
     const { data: targetUsers, error: usersError } = await supabase
       .from('users')
       .select('id, email')
-      .in('email', targetEmails)
-      .eq('role', 'modelo');
+      .eq('role', 'modelo')
+      .neq('id', excludedModelId); // Excluir este ID
 
     if (usersError) {
       console.error('Error obteniendo usuarios objetivo:', usersError);
@@ -32,7 +28,7 @@ export async function POST(request: NextRequest) {
     if (!targetUsers || targetUsers.length === 0) {
       return NextResponse.json({ 
         success: true, 
-        message: 'No se encontraron las modelos objetivo',
+        message: 'No hay modelos para limpiar (o solo la modelo excluida).',
         cleaned: 0
       });
     }
