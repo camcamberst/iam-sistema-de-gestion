@@ -23,6 +23,7 @@ interface User {
 interface ProductivityData {
   usdBruto: number;
   usdModelo: number;
+  todayEarnings: number; // Nuevo: ganancias del día
   copModelo: number;
   goalUsd: number;
   goalProgress: number;
@@ -110,21 +111,33 @@ export default function ModelDashboard() {
       const percentage = (enabled[0]?.percentage_override || enabled[0]?.group_percentage || 80) as number;
       const goalUsd = (enabled[0]?.min_quota_override || enabled[0]?.group_min_quota || 470) as number;
 
-      // 3) Valores del día usando timezone de Colombia
-      const periodDate = getColombiaDate();
-      const valuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
-      const valuesJson = await valuesRes.json();
-      const rows: Array<{ platform_id: string; value: number }> = valuesJson?.data || [];
-      const idToValue: Record<string, number> = {};
-      rows.forEach((r) => {
-        idToValue[r.platform_id] = Number(r.value) || 0;
+      // 3) Valores de hoy y ayer usando timezone de Colombia
+      const todayDate = getColombiaDate();
+      const yesterdayDate = new Date(new Date(todayDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+      
+      // Obtener valores de hoy
+      const todayValuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${todayDate}`);
+      const todayValuesJson = await todayValuesRes.json();
+      const todayRows: Array<{ platform_id: string; value: number }> = todayValuesJson?.data || [];
+      const todayIdToValue: Record<string, number> = {};
+      todayRows.forEach((r) => {
+        todayIdToValue[r.platform_id] = Number(r.value) || 0;
       });
 
-      // 4) Cálculo por plataforma (mismo criterio que calculadora)
-      let usdBruto = 0;
-      let usdModelo = 0;
+      // Obtener valores de ayer
+      const yesterdayValuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${yesterdayDate}`);
+      const yesterdayValuesJson = await yesterdayValuesRes.json();
+      const yesterdayRows: Array<{ platform_id: string; value: number }> = yesterdayValuesJson?.data || [];
+      const yesterdayIdToValue: Record<string, number> = {};
+      yesterdayRows.forEach((r) => {
+        yesterdayIdToValue[r.platform_id] = Number(r.value) || 0;
+      });
+
+      // 4) Cálculo por plataforma para hoy (mismo criterio que calculadora)
+      let todayUsdBruto = 0;
+      let todayUsdModelo = 0;
       for (const p of enabled) {
-        const value = idToValue[p.id] || 0;
+        const value = todayIdToValue[p.id] || 0;
         if (value <= 0) continue;
 
         // Calcular USD bruto con fórmulas específicas por plataforma (igual que Mi Calculadora)
@@ -159,24 +172,73 @@ export default function ModelDashboard() {
           }
         }
 
-        usdBruto += usdFromPlatform;
+        todayUsdBruto += usdFromPlatform;
       }
 
-      usdModelo = usdBruto * (percentage / 100);
-      const copModelo = usdModelo * rates.usd_cop;
-      const goalProgress = goalUsd > 0 ? Math.min((usdModelo / goalUsd) * 100, 100) : 0;
+      todayUsdModelo = todayUsdBruto * (percentage / 100);
+
+      // 5) Cálculo por plataforma para ayer (para calcular ganancias del día)
+      let yesterdayUsdBruto = 0;
+      let yesterdayUsdModelo = 0;
+      for (const p of enabled) {
+        const value = yesterdayIdToValue[p.id] || 0;
+        if (value <= 0) continue;
+
+        // Calcular USD bruto con fórmulas específicas por plataforma (igual que Mi Calculadora)
+        let usdFromPlatform = 0;
+        if (p.currency === 'EUR') {
+          if (p.id === 'big7') {
+            usdFromPlatform = (value * rates.eur_usd) * 0.84; // 16% impuesto
+          } else if (p.id === 'mondo') {
+            usdFromPlatform = (value * rates.eur_usd) * 0.78; // 22% descuento
+          } else {
+            usdFromPlatform = value * rates.eur_usd; // EUR directo
+          }
+        } else if (p.currency === 'GBP') {
+          if (p.id === 'aw') {
+            usdFromPlatform = (value * rates.gbp_usd) * 0.677; // 32.3% descuento
+          } else {
+            usdFromPlatform = value * rates.gbp_usd; // GBP directo
+          }
+        } else if (p.currency === 'USD') {
+          if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+            usdFromPlatform = value * 0.75; // 25% descuento
+          } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+            usdFromPlatform = value * 0.05; // 100 tokens = 5 USD
+          } else if (p.id === 'dxlive') {
+            usdFromPlatform = value * 0.60; // 100 pts = 60 USD
+          } else if (p.id === 'secretfriends') {
+            usdFromPlatform = value * 0.5; // 50% descuento
+          } else if (p.id === 'superfoon') {
+            usdFromPlatform = value; // 100% directo
+          } else {
+            usdFromPlatform = value; // USD directo por defecto
+          }
+        }
+
+        yesterdayUsdBruto += usdFromPlatform;
+      }
+
+      yesterdayUsdModelo = yesterdayUsdBruto * (percentage / 100);
+
+      // 6) Calcular ganancias del día (diferencia entre hoy y ayer)
+      const todayEarnings = todayUsdModelo - yesterdayUsdModelo;
+      const copModelo = todayUsdModelo * rates.usd_cop;
+      const goalProgress = goalUsd > 0 ? Math.min((todayUsdModelo / goalUsd) * 100, 100) : 0;
 
       console.log('🔍 [DASHBOARD] Calculated productivity:', {
-        usdBruto,
-        usdModelo,
+        todayUsdBruto,
+        todayUsdModelo,
+        todayEarnings,
         copModelo,
         goalUsd,
         goalProgress
       });
 
       setProductivityData({
-        usdBruto,
-        usdModelo,
+        usdBruto: todayUsdBruto, // Mantener para la barra de objetivo
+        usdModelo: todayUsdModelo,
+        todayEarnings: todayEarnings, // Nuevo: ganancias del día
         copModelo,
         goalUsd,
         goalProgress
@@ -229,9 +291,9 @@ export default function ModelDashboard() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div className="p-4 rounded-lg bg-blue-50 text-center transition-all duration-300 hover:bg-blue-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-1">
                   <div className="text-2xl font-bold text-blue-600 mb-1 transition-colors duration-300">
-                    {productivityData ? `$${productivityData.usdBruto.toFixed(2)}` : '—'}
+                    {productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-sm text-gray-600">USD Bruto (hoy)</div>
+                  <div className="text-sm text-gray-600">Ganancias Hoy</div>
                 </div>
                 <div className="p-4 rounded-lg bg-green-50 text-center transition-all duration-300 hover:bg-green-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-2">
                   <div className="text-2xl font-bold text-green-600 mb-1 transition-colors duration-300">
