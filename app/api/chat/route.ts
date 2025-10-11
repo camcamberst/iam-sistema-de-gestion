@@ -112,7 +112,11 @@ async function getUserContext(userId: string): Promise<UserContext> {
     .eq('id', userId)
     .single();
 
-  const groups = userData?.user_groups?.map((ug: any) => ug.groups.name) || [];
+  if (!userData) {
+    throw new Error('Usuario no encontrado');
+  }
+
+  const groups = userData.user_groups?.map((ug: any) => ug.groups.name) || [];
 
   // Obtener datos del portafolio si es modelo
   let portfolio = null;
