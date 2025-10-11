@@ -202,8 +202,8 @@ export default function ModelDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-white">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mi Dashboard</h1>
         {user && (
           <p className="text-gray-500 mb-6 text-sm">
@@ -211,14 +211,6 @@ export default function ModelDashboard() {
             {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
           </p>
         )}
-
-        {/* Panel de perfil */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-1">Mi perfil</h2>
-          <p className="text-sm text-gray-500">Revisa tu información</p>
-          <div className="mt-4 text-sm text-gray-700">Email: {user.email}</div>
-          <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
-        </div>
 
         {/* Resumen de productividad y progreso de meta */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
@@ -232,51 +224,45 @@ export default function ModelDashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-md bg-blue-50 text-center">
+                <div className="p-4 rounded-lg bg-blue-50 text-center">
                   <div className="text-2xl font-bold text-blue-600 mb-1">
                     {productivityData ? `$${productivityData.usdBruto.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full inline-block">
-                    USD Bruto (hoy)
-                  </div>
+                  <div className="text-sm text-gray-600">USD Bruto (hoy)</div>
                 </div>
-                <div className="p-4 rounded-md bg-green-50 text-center">
+                <div className="p-4 rounded-lg bg-green-50 text-center">
                   <div className="text-2xl font-bold text-green-600 mb-1">
                     {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full inline-block">
-                    USD Modelo (hoy)
-                  </div>
+                  <div className="text-sm text-gray-600">USD Modelo (hoy)</div>
                 </div>
-                <div className="p-4 rounded-md bg-purple-50 text-center">
+                <div className="p-4 rounded-lg bg-purple-50 text-center">
                   <div className="text-2xl font-bold text-purple-600 mb-1">
                     {productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
                   </div>
-                  <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full inline-block">
-                    COP Modelo (hoy)
-                  </div>
+                  <div className="text-sm text-gray-600">COP Modelo (hoy)</div>
                 </div>
               </div>
 
-              {/* Barra de alcance de meta (compacta) */}
-              <div className="mt-2">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="text-sm font-medium text-gray-700">Alcance de objetivo Básico</span>
+              {/* Barra de alcance de meta */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm font-medium text-gray-700">Objetivo Básico</span>
                   <span className="text-sm text-gray-600">
                     {productivityData ? 
-                      `$${productivityData.usdModelo.toFixed(2)} / $${productivityData.goalUsd} USD` : 
+                      `$${productivityData.usdModelo.toFixed(0)} / $${productivityData.goalUsd} USD` : 
                       '— / — USD'
                     }
                   </span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div 
-                    className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all duration-300" 
-                    style={{ width: `${productivityData?.goalProgress || 0}%` }}
+                    className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" 
+                    style={{ width: `${productivityData ? Math.min(100, productivityData.goalProgress).toFixed(0) : 0}%` }}
                   ></div>
                 </div>
                 <div className="text-right text-xs text-gray-600 mt-1">
-                  {productivityData ? `${productivityData.goalProgress.toFixed(1)}%` : '0%'}
+                  {productivityData ? `${Math.min(100, productivityData.goalProgress).toFixed(0)}%` : '0%'}
                 </div>
               </div>
 
