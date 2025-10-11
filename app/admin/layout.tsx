@@ -91,7 +91,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   };
 
-  // Funciones para manejar el dropdown con delay
+  // Funciones para manejar el dropdown - SOLUCIÓN RADICAL
+  const handleMenuClick = (itemId: string) => {
+    console.log(`🔍 [MENU] Click: ${itemId}, current: ${activeMenu}`);
+    // Toggle: si ya está activo, lo cierra; si no, lo abre
+    if (activeMenu === itemId) {
+      setActiveMenu(null);
+    } else {
+      setActiveMenu(itemId);
+    }
+  };
+
   const handleMenuEnter = (itemId: string) => {
     console.log(`🔍 [MENU] Enter: ${itemId}`);
     if (menuTimeout) {
@@ -106,11 +116,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const timeout = setTimeout(() => {
       console.log(`🔍 [MENU] Timeout: closing menu`);
       setActiveMenu(null);
-    }, 300); // 300ms de delay antes de cerrar
+    }, 200); // Reducido a 200ms
     setMenuTimeout(timeout);
   };
 
   const handleDropdownEnter = () => {
+    console.log(`🔍 [DROPDOWN] Enter`);
     if (menuTimeout) {
       clearTimeout(menuTimeout);
       setMenuTimeout(null);
@@ -118,9 +129,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const handleDropdownLeave = () => {
+    console.log(`🔍 [DROPDOWN] Leave`);
     const timeout = setTimeout(() => {
+      console.log(`🔍 [DROPDOWN] Timeout: closing menu`);
       setActiveMenu(null);
-    }, 150); // Delay más corto cuando se sale del dropdown
+    }, 100); // Delay muy corto
     setMenuTimeout(timeout);
   };
 
@@ -249,11 +262,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const isActive = (href: string) => pathname === href;
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
   
-  // Función para determinar si el dropdown debe mostrarse
+  // Función para determinar si el dropdown debe mostrarse - SIMPLIFICADA
   const shouldShowDropdown = (item: any) => {
-    // Siempre mostrar dropdown si hay subItems y el menú está activo
-    const shouldShow = item.subItems && item.subItems.length > 0 && activeMenu === item.id;
-    console.log(`🔍 [DROPDOWN] ${item.id}: shouldShow=${shouldShow}, activeMenu=${activeMenu}, hasSubItems=${item.subItems?.length > 0}`);
+    const hasSubItems = item.subItems && item.subItems.length > 0;
+    const isActive = activeMenu === item.id;
+    const shouldShow = hasSubItems && isActive;
+    
+    console.log(`🔍 [DROPDOWN] ${item.id}: hasSubItems=${hasSubItems}, isActive=${isActive}, shouldShow=${shouldShow}`);
+    console.log(`🔍 [DROPDOWN] activeMenu=${activeMenu}, subItems=${item.subItems?.length || 0}`);
+    
     return shouldShow;
   };
 
@@ -285,10 +302,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     className="relative"
                     onMouseEnter={() => handleMenuEnter(item.id)}
                     onMouseLeave={handleMenuLeave}
+                    onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
                   >
                     {item.href === '#' ? (
                       <span
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-default whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
                           isParentActive(item) 
                             ? 'text-gray-900 bg-white/50 shadow-sm' 
                             : 'text-gray-700 hover:text-gray-900'
