@@ -256,7 +256,7 @@ export default function PortfolioAnalytics({ modelId }: PortfolioAnalyticsProps)
                 <div className="flex items-center justify-between mb-3">
                   <div>
                     <h4 className="font-semibold text-gray-900">{platform.name}</h4>
-                    <p className="text-sm text-gray-500">{platform.code} • {platform.percentage}%</p>
+                    <p className="text-sm text-gray-500">{platform.code}</p>
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-green-600">

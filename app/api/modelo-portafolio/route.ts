@@ -39,10 +39,7 @@ export async function GET(request: NextRequest) {
         calculator_platforms (
           id,
           name,
-          code,
-          currency,
-          percentage,
-          min_quota
+          currency
         )
       `)
       .eq('model_id', modelId)
@@ -69,7 +66,7 @@ export async function GET(request: NextRequest) {
         period_date,
         calculator_platforms (
           name,
-          code
+          id
         )
       `)
       .eq('model_id', modelId)

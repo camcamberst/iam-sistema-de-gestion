@@ -30,8 +30,7 @@ export async function POST(request: NextRequest) {
         period_date,
         calculator_platforms (
           name,
-          code,
-          percentage
+          id
         )
       `)
       .eq('model_id', modelId)
@@ -87,8 +86,8 @@ export async function POST(request: NextRequest) {
       if (!platformStats.has(platformName)) {
         platformStats.set(platformName, {
           name: platformName,
-          code: record.calculator_platforms.code,
-          percentage: record.calculator_platforms.percentage,
+          code: record.calculator_platforms.id,
+          percentage: 0, // No hay percentage en calculator_platforms
           totalEarnings: 0,
           totalDays: 0,
           avgEarnings: 0,

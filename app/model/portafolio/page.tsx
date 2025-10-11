@@ -28,10 +28,7 @@ interface Platform {
   calculator_platforms: {
     id: string;
     name: string;
-    code: string;
     currency: string;
-    percentage: number;
-    min_quota: number;
   };
   stats: {
     totalDays: number;
@@ -344,9 +341,9 @@ export default function MiPortafolio() {
                               <h3 className="text-lg font-semibold text-gray-900">
                                 {platform.calculator_platforms.name}
                               </h3>
-                              <p className="text-sm text-gray-500">
-                                {platform.calculator_platforms.code} • {platform.calculator_platforms.currency}
-                              </p>
+                          <p className="text-sm text-gray-500">
+                            {platform.calculator_platforms.id} • {platform.calculator_platforms.currency}
+                          </p>
                             </div>
                           </div>
                         </div>
@@ -424,7 +421,7 @@ export default function MiPortafolio() {
                           </div>
                           <div className="flex items-center space-x-1">
                             <Target className="w-4 h-4" />
-                            <span>{platform.calculator_platforms.percentage}% • Min: ${platform.calculator_platforms.min_quota}</span>
+                            <span>Plataforma activa</span>
                           </div>
                         </div>
                       </div>
