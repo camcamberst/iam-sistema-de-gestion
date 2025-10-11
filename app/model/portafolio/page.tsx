@@ -475,7 +475,7 @@ export default function MiPortafolio() {
 
         {activeTab === 'analytics' && (
           <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-            <PortfolioAnalytics userId={user?.id} />
+            <PortfolioAnalytics modelId={user?.id} />
           </div>
         )}
       </div>
