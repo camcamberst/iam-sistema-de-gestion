@@ -168,81 +168,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    // 5. PROPAGACIÓN AUTOMÁTICA: Aplicar configuración del grupo a todas las modelos del grupo
-    if (groupPercentage !== undefined || groupMinQuota) {
-      console.log('🔍 [CONFIG-V2] Propagando configuración del grupo a todas las modelos del grupo:', groupId);
-      
-      // Obtener todas las modelos del grupo
-      const { data: groupModels, error: groupModelsError } = await supabase
-        .from('user_groups')
-        .select(`
-          user_id,
-          users!inner(id, email, name)
-        `)
-        .eq('group_id', groupId);
-
-      if (groupModelsError) {
-        console.error('Error al obtener modelos del grupo:', groupModelsError);
-      } else if (groupModels && groupModels.length > 0) {
-        console.log(`🔍 [CONFIG-V2] Encontradas ${groupModels.length} modelos en el grupo`);
-        
-        // Para cada modelo del grupo, actualizar su configuración si NO tiene overrides individuales
-        for (const groupModel of groupModels) {
-          const modelUserId = groupModel.user_id;
-          
-          // Saltar la modelo que ya configuramos
-          if (modelUserId === modelId) {
-            console.log('🔍 [CONFIG-V2] Saltando modelo actual:', modelUserId);
-            continue;
-          }
-          
-          // Verificar si tiene configuración individual (overrides)
-          const { data: existingConfig, error: configCheckError } = await supabase
-            .from('calculator_config')
-            .select('percentage_override, min_quota_override')
-            .eq('model_id', modelUserId)
-            .eq('active', true)
-            .single();
-          
-          if (configCheckError && configCheckError.code !== 'PGRST116') {
-            console.error(`Error al verificar configuración de modelo ${modelUserId}:`, configCheckError);
-            continue;
-          }
-          
-          // Si tiene overrides individuales, no actualizar
-          if (existingConfig && (existingConfig.percentage_override || existingConfig.min_quota_override)) {
-            console.log(`🔍 [CONFIG-V2] Modelo ${modelUserId} tiene configuración individual, saltando`);
-            continue;
-          }
-          
-          // Desactivar configuración anterior si existe
-          await supabase
-            .from('calculator_config')
-            .update({ active: false })
-            .eq('model_id', modelUserId);
-          
-          // Crear nueva configuración con valores del grupo
-          const { error: insertError } = await supabase
-            .from('calculator_config')
-            .insert({
-              model_id: modelUserId,
-              admin_id: adminId,
-              group_id: groupId,
-              enabled_platforms: enabledPlatforms || [],
-              percentage_override: null, // Sin override individual
-              min_quota_override: null, // Sin override individual
-              group_percentage: groupPercentage !== undefined ? groupPercentage : null,
-              group_min_quota: groupMinQuota || null
-            });
-          
-          if (insertError) {
-            console.error(`Error al propagar configuración a modelo ${modelUserId}:`, insertError);
-          } else {
-            console.log(`✅ [CONFIG-V2] Configuración propagada a modelo ${modelUserId}`);
-          }
-        }
-      }
-    }
+    // 5. NO PROPAGAR configuración automáticamente - cada modelo debe configurarse individualmente
+    console.log('🔍 [CONFIG-V2] Configuración aplicada solo a la modelo seleccionada. NO se propaga a otras modelos del grupo.');
 
     // 6. CREAR PORTAFOLIO AUTOMÁTICAMENTE para configuración inicial
     console.log('🔍 [CONFIG-V2] Creando Portafolio automáticamente para configuración inicial...');
