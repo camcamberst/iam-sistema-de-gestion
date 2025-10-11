@@ -664,6 +664,8 @@ export default function ModelCalculatorPage() {
                         usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.84; // 16% impuesto
                       } else if (platform.id === 'mondo') {
                         usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.78; // 22% descuento
+                      } else if (platform.id === 'superfoon') {
+                        usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR a USD directo
                       } else if (platform.id === 'modelka' || platform.id === 'xmodels' || platform.id === '777' || platform.id === 'vx' || platform.id === 'livecreator' || platform.id === 'mow') {
                         usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR directo
                       } else {
@@ -686,8 +688,6 @@ export default function ModelCalculatorPage() {
                         usdModelo = platform.value * 0.60; // 100 pts = 60 USD
                       } else if (platform.id === 'secretfriends') {
                         usdModelo = platform.value * 0.5; // 50% descuento
-                      } else if (platform.id === 'superfoon') {
-                        usdModelo = platform.value; // 100% directo
                       } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
                         usdModelo = platform.value; // USD directo
                       } else {
@@ -695,8 +695,13 @@ export default function ModelCalculatorPage() {
                       }
                     }
                     
-                    // Aplicar porcentaje de reparto del modelo
-                    const usdModeloFinal = (usdModelo * platform.percentage) / 100;
+                    // SUPERFOON: Aplicar 100% para la modelo (especial)
+                    let usdModeloFinal;
+                    if (platform.id === 'superfoon') {
+                      usdModeloFinal = usdModelo; // 100% directo, sin porcentaje
+                    } else {
+                      usdModeloFinal = (usdModelo * platform.percentage) / 100;
+                    }
                     const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
                     return (
