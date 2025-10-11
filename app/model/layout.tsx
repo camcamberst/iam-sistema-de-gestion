@@ -119,7 +119,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   // 🍎 APPLE.COM STYLE MENU STRUCTURE FOR MODEL
   // ===========================================
   const getMenuItems = () => {
-    return [
+    const items = [
       {
         id: 'calculator',
         label: 'Mi Calculadora',
@@ -130,11 +130,6 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
         ]
       },
       {
-        id: 'portafolio',
-        label: 'Mi Portafolio',
-        href: '/model/portafolio'
-      },
-      {
         id: 'anticipos',
         label: 'Mis Anticipos',
         href: '#', // Sin navegación directa
@@ -143,8 +138,18 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
           { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
           { label: 'Mi Historial', href: '/model/anticipos/historial' }
         ]
+      },
+      {
+        id: 'portafolio',
+        label: 'Mi Portafolio',
+        href: '/model/portafolio'
       }
     ];
+    
+    // Debug: Verificar que Mi Portafolio está en el menú
+    console.log('🔍 Menu items:', items.map(item => ({ id: item.id, label: item.label })));
+    
+    return items;
   };
 
   const menuItems = getMenuItems();
