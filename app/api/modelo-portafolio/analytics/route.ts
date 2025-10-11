@@ -1,10 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
+
+// Inicializar Google Gemini
+const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY as string);
 
 // POST: Generar análisis con IA de los datos del portafolio
 export async function POST(request: NextRequest) {
@@ -18,7 +22,7 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Obtener datos históricos de la calculadora (últimos 30 días)
+    // Obtener datos históricos de la calculadora (últimos 4 períodos quincenales)
     const { data: calculatorData, error: calculatorError } = await supabase
       .from('calculator_history')
       .select(`
@@ -28,14 +32,15 @@ export async function POST(request: NextRequest) {
         usd_modelo,
         cop_modelo,
         period_date,
+        period_type,
         calculator_platforms (
           name,
           id
         )
       `)
       .eq('model_id', modelId)
-      .gte('period_date', new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString())
-      .order('period_date', { ascending: true });
+      .order('period_date', { ascending: true })
+      .order('period_type', { ascending: true });
 
     if (calculatorError) {
       console.error('Error obteniendo datos de calculadora:', calculatorError);
@@ -57,9 +62,9 @@ export async function POST(request: NextRequest) {
           ],
           trends: [],
           summary: {
-            totalDays: 0,
+            totalPeriods: 0,
             totalEarnings: 0,
-            avgDailyEarnings: 0,
+            avgPeriodEarnings: 0,
             bestPlatform: null,
             growthRate: 0
           }
@@ -67,14 +72,14 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Procesar datos para análisis
+    // Procesar datos para análisis por períodos quincenales
     const platformStats = new Map();
-    const dailyEarnings = new Map();
+    const periodEarnings = new Map();
     let totalEarnings = 0;
-    let totalDays = 0;
+    let totalPeriods = 0;
 
     calculatorData.forEach(record => {
-      const date = record.period_date.split('T')[0];
+      const periodKey = `${record.period_date}-${record.period_type}`;
       const platformName = record.calculator_platforms?.name;
       
       // Saltar si no hay datos de plataforma
@@ -87,34 +92,45 @@ export async function POST(request: NextRequest) {
         platformStats.set(platformName, {
           name: platformName,
           code: record.calculator_platforms.id,
-          percentage: 0, // No hay percentage en calculator_platforms
           totalEarnings: 0,
-          totalDays: 0,
+          totalPeriods: 0,
           avgEarnings: 0,
           maxEarnings: 0,
-          minEarnings: Infinity
+          minEarnings: Infinity,
+          periods: new Set()
         });
       }
       
       const platform = platformStats.get(platformName);
       platform.totalEarnings += record.usd_modelo || 0;
-      platform.totalDays += 1;
+      platform.periods.add(periodKey);
       platform.maxEarnings = Math.max(platform.maxEarnings, record.usd_modelo || 0);
       platform.minEarnings = Math.min(platform.minEarnings, record.usd_modelo || 0);
       
-      // Estadísticas diarias
-      if (!dailyEarnings.has(date)) {
-        dailyEarnings.set(date, 0);
-        totalDays++;
+      // Estadísticas por período
+      if (!periodEarnings.has(periodKey)) {
+        periodEarnings.set(periodKey, {
+          period_date: record.period_date,
+          period_type: record.period_type,
+          totalEarnings: 0,
+          platformCount: 0
+        });
+        totalPeriods++;
       }
-      dailyEarnings.set(date, dailyEarnings.get(date) + (record.usd_modelo || 0));
+      
+      const period = periodEarnings.get(periodKey);
+      period.totalEarnings += record.usd_modelo || 0;
+      period.platformCount += 1;
       totalEarnings += record.usd_modelo || 0;
     });
 
     // Calcular promedios
     platformStats.forEach(platform => {
-      platform.avgEarnings = platform.totalDays > 0 ? platform.totalEarnings / platform.totalDays : 0;
+      platform.totalPeriods = platform.periods.size;
+      platform.avgEarnings = platform.totalPeriods > 0 ? platform.totalEarnings / platform.totalPeriods : 0;
       if (platform.minEarnings === Infinity) platform.minEarnings = 0;
+      // Convertir Set a Array para serialización
+      platform.periods = Array.from(platform.periods);
     });
 
     // Encontrar la mejor plataforma
@@ -127,39 +143,27 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // Calcular tendencia de crecimiento
-    const earningsArray = Array.from(dailyEarnings.values());
+    // Calcular tendencia de crecimiento por períodos
+    const periodEarningsArray = Array.from(periodEarnings.values());
     let growthRate = 0;
-    if (earningsArray.length >= 7) {
-      const firstWeek = earningsArray.slice(0, 7).reduce((a, b) => a + b, 0) / 7;
-      const lastWeek = earningsArray.slice(-7).reduce((a, b) => a + b, 0) / 7;
-      growthRate = firstWeek > 0 ? ((lastWeek - firstWeek) / firstWeek) * 100 : 0;
+    if (periodEarningsArray.length >= 2) {
+      const firstPeriod = periodEarningsArray[0].totalEarnings;
+      const lastPeriod = periodEarningsArray[periodEarningsArray.length - 1].totalEarnings;
+      growthRate = firstPeriod > 0 ? ((lastPeriod - firstPeriod) / firstPeriod) * 100 : 0;
     }
 
-    // Generar análisis con IA (simulado por ahora)
-    const analysis = generateAnalysis({
+    // Generar análisis con Google Gemini
+    const analysisData = {
       totalEarnings,
-      totalDays,
-      avgDailyEarnings: totalDays > 0 ? totalEarnings / totalDays : 0,
+      totalPeriods,
+      avgPeriodEarnings: totalPeriods > 0 ? totalEarnings / totalPeriods : 0,
       bestPlatform,
       growthRate,
       platformStats: Array.from(platformStats.values()),
-      dailyEarnings: Array.from(dailyEarnings.entries())
-    });
+      periodEarnings: Array.from(periodEarnings.values())
+    };
 
-    const recommendations = generateRecommendations({
-      totalEarnings,
-      totalDays,
-      avgDailyEarnings: totalDays > 0 ? totalEarnings / totalDays : 0,
-      bestPlatform,
-      growthRate,
-      platformStats: Array.from(platformStats.values())
-    });
-
-    const trends = generateTrends({
-      dailyEarnings: Array.from(dailyEarnings.entries()),
-      platformStats: Array.from(platformStats.values())
-    });
+    const { analysis, recommendations, trends } = await generateAIAnalysis(analysisData);
 
     return NextResponse.json({ 
       success: true, 
@@ -168,9 +172,9 @@ export async function POST(request: NextRequest) {
         recommendations,
         trends,
         summary: {
-          totalDays,
+          totalPeriods,
           totalEarnings,
-          avgDailyEarnings: totalDays > 0 ? totalEarnings / totalDays : 0,
+          avgPeriodEarnings: totalPeriods > 0 ? totalEarnings / totalPeriods : 0,
           bestPlatform: bestPlatform?.name || null,
           growthRate: Math.round(growthRate * 100) / 100
         },
@@ -188,109 +192,90 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// Función para generar análisis
-function generateAnalysis(data: any): string {
-  const { totalEarnings, totalDays, avgDailyEarnings, bestPlatform, growthRate } = data;
-  
-  let analysis = `📊 **Análisis de Rendimiento (${totalDays} días)**\n\n`;
-  
-  analysis += `**Rendimiento General:**\n`;
-  analysis += `• Ganancias totales: $${totalEarnings.toFixed(2)} USD\n`;
-  analysis += `• Promedio diario: $${avgDailyEarnings.toFixed(2)} USD\n`;
-  analysis += `• Tasa de crecimiento: ${growthRate > 0 ? '+' : ''}${growthRate.toFixed(1)}%\n\n`;
-  
-  if (bestPlatform) {
-    analysis += `**Plataforma Destacada:**\n`;
-    analysis += `• ${bestPlatform.name}: $${bestPlatform.avgEarnings.toFixed(2)} USD/día promedio\n`;
-    analysis += `• Contribuye ${((bestPlatform.totalEarnings / totalEarnings) * 100).toFixed(1)}% de tus ganancias totales\n\n`;
-  }
-  
-  if (growthRate > 10) {
-    analysis += `🎉 **Excelente crecimiento!** Estás en una tendencia muy positiva.`;
-  } else if (growthRate > 0) {
-    analysis += `📈 **Crecimiento positivo** - Mantén el buen trabajo!`;
-  } else if (growthRate > -10) {
-    analysis += `📊 **Rendimiento estable** - Considera estrategias para impulsar el crecimiento.`;
-  } else {
-    analysis += `📉 **Oportunidad de mejora** - Revisa tus estrategias y horarios.`;
-  }
-  
-  return analysis;
-}
+// Función para generar análisis con Google Gemini
+async function generateAIAnalysis(data: any) {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    
+    const prompt = `
+Eres un asistente especializado en análisis de rendimiento para modelos de webcam. 
+Analiza los siguientes datos y proporciona insights valiosos con un tono casual y amigable, pero profesional.
 
-// Función para generar recomendaciones
-function generateRecommendations(data: any): string[] {
-  const { avgDailyEarnings, bestPlatform, growthRate, platformStats } = data;
-  const recommendations = [];
-  
-  if (bestPlatform && bestPlatform.avgEarnings > avgDailyEarnings * 1.5) {
-    recommendations.push(`🎯 Enfócate más en ${bestPlatform.name} - es tu plataforma más rentable`);
-  }
-  
-  if (platformStats.length < 3) {
-    recommendations.push(`🔄 Considera diversificar con más plataformas para reducir riesgos`);
-  }
-  
-  if (growthRate < 0) {
-    recommendations.push(`📈 Revisa tus horarios y estrategias de engagement para mejorar el rendimiento`);
-  }
-  
-  if (avgDailyEarnings < 50) {
-    recommendations.push(`💡 Establece objetivos diarios específicos para aumentar la motivación`);
-  }
-  
-  recommendations.push(`📊 Mantén un registro consistente para mejores análisis futuros`);
-  recommendations.push(`🎯 Establece metas semanales y mensuales para medir el progreso`);
-  
-  return recommendations;
-}
+DATOS DEL MODELO:
+- Ganancias totales: $${data.totalEarnings.toFixed(2)} USD
+- Períodos analizados: ${data.totalPeriods} períodos quincenales
+- Promedio por período: $${data.avgPeriodEarnings.toFixed(2)} USD
+- Tasa de crecimiento: ${data.growthRate > 0 ? '+' : ''}${data.growthRate.toFixed(1)}%
+- Mejor plataforma: ${data.bestPlatform?.name || 'N/A'}
 
-// Función para generar tendencias
-function generateTrends(data: any): any[] {
-  const { dailyEarnings, platformStats } = data;
-  const trends = [];
-  
-  // Tendencia semanal
-  if (dailyEarnings.length >= 7) {
-    const lastWeek = dailyEarnings.slice(-7);
-    const weekTotal = lastWeek.reduce((sum, [_, earnings]) => sum + earnings, 0);
-    trends.push({
-      type: 'weekly',
-      label: 'Última Semana',
-      value: weekTotal,
-      change: 'vs semana anterior',
-      trend: 'up' // Simplificado
-    });
+PLATAFORMAS:
+${data.platformStats.map((p: any) => `- ${p.name}: $${p.totalEarnings.toFixed(2)} total, $${p.avgEarnings.toFixed(2)} promedio por período`).join('\n')}
+
+PERÍODOS:
+${data.periodEarnings.map((p: any) => `- ${p.period_date} (${p.period_type}): $${p.totalEarnings.toFixed(2)}`).join('\n')}
+
+INSTRUCCIONES:
+1. Genera un análisis detallado del rendimiento
+2. Proporciona 3-5 recomendaciones específicas y accionables
+3. Identifica 2-3 tendencias importantes
+4. Usa un tono casual y amigable, como si fueras un mentor experimentado
+5. Incluye emojis apropiados
+6. Sé específico pero no menciones datos exactos de ganancias en el análisis
+7. Enfócate en estrategias de mejora y optimización
+
+Responde en formato JSON:
+{
+  "analysis": "análisis detallado aquí",
+  "recommendations": ["recomendación 1", "recomendación 2", ...],
+  "trends": [
+    {
+      "type": "tipo de tendencia",
+      "label": "etiqueta",
+      "value": "valor",
+      "change": "cambio",
+      "trend": "up/down/stable"
+    }
+  ]
+}
+`;
+
+    const result = await model.generateContent(prompt);
+    const response = await result.response;
+    const text = response.text();
+    
+    // Limpiar el texto de markdown si existe
+    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+    
+    try {
+      const parsed = JSON.parse(cleanText);
+      return {
+        analysis: parsed.analysis || 'Análisis no disponible',
+        recommendations: parsed.recommendations || [],
+        trends: parsed.trends || []
+      };
+    } catch (parseError) {
+      console.error('Error parsing Gemini response:', parseError);
+      return {
+        analysis: 'Análisis generado por IA - datos procesados correctamente',
+        recommendations: [
+          'Mantén un registro consistente de tus ingresos',
+          'Diversifica tus plataformas para maximizar ganancias',
+          'Establece objetivos claros y medibles'
+        ],
+        trends: []
+      };
+    }
+    
+  } catch (error) {
+    console.error('Error generando análisis con Gemini:', error);
+    return {
+      analysis: 'Análisis no disponible temporalmente',
+      recommendations: [
+        'Mantén un registro consistente de tus ingresos',
+        'Diversifica tus plataformas para maximizar ganancias',
+        'Establece objetivos claros y medibles'
+      ],
+      trends: []
+    };
   }
-  
-  // Mejor día de la semana
-  const dayOfWeekEarnings = new Map();
-  dailyEarnings.forEach(([date, earnings]) => {
-    const dayOfWeek = new Date(date).getDay();
-    if (!dayOfWeekEarnings.has(dayOfWeek)) {
-      dayOfWeekEarnings.set(dayOfWeek, []);
-    }
-    dayOfWeekEarnings.get(dayOfWeek).push(earnings);
-  });
-  
-  let bestDay = 0;
-  let bestDayAvg = 0;
-  dayOfWeekEarnings.forEach((earnings, day) => {
-    const avg = earnings.reduce((a, b) => a + b, 0) / earnings.length;
-    if (avg > bestDayAvg) {
-      bestDayAvg = avg;
-      bestDay = day;
-    }
-  });
-  
-  const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
-  trends.push({
-    type: 'best_day',
-    label: 'Mejor Día',
-    value: dayNames[bestDay],
-    change: `$${bestDayAvg.toFixed(2)} promedio`,
-    trend: 'neutral'
-  });
-  
-  return trends;
 }

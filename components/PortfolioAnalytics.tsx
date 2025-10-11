@@ -24,21 +24,21 @@ interface AnalyticsData {
     trend: 'up' | 'down' | 'neutral';
   }>;
   summary: {
-    totalDays: number;
+    totalPeriods: number;
     totalEarnings: number;
-    avgDailyEarnings: number;
+    avgPeriodEarnings: number;
     bestPlatform: string | null;
     growthRate: number;
   };
   platformStats: Array<{
     name: string;
     code: string;
-    percentage: number;
     totalEarnings: number;
-    totalDays: number;
+    totalPeriods: number;
     avgEarnings: number;
     maxEarnings: number;
     minEarnings: number;
+    periods: string[];
   }>;
   lastUpdated: string;
 }
@@ -156,8 +156,8 @@ export default function PortfolioAnalytics({ modelId }: PortfolioAnalyticsProps)
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-blue-50 rounded-lg">
-            <div className="text-2xl font-bold text-blue-600">{analyticsData.summary.totalDays}</div>
-            <div className="text-sm text-gray-600">Días Activos</div>
+            <div className="text-2xl font-bold text-blue-600">{analyticsData.summary.totalPeriods}</div>
+            <div className="text-sm text-gray-600">Períodos Quincenales</div>
           </div>
           <div className="text-center p-4 bg-green-50 rounded-lg">
             <div className="text-2xl font-bold text-green-600">
@@ -167,9 +167,9 @@ export default function PortfolioAnalytics({ modelId }: PortfolioAnalyticsProps)
           </div>
           <div className="text-center p-4 bg-purple-50 rounded-lg">
             <div className="text-2xl font-bold text-purple-600">
-              ${analyticsData.summary.avgDailyEarnings.toFixed(2)}
+              ${analyticsData.summary.avgPeriodEarnings.toFixed(2)}
             </div>
-            <div className="text-sm text-gray-600">Promedio Diario</div>
+            <div className="text-sm text-gray-600">Promedio por Período</div>
           </div>
           <div className={`text-center p-4 rounded-lg ${
             analyticsData.summary.growthRate > 0 ? 'bg-green-50' : 
@@ -260,9 +260,9 @@ export default function PortfolioAnalytics({ modelId }: PortfolioAnalyticsProps)
                   </div>
                   <div className="text-right">
                     <div className="text-lg font-bold text-green-600">
-                      ${platform.avgEarnings.toFixed(2)}/día
+                      ${platform.avgEarnings.toFixed(2)}/período
                     </div>
-                    <div className="text-sm text-gray-500">{platform.totalDays} días</div>
+                    <div className="text-sm text-gray-500">{platform.totalPeriods} períodos</div>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
