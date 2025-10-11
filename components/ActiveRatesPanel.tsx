@@ -107,14 +107,19 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
   if (compact) {
     return (
-      <div className="apple-card">
+      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
         {showTitle && (
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            </div>
             <div>
-              <h3 className="text-sm font-medium text-gray-900">Tasas de Calculadora</h3>
+              <h3 className="text-base font-semibold text-gray-900">Tasas de Calculadora</h3>
               <p className="text-xs text-gray-500">Solo manuales</p>
             </div>
-            {loading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>}
+            {loading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin ml-auto"></div>}
           </div>
         )}
         
