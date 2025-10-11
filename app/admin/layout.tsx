@@ -93,6 +93,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // Funciones para manejar el dropdown con delay
   const handleMenuEnter = (itemId: string) => {
+    console.log(`🔍 [MENU] Enter: ${itemId}`);
     if (menuTimeout) {
       clearTimeout(menuTimeout);
       setMenuTimeout(null);
@@ -101,7 +102,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const handleMenuLeave = () => {
+    console.log(`🔍 [MENU] Leave: setting timeout to close`);
     const timeout = setTimeout(() => {
+      console.log(`🔍 [MENU] Timeout: closing menu`);
       setActiveMenu(null);
     }, 300); // 300ms de delay antes de cerrar
     setMenuTimeout(timeout);
@@ -249,7 +252,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // Función para determinar si el dropdown debe mostrarse
   const shouldShowDropdown = (item: any) => {
     // Siempre mostrar dropdown si hay subItems y el menú está activo
-    return item.subItems && item.subItems.length > 0 && activeMenu === item.id;
+    const shouldShow = item.subItems && item.subItems.length > 0 && activeMenu === item.id;
+    console.log(`🔍 [DROPDOWN] ${item.id}: shouldShow=${shouldShow}, activeMenu=${activeMenu}, hasSubItems=${item.subItems?.length > 0}`);
+    return shouldShow;
   };
 
   return (
