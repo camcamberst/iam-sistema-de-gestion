@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import ModelCalculatorNew from '../../../../components/ModelCalculatorNew';
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
+import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
 interface User {
   id: string;
@@ -244,12 +245,20 @@ export default function ModelDashboard() {
                 </div>
               </div>
 
-              {/* Barra de alcance de meta */}
+              {/* Barra de alcance de meta - Copia exacta de Mi Calculadora */}
               <div className="mt-4 animate-fade-in-delay-4">
                 {(() => {
-                  const progress = productivityData ? Math.min(100, productivityData.goalProgress) : 0;
+                  if (!productivityData) return null;
                   
-                  // Sistema de colores dinámicos igual que Mi Calculadora
+                  const totalUsdBruto = productivityData.usdBruto;
+                  const cuotaMinima = productivityData.goalUsd;
+                  const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
+                  const estaPorDebajo = totalUsdBruto < cuotaMinima;
+                  
+                  // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
+                  const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
+                  
+                  // Paleta: Rojo -> Púrpura -> Esmeralda (sin amarillos)
                   const RED = { r: 229, g: 57, b: 53 };     // #E53935
                   const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
                   const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
@@ -260,47 +269,100 @@ export default function ModelDashboard() {
                     b: Math.round(a.b + (b.b - a.b) * t)
                   });
 
-                  const shade = (color: any, amount: number) => ({
-                    r: Math.round(color.r * (1 - amount)),
-                    g: Math.round(color.g * (1 - amount)),
-                    b: Math.round(color.b * (1 - amount))
-                  });
+                  const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
+                  const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
 
-                  const rgbToHex = (color: any) => 
-                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
-
-                  const t = progress / 100;
+                  const t = progressPct / 100;
+                  // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
                   const base = t <= 0.6
                     ? mix(RED, PURPLE, t / 0.6)
                     : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
 
                   const progressStart = rgbToHex(shade(base, 0.05));
                   const progressEnd = rgbToHex(shade(base, 0.15));
+                  const cardBgStart = rgbToHex(tint(base, 0.92));
+                  const cardBgEnd = rgbToHex(tint(base, 0.88));
+                  const cardBorder = rgbToHex(tint(base, 0.7));
+                  const iconStart = rgbToHex(shade(base, 0.0));
+                  const iconEnd = rgbToHex(shade(base, 0.2));
+                  const headingColor = rgbToHex(shade(base, 0.55));
+                  const subTextColor = rgbToHex(shade(base, 0.45));
+
+                  const rgbToHex = (color: any) => 
+                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
+
+                  const milestone = progressPct >= 100 ? 100 : progressPct >= 75 ? 75 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
 
                   return (
-                    <>
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-sm font-medium text-gray-700">Objetivo Básico</span>
-                        <span className="text-sm text-gray-600">
-                          {productivityData ? 
-                            `$${productivityData.usdModelo.toFixed(0)} / $${productivityData.goalUsd} USD` : 
-                            '— / — USD'
-                          }
-                        </span>
+                    <div
+                      className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
+                      style={{
+                        background: `linear-gradient(135deg, ${cardBgStart}, ${cardBgEnd})`,
+                        borderColor: cardBorder,
+                        boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)`
+                      }}
+                    >
+                      {/* Efecto de brillo animado */}
+                      <div
+                        className="absolute inset-0 opacity-10 animate-pulse"
+                        style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
+                      ></div>
+
+                      <div className="relative p-4">
+                        <div className="flex items-center space-x-3">
+                          {/* Icono animado */}
+                          <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
+                            <div
+                              className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md`}
+                              style={{
+                                background: `linear-gradient(135deg, ${iconStart}, ${iconEnd})`
+                              }}
+                            >
+                              <span className="text-white text-sm">✓</span>
+                            </div>
+                          </div>
+                          
+                          {/* Contenido compacto */}
+                          <div className="flex-1">
+                            <div className="flex items-center justify-between">
+                              <div className={`font-bold text-sm`} style={{ color: headingColor }}>
+                                {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
+                              </div>
+                              {(() => {
+                                const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
+                                const remainingPct = Math.max(0, 100 - roundedProgress);
+                                return (
+                                  <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
+                                    {estaPorDebajo
+                                      ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
+                                      : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
+                                  </div>
+                                );
+                              })()}
+                            </div>
+                            
+                            {/* Mensaje de progreso por hito */}
+                            {(() => {
+                              const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
+                              return <ProgressMilestone progress={roundedProgress} />;
+                            })()}
+                            
+                            {/* Barra de progreso compacta */}
+                            <div className="mt-2">
+                              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all duration-1000 ease-out`}
+                                  style={{ 
+                                    width: `${Math.min(porcentajeAlcanzado, 100)}%`,
+                                    background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden transition-all duration-500">
-                        <div 
-                          className="h-full transition-all duration-1000 ease-out" 
-                          style={{ 
-                            width: `${progress}%`,
-                            background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
-                          }}
-                        ></div>
-                      </div>
-                      <div className="text-right text-xs text-gray-600 mt-1 transition-colors duration-300">
-                        {progress.toFixed(0)}%
-                      </div>
-                    </>
+                    </div>
                   );
                 })()}
               </div>
