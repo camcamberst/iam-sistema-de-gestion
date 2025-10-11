@@ -316,8 +316,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             <nav className="flex items-center space-x-6">
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
+                  console.log('🔍 [RENDER] Processing item:', item.id, item.label, 'pathname:', pathname);
+                  
                   // Renderizar Mi Portafolio con el componente especial
                   if (item.id === 'portafolio') {
+                    console.log('✅ [RENDER] Using PortfolioDropdown for:', item.id);
                     return (
                       <PortfolioDropdown
                         key={item.id}
@@ -329,6 +332,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
                   // Renderizar Mi Calculadora con el componente especial
                   if (item.id === 'calculator' && item.label === 'Mi Calculadora') {
+                    console.log('✅ [RENDER] Using CalculatorDropdown for:', item.id);
                     return (
                       <CalculatorDropdown
                         key={item.id}
@@ -340,6 +344,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
                   // Renderizar Mis Anticipos con el componente especial (solo para modelos)
                   if (item.id === 'anticipos' && item.label === 'Mis Anticipos') {
+                    console.log('✅ [RENDER] Using AnticiposDropdown for:', item.id);
                     return (
                       <AnticiposDropdown
                         key={item.id}
@@ -349,7 +354,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     );
                   }
 
-                  // Renderizar otros items normalmente
+                  // Renderizar otros items normalmente (solo para admins/super_admins)
                   return (
                     <div
                       key={item.id}
