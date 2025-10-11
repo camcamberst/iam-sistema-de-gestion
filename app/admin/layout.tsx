@@ -144,6 +144,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     
     console.log('🔍 [MENU] User role:', userRole);
     console.log('🔍 [MENU] User data:', userData);
+    console.log('🔍 [MENU] isClient:', isClient);
 
     // Menú base para todos los roles
     const baseItems: Array<{
@@ -232,6 +233,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
 
     console.log('🔍 [MENU] Final menu items:', baseItems);
+    console.log('🔍 [MENU] Portafolio item:', baseItems.find(item => item.id === 'portafolio'));
     return baseItems;
   };
 
