@@ -212,7 +212,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                       onMouseLeave={handleDropdownLeave}
                     >
                       <div className="p-2">
-                        {item.subItems.map((subItem) => (
+                        {item.subItems?.map((subItem) => (
                           <Link
                             key={subItem.href}
                             href={subItem.href}

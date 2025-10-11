@@ -32,15 +32,16 @@ export async function POST(request: NextRequest) {
         usd_modelo,
         cop_modelo,
         period_date,
-        period_type,
-        calculator_platforms (
-          name,
-          id
-        )
+        period_type
       `)
       .eq('model_id', modelId)
       .order('period_date', { ascending: true })
       .order('period_type', { ascending: true });
+
+    // Obtener información de plataformas por separado
+    const { data: platformsData } = await supabase
+      .from('calculator_platforms')
+      .select('id, name');
 
     if (calculatorError) {
       console.error('Error obteniendo datos de calculadora:', calculatorError);
@@ -78,12 +79,18 @@ export async function POST(request: NextRequest) {
     let totalEarnings = 0;
     let totalPeriods = 0;
 
+    // Crear mapa de plataformas para lookup rápido
+    const platformMap = new Map();
+    platformsData?.forEach(platform => {
+      platformMap.set(platform.id, platform.name);
+    });
+
     calculatorData.forEach(record => {
       const periodKey = `${record.period_date}-${record.period_type}`;
-      const platformName = record.calculator_platforms?.name;
+      const platformName = platformMap.get(record.platform_id);
       
       // Saltar si no hay datos de plataforma
-      if (!platformName || !record.calculator_platforms) {
+      if (!platformName) {
         return;
       }
       
@@ -91,7 +98,7 @@ export async function POST(request: NextRequest) {
       if (!platformStats.has(platformName)) {
         platformStats.set(platformName, {
           name: platformName,
-          code: record.calculator_platforms.id,
+          code: record.platform_id,
           totalEarnings: 0,
           totalPeriods: 0,
           avgEarnings: 0,
@@ -134,7 +141,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Encontrar la mejor plataforma
-    let bestPlatform = null;
+    let bestPlatform: any = null;
     let maxAvgEarnings = 0;
     platformStats.forEach(platform => {
       if (platform.avgEarnings > maxAvgEarnings) {
