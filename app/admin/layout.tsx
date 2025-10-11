@@ -4,6 +4,8 @@ import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PortfolioDropdown from "@/components/PortfolioDropdown";
+import CalculatorDropdown from "@/components/CalculatorDropdown";
+import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { createClient } from "@supabase/supabase-js";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -13,6 +15,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [loadingUser, setLoadingUser] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false);
+  const [calculatorDropdownOpen, setCalculatorDropdownOpen] = useState(false);
+  const [anticiposDropdownOpen, setAnticiposDropdownOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     id: string;
     name: string;
@@ -174,7 +178,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {
         id: 'calculator',
         label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
-        href: userRole === 'modelo' ? '#' : '#', // Sin navegación directa
+        href: userRole === 'modelo' ? '/model/calculator' : '#', // Navegación directa para modelos
         subItems: userRole === 'modelo' 
           ? [ { label: 'Ingresar Valores', href: '/model/calculator' } ]
           : []
@@ -186,7 +190,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'anticipos',
         label: 'Mis Anticipos',
-        href: '#', // Sin navegación directa
+        href: '/model/anticipos/solicitar', // Navegación directa
         subItems: [
           { label: 'Solicitar Anticipo', href: '/model/anticipos/solicitar' },
           { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
@@ -304,6 +308,28 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                         key={item.id}
                         isActive={isActive(item.href)}
                         onToggle={() => setPortfolioDropdownOpen(!portfolioDropdownOpen)}
+                      />
+                    );
+                  }
+
+                  // Renderizar Mi Calculadora con el componente especial
+                  if (item.id === 'calculator' && userRole === 'modelo') {
+                    return (
+                      <CalculatorDropdown
+                        key={item.id}
+                        isActive={isActive(item.href)}
+                        onToggle={() => setCalculatorDropdownOpen(!calculatorDropdownOpen)}
+                      />
+                    );
+                  }
+
+                  // Renderizar Mis Anticipos con el componente especial
+                  if (item.id === 'anticipos') {
+                    return (
+                      <AnticiposDropdown
+                        key={item.id}
+                        isActive={isActive(item.href)}
+                        onToggle={() => setAnticiposDropdownOpen(!anticiposDropdownOpen)}
                       />
                     );
                   }
