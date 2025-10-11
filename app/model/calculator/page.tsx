@@ -64,6 +64,8 @@ export default function ModelCalculatorPage() {
   const [saving, setSaving] = useState(false);
   const [valuesLoaded, setValuesLoaded] = useState(false);
   const [configLoaded, setConfigLoaded] = useState(false);
+  const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
+  const [todayEarnings, setTodayEarnings] = useState<number>(0);
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   const supabase = createClient(
@@ -95,7 +97,113 @@ export default function ModelCalculatorPage() {
       return { ...p, value };
     }));
   };
+
+  // 🔧 NUEVO: Función para calcular ganancias del día
+  const calculateTodayEarnings = (platforms: Platform[], yesterdayValues: Record<string, number>, rates: any) => {
+    // Calcular USD modelo de hoy
+    let todayUsdModelo = 0;
+    for (const p of platforms) {
+      if (!p.enabled || p.value <= 0) continue;
+      
+      let usdModelo = 0;
+      if (p.currency === 'EUR') {
+        if (p.id === 'big7') {
+          usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+        } else if (p.id === 'mondo') {
+          usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+        } else {
+          usdModelo = p.value * (rates?.eur_usd || 1.01);
+        }
+      } else if (p.currency === 'GBP') {
+        if (p.id === 'aw') {
+          usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+        } else {
+          usdModelo = p.value * (rates?.gbp_usd || 1.20);
+        }
+      } else if (p.currency === 'USD') {
+        if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+          usdModelo = p.value * 0.75;
+        } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+          usdModelo = p.value * 0.05;
+        } else if (p.id === 'dxlive') {
+          usdModelo = p.value * 0.60;
+        } else if (p.id === 'secretfriends') {
+          usdModelo = p.value * 0.5;
+        } else if (p.id === 'superfoon') {
+          usdModelo = p.value; // 100% directo
+        } else {
+          usdModelo = p.value;
+        }
+      }
+      
+      // Aplicar porcentaje (excepto superfoon que es 100%)
+      if (p.id === 'superfoon') {
+        todayUsdModelo += usdModelo; // 100% directo
+      } else {
+        todayUsdModelo += usdModelo * p.percentage / 100;
+      }
+    }
+
+    // Calcular USD modelo de ayer
+    let yesterdayUsdModelo = 0;
+    for (const p of platforms) {
+      if (!p.enabled) continue;
+      
+      const yesterdayValue = yesterdayValues[p.id] || 0;
+      if (yesterdayValue <= 0) continue;
+      
+      let usdModelo = 0;
+      if (p.currency === 'EUR') {
+        if (p.id === 'big7') {
+          usdModelo = (yesterdayValue * (rates?.eur_usd || 1.01)) * 0.84;
+        } else if (p.id === 'mondo') {
+          usdModelo = (yesterdayValue * (rates?.eur_usd || 1.01)) * 0.78;
+        } else {
+          usdModelo = yesterdayValue * (rates?.eur_usd || 1.01);
+        }
+      } else if (p.currency === 'GBP') {
+        if (p.id === 'aw') {
+          usdModelo = (yesterdayValue * (rates?.gbp_usd || 1.20)) * 0.677;
+        } else {
+          usdModelo = yesterdayValue * (rates?.gbp_usd || 1.20);
+        }
+      } else if (p.currency === 'USD') {
+        if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+          usdModelo = yesterdayValue * 0.75;
+        } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+          usdModelo = yesterdayValue * 0.05;
+        } else if (p.id === 'dxlive') {
+          usdModelo = yesterdayValue * 0.60;
+        } else if (p.id === 'secretfriends') {
+          usdModelo = yesterdayValue * 0.5;
+        } else if (p.id === 'superfoon') {
+          usdModelo = yesterdayValue; // 100% directo
+        } else {
+          usdModelo = yesterdayValue;
+        }
+      }
+      
+      // Aplicar porcentaje (excepto superfoon que es 100%)
+      if (p.id === 'superfoon') {
+        yesterdayUsdModelo += usdModelo; // 100% directo
+      } else {
+        yesterdayUsdModelo += usdModelo * p.percentage / 100;
+      }
+    }
+
+    const earnings = todayUsdModelo - yesterdayUsdModelo;
+    setTodayEarnings(earnings);
+    console.log('🔍 [CALCULATOR] Today earnings calculated:', { todayUsdModelo, yesterdayUsdModelo, earnings });
+    return earnings;
+  };
   
+  // 🔧 NUEVO: Recalcular ganancias cuando cambien los valores o las tasas
+  useEffect(() => {
+    if (platforms.length > 0 && rates && Object.keys(yesterdayValues).length >= 0) {
+      calculateTodayEarnings(platforms, yesterdayValues, rates);
+    }
+  }, [platforms, rates, yesterdayValues]);
+
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [CALCULATOR] System configuration:', {
     ENABLE_AUTOSAVE,
@@ -290,10 +398,43 @@ export default function ModelCalculatorPage() {
           
           console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map((p: Platform) => ({ id: p.id, name: p.name, value: p.value })));
           setPlatforms(updatedPlatforms);
+
+          // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
+          const yesterdayDate = new Date(new Date(periodDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          console.log('🔍 [CALCULATOR] Loading yesterday values for date:', yesterdayDate);
+          
+          try {
+            const yesterdayResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${yesterdayDate}`);
+            const yesterdayJson = await yesterdayResp.json();
+            console.log('🔍 [CALCULATOR] Yesterday values:', yesterdayJson);
+            
+            if (yesterdayJson.success && Array.isArray(yesterdayJson.data) && yesterdayJson.data.length > 0) {
+              const yesterdayPlatformToValue: Record<string, number> = {};
+              for (const row of yesterdayJson.data) {
+                if (row && row.platform_id) {
+                  const parsed = Number.parseFloat(String(row.value));
+                  yesterdayPlatformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
+                }
+              }
+              setYesterdayValues(yesterdayPlatformToValue);
+              console.log('🔍 [CALCULATOR] Yesterday values loaded:', yesterdayPlatformToValue);
+            } else {
+              setYesterdayValues({});
+              console.log('🔍 [CALCULATOR] No yesterday values found');
+            }
+          } catch (yesterdayError) {
+            console.error('❌ [CALCULATOR] Error loading yesterday values:', yesterdayError);
+            setYesterdayValues({});
+          }
           
           // Sincronizar manualmente
           syncPlatformsToInputs(updatedPlatforms);
           console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados');
+          
+          // 🔧 NUEVO: Calcular ganancias del día
+          if (rates) {
+            calculateTodayEarnings(updatedPlatforms, yesterdayValues, rates);
+          }
         } else {
           console.log('🔍 [CALCULATOR] No se encontraron valores guardados o API falló:', savedJson);
           // Asegurar que las plataformas se muestren aunque no haya valores guardados
@@ -803,45 +944,8 @@ export default function ModelCalculatorPage() {
           <InfoCardGrid
             cards={[
               {
-                value: `$${platforms.reduce((sum, p) => {
-                  // Calcular USD bruto usando fórmulas específicas
-                  let usdBruto = 0;
-                  if (p.currency === 'EUR') {
-                    if (p.id === 'big7') {
-                      usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                    } else if (p.id === 'mondo') {
-                      usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
-                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
-                      usdBruto = p.value * (rates?.eur_usd || 1.01);
-                    } else {
-                      usdBruto = p.value * (rates?.eur_usd || 1.01);
-                    }
-                  } else if (p.currency === 'GBP') {
-                    if (p.id === 'aw') {
-                      usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                    } else {
-                      usdBruto = p.value * (rates?.gbp_usd || 1.20);
-                    }
-                  } else if (p.currency === 'USD') {
-                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                      usdBruto = p.value * 0.75;
-                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                      usdBruto = p.value * 0.05;
-                    } else if (p.id === 'dxlive') {
-                      usdBruto = p.value * 0.60;
-                    } else if (p.id === 'secretfriends') {
-                      usdBruto = p.value * 0.5;
-                    } else if (p.id === 'superfoon') {
-                      usdBruto = p.value;
-                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
-                      usdBruto = p.value;
-                    } else {
-                      usdBruto = p.value;
-                    }
-                  }
-                  return sum + usdBruto;
-                }, 0).toFixed(2)}`,
-                label: 'USD Bruto',
+                value: `$${todayEarnings.toFixed(2)}`,
+                label: 'Ganancias Hoy',
                 color: 'blue'
               },
               {
