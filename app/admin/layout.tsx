@@ -174,6 +174,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           { label: 'Mi Historial', href: '/model/anticipos/historial' }
         ]
       });
+
+      // Agregar Mi Portafolio para modelos
+      baseItems.push({
+        id: 'portafolio',
+        label: 'Mi Portafolio',
+        href: '/model/portafolio'
+      });
     }
 
     // Agregar opciones según el rol
