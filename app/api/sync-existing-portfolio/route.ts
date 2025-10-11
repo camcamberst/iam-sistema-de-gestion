@@ -10,30 +10,47 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔍 Sincronizando Portafolio de modelos existentes...');
     
-    // 1. Verificar qué modelos tienen configuración pero no tienen Portafolio
-    const { data: modelsNeedingSync, error: checkError } = await supabase
+    // 1. Obtener modelos con rol 'modelo'
+    const { data: allModels, error: modelsError } = await supabase
       .from('users')
-      .select(`
-        id,
-        email,
-        name,
-        calculator_config!inner(
-          enabled_platforms,
-          admin_id,
-          created_at
-        )
-      `)
-      .eq('role', 'modelo')
-      .eq('calculator_config.active', true);
+      .select('id, email, name')
+      .eq('role', 'modelo');
 
-    if (checkError) {
-      console.error('Error verificando modelos:', checkError);
-      return NextResponse.json({ success: false, error: checkError.message }, { status: 500 });
+    if (modelsError) {
+      console.error('Error obteniendo modelos:', modelsError);
+      return NextResponse.json({ success: false, error: modelsError.message }, { status: 500 });
     }
+
+    if (!allModels || allModels.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        message: 'No hay modelos en el sistema',
+        synced: 0
+      });
+    }
+
+    // 2. Obtener configuraciones activas de calculadora
+    const { data: activeConfigs, error: configsError } = await supabase
+      .from('calculator_config')
+      .select('model_id, enabled_platforms, admin_id, created_at')
+      .eq('active', true);
+
+    if (configsError) {
+      console.error('Error obteniendo configuraciones:', configsError);
+      return NextResponse.json({ success: false, error: configsError.message }, { status: 500 });
+    }
+
+    // 3. Combinar modelos con sus configuraciones
+    const modelsWithConfig = allModels
+      .map(model => {
+        const config = activeConfigs?.find(c => c.model_id === model.id);
+        return config ? { ...model, calculator_config: [config] } : null;
+      })
+      .filter(Boolean);
+
+    console.log('📋 Modelos encontrados con configuración:', modelsWithConfig.length);
     
-    console.log('📋 Modelos encontrados con configuración:', modelsNeedingSync?.length || 0);
-    
-    if (!modelsNeedingSync || modelsNeedingSync.length === 0) {
+    if (modelsWithConfig.length === 0) {
       return NextResponse.json({ 
         success: true, 
         message: 'No hay modelos con configuración de calculadora',
@@ -41,10 +58,10 @@ export async function POST(request: NextRequest) {
       });
     }
     
-    // 2. Verificar cuáles ya tienen Portafolio
+    // 4. Verificar cuáles ya tienen Portafolio
     const modelsToSync = [];
     
-    for (const model of modelsNeedingSync) {
+    for (const model of modelsWithConfig) {
       const { data: existingPortfolio, error: portfolioError } = await supabase
         .from('modelo_plataformas')
         .select('id')
