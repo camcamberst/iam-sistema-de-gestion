@@ -3,6 +3,7 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import PortfolioDropdown from "@/components/PortfolioDropdown";
 import { createClient } from "@supabase/supabase-js";
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
@@ -11,6 +12,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     id: string;
     name: string;
@@ -192,14 +194,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-      // Agregar Mi Portafolio para modelos
+      // Agregar Mi Portafolio para modelos - NUEVA IMPLEMENTACIÓN
       baseItems.push({
         id: 'portafolio',
         label: 'Mi Portafolio',
-        href: '#', // Sin navegación directa
-        subItems: [
-          { label: 'Ver Portafolio', href: '/model/portafolio' }
-        ]
+        href: '/model/portafolio', // Navegación directa
+        subItems: [] // Sin subItems por ahora
       });
     }
 
@@ -296,63 +296,77 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             {/* Main Navigation - Apple Style 2 */}
             <nav className="flex items-center space-x-6">
               {menuItems.length > 0 ? (
-                menuItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="relative"
-                    onMouseEnter={() => handleMenuEnter(item.id)}
-                    onMouseLeave={handleMenuLeave}
-                    onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
-                  >
-                    {item.href === '#' ? (
-                      <span
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
-                          isParentActive(item) 
-                            ? 'text-gray-900 bg-white/50 shadow-sm' 
-                            : 'text-gray-700 hover:text-gray-900'
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                    ) : (
-                      <Link
-                        href={item.href}
-                        className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
-                          isActive(item.href) || isParentActive(item) 
-                            ? 'text-gray-900 bg-white/50 shadow-sm' 
-                            : 'text-gray-700 hover:text-gray-900'
-                        }`}
-                      >
-                        {item.label}
-                      </Link>
-                    )}
+                menuItems.map((item) => {
+                  // Renderizar Mi Portafolio con el componente especial
+                  if (item.id === 'portafolio') {
+                    return (
+                      <PortfolioDropdown
+                        key={item.id}
+                        isActive={isActive(item.href)}
+                        onToggle={() => setPortfolioDropdownOpen(!portfolioDropdownOpen)}
+                      />
+                    );
+                  }
 
-                  {/* Dropdown Menu */}
-                  {shouldShowDropdown(item) && (
-                    <div 
-                      className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
-                      onMouseEnter={handleDropdownEnter}
-                      onMouseLeave={handleDropdownLeave}
+                  // Renderizar otros items normalmente
+                  return (
+                    <div
+                      key={item.id}
+                      className="relative"
+                      onMouseEnter={() => handleMenuEnter(item.id)}
+                      onMouseLeave={handleMenuLeave}
+                      onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
                     >
-                      <div className="p-2">
-                        {item.subItems.map((subItem) => (
-                          <Link
-                            key={subItem.href}
-                            href={subItem.href}
-                            className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg ${
-                              isActive(subItem.href)
-                                ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
-                                : 'text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
-                            }`}
-                          >
-                            {subItem.label}
-                          </Link>
-                        ))}
-                      </div>
+                      {item.href === '#' ? (
+                        <span
+                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                            isParentActive(item) 
+                              ? 'text-gray-900 bg-white/50 shadow-sm' 
+                              : 'text-gray-700 hover:text-gray-900'
+                          }`}
+                        >
+                          {item.label}
+                        </span>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                            isActive(item.href) || isParentActive(item) 
+                              ? 'text-gray-900 bg-white/50 shadow-sm' 
+                              : 'text-gray-700 hover:text-gray-900'
+                          }`}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+
+                      {/* Dropdown Menu */}
+                      {shouldShowDropdown(item) && (
+                        <div 
+                          className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
+                          onMouseEnter={handleDropdownEnter}
+                          onMouseLeave={handleDropdownLeave}
+                        >
+                          <div className="p-2">
+                            {item.subItems.map((subItem) => (
+                              <Link
+                                key={subItem.href}
+                                href={subItem.href}
+                                className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg ${
+                                  isActive(subItem.href)
+                                    ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
+                                    : 'text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
+                                }`}
+                              >
+                                {subItem.label}
+                              </Link>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                  )}
-                </div>
-              ))
+                  );
+                })
               ) : (
                 <div className="text-gray-500 text-sm">Cargando menú...</div>
               )}
