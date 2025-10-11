@@ -351,6 +351,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   }
 
                   // Renderizar otros items normalmente (solo para admins/super_admins)
+                  // NOTA: Los items con componentes dedicados (calculator, anticipos, portafolio) 
+                  // ya fueron renderizados arriba, este código solo maneja items administrativos
                   return (
                     <div
                       key={item.id}
