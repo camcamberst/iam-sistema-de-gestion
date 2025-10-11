@@ -244,6 +244,8 @@ export async function GET(request: NextRequest) {
           usdModelo = (p.value * rates.eur_usd) * 0.84;
         } else if (p.id === 'mondo') {
           usdModelo = (p.value * rates.eur_usd) * 0.78;
+        } else if (p.id === 'superfoon') {
+          usdModelo = p.value * rates.eur_usd; // EUR a USD directo
         } else {
           usdModelo = p.value * rates.eur_usd;
         }
@@ -262,11 +264,14 @@ export async function GET(request: NextRequest) {
           usdModelo = p.value * 0.60;
         } else if (p.id === 'secretfriends') {
           usdModelo = p.value * 0.5;
-        } else if (p.id === 'superfoon') {
-          usdModelo = p.value;
         } else {
           usdModelo = p.value;
         }
+      }
+
+      // SUPERFOON: Aplicar 100% para la modelo (especial)
+      if (p.id === 'superfoon') {
+        return sum + usdModelo; // 100% directo, sin porcentaje
       }
 
       // Aplicar porcentaje de la modelo (MISMA LÓGICA)

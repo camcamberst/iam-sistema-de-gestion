@@ -757,6 +757,8 @@ export default function AdminModelCalculator({
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (p.id === 'mondo') {
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01); // EUR a USD directo
                     } else {
                       usdModelo = p.value * (rates?.eur_usd || 1.01);
                     }
@@ -775,12 +777,16 @@ export default function AdminModelCalculator({
                       usdModelo = p.value * 0.60;
                     } else if (p.id === 'secretfriends') {
                       usdModelo = p.value * 0.5;
-                    } else if (p.id === 'superfoon') {
-                      usdModelo = p.value;
                     } else {
                       usdModelo = p.value;
                     }
                   }
+                  
+                  // SUPERFOON: Aplicar 100% para la modelo (especial)
+                  if (p.id === 'superfoon') {
+                    return sum + usdModelo; // 100% directo, sin porcentaje
+                  }
+                  
                   return sum + (usdModelo * p.percentage / 100);
                 }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
               </div>
@@ -799,6 +805,8 @@ export default function AdminModelCalculator({
                     usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
                   } else if (p.id === 'mondo') {
                     usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                  } else if (p.id === 'superfoon') {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01); // EUR a USD directo
                   } else {
                     usdModelo = p.value * (rates?.eur_usd || 1.01);
                   }
@@ -817,12 +825,16 @@ export default function AdminModelCalculator({
                     usdModelo = p.value * 0.60;
                   } else if (p.id === 'secretfriends') {
                     usdModelo = p.value * 0.5;
-                  } else if (p.id === 'superfoon') {
-                    usdModelo = p.value;
                   } else {
                     usdModelo = p.value;
                   }
                 }
+                
+                // SUPERFOON: Aplicar 100% para la modelo (especial)
+                if (p.id === 'superfoon') {
+                  return sum + usdModelo; // 100% directo, sin porcentaje
+                }
+                
                 return sum + (usdModelo * p.percentage / 100);
               }, 0) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
             </div>

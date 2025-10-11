@@ -698,6 +698,8 @@ export default function AdminViewModelPage() {
                       usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (platform.id === 'mondo') {
                       usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (platform.id === 'superfoon') {
+                      usdModelo = currentValue * (rates?.eur_usd || 1.01); // EUR a USD directo
                     } else {
                       usdModelo = currentValue * (rates?.eur_usd || 1.01);
                     }
@@ -716,14 +718,18 @@ export default function AdminViewModelPage() {
                       usdModelo = currentValue * 0.60;
                     } else if (platform.id === 'secretfriends') {
                       usdModelo = currentValue * 0.5;
-                    } else if (platform.id === 'superfoon') {
-                      usdModelo = currentValue;
                     } else {
                       usdModelo = currentValue;
                     }
                   }
                   
-                  const usdModeloFinal = usdModelo * platform.percentage / 100;
+                  // SUPERFOON: Aplicar 100% para la modelo (especial)
+                  let usdModeloFinal;
+                  if (platform.id === 'superfoon') {
+                    usdModeloFinal = usdModelo; // 100% directo, sin porcentaje
+                  } else {
+                    usdModeloFinal = usdModelo * platform.percentage / 100;
+                  }
                   
                   return {
                     usdBruto: acc.usdBruto + usdBruto,
