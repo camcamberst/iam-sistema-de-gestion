@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
     console.log(`📋 Portafolios encontrados para eliminar: ${incorrectPortfolios.length}`);
 
     // 2. Obtener emails de los usuarios
-    const modelIds = [...new Set(incorrectPortfolios.map(p => p.model_id))];
+    const modelIds = Array.from(new Set(incorrectPortfolios.map(p => p.model_id)));
     const { data: users, error: usersError } = await supabase
       .from('users')
       .select('id, email')
