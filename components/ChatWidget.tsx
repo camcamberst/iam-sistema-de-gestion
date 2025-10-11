@@ -223,9 +223,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       {/* Chat Window - Estilo escala de grises */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-96 h-[500px] bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 z-50 flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 w-80 h-[400px] bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 z-50 flex flex-col overflow-hidden">
           {/* Header */}
-          <div className="bg-gray-800 text-white p-4 flex items-center justify-between">
+          <div className="bg-gray-800 text-white p-3 flex items-center justify-between">
             <div className="flex items-center space-x-2">
               <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
                 <span className="text-xs font-bold">AIM</span>
@@ -246,11 +246,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-gray-900">
+          <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-900">
             {messages.length === 0 && (
-              <div className="text-center text-gray-300 text-sm py-8">
-                <div className="w-12 h-12 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
-                  <span className="text-lg font-bold text-white">AIM</span>
+              <div className="text-center text-gray-300 text-sm py-6">
+                <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-2">
+                  <span className="text-sm font-bold text-white">AIM</span>
                 </div>
                 <p>¡Hola! Soy tu asistente virtual.</p>
                 <p className="text-xs mt-1 text-gray-400">Puedo ayudarte con tips, soporte técnico y más.</p>
@@ -325,7 +325,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           </div>
 
           {/* Input */}
-          <div className="border-t border-gray-700 p-4 bg-gray-800">
+          <div className="border-t border-gray-700 p-3 bg-gray-800">
             <div className="flex space-x-2">
               <textarea
                 value={inputMessage}
