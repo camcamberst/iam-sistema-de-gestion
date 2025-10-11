@@ -103,10 +103,8 @@ export default function MiPortafolio() {
 
       if (result.success) {
         setPortfolioData(result.data);
-        // Seleccionar la primera plataforma por defecto
-        if (result.data.platforms.length > 0) {
-          setSelectedPlatform(result.data.platforms[0]);
-        }
+        // No seleccionar ninguna plataforma por defecto
+        setSelectedPlatform(null);
       } else {
         setError(result.error || 'Error al cargar el portafolio');
       }
@@ -166,9 +164,15 @@ export default function MiPortafolio() {
     }
   };
 
-  // Función para manejar click en etiqueta de plataforma
+  // Función para manejar click en etiqueta de plataforma (toggle expandir/contraer)
   const handlePlatformClick = (platform: Platform) => {
-    setSelectedPlatform(platform);
+    // Si la plataforma ya está seleccionada, la deseleccionamos (contraer)
+    if (selectedPlatform?.id === platform.id) {
+      setSelectedPlatform(null);
+    } else {
+      // Si no está seleccionada, la seleccionamos (expandir)
+      setSelectedPlatform(platform);
+    }
   };
 
   const getStatusIcon = (status: string) => {
@@ -371,7 +375,7 @@ export default function MiPortafolio() {
                   </div>
 
                   {/* Ventana de Visualización */}
-                  {selectedPlatform && (
+                  {selectedPlatform ? (
                     <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
                       <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center space-x-4">
@@ -465,6 +469,12 @@ export default function MiPortafolio() {
                           </div>
                         </div>
                       </div>
+                    </div>
+                  ) : (
+                    <div className="border border-gray-200 rounded-lg p-12 bg-gray-50 text-center">
+                      <Eye className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">Selecciona una plataforma</h3>
+                      <p className="text-gray-500">Haz click en una etiqueta de plataforma para ver su información detallada</p>
                     </div>
                   )}
                 </>
