@@ -215,13 +215,13 @@ export default function SolicitarAnticipoPage() {
   // Manejar cambio en el input de monto (sin forzar aún el múltiplo)
   const handleMontoChange = (value: string) => {
     const numericValue = parseFormattedNumber(value);
-
+    
     // Actualizar el valor numérico mientras escribe
     setAnticipoData(prev => ({ ...prev, monto_solicitado: numericValue }));
-
+    
     // Formatear para mostrar lo que escribe
     setMontoFormatted(value.replace(/[^0-9.,]/g, ''));
-
+    
     // Validar en vivo (puede mostrar error de múltiplo hasta que salga del campo)
     const error = validateMonto(numericValue);
     setMontoError(error);
@@ -463,16 +463,16 @@ export default function SolicitarAnticipoPage() {
           
           {/* Indicador de política activa (sin bypass) */}
           <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-            <div className="flex items-center">
+              <div className="flex items-center">
               <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-              </svg>
-              <div>
+                </svg>
+                <div>
                 <p className="text-sm font-medium text-blue-800">Política de fechas activa</p>
                 <p className="text-xs text-blue-700">No disponible del fin de mes al 5 y del 15 al 20</p>
+                </div>
               </div>
             </div>
-          </div>
         </div>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
