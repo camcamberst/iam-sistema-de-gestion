@@ -375,10 +375,10 @@ export default function MiPortafolio() {
                   </div>
 
                   {/* Ventana de Visualización con transición */}
-                  <div className={`overflow-hidden transition-all duration-700 ease-in-out transform ${
+                  <div className={`overflow-hidden transition-all duration-500 ease-out transform ${
                     selectedPlatform 
                       ? 'max-h-[600px] opacity-100 translate-y-0 scale-100' 
-                      : 'max-h-0 opacity-0 -translate-y-2 scale-95'
+                      : 'max-h-0 opacity-0 translate-y-0 scale-100'
                   }`}>
                     {selectedPlatform && (
                       <div className="border border-gray-200 rounded-lg p-6 bg-gray-50 hover:shadow-lg transition-shadow duration-300">
