@@ -77,6 +77,30 @@ export async function GET(request: NextRequest) {
       console.warn('Error obteniendo datos de calculadora:', calculatorError);
     }
 
+    // Obtener promedio acumulado mensual de conexión (una sola vez para todas las plataformas)
+    const { data: userData } = await supabase
+      .from('users')
+      .select('monthly_connection_avg, last_avg_calculation_date, last_avg_month')
+      .eq('id', modelId)
+      .single();
+    
+    // Calcular connectionPercentage una sola vez
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    let connectionPercentage = 0;
+    
+    if (userData?.last_avg_month === currentMonth && userData?.monthly_connection_avg) {
+      // Usar promedio acumulado mensual
+      connectionPercentage = Math.round(userData.monthly_connection_avg);
+    } else {
+      // Fallback: calcular en tiempo real para el período quincenal actual
+      const currentDate = new Date();
+      const currentDay = currentDate.getDate();
+      const currentPeriod = currentDay >= 1 && currentDay <= 15 ? '1-15' : '16-31';
+      const periodDays = currentPeriod === '1-15' ? 13 : 13; // 13 días para ambos períodos (considerando descansos)
+      const totalDaysWithActivity = calculatorData?.length || 0;
+      connectionPercentage = periodDays > 0 ? Math.round((totalDaysWithActivity / periodDays) * 100) : 0;
+    }
+
     // Procesar estadísticas por plataforma
     const platformStats = platforms.map(platform => {
       const platformHistory = calculatorData?.filter(data => 
@@ -89,30 +113,6 @@ export async function GET(request: NextRequest) {
       const totalCopModelo = platformHistory.reduce((sum, data) => sum + (data.cop_modelo || 0), 0);
       const avgValue = platformHistory.length > 0 ? totalValue / platformHistory.length : 0;
       const avgUsdModelo = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
-
-      // Obtener promedio acumulado mensual de conexión
-      // Este valor se calcula y almacena mensualmente en la tabla users
-      const { data: userData } = await supabase
-        .from('users')
-        .select('monthly_connection_avg, last_avg_calculation_date, last_avg_month')
-        .eq('id', modelId)
-        .single();
-      
-      // Si no hay datos o el mes actual no está calculado, calcular en tiempo real como fallback
-      const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-      let connectionPercentage = 0;
-      
-      if (userData?.last_avg_month === currentMonth && userData?.monthly_connection_avg) {
-        // Usar promedio acumulado mensual
-        connectionPercentage = Math.round(userData.monthly_connection_avg);
-      } else {
-        // Fallback: calcular en tiempo real para el período quincenal actual
-        const currentDate = new Date();
-        const currentDay = currentDate.getDate();
-        const currentPeriod = currentDay >= 1 && currentDay <= 15 ? '1-15' : '16-31';
-        const periodDays = currentPeriod === '1-15' ? 13 : 13; // 13 días para ambos períodos (considerando descansos)
-        connectionPercentage = periodDays > 0 ? Math.round((platformHistory.length / periodDays) * 100) : 0;
-      }
 
       return {
         ...platform,
