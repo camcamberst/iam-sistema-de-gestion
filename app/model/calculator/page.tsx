@@ -66,7 +66,6 @@ export default function ModelCalculatorPage() {
   const [configLoaded, setConfigLoaded] = useState(false);
   const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
-  const [todayEarningsLoaded, setTodayEarningsLoaded] = useState<boolean>(false);
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   const supabase = createClient(
@@ -203,29 +202,20 @@ export default function ModelCalculatorPage() {
     const earnings = todayUsdModelo - yesterdayUsdModelo;
     setTodayEarnings(earnings);
     console.log('🔍 [CALCULATOR] Today earnings calculated:', { todayUsdModelo, yesterdayUsdModelo, earnings });
-    
-    // 🔧 NUEVO: Guardar todayEarnings en localStorage para persistencia
-    if (typeof window !== 'undefined') {
-      const todayKey = `todayEarnings_${user?.id}_${new Date().toISOString().split('T')[0]}`;
-      localStorage.setItem(todayKey, earnings.toString());
-      console.log('🔍 [CALCULATOR] Today earnings saved to localStorage:', todayKey, earnings);
-    }
-    
     return earnings;
   };
   
   // 🔧 NUEVO: Recalcular ganancias cuando cambien los valores o las tasas
   useEffect(() => {
-    if (platforms.length > 0 && rates && !todayEarningsLoaded) {
-      console.log('🔍 [CALCULATOR] Recalculating today earnings (not loaded from localStorage)...', {
+    if (platforms.length > 0 && rates) {
+      console.log('🔍 [CALCULATOR] Recalculating today earnings from database data...', {
         platformsCount: platforms.length,
         hasRates: !!rates,
-        yesterdayValuesCount: Object.keys(yesterdayValues).length,
-        todayEarningsLoaded
+        yesterdayValuesCount: Object.keys(yesterdayValues).length
       });
       calculateTodayEarnings(platforms, yesterdayValues, rates);
     }
-  }, [platforms, rates, yesterdayValues, todayEarningsLoaded]);
+  }, [platforms, rates, yesterdayValues]);
 
   // 🔧 NUEVO: Recalcular ganancias cuando cambien los inputs del usuario
   useEffect(() => {
@@ -282,20 +272,6 @@ export default function ModelCalculatorPage() {
           last_login: new Date().toISOString(), // Usar fecha del servidor para last_login
         };
         setUser(current);
-
-        // 🔧 NUEVO: Cargar todayEarnings desde localStorage
-        if (typeof window !== 'undefined') {
-          const todayKey = `todayEarnings_${current.id}_${new Date().toISOString().split('T')[0]}`;
-          const savedEarnings = localStorage.getItem(todayKey);
-          if (savedEarnings) {
-            const earnings = parseFloat(savedEarnings);
-            if (!isNaN(earnings)) {
-              setTodayEarnings(earnings);
-              setTodayEarningsLoaded(true);
-              console.log('🔍 [CALCULATOR] Today earnings loaded from localStorage:', todayKey, earnings);
-            }
-          }
-        }
 
         // 🔧 FIX: Solo cargar configuración del usuario actual (modelo) si no se ha cargado antes
         if (!configLoaded) {
