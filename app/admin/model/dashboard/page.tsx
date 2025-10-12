@@ -88,6 +88,30 @@ export default function ModelDashboard() {
     load();
   }, []);
 
+  // 🔧 NUEVO: Posicionar scrollbar al inicio al cargar la página
+  useEffect(() => {
+    const positionScrollbar = () => {
+      // Esperar a que el contenido se haya renderizado completamente
+      setTimeout(() => {
+        // Posición al inicio (0% desde arriba)
+        const targetPosition = 0;
+        
+        // Hacer scroll suave a esa posición
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+        
+        console.log('🔍 [DASHBOARD] Scrollbar positioned at start:', targetPosition);
+      }, 1000); // Delay para asegurar que el contenido esté renderizado
+    };
+
+    // Solo posicionar si no hay error y los datos están cargados
+    if (!loading && !productivityLoading && user) {
+      positionScrollbar();
+    }
+  }, [loading, productivityLoading, user]);
+
   const loadProductivityData = async (userId: string) => {
     try {
       setProductivityLoading(true);
