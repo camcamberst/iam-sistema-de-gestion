@@ -207,10 +207,27 @@ export default function ModelCalculatorPage() {
   
   // 🔧 NUEVO: Recalcular ganancias cuando cambien los valores o las tasas
   useEffect(() => {
-    if (platforms.length > 0 && rates && Object.keys(yesterdayValues).length >= 0) {
+    if (platforms.length > 0 && rates) {
+      console.log('🔍 [CALCULATOR] Recalculating today earnings...', {
+        platformsCount: platforms.length,
+        hasRates: !!rates,
+        yesterdayValuesCount: Object.keys(yesterdayValues).length
+      });
       calculateTodayEarnings(platforms, yesterdayValues, rates);
     }
   }, [platforms, rates, yesterdayValues]);
+
+  // 🔧 NUEVO: Recalcular ganancias cuando cambien los inputs del usuario
+  useEffect(() => {
+    if (platforms.length > 0 && rates) {
+      // Pequeño delay para evitar cálculos excesivos durante la escritura
+      const timeoutId = setTimeout(() => {
+        calculateTodayEarnings(platforms, yesterdayValues, rates);
+      }, 300);
+      
+      return () => clearTimeout(timeoutId);
+    }
+  }, [platforms.map(p => p.value).join(','), rates, yesterdayValues]);
 
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [CALCULATOR] System configuration:', {
@@ -439,10 +456,8 @@ export default function ModelCalculatorPage() {
           syncPlatformsToInputs(updatedPlatforms);
           console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados');
           
-          // 🔧 NUEVO: Calcular ganancias del día
-          if (rates) {
-            calculateTodayEarnings(updatedPlatforms, yesterdayValues, rates);
-          }
+          // 🔧 NUEVO: Calcular ganancias del día después de cargar yesterdayValues
+          // Se calculará en el useEffect cuando yesterdayValues esté listo
         } else {
           console.log('🔍 [CALCULATOR] No se encontraron valores guardados o API falló:', savedJson);
           // Asegurar que las plataformas se muestren aunque no haya valores guardados
