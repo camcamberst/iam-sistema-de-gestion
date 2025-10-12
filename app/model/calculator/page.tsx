@@ -73,8 +73,8 @@ export default function ModelCalculatorPage() {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
   );
   // Sistema V2 siempre activo (sin flags de entorno)
-  // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
-  const ENABLE_AUTOSAVE = false; // Forzar deshabilitado
+  // 🔧 FIX: Autosave solo después de 2 minutos de inactividad
+  const ENABLE_AUTOSAVE = true; // Habilitado con delay de inactividad
   // Animaciones deshabilitadas: sin lógica extra
   useEffect(() => {}, []);
   // 🔧 HELPER: Funciones de sincronización bidireccional
@@ -592,46 +592,50 @@ export default function ModelCalculatorPage() {
   //   }
   // }, [platforms, valuesLoaded]);
 
-  // 🔧 FIX: Autosave deshabilitado para corregir problema de persistencia
-  // useEffect(() => {
-  //   if (!ENABLE_AUTOSAVE) return;
-  //   if (!user) return;
-  //   if (saving) return; // CRÍTICO: No ejecutar autosave durante guardado manual
-  //   
-  //   // Preparar mapa de valores a guardar
-  //   const enabled = platforms.filter(p => p.enabled && p.value > 0);
-  //   const values: Record<string, number> = enabled.reduce((acc, p) => {
-  //     acc[p.id] = p.value;
-  //     return acc;
-  //   }, {} as Record<string, number>);
+  // 🔧 FIX: Autosave con 2 minutos de inactividad para persistencia
+  useEffect(() => {
+    if (!ENABLE_AUTOSAVE) return;
+    if (!user) return;
+    if (saving) return; // CRÍTICO: No ejecutar autosave durante guardado manual
+    
+    // Preparar mapa de valores a guardar
+    const enabled = platforms.filter(p => p.enabled && p.value > 0);
+    const values: Record<string, number> = enabled.reduce((acc, p) => {
+      acc[p.id] = p.value;
+      return acc;
+    }, {} as Record<string, number>);
 
-  //   const hasAny = Object.keys(values).length > 0;
-  //   if (!hasAny) return;
+    const hasAny = Object.keys(values).length > 0;
+    if (!hasAny) return;
 
-  //   const controller = new AbortController();
-  //   const t = setTimeout(async () => {
-  //     try {
-  //       // Autosave solo para el usuario actual (modelo)
-  //       const res = await fetch('/api/calculator/model-values-v2', {
-  //         method: 'POST',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify({ modelId: user.id, values, periodDate }),
-  //         signal: controller.signal
-  //       });
-  //       const json = await res.json();
-  //       if (!json.success) {
-  //         console.warn('⚠️ [AUTOSAVE] Error guardando automáticamente:', json.error);
-  //       }
-  //     } catch (e) {
-  //       console.warn('⚠️ [AUTOSAVE] Excepción en autosave:', e);
-  //     }
-  //   }, 800);
+    const controller = new AbortController();
+    // 🔧 NUEVO: 2 minutos (120,000ms) de inactividad antes de autosave
+    const t = setTimeout(async () => {
+      try {
+        console.log('🔄 [AUTOSAVE] Guardando después de 2 minutos de inactividad...');
+        // Autosave solo para el usuario actual (modelo)
+        const res = await fetch('/api/calculator/model-values-v2', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ modelId: user.id, values, periodDate }),
+          signal: controller.signal
+        });
+        const json = await res.json();
+        if (!json.success) {
+          console.warn('⚠️ [AUTOSAVE] Error guardando automáticamente:', json.error);
+        } else {
+          console.log('✅ [AUTOSAVE] Valores guardados automáticamente después de inactividad');
+        }
+      } catch (e) {
+        console.warn('⚠️ [AUTOSAVE] Excepción en autosave:', e);
+      }
+    }, 120000); // 2 minutos = 120,000ms
 
-  //   return () => {
-  //     controller.abort();
-  //     clearTimeout(t);
-  //   };
-  // }, [ENABLE_AUTOSAVE, user?.id, periodDate]); // OPTIMIZADO: Removido 'platforms' para evitar bucle infinito
+    return () => {
+      clearTimeout(t);
+      controller.abort();
+    };
+  }, [platforms, user, saving, periodDate]); // Incluir platforms para detectar cambios
 
   if (loading) {
     return (
