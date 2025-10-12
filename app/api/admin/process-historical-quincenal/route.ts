@@ -47,8 +47,6 @@ export async function POST(request: NextRequest) {
           .select(`
             platform_id,
             period_date,
-            usd_modelo,
-            usd_bruto,
             value
           `)
           .eq('model_id', model.id)
@@ -107,8 +105,8 @@ export async function POST(request: NextRequest) {
           }
 
           const quincenaData = platformMap.get(quincenaKey)!;
-          // Usar usd_modelo si existe, sino usd_bruto, sino value
-          const usdValue = record.usd_modelo || record.usd_bruto || record.value || 0;
+          // Usar value (que representa el valor en tokens/ingresos de la plataforma)
+          const usdValue = record.value || 0;
           quincenaData.totalUsd += usdValue;
           quincenaData.days.add(record.period_date);
           quincenaData.periodStart = quincenaData.periodStart < date ? quincenaData.periodStart : date;
