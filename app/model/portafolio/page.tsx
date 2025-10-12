@@ -42,6 +42,7 @@ interface Platform {
     avgUsdModelo: number;
     totalUsdModelo: number;
     lastActivity: string | null;
+    trend: string; // Tendencia: ↑, ↓, =
   };
 }
 
@@ -432,9 +433,18 @@ export default function MiPortafolio() {
                             </div>
                             <div className="text-center">
                               <p className="text-sm text-gray-500 mb-1">Promedio Diario</p>
-                              <p className="text-lg font-bold text-green-600">
-                                ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
-                              </p>
+                              <div className="flex items-center justify-center space-x-1">
+                                <p className="text-lg font-bold text-green-600">
+                                  ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
+                                </p>
+                                <span className={`text-sm font-medium ${
+                                  selectedPlatform.stats.trend === '↑' ? 'text-green-500' :
+                                  selectedPlatform.stats.trend === '↓' ? 'text-red-500' :
+                                  'text-gray-400'
+                                }`}>
+                                  {selectedPlatform.stats.trend}
+                                </span>
+                              </div>
                             </div>
                             <div className="text-center">
                               <p className="text-sm text-gray-500 mb-1">Total (30 días)</p>

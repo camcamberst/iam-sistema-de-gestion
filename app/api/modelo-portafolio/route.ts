@@ -102,7 +102,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Procesar estadísticas por plataforma
-    const platformStats = platforms.map(platform => {
+    const platformStats = await Promise.all(platforms.map(async (platform) => {
       const platformHistory = calculatorData?.filter(data => 
         data.platform_id === platform.platform_id
       ) || [];
@@ -112,23 +112,48 @@ export async function GET(request: NextRequest) {
       const totalUsdModelo = platformHistory.reduce((sum, data) => sum + (data.usd_modelo || 0), 0);
       const totalCopModelo = platformHistory.reduce((sum, data) => sum + (data.cop_modelo || 0), 0);
       const avgValue = platformHistory.length > 0 ? totalValue / platformHistory.length : 0;
-      const avgUsdModelo = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
+      
+      // Obtener promedio diario quincenal acumulado (promedio móvil de últimas 4 quincenas)
+      let dailyAvgQuincenal = 0;
+      let trend = '=';
+      
+      try {
+        const { data: movingAvgData, error: movingAvgError } = await supabase.rpc('get_moving_average_daily_avg', {
+          p_model_id: modelId,
+          p_platform_id: platform.platform_id,
+          p_quincenas_back: 4
+        });
+
+        if (!movingAvgError && movingAvgData && movingAvgData.length > 0) {
+          const avgData = movingAvgData[0];
+          dailyAvgQuincenal = avgData.current_avg || 0;
+          trend = avgData.trend || '=';
+        } else {
+          // Fallback: calcular promedio diario en tiempo real
+          dailyAvgQuincenal = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
+        }
+      } catch (error) {
+        console.warn(`Error obteniendo promedio quincenal para ${platform.platform_id}:`, error);
+        // Fallback: calcular promedio diario en tiempo real
+        dailyAvgQuincenal = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
+      }
 
       return {
         ...platform,
         stats: {
           totalDays: platformHistory.length,
-          connectionPercentage, // Nueva métrica: Promedio Conexión
+          connectionPercentage, // Promedio Conexión
           totalValue,
           totalUsdBruto,
           totalUsdModelo,
           totalCopModelo,
           avgValue,
-          avgUsdModelo,
-          lastActivity: platformHistory[0]?.period_date || null
+          avgUsdModelo: dailyAvgQuincenal, // Promedio Diario (acumulado quincenal)
+          lastActivity: platformHistory[0]?.period_date || null,
+          trend // Tendencia: ↑, ↓, =
         }
       };
-    });
+    }));
 
     // Calcular estadísticas generales
     const totalPlatforms = platforms.length;
