@@ -337,8 +337,8 @@ export default function ModelCalculatorPage() {
         const clientHeight = document.documentElement.clientHeight;
         const scrollableHeight = scrollHeight - clientHeight;
         
-        // Calcular la posición un poco más arriba (aproximadamente 40% desde arriba)
-        const targetPosition = scrollableHeight * 0.40;
+        // Calcular la posición cerca del inicio (10% desde arriba)
+        const targetPosition = scrollableHeight * 0.10;
         
         // Hacer scroll suave a esa posición
         window.scrollTo({
