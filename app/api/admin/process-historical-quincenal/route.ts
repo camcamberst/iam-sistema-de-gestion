@@ -47,8 +47,7 @@ export async function POST(request: NextRequest) {
           .select(`
             platform_id,
             period_date,
-            usd_modelo,
-            calculator_platforms!inner(id, name)
+            usd_modelo
           `)
           .eq('model_id', model.id)
           .order('period_date', { ascending: true });
