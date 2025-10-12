@@ -99,7 +99,7 @@ export default function ModelCalculatorPage() {
   };
 
   // 🔧 NUEVO: Función para calcular ganancias del día
-  const calculateTodayEarnings = (platforms: Platform[], yesterdayValues: Record<string, number>, rates: any) => {
+  const calculateTodayEarnings = async (platforms: Platform[], yesterdayValues: Record<string, number>, rates: any) => {
     // Calcular USD modelo de hoy
     let todayUsdModelo = 0;
     for (const p of platforms) {
@@ -202,28 +202,55 @@ export default function ModelCalculatorPage() {
     const earnings = todayUsdModelo - yesterdayUsdModelo;
     setTodayEarnings(earnings);
     console.log('🔍 [CALCULATOR] Today earnings calculated:', { todayUsdModelo, yesterdayUsdModelo, earnings });
+    
+    // 🔧 NUEVO: Guardar ganancias del día en la base de datos
+    if (user?.id && earnings !== 0) {
+      try {
+        const response = await fetch('/api/daily-earnings', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            modelId: user.id,
+            earnings: earnings,
+            date: new Date().toISOString().split('T')[0]
+          })
+        });
+        
+        if (response.ok) {
+          console.log('✅ [CALCULATOR] Daily earnings saved to database:', earnings);
+        } else {
+          console.warn('⚠️ [CALCULATOR] Failed to save daily earnings to database');
+        }
+      } catch (error) {
+        console.error('❌ [CALCULATOR] Error saving daily earnings:', error);
+      }
+    }
+    
     return earnings;
   };
   
   // 🔧 NUEVO: Recalcular ganancias cuando cambien los valores o las tasas
   useEffect(() => {
-    if (platforms.length > 0 && rates) {
-      console.log('🔍 [CALCULATOR] Recalculating today earnings from database data...', {
-        platformsCount: platforms.length,
-        hasRates: !!rates,
-        yesterdayValuesCount: Object.keys(yesterdayValues).length
-      });
-      calculateTodayEarnings(platforms, yesterdayValues, rates);
-    }
+    const recalculate = async () => {
+      if (platforms.length > 0 && rates) {
+        console.log('🔍 [CALCULATOR] Recalculating today earnings from database data...', {
+          platformsCount: platforms.length,
+          hasRates: !!rates,
+          yesterdayValuesCount: Object.keys(yesterdayValues).length
+        });
+        await calculateTodayEarnings(platforms, yesterdayValues, rates);
+      }
+    };
+    recalculate();
   }, [platforms, rates, yesterdayValues]);
 
   // 🔧 NUEVO: Recalcular ganancias cuando cambien los inputs del usuario
   useEffect(() => {
     if (platforms.length > 0 && rates) {
       // Pequeño delay para evitar cálculos excesivos durante la escritura
-      const timeoutId = setTimeout(() => {
+      const timeoutId = setTimeout(async () => {
         console.log('🔍 [CALCULATOR] Recalculating due to input changes...');
-        calculateTodayEarnings(platforms, yesterdayValues, rates);
+        await calculateTodayEarnings(platforms, yesterdayValues, rates);
       }, 300);
       
       return () => clearTimeout(timeoutId);
@@ -272,6 +299,22 @@ export default function ModelCalculatorPage() {
           last_login: new Date().toISOString(), // Usar fecha del servidor para last_login
         };
         setUser(current);
+
+        // 🔧 NUEVO: Cargar ganancias del día desde la base de datos
+        try {
+          const todayDate = new Date().toISOString().split('T')[0];
+          const earningsResponse = await fetch(`/api/daily-earnings?modelId=${current.id}&date=${todayDate}`);
+          const earningsJson = await earningsResponse.json();
+          
+          if (earningsJson.success && earningsJson.earnings !== undefined) {
+            setTodayEarnings(earningsJson.earnings);
+            console.log('✅ [CALCULATOR] Daily earnings loaded from database:', earningsJson.earnings);
+          } else {
+            console.log('🔍 [CALCULATOR] No daily earnings found for today, will calculate from scratch');
+          }
+        } catch (error) {
+          console.error('❌ [CALCULATOR] Error loading daily earnings:', error);
+        }
 
         // 🔧 FIX: Solo cargar configuración del usuario actual (modelo) si no se ha cargado antes
         if (!configLoaded) {
