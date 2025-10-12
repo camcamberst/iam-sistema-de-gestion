@@ -38,6 +38,7 @@ interface Platform {
   };
   stats: {
     totalDays: number;
+    connectionPercentage: number;
     avgUsdModelo: number;
     totalUsdModelo: number;
     lastActivity: string | null;
@@ -426,8 +427,8 @@ export default function MiPortafolio() {
                           <h4 className="text-sm font-semibold text-gray-700 mb-3">Estadísticas de Rendimiento</h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="text-center">
-                              <p className="text-sm text-gray-500 mb-1">Días Activos</p>
-                              <p className="text-lg font-bold text-gray-900">{selectedPlatform.stats.totalDays}</p>
+                              <p className="text-sm text-gray-500 mb-1">Promedio Conexión</p>
+                              <p className="text-lg font-bold text-blue-600">{selectedPlatform.stats.connectionPercentage}%</p>
                             </div>
                             <div className="text-center">
                               <p className="text-sm text-gray-500 mb-1">Promedio Diario</p>

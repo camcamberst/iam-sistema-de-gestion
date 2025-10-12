@@ -90,10 +90,18 @@ export async function GET(request: NextRequest) {
       const avgValue = platformHistory.length > 0 ? totalValue / platformHistory.length : 0;
       const avgUsdModelo = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
 
+      // Calcular promedio de conexión por período quincenal
+      const currentDate = new Date();
+      const currentDay = currentDate.getDate();
+      const currentPeriod = currentDay >= 1 && currentDay <= 15 ? '1-15' : '16-31';
+      const periodDays = currentPeriod === '1-15' ? 15 : (currentDate.getDate() >= 16 ? currentDate.getDate() - 15 : 16);
+      const connectionPercentage = periodDays > 0 ? Math.round((platformHistory.length / periodDays) * 100) : 0;
+
       return {
         ...platform,
         stats: {
           totalDays: platformHistory.length,
+          connectionPercentage, // Nueva métrica: Promedio Conexión
           totalValue,
           totalUsdBruto,
           totalUsdModelo,
