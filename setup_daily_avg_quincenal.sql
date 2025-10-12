@@ -153,7 +153,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- 7. Función para obtener promedio móvil de últimas N quincenas
+-- 7. Función para obtener promedio progresivo de quincenas disponibles
 CREATE OR REPLACE FUNCTION get_moving_average_daily_avg(
   p_model_id UUID,
   p_platform_id VARCHAR(50),
@@ -170,44 +170,74 @@ DECLARE
   previous_avg_val DECIMAL(8,2);
   trend_char VARCHAR(1);
   count_val INTEGER;
+  available_quincenas INTEGER;
 BEGIN
-  -- Obtener promedio de las últimas N quincenas
-  SELECT 
-    ROUND(AVG(daily_avg_usd), 2),
-    COUNT(*)
-  INTO current_avg_val, count_val
+  -- Contar quincenas disponibles
+  SELECT COUNT(*) INTO available_quincenas
   FROM platform_quincenal_stats
   WHERE model_id = p_model_id
-    AND platform_id = p_platform_id
-  ORDER BY quincena DESC
-  LIMIT p_quincenas_back;
+    AND platform_id = p_platform_id;
   
-  -- Obtener promedio de las N quincenas anteriores (para comparar tendencia)
-  SELECT ROUND(AVG(daily_avg_usd), 2)
-  INTO previous_avg_val
-  FROM platform_quincenal_stats
-  WHERE model_id = p_model_id
-    AND platform_id = p_platform_id
-  ORDER BY quincena DESC
-  OFFSET p_quincenas_back
-  LIMIT p_quincenas_back;
-  
-  -- Determinar tendencia
-  IF previous_avg_val IS NULL THEN
-    trend_char := '=';
-  ELSIF current_avg_val > previous_avg_val THEN
-    trend_char := '↑';
-  ELSIF current_avg_val < previous_avg_val THEN
-    trend_char := '↓';
-  ELSE
-    trend_char := '=';
+  -- Si no hay datos, retornar 0
+  IF available_quincenas = 0 THEN
+    RETURN QUERY SELECT 0.00, 0.00, '=', 0;
+    RETURN;
   END IF;
   
-  RETURN QUERY SELECT 
-    COALESCE(current_avg_val, 0.00),
-    COALESCE(previous_avg_val, 0.00),
-    trend_char,
-    count_val;
+  -- Determinar cuántas quincenas usar (progresivo)
+  DECLARE
+    quincenas_to_use INTEGER;
+  BEGIN
+    IF available_quincenas >= 4 THEN
+      quincenas_to_use := 4; -- Promedio móvil de 4 quincenas
+    ELSE
+      quincenas_to_use := available_quincenas; -- Todas las disponibles
+    END IF;
+    
+    -- Obtener promedio de las quincenas disponibles
+    SELECT 
+      ROUND(AVG(daily_avg_usd), 2),
+      quincenas_to_use
+    INTO current_avg_val, count_val
+    FROM platform_quincenal_stats
+    WHERE model_id = p_model_id
+      AND platform_id = p_platform_id
+    ORDER BY quincena DESC
+    LIMIT quincenas_to_use;
+    
+    -- Para tendencia, comparar con el período anterior
+    IF available_quincenas >= 2 THEN
+      -- Si hay 2+ quincenas, comparar con la quincena anterior
+      SELECT ROUND(AVG(daily_avg_usd), 2)
+      INTO previous_avg_val
+      FROM platform_quincenal_stats
+      WHERE model_id = p_model_id
+        AND platform_id = p_platform_id
+      ORDER BY quincena DESC
+      OFFSET 1
+      LIMIT 1;
+    ELSE
+      -- Si solo hay 1 quincena, no hay tendencia
+      previous_avg_val := NULL;
+    END IF;
+    
+    -- Determinar tendencia
+    IF previous_avg_val IS NULL THEN
+      trend_char := '=';
+    ELSIF current_avg_val > previous_avg_val THEN
+      trend_char := '↑';
+    ELSIF current_avg_val < previous_avg_val THEN
+      trend_char := '↓';
+    ELSE
+      trend_char := '=';
+    END IF;
+    
+    RETURN QUERY SELECT 
+      COALESCE(current_avg_val, 0.00),
+      COALESCE(previous_avg_val, 0.00),
+      trend_char,
+      count_val;
+  END;
 END;
 $$ LANGUAGE plpgsql;
 
