@@ -75,7 +75,12 @@ export async function POST(request: NextRequest) {
         }
 
         // Agrupar datos por plataforma y quincena
-        const platformQuincenas = new Map();
+        const platformQuincenas = new Map<string, Map<string, {
+          totalUsd: number;
+          days: Set<string>;
+          periodStart: Date;
+          periodEnd: Date;
+        }>>();
 
         historicalData.forEach(record => {
           const date = new Date(record.period_date);
@@ -90,8 +95,9 @@ export async function POST(request: NextRequest) {
             platformQuincenas.set(platformId, new Map());
           }
 
-          if (!platformQuincenas.get(platformId).has(quincenaKey)) {
-            platformQuincenas.get(platformId).set(quincenaKey, {
+          const platformMap = platformQuincenas.get(platformId)!;
+          if (!platformMap.has(quincenaKey)) {
+            platformMap.set(quincenaKey, {
               totalUsd: 0,
               days: new Set(),
               periodStart: date,
@@ -99,7 +105,7 @@ export async function POST(request: NextRequest) {
             });
           }
 
-          const quincenaData = platformQuincenas.get(platformId).get(quincenaKey);
+          const quincenaData = platformMap.get(quincenaKey)!;
           quincenaData.totalUsd += record.usd_modelo || 0;
           quincenaData.days.add(record.period_date);
           quincenaData.periodStart = quincenaData.periodStart < date ? quincenaData.periodStart : date;
@@ -108,8 +114,8 @@ export async function POST(request: NextRequest) {
 
         // Procesar cada plataforma y quincena
         let modelQuincenas = 0;
-        for (const [platformId, quincenas] of Array.from(platformQuincenas.entries())) {
-          for (const [quincenaKey, data] of Array.from(quincenas.entries())) {
+        for (const [platformId, quincenas] of platformQuincenas.entries()) {
+          for (const [quincenaKey, data] of quincenas.entries()) {
             try {
               const dailyAvg = data.days.size > 0 ? data.totalUsd / data.days.size : 0;
               
