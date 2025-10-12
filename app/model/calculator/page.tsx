@@ -431,7 +431,7 @@ export default function ModelCalculatorPage() {
           try {
             const yesterdayResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${yesterdayDate}`);
             const yesterdayJson = await yesterdayResp.json();
-            console.log('🔍 [CALCULATOR] Yesterday values:', yesterdayJson);
+            console.log('🔍 [CALCULATOR] Yesterday values response:', yesterdayJson);
             
             if (yesterdayJson.success && Array.isArray(yesterdayJson.data) && yesterdayJson.data.length > 0) {
               const yesterdayPlatformToValue: Record<string, number> = {};
@@ -442,10 +442,16 @@ export default function ModelCalculatorPage() {
                 }
               }
               setYesterdayValues(yesterdayPlatformToValue);
-              console.log('🔍 [CALCULATOR] Yesterday values loaded:', yesterdayPlatformToValue);
+              console.log('🔍 [CALCULATOR] Yesterday values loaded successfully:', yesterdayPlatformToValue);
+              
+              // 🔧 CRÍTICO: Calcular ganancias del día DESPUÉS de cargar yesterdayValues
+              if (rates) {
+                console.log('🔍 [CALCULATOR] Calculating today earnings with loaded yesterday values...');
+                calculateTodayEarnings(updatedPlatforms, yesterdayPlatformToValue, rates);
+              }
             } else {
               setYesterdayValues({});
-              console.log('🔍 [CALCULATOR] No yesterday values found');
+              console.log('🔍 [CALCULATOR] No yesterday values found, setting empty object');
             }
           } catch (yesterdayError) {
             console.error('❌ [CALCULATOR] Error loading yesterday values:', yesterdayError);
