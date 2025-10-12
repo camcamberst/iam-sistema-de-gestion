@@ -328,6 +328,39 @@ export default function ModelCalculatorPage() {
     load();
   }, []);
 
+  // 🔧 NUEVO: Posicionar scrollbar en el punto medio al cargar la página
+  useEffect(() => {
+    const positionScrollbar = () => {
+      // Esperar a que el contenido se haya renderizado completamente
+      setTimeout(() => {
+        const scrollHeight = document.documentElement.scrollHeight;
+        const clientHeight = document.documentElement.clientHeight;
+        const scrollableHeight = scrollHeight - clientHeight;
+        
+        // Calcular la posición en el centro (50% desde arriba)
+        const targetPosition = scrollableHeight * 0.50;
+        
+        // Hacer scroll suave a esa posición
+        window.scrollTo({
+          top: targetPosition,
+          behavior: 'smooth'
+        });
+        
+        console.log('🔍 [CALCULATOR] Scrollbar positioned at:', {
+          scrollHeight,
+          clientHeight,
+          scrollableHeight,
+          targetPosition
+        });
+      }, 1500); // Delay un poco más largo para la calculadora (más contenido)
+    };
+
+    // Solo posicionar si no hay error y los datos están cargados
+    if (!loading && !error && platforms.length > 0) {
+      positionScrollbar();
+    }
+  }, [loading, error, platforms]);
+
   const loadCalculatorConfig = async (userId: string) => {
     // 🔧 FIX: Prevenir doble carga usando estado
     if (configLoaded) {
