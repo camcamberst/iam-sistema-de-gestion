@@ -106,8 +106,8 @@ export default function MiPortafolio() {
         const clientHeight = document.documentElement.clientHeight;
         const scrollableHeight = scrollHeight - clientHeight;
         
-        // Calcular la posición un poco más abajo (aproximadamente 40% desde arriba)
-        const targetPosition = scrollableHeight * 0.42;
+        // Calcular la posición un poco más abajo (aproximadamente 50% desde arriba)
+        const targetPosition = scrollableHeight * 0.50;
         
         // Hacer scroll suave a esa posición
         window.scrollTo({
