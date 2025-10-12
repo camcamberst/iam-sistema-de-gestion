@@ -108,8 +108,8 @@ export async function POST(request: NextRequest) {
 
         // Procesar cada plataforma y quincena
         let modelQuincenas = 0;
-        for (const [platformId, quincenas] of platformQuincenas) {
-          for (const [quincenaKey, data] of quincenas) {
+        for (const [platformId, quincenas] of Array.from(platformQuincenas.entries())) {
+          for (const [quincenaKey, data] of Array.from(quincenas.entries())) {
             try {
               const dailyAvg = data.days.size > 0 ? data.totalUsd / data.days.size : 0;
               
