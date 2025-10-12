@@ -91,10 +91,11 @@ export async function GET(request: NextRequest) {
       const avgUsdModelo = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
 
       // Calcular promedio de conexión por período quincenal
+      // Usar 13 días como base (15 días - 2 días de descanso típico)
       const currentDate = new Date();
       const currentDay = currentDate.getDate();
       const currentPeriod = currentDay >= 1 && currentDay <= 15 ? '1-15' : '16-31';
-      const periodDays = currentPeriod === '1-15' ? 15 : (currentDate.getDate() >= 16 ? currentDate.getDate() - 15 : 16);
+      const periodDays = currentPeriod === '1-15' ? 13 : 13; // 13 días para ambos períodos (considerando descansos)
       const connectionPercentage = periodDays > 0 ? Math.round((platformHistory.length / periodDays) * 100) : 0;
 
       return {
