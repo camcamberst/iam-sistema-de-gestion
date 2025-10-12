@@ -432,7 +432,7 @@ export default function MiPortafolio() {
                               <p className="text-lg font-bold text-blue-600">{selectedPlatform.stats.connectionPercentage}%</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-sm text-gray-500 mb-1">Promedio Diario</p>
+                              <p className="text-sm text-gray-500 mb-1">Promedio Quincenal</p>
                               <div className="flex items-center justify-center space-x-1">
                                 <p className="text-lg font-bold text-green-600">
                                   ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD

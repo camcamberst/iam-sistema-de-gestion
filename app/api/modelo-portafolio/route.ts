@@ -113,7 +113,7 @@ export async function GET(request: NextRequest) {
       const totalCopModelo = platformHistory.reduce((sum, data) => sum + (data.cop_modelo || 0), 0);
       const avgValue = platformHistory.length > 0 ? totalValue / platformHistory.length : 0;
       
-      // Obtener promedio diario quincenal acumulado (promedio móvil de últimas 4 quincenas)
+      // Obtener promedio quincenal acumulado (promedio móvil de últimas 4 quincenas)
       let dailyAvgQuincenal = 0;
       let trend = '=';
       
@@ -129,12 +129,12 @@ export async function GET(request: NextRequest) {
           dailyAvgQuincenal = avgData.current_avg || 0;
           trend = avgData.trend || '=';
         } else {
-          // Fallback: calcular promedio diario en tiempo real
+          // Fallback: calcular promedio en tiempo real
           dailyAvgQuincenal = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
         }
       } catch (error) {
         console.warn(`Error obteniendo promedio quincenal para ${platform.platform_id}:`, error);
-        // Fallback: calcular promedio diario en tiempo real
+        // Fallback: calcular promedio en tiempo real
         dailyAvgQuincenal = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
       }
 
@@ -148,7 +148,7 @@ export async function GET(request: NextRequest) {
           totalUsdModelo,
           totalCopModelo,
           avgValue,
-          avgUsdModelo: dailyAvgQuincenal, // Promedio Diario (acumulado quincenal)
+          avgUsdModelo: dailyAvgQuincenal, // Promedio Quincenal (acumulado)
           lastActivity: platformHistory[0]?.period_date || null,
           trend // Tendencia: ↑, ↓, =
         }
