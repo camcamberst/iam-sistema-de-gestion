@@ -56,6 +56,8 @@ interface BillingSummaryProps {
 }
 
 export default function BillingSummary({ userRole, userId }: BillingSummaryProps) {
+  console.log('🔍 [BILLING-SUMMARY] Componente renderizado:', { userRole, userId });
+  
   const [billingData, setBillingData] = useState<BillingData[]>([]);
   const [groupedData, setGroupedData] = useState<SedeData[]>([]);
   const [summary, setSummary] = useState<BillingSummary | null>(null);
@@ -93,6 +95,7 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
 
   const loadBillingData = async () => {
     try {
+      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede });
       setLoading(true);
       setError(null);
 
@@ -105,8 +108,10 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
         params.append('sedeId', selectedSede);
       }
 
+      console.log('🔍 [BILLING-SUMMARY] Parámetros:', params.toString());
       const response = await fetch(`/api/admin/billing-summary?${params}`);
       const data = await response.json();
+      console.log('🔍 [BILLING-SUMMARY] Respuesta API:', data);
 
       if (!data.success) {
         throw new Error(data.error || 'Error al cargar datos');
