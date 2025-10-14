@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import BillingSummary from '../../../../components/BillingSummary';
 
 interface DashboardStats {
   totalSedes: number;
@@ -59,6 +60,7 @@ export default function DashboardSedesPage() {
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('admin');
   const [userGroups, setUserGroups] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string>('');
   
   // Estados para resumen de disponibilidad
   const [selectedSede, setSelectedSede] = useState<string>('');
@@ -88,6 +90,7 @@ export default function DashboardSedesPage() {
         const parsed = JSON.parse(userData);
         setUserRole(parsed.role || 'admin');
         setUserGroups(parsed.groups?.map((g: any) => g.id) || []);
+        setUserId(parsed.id || '');
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);
@@ -299,6 +302,14 @@ export default function DashboardSedesPage() {
             </div>
           </div>
         </div>
+
+        {/* Resumen de Facturación */}
+        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
+          <BillingSummary 
+            userRole={userRole as 'admin' | 'super_admin'} 
+            userId={userId}
+          />
+        )}
 
         {/* Messages */}
         {error && (
