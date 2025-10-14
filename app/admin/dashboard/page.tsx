@@ -213,7 +213,7 @@ export default function AdminDashboard() {
             shouldRender: !loading && user && (user.role === 'super_admin' || user.role === 'admin')
           });
           return !loading && user && (user.role === 'super_admin' || user.role === 'admin');
-        })() && (
+        })() && user && (
           <BillingSummary 
             userRole={user.role as 'admin' | 'super_admin'} 
             userId={user.id}
