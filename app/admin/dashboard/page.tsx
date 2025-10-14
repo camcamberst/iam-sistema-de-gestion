@@ -206,7 +206,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Resumen de Facturación para Admin y Super Admin */}
-        {(user?.role === 'super_admin' || user?.role === 'admin') && (
+        {!loading && user && (user.role === 'super_admin' || user.role === 'admin') && (
           <BillingSummary 
             userRole={user.role as 'admin' | 'super_admin'} 
             userId={user.id}
