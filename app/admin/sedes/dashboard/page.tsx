@@ -383,41 +383,70 @@ export default function DashboardSedesPage() {
           </div>
         </div>
 
-        {/* Resumen de Disponibilidad */}
-        <div className="mb-10">
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20">
-            <div className="px-6 py-4 border-b border-gray-200/50">
-              <div className="flex items-center space-x-2">
-                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                  </svg>
-                </div>
-                <h2 className="text-base font-semibold text-gray-900">Resumen de Disponibilidad</h2>
+        {/* Selector Compacto de Disponibilidad */}
+        <div className="mb-6">
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
+                <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
               </div>
+              <span className="text-sm font-medium text-gray-700">Consultar Disponibilidad:</span>
             </div>
-            <div className="p-6">
-              {/* Dropdown para seleccionar sede */}
-              <div className="mb-6">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Seleccionar Sede
-                </label>
-                <select
-                  value={selectedSede}
-                  onChange={(e) => setSelectedSede(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 backdrop-blur-sm"
-                >
-                  <option value="">Selecciona una sede...</option>
-                  {availableSedes.map((sede) => (
-                    <option key={sede.id} value={sede.id}>
-                      {sede.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <select
+              value={selectedSede}
+              onChange={(e) => setSelectedSede(e.target.value)}
+              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 backdrop-blur-sm text-sm"
+            >
+              <option value="">Selecciona una sede...</option>
+              {availableSedes.map((sede) => (
+                <option key={sede.id} value={sede.id}>
+                  {sede.name}
+                </option>
+              ))}
+            </select>
+            {selectedSede && (
+              <button
+                onClick={() => setSelectedSede('')}
+                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                title="Cerrar consulta"
+              >
+                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            )}
+          </div>
+        </div>
 
-              {/* Resumen de disponibilidad */}
-              {selectedSede && (
+        {/* Resumen de Disponibilidad - Solo se muestra cuando hay una sede seleccionada */}
+        {selectedSede && (
+          <div className="mb-10">
+            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20">
+              <div className="px-6 py-4 border-b border-gray-200/50">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                      <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                      </svg>
+                    </div>
+                    <h2 className="text-base font-semibold text-gray-900">Resumen de Disponibilidad</h2>
+                  </div>
+                  <button
+                    onClick={() => setSelectedSede('')}
+                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                    title="Cerrar consulta"
+                  >
+                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="p-6">
+                {/* Resumen de disponibilidad */}
                 <div className="space-y-4">
                   {loadingDisponibilidad ? (
                     <div className="flex items-center justify-center py-8">
@@ -506,21 +535,10 @@ export default function DashboardSedesPage() {
                     </div>
                   )}
                 </div>
-              )}
-
-              {!selectedSede && (
-                <div className="text-center py-8 text-gray-500">
-                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <p>Selecciona una sede para ver su disponibilidad de rooms y jornadas</p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
