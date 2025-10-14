@@ -7,6 +7,7 @@ import { getColombiaDate } from '@/utils/calculator-dates';
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
+import BillingSummary from "../../../components/BillingSummary";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -202,6 +203,14 @@ export default function AdminDashboard() {
               </Link>
             </div>
           </div>
+        )}
+
+        {/* Resumen de Facturación para Admin y Super Admin */}
+        {(user?.role === 'super_admin' || user?.role === 'admin') && (
+          <BillingSummary 
+            userRole={user.role as 'admin' | 'super_admin'} 
+            userId={user.id}
+          />
         )}
 
         {/* Timeline Portafolio Modelos de Plataformas para Super Admin y Admin */}

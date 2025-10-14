@@ -306,6 +306,7 @@ export default function ModelCalculator({
         return acc;
       }, {} as Record<string, number>);
 
+      // 1. Guardar valores individuales por plataforma
       const response = await fetch('/api/calculator/model-values-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -318,10 +319,33 @@ export default function ModelCalculator({
 
       const data = await response.json();
       if (!data.success) {
-        throw new Error(data.error || 'Error al guardar');
+        throw new Error(data.error || 'Error al guardar valores');
       }
 
       console.log('✅ [MODEL-CALCULATOR] Values saved successfully');
+
+      // 2. Guardar totales consolidados si hay resultado calculado
+      if (result) {
+        const totalsResponse = await fetch('/api/calculator/totals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            modelId: user.id,
+            periodDate,
+            totalUsdBruto: result.totalUsdBruto,
+            totalUsdModelo: result.totalUsdModelo,
+            totalCopModelo: result.totalCopModelo
+          })
+        });
+
+        const totalsData = await totalsResponse.json();
+        if (!totalsData.success) {
+          console.error('❌ [MODEL-CALCULATOR] Error saving totals:', totalsData.error);
+          // No fallar la operación principal, solo loggear el error
+        } else {
+          console.log('✅ [MODEL-CALCULATOR] Totals saved successfully');
+        }
+      }
       
       // Notificar al componente padre si hay callback
       if (onSave) {
