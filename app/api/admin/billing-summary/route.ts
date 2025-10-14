@@ -48,12 +48,7 @@ export async function GET(request: NextRequest) {
         id, 
         email, 
         name, 
-        organization_id,
-        groups!inner(
-          id,
-          name,
-          organization_id
-        )
+        organization_id
       `)
       .eq('role', 'modelo')
       .eq('is_active', true);
@@ -93,6 +88,32 @@ export async function GET(request: NextRequest) {
 
     const modelIds = models.map(m => m.id);
 
+    // 2.1. Obtener grupos de los modelos
+    const { data: userGroups, error: groupsError } = await supabase
+      .from('user_groups')
+      .select(`
+        user_id,
+        groups!inner(
+          id,
+          name,
+          organization_id
+        )
+      `)
+      .in('user_id', modelIds);
+
+    if (groupsError) {
+      console.error('❌ [BILLING-SUMMARY] Error al obtener grupos:', groupsError);
+      // Continuar sin grupos si hay error
+    }
+
+    // Crear mapa de grupos por modelo
+    const modelGroupsMap = new Map();
+    userGroups?.forEach(ug => {
+      if (ug.groups) {
+        modelGroupsMap.set(ug.user_id, ug.groups);
+      }
+    });
+
     // 3. Obtener totales de calculadora para el período
     const { data: totals, error: totalsError } = await supabase
       .from('calculator_totals')
@@ -125,6 +146,7 @@ export async function GET(request: NextRequest) {
     // 5. Consolidar datos por modelo
     const billingData = models.map(model => {
       const modelTotals = totals?.find(t => t.model_id === model.id);
+      const modelGroup = modelGroupsMap.get(model.id);
       
       if (!modelTotals) {
         // Si no hay totales, retornar ceros
@@ -133,8 +155,8 @@ export async function GET(request: NextRequest) {
           email: model.email.split('@')[0], // Solo parte antes del '@'
           name: model.name,
           organizationId: model.organization_id,
-          groupId: model.groups?.id,
-          groupName: model.groups?.name,
+          groupId: modelGroup?.id,
+          groupName: modelGroup?.name,
           usdBruto: 0,
           usdModelo: 0,
           usdSede: 0,
@@ -154,8 +176,8 @@ export async function GET(request: NextRequest) {
         email: model.email.split('@')[0], // Solo parte antes del '@'
         name: model.name,
         organizationId: model.organization_id,
-        groupId: model.groups?.id,
-        groupName: model.groups?.name,
+        groupId: modelGroup?.id,
+        groupName: modelGroup?.name,
         usdBruto,
         usdModelo,
         usdSede,
