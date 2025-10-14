@@ -598,8 +598,8 @@ export default function ModelCalculatorPage() {
       console.log('🔍 [CALCULATOR] Using V2 system for saving');
       console.log('🔍 [CALCULATOR] User ID:', user?.id);
 
+      // 1. Guardar valores individuales por plataforma
       const endpoint = '/api/calculator/model-values-v2';
-      // Solo usar el ID del usuario actual (modelo)
       const payload = { modelId: user?.id, values, periodDate };
       
       console.log('🔍 [CALCULATOR] Using endpoint:', endpoint);
@@ -617,6 +617,101 @@ export default function ModelCalculatorPage() {
 
       if (!data.success) {
         throw new Error(data.error || 'Error al guardar');
+      }
+
+      // 2. Calcular y guardar totales consolidados
+      console.log('🔍 [CALCULATOR] Calculating totals for billing summary...');
+      
+      // Calcular totales usando la misma lógica que se muestra en "Totales y Alertas"
+      const totalUsdBruto = platforms.reduce((sum, p) => {
+        if (!p.enabled) return sum;
+        let usdBruto = 0;
+        if (p.currency === 'EUR') {
+          if (p.id === 'big7') {
+            usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+          } else if (p.id === 'mondo') {
+            usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+          } else {
+            usdBruto = p.value * (rates?.eur_usd || 1.01);
+          }
+        } else if (p.currency === 'GBP') {
+          if (p.id === 'aw') {
+            usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+          } else {
+            usdBruto = p.value * (rates?.gbp_usd || 1.20);
+          }
+        } else if (p.currency === 'USD') {
+          if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+            usdBruto = p.value * 0.75;
+          } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+            usdBruto = p.value * 0.05;
+          } else if (p.id === 'dxlive') {
+            usdBruto = p.value * 0.60;
+          } else if (p.id === 'secretfriends') {
+            usdBruto = p.value * 0.5;
+          } else {
+            usdBruto = p.value;
+          }
+        }
+        return sum + usdBruto;
+      }, 0);
+
+      const totalUsdModelo = platforms.reduce((sum, p) => {
+        if (!p.enabled) return sum;
+        let usdModelo = 0;
+        if (p.currency === 'EUR') {
+          if (p.id === 'big7') {
+            usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+          } else if (p.id === 'mondo') {
+            usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+          } else {
+            usdModelo = p.value * (rates?.eur_usd || 1.01);
+          }
+        } else if (p.currency === 'GBP') {
+          if (p.id === 'aw') {
+            usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+          } else {
+            usdModelo = p.value * (rates?.gbp_usd || 1.20);
+          }
+        } else if (p.currency === 'USD') {
+          if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+            usdModelo = p.value * 0.75;
+          } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+            usdModelo = p.value * 0.05;
+          } else if (p.id === 'dxlive') {
+            usdModelo = p.value * 0.60;
+          } else if (p.id === 'secretfriends') {
+            usdModelo = p.value * 0.5;
+          } else {
+            usdModelo = p.value;
+          }
+        }
+        return sum + (usdModelo * p.percentage / 100);
+      }, 0);
+
+      const totalCopModelo = totalUsdModelo * (rates?.usd_cop || 3900);
+
+      // Guardar totales consolidados
+      const totalsResponse = await fetch('/api/calculator/totals', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelId: user?.id,
+          periodDate,
+          totalUsdBruto,
+          totalUsdModelo,
+          totalCopModelo
+        }),
+      });
+
+      const totalsData = await totalsResponse.json();
+      if (!totalsData.success) {
+        console.error('❌ [CALCULATOR] Error saving totals:', totalsData.error);
+        // No fallar la operación principal, solo loggear el error
+      } else {
+        console.log('✅ [CALCULATOR] Totals saved successfully');
       }
 
       // Marcar que se han guardado nuevos valores
