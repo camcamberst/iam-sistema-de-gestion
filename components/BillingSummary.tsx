@@ -7,11 +7,38 @@ interface BillingData {
   modelId: string;
   email: string;
   name: string;
+  organizationId?: string;
+  groupId?: string;
+  groupName?: string;
   usdBruto: number;
   usdModelo: number;
   usdSede: number;
   copModelo: number;
   copSede: number;
+}
+
+interface GroupData {
+  groupId: string;
+  groupName: string;
+  models: BillingData[];
+  totalModels: number;
+  totalUsdBruto: number;
+  totalUsdModelo: number;
+  totalUsdSede: number;
+  totalCopModelo: number;
+  totalCopSede: number;
+}
+
+interface SedeData {
+  sedeId: string;
+  sedeName: string;
+  groups: GroupData[];
+  totalModels: number;
+  totalUsdBruto: number;
+  totalUsdModelo: number;
+  totalUsdSede: number;
+  totalCopModelo: number;
+  totalCopSede: number;
 }
 
 interface BillingSummary {
@@ -30,12 +57,15 @@ interface BillingSummaryProps {
 
 export default function BillingSummary({ userRole, userId }: BillingSummaryProps) {
   const [billingData, setBillingData] = useState<BillingData[]>([]);
+  const [groupedData, setGroupedData] = useState<SedeData[]>([]);
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(getColombiaDate());
   const [selectedSede, setSelectedSede] = useState<string>('');
   const [availableSedes, setAvailableSedes] = useState<Array<{id: string, name: string}>>([]);
+  const [expandedSedes, setExpandedSedes] = useState<Set<string>>(new Set());
+  const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
 
   // Cargar sedes disponibles (solo para super_admin)
   useEffect(() => {
@@ -83,6 +113,7 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
       }
 
       setBillingData(data.data || []);
+      setGroupedData(data.groupedData || []);
       setSummary(data.summary || null);
 
     } catch (error: any) {
@@ -104,6 +135,26 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
       minimumFractionDigits: 2, 
       maximumFractionDigits: 2 
     });
+  };
+
+  const toggleSedeExpansion = (sedeId: string) => {
+    const newExpanded = new Set(expandedSedes);
+    if (newExpanded.has(sedeId)) {
+      newExpanded.delete(sedeId);
+    } else {
+      newExpanded.add(sedeId);
+    }
+    setExpandedSedes(newExpanded);
+  };
+
+  const toggleGroupExpansion = (groupId: string) => {
+    const newExpanded = new Set(expandedGroups);
+    if (newExpanded.has(groupId)) {
+      newExpanded.delete(groupId);
+    } else {
+      newExpanded.add(groupId);
+    }
+    setExpandedGroups(newExpanded);
   };
 
   if (loading) {
@@ -212,8 +263,129 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
             </div>
           )}
 
-          {/* Tabla de modelos */}
-          {billingData.length > 0 ? (
+          {/* Vista jerárquica para Super Admin o tabla simple para Admin */}
+          {userRole === 'super_admin' && groupedData.length > 0 ? (
+            <div className="space-y-4">
+              {groupedData.map((sede) => (
+                <div key={sede.sedeId} className="border border-gray-200 rounded-lg overflow-hidden">
+                  {/* Header de Sede */}
+                  <div 
+                    className="bg-gray-50 px-4 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                    onClick={() => toggleSedeExpansion(sede.sedeId)}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <svg 
+                          className={`w-4 h-4 text-gray-500 transition-transform ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                        <div>
+                          <h3 className="font-semibold text-gray-900">{sede.sedeName}</h3>
+                          <p className="text-sm text-gray-600">{sede.totalModels} modelos • {sede.groups.length} grupos</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-4 text-sm">
+                        <div className="text-right">
+                          <div className="font-medium text-gray-900">${formatCurrency(sede.totalUsdBruto)}</div>
+                          <div className="text-gray-600">USD Bruto</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-green-600">${formatCurrency(sede.totalUsdModelo)}</div>
+                          <div className="text-gray-600">USD Modelo</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium text-orange-600">${formatCurrency(sede.totalUsdSede)}</div>
+                          <div className="text-gray-600">USD Sede</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Grupos de la Sede */}
+                  {expandedSedes.has(sede.sedeId) && (
+                    <div className="bg-white">
+                      {sede.groups.map((group) => (
+                        <div key={group.groupId} className="border-b border-gray-100 last:border-b-0">
+                          {/* Header de Grupo */}
+                          <div 
+                            className="px-6 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                            onClick={() => toggleGroupExpansion(group.groupId)}
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                                <svg 
+                                  className={`w-4 h-4 text-gray-400 transition-transform ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                  fill="none" 
+                                  stroke="currentColor" 
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                </svg>
+                                <div>
+                                  <h4 className="font-medium text-gray-800">{group.groupName}</h4>
+                                  <p className="text-sm text-gray-600">{group.totalModels} modelos</p>
+                                </div>
+                              </div>
+                              <div className="flex items-center space-x-4 text-sm">
+                                <div className="text-right">
+                                  <div className="font-medium text-gray-700">${formatCurrency(group.totalUsdBruto)}</div>
+                                  <div className="text-gray-500">USD Bruto</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-medium text-green-600">${formatCurrency(group.totalUsdModelo)}</div>
+                                  <div className="text-gray-500">USD Modelo</div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="font-medium text-orange-600">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="text-gray-500">USD Sede</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Modelos del Grupo */}
+                          {expandedGroups.has(group.groupId) && (
+                            <div className="bg-gray-50/50">
+                              <div className="overflow-x-auto">
+                                <table className="w-full text-sm">
+                                  <thead>
+                                    <tr className="border-b border-gray-200">
+                                      <th className="text-left py-2 px-4 font-medium text-gray-600">Email</th>
+                                      <th className="text-right py-2 px-4 font-medium text-gray-600">USD Bruto</th>
+                                      <th className="text-right py-2 px-4 font-medium text-gray-600">USD Modelo</th>
+                                      <th className="text-right py-2 px-4 font-medium text-gray-600">USD Sede</th>
+                                      <th className="text-right py-2 px-4 font-medium text-gray-600">COP Modelo</th>
+                                      <th className="text-right py-2 px-4 font-medium text-gray-600">COP Sede</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    {group.models.map((model) => (
+                                      <tr key={model.modelId} className="border-b border-gray-100 hover:bg-white/50">
+                                        <td className="py-2 px-4 font-medium text-gray-800">{model.email}</td>
+                                        <td className="py-2 px-4 text-right text-gray-700">${formatCurrency(model.usdBruto)}</td>
+                                        <td className="py-2 px-4 text-right text-green-600 font-medium">${formatCurrency(model.usdModelo)}</td>
+                                        <td className="py-2 px-4 text-right text-orange-600 font-medium">${formatCurrency(model.usdSede)}</td>
+                                        <td className="py-2 px-4 text-right text-purple-600 font-medium">{formatCurrency(model.copModelo, 'COP')}</td>
+                                        <td className="py-2 px-4 text-right text-red-600 font-medium">{formatCurrency(model.copSede, 'COP')}</td>
+                                      </tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : billingData.length > 0 ? (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>

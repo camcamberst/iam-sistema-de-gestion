@@ -44,7 +44,17 @@ export async function GET(request: NextRequest) {
     // 2. Obtener modelos según permisos
     let modelsQuery = supabase
       .from('users')
-      .select('id, email, name, organization_id')
+      .select(`
+        id, 
+        email, 
+        name, 
+        organization_id,
+        groups!inner(
+          id,
+          name,
+          organization_id
+        )
+      `)
       .eq('role', 'modelo')
       .eq('is_active', true);
 
@@ -122,6 +132,9 @@ export async function GET(request: NextRequest) {
           modelId: model.id,
           email: model.email.split('@')[0], // Solo parte antes del '@'
           name: model.name,
+          organizationId: model.organization_id,
+          groupId: model.groups?.id,
+          groupName: model.groups?.name,
           usdBruto: 0,
           usdModelo: 0,
           usdSede: 0,
@@ -140,6 +153,9 @@ export async function GET(request: NextRequest) {
         modelId: model.id,
         email: model.email.split('@')[0], // Solo parte antes del '@'
         name: model.name,
+        organizationId: model.organization_id,
+        groupId: model.groups?.id,
+        groupName: model.groups?.name,
         usdBruto,
         usdModelo,
         usdSede,
@@ -165,15 +181,89 @@ export async function GET(request: NextRequest) {
       totalCopSede: 0
     });
 
+    // 7. Para Super Admin: Agrupar por sedes y grupos
+    let groupedData = null;
+    if (isSuperAdmin) {
+      // Obtener información de sedes
+      const { data: sedes, error: sedesError } = await supabase
+        .from('organizations')
+        .select('id, name')
+        .in('id', [...new Set(billingData.map(m => m.organizationId))]);
+
+      if (sedesError) {
+        console.error('❌ [BILLING-SUMMARY] Error al obtener sedes:', sedesError);
+      }
+
+      // Agrupar por sede
+      const sedeGroups = new Map();
+      billingData.forEach(model => {
+        const sedeId = model.organizationId;
+        if (!sedeGroups.has(sedeId)) {
+          sedeGroups.set(sedeId, {
+            sedeId,
+            sedeName: sedes?.find(s => s.id === sedeId)?.name || 'Sede Desconocida',
+            groups: new Map(),
+            totalModels: 0,
+            totalUsdBruto: 0,
+            totalUsdModelo: 0,
+            totalUsdSede: 0,
+            totalCopModelo: 0,
+            totalCopSede: 0
+          });
+        }
+
+        const sede = sedeGroups.get(sedeId);
+        sede.totalModels += 1;
+        sede.totalUsdBruto += model.usdBruto;
+        sede.totalUsdModelo += model.usdModelo;
+        sede.totalUsdSede += model.usdSede;
+        sede.totalCopModelo += model.copModelo;
+        sede.totalCopSede += model.copSede;
+
+        // Agrupar por grupo dentro de la sede
+        const groupId = model.groupId;
+        if (!sede.groups.has(groupId)) {
+          sede.groups.set(groupId, {
+            groupId,
+            groupName: model.groupName || 'Sin Grupo',
+            models: [],
+            totalModels: 0,
+            totalUsdBruto: 0,
+            totalUsdModelo: 0,
+            totalUsdSede: 0,
+            totalCopModelo: 0,
+            totalCopSede: 0
+          });
+        }
+
+        const group = sede.groups.get(groupId);
+        group.models.push(model);
+        group.totalModels += 1;
+        group.totalUsdBruto += model.usdBruto;
+        group.totalUsdModelo += model.usdModelo;
+        group.totalUsdSede += model.usdSede;
+        group.totalCopModelo += model.copModelo;
+        group.totalCopSede += model.copSede;
+      });
+
+      // Convertir Map a Array
+      groupedData = Array.from(sedeGroups.values()).map(sede => ({
+        ...sede,
+        groups: Array.from(sede.groups.values())
+      }));
+    }
+
     console.log('✅ [BILLING-SUMMARY] Resumen generado:', { 
       models: billingData.length, 
-      summary 
+      summary,
+      groupedData: groupedData?.length || 0
     });
 
     return NextResponse.json({
       success: true,
       data: billingData,
       summary,
+      groupedData, // Solo para Super Admin
       periodDate,
       sedeId: sedeId || 'all',
       adminRole: adminUser.role
