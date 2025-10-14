@@ -207,10 +207,11 @@ export async function GET(request: NextRequest) {
     let groupedData = null;
     if (isSuperAdmin) {
       // Obtener información de sedes
+      const uniqueOrgIds = Array.from(new Set(billingData.map(m => m.organizationId).filter(Boolean)));
       const { data: sedes, error: sedesError } = await supabase
         .from('organizations')
         .select('id, name')
-        .in('id', [...new Set(billingData.map(m => m.organizationId))]);
+        .in('id', uniqueOrgIds);
 
       if (sedesError) {
         console.error('❌ [BILLING-SUMMARY] Error al obtener sedes:', sedesError);
