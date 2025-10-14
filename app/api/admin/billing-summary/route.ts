@@ -167,7 +167,7 @@ export async function GET(request: NextRequest) {
 
       const usdBruto = modelTotals.total_usd_bruto || 0;
       const usdModelo = modelTotals.total_usd_modelo || 0;
-      const usdSede = usdBruto - usdModelo; // USD Sede = USD Bruto - USD Modelo
+      const usdSede = usdBruto * 0.4; // USD Sede = 40% de USD Bruto
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;
 
