@@ -11,6 +11,41 @@ interface DashboardStats {
   sedesSinRooms: number;
 }
 
+interface SedeDisponibilidad {
+  sede_id: string;
+  sede_nombre: string;
+  rooms_disponibles: number;
+  rooms_totales: number;
+  jornadas_disponibles: {
+    manana: number;
+    tarde: number;
+    noche: number;
+  };
+  jornadas_dobladas: {
+    manana: number;
+    tarde: number;
+    noche: number;
+  };
+  total_espacios: number;
+}
+
+interface Group {
+  id: string;
+  name: string;
+  is_manager: boolean;
+}
+
+interface Room {
+  id: string;
+  room_name: string;
+  group_id: string;
+  is_active: boolean;
+  groups: {
+    id: string;
+    name: string;
+  };
+}
+
 export default function DashboardSedesPage() {
   const [stats, setStats] = useState<DashboardStats>({
     totalSedes: 0,
@@ -24,6 +59,12 @@ export default function DashboardSedesPage() {
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('admin');
   const [userGroups, setUserGroups] = useState<string[]>([]);
+  
+  // Estados para resumen de disponibilidad
+  const [selectedSede, setSelectedSede] = useState<string>('');
+  const [sedeDisponibilidad, setSedeDisponibilidad] = useState<SedeDisponibilidad | null>(null);
+  const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(false);
+  const [availableSedes, setAvailableSedes] = useState<Group[]>([]);
 
   useEffect(() => {
     // Scroll automático al top cuando se carga la página
@@ -32,6 +73,13 @@ export default function DashboardSedesPage() {
     loadUserInfo();
     loadDashboardData();
   }, []);
+
+  // Cargar disponibilidad cuando se seleccione una sede
+  useEffect(() => {
+    if (selectedSede && availableSedes.length > 0) {
+      loadSedeDisponibilidad(selectedSede);
+    }
+  }, [selectedSede, availableSedes]);
 
   const loadUserInfo = () => {
     try {
@@ -43,6 +91,91 @@ export default function DashboardSedesPage() {
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);
+    }
+  };
+
+  const loadSedeDisponibilidad = async (sedeId: string) => {
+    if (!sedeId) {
+      setSedeDisponibilidad(null);
+      return;
+    }
+
+    try {
+      setLoadingDisponibilidad(true);
+      console.log('🔍 [DASHBOARD] Cargando disponibilidad para sede:', sedeId);
+
+      // Obtener rooms de la sede
+      const roomsResponse = await fetch('/api/groups/rooms');
+      const roomsData = await roomsResponse.json();
+      
+      if (!roomsData.success) {
+        throw new Error('Error obteniendo rooms');
+      }
+
+      const sedeRooms = roomsData.rooms.filter((room: Room) => room.group_id === sedeId);
+      console.log('🔍 [DASHBOARD] Rooms de la sede:', sedeRooms.length);
+
+      // Obtener asignaciones de todos los rooms de la sede
+      const assignmentsPromises = sedeRooms.map(async (room: Room) => {
+        try {
+          const response = await fetch(`/api/room-assignments?roomId=${room.id}`);
+          const data = await response.json();
+          return data.success ? data.assignments : [];
+        } catch (error) {
+          console.warn(`Error obteniendo asignaciones para room ${room.id}:`, error);
+          return [];
+        }
+      });
+
+      const allAssignments = await Promise.all(assignmentsPromises);
+      const flatAssignments = allAssignments.flat();
+
+      // Calcular disponibilidad por jornada
+      const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
+      const jornadasDisponibles = { manana: 0, tarde: 0, noche: 0 };
+      const jornadasDobladas = { manana: 0, tarde: 0, noche: 0 };
+
+      jornadas.forEach((jornada, index) => {
+        const jornadaKey = index === 0 ? 'manana' : index === 1 ? 'tarde' : 'noche';
+        
+        // Contar asignaciones por jornada
+        const asignacionesJornada = flatAssignments.filter((assignment: any) => 
+          assignment.jornada === jornada
+        );
+
+        // Contar modelos únicas (para detectar doblaje)
+        const modelosUnicas = new Set(asignacionesJornada.map((a: any) => a.model_id));
+        
+        // Espacios disponibles = total rooms - asignaciones únicas
+        const espaciosDisponibles = Math.max(0, sedeRooms.length - modelosUnicas.size);
+        jornadasDisponibles[jornadaKey] = espaciosDisponibles;
+
+        // Contar doblajes (asignaciones adicionales de modelos que ya están en otra jornada)
+        const doblajes = Math.max(0, asignacionesJornada.length - modelosUnicas.size);
+        jornadasDobladas[jornadaKey] = doblajes;
+      });
+
+      // Obtener información de la sede
+      const sedeInfo = availableSedes.find(sede => sede.id === sedeId);
+      
+      const disponibilidad: SedeDisponibilidad = {
+        sede_id: sedeId,
+        sede_nombre: sedeInfo?.name || 'Sede Desconocida',
+        rooms_disponibles: sedeRooms.filter((room: Room) => room.is_active).length,
+        rooms_totales: sedeRooms.length,
+        jornadas_disponibles: jornadasDisponibles,
+        jornadas_dobladas: jornadasDobladas,
+        total_espacios: sedeRooms.length * 3 // 3 jornadas por room
+      };
+
+      setSedeDisponibilidad(disponibilidad);
+      console.log('✅ [DASHBOARD] Disponibilidad calculada:', disponibilidad);
+
+    } catch (error) {
+      console.error('❌ [DASHBOARD] Error cargando disponibilidad:', error);
+      setError('Error cargando disponibilidad de la sede');
+    } finally {
+      setLoadingDisponibilidad(false);
     }
   };
 
@@ -80,6 +213,13 @@ export default function DashboardSedesPage() {
         filteredRooms = filteredRooms.filter((room: any) => userGroups.includes(room.group_id));
         filteredAssignments = filteredAssignments.filter((assignment: any) => userGroups.includes(assignment.group_id));
       }
+
+      // Filtrar sedes operativas (excluir Otros y Satélites) para el dropdown
+      const sedesOperativas = filteredGroups.filter((group: any) => 
+        group.name !== 'Otros' && 
+        group.name !== 'Satélites'
+      );
+      setAvailableSedes(sedesOperativas);
 
       // Calcular estadísticas reales
       const totalSedes = filteredGroups.length;
@@ -239,6 +379,145 @@ export default function DashboardSedesPage() {
                 <p className="text-xs font-medium text-gray-500">Sedes con Rooms</p>
                 <p className="text-lg font-semibold text-gray-900">{stats.sedesConRooms}</p>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Resumen de Disponibilidad */}
+        <div className="mb-10">
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20">
+            <div className="px-6 py-4 border-b border-gray-200/50">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <h2 className="text-base font-semibold text-gray-900">Resumen de Disponibilidad</h2>
+              </div>
+            </div>
+            <div className="p-6">
+              {/* Dropdown para seleccionar sede */}
+              <div className="mb-6">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Seleccionar Sede
+                </label>
+                <select
+                  value={selectedSede}
+                  onChange={(e) => setSelectedSede(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 backdrop-blur-sm"
+                >
+                  <option value="">Selecciona una sede...</option>
+                  {availableSedes.map((sede) => (
+                    <option key={sede.id} value={sede.id}>
+                      {sede.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Resumen de disponibilidad */}
+              {selectedSede && (
+                <div className="space-y-4">
+                  {loadingDisponibilidad ? (
+                    <div className="flex items-center justify-center py-8">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                      <span className="ml-3 text-gray-600">Cargando disponibilidad...</span>
+                    </div>
+                  ) : sedeDisponibilidad ? (
+                    <div className="space-y-4">
+                      {/* Header de la sede */}
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200/50">
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {sedeDisponibilidad.sede_nombre}
+                        </h3>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-blue-600">
+                              {sedeDisponibilidad.rooms_disponibles}/{sedeDisponibilidad.rooms_totales}
+                            </p>
+                            <p className="text-sm text-gray-600">Rooms Disponibles</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-green-600">
+                              {sedeDisponibilidad.total_espacios}
+                            </p>
+                            <p className="text-sm text-gray-600">Total Espacios</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-2xl font-bold text-purple-600">
+                              {Object.values(sedeDisponibilidad.jornadas_dobladas).reduce((a, b) => a + b, 0)}
+                            </p>
+                            <p className="text-sm text-gray-600">Doblajes Activos</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Desglose por jornadas */}
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {[
+                          { key: 'manana', label: 'Mañana', color: 'from-orange-500 to-amber-600' },
+                          { key: 'tarde', label: 'Tarde', color: 'from-blue-500 to-indigo-600' },
+                          { key: 'noche', label: 'Noche', color: 'from-purple-500 to-violet-600' }
+                        ].map((jornada) => (
+                          <div key={jornada.key} className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50">
+                            <div className="flex items-center space-x-2 mb-3">
+                              <div className={`w-3 h-3 bg-gradient-to-r ${jornada.color} rounded-full`}></div>
+                              <h4 className="font-medium text-gray-900">{jornada.label}</h4>
+                            </div>
+                            <div className="space-y-2">
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">Disponibles:</span>
+                                <span className="font-semibold text-green-600">
+                                  {sedeDisponibilidad.jornadas_disponibles[jornada.key as keyof typeof sedeDisponibilidad.jornadas_disponibles]}
+                                </span>
+                              </div>
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">Dobladas:</span>
+                                <span className="font-semibold text-blue-600">
+                                  {sedeDisponibilidad.jornadas_dobladas[jornada.key as keyof typeof sedeDisponibilidad.jornadas_dobladas]}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Información adicional */}
+                      <div className="bg-gray-50/80 rounded-lg p-4 border border-gray-200/50">
+                        <div className="flex items-start space-x-2">
+                          <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
+                            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 8 8">
+                              <circle cx="4" cy="4" r="3" />
+                            </svg>
+                          </div>
+                          <div className="text-sm text-gray-700">
+                            <p className="font-medium mb-1">Información para nuevas modelos:</p>
+                            <p>• <strong>Disponibles:</strong> Espacios libres para asignar nuevas modelos</p>
+                            <p>• <strong>Dobladas:</strong> Modelos que trabajan en múltiples jornadas</p>
+                            <p>• <strong>Total Espacios:</strong> Capacidad máxima (rooms × 3 jornadas)</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>No se pudo cargar la disponibilidad de esta sede</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!selectedSede && (
+                <div className="text-center py-8 text-gray-500">
+                  <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                    </svg>
+                  </div>
+                  <p>Selecciona una sede para ver su disponibilidad de rooms y jornadas</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
