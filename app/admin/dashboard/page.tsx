@@ -206,14 +206,7 @@ export default function AdminDashboard() {
         )}
 
         {/* Resumen de Facturación para Admin y Super Admin */}
-        {(() => {
-          console.log('🔍 [DASHBOARD] Condiciones para BillingSummary:', { 
-            loading, 
-            user: user ? { id: user.id, role: user.role } : null,
-            shouldRender: !loading && user && (user.role === 'super_admin' || user.role === 'admin')
-          });
-          return !loading && user && (user.role === 'super_admin' || user.role === 'admin');
-        })() && user && (
+        {user && (user.role === 'super_admin' || user.role === 'admin') && (
           <BillingSummary 
             userRole={user.role as 'admin' | 'super_admin'} 
             userId={user.id}
