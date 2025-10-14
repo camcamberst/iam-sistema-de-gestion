@@ -95,11 +95,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener totales' }, { status: 500 });
     }
 
-    // 4. Obtener tasa USD/COP actual
-    const { data: rates, error: ratesError } = await supabase
+    // 4. Obtener tasa USD/COP actual (más reciente)
+    const { data: usdCopRate, error: ratesError } = await supabase
       .from('rates')
-      .select('usd_cop')
+      .select('value')
       .eq('active', true)
+      .eq('kind', 'USD→COP')
+      .order('valid_from', { ascending: false })
+      .limit(1)
       .single();
 
     if (ratesError) {
@@ -107,7 +110,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener tasas de cambio' }, { status: 500 });
     }
 
-    const usdCopRate = rates?.usd_cop || 3900;
+    const usdCopRateValue = usdCopRate?.value || 3900;
 
     // 5. Consolidar datos por modelo
     const billingData = models.map(model => {
@@ -130,8 +133,8 @@ export async function GET(request: NextRequest) {
       const usdBruto = modelTotals.total_usd_bruto || 0;
       const usdModelo = modelTotals.total_usd_modelo || 0;
       const usdSede = usdBruto - usdModelo; // USD Sede = USD Bruto - USD Modelo
-      const copModelo = usdModelo * usdCopRate;
-      const copSede = usdSede * usdCopRate;
+      const copModelo = usdModelo * usdCopRateValue;
+      const copSede = usdSede * usdCopRateValue;
 
       return {
         modelId: model.id,
