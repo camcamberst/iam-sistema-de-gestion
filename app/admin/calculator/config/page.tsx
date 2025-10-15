@@ -370,8 +370,10 @@ export default function ConfigCalculatorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6 pt-16">
-      <div className="mb-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+        {/* Header */}
+        <div className="mb-12">
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
           <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
@@ -678,6 +680,7 @@ export default function ConfigCalculatorPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
