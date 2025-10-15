@@ -196,18 +196,18 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
   }
 
   return (
-    <div className="mb-10">
-      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20">
-        {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-200/50">
+    <div className="mb-8">
+      <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-white/30 shadow-sm">
+        {/* Header minimalista */}
+        <div className="px-6 py-5">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            <div className="flex items-center space-x-3">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center">
+                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <h2 className="text-base font-semibold text-gray-900">Resumen de Facturación</h2>
+              <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
             </div>
             <div className="flex items-center space-x-3">
               {/* Selector de fecha */}
@@ -215,7 +215,7 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white/80 backdrop-blur-sm text-sm"
+                className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 placeholder-gray-400"
               />
               
               {/* Selector de sede (solo para super_admin) */}
@@ -223,7 +223,7 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
                 <select
                   value={selectedSede}
                   onChange={(e) => setSelectedSede(e.target.value)}
-                  className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 bg-white/80 backdrop-blur-sm text-sm"
+                  className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700"
                 >
                   <option value="">Todas las sedes</option>
                   {availableSedes.map((sede) => (
@@ -237,74 +237,64 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
           </div>
         </div>
 
-        <div className="p-6">
-          {/* Resumen general */}
+        <div className="px-6 pb-6">
+          {/* Resumen general - Estilo Apple minimalista */}
           {summary && (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
-              <div className="text-center p-4 bg-blue-50 rounded-lg">
-                <div className="text-2xl font-bold text-blue-600">{summary.totalModels}</div>
-                <div className="text-sm text-gray-600">Modelos</div>
+            <div className="grid grid-cols-3 gap-5 mb-8">
+              <div className="bg-gradient-to-br from-gray-50/90 to-gray-100/70 rounded-2xl p-6 border border-gray-200/50">
+                <div className="text-3xl font-semibold text-gray-800 mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
+                <div className="text-sm font-medium text-gray-500">USD Bruto</div>
               </div>
-              <div className="text-center p-4 bg-gray-50 rounded-lg">
-                <div className="text-lg font-bold text-gray-700">${formatCurrency(summary.totalUsdBruto)}</div>
-                <div className="text-sm text-gray-600">USD Bruto</div>
+              <div className="bg-gradient-to-br from-green-50/90 to-emerald-100/70 rounded-2xl p-6 border border-green-200/50">
+                <div className="text-3xl font-semibold text-green-700 mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
+                <div className="text-sm font-medium text-green-600">USD Modelo</div>
               </div>
-              <div className="text-center p-4 bg-green-50 rounded-lg">
-                <div className="text-lg font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
-                <div className="text-sm text-gray-600">USD Modelo</div>
-              </div>
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
-                <div className="text-lg font-bold text-orange-600">${formatCurrency(summary.totalUsdSede)}</div>
-                <div className="text-sm text-gray-600">USD Sede</div>
-              </div>
-              <div className="text-center p-4 bg-purple-50 rounded-lg">
-                <div className="text-lg font-bold text-purple-600">{formatCurrency(summary.totalCopModelo, 'COP')}</div>
-                <div className="text-sm text-gray-600">COP Modelo</div>
-              </div>
-              <div className="text-center p-4 bg-red-50 rounded-lg">
-                <div className="text-lg font-bold text-red-600">{formatCurrency(summary.totalCopSede, 'COP')}</div>
-                <div className="text-sm text-gray-600">COP Sede</div>
+              <div className="bg-gradient-to-br from-orange-50/90 to-amber-100/70 rounded-2xl p-6 border border-orange-200/50">
+                <div className="text-3xl font-semibold text-orange-700 mb-2">${formatCurrency(summary.totalUsdSede)}</div>
+                <div className="text-sm font-medium text-orange-600">USD Sede</div>
               </div>
             </div>
           )}
 
-          {/* Vista jerárquica para Super Admin o tabla simple para Admin */}
+          {/* Vista jerárquica para Super Admin - Estilo Apple */}
           {userRole === 'super_admin' && groupedData.length > 0 ? (
-            <div className="space-y-4">
+            <div className="space-y-3">
               {groupedData.map((sede) => (
-                <div key={sede.sedeId} className="border border-gray-200 rounded-lg overflow-hidden">
+                <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
                   {/* Header de Sede */}
                   <div 
-                    className="bg-gray-50 px-4 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                    className="px-6 py-4 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
                     onClick={() => toggleSedeExpansion(sede.sedeId)}
                   >
                     <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <svg 
-                          className={`w-4 h-4 text-gray-500 transition-transform ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
-                        >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                        </svg>
+                      <div className="flex items-center space-x-4">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl flex items-center justify-center">
+                          <svg 
+                            className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
                         <div>
-                          <h3 className="font-semibold text-gray-900">{sede.sedeName}</h3>
-                          <p className="text-sm text-gray-600">{sede.totalModels} modelos • {sede.groups.length} grupos</p>
+                          <h3 className="text-lg font-semibold text-gray-800">{sede.sedeName}</h3>
+                          <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups.length} grupos</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-4 text-sm">
+                      <div className="flex items-center space-x-6 text-sm">
                         <div className="text-right">
-                          <div className="font-medium text-gray-900">${formatCurrency(sede.totalUsdBruto)}</div>
-                          <div className="text-gray-600">USD Bruto</div>
+                          <div className="text-lg font-semibold text-gray-800">${formatCurrency(sede.totalUsdBruto)}</div>
+                          <div className="text-xs text-gray-500">USD Bruto</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium text-green-600">${formatCurrency(sede.totalUsdModelo)}</div>
-                          <div className="text-gray-600">USD Modelo</div>
+                          <div className="text-lg font-semibold text-green-600">${formatCurrency(sede.totalUsdModelo)}</div>
+                          <div className="text-xs text-gray-500">USD Modelo</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-medium text-orange-600">${formatCurrency(sede.totalUsdSede)}</div>
-                          <div className="text-gray-600">USD Sede</div>
+                          <div className="text-lg font-semibold text-orange-600">${formatCurrency(sede.totalUsdSede)}</div>
+                          <div className="text-xs text-gray-500">USD Sede</div>
                         </div>
                       </div>
                     </div>
@@ -312,41 +302,43 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
 
                   {/* Grupos de la Sede */}
                   {expandedSedes.has(sede.sedeId) && (
-                    <div className="bg-white">
+                    <div className="bg-gray-50/30 border-t border-gray-200/50">
                       {sede.groups.map((group) => (
-                        <div key={group.groupId} className="border-b border-gray-100 last:border-b-0">
+                        <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
                           {/* Header de Grupo */}
                           <div 
-                            className="px-6 py-3 cursor-pointer hover:bg-gray-50 transition-colors"
+                            className="px-6 py-4 cursor-pointer hover:bg-white/50 transition-all duration-200"
                             onClick={() => toggleGroupExpansion(group.groupId)}
                           >
                             <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                                <svg 
-                                  className={`w-4 h-4 text-gray-400 transition-transform ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
-                                  fill="none" 
-                                  stroke="currentColor" 
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                </svg>
+                              <div className="flex items-center space-x-4">
+                                <div className="w-6 h-6 bg-gradient-to-br from-gray-400/20 to-gray-500/20 rounded-lg flex items-center justify-center">
+                                  <svg 
+                                    className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                                  </svg>
+                                </div>
                                 <div>
-                                  <h4 className="font-medium text-gray-800">{group.groupName}</h4>
-                                  <p className="text-sm text-gray-600">{group.totalModels} modelos</p>
+                                  <h4 className="font-semibold text-gray-700">{group.groupName}</h4>
+                                  <p className="text-sm text-gray-500">{group.totalModels} modelos</p>
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-4 text-sm">
+                              <div className="flex items-center space-x-6 text-sm">
                                 <div className="text-right">
-                                  <div className="font-medium text-gray-700">${formatCurrency(group.totalUsdBruto)}</div>
-                                  <div className="text-gray-500">USD Bruto</div>
+                                  <div className="font-semibold text-gray-700">${formatCurrency(group.totalUsdBruto)}</div>
+                                  <div className="text-xs text-gray-500">USD Bruto</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-medium text-green-600">${formatCurrency(group.totalUsdModelo)}</div>
-                                  <div className="text-gray-500">USD Modelo</div>
+                                  <div className="font-semibold text-green-600">${formatCurrency(group.totalUsdModelo)}</div>
+                                  <div className="text-xs text-gray-500">USD Modelo</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-medium text-orange-600">${formatCurrency(group.totalUsdSede)}</div>
-                                  <div className="text-gray-500">USD Sede</div>
+                                  <div className="font-semibold text-orange-600">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="text-xs text-gray-500">USD Sede</div>
                                 </div>
                               </div>
                             </div>
@@ -354,32 +346,38 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
 
                           {/* Modelos del Grupo */}
                           {expandedGroups.has(group.groupId) && (
-                            <div className="bg-gray-50/50">
-                              <div className="overflow-x-auto">
-                                <table className="w-full text-sm">
-                                  <thead>
-                                    <tr className="border-b border-gray-200">
-                                      <th className="text-left py-2 px-4 font-medium text-gray-600">Email</th>
-                                      <th className="text-right py-2 px-4 font-medium text-gray-600">USD Bruto</th>
-                                      <th className="text-right py-2 px-4 font-medium text-gray-600">USD Modelo</th>
-                                      <th className="text-right py-2 px-4 font-medium text-gray-600">USD Sede</th>
-                                      <th className="text-right py-2 px-4 font-medium text-gray-600">COP Modelo</th>
-                                      <th className="text-right py-2 px-4 font-medium text-gray-600">COP Sede</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {group.models.map((model) => (
-                                      <tr key={model.modelId} className="border-b border-gray-100 hover:bg-white/50">
-                                        <td className="py-2 px-4 font-medium text-gray-800">{model.email}</td>
-                                        <td className="py-2 px-4 text-right text-gray-700">${formatCurrency(model.usdBruto)}</td>
-                                        <td className="py-2 px-4 text-right text-green-600 font-medium">${formatCurrency(model.usdModelo)}</td>
-                                        <td className="py-2 px-4 text-right text-orange-600 font-medium">${formatCurrency(model.usdSede)}</td>
-                                        <td className="py-2 px-4 text-right text-purple-600 font-medium">{formatCurrency(model.copModelo, 'COP')}</td>
-                                        <td className="py-2 px-4 text-right text-red-600 font-medium">{formatCurrency(model.copSede, 'COP')}</td>
-                                      </tr>
-                                    ))}
-                                  </tbody>
-                                </table>
+                            <div className="bg-white/40 border-t border-gray-200/30">
+                              <div className="px-6 py-4">
+                                <div className="space-y-3">
+                                  {group.models.map((model) => (
+                                    <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                                      <div className="flex items-center space-x-3">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                                          <span className="text-xs font-semibold text-blue-600">
+                                            {model.email.charAt(0).toUpperCase()}
+                                          </span>
+                                        </div>
+                                        <div>
+                                          <div className="font-medium text-gray-800">{model.email}</div>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center space-x-6 text-sm">
+                                        <div className="text-right">
+                                          <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                                          <div className="text-xs text-gray-500">USD Bruto</div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-semibold text-green-600">${formatCurrency(model.usdModelo)}</div>
+                                          <div className="text-xs text-gray-500">USD Modelo</div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
+                                          <div className="text-xs text-gray-500">USD Sede</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
                               </div>
                             </div>
                           )}
@@ -391,51 +389,47 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
               ))}
             </div>
           ) : billingData.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-gray-200">
-                    <th className="text-left py-3 px-2 font-medium text-gray-700">Email</th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">USD Bruto</th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">USD Modelo</th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">USD Sede (40%)</th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">COP Modelo</th>
-                    <th className="text-right py-3 px-2 font-medium text-gray-700">COP Sede</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {billingData.map((model) => (
-                    <tr key={model.modelId} className="border-b border-gray-100 hover:bg-gray-50/50">
-                      <td className="py-3 px-2 font-medium text-gray-900">{model.email}</td>
-                      <td className="py-3 px-2 text-right text-gray-700">${formatCurrency(model.usdBruto)}</td>
-                      <td className="py-3 px-2 text-right text-green-600 font-medium">${formatCurrency(model.usdModelo)}</td>
-                      <td className="py-3 px-2 text-right text-orange-600 font-medium">${formatCurrency(model.usdSede)}</td>
-                      <td className="py-3 px-2 text-right text-purple-600 font-medium">{formatCurrency(model.copModelo, 'COP')}</td>
-                      <td className="py-3 px-2 text-right text-red-600 font-medium">{formatCurrency(model.copSede, 'COP')}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="space-y-3">
+              {billingData.map((model) => (
+                <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                      <span className="text-xs font-semibold text-blue-600">
+                        {model.email.charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div>
+                      <div className="font-medium text-gray-800">{model.email}</div>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-6 text-sm">
+                    <div className="text-right">
+                      <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                      <div className="text-xs text-gray-500">USD Bruto</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-green-600">${formatCurrency(model.usdModelo)}</div>
+                      <div className="text-xs text-gray-500">USD Modelo</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
+                      <div className="text-xs text-gray-500">USD Sede</div>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           ) : (
-            <div className="text-center py-8 text-gray-500">
-              <div className="text-4xl mb-2">📊</div>
-              <div className="font-medium">No hay datos disponibles</div>
-              <div className="text-sm">No se encontraron modelos con datos para el período seleccionado</div>
+            <div className="text-center py-12 text-gray-400">
+              <div className="w-16 h-16 bg-gray-100/60 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+              </div>
+              <div className="font-medium text-gray-600 mb-1">No hay datos disponibles</div>
+              <div className="text-sm text-gray-500">No se encontraron modelos con datos para el período seleccionado</div>
             </div>
           )}
-
-          {/* Información adicional */}
-          <div className="mt-4 text-xs text-gray-500 bg-gray-50/50 rounded-lg p-3">
-            <div className="font-medium mb-1">ℹ️ Información:</div>
-            <ul className="space-y-1">
-              <li>• Los datos se actualizan en tiempo real cuando las modelos guardan valores en "Mi Calculadora"</li>
-              <li>• USD Sede = USD Bruto - USD Modelo</li>
-              <li>• Los totales incluyen solo modelos activos con datos en el período seleccionado</li>
-              {userRole === 'admin' && <li>• Solo puedes ver los datos de tu sede asignada</li>}
-              {userRole === 'super_admin' && <li>• Puedes filtrar por sede específica o ver todas las sedes</li>}
-            </ul>
-          </div>
         </div>
       </div>
     </div>
