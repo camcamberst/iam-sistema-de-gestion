@@ -619,7 +619,14 @@ export default function PortafolioModelos() {
                       <span>Total: {allPlatforms.length} plataformas</span>
                       <div className="flex space-x-4">
                         <span className="text-green-600">
-                          Entregadas: {model.platforms.filter(p => p.status === 'entregada').length}
+                          {(() => {
+                            // Contar como entregadas: 'entregada' o 'confirmada' o inicial activa
+                            const deliveredCount = model.platforms.filter(p => {
+                              const activeInitial = p.is_initial_config && p.status !== 'desactivada';
+                              return p.status === 'entregada' || p.status === 'confirmada' || activeInitial;
+                            }).length;
+                            return <>Entregadas: {deliveredCount}</>;
+                          })()}
                         </span>
                         <span className="text-blue-600">
                           Solicitadas: {model.platforms.filter(p => p.status === 'solicitada').length}
