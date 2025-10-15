@@ -204,15 +204,15 @@ export default function BillingSummaryCompact({ userRole, userId }: BillingSumma
   }
 
   return (
-    <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
-      <div className="flex items-center justify-between mb-4">
+    <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
           </div>
-          <h3 className="text-base font-semibold text-gray-900">Resumen de Facturación</h3>
+          <h3 className="text-sm font-semibold text-gray-900">Resumen de Facturación</h3>
         </div>
         <Link 
           href="/admin/sedes/dashboard" 
@@ -223,60 +223,60 @@ export default function BillingSummaryCompact({ userRole, userId }: BillingSumma
       </div>
 
       {summary && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Resumen compacto */}
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-3 rounded-lg bg-gray-50/80">
-              <div className="text-lg font-bold text-gray-800">${formatCurrency(summary.totalUsdBruto)}</div>
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center p-2 rounded-lg bg-gray-50/80">
+              <div className="text-sm font-bold text-gray-800">${formatCurrency(summary.totalUsdBruto)}</div>
               <div className="text-xs text-gray-600">USD Bruto</div>
             </div>
-            <div className="text-center p-3 rounded-lg bg-green-50/80">
-              <div className="text-lg font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
+            <div className="text-center p-2 rounded-lg bg-green-50/80">
+              <div className="text-sm font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
               <div className="text-xs text-gray-600">USD Modelo</div>
             </div>
-            <div className="text-center p-3 rounded-lg bg-orange-50/80">
-              <div className="text-lg font-bold text-orange-600">${formatCurrency(summary.totalUsdSede)}</div>
+            <div className="text-center p-2 rounded-lg bg-orange-50/80">
+              <div className="text-sm font-bold text-orange-600">${formatCurrency(summary.totalUsdSede)}</div>
               <div className="text-xs text-gray-600">USD Sede</div>
             </div>
           </div>
 
           {/* Listado de sedes y grupos con scrollbar */}
           {groupedData.length > 0 && (
-            <div className="border-t border-gray-200/50 pt-4">
-              <div className="text-xs font-medium text-gray-600 mb-3">
+            <div className="border-t border-gray-200/50 pt-3">
+              <div className="text-xs font-medium text-gray-600 mb-2">
                 {summary.totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
               </div>
-              <div className="max-h-64 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
-                <div className="space-y-3 pr-2">
+              <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                <div className="space-y-2 pr-2">
                   {groupedData.map((sede) => (
-                    <div key={sede.sedeId} className="bg-white/60 rounded-xl border border-gray-200/40 p-3">
+                    <div key={sede.sedeId} className="bg-white/60 rounded-lg border border-gray-200/40 p-2">
                       {/* Header de Sede */}
-                      <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center justify-between mb-1">
                         <div className="flex items-center space-x-2">
-                          <div className="w-5 h-5 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
-                            <svg className="w-3 h-3 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <div className="w-4 h-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded flex items-center justify-center">
+                            <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                             </svg>
                           </div>
                           <div>
-                            <div className="text-sm font-semibold text-gray-800">{sede.sedeName}</div>
+                            <div className="text-xs font-semibold text-gray-800">{sede.sedeName}</div>
                             <div className="text-xs text-gray-500">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
                           </div>
                         </div>
                         <div className="text-right">
-                          <div className="text-sm font-semibold text-gray-700">${formatCurrency(sede.totalUsdBruto)}</div>
+                          <div className="text-xs font-semibold text-gray-700">${formatCurrency(sede.totalUsdBruto)}</div>
                           <div className="text-xs text-gray-500">USD Bruto</div>
                         </div>
                       </div>
 
                       {/* Grupos de la Sede */}
                       {sede.groups.length > 0 && (
-                        <div className="ml-7 space-y-2">
+                        <div className="ml-6 space-y-1">
                           {sede.groups.map((group) => (
-                            <div key={group.groupId} className="flex items-center justify-between p-2 bg-gray-50/60 rounded-lg">
-                              <div className="flex items-center space-x-2">
-                                <div className="w-4 h-4 bg-gradient-to-br from-gray-400/20 to-gray-500/20 rounded flex items-center justify-center">
-                                  <svg className="w-2 h-2 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div key={group.groupId} className="flex items-center justify-between p-1.5 bg-gray-50/60 rounded">
+                              <div className="flex items-center space-x-1.5">
+                                <div className="w-3 h-3 bg-gradient-to-br from-gray-400/20 to-gray-500/20 rounded flex items-center justify-center">
+                                  <svg className="w-1.5 h-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                                   </svg>
                                 </div>
