@@ -319,27 +319,31 @@ export default function PortafolioModelos() {
     }
   };
 
-  const getStatusIcon = (status: string) => {
-    switch (status) {
+  const getStatusIcon = (status: string, isInitial?: boolean) => {
+    const s = (isInitial && status !== 'desactivada') ? 'confirmada' : status;
+    switch (s) {
       case 'disponible': return <Eye className="w-4 h-4" />;
       case 'solicitada': return <Clock className="w-4 h-4" />;
       case 'pendiente': return <AlertCircle className="w-4 h-4" />;
       case 'entregada': return <CheckCircle className="w-4 h-4" />;
       case 'desactivada': return <Minus className="w-4 h-4" />;
       case 'inviable': return <XCircle className="w-4 h-4" />;
-      default: return <AlertTriangle className="w-4 h-4" />;
+      case 'confirmada': return <CheckCircle className="w-4 h-4" />;
+      default: return <CheckCircle className="w-4 h-4" />;
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
+  const getStatusText = (status: string, isInitial?: boolean) => {
+    const s = (isInitial && status !== 'desactivada') ? 'confirmada' : status;
+    switch (s) {
       case 'disponible': return 'Disponible';
       case 'solicitada': return 'Solicitada';
       case 'pendiente': return 'Pendiente';
       case 'entregada': return 'Entregada';
       case 'desactivada': return 'Desactivada';
       case 'inviable': return 'Inviable';
-      default: return 'Desconocido';
+      case 'confirmada': return 'Confirmada';
+      default: return 'Confirmada';
     }
   };
 
@@ -597,10 +601,13 @@ export default function PortafolioModelos() {
                         <button
                           key={`${model.model_id}-${p.id}`}
                           type="button"
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${getTagClasses(tag.status)}`}
+                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${getTagClasses((tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status)}`}
                           onClick={() => handlePlatformAction(tag, 'request')}
                         >
-                          {tag.platform_name}
+                          <span className="inline-flex items-center gap-1">
+                            {getStatusIcon(tag.status, tag.is_initial_config)}
+                            {tag.platform_name}
+                          </span>
                         </button>
                       );
                     })}
