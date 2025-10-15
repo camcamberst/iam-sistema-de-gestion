@@ -47,6 +47,7 @@ export default function AdminViewModelPage() {
   const [saving, setSaving] = useState(false);
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
+  const [syncingTotals, setSyncingTotals] = useState(false);
   
   // Estados para filtros
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
@@ -176,6 +177,109 @@ export default function AdminViewModelPage() {
     } catch (err: any) {
       console.error('Error loading models:', err);
       setError(err.message || 'Error al cargar modelos');
+    }
+  };
+
+  const syncTotals = async () => {
+    try {
+      if (!selectedModel || !selectedModel.calculatorData) return;
+      const calc = selectedModel.calculatorData;
+      const rates = calc.rates || { usd_cop: 3900, eur_usd: 1.01, gbp_usd: 1.20 };
+      const platforms = calc.platforms || [];
+      const values = calc.values || [];
+
+      // Recalcular totales como en "Totales y Alertas"
+      const totals = platforms.reduce((acc: any, platform: any) => {
+        const currentValue = values.find((v: any) => v.platform_id === platform.id || v.platform === platform.name)?.value || 0;
+        let usdBruto = 0;
+        if (platform.currency === 'EUR') {
+          if (platform.id === 'big7') {
+            usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.84;
+          } else if (platform.id === 'mondo') {
+            usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.78;
+          } else {
+            usdBruto = currentValue * (rates.eur_usd || 1.01);
+          }
+        } else if (platform.currency === 'GBP') {
+          if (platform.id === 'aw') {
+            usdBruto = (currentValue * (rates.gbp_usd || 1.20)) * 0.677;
+          } else {
+            usdBruto = currentValue * (rates.gbp_usd || 1.20);
+          }
+        } else if (platform.currency === 'USD') {
+          if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+            usdBruto = currentValue * 0.75;
+          } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+            usdBruto = currentValue * 0.05;
+          } else if (platform.id === 'dxlive') {
+            usdBruto = currentValue * 0.60;
+          } else if (platform.id === 'secretfriends') {
+            usdBruto = currentValue * 0.5;
+          } else if (platform.id === 'superfoon') {
+            usdBruto = currentValue;
+          } else {
+            usdBruto = currentValue;
+          }
+        }
+
+        let usdModelo = 0;
+        if (platform.currency === 'EUR') {
+          if (platform.id === 'big7') {
+            usdModelo = (currentValue * (rates.eur_usd || 1.01)) * 0.84;
+          } else if (platform.id === 'mondo') {
+            usdModelo = (currentValue * (rates.eur_usd || 1.01)) * 0.78;
+          } else if (platform.id === 'superfoon') {
+            usdModelo = currentValue * (rates.eur_usd || 1.01);
+          } else {
+            usdModelo = currentValue * (rates.eur_usd || 1.01);
+          }
+        } else if (platform.currency === 'GBP') {
+          if (platform.id === 'aw') {
+            usdModelo = (currentValue * (rates.gbp_usd || 1.20)) * 0.677;
+          } else {
+            usdModelo = currentValue * (rates.gbp_usd || 1.20);
+          }
+        } else if (platform.currency === 'USD') {
+          if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+            usdModelo = currentValue * 0.75;
+          } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+            usdModelo = currentValue * 0.05;
+          } else if (platform.id === 'dxlive') {
+            usdModelo = currentValue * 0.60;
+          } else if (platform.id === 'secretfriends') {
+            usdModelo = currentValue * 0.5;
+          } else {
+            usdModelo = currentValue;
+          }
+        }
+
+        const usdModeloFinal = platform.id === 'superfoon' ? usdModelo : (usdModelo * platform.percentage / 100);
+        return {
+          usdBruto: acc.usdBruto + usdBruto,
+          usdModelo: acc.usdModelo + usdModeloFinal,
+          copModelo: acc.copModelo + (usdModeloFinal * (rates.usd_cop || 3900))
+        };
+      }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
+
+      setSyncingTotals(true);
+      const res = await fetch('/api/calculator/totals', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          modelId: selectedModel.id,
+          totalUsdBruto: totals.usdBruto,
+          totalUsdModelo: totals.usdModelo,
+          totalCopModelo: totals.copModelo
+        })
+      });
+      const data = await res.json();
+      if (!data.success) {
+        console.error('❌ [ADMIN VIEW] Error al sincronizar totales:', data.error);
+      }
+    } catch (e) {
+      console.error('❌ [ADMIN VIEW] Error en syncTotals:', e);
+    } finally {
+      setSyncingTotals(false);
     }
   };
 
@@ -464,7 +568,18 @@ export default function AdminViewModelPage() {
               </div>
 
               {/* Footer actions */}
-              <div className="flex justify-end">
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={syncTotals}
+                  disabled={syncingTotals || !selectedModel?.calculatorData}
+                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                    !syncingTotals
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200 hover:shadow-indigo-300'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {syncingTotals ? 'Sincronizando...' : 'Sincronizar Totales'}
+                </button>
                 <button
                   onClick={handleSave}
                   disabled={saving || !hasChanges}
