@@ -679,7 +679,6 @@ export default function ConfigCalculatorPage() {
           </div>
         )}
       </div>
-      </div>
     </div>
   );
 }
