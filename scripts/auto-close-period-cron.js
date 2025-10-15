@@ -1,8 +1,8 @@
 /**
  * 🔄 CRON JOB: Cierre Automático de Períodos de Calculadora
  * 
- * Este script se ejecuta automáticamente los días 1 y 16 de cada mes
- * a las 00:00 (medianoche) en huso horario de Europa Central.
+ * Este script se ejecuta automáticamente los días 15 y 30 de cada mes
+ * a las 17:00 (5:00 PM) en huso horario de Colombia, sincronizado con medianoche europea.
  * 
  * FUNCIONES:
  * 1. Archivar valores actuales a tabla histórica
@@ -26,12 +26,12 @@ async function executeAutoClose() {
     console.log('🔄 [CRON] Fecha actual (Europa Central):', getCalculatorDate());
     console.log('🔄 [CRON] Período:', getCurrentCalculatorPeriod().description);
     
-    // Verificar si es día de corte (1 o 16)
+    // Verificar si es día de corte (15 o 30)
     const today = new Date();
     const day = today.getDate();
     
-    if (day !== 1 && day !== 16) {
-      console.log('⏭️ [CRON] No es día de corte (1 o 16), saltando ejecución');
+    if (day !== 15 && day !== 30) {
+      console.log('⏭️ [CRON] No es día de corte (15 o 30), saltando ejecución');
       return;
     }
     

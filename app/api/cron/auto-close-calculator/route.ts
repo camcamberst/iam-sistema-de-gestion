@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getColombiaDate, getCurrentCalculatorPeriod } from '@/utils/calculator-dates';
 
 // CRON JOB: Cierre automático de calculadora
-// Se ejecuta los días 1 y 16 a las 00:00 Europa Central
+// Se ejecuta los días 15 y 30 a las 17:00 Colombia (sincronizado con medianoche europea)
 export async function GET(request: NextRequest) {
   try {
     console.log('🕐 [CRON] Iniciando cierre automático de calculadora...');
@@ -13,17 +13,17 @@ export async function GET(request: NextRequest) {
     console.log('🕐 [CRON] Fecha actual:', currentDate);
     console.log('🕐 [CRON] Período:', period.description);
     
-    // Verificar si es un día de corte (1 o 16)
+    // Verificar si es un día de corte (15 o 30)
     const today = new Date();
     const day = today.getDate();
     
-    if (day !== 1 && day !== 16) {
+    if (day !== 15 && day !== 30) {
       console.log('🕐 [CRON] No es día de corte. Día actual:', day);
       return NextResponse.json({
         success: true,
         message: 'No es día de corte automático',
         current_day: day,
-        cutoff_days: [1, 16]
+        cutoff_days: [15, 30]
       });
     }
     

@@ -2,7 +2,7 @@
 
 ## 📋 Resumen
 
-Este documento describe cómo configurar el sistema de cortes automáticos para la calculadora, que ejecuta los días 1 y 16 de cada mes a las 00:00 (medianoche) en huso horario de Europa Central.
+Este documento describe cómo configurar el sistema de cortes automáticos para la calculadora, que ejecuta los días 15 y 30 de cada mes a las 17:00 (5:00 PM) en huso horario de Colombia, sincronizado con la medianoche europea.
 
 ## 🎯 Funcionalidades
 
@@ -10,7 +10,8 @@ Este documento describe cómo configurar el sistema de cortes automáticos para 
 - **API de cierre automático**: `/api/calculator/auto-close-period`
 - **Script de cron job**: `scripts/auto-close-period-cron.js`
 - **Integración UI**: "Mi Historial" en menú de calculadora
-- **Huso horario**: Europa Central para todas las operaciones
+- **Huso horario**: Colombia (America/Bogota) con sincronización automática a medianoche europea
+- **Detección automática**: Horario de verano/invierno europeo
 
 ### 🔄 Proceso Automático
 1. **Archivar valores** actuales a tabla `calculator_history`

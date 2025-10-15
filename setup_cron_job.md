@@ -18,8 +18,9 @@ Agregar al archivo `vercel.json`:
 ```
 
 **Explicación del schedule:**
-- `0 0 1,16 * *` = A las 00:00 (medianoche) los días 1 y 16 de cada mes
-- Usa huso horario de Europa Central (Europe/Berlin)
+- `0 17 15,30 * *` = A las 17:00 (5:00 PM) los días 15 y 30 de cada mes
+- Usa huso horario de Colombia (America/Bogota) sincronizado con medianoche europea
+- Detección automática de horario de verano/invierno europeo
 
 ### **2. ALTERNATIVA: CRON EXTERNO**
 
