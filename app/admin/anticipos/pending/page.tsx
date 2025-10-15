@@ -255,15 +255,31 @@ export default function SolicitudesPendientesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
+        <div className="mb-10">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-900">Gestión de Solicitudes</h1>
+                  <p className="text-sm text-gray-600 mt-1">Gestiona las solicitudes de anticipo de tu grupo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Filtros */}
         <div className="mb-6">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-2">Gestión de Solicitudes</h1>
-          <p className="text-gray-600">Gestiona las solicitudes de anticipo de tu grupo</p>
-          
-          {/* Filtros */}
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Filtro por Grupo (solo para super admin) */}
             {user?.role === 'super_admin' && availableGroups.length > 0 && (
               <div>
@@ -300,6 +316,7 @@ export default function SolicitudesPendientesPage() {
                 onChange={(value) => setEstadoFiltro(value as 'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado')}
                 placeholder="Selecciona un estado"
               />
+            </div>
             </div>
           </div>
         </div>
@@ -464,6 +481,7 @@ export default function SolicitudesPendientesPage() {
             Ver Historial
           </div>
         </div>
+      </div>
       </div>
     </div>
   );
