@@ -114,12 +114,22 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 3. Obtener totales de calculadora para el período
+    // 3. Obtener totales de calculadora para la QUINCENA del periodDate
+    const d = new Date(periodDate);
+    const y = d.getFullYear();
+    const m = d.getMonth();
+    const day = d.getDate();
+    const firstHalf = day >= 1 && day <= 15;
+    const startStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '01' : '16'}`;
+    const lastDay = new Date(y, m + 1, 0).getDate();
+    const endStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '15' : String(lastDay).padStart(2,'0')}`;
+
     const { data: totals, error: totalsError } = await supabase
       .from('calculator_totals')
       .select('*')
       .in('model_id', modelIds)
-      .eq('period_date', periodDate);
+      .gte('period_date', startStr)
+      .lte('period_date', endStr);
 
     if (totalsError) {
       console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
@@ -143,12 +153,12 @@ export async function GET(request: NextRequest) {
 
     const usdCopRateValue = usdCopRate?.value || 3900;
 
-    // 5. Consolidar datos por modelo
+    // 5. Consolidar datos por modelo (sumatoria dentro de la quincena)
     const billingData = models.map(model => {
-      const modelTotals = totals?.find(t => t.model_id === model.id);
+      const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
       const modelGroup = modelGroupsMap.get(model.id);
       
-      if (!modelTotals) {
+      if (!totalsForModel || totalsForModel.length === 0) {
         // Si no hay totales, retornar ceros
         return {
           modelId: model.id,
@@ -165,8 +175,8 @@ export async function GET(request: NextRequest) {
         };
       }
 
-      const usdBruto = modelTotals.total_usd_bruto || 0;
-      const usdModelo = modelTotals.total_usd_modelo || 0;
+      const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
+      const usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
       const usdSede = usdBruto - usdModelo; // USD Sede = USD Bruto - USD Modelo
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;

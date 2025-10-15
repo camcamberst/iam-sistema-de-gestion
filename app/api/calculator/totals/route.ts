@@ -56,10 +56,10 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const { modelId, periodDate, totalUsdBruto, totalUsdModelo, totalCopModelo } = body;
 
-    if (!modelId || !periodDate || totalUsdBruto === undefined || totalUsdModelo === undefined || totalCopModelo === undefined) {
+    if (!modelId || totalUsdBruto === undefined || totalUsdModelo === undefined || totalCopModelo === undefined) {
       return NextResponse.json({ 
         success: false, 
-        error: 'modelId, periodDate, totalUsdBruto, totalUsdModelo y totalCopModelo son requeridos' 
+        error: 'modelId, totalUsdBruto, totalUsdModelo y totalCopModelo son requeridos' 
       }, { status: 400 });
     }
 
@@ -71,11 +71,14 @@ export async function POST(request: NextRequest) {
       totalCopModelo 
     });
 
+    // Normalizar la fecha al día actual en Colombia (evita desajustes por zona horaria)
+    const periodDateCo = getColombiaDate();
+
     const { data, error } = await supabase
       .from('calculator_totals')
       .upsert({
         model_id: modelId,
-        period_date: periodDate,
+        period_date: periodDateCo,
         total_usd_bruto: Number.parseFloat(String(totalUsdBruto)) || 0,
         total_usd_modelo: Number.parseFloat(String(totalUsdModelo)) || 0,
         total_cop_modelo: Number.parseFloat(String(totalCopModelo)) || 0,
@@ -94,7 +97,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       data: data?.[0] || null,
-      message: 'Totales guardados correctamente' 
+      message: 'Totales guardados correctamente',
+      periodDate: periodDateCo
     });
 
   } catch (error: any) {
