@@ -122,10 +122,10 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
 
   if (loading) {
     return (
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600">Cargando timeline...</span>
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
+        <div className="flex items-center justify-center py-4">
+          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+          <span className="ml-3 text-gray-600 text-sm">Cargando timeline...</span>
         </div>
       </div>
     );
@@ -133,20 +133,20 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
 
   if (error) {
     return (
-      <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-        <div className="text-center py-8">
-          <XCircle className="w-8 h-8 text-red-500 mx-auto mb-2" />
-          <p className="text-red-600">{error}</p>
+      <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
+        <div className="text-center py-4">
+          <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
+          <p className="text-red-600 text-sm">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6" style={{ overflow: 'visible' }}>
-      <div className="flex items-center justify-between mb-6">
-        <h3 className="text-lg font-semibold text-gray-900 flex items-center">
-          <Clock className="w-5 h-5 mr-2" />
+    <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4" style={{ overflow: 'visible' }}>
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="text-base font-semibold text-gray-900 flex items-center">
+          <Clock className="w-4 h-4 mr-2" />
           Timeline Portafolio Modelos
         </h3>
         <span className="text-sm text-gray-500">
@@ -155,9 +155,9 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
       </div>
 
       {requests.length === 0 ? (
-        <div className="text-center py-8">
-          <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <p className="text-gray-500">No hay solicitudes de plataformas activas</p>
+        <div className="text-center py-4">
+          <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500 text-sm">No hay solicitudes de plataformas activas</p>
         </div>
       ) : (
         <div className="max-h-80 overflow-y-auto space-y-3 relative" style={{ overflowX: 'visible' }}>
