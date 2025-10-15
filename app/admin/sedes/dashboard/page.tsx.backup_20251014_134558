@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import BillingSummary from '../../../../components/BillingSummary';
 
 interface DashboardStats {
   totalSedes: number;
@@ -60,7 +59,6 @@ export default function DashboardSedesPage() {
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('admin');
   const [userGroups, setUserGroups] = useState<string[]>([]);
-  const [userId, setUserId] = useState<string>('');
   
   // Estados para resumen de disponibilidad
   const [selectedSede, setSelectedSede] = useState<string>('');
@@ -90,7 +88,6 @@ export default function DashboardSedesPage() {
         const parsed = JSON.parse(userData);
         setUserRole(parsed.role || 'admin');
         setUserGroups(parsed.groups?.map((g: any) => g.id) || []);
-        setUserId(parsed.id || '');
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);
@@ -256,7 +253,7 @@ export default function DashboardSedesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Cargando dashboard...</p>
@@ -267,7 +264,7 @@ export default function DashboardSedesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-24">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
@@ -302,14 +299,6 @@ export default function DashboardSedesPage() {
             </div>
           </div>
         </div>
-
-        {/* Resumen de Facturación */}
-        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
-          <BillingSummary 
-            userRole={userRole as 'admin' | 'super_admin'} 
-            userId={userId}
-          />
-        )}
 
         {/* Messages */}
         {error && (

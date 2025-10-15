@@ -145,7 +145,7 @@ export default function CreateUserPage() {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-start justify-center p-4 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-start justify-center p-4 pt-16">
       <div className="w-full max-w-md">
         <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6">
           <div className="flex items-center space-x-3 mb-6">
