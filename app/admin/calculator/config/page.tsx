@@ -390,9 +390,8 @@ export default function ConfigCalculatorPage() {
             </div>
           </div>
         </div>
-      </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Panel izquierdo: Filtros y Selección de modelo */}
         <div className="md:col-span-1">
           <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 space-y-6">
@@ -678,6 +677,7 @@ export default function ConfigCalculatorPage() {
             </div>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
