@@ -482,7 +482,6 @@ export default function SolicitudesPendientesPage() {
           </div>
         </div>
       </div>
-      </div>
     </div>
   );
 }
