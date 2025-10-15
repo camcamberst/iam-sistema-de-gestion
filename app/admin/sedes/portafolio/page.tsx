@@ -601,10 +601,10 @@ export default function PortafolioModelos() {
                         <button
                           key={`${model.model_id}-${p.id}`}
                           type="button"
-                          className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${getTagClasses((tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status)}`}
+                          className={`px-2.5 py-1 rounded-full text-[11px] leading-5 font-medium transition-colors inline-flex items-center ${getTagClasses((tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status)}`}
                           onClick={() => handlePlatformAction(tag, 'request')}
                         >
-                          <span className="inline-flex items-center gap-1">
+                          <span className="inline-flex items-center gap-1 align-middle">
                             {getStatusIcon(tag.status, tag.is_initial_config)}
                             {tag.platform_name}
                           </span>

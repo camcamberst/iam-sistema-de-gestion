@@ -402,7 +402,7 @@ export default function MiPortafolio() {
                       <button
                         key={platform.id}
                         type="button"
-                        className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${getTagClasses(platform.status)} ${
+                        className={`px-2.5 py-1 rounded-full text-[11px] leading-5 font-medium transition-colors inline-flex items-center ${getTagClasses(platform.status)} ${
                           selectedPlatform?.id === platform.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''
                         }`}
                         onClick={() => handlePlatformClick(platform)}
