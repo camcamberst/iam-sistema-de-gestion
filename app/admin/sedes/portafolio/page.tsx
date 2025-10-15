@@ -623,7 +623,8 @@ export default function PortafolioModelos() {
                             // Contar como entregadas: 'entregada' o 'confirmada' o inicial activa
                             const deliveredCount = model.platforms.filter(p => {
                               const activeInitial = p.is_initial_config && p.status !== 'desactivada';
-                              return p.status === 'entregada' || p.status === 'confirmada' || activeInitial;
+                              // Contar 'entregada' o inicial activa (confirmada visualmente)
+                              return p.status === 'entregada' || activeInitial;
                             }).length;
                             return <>Entregadas: {deliveredCount}</>;
                           })()}
