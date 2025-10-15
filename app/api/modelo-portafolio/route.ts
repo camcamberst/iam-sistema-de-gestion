@@ -138,8 +138,8 @@ export async function GET(request: NextRequest) {
         dailyAvgQuincenal = platformHistory.length > 0 ? totalUsdModelo / platformHistory.length : 0;
       }
 
-      // Tratar configuración inicial creada por admin como confirmada
-      const effectiveStatus = (platform.is_initial_config && (platform.status === 'entregada' || platform.status === 'pendiente'))
+      // Tratar configuración inicial creada por admin como confirmada (salvo desactivada)
+      const effectiveStatus = (platform.is_initial_config && platform.status !== 'desactivada')
         ? 'confirmada'
         : platform.status;
 
