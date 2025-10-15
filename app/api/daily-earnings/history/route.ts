@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     // Formatear datos para respuesta
     const formattedHistory = history?.map(item => ({
       modelId: item.model_id,
-      modelName: item.users?.name || item.users?.email || 'Modelo desconocido',
+      modelName: (item.users as any)?.name || (item.users as any)?.email || 'Modelo desconocido',
       earningsDate: item.earnings_date,
       earningsAmount: item.earnings_amount,
       archivedAt: item.archived_at
