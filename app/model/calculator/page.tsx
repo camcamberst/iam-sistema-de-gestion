@@ -755,10 +755,10 @@ export default function ModelCalculatorPage() {
     if (!hasAny) return;
 
     const controller = new AbortController();
-    // 🔧 NUEVO: 2 minutos (120,000ms) de inactividad antes de autosave
+    // 🔧 NUEVO: 40 segundos (40,000ms) de inactividad antes de autosave
     const t = setTimeout(async () => {
       try {
-        console.log('🔄 [AUTOSAVE] Guardando después de 2 minutos de inactividad...');
+        console.log('🔄 [AUTOSAVE] Guardando después de 40 segundos de inactividad...');
         // Autosave solo para el usuario actual (modelo)
         const res = await fetch('/api/calculator/model-values-v2', {
           method: 'POST',
@@ -775,7 +775,7 @@ export default function ModelCalculatorPage() {
       } catch (e) {
         console.warn('⚠️ [AUTOSAVE] Excepción en autosave:', e);
       }
-    }, 120000); // 2 minutos = 120,000ms
+    }, 40000); // 40 segundos = 40,000ms
 
     return () => {
       clearTimeout(t);

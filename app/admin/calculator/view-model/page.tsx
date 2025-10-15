@@ -405,6 +405,68 @@ export default function AdminViewModelPage() {
     setHasChanges(true);
   };
 
+  // 🔧 AUTOSAVE: Guardar automáticamente después de 40 segundos de inactividad
+  useEffect(() => {
+    if (!selectedModel || !user || !hasChanges || saving) return;
+
+    console.log('🔄 [ADMIN-AUTOSAVE] Iniciando timer de autosave...');
+    
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        console.log('🔄 [ADMIN-AUTOSAVE] Ejecutando autosave después de 40 segundos de inactividad...');
+        
+        // Convertir valores de string a number
+        const valuesToSave: Record<string, number> = {};
+        Object.entries(editValues).forEach(([platformId, value]) => {
+          const numericValue = Number.parseFloat(value) || 0;
+          valuesToSave[platformId] = numericValue;
+        });
+
+        const response = await fetch('/api/calculator/model-values-v2', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            modelId: selectedModel.id,
+            values: valuesToSave,
+            periodDate: selectedModel.calculatorData.periodDate
+          }),
+          signal: controller.signal
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('✅ [ADMIN-AUTOSAVE] Autosave completado exitosamente');
+          setHasChanges(false);
+          
+          // Notificación elegante
+          const notification = document.createElement('div');
+          notification.className = 'fixed top-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+          notification.innerHTML = 'Guardado automático completado';
+          document.body.appendChild(notification);
+          
+          setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+          setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => document.body.removeChild(notification), 300);
+          }, 2000);
+        } else {
+          console.warn('⚠️ [ADMIN-AUTOSAVE] Error en autosave:', data.error);
+        }
+      } catch (e) {
+        console.warn('⚠️ [ADMIN-AUTOSAVE] Excepción en autosave:', e);
+      }
+    }, 40000); // 40 segundos = 40,000ms
+
+    return () => {
+      clearTimeout(t);
+      controller.abort();
+    };
+  }, [editValues, selectedModel, user, hasChanges, saving]);
+
   const handleSave = async () => {
     if (!selectedModel || !user) return;
 
