@@ -219,7 +219,8 @@ export default function MiPortafolio() {
       case 'desactivada':
         return <AlertCircle className="w-5 h-5 text-red-500" />;
       default:
-        return <Clock className="w-5 h-5 text-gray-500" />;
+        // Tratar estados no reconocidos como confirmados (por configuración inicial)
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
     }
   };
 
@@ -232,7 +233,8 @@ export default function MiPortafolio() {
       case 'desactivada':
         return 'Desactivada';
       default:
-        return 'Estado desconocido';
+        // Tratar estados no definidos como confirmados
+        return 'Confirmada';
     }
   };
 
@@ -245,7 +247,8 @@ export default function MiPortafolio() {
       case 'desactivada':
         return 'bg-red-50 border-red-200 text-red-700';
       default:
-        return 'bg-gray-50 border-gray-200 text-gray-500';
+        // Tratar estados no definidos como confirmados
+        return 'bg-green-50 border-green-200 text-green-700';
     }
   };
 
