@@ -283,20 +283,6 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
                           <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups.length} grupos</p>
                         </div>
                       </div>
-                      <div className="flex items-center space-x-6 text-sm">
-                        <div className="text-right">
-                          <div className="text-lg font-semibold text-gray-800">${formatCurrency(sede.totalUsdBruto)}</div>
-                          <div className="text-xs text-gray-500">USD Bruto</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-semibold text-green-600">${formatCurrency(sede.totalUsdModelo)}</div>
-                          <div className="text-xs text-gray-500">USD Modelo</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-semibold text-orange-600">${formatCurrency(sede.totalUsdSede)}</div>
-                          <div className="text-xs text-gray-500">USD Sede</div>
-                        </div>
-                      </div>
                     </div>
                   </div>
 
