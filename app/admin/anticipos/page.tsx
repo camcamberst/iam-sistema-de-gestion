@@ -129,65 +129,65 @@ export default function GestionAnticiposPage() {
         </div>
 
         {/* Opciones principales */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Solicitudes Pendientes */}
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
-            <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center shadow-md">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
+            <div className="flex items-center mb-3">
+              <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Solicitudes Pendientes</h3>
-            <p className="text-gray-500 text-xs mb-4 flex-grow">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Solicitudes Pendientes</h3>
+            <p className="text-gray-500 text-xs mb-3 flex-grow">
               Revisa y gestiona las solicitudes pendientes de aprobación
             </p>
-            <div className="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg hover:from-orange-600 hover:to-amber-700 transition-all duration-300 mt-auto text-center cursor-default text-sm shadow-md group-hover:shadow-lg transform group-hover:scale-105">
+            <div className="w-full px-3 py-2 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg hover:from-orange-600 hover:to-amber-700 transition-all duration-300 mt-auto text-center cursor-default text-xs shadow-md group-hover:shadow-lg transform group-hover:scale-105">
               Gestionar Solicitudes
             </div>
           </div>
 
           {/* Historial de Anticipos */}
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
-            <div className="flex items-center mb-4">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
+            <div className="flex items-center mb-3">
+              <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
               </div>
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">Historial de Anticipos</h3>
-            <p className="text-gray-500 text-xs mb-4 flex-grow">
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">Historial de Anticipos</h3>
+            <p className="text-gray-500 text-xs mb-3 flex-grow">
               Consulta el historial completo de anticipos procesados
             </p>
-            <div className="w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 mt-auto text-center cursor-default text-sm shadow-md group-hover:shadow-lg transform group-hover:scale-105">
+            <div className="w-full px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 mt-auto text-center cursor-default text-xs shadow-md group-hover:shadow-lg transform group-hover:scale-105">
               Ver Historial
             </div>
           </div>
         </div>
 
         {/* Estadísticas rápidas */}
-        <div className="mt-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-          <div className="flex items-center space-x-2 mb-6">
-            <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="mt-6 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-violet-600 rounded flex items-center justify-center">
+              <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-gray-900">Resumen del Sistema</h3>
+            <h3 className="text-sm font-semibold text-gray-900">Resumen del Sistema</h3>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
-              <div className="text-lg font-bold text-gray-900">-</div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
+              <div className="text-base font-bold text-gray-900">-</div>
               <div className="text-xs text-gray-500 font-medium">Solicitudes Pendientes</div>
             </div>
-            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
-              <div className="text-lg font-bold text-gray-900">-</div>
+            <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
+              <div className="text-base font-bold text-gray-900">-</div>
               <div className="text-xs text-gray-500 font-medium">Solicitudes Aprobadas</div>
             </div>
-            <div className="text-center p-4 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
-              <div className="text-lg font-bold text-gray-900">-</div>
+            <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
+              <div className="text-base font-bold text-gray-900">-</div>
               <div className="text-xs text-gray-500 font-medium">Total Procesadas</div>
             </div>
           </div>
