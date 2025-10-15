@@ -56,9 +56,9 @@ export default function BillingSummaryCompact({ userRole, userId }: BillingSumma
 
       const today = new Date().toISOString().split('T')[0];
       const params = new URLSearchParams({
-        userId,
+        adminId: userId,
         userRole,
-        date: today,
+        periodDate: today,
       });
 
       const response = await fetch(`/api/admin/billing-summary?${params}`);
