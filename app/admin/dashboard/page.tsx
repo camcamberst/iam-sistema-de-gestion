@@ -7,6 +7,7 @@ import { getColombiaDate } from '@/utils/calculator-dates';
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
+import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -180,27 +181,14 @@ export default function AdminDashboard() {
 
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
-        {/* Panel de Tasas Activas para Super Admin y Admin */}
+        {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin y Admin */}
         {(user?.role === 'super_admin' || user?.role === 'admin') && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
             <ActiveRatesPanel compact={true} />
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-base font-semibold text-gray-900">Calculadora</h3>
-              </div>
-              <p className="text-xs text-gray-500 mb-4">Gestiona las tasas de cambio para la calculadora</p>
-              <Link 
-                href="/admin/rates" 
-                className="inline-flex items-center text-xs text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Ver todas las tasas →
-              </Link>
-            </div>
+            <BillingSummaryCompact 
+              userRole={user.role as 'admin' | 'super_admin'} 
+              userId={user.id}
+            />
           </div>
         )}
 
