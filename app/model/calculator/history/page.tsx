@@ -191,16 +191,24 @@ export default function CalculatorHistory() {
           period.period_date = item.period_date;
         }
         
-        period.values.push({
-          id: item.id,
-          platform_id: item.platform_id,
-          value: item.value,
-          period_date: item.period_date,
-          period_type: item.period_type,
-          archived_at: item.archived_at,
-          original_updated_at: item.original_updated_at
-        });
-        period.total_value += Number(item.value || 0);
+        // Si es el total congelado del cierre, úsalo como total y no lo muestres en detalle
+        if (item.platform_id === '_total_usd_modelo') {
+          period.total_value = Number(item.value || 0);
+        } else {
+          period.values.push({
+            id: item.id,
+            platform_id: item.platform_id,
+            value: item.value,
+            period_date: item.period_date,
+            period_type: item.period_type,
+            archived_at: item.archived_at,
+            original_updated_at: item.original_updated_at
+          });
+          // Si aún no hay total congelado, suma de plataformas como reserva
+          if (!Number.isFinite(period.total_value) || period.total_value === 0) {
+            period.total_value += Number(item.value || 0);
+          }
+        }
       });
       
       const finalPeriods = Array.from(groupedData.values());
