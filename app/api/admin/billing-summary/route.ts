@@ -127,7 +127,7 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { startStr, endStr, periodType });
 
-    // 3.1. Verificar si el período está cerrado (datos en calculator_history)
+    // 3.1. Obtener datos de calculator_history (período cerrado)
     const { data: historyData, error: historyError } = await supabase
       .from('calculator_history')
       .select('model_id, platform_id, value, period_date, period_type')
@@ -140,25 +140,37 @@ export async function GET(request: NextRequest) {
       console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
     }
 
-    const isPeriodClosed = historyData && historyData.length > 0;
-    console.log('🔍 [BILLING-SUMMARY] Período cerrado:', isPeriodClosed, 'Registros en historial:', historyData?.length || 0);
+    // 3.2. Obtener datos de calculator_totals (período activo)
+    const { data: totalsData, error: totalsError } = await supabase
+      .from('calculator_totals')
+      .select('*')
+      .in('model_id', modelIds)
+      .gte('period_date', startStr)
+      .lte('period_date', endStr);
 
-    let totals: any[] = [];
+    if (totalsError) {
+      console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
+    }
 
-    if (isPeriodClosed) {
-      // 3.2. Si el período está cerrado, obtener datos de calculator_history
-      console.log('📚 [BILLING-SUMMARY] Obteniendo datos de calculator_history (período cerrado)');
+    console.log('🔍 [BILLING-SUMMARY] Datos encontrados:', {
+      historyRecords: historyData?.length || 0,
+      totalsRecords: totalsData?.length || 0
+    });
+
+    // 3.3. Procesar datos del historial (período cerrado)
+    const historyMap = new Map();
+    if (historyData && historyData.length > 0) {
+      console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history');
       
-      // Agrupar datos del historial por modelo y calcular totales
-      const historyMap = new Map();
-      historyData?.forEach(item => {
+      historyData.forEach(item => {
         if (!historyMap.has(item.model_id)) {
           historyMap.set(item.model_id, {
             model_id: item.model_id,
             total_usd_bruto: 0,
             total_usd_modelo: 0,
             total_cop_modelo: 0,
-            period_date: item.period_date
+            period_date: item.period_date,
+            dataSource: 'calculator_history'
           });
         }
         
@@ -173,38 +185,44 @@ export async function GET(request: NextRequest) {
         }
       });
 
-      // Convertir mapa a array
-      totals = Array.from(historyMap.values());
-      
-      // Calcular USD bruto si no está disponible (sumar plataformas individuales)
-      totals.forEach(total => {
-        if (total.total_usd_bruto === 0 && total.total_usd_modelo > 0) {
-          // Si no hay USD bruto calculado, estimar basado en USD modelo
-          total.total_usd_bruto = total.total_usd_modelo * 1.4; // Estimación conservadora
+      // Calcular USD bruto si no está disponible
+      historyMap.forEach((modelData, modelId) => {
+        if (modelData.total_usd_bruto === 0 && modelData.total_usd_modelo > 0) {
+          modelData.total_usd_bruto = modelData.total_usd_modelo * 1.4; // Estimación conservadora
         }
-        total.total_cop_modelo = total.total_usd_modelo * 3900; // Tasa estimada
+        modelData.total_cop_modelo = modelData.total_usd_modelo * 3900; // Tasa estimada
       });
-
-      console.log('📚 [BILLING-SUMMARY] Datos procesados del historial:', totals.length, 'modelos');
-    } else {
-      // 3.3. Si el período está activo, obtener datos de calculator_totals
-      console.log('📊 [BILLING-SUMMARY] Obteniendo datos de calculator_totals (período activo)');
-      
-      const { data: totalsData, error: totalsError } = await supabase
-        .from('calculator_totals')
-        .select('*')
-        .in('model_id', modelIds)
-        .gte('period_date', startStr)
-        .lte('period_date', endStr);
-
-      if (totalsError) {
-        console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
-        return NextResponse.json({ success: false, error: 'Error al obtener totales' }, { status: 500 });
-      }
-
-      totals = totalsData || [];
-      console.log('📊 [BILLING-SUMMARY] Datos obtenidos de calculator_totals:', totals.length, 'modelos');
     }
+
+    // 3.4. Procesar datos de calculator_totals (período activo) para modelos sin datos en historial
+    const totalsMap = new Map();
+    if (totalsData && totalsData.length > 0) {
+      console.log('📊 [BILLING-SUMMARY] Procesando datos de calculator_totals');
+      
+      totalsData.forEach(item => {
+        // Solo agregar si no tiene datos en historial
+        if (!historyMap.has(item.model_id)) {
+          totalsMap.set(item.model_id, {
+            model_id: item.model_id,
+            total_usd_bruto: item.total_usd_bruto || 0,
+            total_usd_modelo: item.total_usd_modelo || 0,
+            total_cop_modelo: item.total_cop_modelo || 0,
+            period_date: item.period_date,
+            dataSource: 'calculator_totals'
+          });
+        }
+      });
+    }
+
+    // 3.5. Combinar ambos mapas
+    const allTotalsMap = new Map([...historyMap, ...totalsMap]);
+    const totals = Array.from(allTotalsMap.values());
+
+    console.log('📊 [BILLING-SUMMARY] Datos finales:', {
+      totalModels: totals.length,
+      fromHistory: Array.from(historyMap.keys()).length,
+      fromTotals: Array.from(totalsMap.keys()).length
+    });
 
     // 4. Obtener tasa USD/COP actual (más reciente)
     const { data: usdCopRate, error: ratesError } = await supabase
@@ -261,7 +279,8 @@ export async function GET(request: NextRequest) {
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;
 
-      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${isPeriodClosed ? 'calculator_history' : 'calculator_totals'}`);
+      const dataSource = totalsForModel[0]?.dataSource || 'unknown';
+      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${dataSource}`);
 
       return {
         modelId: model.id,
@@ -372,9 +391,11 @@ export async function GET(request: NextRequest) {
       models: billingData.length, 
       summary,
       groupedData: groupedData?.length || 0,
-      dataSource: isPeriodClosed ? 'calculator_history (período cerrado)' : 'calculator_totals (período activo)',
+      dataSource: 'mixed (calculator_history + calculator_totals)',
       periodType,
-      periodRange: `${startStr} - ${endStr}`
+      periodRange: `${startStr} - ${endStr}`,
+      historyModels: Array.from(historyMap.keys()).length,
+      totalsModels: Array.from(totalsMap.keys()).length
     });
 
     return NextResponse.json({
