@@ -126,15 +126,17 @@ export default function CalculatorHistory() {
         return;
       }
       
-      // Agrupar por período
+      // Agrupar por período quincenal (no por día individual)
       const groupedData = new Map<string, HistoricalPeriod>();
       
       history?.forEach((item: any) => {
-        const key = `${item.period_date}-${item.period_type}`;
+        // Usar solo period_type como clave para agrupar por período quincenal
+        const key = item.period_type;
         
         if (!groupedData.has(key)) {
+          // Usar la fecha más reciente del período como representativa
           groupedData.set(key, {
-            period_date: item.period_date,
+            period_date: item.period_date, // Se actualizará con la fecha más reciente
             period_type: item.period_type,
             values: [],
             total_value: 0
@@ -142,6 +144,12 @@ export default function CalculatorHistory() {
         }
         
         const period = groupedData.get(key)!;
+        
+        // Actualizar la fecha del período con la más reciente
+        if (new Date(item.period_date) > new Date(period.period_date)) {
+          period.period_date = item.period_date;
+        }
+        
         period.values.push({
           id: item.id,
           platform_id: item.platform_id,
@@ -164,11 +172,26 @@ export default function CalculatorHistory() {
 
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('es-CO', {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('es-CO', {
       year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
+  };
+
+  const formatPeriodDate = (periodType: string, dateString: string) => {
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = date.getMonth();
+    
+    if (periodType === '1-15') {
+      return `1-15 de ${date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`;
+    } else if (periodType === '16-31') {
+      return `16-31 de ${date.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}`;
+    } else {
+      return formatDate(dateString);
+    }
   };
 
   const formatCurrency = (amount: number) => {
@@ -483,7 +506,7 @@ export default function CalculatorHistory() {
                   <div className="mb-4">
                     <InfoCard
                       value={formatCurrency(period.total_value)}
-                      label={`Período ${period.period_type === '1-15' ? '1' : '2'} - ${formatDate(period.period_date)}`}
+                      label={`Período ${period.period_type === '1-15' ? '1' : '2'} - ${formatPeriodDate(period.period_type, period.period_date)}`}
                       color="blue"
                       clickable={true}
                       onClick={() => setExpandedPeriod(isExpanded ? null : periodKey)}
