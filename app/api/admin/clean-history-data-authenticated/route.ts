@@ -1,17 +1,47 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  'https://mhernfrkvwigxdubiozm.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oZXJuZnJrdndpZ3hkdWJpb3ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MTY1NDcsImV4cCI6MjA3NDM5MjU0N30.v7qBceGTwaqyDZe5h9yLBjWwuuGEwAq6KVsAH_RNw8c'
-);
-
 export async function POST(request: NextRequest) {
   try {
-    console.log('🔍 [CLEAN-HISTORY] Iniciando limpieza de datos incorrectos del historial...');
+    console.log('🔍 [CLEAN-HISTORY-AUTH] Iniciando limpieza autenticada...');
+    
+    // Obtener el token de autorización del header
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return NextResponse.json({
+        success: false,
+        error: 'Token de autorización requerido'
+      }, { status: 401 });
+    }
+    
+    const token = authHeader.substring(7);
+    
+    // Crear cliente Supabase con el token del usuario
+    const supabase = createClient(
+      'https://mhernfrkvwigxdubiozm.supabase.co',
+      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oZXJuZnJrdndpZ3hkdWJpb3ptIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg4MTY1NDcsImV4cCI6MjA3NDM5MjU0N30.v7qBceGTwaqyDZe5h9yLBjWwuuGEwAq6KVsAH_RNw8c',
+      {
+        global: {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        }
+      }
+    );
+    
+    // Verificar que el usuario esté autenticado
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({
+        success: false,
+        error: 'Usuario no autenticado'
+      }, { status: 401 });
+    }
+    
+    console.log(`🔍 [CLEAN-HISTORY-AUTH] Usuario autenticado: ${user.id}`);
     
     // 0. Verificar estado ANTES de la limpieza
-    console.log('\n📊 [CLEAN-HISTORY] 0. Verificando estado ANTES de la limpieza:');
+    console.log('\n📊 [CLEAN-HISTORY-AUTH] 0. Verificando estado ANTES de la limpieza:');
     const { data: beforeData, error: beforeError } = await supabase
       .from('calculator_history')
       .select('period_type, value, model_id');
@@ -24,7 +54,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    const beforeSummary: Record<string, any> = {};
+    const beforeSummary = {};
     beforeData?.forEach(record => {
       if (!beforeSummary[record.period_type]) {
         beforeSummary[record.period_type] = {
@@ -38,7 +68,7 @@ export async function POST(request: NextRequest) {
       beforeSummary[record.period_type].total_valor += parseFloat(record.value || 0);
     });
     
-    const beforeSummaryFormatted: Record<string, any> = {};
+    const beforeSummaryFormatted = {};
     Object.entries(beforeSummary).forEach(([period, data]) => {
       beforeSummaryFormatted[period] = {
         registros: data.registros,
@@ -49,12 +79,12 @@ export async function POST(request: NextRequest) {
     
     console.log('📊 Estado ANTES:', beforeSummaryFormatted);
     
-    // 1. Verificar datos específicos del usuario problemático
-    console.log('\n📊 [CLEAN-HISTORY] 1. Verificando datos del usuario específico:');
+    // 1. Verificar datos específicos del usuario
+    console.log('\n📊 [CLEAN-HISTORY-AUTH] 1. Verificando datos del usuario:');
     const { data: userData, error: userError } = await supabase
       .from('calculator_history')
       .select('*')
-      .eq('model_id', 'fe54995d-1828-4721-8153-53fce6f4fe56')
+      .eq('model_id', user.id)
       .order('period_date', { ascending: false });
     
     if (userError) {
@@ -65,9 +95,9 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    console.log(`✅ Registros del usuario específico: ${userData?.length || 0}`);
+    console.log(`✅ Registros del usuario: ${userData?.length || 0}`);
     
-    let userSummary: Record<string, any> = {};
+    let userSummary = {};
     if (userData && userData.length > 0) {
       userData.forEach(record => {
         const key = `${record.period_type}-${record.period_date}`;
@@ -86,16 +116,17 @@ export async function POST(request: NextRequest) {
       });
       
       // Convertir Set a Array para JSON
-      Object.values(userSummary).forEach((item: any) => {
+      Object.values(userSummary).forEach(item => {
         item.plataformas = Array.from(item.plataformas);
       });
     }
     
     // 2. Eliminar datos del período 2 (16-31) que no deberían existir
-    console.log('\n📊 [CLEAN-HISTORY] 2. Eliminando datos del período 2 (16-31):');
+    console.log('\n📊 [CLEAN-HISTORY-AUTH] 2. Eliminando datos del período 2 (16-31):');
     const { data: period2Data, error: period2Error } = await supabase
       .from('calculator_history')
       .select('id')
+      .eq('model_id', user.id)
       .eq('period_type', '16-31');
     
     let period2Deleted = 0;
@@ -105,32 +136,28 @@ export async function POST(request: NextRequest) {
       console.log(`✅ Registros del período 2 encontrados: ${period2Data?.length || 0}`);
       
       if (period2Data && period2Data.length > 0) {
-        // Eliminar en lotes para evitar problemas de tamaño
-        const batchSize = 50;
-        for (let i = 0; i < period2Data.length; i += batchSize) {
-          const batch = period2Data.slice(i, i + batchSize);
-          const ids = batch.map(record => record.id);
-          
-          const { error: deleteError } = await supabase
-            .from('calculator_history')
-            .delete()
-            .in('id', ids);
-          
-          if (deleteError) {
-            console.error(`❌ Error eliminando lote ${i}-${i + batch.length}:`, deleteError);
-          } else {
-            console.log(`✅ Lote ${i}-${i + batch.length} eliminado correctamente`);
-            period2Deleted += batch.length;
-          }
+        const ids = period2Data.map(record => record.id);
+        
+        const { error: deleteError } = await supabase
+          .from('calculator_history')
+          .delete()
+          .in('id', ids);
+        
+        if (deleteError) {
+          console.error('❌ Error eliminando período 2:', deleteError);
+        } else {
+          console.log(`✅ Período 2 eliminado: ${ids.length} registros`);
+          period2Deleted = ids.length;
         }
       }
     }
     
     // 3. Verificar duplicados en el período 1
-    console.log('\n📊 [CLEAN-HISTORY] 3. Verificando duplicados en período 1:');
+    console.log('\n📊 [CLEAN-HISTORY-AUTH] 3. Verificando duplicados en período 1:');
     const { data: period1Data, error: period1Error } = await supabase
       .from('calculator_history')
       .select('*')
+      .eq('model_id', user.id)
       .eq('period_type', '1-15')
       .order('archived_at', { ascending: false });
     
@@ -142,9 +169,9 @@ export async function POST(request: NextRequest) {
       
       if (period1Data && period1Data.length > 0) {
         // Identificar duplicados
-        const duplicates: Record<string, any[]> = {};
+        const duplicates = {};
         period1Data.forEach(record => {
-          const key = `${record.model_id}-${record.platform_id}-${record.period_date}`;
+          const key = `${record.platform_id}-${record.period_date}`;
           if (!duplicates[key]) {
             duplicates[key] = [];
           }
@@ -180,7 +207,7 @@ export async function POST(request: NextRequest) {
     }
     
     // 4. Verificar estado DESPUÉS de la limpieza
-    console.log('\n📊 [CLEAN-HISTORY] 4. Verificando estado DESPUÉS de la limpieza:');
+    console.log('\n📊 [CLEAN-HISTORY-AUTH] 4. Verificando estado DESPUÉS de la limpieza:');
     const { data: afterData, error: afterError } = await supabase
       .from('calculator_history')
       .select('period_type, value, model_id');
@@ -193,7 +220,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    const afterSummary: Record<string, any> = {};
+    const afterSummary = {};
     afterData?.forEach(record => {
       if (!afterSummary[record.period_type]) {
         afterSummary[record.period_type] = {
@@ -207,7 +234,7 @@ export async function POST(request: NextRequest) {
       afterSummary[record.period_type].total_valor += parseFloat(record.value || 0);
     });
     
-    const afterSummaryFormatted: Record<string, any> = {};
+    const afterSummaryFormatted = {};
     Object.entries(afterSummary).forEach(([period, data]) => {
       afterSummaryFormatted[period] = {
         registros: data.registros,
@@ -218,36 +245,23 @@ export async function POST(request: NextRequest) {
     
     console.log('📊 Estado DESPUÉS:', afterSummaryFormatted);
     
-    // 5. Verificar que no quedan datos del período 2
-    console.log('\n📊 [CLEAN-HISTORY] 5. Verificando que no quedan datos del período 2:');
-    const { data: period2Check, error: period2CheckError } = await supabase
-      .from('calculator_history')
-      .select('id')
-      .eq('period_type', '16-31');
-    
-    if (period2CheckError) {
-      console.error('❌ Error verificando período 2:', period2CheckError);
-    } else {
-      console.log(`✅ Registros del período 2 restantes: ${period2Check?.length || 0}`);
-    }
-    
-    console.log('\n✅ [CLEAN-HISTORY] Limpieza completada');
+    console.log('\n✅ [CLEAN-HISTORY-AUTH] Limpieza completada');
     
     return NextResponse.json({
       success: true,
       message: 'Limpieza de historial completada',
       results: {
+        user_id: user.id,
         before: beforeSummaryFormatted,
         after: afterSummaryFormatted,
         user_summary: userSummary,
         period2_deleted: period2Deleted,
-        duplicates_deleted: duplicatesDeleted,
-        period2_remaining: period2Check?.length || 0
+        duplicates_deleted: duplicatesDeleted
       }
     });
     
   } catch (error) {
-    console.error('❌ [CLEAN-HISTORY] Error general:', error);
+    console.error('❌ [CLEAN-HISTORY-AUTH] Error general:', error);
     return NextResponse.json({
       success: false,
       error: 'Error general en limpieza de historial'
