@@ -99,6 +99,11 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
       setLoading(true);
       setError(null);
 
+      // Limpiar datos anteriores para evitar cache
+      setBillingData([]);
+      setGroupedData([]);
+      setSummary(null);
+
       const params = new URLSearchParams({
         adminId: userId,
         periodDate: selectedDate
@@ -109,13 +114,31 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
       }
 
       console.log('🔍 [BILLING-SUMMARY] Parámetros:', params.toString());
-      const response = await fetch(`/api/admin/billing-summary?${params}`);
+      
+      // Agregar timestamp para evitar cache del navegador
+      const url = `/api/admin/billing-summary?${params}&_t=${Date.now()}`;
+      console.log('🔍 [BILLING-SUMMARY] URL completa:', url);
+      
+      const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+          'Cache-Control': 'no-cache',
+          'Pragma': 'no-cache'
+        }
+      });
+      
       const data = await response.json();
       console.log('🔍 [BILLING-SUMMARY] Respuesta API:', data);
 
       if (!data.success) {
         throw new Error(data.error || 'Error al cargar datos');
       }
+
+      console.log('🔍 [BILLING-SUMMARY] Estableciendo nuevos datos:', {
+        billingDataLength: data.data?.length || 0,
+        summary: data.summary,
+        groupedDataLength: data.groupedData?.length || 0
+      });
 
       setBillingData(data.data || []);
       setGroupedData(data.groupedData || []);
