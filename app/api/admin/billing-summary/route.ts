@@ -140,13 +140,14 @@ export async function GET(request: NextRequest) {
       console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
     }
 
-    // 3.2. Obtener datos de calculator_totals (período activo)
+    // 3.2. Obtener datos de calculator_totals (período activo) - buscar en rango más amplio
     const { data: totalsData, error: totalsError } = await supabase
       .from('calculator_totals')
       .select('*')
       .in('model_id', modelIds)
       .gte('period_date', startStr)
-      .lte('period_date', endStr);
+      .lte('period_date', endStr)
+      .order('period_date', { ascending: false });
 
     if (totalsError) {
       console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
@@ -154,7 +155,9 @@ export async function GET(request: NextRequest) {
 
     console.log('🔍 [BILLING-SUMMARY] Datos encontrados:', {
       historyRecords: historyData?.length || 0,
-      totalsRecords: totalsData?.length || 0
+      totalsRecords: totalsData?.length || 0,
+      historyModels: historyData ? [...new Set(historyData.map(h => h.model_id))] : [],
+      totalsModels: totalsData ? [...new Set(totalsData.map(t => t.model_id))] : []
     });
 
     // 3.3. Procesar datos del historial (período cerrado)
