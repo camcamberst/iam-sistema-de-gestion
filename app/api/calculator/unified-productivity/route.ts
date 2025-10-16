@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
       .from('model_values')
       .select('platform_id, value')
       .eq('model_id', modelId)
-      .in('period_date', [dates.colombia, dates.europe])
+      .eq('period_date', dates.colombia)
       .order('updated_at', { ascending: false })
       .limit(100);
 
