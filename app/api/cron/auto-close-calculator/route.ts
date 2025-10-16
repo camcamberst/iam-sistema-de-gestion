@@ -49,38 +49,42 @@ export async function GET(request: NextRequest) {
     const currentPeriod = await createPeriodIfNeeded(currentDate);
     console.log('✅ [CRON] Período actual:', currentPeriod);
     
-    // 2. Obtener todas las configuraciones activas
-    const { data: configs, error: configsError } = await supabase
-      .from('calculator_config')
-      .select('model_id, active')
-      .eq('active', true);
+    // 2. Obtener TODOS los modelos activos (sin filtro de configuración)
+    const { data: allModels, error: modelsError } = await supabase
+      .from('users')
+      .select('id, email, name, role')
+      .eq('role', 'modelo')
+      .eq('is_active', true);
     
-    if (configsError) {
-      console.error('❌ [CRON] Error obteniendo configuraciones:', configsError);
+    if (modelsError) {
+      console.error('❌ [CRON] Error obteniendo modelos:', modelsError);
       return NextResponse.json({
         success: false,
-        error: 'Error obteniendo configuraciones'
+        error: 'Error obteniendo modelos'
       }, { status: 500 });
     }
     
-    console.log('🔄 [CRON] Configuraciones encontradas:', configs?.length || 0);
+    console.log('🔄 [CRON] Modelos encontrados:', allModels?.length || 0);
     
     // 3. Para cada modelo, archivar valores y resetear calculadora
     const results = [];
     
-    for (const config of configs || []) {
+    for (const model of allModels || []) {
       try {
+        console.log(`🔄 [CRON] Procesando modelo: ${model.email} (${model.id})`);
+        
         // Obtener valores actuales del modelo
         const { data: currentValues, error: valuesError } = await supabase
           .from('model_values')
           .select('*')
-          .eq('model_id', config.model_id)
+          .eq('model_id', model.id)
           .eq('period_date', currentDate);
         
         if (valuesError) {
-          console.error(`❌ [CRON] Error obteniendo valores para ${config.model_id}:`, valuesError);
+          console.error(`❌ [CRON] Error obteniendo valores para ${model.id}:`, valuesError);
           results.push({
-            model_id: config.model_id,
+            model_id: model.id,
+            model_email: model.email,
             status: 'error',
             error: valuesError.message
           });
@@ -89,6 +93,8 @@ export async function GET(request: NextRequest) {
         
         // Archivar valores a calculator_history
         if (currentValues && currentValues.length > 0) {
+          console.log(`🔄 [CRON] Archivando ${currentValues.length} valores para ${model.email}`);
+          
           const historyRecords = currentValues.map(value => ({
             model_id: value.model_id,
             platform_id: value.platform_id,
@@ -104,7 +110,9 @@ export async function GET(request: NextRequest) {
             .insert(historyRecords);
           
           if (historyError) {
-            console.error(`❌ [CRON] Error archivando valores para ${config.model_id}:`, historyError);
+            console.error(`❌ [CRON] Error archivando valores para ${model.email}:`, historyError);
+          } else {
+            console.log(`✅ [CRON] Valores archivados para ${model.email}`);
           }
         }
         
@@ -112,25 +120,30 @@ export async function GET(request: NextRequest) {
         const { error: deleteError } = await supabase
           .from('model_values')
           .delete()
-          .eq('model_id', config.model_id)
+          .eq('model_id', model.id)
           .eq('period_date', currentDate);
         
         if (deleteError) {
-          console.error(`❌ [CRON] Error eliminando valores para ${config.model_id}:`, deleteError);
+          console.error(`❌ [CRON] Error eliminando valores para ${model.email}:`, deleteError);
+        } else {
+          console.log(`✅ [CRON] Valores eliminados para ${model.email}`);
         }
         
         results.push({
-          model_id: config.model_id,
+          model_id: model.id,
+          model_email: model.email,
           status: 'success',
-          values_archived: currentValues?.length || 0
+          values_archived: currentValues?.length || 0,
+          values_deleted: !deleteError
         });
         
-        console.log(`✅ [CRON] Modelo ${config.model_id} procesado: ${currentValues?.length || 0} valores archivados`);
+        console.log(`✅ [CRON] Modelo ${model.email} procesado: ${currentValues?.length || 0} valores archivados`);
         
       } catch (modelError) {
-        console.error(`❌ [CRON] Error procesando modelo ${config.model_id}:`, modelError);
+        console.error(`❌ [CRON] Error procesando modelo ${model.email}:`, modelError);
         results.push({
-          model_id: config.model_id,
+          model_id: model.id,
+          model_email: model.email,
           status: 'error',
           error: modelError instanceof Error ? modelError.message : 'Error desconocido'
         });
