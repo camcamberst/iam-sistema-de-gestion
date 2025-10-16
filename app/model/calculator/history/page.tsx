@@ -113,6 +113,8 @@ export default function CalculatorHistory() {
 
   const loadHistoricalData = async (userId: string) => {
     try {
+      console.log('🔍 [HISTORY] Cargando datos históricos para usuario:', userId);
+      
       const { data: history, error } = await supabase
         .from('calculator_history')
         .select('*')
@@ -120,8 +122,14 @@ export default function CalculatorHistory() {
         .order('period_date', { ascending: false })
         .order('archived_at', { ascending: false });
       
+      console.log('🔍 [HISTORY] Datos obtenidos de la base de datos:', {
+        history: history,
+        error: error,
+        count: history?.length || 0
+      });
+      
       if (error) {
-        console.error('Error loading history:', error);
+        console.error('❌ [HISTORY] Error loading history:', error);
         setError('Error cargando historial');
         return;
       }
@@ -162,10 +170,22 @@ export default function CalculatorHistory() {
         period.total_value += item.value;
       });
       
-      setHistoricalPeriods(Array.from(groupedData.values()));
+      const finalPeriods = Array.from(groupedData.values());
+      console.log('🔍 [HISTORY] Períodos finales procesados:', {
+        periods: finalPeriods,
+        count: finalPeriods.length,
+        details: finalPeriods.map(p => ({
+          period_type: p.period_type,
+          period_date: p.period_date,
+          total_value: p.total_value,
+          values_count: p.values.length
+        }))
+      });
+      
+      setHistoricalPeriods(finalPeriods);
       
     } catch (error) {
-      console.error('Error loading historical data:', error);
+      console.error('❌ [HISTORY] Error loading historical data:', error);
       setError('Error cargando datos históricos');
     }
   };
