@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { SecurityFilter } from './SecurityFilter';
 
 interface Message {
@@ -29,10 +29,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [error, setError] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
 
   // Scroll to bottom when new messages arrive
   const scrollToBottom = () => {

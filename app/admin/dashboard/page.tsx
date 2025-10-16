@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
@@ -17,10 +17,7 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: Role; groups: string[] } | null>(null);
   // Resumen de productividad (modelo)
   const [summary, setSummary] = useState<{ usdBruto: number; usdModelo: number; copModelo: number; goalUsd: number; pct: number } | null>(null);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
+  
 
   useEffect(() => {
     const load = async () => {

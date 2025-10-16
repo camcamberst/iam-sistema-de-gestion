@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
@@ -14,10 +14,6 @@ export default function SuperAdminDashboard() {
   const [stats, setStats] = useState({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: Role; groups: string[] } | null>(null);
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
 
   useEffect(() => {
     const load = async () => {

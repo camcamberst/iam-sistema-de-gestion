@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from "@/lib/supabase";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
@@ -68,10 +68,6 @@ export default function ModelCalculatorPage() {
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
   // Sistema V2 siempre activo (sin flags de entorno)
   // 🔧 FIX: Autosave solo después de 2 minutos de inactividad
   const ENABLE_AUTOSAVE = true; // Habilitado con delay de inactividad

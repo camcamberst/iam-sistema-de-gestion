@@ -225,8 +225,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         label: 'Gestión Usuarios',
         href: '#',
         subItems: [
-          { label: 'Crear Usuario', href: '/admin/users/create' },
-          { label: 'Consultar Usuarios', href: '/admin/users' }
+          { 
+            label: 'Crear Usuario', 
+            href: '/admin/users/create',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            ),
+            description: 'Registra nuevos usuarios en el sistema'
+          },
+          { 
+            label: 'Consultar Usuarios', 
+            href: '/admin/users',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            ),
+            description: 'Administra usuarios existentes'
+          }
         ]
       });
 
@@ -235,8 +253,26 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         label: 'Gestión Anticipos',
         href: '#',
         subItems: [
-          { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
-          { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
+          { 
+            label: 'Solicitudes Pendientes', 
+            href: '/admin/anticipos/pending',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ),
+            description: 'Revisa solicitudes por aprobar'
+          },
+          { 
+            label: 'Historial Anticipos', 
+            href: '/admin/anticipos/history',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            ),
+            description: 'Consulta el historial completo'
+          }
         ]
       });
 
@@ -245,9 +281,36 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         label: 'Gestión Sedes',
         href: '#',
         subItems: [
-          { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar' },
-          { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio' },
-          { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard' }
+          { 
+            label: 'Gestionar Sedes', 
+            href: '/admin/sedes/gestionar',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            ),
+            description: 'Administra sedes y ubicaciones'
+          },
+          { 
+            label: 'Portafolio Modelos', 
+            href: '/admin/sedes/portafolio',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            ),
+            description: 'Gestiona portafolios por sede'
+          },
+          { 
+            label: 'Dashboard Sedes', 
+            href: '/admin/sedes/dashboard',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            ),
+            description: 'Vista general de todas las sedes'
+          }
         ]
       });
 
@@ -255,9 +318,38 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
       if (calculatorIndex !== -1) {
         baseItems[calculatorIndex].subItems = [
-          { label: 'Definir RATES', href: '/admin/rates' },
-          { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
-          { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view-model' }
+          { 
+            label: 'Definir RATES', 
+            href: '/admin/rates',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            ),
+            description: 'Configura las tasas de conversión'
+          },
+          { 
+            label: 'Configurar Calculadora', 
+            href: '/admin/calculator/config',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ),
+            description: 'Configura parámetros del sistema'
+          },
+          { 
+            label: 'Ver Calculadora Modelo', 
+            href: '/admin/calculator/view-model',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            ),
+            description: 'Vista de la calculadora para modelos'
+          }
         ];
       }
     }
@@ -273,7 +365,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [isClient]);
 
-  
+  // Comparación exacta y normalizada de rutas para subopciones
+  const isExactPath = (a: string, b: string) => {
+    const norm = (p: string) => p.replace(/\/+$/, '');
+    return norm(a) === norm(b);
+  };
 
   const isActive = (href: string) => {
     if (href === '#') return false;
@@ -393,23 +489,55 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
                       {/* Dropdown Menu */}
                       {shouldShowDropdown(item) && (
-                        <div 
-                          className="absolute top-full left-0 mt-2 w-72 bg-white/90 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
+                        <div
+                          className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
                           onMouseEnter={handleDropdownEnter}
                           onMouseLeave={handleDropdownLeave}
                         >
-                          <div className="p-2">
+                          <div className="p-3">
+                            <div className="mb-2">
+                              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                {item.label}
+                              </h3>
+                            </div>
                             {item.subItems.map((subItem) => (
                               <Link
                                 key={subItem.href}
                                 href={subItem.href}
-                                className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg ${
-                                  isActive(subItem.href)
+                                className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
+                                  isExactPath(pathname, subItem.href)
                                     ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
                                     : 'text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
                                 }`}
                               >
-                                {subItem.label}
+                                <div className="flex items-center space-x-3">
+                                  <div className={`flex-shrink-0 ${
+                                    isExactPath(pathname, subItem.href) ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                                  }`}>
+                                    {subItem.icon || (
+                                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                                      </svg>
+                                    )}
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="font-medium">{subItem.label}</div>
+                                    {subItem.description && (
+                                      <div className={`text-xs ${
+                                        isExactPath(pathname, subItem.href) ? 'text-blue-600' : 'text-gray-500'
+                                      }`}>
+                                        {subItem.description}
+                                      </div>
+                                    )}
+                                  </div>
+                                  {isExactPath(pathname, subItem.href) && (
+                                    <div className="flex-shrink-0">
+                                      <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                      </svg>
+                                    </div>
+                                  )}
+                                </div>
                               </Link>
                             ))}
                           </div>
