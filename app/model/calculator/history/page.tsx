@@ -134,10 +134,42 @@ export default function CalculatorHistory() {
         return;
       }
       
+      // Determinar el último período cerrado (excluir período en curso)
+      const now = new Date();
+      const tzNow = new Date(now.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+      const year = tzNow.getFullYear();
+      const month = tzNow.getMonth() + 1; // 1-12
+      const day = tzNow.getDate();
+      let lastPeriodType: '1-15' | '16-31';
+      let lastPeriodYear = year;
+      let lastPeriodMonth = month;
+      if (day >= 1 && day <= 15) {
+        // En primera quincena: el último cerrado es 16-31 del mes anterior
+        lastPeriodType = '16-31';
+        if (month === 1) {
+          lastPeriodMonth = 12;
+          lastPeriodYear = year - 1;
+        } else {
+          lastPeriodMonth = month - 1;
+        }
+      } else {
+        // En segunda quincena: el último cerrado es 1-15 del mismo mes
+        lastPeriodType = '1-15';
+      }
+      const lastYm = `${lastPeriodYear}-${String(lastPeriodMonth).padStart(2, '0')}`;
+
+      // Filtrar solo registros del último período cerrado
+      const filteredHistory = (history || []).filter((item: any) => {
+        const ym = (item.period_date || '').toString().slice(0, 7);
+        return item.period_type === lastPeriodType && ym === lastYm;
+      });
+
+      console.log('🔍 [HISTORY] Filtro período cerrado:', { lastPeriodType, lastYm, total: filteredHistory.length });
+
       // Agrupar por período quincenal y mes/año (evitar mezclar meses con misma quincena)
       const groupedData = new Map<string, HistoricalPeriod>();
       
-      history?.forEach((item: any) => {
+      filteredHistory.forEach((item: any) => {
         // Clave: tipo de período + año-mes (YYYY-MM)
         const ym = (item.period_date || '').toString().slice(0, 7); // YYYY-MM
         const key = `${item.period_type}-${ym}`;
