@@ -545,7 +545,7 @@ export default function CalculatorHistory() {
                       <h4 className="text-sm font-medium text-gray-700 mb-3">Detalles por plataforma:</h4>
                       <InfoCardGrid 
                         cards={period.values.map(value => ({
-                          value: formatCurrency(value.value),
+                          value: `${formatCurrencyUSD(Number(value.value || 0))} USD`,
                           label: value.platform_id.replace('_', ' '),
                           color: "green"
                         }))}
