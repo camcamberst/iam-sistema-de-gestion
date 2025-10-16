@@ -47,7 +47,7 @@ SELECT
     COUNT(*) AS total_valores,
     SUM(mv.value) AS suma_total_valores
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 2. Archivar TODOS los valores existentes del período 1-15
 INSERT INTO calculator_history (
@@ -68,7 +68,7 @@ SELECT
     NOW() AS archived_at,
     mv.updated_at AS original_updated_at
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 3. Verificar cuántos valores se archivaron
 SELECT 
@@ -77,7 +77,7 @@ SELECT
     COUNT(DISTINCT model_id) AS modelos_archivados,
     SUM(value) AS suma_archivada
 FROM calculator_history 
-WHERE period_date = '2025-10-15' 
+WHERE period_date = '2025-10-15'::date 
 AND archived_at >= NOW() - INTERVAL '1 minute';
 
 -- 4. Crear notificaciones de limpieza para TODOS los modelos afectados
@@ -100,14 +100,14 @@ SELECT DISTINCT
         'action', 'clear_calculator_values',
         'archived_values', true
     ) AS notification_data,
-    '2025-10-15' AS period_date,
+    '2025-10-15'::date AS period_date,
     NOW() + INTERVAL '24 hours' AS expires_at
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 5. ELIMINAR TODOS LOS VALORES de model_values para el período 1-15
 DELETE FROM model_values 
-WHERE period_date = '2025-10-15';
+WHERE period_date = '2025-10-15'::date;
 
 -- 6. Verificar estado DESPUÉS de la limpieza
 SELECT 
@@ -116,7 +116,7 @@ SELECT
     COUNT(*) AS total_valores,
     COALESCE(SUM(mv.value), 0) AS suma_total_valores
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 7. Verificar que los valores están archivados
 SELECT 
@@ -125,7 +125,7 @@ SELECT
     COUNT(DISTINCT model_id) AS modelos_en_historial,
     SUM(value) AS suma_en_historial
 FROM calculator_history 
-WHERE period_date = '2025-10-15';
+WHERE period_date = '2025-10-15'::date;
 
 -- 8. Verificar notificaciones creadas
 SELECT 
@@ -133,7 +133,7 @@ SELECT
     COUNT(*) AS total_notificaciones,
     COUNT(DISTINCT model_id) AS modelos_notificados
 FROM calculator_notifications 
-WHERE period_date = '2025-10-15' 
+WHERE period_date = '2025-10-15'::date 
 AND notification_type = 'calculator_cleared'
 AND created_at >= NOW() - INTERVAL '1 minute';
 

@@ -12,7 +12,7 @@ SELECT
     COUNT(*) AS total_valores,
     SUM(mv.value) AS suma_total_valores
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 1. Archivar TODOS los valores existentes del período 1-15
 INSERT INTO calculator_history (
@@ -33,7 +33,7 @@ SELECT
     NOW() AS archived_at,
     mv.updated_at AS original_updated_at
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 2. Verificar cuántos valores se archivaron
 SELECT 
@@ -42,12 +42,12 @@ SELECT
     COUNT(DISTINCT model_id) AS modelos_archivados,
     SUM(value) AS suma_archivada
 FROM calculator_history 
-WHERE period_date = '2025-10-15' 
+WHERE period_date = '2025-10-15'::date 
 AND archived_at >= NOW() - INTERVAL '1 minute';
 
 -- 3. ELIMINAR TODOS LOS VALORES de model_values para el período 1-15
 DELETE FROM model_values 
-WHERE period_date = '2025-10-15';
+WHERE period_date = '2025-10-15'::date;
 
 -- 4. Verificar estado DESPUÉS de la limpieza
 SELECT 
@@ -56,7 +56,7 @@ SELECT
     COUNT(*) AS total_valores,
     COALESCE(SUM(mv.value), 0) AS suma_total_valores
 FROM model_values mv
-WHERE mv.period_date = '2025-10-15';
+WHERE mv.period_date = '2025-10-15'::date;
 
 -- 5. Verificar que los valores están archivados
 SELECT 
@@ -65,7 +65,7 @@ SELECT
     COUNT(DISTINCT model_id) AS modelos_en_historial,
     SUM(value) AS suma_en_historial
 FROM calculator_history 
-WHERE period_date = '2025-10-15';
+WHERE period_date = '2025-10-15'::date;
 
 -- 6. Mostrar resumen de modelos procesados
 SELECT 
