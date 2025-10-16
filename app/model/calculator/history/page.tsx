@@ -134,12 +134,13 @@ export default function CalculatorHistory() {
         return;
       }
       
-      // Agrupar por período quincenal (no por día individual)
+      // Agrupar por período quincenal y mes/año (evitar mezclar meses con misma quincena)
       const groupedData = new Map<string, HistoricalPeriod>();
       
       history?.forEach((item: any) => {
-        // Usar solo period_type como clave para agrupar por período quincenal
-        const key = item.period_type;
+        // Clave: tipo de período + año-mes (YYYY-MM)
+        const ym = (item.period_date || '').toString().slice(0, 7); // YYYY-MM
+        const key = `${item.period_type}-${ym}`;
         
         if (!groupedData.has(key)) {
           // Usar la fecha más reciente del período como representativa
