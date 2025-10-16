@@ -158,7 +158,7 @@ export async function POST(request: NextRequest) {
           // Eliminar duplicados (mantener solo el más reciente)
           for (const key of duplicateKeys) {
             const records = duplicates[key];
-            const sortedRecords = records.sort((a, b) => new Date(b.archived_at) - new Date(a.archived_at));
+            const sortedRecords = records.sort((a, b) => new Date(b.archived_at).getTime() - new Date(a.archived_at).getTime());
             const toDelete = sortedRecords.slice(1); // Mantener solo el primero (más reciente)
             
             const idsToDelete = toDelete.map(record => record.id);
