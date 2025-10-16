@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    const beforeSummary = {};
+    const beforeSummary: Record<string, any> = {};
     beforeData?.forEach(record => {
       if (!beforeSummary[record.period_type]) {
         beforeSummary[record.period_type] = {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
       beforeSummary[record.period_type].total_valor += parseFloat(record.value || 0);
     });
     
-    const beforeSummaryFormatted = {};
+    const beforeSummaryFormatted: Record<string, any> = {};
     Object.entries(beforeSummary).forEach(([period, data]) => {
       beforeSummaryFormatted[period] = {
         registros: data.registros,
@@ -97,7 +97,7 @@ export async function POST(request: NextRequest) {
     
     console.log(`✅ Registros del usuario: ${userData?.length || 0}`);
     
-    let userSummary = {};
+    let userSummary: Record<string, any> = {};
     if (userData && userData.length > 0) {
       userData.forEach(record => {
         const key = `${record.period_type}-${record.period_date}`;
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       });
       
       // Convertir Set a Array para JSON
-      Object.values(userSummary).forEach(item => {
+      Object.values(userSummary).forEach((item: any) => {
         item.plataformas = Array.from(item.plataformas);
       });
     }
@@ -169,7 +169,7 @@ export async function POST(request: NextRequest) {
       
       if (period1Data && period1Data.length > 0) {
         // Identificar duplicados
-        const duplicates = {};
+        const duplicates: Record<string, any[]> = {};
         period1Data.forEach(record => {
           const key = `${record.platform_id}-${record.period_date}`;
           if (!duplicates[key]) {
@@ -220,7 +220,7 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
     
-    const afterSummary = {};
+    const afterSummary: Record<string, any> = {};
     afterData?.forEach(record => {
       if (!afterSummary[record.period_type]) {
         afterSummary[record.period_type] = {
@@ -234,7 +234,7 @@ export async function POST(request: NextRequest) {
       afterSummary[record.period_type].total_valor += parseFloat(record.value || 0);
     });
     
-    const afterSummaryFormatted = {};
+    const afterSummaryFormatted: Record<string, any> = {};
     Object.entries(afterSummary).forEach(([period, data]) => {
       afterSummaryFormatted[period] = {
         registros: data.registros,
