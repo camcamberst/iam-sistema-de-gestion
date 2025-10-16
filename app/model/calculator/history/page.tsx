@@ -167,7 +167,7 @@ export default function CalculatorHistory() {
           archived_at: item.archived_at,
           original_updated_at: item.original_updated_at
         });
-        period.total_value += item.value;
+        period.total_value += Number(item.value || 0);
       });
       
       const finalPeriods = Array.from(groupedData.values());
@@ -214,13 +214,13 @@ export default function CalculatorHistory() {
     }
   };
 
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-CO', {
+  const formatCurrencyUSD = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: 'COP',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+      currency: 'USD',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(amount || 0);
   };
 
   // Calcular estadísticas específicas solicitadas
@@ -525,7 +525,7 @@ export default function CalculatorHistory() {
                   {/* Header del período con InfoCard clickeable */}
                   <div className="mb-4">
                     <InfoCard
-                      value={formatCurrency(period.total_value)}
+                      value={`${formatCurrencyUSD(period.total_value)} USD`}
                       label={`Período ${period.period_type === '1-15' ? '1' : '2'} - ${formatPeriodDate(period.period_type, period.period_date)}`}
                       color="blue"
                       clickable={true}
