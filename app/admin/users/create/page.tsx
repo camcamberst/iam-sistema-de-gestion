@@ -234,11 +234,11 @@ export default function CreateUserPage() {
           <label className="text-sm font-medium text-gray-700 self-center">Rol</label>
           <div>
             <AppleDropdown
-              options=[
+              options={[
                 { value: 'modelo', label: 'Modelo' },
                 { value: 'admin', label: 'Admin' },
                 { value: 'super_admin', label: 'Super Admin' }
-              ]
+              ]}
               value={form.role}
               onChange={(value) => setForm({ ...form, role: value as any })}
               placeholder="Selecciona un rol"
