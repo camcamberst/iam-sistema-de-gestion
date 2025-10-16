@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 3. Obtener totales de calculadora para la QUINCENA del periodDate
+    // 3. Determinar si el período está cerrado o activo
     const d = new Date(periodDate);
     const y = d.getFullYear();
     const m = d.getMonth();
@@ -123,17 +123,87 @@ export async function GET(request: NextRequest) {
     const startStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '01' : '16'}`;
     const lastDay = new Date(y, m + 1, 0).getDate();
     const endStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '15' : String(lastDay).padStart(2,'0')}`;
+    const periodType = firstHalf ? '1-15' : '16-31';
 
-    const { data: totals, error: totalsError } = await supabase
-      .from('calculator_totals')
-      .select('*')
+    console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { startStr, endStr, periodType });
+
+    // 3.1. Verificar si el período está cerrado (datos en calculator_history)
+    const { data: historyData, error: historyError } = await supabase
+      .from('calculator_history')
+      .select('model_id, platform_id, value, period_date, period_type')
       .in('model_id', modelIds)
       .gte('period_date', startStr)
-      .lte('period_date', endStr);
+      .lte('period_date', endStr)
+      .eq('period_type', periodType);
 
-    if (totalsError) {
-      console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
-      return NextResponse.json({ success: false, error: 'Error al obtener totales' }, { status: 500 });
+    if (historyError) {
+      console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
+    }
+
+    const isPeriodClosed = historyData && historyData.length > 0;
+    console.log('🔍 [BILLING-SUMMARY] Período cerrado:', isPeriodClosed, 'Registros en historial:', historyData?.length || 0);
+
+    let totals: any[] = [];
+
+    if (isPeriodClosed) {
+      // 3.2. Si el período está cerrado, obtener datos de calculator_history
+      console.log('📚 [BILLING-SUMMARY] Obteniendo datos de calculator_history (período cerrado)');
+      
+      // Agrupar datos del historial por modelo y calcular totales
+      const historyMap = new Map();
+      historyData?.forEach(item => {
+        if (!historyMap.has(item.model_id)) {
+          historyMap.set(item.model_id, {
+            model_id: item.model_id,
+            total_usd_bruto: 0,
+            total_usd_modelo: 0,
+            total_cop_modelo: 0,
+            period_date: item.period_date
+          });
+        }
+        
+        const modelData = historyMap.get(item.model_id);
+        
+        // Si es el total USD modelo, usar ese valor
+        if (item.platform_id === '_total_usd_modelo') {
+          modelData.total_usd_modelo = item.value || 0;
+        } else {
+          // Sumar valores de plataformas individuales para USD bruto
+          modelData.total_usd_bruto += item.value || 0;
+        }
+      });
+
+      // Convertir mapa a array
+      totals = Array.from(historyMap.values());
+      
+      // Calcular USD bruto si no está disponible (sumar plataformas individuales)
+      totals.forEach(total => {
+        if (total.total_usd_bruto === 0 && total.total_usd_modelo > 0) {
+          // Si no hay USD bruto calculado, estimar basado en USD modelo
+          total.total_usd_bruto = total.total_usd_modelo * 1.4; // Estimación conservadora
+        }
+        total.total_cop_modelo = total.total_usd_modelo * 3900; // Tasa estimada
+      });
+
+      console.log('📚 [BILLING-SUMMARY] Datos procesados del historial:', totals.length, 'modelos');
+    } else {
+      // 3.3. Si el período está activo, obtener datos de calculator_totals
+      console.log('📊 [BILLING-SUMMARY] Obteniendo datos de calculator_totals (período activo)');
+      
+      const { data: totalsData, error: totalsError } = await supabase
+        .from('calculator_totals')
+        .select('*')
+        .in('model_id', modelIds)
+        .gte('period_date', startStr)
+        .lte('period_date', endStr);
+
+      if (totalsError) {
+        console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
+        return NextResponse.json({ success: false, error: 'Error al obtener totales' }, { status: 500 });
+      }
+
+      totals = totalsData || [];
+      console.log('📊 [BILLING-SUMMARY] Datos obtenidos de calculator_totals:', totals.length, 'modelos');
     }
 
     // 4. Obtener tasa USD/COP actual (más reciente)
@@ -153,7 +223,7 @@ export async function GET(request: NextRequest) {
 
     const usdCopRateValue = usdCopRate?.value || 3900;
 
-    // 5. Consolidar datos por modelo (sumatoria dentro de la quincena)
+    // 5. Consolidar datos por modelo
     const billingData = models.map(model => {
       const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
       const modelGroup = modelGroupsMap.get(model.id);
@@ -183,11 +253,15 @@ export async function GET(request: NextRequest) {
         };
       }
 
+      // Para períodos cerrados, ya tenemos los totales calculados
+      // Para períodos activos, sumar múltiples registros si existen
       const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
       const usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
       const usdSede = usdBruto - usdModelo; // USD Sede = USD Bruto - USD Modelo
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;
+
+      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${isPeriodClosed ? 'calculator_history' : 'calculator_totals'}`);
 
       return {
         modelId: model.id,
@@ -297,7 +371,10 @@ export async function GET(request: NextRequest) {
     console.log('✅ [BILLING-SUMMARY] Resumen generado:', { 
       models: billingData.length, 
       summary,
-      groupedData: groupedData?.length || 0
+      groupedData: groupedData?.length || 0,
+      dataSource: isPeriodClosed ? 'calculator_history (período cerrado)' : 'calculator_totals (período activo)',
+      periodType,
+      periodRange: `${startStr} - ${endStr}`
     });
 
     return NextResponse.json({
