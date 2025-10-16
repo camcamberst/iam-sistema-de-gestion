@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -27,10 +27,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const userPanelRef = useRef<HTMLDivElement>(null);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
+  // Cliente centralizado de Supabase
 
   // Manejar hidratación del cliente
   useEffect(() => {

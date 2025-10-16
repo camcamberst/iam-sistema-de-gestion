@@ -3,7 +3,7 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -20,10 +20,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const userPanelRef = useRef<HTMLDivElement>(null);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
+  // Cliente centralizado de Supabase
 
   const loadUser = async () => {
     try {
