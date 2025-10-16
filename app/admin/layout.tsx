@@ -155,7 +155,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     id: string;
     label: string;
     href: string;
-    subItems: Array<{label: string; href: string}>;
+    subItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}>;
   }>>([]);
 
   // Función para inicializar el menú una sola vez
@@ -184,7 +184,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       id: string;
       label: string;
       href: string;
-      subItems: Array<{label: string; href: string}>;
+      subItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}>;
     }> = [
       {
         id: 'calculator',
