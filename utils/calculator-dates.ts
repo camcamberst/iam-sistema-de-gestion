@@ -56,13 +56,13 @@ export const getColombiaDateTime = (): string => {
 };
 
 /**
- * Convierte una fecha a formato YYYY-MM-DD usando Europa Central
+ * Convierte una fecha a formato YYYY-MM-DD usando Colombia
  * @param date - Fecha a convertir
- * @returns Fecha en formato YYYY-MM-DD (Europa Central)
+ * @returns Fecha en formato YYYY-MM-DD (Colombia)
  */
 export const formatCalculatorDate = (date: Date): string => {
   return date.toLocaleDateString('en-CA', { 
-    timeZone: 'Europe/Berlin' 
+    timeZone: 'America/Bogota' 
   });
 };
 
@@ -153,8 +153,8 @@ export const getPeriodEndDate = (): string => {
 };
 
 /**
- * Obtiene la fecha del siguiente día en Europa Central
- * @returns Fecha del siguiente día en formato YYYY-MM-DD
+ * Obtiene la fecha del siguiente día en Colombia
+ * @returns Fecha del siguiente día en formato YYYY-MM-DD (Colombia)
  */
 export const getNextCalculatorDate = (): string => {
   const tomorrow = new Date();

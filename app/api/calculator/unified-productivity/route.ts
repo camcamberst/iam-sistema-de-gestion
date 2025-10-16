@@ -81,8 +81,7 @@ export async function GET(request: NextRequest) {
     const getCurrentPeriodDates = () => {
       const now = new Date();
       return {
-        colombia: now.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }),
-        europe: now.toLocaleDateString('en-CA', { timeZone: 'Europe/Berlin' })
+        colombia: now.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' })
       };
     };
 
