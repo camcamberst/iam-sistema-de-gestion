@@ -218,7 +218,9 @@ export async function GET(request: NextRequest) {
     }
 
     // 3.5. Combinar ambos mapas
-    const allTotalsMap = new Map([...historyMap, ...totalsMap]);
+    const allTotalsMap = new Map();
+    historyMap.forEach((value, key) => allTotalsMap.set(key, value));
+    totalsMap.forEach((value, key) => allTotalsMap.set(key, value));
     const totals = Array.from(allTotalsMap.values());
 
     console.log('📊 [BILLING-SUMMARY] Datos finales:', {
