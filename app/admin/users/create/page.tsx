@@ -22,6 +22,7 @@ export default function CreateUserPage() {
   const [openGroups, setOpenGroups] = useState(false);
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
@@ -141,8 +142,6 @@ export default function CreateUserPage() {
       setSubmitting(false);
     }
   }
-
-  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-start justify-center p-4 pt-16">
