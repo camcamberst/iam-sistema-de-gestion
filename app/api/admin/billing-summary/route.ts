@@ -158,13 +158,21 @@ export async function GET(request: NextRequest) {
       const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
       const modelGroup = modelGroupsMap.get(model.id);
       
+      // 🔧 CORRECCIÓN: Si el modelo no tiene organization_id, usar el del grupo
+      const effectiveOrganizationId = model.organization_id || modelGroup?.organization_id || null;
+      
+      // Log cuando se aplique la corrección
+      if (!model.organization_id && modelGroup?.organization_id) {
+        console.log(`🔧 [BILLING-SUMMARY] Corrigiendo organizationId para modelo ${model.email}: null → ${modelGroup.organization_id} (grupo: ${modelGroup.name})`);
+      }
+      
       if (!totalsForModel || totalsForModel.length === 0) {
         // Si no hay totales, retornar ceros
         return {
           modelId: model.id,
           email: model.email.split('@')[0], // Solo parte antes del '@'
           name: model.name,
-          organizationId: model.organization_id,
+          organizationId: effectiveOrganizationId,
           groupId: modelGroup?.id,
           groupName: modelGroup?.name,
           usdBruto: 0,
@@ -185,7 +193,7 @@ export async function GET(request: NextRequest) {
         modelId: model.id,
         email: model.email.split('@')[0], // Solo parte antes del '@'
         name: model.name,
-        organizationId: model.organization_id,
+        organizationId: effectiveOrganizationId,
         groupId: modelGroup?.id,
         groupName: modelGroup?.name,
         usdBruto,
