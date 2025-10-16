@@ -91,53 +91,46 @@ export async function GET(request: NextRequest) {
           continue;
         }
         
-        // Archivar valores a calculator_history
-        if (currentValues && currentValues.length > 0) {
-          console.log(`🔄 [CRON] Archivando ${currentValues.length} valores para ${model.email}`);
-          
-          const historyRecords = currentValues.map(value => ({
-            model_id: value.model_id,
-            platform_id: value.platform_id,
-            value: value.value,
-            period_date: value.period_date,
-            period_type: currentPeriod.type,
-            archived_at: new Date().toISOString(),
-            original_updated_at: value.updated_at
-          }));
-          
-          const { error: historyError } = await supabase
-            .from('calculator_history')
-            .insert(historyRecords);
-          
-          if (historyError) {
-            console.error(`❌ [CRON] Error archivando valores para ${model.email}:`, historyError);
-          } else {
-            console.log(`✅ [CRON] Valores archivados para ${model.email}`);
-          }
+        // Usar función SQL para limpieza completa
+        const { data: cleanupResult, error: cleanupError } = await supabase
+          .rpc('cleanup_calculator_period', {
+            p_period_date: currentDate,
+            p_period_type: currentPeriod.type
+          });
+        
+        if (cleanupError) {
+          console.error(`❌ [CRON] Error en limpieza completa para ${model.email}:`, cleanupError);
+          results.push({
+            model_id: model.id,
+            model_email: model.email,
+            status: 'error',
+            error: cleanupError.message
+          });
+          continue;
         }
         
-        // Eliminar valores actuales (reset calculadora)
-        const { error: deleteError } = await supabase
-          .from('model_values')
-          .delete()
-          .eq('model_id', model.id)
-          .eq('period_date', currentDate);
-        
-        if (deleteError) {
-          console.error(`❌ [CRON] Error eliminando valores para ${model.email}:`, deleteError);
+        if (cleanupResult && cleanupResult.success) {
+          console.log(`✅ [CRON] Limpieza completa exitosa para ${model.email}:`, {
+            archived: cleanupResult.archived_values,
+            deleted_values: cleanupResult.deleted_values,
+            deleted_totals: cleanupResult.deleted_totals,
+            notifications: cleanupResult.notifications_sent
+          });
         } else {
-          console.log(`✅ [CRON] Valores eliminados para ${model.email}`);
+          console.error(`❌ [CRON] Limpieza falló para ${model.email}:`, cleanupResult?.error);
         }
         
         results.push({
           model_id: model.id,
           model_email: model.email,
           status: 'success',
-          values_archived: currentValues?.length || 0,
-          values_deleted: !deleteError
+          values_archived: cleanupResult?.archived_values || 0,
+          values_deleted: cleanupResult?.deleted_values || 0,
+          totals_deleted: cleanupResult?.deleted_totals || 0,
+          notifications_sent: cleanupResult?.notifications_sent || 0
         });
         
-        console.log(`✅ [CRON] Modelo ${model.email} procesado: ${currentValues?.length || 0} valores archivados`);
+        console.log(`✅ [CRON] Modelo ${model.email} procesado: ${cleanupResult?.archived_values || 0} valores archivados, ${cleanupResult?.deleted_values || 0} valores eliminados, ${cleanupResult?.deleted_totals || 0} totales eliminados`);
         
       } catch (modelError) {
         console.error(`❌ [CRON] Error procesando modelo ${model.email}:`, modelError);
