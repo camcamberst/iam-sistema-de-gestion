@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
 import { getColombiaDate } from '@/utils/calculator-dates';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import AppleDropdown from '@/components/ui/AppleDropdown';
@@ -50,10 +50,7 @@ export default function CalculatorHistory() {
   // Estado para coordinación de dropdowns (principio estético) - removido temporalmente
   // const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
+  // Cliente centralizado de Supabase (lib/supabase)
 
   useEffect(() => {
     const load = async () => {
