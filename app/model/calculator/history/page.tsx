@@ -194,6 +194,7 @@ export default function CalculatorHistory() {
         // Si es el total congelado del cierre, úsalo como total y no lo muestres en detalle
         if (item.platform_id === '_total_usd_modelo') {
           period.total_value = Number(item.value || 0);
+          (period as any).has_total = true;
         } else {
           period.values.push({
             id: item.id,
@@ -204,10 +205,16 @@ export default function CalculatorHistory() {
             archived_at: item.archived_at,
             original_updated_at: item.original_updated_at
           });
-          // Si aún no hay total congelado, suma de plataformas como reserva
-          if (!Number.isFinite(period.total_value) || period.total_value === 0) {
-            period.total_value += Number(item.value || 0);
-          }
+          // Acumular suma de plataformas como respaldo
+          (period as any).sum_platforms = ((period as any).sum_platforms || 0) + Number(item.value || 0);
+        }
+      });
+
+      // Si no existe total congelado, usar la suma de plataformas
+      groupedData.forEach((p) => {
+        const hasTotal = (p as any).has_total;
+        if (!hasTotal) {
+          p.total_value = (p as any).sum_platforms || 0;
         }
       });
       
