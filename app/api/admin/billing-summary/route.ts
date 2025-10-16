@@ -156,8 +156,8 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [BILLING-SUMMARY] Datos encontrados:', {
       historyRecords: historyData?.length || 0,
       totalsRecords: totalsData?.length || 0,
-      historyModels: historyData ? [...new Set(historyData.map(h => h.model_id))] : [],
-      totalsModels: totalsData ? [...new Set(totalsData.map(t => t.model_id))] : []
+      historyModels: historyData ? Array.from(new Set(historyData.map(h => h.model_id))) : [],
+      totalsModels: totalsData ? Array.from(new Set(totalsData.map(t => t.model_id))) : []
     });
 
     // 3.3. Procesar datos del historial (período cerrado)
