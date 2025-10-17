@@ -7,6 +7,7 @@ import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
 import ConversationTabs from "@/components/ConversationTabs";
+import ChatWidget from "@/components/ChatWidget";
 import { supabase } from '@/lib/supabase';
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
@@ -33,6 +34,11 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   // Manejar hidratación del cliente
   useEffect(() => {
     setIsClient(true);
+  }, []);
+
+  // Cargar usuario automáticamente al montar el layout
+  useEffect(() => {
+    loadUser();
   }, []);
 
   // Cerrar todos los dropdowns al cambiar de página
@@ -366,6 +372,11 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* ChatWidget para modelos - asistente principal */}
+      {userInfo && userInfo.role === 'modelo' && (
+        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+      )}
 
       {/* ConversationTabs para modelos - ventanas de conversación individual */}
       {userInfo && userInfo.role === 'modelo' && (
