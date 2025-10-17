@@ -42,10 +42,7 @@ export default function RatesPage() {
 	const [authLoading, setAuthLoading] = useState(true);
 	const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-	const supabase = createClient(
-		process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-		process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-	);
+	const supabase = require('@/lib/supabase').supabase;
 
 	// ===========================================
 	// 🔐 VALIDACIÓN DE AUTENTICACIÓN Y ROLES

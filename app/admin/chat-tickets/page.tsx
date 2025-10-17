@@ -52,10 +52,7 @@ export default function ChatTicketsPage() {
   const [unreadCount, setUnreadCount] = useState(0);
   const [admins, setAdmins] = useState<any[]>([]);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  );
+  const supabase = require('@/lib/supabase').supabase;
 
   useEffect(() => {
     loadTickets();

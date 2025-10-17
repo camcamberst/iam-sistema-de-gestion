@@ -68,10 +68,7 @@ export default function MiPortafolio() {
   const [activeTab, setActiveTab] = useState<'platforms' | 'analytics'>('platforms');
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
-  );
+  const supabase = require('@/lib/supabase').supabase;
 
   // Cargar usuario autenticado
   useEffect(() => {
