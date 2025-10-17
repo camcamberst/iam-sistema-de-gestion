@@ -132,14 +132,23 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const role = (resolvedUser?.role || userRole || '').toString();
       if (role === 'admin' || role === 'super_admin') {
         try {
-          const { data: models } = await supabase
+          console.log('Loading models for role:', role);
+          const { data: models, error } = await supabase
             .from('users')
             .select('id, name, email')
             .eq('role', 'modelo')
             .order('name');
-          setAvailableModels(models || []);
+          
+          if (error) {
+            console.error('Error loading models:', error);
+            setAvailableModels([]);
+          } else {
+            console.log('Models loaded:', models);
+            setAvailableModels(models || []);
+          }
         } catch (e) {
           console.warn('Error loading models:', e);
+          setAvailableModels([]);
         }
       }
     };
@@ -645,42 +654,79 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                     
                     {/* Selector de modelo */}
                     <div className="relative">
-                      <button
-                        onClick={() => setShowModelList(!showModelList)}
-                        className="w-full text-left text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 flex items-center justify-between"
-                      >
-                        <span>
-                          {selectedModelName || 'Seleccionar modelo...'}
-                        </span>
-                        <svg 
-                          className={`w-3 h-3 transition-transform ${showModelList ? 'rotate-180' : ''}`}
-                          fill="none" 
-                          stroke="currentColor" 
-                          viewBox="0 0 24 24"
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setShowModelList(!showModelList)}
+                          className="flex-1 text-left text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 flex items-center justify-between"
                         >
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                        </svg>
-                      </button>
+                          <span>
+                            {selectedModelName || 'Seleccionar modelo...'}
+                          </span>
+                          <svg 
+                            className={`w-3 h-3 transition-transform ${showModelList ? 'rotate-180' : ''}`}
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={async () => {
+                            try {
+                              const { data: models, error } = await supabase
+                                .from('users')
+                                .select('id, name, email')
+                                .eq('role', 'modelo')
+                                .order('name');
+                              
+                              if (error) {
+                                console.error('Error reloading models:', error);
+                                setError('Error al cargar modelos');
+                              } else {
+                                setAvailableModels(models || []);
+                                console.log('Models reloaded:', models);
+                              }
+                            } catch (e) {
+                              console.warn('Error reloading models:', e);
+                              setError('Error al cargar modelos');
+                            }
+                          }}
+                          className="px-2 py-1 text-xs bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                          title="Recargar lista de modelos"
+                        >
+                          🔄
+                        </button>
+                      </div>
                       
                       {/* Lista desplegable de modelos */}
                       {showModelList && (
                         <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-32 overflow-y-auto">
                           {availableModels.length === 0 ? (
-                            <div className="px-2 py-1 text-xs text-gray-400">Cargando modelos...</div>
+                            <div className="px-2 py-1 text-xs text-gray-400">
+                              {resolvedUser?.role === 'admin' || userRole === 'admin' || resolvedUser?.role === 'super_admin' || userRole === 'super_admin' 
+                                ? 'No hay modelos disponibles' 
+                                : 'Cargando modelos...'}
+                            </div>
                           ) : (
-                            availableModels.map((model) => (
-                              <button
-                                key={model.id}
-                                onClick={() => {
-                                  setSelectedModelId(model.id);
-                                  setSelectedModelName(`${model.name} (${model.email})`);
-                                  setShowModelList(false);
-                                }}
-                                className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
-                              >
-                                {model.name} ({model.email})
-                              </button>
-                            ))
+                            <>
+                              <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-700">
+                                {availableModels.length} modelo(s) disponible(s)
+                              </div>
+                              {availableModels.map((model) => (
+                                <button
+                                  key={model.id}
+                                  onClick={() => {
+                                    setSelectedModelId(model.id);
+                                    setSelectedModelName(`${model.name} (${model.email})`);
+                                    setShowModelList(false);
+                                  }}
+                                  className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
+                                >
+                                  {model.name} ({model.email})
+                                </button>
+                              ))}
+                            </>
                           )}
                         </div>
                       )}
