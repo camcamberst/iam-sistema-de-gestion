@@ -126,44 +126,38 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     resolve();
   }, [userId, userRole]);
 
-  // Cargar modelos disponibles para admin/super_admin
+  // Cargar modelos disponibles para admin/super_admin usando API
   useEffect(() => {
     const loadModels = async () => {
       const role = (resolvedUser?.role || userRole || '').toString();
       if (role === 'admin' || role === 'super_admin') {
         try {
-          console.log('Loading models for role:', role);
-          // Usar el rol correcto: 'modelo' (confirmado por debug)
-          let { data: models, error } = await supabase
-            .from('users')
-            .select('id, name, email, role')
-            .eq('role', 'modelo')
-            .order('name');
+          console.log('Loading models via API for role:', role);
           
-          // Debug: Si no encuentra modelos, mostrar información
-          if (!models || models.length === 0) {
-            console.log('No models found with role "modelo", checking debug info');
-            const debugResult = await supabase
-              .from('users')
-              .select('id, name, email, role')
-              .order('name')
-              .limit(20);
-            console.log('Debug - All users (first 20):', debugResult.data);
-            
-            if (debugResult.data) {
-              const uniqueRoles = Array.from(new Set(debugResult.data.map(u => u.role)));
-              console.log('Unique roles found:', uniqueRoles);
-            }
-          } else {
-            console.log(`✅ Found ${models.length} models with role 'modelo'`);
+          // Obtener token de sesión
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            console.warn('No active session to load models');
+            return;
           }
           
-          if (error) {
-            console.error('Error loading models:', error);
-            setAvailableModels([]);
+          // Llamar al endpoint API en lugar de consulta directa
+          const response = await fetch('/api/chat/models', {
+            method: 'GET',
+            headers: {
+              'Authorization': `Bearer ${session.access_token}`,
+              'Content-Type': 'application/json'
+            }
+          });
+          
+          const data = await response.json();
+          
+          if (response.ok && data.success) {
+            console.log(`✅ Loaded ${data.count} models via API`);
+            setAvailableModels(data.models || []);
           } else {
-            console.log('Models loaded:', models);
-            setAvailableModels(models || []);
+            console.error('Error loading models via API:', data.error);
+            setAvailableModels([]);
           }
         } catch (e) {
           console.warn('Error loading models:', e);
@@ -693,25 +687,33 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         <button
                           onClick={async () => {
                             try {
-                              // Usar el rol correcto: 'modelo' (confirmado por debug)
-                              let { data: models, error } = await supabase
-                                .from('users')
-                                .select('id, name, email, role')
-                                .eq('role', 'modelo')
-                                .order('name');
+                              console.log('🔄 Reloading models via API...');
                               
-                              if (models && models.length > 0) {
-                                console.log(`✅ Reloaded ${models.length} models with role 'modelo'`);
-                              } else {
-                                console.log('❌ No models found on reload');
+                              // Obtener token de sesión
+                              const { data: { session } } = await supabase.auth.getSession();
+                              if (!session) {
+                                setError('No hay sesión activa');
+                                return;
                               }
                               
-                              if (error) {
-                                console.error('Error reloading models:', error);
-                                setError('Error al cargar modelos');
+                              // Llamar al endpoint API
+                              const response = await fetch('/api/chat/models', {
+                                method: 'GET',
+                                headers: {
+                                  'Authorization': `Bearer ${session.access_token}`,
+                                  'Content-Type': 'application/json'
+                                }
+                              });
+                              
+                              const data = await response.json();
+                              
+                              if (response.ok && data.success) {
+                                console.log(`✅ Reloaded ${data.count} models via API`);
+                                setAvailableModels(data.models || []);
+                                setError(null);
                               } else {
-                                setAvailableModels(models || []);
-                                console.log('Models reloaded:', models);
+                                console.error('Error reloading models via API:', data.error);
+                                setError('Error al cargar modelos');
                               }
                             } catch (e) {
                               console.warn('Error reloading models:', e);

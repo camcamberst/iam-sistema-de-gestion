@@ -432,20 +432,20 @@ export default function ModelDashboard() {
                             })()}
                             
                             {/* Barra de progreso compacta */}
-                            <div className="mt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                                <div 
+              <div className="mt-2">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div 
                                   className={`h-full transition-all duration-1000 ease-out`}
                                   style={{ 
                                     width: `${Math.min(porcentajeAlcanzado, 100)}%`,
                                     background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
                                   }}
-                                ></div>
-                              </div>
+                  ></div>
+                </div>
                             </div>
                           </div>
                         </div>
-                      </div>
+                </div>
                     </div>
                   );
                 })()}
