@@ -224,9 +224,9 @@ export default function ConversationTab({
         ref={tabRef}
         className="fixed bg-gray-800 border border-gray-600 rounded-lg shadow-lg cursor-pointer hover:bg-gray-700 transition-colors z-50"
         style={{
-          left: conversation.position.x,
-          top: conversation.position.y,
-          width: '200px'
+          right: 288 + 12 + 16, // a la izquierda del chat principal (chatWidth + gap + margin)
+          bottom: 20,
+          width: 200
         }}
         onClick={onActivate}
       >
@@ -262,17 +262,17 @@ export default function ConversationTab({
   return (
     <div
       ref={tabRef}
-      className="fixed bg-gray-900 border border-gray-600 rounded-lg shadow-xl z-50 flex flex-col"
+      className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
       style={{
-        left: conversation.position.x,
-        top: conversation.position.y,
-        width: '288px', // w-72
-        height: '500px' // h-[500px]
+        right: 288 + 12 + 16, // a la izquierda del chat principal (chatWidth + gap + margin)
+        bottom: 20,
+        width: 288, // w-72
+        height: 500 // h-[500px]
       }}
     >
       {/* Header */}
       <div 
-        className="bg-gray-800 border-b border-gray-600 rounded-t-lg p-3 cursor-move drag-handle"
+        className="bg-gray-800/90 border-b border-gray-700 p-3 cursor-move drag-handle"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center justify-between">
@@ -287,7 +287,7 @@ export default function ConversationTab({
             </div>
             <div>
               <h3 className="text-white font-medium">{conversation.modelName}</h3>
-              <p className="text-xs text-gray-400">{conversation.modelEmail}</p>
+              <p className="text-xs text-gray-400">Conversación individual</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -341,24 +341,37 @@ export default function ConversationTab({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-600 p-3">
-        <div className="flex space-x-2">
+      {/* Input - misma estética que ChatWidget */}
+      <div className="border-t border-gray-700 p-3">
+        <div className="flex items-center gap-2">
           <input
             type="text"
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
-            placeholder="Escribe un mensaje..."
-            className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-600 focus:outline-none focus:border-blue-500"
+            placeholder="Escribe tu mensaje..."
+            className="flex-1 bg-gray-800 text-white px-3 py-2 rounded-lg border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
             disabled={sending}
           />
+          {/* Botón emoji */}
           <button
+            aria-label="Abrir emojis"
+            className="bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition-colors w-10 h-10 flex items-center justify-center"
+            onClick={() => setInputMessage(prev => prev + '😊')}
+            disabled={sending}
+          >
+            <span role="img" aria-label="emoji">😊</span>
+          </button>
+          {/* Botón enviar */}
+          <button
+            aria-label="Enviar mensaje"
             onClick={sendMessage}
             disabled={!inputMessage.trim() || sending}
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            className="bg-gray-700 text-white rounded-xl hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-10 h-10 flex items-center justify-center"
           >
-            {sending ? '...' : 'Enviar'}
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.25a1 1 0 00.727-.727l1.25-5a1 1 0 00-.727-1.169l-2.146-.537 4.79-4.79a1 1 0 00-1.414-1.414l-4.79 4.79-.537-2.146a1 1 0 00-1.169-.727l-1.25 5a1 1 0 00.727 1.169l14-7z" />
+            </svg>
           </button>
         </div>
       </div>
