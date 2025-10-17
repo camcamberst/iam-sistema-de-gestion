@@ -748,12 +748,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                                     key={model.id}
                                     onClick={() => {
                                       setSelectedModelId(model.id);
-                                      setSelectedModelName(`${emailUsername} (${model.email})`);
+                                      setSelectedModelName(emailUsername);
                                       setShowModelList(false);
                                     }}
                                     className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
                                   >
-                                    {emailUsername} ({model.email})
+                                    {emailUsername}
                                   </button>
                                 );
                               })}
@@ -788,8 +788,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               // Abrir conversación en pestaña flotante
               if ((window as any).openConversation) {
-                const modelName = selectedModelName.split(' (')[0]; // Extraer solo el nombre
-                (window as any).openConversation(selectedModelId, modelName, selectedModelName);
+                (window as any).openConversation(selectedModelId, selectedModelName, selectedModelName);
               }
               
               // Enviar mensaje inicial
