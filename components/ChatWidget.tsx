@@ -414,7 +414,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       {/* Chat Window - Estilo escala de grises */}
       {isOpen && (
-        <div className="fixed bottom-6 right-6 w-80 h-[400px] bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 z-50 flex flex-col overflow-hidden">
+        <div className="fixed bottom-6 right-6 w-72 h-[500px] bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 z-50 flex flex-col overflow-hidden">
           {/* Header */}
           <div className="bg-gray-800 text-white p-3 flex items-center justify-between">
             <div className="flex items-center space-x-2">
