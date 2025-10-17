@@ -27,10 +27,6 @@ interface User {
     id: string;
     name: string;
   }>;
-  // Campos de asignación (opcionales)
-  jornada?: string;
-  room_id?: string;
-  room_name?: string;
 }
 
 interface Group {
@@ -194,14 +190,7 @@ export default function UsersListPage() {
       return;
     }
     
-    // Los datos de room y jornada ya vienen incluidos en el objeto user
-    // desde la API /api/users que acabamos de corregir
     console.log('🔍 [FRONTEND] Abriendo modal para usuario:', user);
-    console.log('🔍 [FRONTEND] Datos de asignación:', {
-      jornada: user.jornada,
-      room_id: user.room_id,
-      room_name: user.room_name
-    });
     
     setSelectedUser(user);
     setShowEditModal(true);
@@ -599,36 +588,18 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     password: '', // Nueva contraseña (opcional)
     role: user?.role || 'modelo',
     is_active: user?.is_active ?? true,
-    group_ids: user?.groups?.map(g => g.id) || [],
-    jornada: user?.jornada || '', // 🆕 Campo para jornada (usar datos del usuario)
-    room_id: user?.room_id || ''  // 🆕 Campo para room (usar datos del usuario)
+    group_ids: user?.groups?.map(g => g.id) || []
   });
 
   const [showPassword, setShowPassword] = useState(false);
   const [restrictionMessage, setRestrictionMessage] = useState('');
-  const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
-  const [loadingRooms, setLoadingRooms] = useState(false);
   const [isPasswordChanged, setIsPasswordChanged] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
-
-  // Función para determinar si un grupo requiere rooms obligatorios
-  const groupRequiresRooms = (groupName: string): boolean => {
-    // Solo "Sede MP" requiere rooms obligatorios
-    // Otros grupos (Cabecera, Victoria, Terrazas, Diamante) omitidos por ahora
-    return groupName === 'Sede MP';
-  };
-
-  // Función para determinar si un grupo requiere jornada obligatoria
-  const groupRequiresJornada = (groupName: string): boolean => {
-    // Solo "Sede MP" requiere jornada obligatoria
-    // Otros grupos (Cabecera, Victoria, Terrazas, Diamante) omitidos por ahora
-    return groupName === 'Sede MP';
-  };
 
   // Obtener el nombre del grupo seleccionado
   const selectedGroupName = groups.find(g => g.id === formData.group_ids[0])?.name || '';
 
-  // 🔧 ACTUALIZAR FORMULARIO CUANDO CAMBIE EL USUARIO (con asignaciones)
+  // 🔧 ACTUALIZAR FORMULARIO CUANDO CAMBIE EL USUARIO
   useEffect(() => {
     if (!user) return; // Validar que user existe
     
@@ -639,9 +610,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
       password: '',
       role: user.role,
       is_active: user.is_active,
-      group_ids: user.groups?.map(g => g.id) || [],
-      jornada: user.jornada || '',
-      room_id: user.room_id || ''
+      group_ids: user.groups?.map(g => g.id) || []
     });
   }, [user]);
 
@@ -710,38 +679,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     }
   };
 
-  // Función para cargar rooms por grupo
-  const loadRoomsForGroup = async (groupId: string) => {
-    if (!groupId) {
-      setAvailableRooms([]);
-      return;
-    }
-
-    setLoadingRooms(true);
-    try {
-      const response = await fetch(`/api/groups/rooms?groupId=${groupId}`);
-      const data = await response.json();
-      
-      if (data.success) {
-        setAvailableRooms(data.rooms);
-      } else {
-        console.error('Error loading rooms:', data.error);
-        setAvailableRooms([]);
-      }
-    } catch (error) {
-      console.error('Error loading rooms:', error);
-      setAvailableRooms([]);
-    } finally {
-      setLoadingRooms(false);
-    }
-  };
-
-  // Cargar rooms iniciales si el usuario ya tiene un grupo
-  useEffect(() => {
-    if (formData.group_ids.length > 0) {
-      loadRoomsForGroup(formData.group_ids[0]);
-    }
-  }, []);
 
   // Mostrar mensajes de restricción según rol
   const handleRoleChange = (role: string) => {
@@ -760,16 +697,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   const handleGroupChange = (value: string) => {
     setFormData(prev => ({ 
       ...prev, 
-      group_ids: value ? [value] : [],
-      room_id: '' // Reset room when group changes
+      group_ids: value ? [value] : []
     }));
-    
-    // Cargar rooms para el grupo seleccionado
-    if (value) {
-      loadRoomsForGroup(value);
-    } else {
-      setAvailableRooms([]);
-    }
   };
 
   return (
@@ -928,54 +857,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             )}
           </div>
 
-          {/* Campos específicos para modelos */}
-          {formData.role === 'modelo' && (
-            <>
-              {/* Campo Room - solo obligatorio para Sede MP */}
-              <div>
-                <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}
-                </label>
-                <AppleDropdown
-                  options={availableRooms.map(room => ({
-                    value: room.id,
-                    label: room.room_name
-                  }))}
-                  value={formData.room_id}
-                  onChange={(value) => setFormData({ ...formData, room_id: value })}
-                  placeholder={loadingRooms ? "Cargando rooms..." : "Selecciona un room"}
-                  disabled={loadingRooms || availableRooms.length === 0}
-                  maxHeight="max-h-40"
-                />
-                {formData.group_ids.length === 0 && (
-                  <p className="mt-1 text-sm text-gray-500">Primero selecciona un grupo</p>
-                )}
-                {!groupRequiresRooms(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-1 text-sm text-gray-500">Opcional para {selectedGroupName}</p>
-                )}
-              </div>
-
-              {/* Campo Jornada - solo obligatorio para Sede MP */}
-              <div>
-                <label className="block text-gray-700 text-sm font-medium mb-1">
-                  Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}
-                </label>
-                <AppleDropdown
-                  options={[
-                    { value: 'MAÑANA', label: 'Mañana' },
-                    { value: 'TARDE', label: 'Tarde' },
-                    { value: 'NOCHE', label: 'Noche' }
-                  ]}
-                  value={formData.jornada}
-                  onChange={(value) => setFormData({ ...formData, jornada: value })}
-                  placeholder="Selecciona una jornada"
-                />
-                {!groupRequiresJornada(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-1 text-sm text-gray-500">Opcional para {selectedGroupName}</p>
-                )}
-              </div>
-            </>
-          )}
 
           <div className="flex space-x-3 pt-10">
             <button
