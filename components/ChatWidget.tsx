@@ -200,16 +200,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Acciones rápidas (opciones en select para ahorrar espacio)
   const quickActions = (() => {
-    const base = [
-      { id: 'anticipos', label: 'Mis Anticipos', payload: 'mis anticipos' },
-      { id: 'calculadora', label: 'Mi Calculadora', payload: 'totales de mi calculadora' }
-    ];
-    const role = resolvedUser?.role || userRole;
+    const role = (resolvedUser?.role || userRole || 'modelo').toString();
     if (role === 'admin' || role === 'super_admin') {
-      base.push({ id: 'resumen', label: 'Resumen Administrativo', payload: 'resumen de facturación' });
+      return [
+        { id: 'resumen', label: 'Resumen Administrativo', payload: 'resumen de facturación' },
+        { id: 'ticket', label: 'Crear Ticket', payload: 'crear ticket' }
+      ];
     }
-    base.push({ id: 'ticket', label: 'Crear Ticket', payload: 'crear ticket' });
-    return base;
+    // Modelo (por defecto)
+    return [
+      { id: 'anticipos', label: 'Mis Anticipos', payload: 'mis anticipos' },
+      { id: 'calculadora', label: 'Mi Calculadora', payload: 'totales de mi calculadora' },
+      { id: 'ticket', label: 'Crear Ticket', payload: 'crear ticket' }
+    ];
   })();
 
   const handleQuickAction = async (actionId: string) => {
@@ -433,9 +436,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
             >
               <option value="">Plantillas…</option>
-              <option value="No veo mi último anticipo registrado, por favor revisar.">No veo mis anticipos</option>
-              <option value="Mis totales de la quincena aparecen en 0, aunque ingresé valores.">Totales en 0</option>
-              <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
+              {((resolvedUser?.role || userRole || 'modelo') === 'modelo') ? (
+                <>
+                  <option value="No veo mi último anticipo registrado, por favor revisar.">No veo mis anticipos</option>
+                  <option value="Mis totales de la quincena aparecen en 0, aunque ingresé valores.">Totales en 0</option>
+                  <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
+                </>
+              ) : (
+                <>
+                  <option value="Necesito un resumen de facturación del periodo actual.">Resumen del periodo</option>
+                  <option value="Solicito revisión de solicitudes de anticipos pendientes.">Revisión de anticipos pendientes</option>
+                  <option value="Verificar configuración de RATES y plataformas.">Verificación de RATES</option>
+                </>
+              )}
             </select>
           </div>
 
