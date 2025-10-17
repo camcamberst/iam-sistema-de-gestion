@@ -218,7 +218,7 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // 3.5. Combinar ambos mapas
+    // 3.5. Combinar ambos mapas - Fixed TypeScript compatibility
     const allTotalsMap = new Map();
     historyMap.forEach((value, key) => allTotalsMap.set(key, value));
     totalsMap.forEach((value, key) => allTotalsMap.set(key, value));
