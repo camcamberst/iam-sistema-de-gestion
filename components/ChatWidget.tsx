@@ -741,19 +741,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                               <div className="px-2 py-1 text-xs text-gray-500 border-b border-gray-700">
                                 {availableModels.length} modelo(s) disponible(s)
                               </div>
-                              {availableModels.map((model) => (
-                                <button
-                                  key={model.id}
-                                  onClick={() => {
-                                    setSelectedModelId(model.id);
-                                    setSelectedModelName(`${model.name} (${model.email})`);
-                                    setShowModelList(false);
-                                  }}
-                                  className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
-                                >
-                                  {model.name} ({model.email})
-                                </button>
-                              ))}
+                              {availableModels.map((model) => {
+                                const emailUsername = model.email.split('@')[0];
+                                return (
+                                  <button
+                                    key={model.id}
+                                    onClick={() => {
+                                      setSelectedModelId(model.id);
+                                      setSelectedModelName(`${emailUsername} (${model.email})`);
+                                      setShowModelList(false);
+                                    }}
+                                    className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
+                                  >
+                                    {emailUsername} ({model.email})
+                                  </button>
+                                );
+                              })}
                             </>
                           )}
                         </div>
