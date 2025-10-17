@@ -184,13 +184,31 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       // Para modelos: cargar mensajes de su sesión (donde aparecen como destinatarios)
       // (incluyendo mensajes de admin/super_admin enviados a ellos)
+      
+      // Primero obtener las sesiones de chat para el usuario
+      const { data: userSessions, error: sessionsError } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('is_active', true);
+
+      if (sessionsError) {
+        console.error('Error loading user sessions:', sessionsError);
+        return;
+      }
+
+      if (!userSessions || userSessions.length === 0) {
+        console.log('No active sessions found for user');
+        return;
+      }
+
+      const sessionIds = userSessions.map(s => s.id);
+
+      // Luego obtener los mensajes de esas sesiones
       const { data: chatMessages, error } = await supabase
         .from('chat_messages')
-        .select(`
-          *,
-          chat_sessions!inner(user_id)
-        `)
-        .eq('chat_sessions.user_id', session.user.id)
+        .select('*')
+        .in('session_id', sessionIds)
         .order('created_at', { ascending: true });
 
       if (error) {
