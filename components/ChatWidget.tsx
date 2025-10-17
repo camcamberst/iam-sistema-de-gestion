@@ -26,6 +26,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [messageCount, setMessageCount] = useState(0);
   const [limitReached, setLimitReached] = useState(false);
   const [escalated, setEscalated] = useState(false);
+  const [individualMessages, setIndividualMessages] = useState<Message[]>([]);
+  const [showIndividualNotification, setShowIndividualNotification] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTicketConfirm, setShowTicketConfirm] = useState(false);
   const [creatingTicket, setCreatingTicket] = useState(false);
@@ -177,15 +179,64 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [isOpen]);
 
+  // Para modelos: verificar mensajes individuales y mostrar notificaciones
+  useEffect(() => {
+    const role = (resolvedUser?.role || userRole || '').toString();
+    if (role === 'modelo' && isOpen) {
+      checkIndividualMessages();
+    }
+  }, [isOpen, resolvedUser, userRole]);
+
+  const checkIndividualMessages = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      console.log('🔍 [INDIVIDUAL] Checking individual messages for user:', session.user.id);
+      
+      // Obtener mensajes individuales (donde sender_type = 'admin' y el usuario es destinatario)
+      const { data: individualMsgs, error } = await supabase
+        .from('chat_messages')
+        .select('*')
+        .eq('sender_type', 'admin')
+        .in('session_id', (await supabase
+          .from('chat_sessions')
+          .select('id')
+          .eq('user_id', session.user.id)
+          .eq('is_active', true)
+        ).data?.map(s => s.id) || [])
+        .order('created_at', { ascending: true });
+
+      if (error) {
+        console.error('❌ [INDIVIDUAL] Error loading individual messages:', error);
+        return;
+      }
+
+      if (individualMsgs && individualMsgs.length > 0) {
+        console.log('💬 [INDIVIDUAL] Found individual messages:', individualMsgs);
+        setIndividualMessages(individualMsgs.map(msg => ({
+          id: msg.id,
+          sender: 'admin',
+          message: msg.message,
+          timestamp: new Date(msg.created_at),
+          isRead: false
+        })));
+        setShowIndividualNotification(true);
+      }
+    } catch (error) {
+      console.error('❌ [INDIVIDUAL] Error in checkIndividualMessages:', error);
+    }
+  };
+
   const loadChatHistory = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      // Para modelos: cargar mensajes de su sesión (donde aparecen como destinatarios)
-      // (incluyendo mensajes de admin/super_admin enviados a ellos)
+      // Para modelos: cargar SOLO mensajes del asistente (excluir mensajes individuales)
+      const role = (resolvedUser?.role || userRole || '').toString();
       
-      console.log('🔍 [CHATWIDGET] Loading messages for user:', session.user.id);
+      console.log('🔍 [CHATWIDGET] Loading messages for user:', session.user.id, 'role:', role);
       
       // Primero obtener las sesiones de chat para el usuario
       const { data: userSessions, error: sessionsError } = await supabase
@@ -209,12 +260,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const sessionIds = userSessions.map(s => s.id);
       console.log('🆔 [CHATWIDGET] Session IDs:', sessionIds);
 
-      // Luego obtener los mensajes de esas sesiones
-      const { data: chatMessages, error } = await supabase
+      // Para modelos: cargar SOLO mensajes del bot (excluir mensajes de admin individuales)
+      let query = supabase
         .from('chat_messages')
         .select('*')
         .in('session_id', sessionIds)
         .order('created_at', { ascending: true });
+
+      if (role === 'modelo') {
+        // Para modelos: excluir mensajes individuales de admin
+        query = query.neq('sender_type', 'admin');
+      }
+
+      const { data: chatMessages, error } = await query;
 
       if (error) {
         console.error('❌ [CHATWIDGET] Error loading chat history:', error);
@@ -1193,6 +1251,49 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               </button>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Notificación de mensajes individuales para modelos */}
+      {showIndividualNotification && individualMessages.length > 0 && (
+        <div className="fixed top-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm">
+          <div className="flex items-center justify-between mb-2">
+            <h4 className="font-semibold">💬 Mensaje Individual</h4>
+            <button
+              onClick={() => setShowIndividualNotification(false)}
+              className="text-white hover:text-gray-200"
+            >
+              ✕
+            </button>
+          </div>
+          <p className="text-sm mb-3">
+            Tienes {individualMessages.length} mensaje(s) individual(es) de administración
+          </p>
+          <div className="space-y-2">
+            {individualMessages.slice(0, 2).map((msg) => (
+              <div key={msg.id} className="bg-blue-700 p-2 rounded text-xs">
+                <p className="truncate">{msg.message}</p>
+                <p className="text-blue-200 text-xs mt-1">
+                  {formatTime(msg.timestamp)}
+                </p>
+              </div>
+            ))}
+            {individualMessages.length > 2 && (
+              <p className="text-xs text-blue-200">
+                +{individualMessages.length - 2} mensaje(s) más
+              </p>
+            )}
+          </div>
+          <button
+            onClick={() => {
+              setShowIndividualNotification(false);
+              // Aquí podrías abrir una ventana de conversación individual
+              console.log('Abrir conversación individual');
+            }}
+            className="w-full mt-3 bg-blue-500 hover:bg-blue-400 text-white py-2 px-3 rounded text-sm font-medium transition-colors"
+          >
+            Responder
+          </button>
         </div>
       )}
     </>
