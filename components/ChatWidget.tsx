@@ -170,7 +170,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Load chat history when widget opens
   useEffect(() => {
+    console.log('🔄 [CHATWIDGET] useEffect triggered, isOpen:', isOpen);
     if (isOpen) {
+      console.log('🚀 [CHATWIDGET] Opening chat, calling loadChatHistory');
       loadChatHistory();
     }
   }, [isOpen]);
