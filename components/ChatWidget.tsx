@@ -750,6 +750,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                                       setSelectedModelId(model.id);
                                       setSelectedModelName(emailUsername);
                                       setShowModelList(false);
+                                      // Abrir pestaña de conversación inmediatamente al seleccionar modelo
+                                      if ((window as any).openConversation) {
+                                        (window as any).openConversation(model.id, emailUsername, emailUsername);
+                                      }
                                     }}
                                     className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
                                   >
@@ -859,6 +863,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         if (target === 'groups') {
                           const groupNames = prompt('Grupos (separados por coma):');
                           if (groupNames) setGroupNamesInput(groupNames);
+                        }
+                        // Abrir pestaña especial de difusión cuando se selecciona destinatario
+                        if (target === 'groups' || target === 'all') {
+                          const tabId = `broadcast-${target}`;
+                          if ((window as any).openConversation) {
+                            const title = target === 'all' ? 'Difusión (Todos)' : 'Difusión (Grupos)';
+                            (window as any).openConversation(tabId, title, title);
+                          }
                         }
                       }}
                       className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 w-full"
