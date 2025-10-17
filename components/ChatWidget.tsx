@@ -170,14 +170,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Load chat history when widget opens
   useEffect(() => {
-    if (isOpen && sessionId) {
+    if (isOpen) {
       loadChatHistory();
     }
-  }, [isOpen, sessionId]);
+  }, [isOpen]);
 
   const loadChatHistory = async () => {
-    if (!sessionId) return;
-
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
