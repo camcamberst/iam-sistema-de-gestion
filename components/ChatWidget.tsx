@@ -184,7 +184,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               // Mostrar roles únicos encontrados
               if (debugResult.data) {
-                const uniqueRoles = [...new Set(debugResult.data.map(u => u.role))];
+                const uniqueRoles = Array.from(new Set(debugResult.data.map(u => u.role)));
                 console.log('Unique roles found:', uniqueRoles);
               }
             }
