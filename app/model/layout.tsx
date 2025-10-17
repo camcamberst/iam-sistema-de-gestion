@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
+import ConversationTabs from "@/components/ConversationTabs";
 import { supabase } from '@/lib/supabase';
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
@@ -365,6 +366,11 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
           {children}
         </div>
       </main>
+
+      {/* ConversationTabs para modelos - ventanas de conversación individual */}
+      {userInfo && userInfo.role === 'modelo' && (
+        <ConversationTabs userId={userInfo.id} userRole={userInfo.role} />
+      )}
     </div>
   );
 }

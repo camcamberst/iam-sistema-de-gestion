@@ -194,10 +194,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       console.log('🔍 [INDIVIDUAL] Checking individual messages for user:', session.user.id);
       
-      // Obtener mensajes individuales (donde sender_type = 'admin' y el usuario es destinatario)
+      // Obtener mensajes individuales con información del remitente
       const { data: individualMsgs, error } = await supabase
         .from('chat_messages')
-        .select('*')
+        .select(`
+          *,
+          sender_user:users!chat_messages_sender_id_fkey(id, name, email, role)
+        `)
         .eq('sender_type', 'admin')
         .in('session_id', (await supabase
           .from('chat_sessions')
@@ -214,14 +217,39 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       if (individualMsgs && individualMsgs.length > 0) {
         console.log('💬 [INDIVIDUAL] Found individual messages:', individualMsgs);
+        
+        // Almacenar información del remitente para usar en la notificación
+        const senderInfo = individualMsgs[0]?.sender_user;
+        if (senderInfo) {
+          // Almacenar en el estado global para usar en la notificación
+          (window as any).lastMessageSender = {
+            id: senderInfo.id,
+            name: senderInfo.name,
+            email: senderInfo.email,
+            role: senderInfo.role
+          };
+        }
+
         setIndividualMessages(individualMsgs.map(msg => ({
           id: msg.id,
           sender: 'admin',
           message: msg.message,
           timestamp: new Date(msg.created_at),
-          isRead: false
+          isRead: false,
+          senderInfo: msg.sender_user
         })));
-        setShowIndividualNotification(true);
+        
+        // Abrir automáticamente la ventana de conversación individual
+        if (typeof window !== 'undefined' && (window as any).openConversation && senderInfo) {
+          (window as any).openConversation(
+            senderInfo.id, 
+            senderInfo.name, 
+            senderInfo.email
+          );
+        } else {
+          // Si no se puede abrir automáticamente, mostrar notificación
+          setShowIndividualNotification(true);
+        }
       }
     } catch (error) {
       console.error('❌ [INDIVIDUAL] Error in checkIndividualMessages:', error);
@@ -1287,8 +1315,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           <button
             onClick={() => {
               setShowIndividualNotification(false);
-              // Aquí podrías abrir una ventana de conversación individual
-              console.log('Abrir conversación individual');
+              // Abrir ventana de conversación individual
+              if (typeof window !== 'undefined' && (window as any).openConversation) {
+                const senderInfo = (window as any).lastMessageSender;
+                if (senderInfo) {
+                  (window as any).openConversation(
+                    senderInfo.id, 
+                    senderInfo.name, 
+                    senderInfo.email
+                  );
+                } else {
+                  // Fallback si no hay información del remitente
+                  (window as any).openConversation(
+                    'admin-user-id', 
+                    'Administración', 
+                    'admin@sistema.com'
+                  );
+                }
+              }
             }}
             className="w-full mt-3 bg-blue-500 hover:bg-blue-400 text-white py-2 px-3 rounded text-sm font-medium transition-colors"
           >
