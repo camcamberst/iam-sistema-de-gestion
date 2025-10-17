@@ -157,7 +157,8 @@ export async function GET(request: NextRequest) {
       historyRecords: historyData?.length || 0,
       totalsRecords: totalsData?.length || 0,
       historyModels: historyData ? Array.from(new Set(historyData.map(h => h.model_id))) : [],
-      totalsModels: totalsData ? Array.from(new Set(totalsData.map(t => t.model_id))) : []
+      totalsModels: totalsData ? Array.from(new Set(totalsData.map(t => t.model_id))) : [],
+      timestamp: new Date().toISOString()
     });
 
     // 3.3. Procesar datos del historial (período cerrado)
