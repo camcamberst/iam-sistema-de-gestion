@@ -249,7 +249,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           },
           { 
             label: 'Consultar Usuarios', 
-            href: '/admin/users',
+        href: '/admin/users',
             icon: (
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
@@ -476,9 +476,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   // NOTA: Los items con componentes dedicados (calculator, anticipos, portafolio) 
                   // ya fueron renderizados arriba, este código solo maneja items administrativos
                   return (
-                    <div
-                      key={item.id}
-                      className="relative"
+                  <div
+                    key={item.id}
+                    className="relative"
                       onMouseEnter={() => handleMenuEnter(item.id)}
                       onMouseLeave={handleMenuLeave}
                       onClick={() => item.subItems && item.subItems.length > 0 && handleMenuClick(item.id)}
@@ -494,19 +494,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           {item.label}
                         </span>
                       ) : (
-                        <Link
-                          href={item.href}
+                    <Link
+                      href={item.href}
                           className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
-                            isActive(item.href) || isParentActive(item) 
+                        isActive(item.href) || isParentActive(item) 
                               ? 'text-gray-900 bg-white/50 shadow-sm' 
                               : 'text-gray-700 hover:text-gray-900'
-                          }`}
-                        >
-                          {item.label}
-                        </Link>
+                      }`}
+                    >
+                      {item.label}
+                    </Link>
                       )}
 
-                      {/* Dropdown Menu */}
+                  {/* Dropdown Menu */}
                       {shouldShowDropdown(item) && (
                         <div
                           className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
@@ -519,10 +519,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 {item.label}
                               </h3>
                             </div>
-                            {item.subItems.map((subItem) => (
-                              <Link
-                                key={subItem.href}
-                                href={subItem.href}
+                        {item.subItems.map((subItem) => (
+                          <Link
+                            key={subItem.href}
+                            href={subItem.href}
                                 className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                                   isExactPath(pathname, subItem.href)
                                     ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
@@ -557,12 +557,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                     </div>
                                   )}
                                 </div>
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      )}
+                          </Link>
+                        ))}
+                      </div>
                     </div>
+                  )}
+                </div>
                   );
                 })
               ) : (
@@ -614,13 +614,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <div className="text-sm font-semibold text-gray-100 truncate">{userInfo.name}</div>
                             <div className="text-xs text-gray-300 truncate">
                               {String(userInfo.role).replace('_',' ').charAt(0).toUpperCase() + String(userInfo.role).replace('_',' ').slice(1)} · {userInfo.email}
-                            </div>
+                          </div>
                           </div>
                         </div>
                         
                         {/* Información compacta - Estilo sobrio */}
                         <div className="space-y-2">
-                          {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
+                        {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                             <div className="flex items-center justify-between text-xs">
                               <span className="text-gray-400 font-medium">{userInfo.role === 'modelo' ? 'Grupo' : 'Grupos'}</span>
                               <div className="flex flex-wrap gap-1 justify-end">

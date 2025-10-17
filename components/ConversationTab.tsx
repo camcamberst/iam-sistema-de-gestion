@@ -138,18 +138,16 @@ export default function ConversationTab({
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('No active session');
 
-      // Send message via API
-      const response = await fetch('/api/chat/broadcast', {
+      // Send message via individual message API
+      const response = await fetch('/api/chat/send-individual', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          target: 'user',
-          userId: conversation.modelId,
-          text: inputMessage.trim(),
-          isBroadcast: false
+          message: inputMessage.trim(),
+          targetUserId: conversation.modelId
         })
       });
 
