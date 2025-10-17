@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from '@/lib/supabase';
+import ChatWidget from '@/components/ChatWidget';
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -19,6 +20,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   } | null>(null);
   const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const userPanelRef = useRef<HTMLDivElement>(null);
+  const [isClient, setIsClient] = useState(false);
 
   // Cliente centralizado de Supabase
 
@@ -55,6 +57,34 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       setLoadingUser(false);
     }
   };
+
+  // Hidratar y cargar userInfo al montar para habilitar el ChatWidget
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!userInfo && !loadingUser) {
+      // Inicial rápido desde localStorage
+      try {
+        const local = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
+        if (local) {
+          const parsed = JSON.parse(local);
+          if (parsed?.id && parsed?.role) {
+            setUserInfo({
+              id: parsed.id,
+              name: parsed.name || parsed.email?.split('@')[0] || 'Usuario',
+              email: parsed.email || '',
+              role: parsed.role,
+              groups: parsed.groups || []
+            });
+          }
+        }
+      } catch {}
+      // Confirmación desde Supabase
+      loadUser();
+    }
+  }, [isClient]);
 
   // Funciones para manejar el dropdown con delay
   const handleMenuEnter = (itemId: string) => {
@@ -383,6 +413,11 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
           {children}
         </div>
       </main>
+
+      {/* ChatWidget global para super_admin/admin */}
+      {userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin') && (
+        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+      )}
     </div>
   );
 }
