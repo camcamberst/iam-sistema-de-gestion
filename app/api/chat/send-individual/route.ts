@@ -52,8 +52,11 @@ export async function POST(request: NextRequest) {
     // Crear/obtener sesión para el destinatario
     const sessionId = await getOrCreateSession(targetUserId);
     if (!sessionId) {
+      console.error('❌ [SEND-INDIVIDUAL] Failed to get/create session for target user:', targetUserId);
       return NextResponse.json({ error: 'Error creando sesión' }, { status: 500 });
     }
+
+    console.log('✅ [SEND-INDIVIDUAL] Session ID for target user:', sessionId);
 
     // Insertar mensaje
     const { error: insertError } = await supabaseServer
@@ -67,9 +70,11 @@ export async function POST(request: NextRequest) {
       });
 
     if (insertError) {
-      console.error('Error inserting message:', insertError);
+      console.error('❌ [SEND-INDIVIDUAL] Error inserting message:', insertError);
       return NextResponse.json({ error: 'Error enviando mensaje' }, { status: 500 });
     }
+
+    console.log('✅ [SEND-INDIVIDUAL] Message inserted successfully for session:', sessionId);
 
     return NextResponse.json({ success: true, message: 'Mensaje enviado' });
   } catch (e) {
@@ -79,6 +84,8 @@ export async function POST(request: NextRequest) {
 }
 
 async function getOrCreateSession(userId: string): Promise<string | null> {
+  console.log('🔍 [GET-OR-CREATE-SESSION] Looking for existing session for user:', userId);
+  
   const { data: existing } = await supabaseServer
     .from('chat_sessions')
     .select('id')
@@ -87,13 +94,25 @@ async function getOrCreateSession(userId: string): Promise<string | null> {
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
-  if (existing?.id) return existing.id;
+    
+  if (existing?.id) {
+    console.log('✅ [GET-OR-CREATE-SESSION] Found existing session:', existing.id);
+    return existing.id;
+  }
 
+  console.log('🆕 [GET-OR-CREATE-SESSION] Creating new session for user:', userId);
+  
   const { data: created, error } = await supabaseServer
     .from('chat_sessions')
     .insert({ user_id: userId, is_active: true })
     .select('id')
     .single();
-  if (error) return null;
+    
+  if (error) {
+    console.error('❌ [GET-OR-CREATE-SESSION] Error creating session:', error);
+    return null;
+  }
+  
+  console.log('✅ [GET-OR-CREATE-SESSION] Created new session:', created?.id);
   return created?.id || null;
 }

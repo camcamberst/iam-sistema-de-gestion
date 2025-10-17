@@ -185,6 +185,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       // Para modelos: cargar mensajes de su sesión (donde aparecen como destinatarios)
       // (incluyendo mensajes de admin/super_admin enviados a ellos)
       
+      console.log('🔍 [CHATWIDGET] Loading messages for user:', session.user.id);
+      
       // Primero obtener las sesiones de chat para el usuario
       const { data: userSessions, error: sessionsError } = await supabase
         .from('chat_sessions')
@@ -193,16 +195,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         .eq('is_active', true);
 
       if (sessionsError) {
-        console.error('Error loading user sessions:', sessionsError);
+        console.error('❌ [CHATWIDGET] Error loading user sessions:', sessionsError);
         return;
       }
 
+      console.log('📋 [CHATWIDGET] Found sessions:', userSessions);
+
       if (!userSessions || userSessions.length === 0) {
-        console.log('No active sessions found for user');
+        console.log('⚠️ [CHATWIDGET] No active sessions found for user');
         return;
       }
 
       const sessionIds = userSessions.map(s => s.id);
+      console.log('🆔 [CHATWIDGET] Session IDs:', sessionIds);
 
       // Luego obtener los mensajes de esas sesiones
       const { data: chatMessages, error } = await supabase
@@ -212,9 +217,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Error loading chat history:', error);
+        console.error('❌ [CHATWIDGET] Error loading chat history:', error);
         return;
       }
+
+      console.log('💬 [CHATWIDGET] Found messages:', chatMessages);
 
       const formattedMessages: Message[] = chatMessages.map(msg => ({
         id: msg.id,
