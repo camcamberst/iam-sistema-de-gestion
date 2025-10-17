@@ -30,6 +30,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [showTicketConfirm, setShowTicketConfirm] = useState(false);
   const [creatingTicket, setCreatingTicket] = useState(false);
   const [resolvedUser, setResolvedUser] = useState<{ id: string; role: string } | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -267,6 +269,31 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   };
 
+  // Inserción de emoji en la posición del cursor
+  const insertEmoji = (emoji: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) {
+      setInputMessage((prev) => prev + emoji);
+      return;
+    }
+    const start = textarea.selectionStart || 0;
+    const end = textarea.selectionEnd || 0;
+    const before = inputMessage.slice(0, start);
+    const after = inputMessage.slice(end);
+    const next = `${before}${emoji}${after}`;
+    setInputMessage(next);
+    requestAnimationFrame(() => {
+      textarea.focus();
+      const caret = start + emoji.length;
+      textarea.setSelectionRange(caret, caret);
+    });
+  };
+
+  // Picker mínimo (Unicode) — ligero y sin dependencias
+  const commonEmojis = [
+    '😀','😁','😂','🤣','😊','😍','😘','😎','🤩','🤔','😅','🙏','💪','👏','🙌','🔥','✨','💡','✅','🚀','❤️','💙','💚','💛','💜','🤍','👍','👎','👉','👀'
+  ];
+
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString('es-ES', { 
       hour: '2-digit', 
@@ -458,6 +485,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           <div className="border-t border-gray-700 p-3 bg-gray-800">
             <div className="flex space-x-2">
               <textarea
+                ref={textareaRef}
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
                 onKeyPress={handleKeyPress}
@@ -466,6 +494,32 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 rows={2}
                 disabled={isLoading || limitReached}
               />
+              {/* Botón Emoji */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker((v) => !v)}
+                  className="px-2 py-2 bg-gray-700 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  aria-label="Abrir emojis"
+                >
+                  <span role="img" aria-hidden>😊</span>
+                </button>
+                {showEmojiPicker && (
+                  <div className="absolute bottom-10 right-0 w-64 p-2 rounded-xl bg-gray-900 border border-gray-700 shadow-2xl grid grid-cols-8 gap-1 z-[60]">
+                    {commonEmojis.map((e) => (
+                      <button
+                        key={e}
+                        type="button"
+                        className="h-7 w-7 rounded-md hover:bg-gray-800 text-lg"
+                        onClick={() => { insertEmoji(e); setShowEmojiPicker(false); }}
+                        aria-label={`Insertar emoji ${e}`}
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
               <button
                 onClick={sendMessage}
                 disabled={!inputMessage.trim() || isLoading || limitReached}
