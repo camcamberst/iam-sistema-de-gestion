@@ -303,7 +303,7 @@ export default function HistorialAnticiposPage() {
           console.log('🔍 [CARGAR GRUPOS] Modelos del grupo', grupo.name, ':', modelosData);
           
           if (modelosData) {
-            modelosPorGrupoData[grupo.id] = modelosData.map(m => m.user_id);
+            modelosPorGrupoData[grupo.id] = modelosData.map((m: any) => m.user_id);
           }
         }
         
