@@ -38,6 +38,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [isBroadcast, setIsBroadcast] = useState(true);
   const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const [showBroadcastPanel, setShowBroadcastPanel] = useState(false);
+  const [showIndividualMessage, setShowIndividualMessage] = useState(false);
+  const [selectedModelId, setSelectedModelId] = useState('');
+  const [selectedModelName, setSelectedModelName] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -49,6 +52,53 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   useEffect(() => {
     scrollToBottom();
+  }, [messages]);
+
+  // Notificación sonora vibrante para nuevos mensajes
+  const playNotificationSound = () => {
+    try {
+      // Crear un sonido de notificación vibrante con vibrato sutil
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      const lfo = audioContext.createOscillator();
+      const lfoGain = audioContext.createGain();
+      
+      // Configurar LFO para el vibrato
+      lfo.frequency.setValueAtTime(5, audioContext.currentTime);
+      lfoGain.gain.setValueAtTime(50, audioContext.currentTime);
+      
+      // Conectar el LFO al oscilador principal
+      lfo.connect(lfoGain);
+      lfoGain.connect(oscillator.frequency);
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      // Frecuencia base del sonido
+      oscillator.frequency.setValueAtTime(900, audioContext.currentTime);
+      
+      // Configurar volumen con fade out
+      gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
+      
+      // Iniciar y detener los osciladores
+      lfo.start(audioContext.currentTime);
+      oscillator.start(audioContext.currentTime);
+      lfo.stop(audioContext.currentTime + 0.4);
+      oscillator.stop(audioContext.currentTime + 0.4);
+    } catch (error) {
+      console.log('No se pudo reproducir sonido de notificación');
+    }
+  };
+
+  // Reproducir sonido cuando llega un mensaje del bot o admin
+  useEffect(() => {
+    if (messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.sender === 'bot' || lastMessage.sender === 'admin') {
+        playNotificationSound();
+      }
+    }
   }, [messages]);
 
   // Resolver usuario si no viene por props
@@ -513,6 +563,136 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         )}
                       </select>
                     </div>
+                  </div>
+
+                  {/* Separador */}
+                  <div className="border-t border-gray-700"></div>
+
+                  {/* Sección: Mensajes individuales */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-300">Mensaje individual</h4>
+                    
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={selectedModelName}
+                        onChange={(e) => setSelectedModelName(e.target.value)}
+                        placeholder="Nombre o email de modelo"
+                        className="flex-1 text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      />
+                      <button
+                        onClick={async () => {
+                          if (!selectedModelName.trim()) return;
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession();
+                            if (!session) throw new Error('No hay sesión activa');
+                            
+                            // Buscar modelo por nombre o email
+                            const { data: models } = await supabase
+                              .from('users')
+                              .select('id, name, email')
+                              .eq('role', 'modelo')
+                              .or(`name.ilike.%${selectedModelName}%,email.ilike.%${selectedModelName}%`);
+                            
+                            if (!models || models.length === 0) {
+                              setError('No se encontró el modelo');
+                              return;
+                            }
+                            
+                            if (models.length === 1) {
+                              setSelectedModelId(models[0].id);
+                              setSelectedModelName(`${models[0].name} (${models[0].email})`);
+                            } else {
+                              // Mostrar lista para seleccionar
+                              const modelList = models.map(m => `${m.name} (${m.email})`).join('\n');
+                              const selection = prompt(`Múltiples modelos encontrados:\n${modelList}\n\nEscribe el nombre exacto:`);
+                              if (selection) {
+                                const selected = models.find(m => m.name === selection || m.email === selection);
+                                if (selected) {
+                                  setSelectedModelId(selected.id);
+                                  setSelectedModelName(`${selected.name} (${selected.email})`);
+                                }
+                              }
+                            }
+                          } catch (e: any) {
+                            setError(e?.message || 'Error al buscar modelo');
+                          }
+                        }}
+                        className="px-2 py-1 text-xs rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+                      >
+                        Buscar
+                      </button>
+                    </div>
+                    
+                    {selectedModelId && (
+                      <div className="flex items-center justify-between p-2 bg-gray-800 rounded-lg">
+                        <span className="text-xs text-gray-300">Para: {selectedModelName}</span>
+                        <button
+                          onClick={() => {
+                            setSelectedModelId('');
+                            setSelectedModelName('');
+                          }}
+                          className="text-gray-500 hover:text-gray-300 text-xs"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                    
+                    {selectedModelId && inputMessage.trim() && (
+                      <button
+                        onClick={async () => {
+                          try {
+                            setSendingBroadcast(true);
+                            const { data: { session } } = await supabase.auth.getSession();
+                            if (!session) throw new Error('No hay sesión activa');
+                            
+                            const payload = {
+                              target: 'user' as const,
+                              userId: selectedModelId,
+                              text: inputMessage.trim(),
+                              imageUrl: imageUrl || undefined,
+                              isBroadcast: false,
+                            };
+                            
+                            const res = await fetch('/api/chat/broadcast', {
+                              method: 'POST',
+                              headers: {
+                                'Content-Type': 'application/json',
+                                'Authorization': `Bearer ${session.access_token}`
+                              },
+                              body: JSON.stringify(payload)
+                            });
+                            
+                            const data = await res.json();
+                            if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el mensaje');
+                            
+                            // Confirmación en la conversación
+                            const botMessage: Message = {
+                              id: (Date.now() + 4).toString(),
+                              sender: 'bot',
+                              message: `✅ Mensaje enviado a ${selectedModelName}`,
+                              timestamp: new Date()
+                            } as any;
+                            setMessages(prev => [...prev, botMessage]);
+                            
+                            // Reset
+                            setSelectedModelId('');
+                            setSelectedModelName('');
+                            setInputMessage('');
+                            setImageUrl('');
+                          } catch (e: any) {
+                            setError(e?.message || 'No se pudo enviar el mensaje');
+                          } finally {
+                            setSendingBroadcast(false);
+                          }
+                        }}
+                        disabled={sendingBroadcast}
+                        className="w-full px-3 py-1.5 text-xs rounded-lg bg-blue-700 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                      >
+                        {sendingBroadcast ? 'Enviando…' : '💬 Enviar mensaje individual'}
+                      </button>
+                    )}
                   </div>
 
                   {/* Separador */}

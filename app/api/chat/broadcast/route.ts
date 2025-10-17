@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 
-type Target = 'all' | 'groups';
+type Target = 'all' | 'groups' | 'user';
 
 interface BroadcastBody {
   target: Target;
   groupNames?: string[]; // requerido si target === 'groups'
+  userId?: string; // requerido si target === 'user'
   text: string;
   imageUrl?: string;
   isBroadcast?: boolean;
@@ -63,6 +64,22 @@ export async function POST(request: NextRequest) {
         .select('id')
         .eq('role', 'modelo');
       recipientIds = (models || []).map(r => r.id);
+    } else if (target === 'user') {
+      const userId = body.userId;
+      if (!userId) return NextResponse.json({ error: 'userId requerido para mensaje individual' }, { status: 400 });
+      
+      // Verificar que el usuario existe y es modelo
+      const { data: targetUser } = await supabaseServer
+        .from('users')
+        .select('id, role')
+        .eq('id', userId)
+        .single();
+      
+      if (!targetUser || targetUser.role !== 'modelo') {
+        return NextResponse.json({ error: 'Usuario no encontrado o no es modelo' }, { status: 404 });
+      }
+      
+      recipientIds = [userId];
     } else if (target === 'groups') {
       const names = (body.groupNames || []).map(s => s.trim()).filter(Boolean);
       if (names.length === 0) return NextResponse.json({ error: 'Debe indicar al menos un grupo' }, { status: 400 });
