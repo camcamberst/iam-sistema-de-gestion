@@ -172,6 +172,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       if (userData) {
         const parsed = JSON.parse(userData);
         userRole = parsed.role || 'modelo';
+        // Establecer userInfo inmediatamente desde localStorage para no depender del fetch
+        if (!userInfo && parsed?.id && parsed?.role) {
+          setUserInfo({
+            id: parsed.id,
+            name: parsed.name || parsed.email?.split('@')[0] || 'Usuario',
+            email: parsed.email || '',
+            role: parsed.role,
+            groups: parsed.groups || []
+          });
+        }
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);
