@@ -282,7 +282,7 @@ export default function ConversationTab({
   return (
     <div
       ref={tabRef}
-      className="fixed bg-gray-900/95 backdrop-blur-sm border border-gray-700 rounded-2xl shadow-2xl z-50 flex flex-col overflow-hidden"
+      className="fixed bg-gray-900 rounded-2xl shadow-2xl border border-gray-700 z-50 flex flex-col overflow-hidden"
       style={{
         right: 288 + 12 + 16, // a la izquierda del chat principal (chatWidth + gap + margin)
         bottom: 20,
@@ -292,14 +292,14 @@ export default function ConversationTab({
     >
       {/* Header */}
       <div 
-        className="bg-gray-800/90 border-b border-gray-700 p-3 cursor-move drag-handle"
+        className="bg-gray-800 text-white p-3 cursor-move drag-handle"
         onMouseDown={handleMouseDown}
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-10 h-10 bg-blue-600 rounded-full flex items-center justify-center text-white font-medium">
-                {getInitials(conversation.modelName)}
+              <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center">
+                <span className="text-xs font-bold text-white">{getInitials(conversation.modelName)}</span>
               </div>
               {isOnline && (
                 <div className="absolute -bottom-1 -right-1 w-3 h-3 bg-green-500 border-2 border-gray-800 rounded-full"></div>
@@ -313,7 +313,7 @@ export default function ConversationTab({
           <div className="flex items-center space-x-2">
             <button
               onClick={onMinimize}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
@@ -321,7 +321,7 @@ export default function ConversationTab({
             </button>
             <button
               onClick={onClose}
-              className="text-gray-400 hover:text-white transition-colors"
+              className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center hover:bg-gray-600 transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -332,9 +332,12 @@ export default function ConversationTab({
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-2 bg-gray-900">
         {messages.length === 0 ? (
-          <div className="text-center text-gray-400 py-8">
+          <div className="text-center text-gray-300 text-sm py-6">
+            <div className="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-2">
+              <span className="text-sm font-bold text-white">{getInitials(conversation.modelName)}</span>
+            </div>
             <p>Inicia una conversación con {conversation.modelName}</p>
           </div>
         ) : (
@@ -346,8 +349,8 @@ export default function ConversationTab({
               <div
                 className={`max-w-xs px-3 py-2 rounded-lg ${
                   message.sender === 'user'
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-700 text-gray-100'
+                    ? 'bg-gray-800 text-white'
+                    : 'bg-gray-800 text-white'
                 }`}
               >
                 <p className="text-sm">{message.message}</p>
