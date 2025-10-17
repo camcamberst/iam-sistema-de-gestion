@@ -91,11 +91,27 @@ export default function ConversationTab({
 
   const loadConversationHistory = async () => {
     try {
+      // Primero obtener las sesiones de chat para ambos usuarios
+      const { data: sessions, error: sessionsError } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .or(`user_id.eq.${userId},user_id.eq.${conversation.modelId}`)
+        .eq('is_active', true);
+
+      if (sessionsError) throw sessionsError;
+
+      if (!sessions || sessions.length === 0) {
+        setMessages([]);
+        return;
+      }
+
+      const sessionIds = sessions.map(s => s.id);
+
+      // Luego obtener los mensajes de esas sesiones
       const { data, error } = await supabase
         .from('chat_messages')
         .select('*')
-        .or(`sender_id.eq.${userId},recipient_id.eq.${userId}`)
-        .or(`sender_id.eq.${conversation.modelId},recipient_id.eq.${conversation.modelId}`)
+        .in('session_id', sessionIds)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
