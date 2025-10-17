@@ -485,59 +485,31 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             </select>
           </div>
 
-          {/* Controles de difusión (solo admin/super_admin) */}
+          {/* Select compacto de difusión (solo admin/super_admin) */}
           {((resolvedUser?.role || userRole) === 'admin' || (resolvedUser?.role || userRole) === 'super_admin') && (
-            <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 space-y-2">
-              <div className="grid grid-cols-2 gap-2">
-                <select
-                  value={recipientTarget}
-                  onChange={(e) => setRecipientTarget(e.target.value as 'all' | 'groups' | '')}
-                  className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
-                >
-                  <option value="">Destinatario…</option>
-                  <option value="groups">Grupo(s)</option>
-                  {(resolvedUser?.role === 'super_admin' || userRole === 'super_admin') && (
-                    <option value="all">Todos (modelos)</option>
-                  )}
-                </select>
-                {recipientTarget === 'groups' && (
-                  <input
-                    type="text"
-                    value={groupNamesInput}
-                    onChange={(e) => setGroupNamesInput(e.target.value)}
-                    placeholder="Grupos (coma)"
-                    className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
-                  />
-                )}
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <input
-                  type="url"
-                  value={imageUrl}
-                  onChange={(e) => setImageUrl(e.target.value)}
-                  placeholder="Imagen por URL (opcional)"
-                  className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 col-span-2"
-                />
-                {imageUrl && (
-                  <div className="col-span-2">
-                    <img src={imageUrl} alt="Vista previa" className="max-h-24 rounded-md border border-gray-700" />
-                  </div>
-                )}
-              </div>
-              <label className="flex items-center gap-2 text-xs text-gray-200">
-                <input
-                  type="checkbox"
-                  checked={isBroadcast}
-                  onChange={(e) => setIsBroadcast(e.target.checked)}
-                  className="accent-gray-600"
-                />
-                Marcar como “Mensaje de difusión”
-              </label>
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  disabled={sendingBroadcast || !recipientTarget || !inputMessage.trim()}
-                  onClick={async () => {
+            <div className="border-t border-gray-800 bg-gray-900 px-3 py-2">
+              <select
+                onChange={async (e) => {
+                  const action = e.target.value;
+                  if (!action) return;
+                  
+                  if (action === 'groups') {
+                    const groupNames = prompt('Grupos (separados por coma):');
+                    if (!groupNames) return;
+                    setRecipientTarget('groups');
+                    setGroupNamesInput(groupNames);
+                  } else if (action === 'all') {
+                    setRecipientTarget('all');
+                  } else if (action === 'image') {
+                    const url = prompt('URL de imagen:');
+                    if (url) setImageUrl(url);
+                    return;
+                  } else if (action === 'send') {
+                    if (!recipientTarget || !inputMessage.trim()) {
+                      setError('Selecciona destinatario y escribe mensaje');
+                      return;
+                    }
+                    // Enviar difusión
                     if (!resolvedUser?.id) return;
                     try {
                       setSendingBroadcast(true);
@@ -547,7 +519,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         target: recipientTarget,
                         text: inputMessage.trim(),
                         imageUrl: imageUrl || undefined,
-                        isBroadcast: !!isBroadcast,
+                        isBroadcast: true,
                       };
                       if (recipientTarget === 'groups') {
                         payload.groupNames = groupNamesInput
@@ -573,9 +545,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         timestamp: new Date()
                       } as any;
                       setMessages(prev => [...prev, botMessage]);
-                      // Reset parciales
+                      // Reset
                       setImageUrl('');
-                      setIsBroadcast(true);
                       setGroupNamesInput('');
                       setRecipientTarget('');
                       setInputMessage('');
@@ -584,11 +555,40 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                     } finally {
                       setSendingBroadcast(false);
                     }
-                  }}
-                  className="px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
-                >
-                  {sendingBroadcast ? 'Enviando…' : 'Enviar difusión'}
-                </button>
+                  }
+                  e.target.selectedIndex = 0; // reset
+                }}
+                className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 w-full"
+              >
+                <option value="">Difusión masiva…</option>
+                <option value="groups">📢 Enviar a Grupo(s)</option>
+                {(resolvedUser?.role === 'super_admin' || userRole === 'super_admin') && (
+                  <option value="all">📢 Enviar a Todos</option>
+                )}
+                <option value="image">🖼️ Agregar imagen</option>
+                {recipientTarget && inputMessage.trim() && (
+                  <option value="send">🚀 Enviar difusión</option>
+                )}
+              </select>
+              {/* Indicadores compactos */}
+              <div className="flex items-center justify-between mt-1 text-xs text-gray-400">
+                <span>
+                  {recipientTarget === 'groups' && groupNamesInput && `Grupos: ${groupNamesInput}`}
+                  {recipientTarget === 'all' && 'Destino: Todos los modelos'}
+                  {imageUrl && ' • Con imagen'}
+                </span>
+                {recipientTarget && (
+                  <button
+                    onClick={() => {
+                      setRecipientTarget('');
+                      setGroupNamesInput('');
+                      setImageUrl('');
+                    }}
+                    className="text-gray-500 hover:text-gray-300"
+                  >
+                    ✕
+                  </button>
+                )}
               </div>
             </div>
           )}
