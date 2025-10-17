@@ -525,7 +525,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 onClick={() => setShowBroadcastPanel(!showBroadcastPanel)}
                 className="w-full px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-gray-800 transition-colors flex items-center justify-between"
               >
-                <span>📢 Difusión masiva</span>
+                <span>⚡ Acciones</span>
                 <svg 
                   className={`w-4 h-4 transition-transform duration-200 ${showBroadcastPanel ? 'rotate-180' : ''}`}
                   fill="none" 
@@ -585,6 +585,55 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         )}
                       </select>
                     </div>
+                    
+                    {/* Botón Clear Chat */}
+                    <button
+                      onClick={async () => {
+                        if (!confirm('¿Estás seguro de que quieres limpiar toda la conversación? Esta acción no se puede deshacer.')) {
+                          return;
+                        }
+                        
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          if (!session) throw new Error('No hay sesión activa');
+                          
+                          // Limpiar mensajes locales
+                          setMessages([]);
+                          setMessageCount(0);
+                          setInputMessage('');
+                          setError(null);
+                          setLimitReached(false);
+                          setEscalated(false);
+                          
+                          // Si hay sesión activa, limpiar mensajes en la base de datos
+                          if (sessionId) {
+                            const { error } = await supabase
+                              .from('chat_messages')
+                              .delete()
+                              .eq('session_id', sessionId);
+                            
+                            if (error) {
+                              console.warn('Error clearing chat messages:', error);
+                            }
+                          }
+                          
+                          // Confirmación
+                          const botMessage: Message = {
+                            id: (Date.now() + 5).toString(),
+                            sender: 'bot',
+                            message: '✅ Conversación limpiada exitosamente.',
+                            timestamp: new Date()
+                          } as any;
+                          setMessages([botMessage]);
+                          
+                        } catch (e: any) {
+                          setError(e?.message || 'Error al limpiar la conversación');
+                        }
+                      }}
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-red-700 text-white hover:bg-red-600 transition-colors"
+                    >
+                      🗑️ Clear Chat
+                    </button>
                   </div>
 
                   {/* Separador */}
@@ -885,6 +934,55 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
                       </select>
                     </div>
+                    
+                    {/* Botón Clear Chat para modelos */}
+                    <button
+                      onClick={async () => {
+                        if (!confirm('¿Estás seguro de que quieres limpiar toda la conversación? Esta acción no se puede deshacer.')) {
+                          return;
+                        }
+                        
+                        try {
+                          const { data: { session } } = await supabase.auth.getSession();
+                          if (!session) throw new Error('No hay sesión activa');
+                          
+                          // Limpiar mensajes locales
+                          setMessages([]);
+                          setMessageCount(0);
+                          setInputMessage('');
+                          setError(null);
+                          setLimitReached(false);
+                          setEscalated(false);
+                          
+                          // Si hay sesión activa, limpiar mensajes en la base de datos
+                          if (sessionId) {
+                            const { error } = await supabase
+                              .from('chat_messages')
+                              .delete()
+                              .eq('session_id', sessionId);
+                            
+                            if (error) {
+                              console.warn('Error clearing chat messages:', error);
+                            }
+                          }
+                          
+                          // Confirmación
+                          const botMessage: Message = {
+                            id: (Date.now() + 5).toString(),
+                            sender: 'bot',
+                            message: '✅ Conversación limpiada exitosamente.',
+                            timestamp: new Date()
+                          } as any;
+                          setMessages([botMessage]);
+                          
+                        } catch (e: any) {
+                          setError(e?.message || 'Error al limpiar la conversación');
+                        }
+                      }}
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-red-700 text-white hover:bg-red-600 transition-colors"
+                    >
+                      🗑️ Clear Chat
+                    </button>
                   </div>
                 </div>
               </div>
