@@ -28,9 +28,12 @@ export async function POST(request: NextRequest) {
       .eq('id', user.id)
       .single();
 
+    console.log('🔍 [BROADCAST] User auth check:', { userId: user.id, userRow, role: userRow?.role });
+
     if (!userRow) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     const role = (userRow.role || '').toString();
     if (role !== 'admin' && role !== 'super_admin') {
+      console.log('❌ [BROADCAST] Role check failed:', { role, allowed: ['admin', 'super_admin'] });
       return NextResponse.json({ error: 'Prohibido' }, { status: 403 });
     }
 
