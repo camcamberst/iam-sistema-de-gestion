@@ -41,6 +41,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [showIndividualMessage, setShowIndividualMessage] = useState(false);
   const [selectedModelId, setSelectedModelId] = useState('');
   const [selectedModelName, setSelectedModelName] = useState('');
+  const [availableModels, setAvailableModels] = useState<Array<{id: string, name: string, email: string}>>([]);
+  const [showModelList, setShowModelList] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -123,6 +125,26 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
     resolve();
   }, [userId, userRole]);
+
+  // Cargar modelos disponibles para admin/super_admin
+  useEffect(() => {
+    const loadModels = async () => {
+      const role = (resolvedUser?.role || userRole || '').toString();
+      if (role === 'admin' || role === 'super_admin') {
+        try {
+          const { data: models } = await supabase
+            .from('users')
+            .select('id, name, email')
+            .eq('role', 'modelo')
+            .order('name');
+          setAvailableModels(models || []);
+        } catch (e) {
+          console.warn('Error loading models:', e);
+        }
+      }
+    };
+    loadModels();
+  }, [resolvedUser, userRole]);
 
   // Load chat history when widget opens
   useEffect(() => {
@@ -572,58 +594,50 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   <div className="space-y-2">
                     <h4 className="text-xs font-medium text-gray-300">Mensaje individual</h4>
                     
-                    <div className="flex gap-2">
-                      <input
-                        type="text"
-                        value={selectedModelName}
-                        onChange={(e) => setSelectedModelName(e.target.value)}
-                        placeholder="Nombre o email de modelo"
-                        className="flex-1 text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
-                      />
+                    {/* Selector de modelo */}
+                    <div className="relative">
                       <button
-                        onClick={async () => {
-                          if (!selectedModelName.trim()) return;
-                          try {
-                            const { data: { session } } = await supabase.auth.getSession();
-                            if (!session) throw new Error('No hay sesión activa');
-                            
-                            // Buscar modelo por nombre o email
-                            const { data: models } = await supabase
-                              .from('users')
-                              .select('id, name, email')
-                              .eq('role', 'modelo')
-                              .or(`name.ilike.%${selectedModelName}%,email.ilike.%${selectedModelName}%`);
-                            
-                            if (!models || models.length === 0) {
-                              setError('No se encontró el modelo');
-                              return;
-                            }
-                            
-                            if (models.length === 1) {
-                              setSelectedModelId(models[0].id);
-                              setSelectedModelName(`${models[0].name} (${models[0].email})`);
-                            } else {
-                              // Mostrar lista para seleccionar
-                              const modelList = models.map(m => `${m.name} (${m.email})`).join('\n');
-                              const selection = prompt(`Múltiples modelos encontrados:\n${modelList}\n\nEscribe el nombre exacto:`);
-                              if (selection) {
-                                const selected = models.find(m => m.name === selection || m.email === selection);
-                                if (selected) {
-                                  setSelectedModelId(selected.id);
-                                  setSelectedModelName(`${selected.name} (${selected.email})`);
-                                }
-                              }
-                            }
-                          } catch (e: any) {
-                            setError(e?.message || 'Error al buscar modelo');
-                          }
-                        }}
-                        className="px-2 py-1 text-xs rounded-lg bg-gray-700 text-white hover:bg-gray-600 transition-colors"
+                        onClick={() => setShowModelList(!showModelList)}
+                        className="w-full text-left text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 flex items-center justify-between"
                       >
-                        Buscar
+                        <span>
+                          {selectedModelName || 'Seleccionar modelo...'}
+                        </span>
+                        <svg 
+                          className={`w-3 h-3 transition-transform ${showModelList ? 'rotate-180' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                        </svg>
                       </button>
+                      
+                      {/* Lista desplegable de modelos */}
+                      {showModelList && (
+                        <div className="absolute top-full left-0 right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-lg z-10 max-h-32 overflow-y-auto">
+                          {availableModels.length === 0 ? (
+                            <div className="px-2 py-1 text-xs text-gray-400">Cargando modelos...</div>
+                          ) : (
+                            availableModels.map((model) => (
+                              <button
+                                key={model.id}
+                                onClick={() => {
+                                  setSelectedModelId(model.id);
+                                  setSelectedModelName(`${model.name} (${model.email})`);
+                                  setShowModelList(false);
+                                }}
+                                className="w-full text-left px-2 py-1 text-xs text-gray-200 hover:bg-gray-700 transition-colors"
+                              >
+                                {model.name} ({model.email})
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      )}
                     </div>
                     
+                    {/* Modelo seleccionado */}
                     {selectedModelId && (
                       <div className="flex items-center justify-between p-2 bg-gray-800 rounded-lg">
                         <span className="text-xs text-gray-300">Para: {selectedModelName}</span>
@@ -639,6 +653,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                       </div>
                     )}
                     
+                    {/* Botón de envío */}
                     {selectedModelId && inputMessage.trim() && (
                       <button
                         onClick={async () => {
