@@ -26,6 +26,26 @@ export default function ConversationTabs({ userId, userRole }: ConversationTabsP
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [nextPosition, setNextPosition] = useState({ x: 20, y: 20 });
 
+  const computePositionLeftOfMainChat = (): { x: number; y: number } => {
+    try {
+      // Dimensiones del Chat principal (w-72 ≈ 288px) y de la pestaña (mismas dimensiones)
+      const chatWidth = 288; // px
+      const tabWidth = 288; // px (w-72)
+      const tabHeight = 500; // px (h-[500px])
+      const margin = 16; // separación desde el borde derecho
+      const gap = 12; // separación entre pestaña y chat principal
+
+      const viewportWidth = typeof window !== 'undefined' ? window.innerWidth : 1280;
+      const viewportHeight = typeof window !== 'undefined' ? window.innerHeight : 800;
+
+      const x = Math.max(8, viewportWidth - (chatWidth + tabWidth + margin + gap));
+      const y = Math.max(8, viewportHeight - (tabHeight + margin));
+      return { x, y };
+    } catch {
+      return { x: 20, y: 20 };
+    }
+  };
+
   // Cargar conversaciones desde localStorage al montar
   useEffect(() => {
     const savedConversations = localStorage.getItem('conversation-tabs');
@@ -63,6 +83,7 @@ export default function ConversationTabs({ userId, userRole }: ConversationTabsP
       ));
     } else {
       // Crear nueva conversación
+      const initialPosition = computePositionLeftOfMainChat();
       const newConversation: Conversation = {
         id: `conv-${Date.now()}`,
         modelId,
@@ -73,7 +94,7 @@ export default function ConversationTabs({ userId, userRole }: ConversationTabsP
         lastMessage: '',
         lastMessageTime: new Date(),
         isActive: true,
-        position: { ...nextPosition }
+        position: { ...initialPosition }
       };
 
       setConversations(prev => [
@@ -81,11 +102,8 @@ export default function ConversationTabs({ userId, userRole }: ConversationTabsP
         newConversation
       ]);
 
-      // Actualizar posición para la siguiente pestaña
-      setNextPosition(prev => ({
-        x: prev.x + 20,
-        y: prev.y + 20
-      }));
+      // Mantener siempre al lado del chat (sin cascada)
+      setNextPosition(initialPosition);
     }
   };
 

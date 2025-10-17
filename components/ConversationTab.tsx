@@ -266,8 +266,8 @@ export default function ConversationTab({
       style={{
         left: conversation.position.x,
         top: conversation.position.y,
-        width: '350px',
-        height: '500px'
+        width: '288px', // w-72
+        height: '500px' // h-[500px]
       }}
     >
       {/* Header */}
