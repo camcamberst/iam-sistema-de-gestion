@@ -133,11 +133,35 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (role === 'admin' || role === 'super_admin') {
         try {
           console.log('Loading models for role:', role);
-          const { data: models, error } = await supabase
+          // Primero intentar con 'modelo', luego con 'model'
+          let { data: models, error } = await supabase
             .from('users')
-            .select('id, name, email')
+            .select('id, name, email, role')
             .eq('role', 'modelo')
             .order('name');
+          
+          // Si no encuentra con 'modelo', intentar con 'model'
+          if (!models || models.length === 0) {
+            console.log('No models found with role "modelo", trying "model"');
+            const result = await supabase
+              .from('users')
+              .select('id, name, email, role')
+              .eq('role', 'model')
+              .order('name');
+            models = result.data;
+            error = result.error;
+          }
+          
+          // Si aún no encuentra, mostrar todos los usuarios para debug
+          if (!models || models.length === 0) {
+            console.log('No models found, checking all users for debug');
+            const debugResult = await supabase
+              .from('users')
+              .select('id, name, email, role')
+              .order('name')
+              .limit(10);
+            console.log('Debug - All users (first 10):', debugResult.data);
+          }
           
           if (error) {
             console.error('Error loading models:', error);
@@ -674,11 +698,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         <button
                           onClick={async () => {
                             try {
-                              const { data: models, error } = await supabase
+                              // Primero intentar con 'modelo', luego con 'model'
+                              let { data: models, error } = await supabase
                                 .from('users')
-                                .select('id, name, email')
+                                .select('id, name, email, role')
                                 .eq('role', 'modelo')
                                 .order('name');
+                              
+                              // Si no encuentra con 'modelo', intentar con 'model'
+                              if (!models || models.length === 0) {
+                                console.log('No models found with role "modelo", trying "model"');
+                                const result = await supabase
+                                  .from('users')
+                                  .select('id, name, email, role')
+                                  .eq('role', 'model')
+                                  .order('name');
+                                models = result.data;
+                                error = result.error;
+                              }
                               
                               if (error) {
                                 console.error('Error reloading models:', error);
