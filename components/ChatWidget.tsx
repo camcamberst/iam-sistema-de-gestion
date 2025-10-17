@@ -174,7 +174,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   };
 
-  // Acciones rápidas (chips)
+  // Acciones rápidas (opciones en select para ahorrar espacio)
   const quickActions = (() => {
     const base = [
       { id: 'anticipos', label: 'Mis Anticipos', payload: 'mis anticipos' },
@@ -381,30 +381,39 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick actions */}
-          <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 flex flex-wrap gap-2">
-            {quickActions.map(a => (
-              <button key={a.id} onClick={() => handleQuickAction(a.id)} className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors">
-                {a.label}
-              </button>
-            ))}
+          {/* Barra compacta: selects para acciones y plantillas */}
+          <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 grid grid-cols-2 gap-2">
+            <select
+              onChange={async (e) => {
+                const val = e.target.value;
+                if (!val) return;
+                await handleQuickAction(val);
+                e.currentTarget.selectedIndex = 0; // reset
+              }}
+              className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            >
+              <option value="">Acción rápida…</option>
+              {quickActions.map(a => (
+                <option key={a.id} value={a.id}>{a.label}</option>
+              ))}
+            </select>
+
+            <select
+              onChange={(e) => {
+                const val = e.target.value;
+                if (!val) return;
+                setInputMessage(val);
+              }}
+              className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+            >
+              <option value="">Plantillas…</option>
+              <option value="No veo mi último anticipo registrado, por favor revisar.">No veo mis anticipos</option>
+              <option value="Mis totales de la quincena aparecen en 0, aunque ingresé valores.">Totales en 0</option>
+              <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
+            </select>
           </div>
 
-          {/* Plantillas de tickets */}
-          <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 flex flex-wrap gap-2">
-            <span className="text-[10px] text-gray-400 mr-2">Plantillas:</span>
-            {[
-              { t: 'No veo mis anticipos', d: 'No veo mi último anticipo registrado, por favor revisar.' },
-              { t: 'Totales en 0', d: 'Mis totales de la quincena aparecen en 0, aunque ingresé valores.' },
-              { t: 'Problema de acceso', d: 'Tengo problemas para iniciar sesión o recuperar contraseña.' }
-            ].map((tpl, idx) => (
-              <button
-                key={idx}
-                onClick={() => setInputMessage(tpl.d)}
-                className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
-              >{tpl.t}</button>
-            ))}
-          </div>
+          {/* (Se reemplazó la sección de etiquetas por los selects anteriores) */}
 
           {/* Input */}
           <div className="border-t border-gray-700 p-3 bg-gray-800">
