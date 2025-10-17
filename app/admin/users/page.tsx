@@ -608,6 +608,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   const [restrictionMessage, setRestrictionMessage] = useState('');
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
+  const [isPasswordChanged, setIsPasswordChanged] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
 
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
@@ -645,7 +647,67 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    // Excluir la contraseña del formulario principal para evitar conflictos
+    const { password, ...formDataWithoutPassword } = formData;
+    onSubmit(formDataWithoutPassword);
+  };
+
+  // Función para manejar cambio de contraseña
+  const handlePasswordChange = (value: string) => {
+    setFormData(prev => ({ ...prev, password: value }));
+    setIsPasswordChanged(value.trim().length > 0);
+  };
+
+  // Función para guardar solo la contraseña
+  const handleSavePassword = async () => {
+    if (!formData.password.trim()) {
+      setModalError('La contraseña no puede estar vacía');
+      return;
+    }
+
+    if (formData.password.trim().length < 6) {
+      setModalError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    setSavingPassword(true);
+    setModalError(null);
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          id: formData.id,
+          password: formData.password.trim()
+        }),
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setModalError(null);
+        setIsPasswordChanged(false);
+        setFormData(prev => ({ ...prev, password: '' }));
+        // Mostrar mensaje de éxito temporal
+        const successMsg = document.createElement('div');
+        successMsg.textContent = 'Contraseña actualizada exitosamente';
+        successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
+        document.body.appendChild(successMsg);
+        setTimeout(() => {
+          document.body.removeChild(successMsg);
+        }, 3000);
+      } else {
+        setModalError(result.error || 'Error actualizando contraseña');
+      }
+    } catch (error) {
+      console.error('Error actualizando contraseña:', error);
+      setModalError('Error de conexión. Por favor, intenta nuevamente.');
+    } finally {
+      setSavingPassword(false);
+    }
   };
 
   // Función para cargar rooms por grupo
@@ -763,7 +825,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               <input
                 type={showPassword ? "text" : "password"}
                 value={formData.password}
-                onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="Ingresa nueva contraseña"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -786,6 +848,35 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             </div>
             {formData.password && formData.password.length < 6 && (
               <p className="text-red-500 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
+            )}
+            
+            {/* Botón para guardar solo la contraseña */}
+            {isPasswordChanged && formData.password.trim().length >= 6 && (
+              <div className="mt-2">
+                <button
+                  type="button"
+                  onClick={handleSavePassword}
+                  disabled={savingPassword}
+                  className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+                >
+                  {savingPassword ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Guardando...
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      Guardar Contraseña
+                    </>
+                  )}
+                </button>
+              </div>
             )}
           </div>
 
