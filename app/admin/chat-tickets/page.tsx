@@ -51,6 +51,7 @@ export default function ChatTicketsPage() {
   });
   const [unreadCount, setUnreadCount] = useState(0);
   const [admins, setAdmins] = useState<any[]>([]);
+  const [metrics, setMetrics] = useState<any | null>(null);
 
   const supabase = require('@/lib/supabase').supabase;
 
@@ -58,6 +59,7 @@ export default function ChatTicketsPage() {
     loadTickets();
     loadNotifications();
     loadAdmins();
+    loadMetrics();
   }, [filters]);
 
   const loadTickets = async () => {
@@ -116,6 +118,20 @@ export default function ChatTicketsPage() {
       setAdmins(adminData || []);
     } catch (error) {
       console.error('Error loading admins:', error);
+    }
+  };
+
+  const loadMetrics = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+      const res = await fetch('/api/chat/metrics', {
+        headers: { 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await res.json();
+      if (data?.success) setMetrics(data.metrics);
+    } catch (e) {
+      console.error('Error loading chat metrics', e);
     }
   };
 
@@ -211,7 +227,7 @@ export default function ChatTicketsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+        {/* Header con métricas */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
             <div>
@@ -233,6 +249,35 @@ export default function ChatTicketsPage() {
               </div>
             )}
           </div>
+
+          {metrics && (
+            <div className="mt-4 grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="text-xs text-gray-500">Sesiones totales</p>
+                <p className="text-xl font-semibold text-gray-900">{metrics.sessionsTotal}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="text-xs text-gray-500">Sesiones activas</p>
+                <p className="text-xl font-semibold text-gray-900">{metrics.sessionsActive}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="text-xs text-gray-500">Escaladas</p>
+                <p className="text-xl font-semibold text-gray-900">{metrics.sessionsEscalated}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="text-xs text-gray-500">Mensajes 24h</p>
+                <p className="text-xl font-semibold text-gray-900">{metrics.messagesLast24h}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="text-xs text-gray-500">Tickets abiertos</p>
+                <p className="text-xl font-semibold text-gray-900">{metrics.ticketsOpen}</p>
+              </div>
+              <div className="bg-white rounded-lg border border-gray-200 p-3">
+                <p className="text-xs text-gray-500">Tickets urgentes</p>
+                <p className="text-xl font-semibold text-gray-900">{metrics.ticketsUrgent}</p>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
