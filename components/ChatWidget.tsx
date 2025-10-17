@@ -31,6 +31,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [creatingTicket, setCreatingTicket] = useState(false);
   const [resolvedUser, setResolvedUser] = useState<{ id: string; role: string } | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  // Controles de difusión (solo admin/super_admin)
+  const [recipientTarget, setRecipientTarget] = useState<'all' | 'groups' | ''>('');
+  const [groupNamesInput, setGroupNamesInput] = useState(''); // nombres de grupos separados por coma
+  const [imageUrl, setImageUrl] = useState('');
+  const [isBroadcast, setIsBroadcast] = useState(true);
+  const [sendingBroadcast, setSendingBroadcast] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -478,6 +484,114 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               )}
             </select>
           </div>
+
+          {/* Controles de difusión (solo admin/super_admin) */}
+          {((resolvedUser?.role || userRole) === 'admin' || (resolvedUser?.role || userRole) === 'super_admin') && (
+            <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 space-y-2">
+              <div className="grid grid-cols-2 gap-2">
+                <select
+                  value={recipientTarget}
+                  onChange={(e) => setRecipientTarget(e.target.value as 'all' | 'groups' | '')}
+                  className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                >
+                  <option value="">Destinatario…</option>
+                  <option value="groups">Grupo(s)</option>
+                  {(resolvedUser?.role === 'super_admin' || userRole === 'super_admin') && (
+                    <option value="all">Todos (modelos)</option>
+                  )}
+                </select>
+                {recipientTarget === 'groups' && (
+                  <input
+                    type="text"
+                    value={groupNamesInput}
+                    onChange={(e) => setGroupNamesInput(e.target.value)}
+                    placeholder="Grupos (coma)"
+                    className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                  />
+                )}
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <input
+                  type="url"
+                  value={imageUrl}
+                  onChange={(e) => setImageUrl(e.target.value)}
+                  placeholder="Imagen por URL (opcional)"
+                  className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 col-span-2"
+                />
+                {imageUrl && (
+                  <div className="col-span-2">
+                    <img src={imageUrl} alt="Vista previa" className="max-h-24 rounded-md border border-gray-700" />
+                  </div>
+                )}
+              </div>
+              <label className="flex items-center gap-2 text-xs text-gray-200">
+                <input
+                  type="checkbox"
+                  checked={isBroadcast}
+                  onChange={(e) => setIsBroadcast(e.target.checked)}
+                  className="accent-gray-600"
+                />
+                Marcar como “Mensaje de difusión”
+              </label>
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  disabled={sendingBroadcast || !recipientTarget || !inputMessage.trim()}
+                  onClick={async () => {
+                    if (!resolvedUser?.id) return;
+                    try {
+                      setSendingBroadcast(true);
+                      const { data: { session } } = await supabase.auth.getSession();
+                      if (!session) throw new Error('No hay sesión activa');
+                      const payload: any = {
+                        target: recipientTarget,
+                        text: inputMessage.trim(),
+                        imageUrl: imageUrl || undefined,
+                        isBroadcast: !!isBroadcast,
+                      };
+                      if (recipientTarget === 'groups') {
+                        payload.groupNames = groupNamesInput
+                          .split(',')
+                          .map(s => s.trim())
+                          .filter(Boolean);
+                      }
+                      const res = await fetch('/api/chat/broadcast', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify(payload)
+                      });
+                      const data = await res.json();
+                      if (!res.ok) throw new Error(data?.error || 'No se pudo enviar la difusión');
+                      // Confirmación en la conversación
+                      const botMessage: Message = {
+                        id: (Date.now() + 3).toString(),
+                        sender: 'bot',
+                        message: `✅ Difusión enviada a ${data?.recipients || 0} destinatarios.`,
+                        timestamp: new Date()
+                      } as any;
+                      setMessages(prev => [...prev, botMessage]);
+                      // Reset parciales
+                      setImageUrl('');
+                      setIsBroadcast(true);
+                      setGroupNamesInput('');
+                      setRecipientTarget('');
+                      setInputMessage('');
+                    } catch (e: any) {
+                      setError(e?.message || 'No se pudo enviar la difusión');
+                    } finally {
+                      setSendingBroadcast(false);
+                    }
+                  }}
+                  className="px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50"
+                >
+                  {sendingBroadcast ? 'Enviando…' : 'Enviar difusión'}
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* (Se reemplazó la sección de etiquetas por los selects anteriores) */}
 
