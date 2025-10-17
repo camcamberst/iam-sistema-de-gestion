@@ -366,6 +366,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     }
   }, [isClient]);
 
+  // Cargar información de usuario al montar para habilitar ChatWidget
+  useEffect(() => {
+    if (isClient && !userInfo && !loadingUser) {
+      loadUser();
+    }
+  }, [isClient]);
+
   // Comparación exacta y normalizada de rutas para subopciones
   const isExactPath = (a: string, b: string) => {
     const norm = (p: string) => p.replace(/\/+$/, '');
