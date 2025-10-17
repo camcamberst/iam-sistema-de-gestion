@@ -373,8 +373,8 @@ export default function ConversationTab({
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Escribe tu mensaje..."
-            className="flex-1 resize-none border border-gray-600 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent placeholder-gray-400"
-            rows={2}
+            className="flex-1 resize-none h-10 border border-gray-600 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent placeholder-gray-400"
+            rows={1}
             disabled={sending}
           />
           {/* Botón Emoji (simétrico al de envío) */}
