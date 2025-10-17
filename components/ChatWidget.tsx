@@ -390,6 +390,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             ))}
           </div>
 
+          {/* Plantillas de tickets */}
+          <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 flex flex-wrap gap-2">
+            <span className="text-[10px] text-gray-400 mr-2">Plantillas:</span>
+            {[
+              { t: 'No veo mis anticipos', d: 'No veo mi último anticipo registrado, por favor revisar.' },
+              { t: 'Totales en 0', d: 'Mis totales de la quincena aparecen en 0, aunque ingresé valores.' },
+              { t: 'Problema de acceso', d: 'Tengo problemas para iniciar sesión o recuperar contraseña.' }
+            ].map((tpl, idx) => (
+              <button
+                key={idx}
+                onClick={() => setInputMessage(tpl.d)}
+                className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors"
+              >{tpl.t}</button>
+            ))}
+          </div>
+
           {/* Input */}
           <div className="border-t border-gray-700 p-3 bg-gray-800">
             <div className="flex space-x-2">
