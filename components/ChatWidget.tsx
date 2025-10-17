@@ -182,10 +182,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
+      // Para modelos: cargar mensajes de todas las sesiones donde aparecen como destinatarios
+      // (incluyendo mensajes de admin/super_admin enviados a ellos)
       const { data: chatMessages, error } = await supabase
         .from('chat_messages')
-        .select('*')
-        .eq('session_id', sessionId)
+        .select(`
+          *,
+          chat_sessions!inner(user_id)
+        `)
+        .or(`chat_sessions.user_id.eq.${session.user.id},sender_id.eq.${session.user.id}`)
         .order('created_at', { ascending: true });
 
       if (error) {
@@ -195,7 +200,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       const formattedMessages: Message[] = chatMessages.map(msg => ({
         id: msg.id,
-        sender: msg.sender_type,
+        sender: msg.sender_id === session.user.id ? 'user' : msg.sender_type,
         message: msg.message,
         timestamp: new Date(msg.created_at),
         isRead: msg.is_read
