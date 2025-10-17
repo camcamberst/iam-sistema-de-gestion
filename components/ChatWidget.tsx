@@ -27,6 +27,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [limitReached, setLimitReached] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showTicketConfirm, setShowTicketConfirm] = useState(false);
+  const [creatingTicket, setCreatingTicket] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -169,6 +171,64 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       setMessageCount(prev => prev - 1);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  // Acciones rápidas (chips)
+  const quickActions = (() => {
+    const base = [
+      { id: 'anticipos', label: 'Mis Anticipos', payload: 'mis anticipos' },
+      { id: 'calculadora', label: 'Mi Calculadora', payload: 'totales de mi calculadora' }
+    ];
+    if (userRole === 'admin' || userRole === 'super_admin') {
+      base.push({ id: 'resumen', label: 'Resumen Administrativo', payload: 'resumen de facturación' });
+    }
+    base.push({ id: 'ticket', label: 'Crear Ticket', payload: 'crear ticket' });
+    return base;
+  })();
+
+  const handleQuickAction = async (actionId: string) => {
+    if (actionId === 'ticket') {
+      setShowTicketConfirm(true);
+      return;
+    }
+    const qa = quickActions.find(a => a.id === actionId);
+    if (!qa) return;
+    setInputMessage(qa.payload);
+    await sendMessage();
+  };
+
+  const createTicket = async () => {
+    try {
+      setCreatingTicket(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('No hay sesión activa');
+
+      const description = inputMessage.trim() || 'Solicitud de soporte desde el ChatBot';
+      const res = await fetch('/api/chat/tickets', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({ title: 'Ticket de soporte', description })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data?.error || 'No se pudo crear el ticket');
+
+      setShowTicketConfirm(false);
+      setInputMessage('');
+      const botMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        sender: 'bot',
+        message: `Listo. He creado el ticket #${data?.ticket?.id || ''}. Un administrador te contactará pronto.`,
+        timestamp: new Date()
+      } as any;
+      setMessages(prev => [...prev, botMessage]);
+    } catch (e: any) {
+      setError(e?.message || 'No se pudo crear el ticket');
+    } finally {
+      setCreatingTicket(false);
     }
   };
 
@@ -321,6 +381,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             <div ref={messagesEndRef} />
           </div>
 
+          {/* Quick actions */}
+          <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 flex flex-wrap gap-2">
+            {quickActions.map(a => (
+              <button key={a.id} onClick={() => handleQuickAction(a.id)} className="text-xs px-2 py-1 rounded-full bg-gray-800 text-gray-200 hover:bg-gray-700 transition-colors">
+                {a.label}
+              </button>
+            ))}
+          </div>
+
           {/* Input */}
           <div className="border-t border-gray-700 p-3 bg-gray-800">
             <div className="flex space-x-2">
@@ -351,6 +420,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             {/* Message counter */}
             <div className="text-xs text-gray-400 mt-2 text-center">
               {messageCount}/20 mensajes • Sesión activa
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmación crear ticket */}
+      {showTicketConfirm && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl w-[320px] p-4">
+            <h4 className="text-sm font-semibold text-gray-900">Crear ticket de soporte</h4>
+            <p className="text-xs text-gray-600 mt-1">¿Confirmas crear un ticket con tu descripción actual?</p>
+            <div className="mt-3 flex justify-end gap-2">
+              <button onClick={() => setShowTicketConfirm(false)} className="px-3 py-1.5 text-sm rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50">Cancelar</button>
+              <button onClick={createTicket} disabled={creatingTicket} className="px-3 py-1.5 text-sm rounded-lg bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50">
+                {creatingTicket ? 'Creando...' : 'Confirmar'}
+              </button>
             </div>
           </div>
         </div>
