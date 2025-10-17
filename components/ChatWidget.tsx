@@ -403,6 +403,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 const val = e.target.value;
                 if (!val) return;
                 setInputMessage(val);
+                e.currentTarget.selectedIndex = 0; // reset
               }}
               className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
             >
