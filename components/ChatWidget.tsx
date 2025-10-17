@@ -152,15 +152,42 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             error = result.error;
           }
           
-          // Si aún no encuentra, mostrar todos los usuarios para debug
+          // Si aún no encuentra, intentar con otros roles posibles
           if (!models || models.length === 0) {
-            console.log('No models found, checking all users for debug');
-            const debugResult = await supabase
-              .from('users')
-              .select('id, name, email, role')
-              .order('name')
-              .limit(10);
-            console.log('Debug - All users (first 10):', debugResult.data);
+            console.log('No models found, trying other possible roles');
+            const possibleRoles = ['MODELO', 'Modelo', 'MODEL', 'Model'];
+            
+            for (const roleName of possibleRoles) {
+              console.log(`Trying role: ${roleName}`);
+              const result = await supabase
+                .from('users')
+                .select('id, name, email, role')
+                .eq('role', roleName)
+                .order('name');
+              
+              if (result.data && result.data.length > 0) {
+                console.log(`Found ${result.data.length} users with role: ${roleName}`);
+                models = result.data;
+                break;
+              }
+            }
+            
+            // Si aún no encuentra, mostrar todos los usuarios para debug
+            if (!models || models.length === 0) {
+              console.log('No models found with any role, checking all users for debug');
+              const debugResult = await supabase
+                .from('users')
+                .select('id, name, email, role')
+                .order('name')
+                .limit(20);
+              console.log('Debug - All users (first 20):', debugResult.data);
+              
+              // Mostrar roles únicos encontrados
+              if (debugResult.data) {
+                const uniqueRoles = [...new Set(debugResult.data.map(u => u.role))];
+                console.log('Unique roles found:', uniqueRoles);
+              }
+            }
           }
           
           if (error) {
@@ -705,16 +732,36 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                                 .eq('role', 'modelo')
                                 .order('name');
                               
-                              // Si no encuentra con 'modelo', intentar con 'model'
+                              // Si no encuentra con 'modelo', intentar con otros roles
                               if (!models || models.length === 0) {
-                                console.log('No models found with role "modelo", trying "model"');
-                                const result = await supabase
-                                  .from('users')
-                                  .select('id, name, email, role')
-                                  .eq('role', 'model')
-                                  .order('name');
-                                models = result.data;
-                                error = result.error;
+                                console.log('No models found with role "modelo", trying other roles');
+                                const possibleRoles = ['model', 'MODELO', 'Modelo', 'MODEL', 'Model'];
+                                
+                                for (const roleName of possibleRoles) {
+                                  console.log(`Trying role: ${roleName}`);
+                                  const result = await supabase
+                                    .from('users')
+                                    .select('id, name, email, role')
+                                    .eq('role', roleName)
+                                    .order('name');
+                                  
+                                  if (result.data && result.data.length > 0) {
+                                    console.log(`Found ${result.data.length} users with role: ${roleName}`);
+                                    models = result.data;
+                                    break;
+                                  }
+                                }
+                                
+                                // Si aún no encuentra, mostrar debug
+                                if (!models || models.length === 0) {
+                                  console.log('No models found, showing debug info');
+                                  const debugResult = await supabase
+                                    .from('users')
+                                    .select('id, name, email, role')
+                                    .order('name')
+                                    .limit(10);
+                                  console.log('Debug - All users (first 10):', debugResult.data);
+                                }
                               }
                               
                               if (error) {
