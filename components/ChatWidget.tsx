@@ -13,8 +13,8 @@ interface Message {
 }
 
 interface ChatWidgetProps {
-  userId: string;
-  userRole: string;
+  userId?: string;
+  userRole?: string;
 }
 
 export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
@@ -29,6 +29,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [error, setError] = useState<string | null>(null);
   const [showTicketConfirm, setShowTicketConfirm] = useState(false);
   const [creatingTicket, setCreatingTicket] = useState(false);
+  const [resolvedUser, setResolvedUser] = useState<{ id: string; role: string } | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,6 +41,29 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Resolver usuario si no viene por props
+  useEffect(() => {
+    const resolve = async () => {
+      try {
+        if (userId && userRole) {
+          setResolvedUser({ id: userId, role: userRole });
+          return;
+        }
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        const { data: row } = await supabase
+          .from('users')
+          .select('id, role')
+          .eq('id', user.id)
+          .single();
+        if (row) setResolvedUser({ id: row.id, role: row.role });
+      } catch (e) {
+        console.warn('ChatWidget resolve user error', e);
+      }
+    };
+    resolve();
+  }, [userId, userRole]);
 
   // Load chat history when widget opens
   useEffect(() => {
@@ -180,7 +204,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       { id: 'anticipos', label: 'Mis Anticipos', payload: 'mis anticipos' },
       { id: 'calculadora', label: 'Mi Calculadora', payload: 'totales de mi calculadora' }
     ];
-    if (userRole === 'admin' || userRole === 'super_admin') {
+    const role = resolvedUser?.role || userRole;
+    if (role === 'admin' || role === 'super_admin') {
       base.push({ id: 'resumen', label: 'Resumen Administrativo', payload: 'resumen de facturación' });
     }
     base.push({ id: 'ticket', label: 'Crear Ticket', payload: 'crear ticket' });
@@ -211,7 +236,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${session.access_token}`
         },
-        body: JSON.stringify({ title: 'Ticket de soporte', description })
+        body: JSON.stringify({ title: 'Ticket de soporte', description, userId: resolvedUser?.id || userId, sessionId })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data?.error || 'No se pudo crear el ticket');
