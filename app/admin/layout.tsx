@@ -2,6 +2,7 @@
 
 import { ReactNode, useEffect, useState, useRef } from "react";
 import ChatWidget from '@/components/ChatWidget';
+import ConversationTabs from '@/components/ConversationTabs';
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import PortfolioDropdown from "@/components/PortfolioDropdown";
@@ -693,9 +694,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </main>
 
       {/* ChatWidget global para admin/super_admin */}
-      {userInfo && (userInfo.role === 'admin' || userInfo.role === 'super_admin') && (
-        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
-      )}
+        {userInfo && (userInfo.role === 'admin' || userInfo.role === 'super_admin') && (
+          <>
+            <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+            <ConversationTabs userId={userInfo.id} userRole={userInfo.role} />
+          </>
+        )}
     </div>
   );
 }

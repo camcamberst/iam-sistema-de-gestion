@@ -779,61 +779,69 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                       </div>
                     )}
                     
-                    {/* Botón de envío */}
-                    {selectedModelId && inputMessage.trim() && (
-                      <button
-                        onClick={async () => {
-                          try {
-                            setSendingBroadcast(true);
-                            const { data: { session } } = await supabase.auth.getSession();
-                            if (!session) throw new Error('No hay sesión activa');
-                            
-                            const payload = {
-                              target: 'user' as const,
-                              userId: selectedModelId,
-                              text: inputMessage.trim(),
-                              imageUrl: imageUrl || undefined,
-                              isBroadcast: false,
-                            };
-                            
-                            const res = await fetch('/api/chat/broadcast', {
-                              method: 'POST',
-                              headers: {
-                                'Content-Type': 'application/json',
-                                'Authorization': `Bearer ${session.access_token}`
-                              },
-                              body: JSON.stringify(payload)
-                            });
-                            
-                            const data = await res.json();
-                            if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el mensaje');
-                            
-                            // Confirmación en la conversación
-                            const botMessage: Message = {
-                              id: (Date.now() + 4).toString(),
-                              sender: 'bot',
-                              message: `✅ Mensaje enviado a ${selectedModelName}`,
-                              timestamp: new Date()
-                            } as any;
-                            setMessages(prev => [...prev, botMessage]);
-                            
-                            // Reset
-                            setSelectedModelId('');
-                            setSelectedModelName('');
-                            setInputMessage('');
-                            setImageUrl('');
-                          } catch (e: any) {
-                            setError(e?.message || 'No se pudo enviar el mensaje');
-                          } finally {
-                            setSendingBroadcast(false);
-                          }
-                        }}
-                        disabled={sendingBroadcast}
-                        className="w-full px-3 py-1.5 text-xs rounded-lg bg-blue-700 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                      >
-                        {sendingBroadcast ? 'Enviando…' : '💬 Enviar mensaje individual'}
-                      </button>
-                    )}
+      {/* Botón de envío */}
+      {selectedModelId && inputMessage.trim() && (
+        <button
+          onClick={async () => {
+            try {
+              setSendingBroadcast(true);
+              
+              // Abrir conversación en pestaña flotante
+              if ((window as any).openConversation) {
+                const modelName = selectedModelName.split(' (')[0]; // Extraer solo el nombre
+                (window as any).openConversation(selectedModelId, modelName, selectedModelName);
+              }
+              
+              // Enviar mensaje inicial
+              const { data: { session } } = await supabase.auth.getSession();
+              if (!session) throw new Error('No hay sesión activa');
+              
+              const payload = {
+                target: 'user' as const,
+                userId: selectedModelId,
+                text: inputMessage.trim(),
+                imageUrl: imageUrl || undefined,
+                isBroadcast: false,
+              };
+              
+              const res = await fetch('/api/chat/broadcast', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${session.access_token}`
+                },
+                body: JSON.stringify(payload)
+              });
+              
+              const data = await res.json();
+              if (!res.ok) throw new Error(data?.error || 'No se pudo enviar el mensaje');
+              
+              // Confirmación en la conversación principal
+              const botMessage: Message = {
+                id: (Date.now() + 4).toString(),
+                sender: 'bot',
+                message: `✅ Conversación iniciada con ${selectedModelName}`,
+                timestamp: new Date()
+              } as any;
+              setMessages(prev => [...prev, botMessage]);
+              
+              // Reset
+              setSelectedModelId('');
+              setSelectedModelName('');
+              setInputMessage('');
+              setImageUrl('');
+            } catch (e: any) {
+              setError(e?.message || 'No se pudo enviar el mensaje');
+            } finally {
+              setSendingBroadcast(false);
+            }
+          }}
+          disabled={sendingBroadcast}
+          className="w-full px-3 py-1.5 text-xs rounded-lg bg-blue-700 text-white hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          {sendingBroadcast ? 'Abriendo…' : '💬 Abrir conversación'}
+        </button>
+      )}
                   </div>
 
                   {/* Separador */}
