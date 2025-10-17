@@ -11,6 +11,12 @@ const supabase = createClient(
 const GEMINI_API_KEY = process.env.GOOGLE_GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent';
 
+// Flags de configuración (modo Seguro-Ampliado)
+const CHATBOT_MODE = process.env.CHATBOT_MODE || 'secure_extended';
+const CHATBOT_ENABLE_ESCALATION = (process.env.CHATBOT_ENABLE_ESCALATION || 'true') === 'true';
+const CHATBOT_SESSION_MINUTES = parseInt(process.env.CHATBOT_SESSION_MINUTES || '15', 10);
+const CHATBOT_MAX_MSGS = parseInt(process.env.CHATBOT_MAX_MSGS || '30', 10);
+
 interface ChatRequest {
   message: string;
   sessionId?: string;
@@ -62,37 +68,45 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
-    // VERSIÓN ULTRA-SEGURA: Filtrar mensaje antes de procesar
-    const sanitizedMessage = SecurityFilter.sanitizeMessage(message);
-    
-    // Guardar mensaje filtrado del usuario
+    // Filtrar mensaje (modo light en secure_extended, estricto en ultra)
+    const sanitizedMessage = CHATBOT_MODE === 'ultra_safe'
+      ? SecurityFilter.sanitizeMessage(message)
+      : SecurityFilter.sanitizeMessage(message); // mantenemos filtrado básico
+
+    // Guardar mensaje del usuario (filtrado)
     await saveMessage(session.id, 'user', user.id, sanitizedMessage);
 
-    // VERSIÓN ULTRA-SEGURA: No escalar automáticamente
-    // const shouldEscalate = await checkEscalationConditions(session.id, sanitizedMessage, userContext);
-    
-    // if (shouldEscalate.should) {
-    //   await escalateToAdmin(session.id, user.id, sanitizedMessage, shouldEscalate.reason);
-    //   return NextResponse.json({
-    //     response: "He escalado tu consulta a un administrador. Te contactarán pronto para ayudarte.",
-    //     escalated: true,
-    //     sessionId: session.id,
-    //     ticketId: shouldEscalate.ticketId
-    //   });
-    // }
+    // Escalación automática (opcional por flag)
+    if (CHATBOT_ENABLE_ESCALATION) {
+      const shouldEscalate = await checkEscalationConditions(session.id, sanitizedMessage, userContext);
+      if (shouldEscalate.should) {
+        const ticketId = await escalateToAdmin(session.id, user.id, sanitizedMessage, shouldEscalate.reason);
+        return NextResponse.json({
+          response: "He escalado tu consulta a un administrador. Te contactarán pronto para ayudarte.",
+          escalated: true,
+          sessionId: session.id,
+          ticketId
+        });
+      }
+    }
 
-    // VERSIÓN ULTRA-SEGURA: Generar respuesta con contexto seguro
+    // Modo Seguro-Ampliado: intents de solo lectura y respuestas con contexto
+    if (CHATBOT_MODE === 'secure_extended') {
+      const intentResponse = await handleReadOnlyIntents(sanitizedMessage, userContext);
+      if (intentResponse) {
+        await saveMessage(session.id, 'bot', null, intentResponse);
+        return NextResponse.json({ response: intentResponse, sessionId: session.id, escalated: false });
+      }
+
+      const botResponse = await generateBotResponse(sanitizedMessage, userContext, session.id);
+      await saveMessage(session.id, 'bot', null, botResponse);
+      return NextResponse.json({ response: botResponse, sessionId: session.id, escalated: false });
+    }
+
+    // Fallback: Modo ultra-seguro original
     const botResponse = await generateUltraSafeBotResponse(sanitizedMessage, userContext, session.id);
-    
-    // Guardar respuesta del bot
     await saveMessage(session.id, 'bot', null, botResponse);
-
-    return NextResponse.json({
-      response: botResponse,
-      sessionId: session.id,
-      escalated: false,
-      securityLevel: 'ULTRA_SAFE' // Informar que se usó versión ultra-segura
-    });
+    return NextResponse.json({ response: botResponse, sessionId: session.id, escalated: false, securityLevel: 'ULTRA_SAFE' });
 
   } catch (error) {
     console.error('Error en chat API:', error);
@@ -192,18 +206,18 @@ async function checkChatLimits(sessionId: string, userId: string) {
     return { allowed: false, reason: 'Sesión no encontrada' };
   }
 
-  // Verificar límite de mensajes por sesión (20)
-  if (session.message_count >= 20) {
-    return { allowed: false, reason: 'Has alcanzado el límite de 20 mensajes por sesión' };
+  // Verificar límite de mensajes por sesión (configurable)
+  if (session.message_count >= CHATBOT_MAX_MSGS) {
+    return { allowed: false, reason: `Has alcanzado el límite de ${CHATBOT_MAX_MSGS} mensajes por sesión` };
   }
 
-  // Verificar timeout de inactividad (10 minutos)
+  // Verificar timeout de inactividad (configurable)
   const lastActivity = new Date(session.last_activity);
   const now = new Date();
   const diffMinutes = (now.getTime() - lastActivity.getTime()) / (1000 * 60);
   
-  if (diffMinutes > 10) {
-    return { allowed: false, reason: 'La sesión ha expirado por inactividad (10 minutos)' };
+  if (diffMinutes > CHATBOT_SESSION_MINUTES) {
+    return { allowed: false, reason: `La sesión ha expirado por inactividad (${CHATBOT_SESSION_MINUTES} minutos)` };
   }
 
   return { allowed: true };
@@ -477,4 +491,67 @@ async function saveMessage(sessionId: string, senderType: 'user' | 'bot' | 'admi
   if (error) {
     console.error('Error saving message:', error);
   }
+}
+
+// Intents de solo lectura (modo Seguro-Ampliado)
+async function handleReadOnlyIntents(message: string, userContext: UserContext): Promise<string | null> {
+  const text = message.toLowerCase();
+
+  // Intent: consultar anticipos (modelo)
+  if (userContext.role === 'modelo' && /(mi|mis).*anticipos|anticipos|estado de anticipos/.test(text)) {
+    const { data: anticipos } = await supabase
+      .from('anticipos')
+      .select('id, estado, monto, created_at')
+      .eq('model_id', userContext.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    if (!anticipos || anticipos.length === 0) {
+      return 'No encuentro anticipos recientes en tu cuenta. Puedes abrir Mis Anticipos desde el menú para crear uno.';
+    }
+
+    const lines = anticipos.map(a => `• ${new Date(a.created_at).toLocaleDateString('es-CO')}: ${a.estado} - USD ${Number(a.monto || 0).toFixed(2)}`);
+    return `Tus últimos anticipos:\n${lines.join('\n')}\n\n¿Quieres abrir la pantalla de Mis Anticipos?`;
+  }
+
+  // Intent: consultar calculadora (modelo)
+  if (userContext.role === 'modelo' && /(mi|mis).*calculadora|totales|cuánto llevo|quincena/.test(text)) {
+    const { data: totals } = await supabase
+      .from('calculator_totals')
+      .select('usd_bruto, usd_modelo, usd_sede, period_key, updated_at')
+      .eq('user_id', userContext.id)
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!totals) {
+      return 'Aún no encuentro totales registrados para esta quincena. Abre tu Calculadora para ingresar valores.';
+    }
+
+    return `Totales recientes (periodo ${totals.period_key || 'actual'}):\n- USD Bruto: ${Number(totals.usd_bruto || 0).toFixed(2)}\n- USD Modelo: ${Number(totals.usd_modelo || 0).toFixed(2)}\n- USD Sede: ${Number(totals.usd_sede || 0).toFixed(2)}\n\n¿Quieres abrir Mi Calculadora?`;
+  }
+
+  // Intent: resumen administrativo (solo admin/super_admin)
+  if ((userContext.role === 'admin' || userContext.role === 'super_admin') && /(resumen|facturación|dashboard|sedes)/.test(text)) {
+    // Consultar API interna de resumen administrativo
+    try {
+      const params = new URLSearchParams({ adminId: userContext.id });
+      const url = `${process.env.NEXT_PUBLIC_BASE_URL || ''}/api/admin/billing-summary?${params.toString()}`;
+      const res = await fetch(url, { headers: { 'Cache-Control': 'no-cache' } });
+      const data = await res.json();
+      if (!data?.success) return 'No pude obtener el resumen administrativo en este momento.';
+
+      const sum = data.summary || {};
+      return `Resumen administrativo (estimado):\n- USD Sede: ${Number(sum.usdSede || 0).toFixed(2)}\n- USD Modelo: ${Number(sum.usdModelo || 0).toFixed(2)}\n\nPuedes abrir el Dashboard de Sedes para ver más detalles.`;
+    } catch {
+      return 'No pude obtener el resumen administrativo en este momento.';
+    }
+  }
+
+  // Intent: crear ticket (para todos los roles, con confirmación en UI)
+  if (/crear ticket|abrir ticket|soporte|ayuda/.test(text)) {
+    return 'Puedo crear un ticket de soporte con tu descripción. Confirma en el botón “Crear ticket” para proceder.';
+  }
+
+  return null;
 }
