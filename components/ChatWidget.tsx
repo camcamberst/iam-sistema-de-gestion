@@ -443,51 +443,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Barra compacta: selects para acciones y plantillas */}
-          <div className="border-t border-gray-800 bg-gray-900 px-3 py-2 grid grid-cols-2 gap-2">
-            <select
-              onChange={async (e) => {
-                const val = e.target.value;
-                if (!val) return;
-                await handleQuickAction(val);
-                e.currentTarget.selectedIndex = 0; // reset
-              }}
-              className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
-            >
-              <option value="">Acción rápida…</option>
-              {quickActions.map(a => (
-                <option key={a.id} value={a.id}>{a.label}</option>
-              ))}
-            </select>
 
-            <select
-              onChange={(e) => {
-                const val = e.target.value;
-                if (!val) return;
-                setInputMessage(val);
-                e.currentTarget.selectedIndex = 0; // reset
-              }}
-              className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
-            >
-              <option value="">Plantillas…</option>
-              {((resolvedUser?.role || userRole || 'modelo') === 'modelo') ? (
-                <>
-                  <option value="No veo mi último anticipo registrado, por favor revisar.">No veo mis anticipos</option>
-                  <option value="Mis totales de la quincena aparecen en 0, aunque ingresé valores.">Totales en 0</option>
-                  <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
-                </>
-              ) : (
-                <>
-                  <option value="Necesito un resumen de facturación del periodo actual.">Resumen del periodo</option>
-                  <option value="Solicito revisión de solicitudes de anticipos pendientes.">Revisión de anticipos pendientes</option>
-                  <option value="Verificar configuración de RATES y plataformas.">Verificación de RATES</option>
-                </>
-              )}
-            </select>
-          </div>
-
-          {/* Panel de difusión colapsable (solo admin/super_admin) */}
-          {((resolvedUser?.role || userRole) === 'admin' || (resolvedUser?.role || userRole) === 'super_admin') && (
+          {/* Panel de herramientas colapsable */}
+          {((resolvedUser?.role || userRole) === 'admin' || (resolvedUser?.role || userRole) === 'super_admin') ? (
+            /* Panel para admin/super_admin con difusión masiva */
             <div className="border-t border-gray-800 bg-gray-900">
               {/* Botón principal para abrir/cerrar panel */}
               <button
@@ -507,115 +466,231 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               {/* Panel desplegable con transición */}
               <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                showBroadcastPanel ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+              }`}>
+                <div className="px-3 pb-3 space-y-3">
+                  {/* Sección: Acciones rápidas y plantillas */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-300">Acciones rápidas</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        onChange={async (e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          await handleQuickAction(val);
+                          e.currentTarget.selectedIndex = 0; // reset
+                        }}
+                        className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      >
+                        <option value="">Acción rápida…</option>
+                        {quickActions.map(a => (
+                          <option key={a.id} value={a.id}>{a.label}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          setInputMessage(val);
+                          e.currentTarget.selectedIndex = 0; // reset
+                        }}
+                        className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      >
+                        <option value="">Plantillas…</option>
+                        {((resolvedUser?.role || userRole || 'modelo') === 'modelo') ? (
+                          <>
+                            <option value="No veo mi último anticipo registrado, por favor revisar.">No veo mis anticipos</option>
+                            <option value="Mis totales de la quincena aparecen en 0, aunque ingresé valores.">Totales en 0</option>
+                            <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
+                          </>
+                        ) : (
+                          <>
+                            <option value="Necesito un resumen de facturación del periodo actual.">Resumen del periodo</option>
+                            <option value="Solicito revisión de solicitudes de anticipos pendientes.">Revisión de anticipos pendientes</option>
+                            <option value="Verificar configuración de RATES y plataformas.">Verificación de RATES</option>
+                          </>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Separador */}
+                  <div className="border-t border-gray-700"></div>
+
+                  {/* Sección: Difusión masiva */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-300">Difusión masiva</h4>
+                    
+                    {/* Selector de destinatario */}
+                    <select
+                      value={recipientTarget}
+                      onChange={(e) => {
+                        const target = e.target.value as 'all' | 'groups' | '';
+                        setRecipientTarget(target);
+                        if (target === 'groups') {
+                          const groupNames = prompt('Grupos (separados por coma):');
+                          if (groupNames) setGroupNamesInput(groupNames);
+                        }
+                      }}
+                      className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 w-full"
+                    >
+                      <option value="">Seleccionar destinatario…</option>
+                      <option value="groups">📢 Enviar a Grupo(s)</option>
+                      {(resolvedUser?.role === 'super_admin' || userRole === 'super_admin') && (
+                        <option value="all">📢 Enviar a Todos</option>
+                      )}
+                    </select>
+                    
+                    {/* Campo de imagen */}
+                    <div className="flex gap-2">
+                      <input
+                        type="url"
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        placeholder="URL de imagen (opcional)"
+                        className="flex-1 text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      />
+                      {imageUrl && (
+                        <button
+                          onClick={() => setImageUrl('')}
+                          className="text-gray-500 hover:text-gray-300 text-xs"
+                        >
+                          ✕
+                        </button>
+                      )}
+                    </div>
+                    
+                    {/* Vista previa de imagen */}
+                    {imageUrl && (
+                      <div className="flex justify-center">
+                        <img src={imageUrl} alt="Vista previa" className="max-h-20 rounded-md border border-gray-700" />
+                      </div>
+                    )}
+                    
+                    {/* Botón de envío */}
+                    <button
+                      onClick={async () => {
+                        if (!recipientTarget || !inputMessage.trim()) {
+                          setError('Selecciona destinatario y escribe mensaje');
+                          return;
+                        }
+                        // Enviar difusión
+                        if (!resolvedUser?.id) return;
+                        try {
+                          setSendingBroadcast(true);
+                          const { data: { session } } = await supabase.auth.getSession();
+                          if (!session) throw new Error('No hay sesión activa');
+                          const payload: any = {
+                            target: recipientTarget,
+                            text: inputMessage.trim(),
+                            imageUrl: imageUrl || undefined,
+                            isBroadcast: true,
+                          };
+                          if (recipientTarget === 'groups') {
+                            payload.groupNames = groupNamesInput
+                              .split(',')
+                              .map(s => s.trim())
+                              .filter(Boolean);
+                          }
+                          const res = await fetch('/api/chat/broadcast', {
+                            method: 'POST',
+                            headers: {
+                              'Content-Type': 'application/json',
+                              'Authorization': `Bearer ${session.access_token}`
+                            },
+                            body: JSON.stringify(payload)
+                          });
+                          const data = await res.json();
+                          if (!res.ok) throw new Error(data?.error || 'No se pudo enviar la difusión');
+                          // Confirmación en la conversación
+                          const botMessage: Message = {
+                            id: (Date.now() + 3).toString(),
+                            sender: 'bot',
+                            message: `✅ Difusión enviada a ${data?.recipients || 0} destinatarios.`,
+                            timestamp: new Date()
+                          } as any;
+                          setMessages(prev => [...prev, botMessage]);
+                          // Reset y cerrar panel
+                          setImageUrl('');
+                          setGroupNamesInput('');
+                          setRecipientTarget('');
+                          setInputMessage('');
+                          setShowBroadcastPanel(false);
+                        } catch (e: any) {
+                          setError(e?.message || 'No se pudo enviar la difusión');
+                        } finally {
+                          setSendingBroadcast(false);
+                        }
+                      }}
+                      disabled={sendingBroadcast || !recipientTarget || !inputMessage.trim()}
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {sendingBroadcast ? 'Enviando…' : '🚀 Enviar difusión'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : (
+            /* Panel para modelos con acciones rápidas y plantillas */
+            <div className="border-t border-gray-800 bg-gray-900">
+              {/* Botón principal para abrir/cerrar panel */}
+              <button
+                onClick={() => setShowBroadcastPanel(!showBroadcastPanel)}
+                className="w-full px-3 py-2 text-xs text-gray-300 hover:text-white hover:bg-gray-800 transition-colors flex items-center justify-between"
+              >
+                <span>⚡ Acciones rápidas</span>
+                <svg 
+                  className={`w-4 h-4 transition-transform duration-200 ${showBroadcastPanel ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+              
+              {/* Panel desplegable con transición */}
+              <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
                 showBroadcastPanel ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'
               }`}>
-                <div className="px-3 pb-3 space-y-2">
-                  {/* Selector de destinatario */}
-                  <select
-                    value={recipientTarget}
-                    onChange={(e) => {
-                      const target = e.target.value as 'all' | 'groups' | '';
-                      setRecipientTarget(target);
-                      if (target === 'groups') {
-                        const groupNames = prompt('Grupos (separados por coma):');
-                        if (groupNames) setGroupNamesInput(groupNames);
-                      }
-                    }}
-                    className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 w-full"
-                  >
-                    <option value="">Seleccionar destinatario…</option>
-                    <option value="groups">📢 Enviar a Grupo(s)</option>
-                    {(resolvedUser?.role === 'super_admin' || userRole === 'super_admin') && (
-                      <option value="all">📢 Enviar a Todos</option>
-                    )}
-                  </select>
-                  
-                  {/* Campo de imagen */}
-                  <div className="flex gap-2">
-                    <input
-                      type="url"
-                      value={imageUrl}
-                      onChange={(e) => setImageUrl(e.target.value)}
-                      placeholder="URL de imagen (opcional)"
-                      className="flex-1 text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
-                    />
-                    {imageUrl && (
-                      <button
-                        onClick={() => setImageUrl('')}
-                        className="text-gray-500 hover:text-gray-300 text-xs"
+                <div className="px-3 pb-3 space-y-3">
+                  {/* Sección: Acciones rápidas y plantillas para modelos */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-medium text-gray-300">Herramientas de chat</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <select
+                        onChange={async (e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          await handleQuickAction(val);
+                          e.currentTarget.selectedIndex = 0; // reset
+                        }}
+                        className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
                       >
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                  
-                  {/* Vista previa de imagen */}
-                  {imageUrl && (
-                    <div className="flex justify-center">
-                      <img src={imageUrl} alt="Vista previa" className="max-h-20 rounded-md border border-gray-700" />
+                        <option value="">Acción rápida…</option>
+                        {quickActions.map(a => (
+                          <option key={a.id} value={a.id}>{a.label}</option>
+                        ))}
+                      </select>
+
+                      <select
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (!val) return;
+                          setInputMessage(val);
+                          e.currentTarget.selectedIndex = 0; // reset
+                        }}
+                        className="text-xs bg-gray-800 text-gray-200 rounded-lg px-2 py-1 border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500"
+                      >
+                        <option value="">Plantillas…</option>
+                        <option value="No veo mi último anticipo registrado, por favor revisar.">No veo mis anticipos</option>
+                        <option value="Mis totales de la quincena aparecen en 0, aunque ingresé valores.">Totales en 0</option>
+                        <option value="Tengo problemas para iniciar sesión o recuperar contraseña.">Problema de acceso</option>
+                      </select>
                     </div>
-                  )}
-                  
-                  {/* Botón de envío */}
-                  <button
-                    onClick={async () => {
-                      if (!recipientTarget || !inputMessage.trim()) {
-                        setError('Selecciona destinatario y escribe mensaje');
-                        return;
-                      }
-                      // Enviar difusión
-                      if (!resolvedUser?.id) return;
-                      try {
-                        setSendingBroadcast(true);
-                        const { data: { session } } = await supabase.auth.getSession();
-                        if (!session) throw new Error('No hay sesión activa');
-                        const payload: any = {
-                          target: recipientTarget,
-                          text: inputMessage.trim(),
-                          imageUrl: imageUrl || undefined,
-                          isBroadcast: true,
-                        };
-                        if (recipientTarget === 'groups') {
-                          payload.groupNames = groupNamesInput
-                            .split(',')
-                            .map(s => s.trim())
-                            .filter(Boolean);
-                        }
-                        const res = await fetch('/api/chat/broadcast', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${session.access_token}`
-                          },
-                          body: JSON.stringify(payload)
-                        });
-                        const data = await res.json();
-                        if (!res.ok) throw new Error(data?.error || 'No se pudo enviar la difusión');
-                        // Confirmación en la conversación
-                        const botMessage: Message = {
-                          id: (Date.now() + 3).toString(),
-                          sender: 'bot',
-                          message: `✅ Difusión enviada a ${data?.recipients || 0} destinatarios.`,
-                          timestamp: new Date()
-                        } as any;
-                        setMessages(prev => [...prev, botMessage]);
-                        // Reset y cerrar panel
-                        setImageUrl('');
-                        setGroupNamesInput('');
-                        setRecipientTarget('');
-                        setInputMessage('');
-                        setShowBroadcastPanel(false);
-                      } catch (e: any) {
-                        setError(e?.message || 'No se pudo enviar la difusión');
-                      } finally {
-                        setSendingBroadcast(false);
-                      }
-                    }}
-                    disabled={sendingBroadcast || !recipientTarget || !inputMessage.trim()}
-                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-gray-700 text-white hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    {sendingBroadcast ? 'Enviando…' : '🚀 Enviar difusión'}
-                  </button>
+                  </div>
                 </div>
               </div>
             </div>
