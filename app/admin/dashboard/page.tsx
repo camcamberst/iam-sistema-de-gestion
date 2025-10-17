@@ -8,6 +8,7 @@ import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
 import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
+import ChatWidget from "@/components/ChatWidget";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -263,6 +264,10 @@ export default function AdminDashboard() {
               </div>
             </div>
           </div>
+        )}
+        {/* Chat Widget */}
+        {user && (user.role === 'super_admin' || user.role === 'admin') && (
+          <ChatWidget userId={user.id} userRole={user.role} />
         )}
       </div>
     </div>
