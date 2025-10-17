@@ -51,6 +51,9 @@ export default function ConversationTab({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isOnline, setIsOnline] = useState(false);
   const [sending, setSending] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const commonEmojis = ['😊','😍','👍','👏','🔥','🙌','✅','✨','💬','🧠','📌','📎','📝','📷','⏳','⚠️'];
   
   const tabRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -166,6 +169,23 @@ export default function ConversationTab({
       e.preventDefault();
       sendMessage();
     }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const el = textareaRef.current as HTMLTextAreaElement | null;
+    if (!el) {
+      setInputMessage(prev => prev + emoji);
+      return;
+    }
+    const start = el.selectionStart ?? inputMessage.length;
+    const end = el.selectionEnd ?? inputMessage.length;
+    const newValue = inputMessage.slice(0, start) + emoji + inputMessage.slice(end);
+    setInputMessage(newValue);
+    requestAnimationFrame(() => {
+      el.focus();
+      const caret = start + emoji.length;
+      el.setSelectionRange(caret, caret);
+    });
   };
 
   // Drag functionality
@@ -341,37 +361,59 @@ export default function ConversationTab({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input - misma estética que ChatWidget */}
-      <div className="border-t border-gray-700 p-3">
-        <div className="flex items-center gap-2">
-          <input
-            type="text"
+      {/* Input idéntico al ChatWidget */}
+      <div className="border-t border-gray-700 p-3 bg-gray-800">
+        <div className="flex space-x-2">
+          <textarea
+            ref={textareaRef}
             value={inputMessage}
             onChange={(e) => setInputMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             placeholder="Escribe tu mensaje..."
-            className="flex-1 bg-gray-800 text-white px-3 rounded-lg border border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-500 h-10"
+            className="flex-1 resize-none border border-gray-600 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent placeholder-gray-400"
+            rows={2}
             disabled={sending}
           />
-          {/* Botón emoji */}
+          {/* Botón Emoji (simétrico al de envío) */}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowEmojiPicker((v) => !v)}
+              className="bg-gray-700 text-white rounded-xl hover:bg-gray-600 transition-colors w-10 h-10 flex items-center justify-center"
+              aria-label="Abrir emojis"
+              disabled={sending}
+            >
+              <span role="img" aria-hidden>😊</span>
+            </button>
+            {showEmojiPicker && (
+              <div className="absolute bottom-10 right-0 w-64 p-2 rounded-xl bg-gray-900 border border-gray-700 shadow-2xl grid grid-cols-8 gap-1 z-[60]">
+                {commonEmojis.map((e) => (
+                  <button
+                    key={e}
+                    type="button"
+                    className="h-7 w-7 rounded-md hover:bg-gray-800 text-lg"
+                    onClick={() => { insertEmoji(e); setShowEmojiPicker(false); }}
+                    aria-label={`Insertar emoji ${e}`}
+                  >
+                    {e}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <button
-            aria-label="Abrir emojis"
-            className="bg-gray-800 text-white rounded-xl hover:bg-gray-700 transition-colors w-10 h-10 flex items-center justify-center"
-            onClick={() => setInputMessage(prev => prev + '😊')}
-            disabled={sending}
-          >
-            <span role="img" aria-label="emoji">😊</span>
-          </button>
-          {/* Botón enviar */}
-          <button
-            aria-label="Enviar mensaje"
             onClick={sendMessage}
             disabled={!inputMessage.trim() || sending}
             className="bg-gray-700 text-white rounded-xl hover:bg-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors w-10 h-10 flex items-center justify-center"
+            aria-label="Enviar mensaje"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M10.894 2.553a1 1 0 00-1.788 0l-7 14a1 1 0 001.169 1.409l5-1.25a1 1 0 00.727-.727l1.25-5a1 1 0 00-.727-1.169l-2.146-.537 4.79-4.79a1 1 0 00-1.414-1.414l-4.79 4.79-.537-2.146a1 1 0 00-1.169-.727l-1.25 5a1 1 0 00.727 1.169l14-7z" />
-            </svg>
+            {sending ? (
+              <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+            ) : (
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+              </svg>
+            )}
           </button>
         </div>
       </div>
