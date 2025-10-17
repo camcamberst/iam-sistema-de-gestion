@@ -198,6 +198,7 @@ export default function CreateUserPage() {
             value={form.name}
             onChange={e=>setForm({...form, name:e.target.value})}
             required
+            autoComplete="name"
             className="w-full px-3 py-2 text-sm border border-gray-200/50 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
@@ -208,6 +209,7 @@ export default function CreateUserPage() {
             value={form.email}
             onChange={e=>setForm({...form, email:e.target.value})}
             required
+            autoComplete="email"
             className="w-full px-3 py-2 text-sm border border-gray-200/50 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
@@ -219,6 +221,7 @@ export default function CreateUserPage() {
               value={form.password}
               onChange={e=>setForm({...form, password:e.target.value})}
               required
+              autoComplete="new-password"
               className="w-full px-3 py-2 pr-14 text-sm border border-gray-200/50 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
             />
             <button

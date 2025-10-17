@@ -6,7 +6,7 @@
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer, supabaseAuth } from '@/lib/supabase-server';
 
 // =====================================================
 // 📋 GET - Obtener usuarios (SOLO DATOS VITALES)
@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
   try {
     console.log('👥 [API] Obteniendo usuarios (SOLO DATOS VITALES)');
     
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = supabaseServer;
 
     // Obtener usuarios con datos vitales (SIN JOIN problemático)
     const { data: users, error } = await supabase
@@ -142,10 +139,7 @@ export async function POST(request: NextRequest) {
   try {
     console.log('➕ [API] Creando usuario (SOLO DATOS VITALES)');
     
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = supabaseServer;
 
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido:', JSON.stringify(body, null, 2));
@@ -453,10 +447,7 @@ export async function PUT(request: NextRequest) {
   try {
     console.log('✏️ [API] Editando usuario (SOLO DATOS VITALES)');
     
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = supabaseServer;
 
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido en PUT:', JSON.stringify(body, null, 2));
@@ -700,10 +691,7 @@ export async function DELETE(request: NextRequest) {
   try {
     console.log('🗑️ [API] Eliminando usuario (SOLO DATOS VITALES)');
     
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const supabase = supabaseServer;
 
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('id');

@@ -1,12 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseServer } from '@/lib/supabase-server';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
-);
+const supabase = supabaseServer;
 
 // GET: Obtener resumen de facturación por sede
 export async function GET(request: NextRequest) {

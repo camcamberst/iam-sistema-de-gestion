@@ -730,6 +730,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="name"
               required
             />
           </div>
@@ -741,6 +742,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              autoComplete="email"
               required
             />
           </div>
@@ -756,6 +758,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 value={formData.password}
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="Ingresa nueva contraseña"
+                autoComplete="new-password"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
