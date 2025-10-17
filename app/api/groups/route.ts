@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseServer } from '@/lib/supabase-server';
+import { supabaseServer, supabaseAuth } from '@/lib/supabase-server';
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,15 +14,14 @@ export async function GET(request: NextRequest) {
 
     if (authHeader) {
       try {
-        // Crear cliente con token de usuario para obtener su información
-        const userSupabase = createClient(supabaseUrl, supabaseKey);
+        // Usar cliente centralizado para autenticación
         const token = authHeader.replace('Bearer ', '');
         
-        const { data: { user }, error: userError } = await userSupabase.auth.getUser(token);
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
         
         if (!userError && user) {
           // Obtener información completa del usuario
-          const { data: userData, error: userDataError } = await userSupabase
+          const { data: userData, error: userDataError } = await supabaseServer
             .from('users')
             .select('role, groups')
             .eq('id', user.id)
@@ -88,19 +87,7 @@ export async function POST(request: NextRequest) {
     if (body.userRole && body.userGroups) {
       console.log('🏢 [API] Obteniendo grupos con info del usuario...');
       
-      // Verificar variables de entorno
-      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-      const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      
-      if (!supabaseUrl || !supabaseKey) {
-        console.error('❌ [API] Variables de entorno faltantes');
-        return NextResponse.json(
-          { success: false, error: 'Configuración de base de datos faltante' },
-          { status: 500 }
-        );
-      }
-      
-      const supabase = createClient(supabaseUrl, supabaseKey);
+      const supabase = supabaseServer;
       
       const userRole = body.userRole;
       const userGroups = body.userGroups;
@@ -151,22 +138,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verificar variables de entorno
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-    
-    if (!supabaseUrl || !supabaseKey) {
-      console.error('❌ [API] Variables de entorno faltantes:', {
-        url: !!supabaseUrl,
-        key: !!supabaseKey
-      });
-      return NextResponse.json(
-        { success: false, error: 'Configuración de base de datos faltante' },
-        { status: 500 }
-      );
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    const supabase = supabaseServer;
 
     // Obtener información del usuario para verificar permisos
     const authHeader = request.headers.get('authorization');
@@ -174,13 +146,12 @@ export async function POST(request: NextRequest) {
 
     if (authHeader) {
       try {
-        const userSupabase = createClient(supabaseUrl, supabaseKey);
         const token = authHeader.replace('Bearer ', '');
         
-        const { data: { user }, error: userError } = await userSupabase.auth.getUser(token);
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
         
         if (!userError && user) {
-          const { data: userData, error: userDataError } = await userSupabase
+          const { data: userData, error: userDataError } = await supabaseServer
             .from('users')
             .select('role')
             .eq('id', user.id)
