@@ -5,7 +5,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from '@/lib/supabase';
 import ChatWidget from '@/components/ChatWidget';
-import ConversationTabs from '@/components/ConversationTabs';
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -417,10 +416,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
 
       {/* ChatWidget global para super_admin/admin */}
       {userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin') && (
-        <>
-          <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
-          <ConversationTabs userId={userInfo.id} userRole={userInfo.role} />
-        </>
+        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
       )}
     </div>
   );
