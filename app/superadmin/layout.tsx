@@ -4,7 +4,6 @@ import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from '@/lib/supabase';
-import ChatWidget from '@/components/ChatWidget';
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -58,7 +57,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     }
   };
 
-  // Hidratar y cargar userInfo al montar para habilitar el ChatWidget
+  // Hidratar y cargar userInfo al montar
   useEffect(() => {
     setIsClient(true);
   }, []);
@@ -414,10 +413,6 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
         </div>
       </main>
 
-      {/* ChatWidget global para super_admin/admin */}
-      {userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin') && (
-        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
-      )}
     </div>
   );
 }

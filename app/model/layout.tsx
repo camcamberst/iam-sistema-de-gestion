@@ -6,7 +6,6 @@ import { usePathname } from "next/navigation";
 import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
-import ChatWidget from "@/components/ChatWidget";
 import { supabase } from '@/lib/supabase';
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
@@ -372,10 +371,6 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
 
-      {/* ChatWidget para modelos - asistente principal */}
-      {userInfo && userInfo.role === 'modelo' && (
-        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
-      )}
     </div>
   );
 }
