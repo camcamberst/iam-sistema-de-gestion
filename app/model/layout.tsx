@@ -7,6 +7,7 @@ import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { supabase } from '@/lib/supabase';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -371,6 +372,10 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
 
+      {/* ChatWidget para modelos */}
+      {userInfo && userInfo.role === 'modelo' && (
+        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+      )}
     </div>
   );
 }

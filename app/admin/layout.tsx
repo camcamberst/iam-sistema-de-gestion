@@ -7,6 +7,7 @@ import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { supabase } from '@/lib/supabase';
+import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -691,6 +692,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
 
+      {/* ChatWidget para admin/super_admin */}
+      {userInfo && (userInfo.role === 'admin' || userInfo.role === 'super_admin') && (
+        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+      )}
     </div>
   );
 }
