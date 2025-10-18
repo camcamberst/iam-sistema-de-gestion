@@ -6,11 +6,7 @@ export async function GET(request: NextRequest) {
     // Obtener todos los mensajes de chat recientes (últimos 10)
     const { data: recentMessages, error } = await supabaseServer
       .from('chat_messages')
-      .select(`
-        *,
-        session:chat_sessions!inner(user_id),
-        sender:users!chat_messages_sender_id_fkey(name, email, role)
-      `)
+      .select('*')
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -21,10 +17,7 @@ export async function GET(request: NextRequest) {
     // Obtener todas las sesiones activas
     const { data: activeSessions, error: sessionsError } = await supabaseServer
       .from('chat_sessions')
-      .select(`
-        *,
-        user:users!inner(name, email, role)
-      `)
+      .select('*')
       .eq('is_active', true)
       .order('created_at', { ascending: false });
 
