@@ -21,28 +21,60 @@ export async function POST(request: NextRequest) {
     console.log('🔍 [SEND-INDIVIDUAL] Auth result:', { user: user?.id, error: authError?.message });
     if (authError || !user) return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
 
-    // Obtener rol del usuario
+    // Obtener rol del usuario - usar supabaseServer con service role para bypass RLS
     const { data: userRow, error: userRowError } = await supabaseServer
       .from('users')
-      .select('id, role')
+      .select('id, role, name, email')
       .eq('id', user.id)
       .single();
 
-    console.log('🔍 [SEND-INDIVIDUAL] User row query:', { userRow, error: userRowError?.message });
+    console.log('🔍 [SEND-INDIVIDUAL] User row query:', { 
+      userRow, 
+      error: userRowError?.message,
+      userId: user.id,
+      userEmail: user.email 
+    });
 
-    if (!userRow) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    if (userRowError) {
+      console.error('❌ [SEND-INDIVIDUAL] Error querying user:', userRowError);
+      return NextResponse.json({ error: 'Error consultando usuario' }, { status: 500 });
+    }
+
+    if (!userRow) {
+      console.error('❌ [SEND-INDIVIDUAL] User not found in database');
+      return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
+    }
+
     const role = (userRow.role || '').toString();
-    console.log('🔍 [SEND-INDIVIDUAL] Role check:', { role, allowed: ['admin', 'super_admin'] });
+    console.log('🔍 [SEND-INDIVIDUAL] Role check:', { 
+      role, 
+      allowed: ['admin', 'super_admin'],
+      userInfo: { id: userRow.id, name: userRow.name, email: userRow.email }
+    });
     
     if (role !== 'admin' && role !== 'super_admin') {
-      console.log('❌ [SEND-INDIVIDUAL] Role check failed:', { role, allowed: ['admin', 'super_admin'] });
+      console.log('❌ [SEND-INDIVIDUAL] Role check failed:', { 
+        role, 
+        allowed: ['admin', 'super_admin'],
+        userInfo: userRow 
+      });
       return NextResponse.json({ error: 'Prohibido' }, { status: 403 });
     }
 
     const body = (await request.json()) as SendIndividualBody;
     const { message, targetUserId } = body;
 
+    console.log('🔍 [SEND-INDIVIDUAL] Request body:', { 
+      message: message?.substring(0, 50) + '...', 
+      targetUserId,
+      bodyKeys: Object.keys(body)
+    });
+
     if (!message?.trim() || !targetUserId) {
+      console.error('❌ [SEND-INDIVIDUAL] Missing required fields:', { 
+        hasMessage: !!message?.trim(), 
+        hasTargetUserId: !!targetUserId 
+      });
       return NextResponse.json({ error: 'Mensaje y destinatario requeridos' }, { status: 400 });
     }
 
