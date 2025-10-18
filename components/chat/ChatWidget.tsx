@@ -29,7 +29,6 @@ interface Conversation {
 }
 
 export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
-  console.log('🔍 [ChatWidget] Rendering with:', { userId, userRole });
   const [isOpen, setIsOpen] = useState(false);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [availableUsers, setAvailableUsers] = useState<User[]>([]);

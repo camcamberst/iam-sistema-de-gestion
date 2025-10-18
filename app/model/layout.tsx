@@ -383,13 +383,6 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
       {userInfo && userInfo.role === 'modelo' && (
         <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
       )}
-      
-      {/* Debug: Mostrar ChatWidget siempre para verificar */}
-      {!userInfo && (
-        <div className="fixed bottom-6 right-6 w-10 h-10 bg-red-500 text-white rounded-2xl flex items-center justify-center z-50">
-          <span className="text-xs">?</span>
-        </div>
-      )}
     </div>
   );
 }
