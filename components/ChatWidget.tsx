@@ -27,7 +27,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [limitReached, setLimitReached] = useState(false);
   const [escalated, setEscalated] = useState(false);
   const [individualMessages, setIndividualMessages] = useState<Message[]>([]);
-  const [showIndividualNotification, setShowIndividualNotification] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showTicketConfirm, setShowTicketConfirm] = useState(false);
   const [creatingTicket, setCreatingTicket] = useState(false);
@@ -179,10 +178,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [isOpen]);
 
-  // Para modelos: verificar mensajes individuales y mostrar notificaciones
+  // Para modelos: verificar mensajes individuales cuando se abre el ChatWidget
   useEffect(() => {
     const role = (resolvedUser?.role || userRole || '').toString();
     if (role === 'modelo' && isOpen) {
+      console.log('🔍 [CHATWIDGET] Modelo abrió ChatWidget, verificando mensajes individuales...');
       checkIndividualMessages();
     }
   }, [isOpen, resolvedUser, userRole]);
@@ -240,19 +240,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         })));
         
         // Abrir automáticamente la ventana de conversación individual
-        if (typeof window !== 'undefined' && (window as any).openConversation && senderInfo) {
-          console.log('🚀 [INDIVIDUAL] Abriendo ventana de conversación para:', senderInfo);
-          (window as any).openConversation(
-            senderInfo.id, 
-            senderInfo.name, 
-            senderInfo.email
-          );
-          // NO mostrar notificación si se abre la ventana
-          setShowIndividualNotification(false);
+        console.log('🚀 [INDIVIDUAL] Intentando abrir ventana de conversación...');
+        console.log('🔍 [INDIVIDUAL] window.openConversation disponible:', typeof window !== 'undefined' && !!(window as any).openConversation);
+        console.log('🔍 [INDIVIDUAL] senderInfo:', senderInfo);
+        
+        if (typeof window !== 'undefined' && (window as any).openConversation) {
+          if (senderInfo) {
+            console.log('✅ [INDIVIDUAL] Abriendo ventana con información del remitente:', senderInfo);
+            (window as any).openConversation(
+              senderInfo.id, 
+              senderInfo.name, 
+              senderInfo.email
+            );
+          } else {
+            console.log('⚠️ [INDIVIDUAL] Sin información del remitente, usando fallback');
+            (window as any).openConversation(
+              'admin-user-id', 
+              'Administración', 
+              'admin@sistema.com'
+            );
+          }
         } else {
-          console.log('⚠️ [INDIVIDUAL] No se puede abrir ventana, mostrando notificación');
-          // Solo mostrar notificación si no se puede abrir la ventana
-          setShowIndividualNotification(true);
+          console.error('❌ [INDIVIDUAL] openConversation no está disponible en window');
         }
       }
     } catch (error) {
@@ -1286,64 +1295,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         </div>
       )}
 
-      {/* Notificación de mensajes individuales para modelos */}
-      {showIndividualNotification && individualMessages.length > 0 && (
-        <div className="fixed top-4 right-4 bg-blue-600 text-white p-4 rounded-lg shadow-lg z-50 max-w-sm">
-          <div className="flex items-center justify-between mb-2">
-            <h4 className="font-semibold">💬 Mensaje Individual</h4>
-            <button
-              onClick={() => setShowIndividualNotification(false)}
-              className="text-white hover:text-gray-200"
-            >
-              ✕
-            </button>
-          </div>
-          <p className="text-sm mb-3">
-            Tienes {individualMessages.length} mensaje(s) individual(es) de administración
-          </p>
-          <div className="space-y-2">
-            {individualMessages.slice(0, 2).map((msg) => (
-              <div key={msg.id} className="bg-blue-700 p-2 rounded text-xs">
-                <p className="truncate">{msg.message}</p>
-                <p className="text-blue-200 text-xs mt-1">
-                  {formatTime(msg.timestamp)}
-                </p>
-              </div>
-            ))}
-            {individualMessages.length > 2 && (
-              <p className="text-xs text-blue-200">
-                +{individualMessages.length - 2} mensaje(s) más
-              </p>
-            )}
-          </div>
-          <button
-            onClick={() => {
-              setShowIndividualNotification(false);
-              // Abrir ventana de conversación individual
-              if (typeof window !== 'undefined' && (window as any).openConversation) {
-                const senderInfo = (window as any).lastMessageSender;
-                if (senderInfo) {
-                  (window as any).openConversation(
-                    senderInfo.id, 
-                    senderInfo.name, 
-                    senderInfo.email
-                  );
-                } else {
-                  // Fallback si no hay información del remitente
-                  (window as any).openConversation(
-                    'admin-user-id', 
-                    'Administración', 
-                    'admin@sistema.com'
-                  );
-                }
-              }
-            }}
-            className="w-full mt-3 bg-blue-500 hover:bg-blue-400 text-white py-2 px-3 rounded text-sm font-medium transition-colors"
-          >
-            Responder
-          </button>
-        </div>
-      )}
     </>
   );
 }
