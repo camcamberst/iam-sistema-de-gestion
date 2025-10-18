@@ -35,8 +35,8 @@ export async function validateConversationPermission(
       return { allowed: false, reason: 'Error obteniendo información de usuarios' };
     }
 
-    const sender = users.find(u => u.id === senderId);
-    const receiver = users.find(u => u.id === receiverId);
+    const sender = users.find((u: any) => u.id === senderId);
+    const receiver = users.find((u: any) => u.id === receiverId);
 
     if (!sender || !receiver) {
       return { allowed: false, reason: 'Usuario no encontrado' };
@@ -71,10 +71,10 @@ export async function validateConversationPermission(
         .select('group_id')
         .eq('user_id', receiverId);
 
-      const senderGroupIds = senderGroups?.map(g => g.group_id) || [];
-      const receiverGroupIds = receiverGroups?.map(g => g.group_id) || [];
+      const senderGroupIds = senderGroups?.map((g: any) => g.group_id) || [];
+      const receiverGroupIds = receiverGroups?.map((g: any) => g.group_id) || [];
 
-      const hasCommonGroup = senderGroupIds.some(id => receiverGroupIds.includes(id));
+      const hasCommonGroup = senderGroupIds.some((id: any) => receiverGroupIds.includes(id));
 
       if (hasCommonGroup) {
         return { allowed: true };
@@ -127,7 +127,7 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
         .select('group_id')
         .eq('user_id', currentUserId);
 
-      const groupIds = userGroups?.map(g => g.group_id) || [];
+      const groupIds = userGroups?.map((g: any) => g.group_id) || [];
 
       // Obtener super admin
       const { data: superAdmin } = await supabase
@@ -149,7 +149,7 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
           .in('group_id', groupIds)
           .neq('user_id', currentUserId);
 
-        groupUsers = usersInGroups?.map(ug => ug.users).filter(Boolean) || [];
+        groupUsers = usersInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
 
       availableUsers = [
@@ -163,7 +163,7 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
         .select('group_id')
         .eq('user_id', currentUserId);
 
-      const groupIds = userGroups?.map(g => g.group_id) || [];
+      const groupIds = userGroups?.map((g: any) => g.group_id) || [];
 
       if (groupIds.length > 0) {
         const { data: adminsInGroups } = await supabase
@@ -176,7 +176,7 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
           .eq('users.role', 'admin')
           .eq('users.is_active', true);
 
-        availableUsers = adminsInGroups?.map(ug => ug.users).filter(Boolean) || [];
+        availableUsers = adminsInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
     }
 
