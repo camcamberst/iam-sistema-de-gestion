@@ -213,20 +213,23 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante para abrir el chat */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center z-50"
+        className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 hover:w-20 hover:h-14 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden"
         aria-label="Abrir chat de soporte"
       >
-        <div className="flex items-center space-x-2">
-          <span className="text-lg font-bold">AIM</span>
-          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
-            <span className="text-blue-600 font-bold text-sm">A</span>
-          </div>
-          {unreadCount > 0 && (
-            <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-              {unreadCount}
-            </div>
-          )}
+        <div className="flex items-center justify-center">
+          {/* Versión miniatura - solo "A" */}
+          <span className="text-white font-bold text-lg group-hover:hidden">A</span>
+          
+          {/* Versión expandida - "AIM" */}
+          <span className="text-white font-bold text-sm hidden group-hover:block whitespace-nowrap">AIM</span>
         </div>
+        
+        {/* Contador de mensajes no leídos */}
+        {unreadCount > 0 && (
+          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+            {unreadCount}
+          </div>
+        )}
       </button>
 
       {/* Ventana del chat */}
