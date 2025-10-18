@@ -246,15 +246,31 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               console.log('💬 [REALTIME] Mensaje individual detectado, abriendo ventana...');
               
               // Abrir ventana de conversación individual inmediatamente
-              if (typeof window !== 'undefined' && (window as any).openConversation) {
-                console.log('🚀 [REALTIME] Abriendo ventana de conversación...');
-                (window as any).openConversation(
-                  payload.new.sender_id,
-                  'Administración',
-                  'admin@sistema.com'
-                );
-              } else {
-                console.error('❌ [REALTIME] openConversation no disponible');
+              const tryOpenRealtime = () => {
+                if (typeof window !== 'undefined' && (window as any).openConversation) {
+                  console.log('🚀 [REALTIME] Abriendo ventana de conversación...');
+                  (window as any).openConversation(
+                    payload.new.sender_id,
+                    'Administración',
+                    'admin@sistema.com'
+                  );
+                  return true;
+                }
+                return false;
+              };
+
+              if (!tryOpenRealtime()) {
+                console.log('⏳ [REALTIME] openConversation no disponible, esperando...');
+                setTimeout(() => {
+                  if (!tryOpenRealtime()) {
+                    console.log('⏳ [REALTIME] Segunda tentativa fallida, esperando más...');
+                    setTimeout(() => {
+                      if (!tryOpenRealtime()) {
+                        console.error('❌ [REALTIME] openConversation sigue no disponible después de múltiples intentos');
+                      }
+                    }, 2000);
+                  }
+                }, 1000);
               }
             } else {
               console.log('ℹ️ [REALTIME] Mensaje no es individual (sender_type:', payload.new.sender_type, ')');
@@ -364,7 +380,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           // Si no está disponible, esperar un poco y volver a intentar
           setTimeout(() => {
             if (!tryOpenConversation()) {
-              console.error('❌ [INDIVIDUAL] openConversation sigue no disponible después de esperar');
+              console.log('⏳ [INDIVIDUAL] Segunda tentativa fallida, esperando más...');
+              // Segunda tentativa con más tiempo
+              setTimeout(() => {
+                if (!tryOpenConversation()) {
+                  console.error('❌ [INDIVIDUAL] openConversation sigue no disponible después de múltiples intentos');
+                }
+              }, 2000);
             }
           }, 1000);
         }

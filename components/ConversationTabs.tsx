@@ -165,10 +165,16 @@ export default function ConversationTabs({ userId, userRole }: ConversationTabsP
 
   // Exponer funciones globalmente para que el ChatWidget las pueda usar
   useEffect(() => {
+    console.log('🔧 [CONVERSATION-TABS] Exponiendo funciones globales...');
     (window as any).openConversation = openConversation;
     (window as any).updateLastMessage = updateLastMessage;
     (window as any).clearUnreadCount = clearUnreadCount;
-  }, []);
+    console.log('✅ [CONVERSATION-TABS] Funciones expuestas:', {
+      openConversation: typeof (window as any).openConversation,
+      updateLastMessage: typeof (window as any).updateLastMessage,
+      clearUnreadCount: typeof (window as any).clearUnreadCount
+    });
+  }, [openConversation, updateLastMessage, clearUnreadCount]);
 
   // Mostrar para admin, super_admin y modelos
   const role = userRole?.toString();

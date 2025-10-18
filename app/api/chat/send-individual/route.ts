@@ -8,24 +8,32 @@ interface SendIndividualBody {
 
 export async function POST(request: NextRequest) {
   try {
+    console.log('🔍 [SEND-INDIVIDUAL] Starting request...');
+    
     const authHeader = request.headers.get('authorization');
+    console.log('🔍 [SEND-INDIVIDUAL] Auth header:', authHeader ? 'Present' : 'Missing');
     if (!authHeader) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
     const token = authHeader.replace('Bearer ', '');
+    console.log('🔍 [SEND-INDIVIDUAL] Token length:', token.length);
+    
     const { data: { user }, error: authError } = await supabaseServer.auth.getUser(token);
+    console.log('🔍 [SEND-INDIVIDUAL] Auth result:', { user: user?.id, error: authError?.message });
     if (authError || !user) return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
 
     // Obtener rol del usuario
-    const { data: userRow } = await supabaseServer
+    const { data: userRow, error: userRowError } = await supabaseServer
       .from('users')
       .select('id, role')
       .eq('id', user.id)
       .single();
 
-    console.log('🔍 [SEND-INDIVIDUAL] User auth check:', { userId: user.id, userRow, role: userRow?.role });
+    console.log('🔍 [SEND-INDIVIDUAL] User row query:', { userRow, error: userRowError?.message });
 
     if (!userRow) return NextResponse.json({ error: 'Usuario no encontrado' }, { status: 404 });
     const role = (userRow.role || '').toString();
+    console.log('🔍 [SEND-INDIVIDUAL] Role check:', { role, allowed: ['admin', 'super_admin'] });
+    
     if (role !== 'admin' && role !== 'super_admin') {
       console.log('❌ [SEND-INDIVIDUAL] Role check failed:', { role, allowed: ['admin', 'super_admin'] });
       return NextResponse.json({ error: 'Prohibido' }, { status: 403 });
