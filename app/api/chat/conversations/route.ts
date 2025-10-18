@@ -232,8 +232,8 @@ async function validateConversationPermission(
       .select('group_id')
       .eq('user_id', receiverId);
 
-    const senderGroupIds = senderGroups?.map(g => g.group_id) || [];
-    const receiverGroupIds = receiverGroups?.map(g => g.group_id) || [];
+      const senderGroupIds = senderGroups?.map((g: any) => g.group_id) || [];
+      const receiverGroupIds = receiverGroups?.map((g: any) => g.group_id) || [];
 
     const hasCommonGroup = senderGroupIds.some(id => receiverGroupIds.includes(id));
 
