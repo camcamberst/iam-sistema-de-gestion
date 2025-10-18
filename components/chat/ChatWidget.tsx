@@ -213,15 +213,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante para abrir el chat */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 w-14 h-14 bg-gray-900 hover:w-20 hover:h-14 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden"
+        className="fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden"
         aria-label="Abrir chat de soporte"
       >
         <div className="flex items-center justify-center">
           {/* Versión miniatura - solo "A" */}
-          <span className="text-white font-bold text-lg group-hover:hidden">A</span>
+          <span className="text-white font-bold text-sm group-hover:hidden">A</span>
           
           {/* Versión expandida - "AIM" */}
-          <span className="text-white font-bold text-sm hidden group-hover:block whitespace-nowrap">AIM</span>
+          <span className="text-white font-bold text-xs hidden group-hover:block whitespace-nowrap">AIM</span>
         </div>
         
         {/* Contador de mensajes no leídos */}
