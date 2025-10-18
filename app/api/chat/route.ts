@@ -371,8 +371,9 @@ Asistente:`;
 }
 
 async function generateBotResponse(message: string, userContext: UserContext, sessionId: string): Promise<string> {
+  // Si no hay API key de Gemini, usar respuestas inteligentes basadas en patrones
   if (!GEMINI_API_KEY) {
-    return "Lo siento, el servicio de chat no está disponible en este momento. Por favor contacta a un administrador.";
+    return generateFallbackResponse(message, userContext);
   }
 
   // Obtener historial de la conversación
@@ -554,4 +555,71 @@ async function handleReadOnlyIntents(message: string, userContext: UserContext):
   }
 
   return null;
+}
+
+function generateFallbackResponse(message: string, userContext: UserContext): string {
+  const lowerMessage = message.toLowerCase();
+  
+  // Saludos
+  if (lowerMessage.includes('hola') || lowerMessage.includes('hi') || lowerMessage.includes('buenos días') || lowerMessage.includes('buenas tardes') || lowerMessage.includes('buenas noches')) {
+    return `¡Hola ${userContext.name}! 👋 Soy el asistente de AIM. Estoy aquí para ayudarte con consultas sobre el sistema. ¿En qué puedo asistirte hoy?`;
+  }
+  
+  // Preguntas sobre el sistema
+  if (lowerMessage.includes('qué es') || lowerMessage.includes('que es') || lowerMessage.includes('qué hace') || lowerMessage.includes('que hace')) {
+    return `AIM es el Sistema de Gestión de Agencia Innova. Te permite gestionar usuarios, calculadora, anticipos y sedes. Como ${userContext.role}, tienes acceso a funciones administrativas del sistema.`;
+  }
+  
+  // Preguntas sobre calculadora
+  if (lowerMessage.includes('calculadora') || lowerMessage.includes('rates') || lowerMessage.includes('tasas')) {
+    return `La calculadora te permite gestionar las tasas de conversión (USD→COP, EUR→USD, GBP→USD). Puedes acceder a ella desde el menú "Gestión Calculadora".`;
+  }
+  
+  // Preguntas sobre anticipos
+  if (lowerMessage.includes('anticipo') || lowerMessage.includes('anticipos')) {
+    return `Los anticipos son pagos adelantados que se pueden solicitar. Puedes gestionarlos desde "Gestión Anticipos" en el menú principal.`;
+  }
+  
+  // Preguntas sobre usuarios
+  if (lowerMessage.includes('usuario') || lowerMessage.includes('usuarios') || lowerMessage.includes('modelo') || lowerMessage.includes('modelos')) {
+    return `Puedes gestionar usuarios y modelos desde "Gestión Usuarios". Allí puedes crear, editar y administrar las cuentas del sistema.`;
+  }
+  
+  // Preguntas sobre sedes
+  if (lowerMessage.includes('sede') || lowerMessage.includes('sedes')) {
+    return `Las sedes son las ubicaciones físicas de la agencia. Puedes gestionarlas desde "Gestión Sedes" en el menú principal.`;
+  }
+  
+  // Preguntas sobre ayuda
+  if (lowerMessage.includes('ayuda') || lowerMessage.includes('help') || lowerMessage.includes('cómo') || lowerMessage.includes('como')) {
+    return `Puedo ayudarte con información sobre:
+    • Gestión de usuarios y modelos
+    • Configuración de la calculadora
+    • Administración de anticipos
+    • Gestión de sedes
+    • Funcionalidades del sistema
+    
+    ¿Hay algo específico en lo que te gustaría que te ayude?`;
+  }
+  
+  // Preguntas sobre el rol
+  if (lowerMessage.includes('rol') || lowerMessage.includes('permisos') || lowerMessage.includes('acceso')) {
+    return `Tu rol actual es: ${userContext.role}. Esto te da acceso a las funciones administrativas del sistema AIM.`;
+  }
+  
+  // Preguntas sobre productividad
+  if (lowerMessage.includes('productividad') || lowerMessage.includes('ganancias') || lowerMessage.includes('ingresos')) {
+    return `Puedes ver tu productividad y ganancias en el dashboard principal. Los datos se actualizan en tiempo real basándose en tu actividad.`;
+  }
+  
+  // Respuesta por defecto
+  return `Entiendo tu consulta sobre "${message}". Como asistente de AIM, puedo ayudarte con información sobre:
+  
+  📊 **Dashboard**: Resumen de productividad y ganancias
+  👥 **Usuarios**: Gestión de modelos y cuentas
+  🧮 **Calculadora**: Configuración de tasas de conversión
+  💰 **Anticipos**: Administración de pagos adelantados
+  🏢 **Sedes**: Gestión de ubicaciones
+  
+  ¿Podrías ser más específico sobre lo que necesitas? Estoy aquí para ayudarte.`;
 }
