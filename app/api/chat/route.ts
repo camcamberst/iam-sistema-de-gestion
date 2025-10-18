@@ -551,7 +551,59 @@ async function handleReadOnlyIntents(message: string, userContext: UserContext):
 
   // Intent: crear ticket (para todos los roles, con confirmación en UI)
   if (/crear ticket|abrir ticket|soporte|ayuda/.test(text)) {
-    return 'Puedo crear un ticket de soporte con tu descripción. Confirma en el botón “Crear ticket” para proceder.';
+    return 'Puedo crear un ticket de soporte con tu descripción. Confirma en el botón "Crear ticket" para proceder.';
+  }
+
+  // Intent: saludos y preguntas básicas
+  if (/hola|hi|buenos días|buenas tardes|buenas noches|cómo estás|como estas/.test(text)) {
+    return `¡Hola ${userContext.name}! 👋 Soy el asistente de AIM. Estoy aquí para ayudarte con consultas sobre el sistema. ¿En qué puedo asistirte hoy?`;
+  }
+
+  // Intent: preguntas sobre el sistema
+  if (/qué es|que es|qué hace|que hace|qué es aim|que es aim/.test(text)) {
+    return `AIM es el Sistema de Gestión de Agencia Innova. Te permite gestionar usuarios, calculadora, anticipos y sedes. Como ${userContext.role}, tienes acceso a funciones administrativas del sistema.`;
+  }
+
+  // Intent: preguntas sobre calculadora
+  if (/calculadora|rates|tasas/.test(text)) {
+    return `La calculadora te permite gestionar las tasas de conversión (USD→COP, EUR→USD, GBP→USD). Puedes acceder a ella desde el menú "Gestión Calculadora".`;
+  }
+
+  // Intent: preguntas sobre anticipos
+  if (/anticipo|anticipos/.test(text)) {
+    return `Los anticipos son pagos adelantados que se pueden solicitar. Puedes gestionarlos desde "Gestión Anticipos" en el menú principal.`;
+  }
+
+  // Intent: preguntas sobre usuarios
+  if (/usuario|usuarios|modelo|modelos/.test(text)) {
+    return `Puedes gestionar usuarios y modelos desde "Gestión Usuarios". Allí puedes crear, editar y administrar las cuentas del sistema.`;
+  }
+
+  // Intent: preguntas sobre sedes
+  if (/sede|sedes/.test(text)) {
+    return `Las sedes son las ubicaciones físicas de la agencia. Puedes gestionarlas desde "Gestión Sedes" en el menú principal.`;
+  }
+
+  // Intent: preguntas sobre ayuda general
+  if (/ayuda|help|cómo|como|qué puedo|que puedo/.test(text)) {
+    return `Puedo ayudarte con información sobre:
+    • Gestión de usuarios y modelos
+    • Configuración de la calculadora
+    • Administración de anticipos
+    • Gestión de sedes
+    • Funcionalidades del sistema
+    
+    ¿Hay algo específico en lo que te gustaría que te ayude?`;
+  }
+
+  // Intent: preguntas sobre el rol
+  if (/rol|permisos|acceso/.test(text)) {
+    return `Tu rol actual es: ${userContext.role}. Esto te da acceso a las funciones administrativas del sistema AIM.`;
+  }
+
+  // Intent: preguntas sobre productividad
+  if (/productividad|ganancias|ingresos/.test(text)) {
+    return `Puedes ver tu productividad y ganancias en el dashboard principal. Los datos se actualizan en tiempo real basándose en tu actividad.`;
   }
 
   return null;
