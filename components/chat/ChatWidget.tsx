@@ -234,7 +234,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       {/* Ventana del chat */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-50">
+        <div className="fixed bottom-6 right-16 w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-50">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
             <div className="flex items-center space-x-3">
