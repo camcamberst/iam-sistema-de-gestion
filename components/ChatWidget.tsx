@@ -234,37 +234,30 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           },
           (payload) => {
             console.log('🔔 [REALTIME] Nuevo mensaje recibido:', payload);
+            console.log('🔍 [REALTIME] Detalles del mensaje:', {
+              session_id: payload.new.session_id,
+              sender_type: payload.new.sender_type,
+              sender_id: payload.new.sender_id,
+              message: payload.new.message
+            });
             
             // Verificar si es un mensaje individual (sender_type = 'admin')
             if (payload.new.sender_type === 'admin') {
               console.log('💬 [REALTIME] Mensaje individual detectado, abriendo ventana...');
               
-              // Obtener información del remitente
-              supabase
-                .from('users')
-                .select('id, name, email, role')
-                .eq('id', payload.new.sender_id)
-                .single()
-                .then(({ data: senderInfo, error }) => {
-                  if (error) {
-                    console.error('❌ [REALTIME] Error obteniendo info del remitente:', error);
-                    return;
-                  }
-
-                  console.log('👤 [REALTIME] Información del remitente:', senderInfo);
-
-                  // Abrir ventana de conversación individual
-                  if (typeof window !== 'undefined' && (window as any).openConversation) {
-                    console.log('🚀 [REALTIME] Abriendo ventana de conversación...');
-                    (window as any).openConversation(
-                      senderInfo.id,
-                      senderInfo.name,
-                      senderInfo.email
-                    );
-                  } else {
-                    console.error('❌ [REALTIME] openConversation no disponible');
-                  }
-                });
+              // Abrir ventana de conversación individual inmediatamente
+              if (typeof window !== 'undefined' && (window as any).openConversation) {
+                console.log('🚀 [REALTIME] Abriendo ventana de conversación...');
+                (window as any).openConversation(
+                  payload.new.sender_id,
+                  'Administración',
+                  'admin@sistema.com'
+                );
+              } else {
+                console.error('❌ [REALTIME] openConversation no disponible');
+              }
+            } else {
+              console.log('ℹ️ [REALTIME] Mensaje no es individual (sender_type:', payload.new.sender_type, ')');
             }
           }
         )
