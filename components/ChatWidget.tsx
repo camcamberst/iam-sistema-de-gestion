@@ -335,24 +335,38 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         console.log('🔍 [INDIVIDUAL] window.openConversation disponible:', typeof window !== 'undefined' && !!(window as any).openConversation);
         console.log('🔍 [INDIVIDUAL] senderInfo:', senderInfo);
         
-        if (typeof window !== 'undefined' && (window as any).openConversation) {
-          if (senderInfo) {
-            console.log('✅ [INDIVIDUAL] Abriendo ventana con información del remitente:', senderInfo);
-            (window as any).openConversation(
-              senderInfo.id, 
-              senderInfo.name, 
-              senderInfo.email
-            );
-          } else {
-            console.log('⚠️ [INDIVIDUAL] Sin información del remitente, usando fallback');
-            (window as any).openConversation(
-              'admin-user-id', 
-              'Administración', 
-              'admin@sistema.com'
-            );
+        // Intentar abrir inmediatamente
+        const tryOpenConversation = () => {
+          if (typeof window !== 'undefined' && (window as any).openConversation) {
+            if (senderInfo) {
+              console.log('✅ [INDIVIDUAL] Abriendo ventana con información del remitente:', senderInfo);
+              (window as any).openConversation(
+                senderInfo.id, 
+                senderInfo.name, 
+                senderInfo.email
+              );
+            } else {
+              console.log('⚠️ [INDIVIDUAL] Sin información del remitente, usando fallback');
+              (window as any).openConversation(
+                'admin-user-id', 
+                'Administración', 
+                'admin@sistema.com'
+              );
+            }
+            return true;
           }
-        } else {
-          console.error('❌ [INDIVIDUAL] openConversation no está disponible en window');
+          return false;
+        };
+
+        // Intentar abrir inmediatamente
+        if (!tryOpenConversation()) {
+          console.log('⏳ [INDIVIDUAL] openConversation no disponible, esperando...');
+          // Si no está disponible, esperar un poco y volver a intentar
+          setTimeout(() => {
+            if (!tryOpenConversation()) {
+              console.error('❌ [INDIVIDUAL] openConversation sigue no disponible después de esperar');
+            }
+          }, 1000);
         }
       }
     } catch (error) {
