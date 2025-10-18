@@ -196,8 +196,8 @@ async function validateConversationPermission(
     return { allowed: false, reason: 'Error obteniendo información de usuarios' };
   }
 
-  const sender = users.find(u => u.id === senderId);
-  const receiver = users.find(u => u.id === receiverId);
+    const sender = users.find((u: any) => u.id === senderId);
+    const receiver = users.find((u: any) => u.id === receiverId);
 
   if (!sender || !receiver) {
     return { allowed: false, reason: 'Usuario no encontrado' };
