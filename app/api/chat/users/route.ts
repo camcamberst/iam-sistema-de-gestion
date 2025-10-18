@@ -69,7 +69,7 @@ export async function GET(request: NextRequest) {
         .select('group_id')
         .eq('user_id', user.id);
 
-      const groupIds = userGroups?.map(g => g.group_id) || [];
+      const groupIds = userGroups?.map((g: any) => g.group_id) || [];
 
       // Obtener super admin
       const { data: superAdmin } = await supabase
@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
           .in('group_id', groupIds)
           .neq('user_id', user.id);
 
-        groupUsers = usersInGroups?.map(ug => ug.users).filter(Boolean) || [];
+        groupUsers = usersInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
 
       availableUsers = [
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
         .select('group_id')
         .eq('user_id', user.id);
 
-      const groupIds = userGroups?.map(g => g.group_id) || [];
+      const groupIds = userGroups?.map((g: any) => g.group_id) || [];
 
       if (groupIds.length > 0) {
         const { data: adminsInGroups } = await supabase
@@ -125,20 +125,20 @@ export async function GET(request: NextRequest) {
           .eq('users.role', 'admin')
           .eq('users.is_active', true);
 
-        availableUsers = adminsInGroups?.map(ug => ug.users).filter(Boolean) || [];
+        availableUsers = adminsInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
     }
 
     // Obtener estados en línea de los usuarios
-    const userIds = availableUsers.map(u => u.id);
+    const userIds = availableUsers.map((u: any) => u.id);
     const { data: userStatuses } = await supabase
       .from('chat_user_status')
       .select('user_id, is_online, last_seen, status_message')
       .in('user_id', userIds);
 
     // Combinar información de usuarios con estados
-    const usersWithStatus = availableUsers.map(user => {
-      const status = userStatuses?.find(s => s.user_id === user.id);
+    const usersWithStatus = availableUsers.map((user: any) => {
+      const status = userStatuses?.find((s: any) => s.user_id === user.id);
       return {
         ...user,
         is_online: status?.is_online || false,

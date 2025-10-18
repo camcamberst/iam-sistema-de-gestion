@@ -75,8 +75,8 @@ export async function GET(request: NextRequest) {
 
     // Marcar mensajes como leídos
     const unreadMessageIds = messages
-      .filter(msg => !msg.is_read && msg.sender_id !== user.id)
-      .map(msg => msg.id);
+      .filter((msg: any) => !msg.is_read && msg.sender_id !== user.id)
+      .map((msg: any) => msg.id);
 
     if (unreadMessageIds.length > 0) {
       await supabase

@@ -235,7 +235,7 @@ async function validateConversationPermission(
       const senderGroupIds = senderGroups?.map((g: any) => g.group_id) || [];
       const receiverGroupIds = receiverGroups?.map((g: any) => g.group_id) || [];
 
-    const hasCommonGroup = senderGroupIds.some(id => receiverGroupIds.includes(id));
+    const hasCommonGroup = senderGroupIds.some((id: any) => receiverGroupIds.includes(id));
 
     if (hasCommonGroup) {
       return { allowed: true };
