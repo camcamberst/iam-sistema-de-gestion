@@ -38,6 +38,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showUserList, setShowUserList] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -213,10 +214,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       <button
         onClick={toggleChat}
         className="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg transition-all duration-300 flex items-center justify-center z-50"
-        aria-label="Abrir chat"
+        aria-label="Abrir chat de soporte"
       >
         <div className="flex items-center space-x-2">
           <span className="text-lg font-bold">AIM</span>
+          <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+            <span className="text-blue-600 font-bold text-sm">A</span>
+          </div>
           {unreadCount > 0 && (
             <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
               {unreadCount}
@@ -235,8 +239,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 <span className="text-white font-bold text-sm">AIM</span>
               </div>
               <div>
-                <h3 className="text-white font-semibold">Chat AIM</h3>
-                <p className="text-gray-400 text-xs">Comunicación interna</p>
+                <h3 className="text-white font-semibold">AIM Assistant</h3>
+                <p className="text-gray-400 text-xs">Soporte y tips</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -355,17 +359,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               {/* Área de entrada */}
               <div className="p-4 border-t border-gray-700 bg-gray-800">
                 <div className="flex items-end space-x-2">
-                  <div className="flex-1">
-                    <textarea
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      placeholder="Escribe tu mensaje..."
-                      className="w-full resize-none border border-gray-600 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent placeholder-gray-400"
-                      rows={1}
-                      disabled={isLoading}
-                    />
-                  </div>
+              <div className="flex-1 relative">
+                <textarea
+                  value={newMessage}
+                  onChange={(e) => setNewMessage(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Escribe tu mensaje..."
+                  className="w-full resize-none border border-gray-600 bg-gray-700 text-white rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent placeholder-gray-400"
+                  rows={1}
+                  disabled={isLoading}
+                />
+              </div>
+              <button
+                onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                className="p-2 text-gray-400 hover:text-white transition-colors"
+                aria-label="Abrir emojis"
+              >
+                <span className="text-lg">😊</span>
+              </button>
                   <button
                     onClick={sendMessage}
                     disabled={!newMessage.trim() || isLoading}
@@ -391,7 +402,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   >
                     ← Volver a conversaciones
                   </button>
-                  <span>• Chat activo</span>
+                  <span>• Sesión activa</span>
                 </div>
               </div>
             </>
