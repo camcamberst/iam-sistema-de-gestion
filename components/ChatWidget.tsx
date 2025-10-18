@@ -241,13 +241,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         // Abrir automáticamente la ventana de conversación individual
         if (typeof window !== 'undefined' && (window as any).openConversation && senderInfo) {
+          console.log('🚀 [INDIVIDUAL] Abriendo ventana de conversación para:', senderInfo);
           (window as any).openConversation(
             senderInfo.id, 
             senderInfo.name, 
             senderInfo.email
           );
+          // NO mostrar notificación si se abre la ventana
+          setShowIndividualNotification(false);
         } else {
-          // Si no se puede abrir automáticamente, mostrar notificación
+          console.log('⚠️ [INDIVIDUAL] No se puede abrir ventana, mostrando notificación');
+          // Solo mostrar notificación si no se puede abrir la ventana
           setShowIndividualNotification(true);
         }
       }

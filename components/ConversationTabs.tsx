@@ -170,9 +170,9 @@ export default function ConversationTabs({ userId, userRole }: ConversationTabsP
     (window as any).clearUnreadCount = clearUnreadCount;
   }, []);
 
-  // Solo mostrar para admin y super_admin
+  // Mostrar para admin, super_admin y modelos
   const role = userRole?.toString();
-  if (role !== 'admin' && role !== 'super_admin') {
+  if (role !== 'admin' && role !== 'super_admin' && role !== 'modelo') {
     return null;
   }
 
