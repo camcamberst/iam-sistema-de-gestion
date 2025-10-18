@@ -187,6 +187,104 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [isOpen, resolvedUser, userRole]);
 
+  // Para modelos: escuchar mensajes individuales en tiempo real
+  useEffect(() => {
+    const role = (resolvedUser?.role || userRole || '').toString();
+    if (role !== 'modelo') return;
+
+    console.log('🔊 [REALTIME] Configurando escucha en tiempo real para modelo...');
+
+    // Obtener sesión actual
+    const setupRealtime = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      console.log('🔊 [REALTIME] Sesión obtenida, configurando suscripción...');
+
+      // Obtener las sesiones de chat del usuario actual
+      const { data: userSessions, error: sessionsError } = await supabase
+        .from('chat_sessions')
+        .select('id')
+        .eq('user_id', session.user.id)
+        .eq('is_active', true);
+
+      if (sessionsError) {
+        console.error('❌ [REALTIME] Error obteniendo sesiones:', sessionsError);
+        return;
+      }
+
+      if (!userSessions || userSessions.length === 0) {
+        console.log('⚠️ [REALTIME] No hay sesiones activas para el usuario');
+        return;
+      }
+
+      const sessionIds = userSessions.map(s => s.id);
+      console.log('🔊 [REALTIME] Escuchando sesiones:', sessionIds);
+
+      // Suscribirse a cambios en chat_messages para las sesiones del usuario
+      const subscription = supabase
+        .channel('individual-messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'chat_messages',
+            filter: `session_id=in.(${sessionIds.join(',')})`
+          },
+          (payload) => {
+            console.log('🔔 [REALTIME] Nuevo mensaje recibido:', payload);
+            
+            // Verificar si es un mensaje individual (sender_type = 'admin')
+            if (payload.new.sender_type === 'admin') {
+              console.log('💬 [REALTIME] Mensaje individual detectado, abriendo ventana...');
+              
+              // Obtener información del remitente
+              supabase
+                .from('users')
+                .select('id, name, email, role')
+                .eq('id', payload.new.sender_id)
+                .single()
+                .then(({ data: senderInfo, error }) => {
+                  if (error) {
+                    console.error('❌ [REALTIME] Error obteniendo info del remitente:', error);
+                    return;
+                  }
+
+                  console.log('👤 [REALTIME] Información del remitente:', senderInfo);
+
+                  // Abrir ventana de conversación individual
+                  if (typeof window !== 'undefined' && (window as any).openConversation) {
+                    console.log('🚀 [REALTIME] Abriendo ventana de conversación...');
+                    (window as any).openConversation(
+                      senderInfo.id,
+                      senderInfo.name,
+                      senderInfo.email
+                    );
+                  } else {
+                    console.error('❌ [REALTIME] openConversation no disponible');
+                  }
+                });
+            }
+          }
+        )
+        .subscribe();
+
+      // Cleanup al desmontar
+      return () => {
+        console.log('🔇 [REALTIME] Limpiando suscripción...');
+        subscription.unsubscribe();
+      };
+    };
+
+    setupRealtime();
+
+    // Cleanup al desmontar el componente
+    return () => {
+      console.log('🔇 [REALTIME] Componente desmontado, limpiando...');
+    };
+  }, [resolvedUser, userRole]);
+
   const checkIndividualMessages = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
