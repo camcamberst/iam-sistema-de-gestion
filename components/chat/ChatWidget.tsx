@@ -41,7 +41,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     online: true,
-    offline: true
+    offline: false
   });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
