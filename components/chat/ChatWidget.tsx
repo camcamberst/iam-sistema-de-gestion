@@ -556,9 +556,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       oscillator.type = 'sine';
       
-      // Patrón "N Dinámico": [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200]
-      const frequencies = [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200];
-      const duration = 0.5;
+      // Patrón "Latido de Corazón": [300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500]
+      const frequencies = [300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500, 300, 500];
+      const duration = 1.5; // Duración más larga para coincidir con la animación
       
       console.log('🎼 [ChatWidget] Configurando frecuencias:', frequencies);
       
@@ -567,9 +567,36 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         oscillator.frequency.setValueAtTime(freq, time);
       });
       
-      // Envelope dinámico
+      // Envelope de latido de corazón
       gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.02);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.05);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.1);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.15);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.2);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.25);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.3);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.35);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.4);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.45);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.5);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.55);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.6);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.65);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.7);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.75);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.8);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.85);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.9);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 0.95);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.0);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 1.05);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.1);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 1.15);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.2);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 1.25);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.3);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioContext.currentTime + 1.35);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 1.4);
       gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
       
       oscillator.start(audioContext.currentTime);
@@ -600,11 +627,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       setIsOpen(true);
     }
     
-    // Detener parpadeo después de 3 segundos
+    // Detener latido de corazón después de 6 segundos (4 ciclos de 1.5s)
     setTimeout(() => {
-      console.log('⏹️ [ChatWidget] Deteniendo parpadeo...');
+      console.log('⏹️ [ChatWidget] Deteniendo latido de corazón...');
       setIsBlinking(false);
-    }, 3000);
+    }, 6000);
   };
 
   // Cargar datos iniciales
@@ -792,7 +819,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       <button
         onClick={toggleChat}
         className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden ${
-          isBlinking ? 'animate-pulse bg-blue-600' : ''
+          isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600' : ''
         }`}
         aria-label="Abrir chat de soporte"
       >
