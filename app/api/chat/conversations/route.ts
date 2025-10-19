@@ -246,3 +246,71 @@ async function validateConversationPermission(
 
   return { allowed: false, reason: 'No tiene permisos para iniciar esta conversación' };
 }
+
+// DELETE: Eliminar conversación
+export async function DELETE(request: NextRequest) {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+
+    // Obtener token de autorización
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Token de autorización requerido' }, { status: 401 });
+    }
+
+    const token = authHeader.split(' ')[1];
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
+    }
+
+    // Obtener ID de conversación de la query string
+    const { searchParams } = new URL(request.url);
+    const conversationId = searchParams.get('conversation_id');
+    
+    if (!conversationId) {
+      return NextResponse.json({ error: 'ID de conversación requerido' }, { status: 400 });
+    }
+
+    // Verificar que el usuario es participante de la conversación
+    const { data: conversation, error: convError } = await supabase
+      .from('chat_conversations')
+      .select('id, participant_1_id, participant_2_id')
+      .eq('id', conversationId)
+      .single();
+
+    if (convError || !conversation) {
+      return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
+    }
+
+    if (conversation.participant_1_id !== user.id && conversation.participant_2_id !== user.id) {
+      return NextResponse.json({ error: 'No tienes permisos para eliminar esta conversación' }, { status: 403 });
+    }
+
+    // Eliminar la conversación (esto también eliminará los mensajes por CASCADE)
+    const { error: deleteError } = await supabase
+      .from('chat_conversations')
+      .delete()
+      .eq('id', conversationId);
+
+    if (deleteError) {
+      console.error('Error eliminando conversación:', deleteError);
+      return NextResponse.json({ error: 'Error eliminando conversación' }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Conversación eliminada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('Error en DELETE conversación:', error);
+    return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
+  }
+}

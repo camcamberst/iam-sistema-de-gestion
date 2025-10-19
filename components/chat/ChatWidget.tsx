@@ -47,6 +47,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [isBlinking, setIsBlinking] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -293,6 +294,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       console.error('Error creando conversación:', error);
     }
     return null;
+  };
+
+  // Eliminar conversación
+  const deleteConversation = async (conversationId: string) => {
+    if (!session) return;
+    
+    try {
+      const response = await fetch(`/api/chat/conversations?conversation_id=${conversationId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        // Recargar conversaciones
+        await loadConversations();
+        // Si la conversación eliminada estaba seleccionada, limpiar
+        if (selectedConversation === conversationId) {
+          setSelectedConversation(null);
+          setMessages([]);
+        }
+        setShowDeleteConfirm(null);
+      }
+    } catch (error) {
+      console.error('Error eliminando conversación:', error);
+    }
   };
 
   // Actualizar estado del usuario (en línea/offline)
@@ -642,33 +671,46 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           {!showUserList && !selectedConversation && (
             <div className="flex-1 overflow-y-auto p-4">
               <h4 className="text-white text-sm font-medium mb-3">Conversaciones</h4>
-              <div className="space-y-2">
+              <div className="space-y-1">
                 {conversations.map((conversation) => (
-                  <button
+                  <div
                     key={conversation.id}
-                    onClick={() => loadMessages(conversation.id)}
-                    className="w-full flex items-center space-x-3 p-3 hover:bg-gray-700 rounded-lg transition-colors"
+                    className="group flex items-center space-x-2 p-2 hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <div className="w-10 h-10 bg-gray-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">
-                        {conversation.other_participant.name.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-white text-sm font-medium">
-                        {conversation.other_participant.name}
+                    <button
+                      onClick={() => loadMessages(conversation.id)}
+                      className="flex-1 flex items-center space-x-2 min-w-0"
+                    >
+                      <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
+                        <span className="text-white text-xs font-medium">
+                          {conversation.other_participant.name.charAt(0).toUpperCase()}
+                        </span>
                       </div>
-                      <div className="text-gray-400 text-xs truncate">
-                        {conversation.last_message?.content || 'Sin mensajes'}
+                      <div className="flex-1 text-left min-w-0">
+                        <div className="text-white text-sm font-medium truncate">
+                          {conversation.other_participant.name}
+                        </div>
+                        <div className="text-gray-400 text-xs truncate">
+                          {conversation.last_message?.content || 'Sin mensajes'}
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex flex-col items-end">
-                      <div className={`w-2 h-2 rounded-full ${conversation.other_participant.is_online ? 'bg-green-500' : 'bg-gray-500'}`} />
-                      <div className="text-gray-400 text-xs mt-1">
-                        {new Date(conversation.last_message_at).toLocaleDateString()}
+                      <div className="flex items-center space-x-1 flex-shrink-0">
+                        <div className={`w-2 h-2 rounded-full ${conversation.other_participant.is_online ? 'bg-green-500' : 'bg-gray-500'}`} />
+                        <div className="text-gray-400 text-xs">
+                          {new Date(conversation.last_message_at).toLocaleDateString()}
+                        </div>
                       </div>
-                    </div>
-                  </button>
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteConfirm(conversation.id)}
+                      className="opacity-0 group-hover:opacity-100 p-1 text-gray-400 hover:text-red-400 transition-all"
+                      title="Eliminar conversación"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>
@@ -753,6 +795,32 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               </div>
             </>
           )}
+        </div>
+      )}
+
+      {/* Modal de confirmación para eliminar conversación */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-white text-lg font-semibold mb-4">Eliminar conversación</h3>
+            <p className="text-gray-300 text-sm mb-6">
+              ¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => deleteConversation(showDeleteConfirm)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Eliminar
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </>
