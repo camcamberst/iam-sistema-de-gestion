@@ -43,6 +43,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     online: true,
     offline: false
   });
+  const [isBlinking, setIsBlinking] = useState(false);
+  const [hasNewMessage, setHasNewMessage] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -214,6 +216,59 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }));
   };
 
+  // Función para reproducir sonido de notificación "N Dinámico"
+  const playNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      
+      // Patrón "N Dinámico": [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200]
+      const frequencies = [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200];
+      const duration = 0.5;
+      
+      frequencies.forEach((freq, index) => {
+        const time = audioContext.currentTime + (index / frequencies.length) * duration;
+        oscillator.frequency.setValueAtTime(freq, time);
+      });
+      
+      // Envelope dinámico
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+    } catch (error) {
+      console.error('Error reproduciendo sonido de notificación:', error);
+    }
+  };
+
+  // Función para activar notificaciones (sonido + parpadeo + apertura automática)
+  const triggerNotification = () => {
+    // Reproducir sonido
+    playNotificationSound();
+    
+    // Activar parpadeo
+    setIsBlinking(true);
+    setHasNewMessage(true);
+    
+    // Abrir chat automáticamente si está cerrado
+    if (!isOpen) {
+      setIsOpen(true);
+    }
+    
+    // Detener parpadeo después de 3 segundos
+    setTimeout(() => {
+      setIsBlinking(false);
+    }, 3000);
+  };
+
   // Cargar datos iniciales
   useEffect(() => {
     if (session) {
@@ -261,10 +316,56 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Suscripción a tiempo real para mensajes nuevos
+  useEffect(() => {
+    if (!session) return;
+
+    const channel = supabase
+      .channel('chat-messages')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'chat_messages'
+        },
+        (payload) => {
+          const newMessage = payload.new as any;
+          
+          // Solo activar notificación si el mensaje no es del usuario actual
+          if (newMessage.sender_id !== userId) {
+            // Verificar si el mensaje pertenece a una conversación del usuario
+            const isRelevantMessage = conversations.some(conv => conv.id === newMessage.conversation_id);
+            
+            if (isRelevantMessage) {
+              triggerNotification();
+              
+              // Recargar conversaciones y mensajes si es la conversación activa
+              if (selectedConversation === newMessage.conversation_id) {
+                loadMessages(selectedConversation);
+              }
+              loadConversations();
+            }
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [session, conversations, selectedConversation, userId]);
+
   const toggleChat = () => {
     setIsOpen(!isOpen);
     if (!isOpen && session) {
       loadConversations();
+    }
+    
+    // Limpiar estado de notificación cuando se abre el chat
+    if (!isOpen) {
+      setHasNewMessage(false);
+      setIsBlinking(false);
     }
   };
 
@@ -280,7 +381,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante para abrir el chat */}
       <button
         onClick={toggleChat}
-        className="fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden"
+        className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden ${
+          isBlinking ? 'animate-pulse bg-blue-600' : ''
+        }`}
         aria-label="Abrir chat de soporte"
       >
         <div className="flex items-center justify-center">
