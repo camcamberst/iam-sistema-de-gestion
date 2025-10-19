@@ -46,6 +46,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   });
   const [isBlinking, setIsBlinking] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -200,6 +201,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     
     setIsLoading(true);
     try {
+      let conversationId = selectedConversation;
+      
+      // Si es una conversación temporal, crear la conversación real primero
+      if (selectedConversation.startsWith('temp_')) {
+        const userId = selectedConversation.replace('temp_', '');
+        const newConversationId = await createConversation(userId);
+        if (newConversationId) {
+          conversationId = newConversationId;
+          setSelectedConversation(newConversationId);
+          setTempChatUser(null); // Limpiar usuario temporal
+        } else {
+          console.error('Error creando conversación');
+          return;
+        }
+      }
+      
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
         headers: {
@@ -207,7 +224,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          conversation_id: selectedConversation,
+          conversation_id: conversationId,
           content: newMessage.trim()
         })
       });
@@ -216,7 +233,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (data.success) {
         setNewMessage('');
         // Recargar mensajes
-        await loadMessages(selectedConversation);
+        await loadMessages(conversationId);
         // Recargar conversaciones para actualizar último mensaje
         await loadConversations();
       }
@@ -227,7 +244,32 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   };
 
-  // Crear nueva conversación
+  // Abrir chat con usuario (sin crear conversación aún)
+  const openChatWithUser = async (userId: string) => {
+    if (!session) return;
+    
+    // Buscar si ya existe una conversación con este usuario
+    const existingConversation = conversations.find(conv => 
+      conv.other_participant.id === userId
+    );
+    
+    if (existingConversation) {
+      // Si ya existe conversación, abrirla
+      setShowUserList(false);
+      setSelectedConversation(existingConversation.id);
+      setTempChatUser(null); // Limpiar usuario temporal
+      await loadMessages(existingConversation.id);
+    } else {
+      // Si no existe, solo abrir la ventana de chat sin crear conversación
+      const user = availableUsers.find(u => u.id === userId);
+      setShowUserList(false);
+      setSelectedConversation(`temp_${userId}`); // ID temporal
+      setTempChatUser(user || null); // Almacenar usuario temporal
+      setMessages([]); // Sin mensajes aún
+    }
+  };
+
+  // Crear nueva conversación (solo cuando se envía el primer mensaje)
   const createConversation = async (userId: string) => {
     if (!session) return;
     
@@ -245,14 +287,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        setShowUserList(false);
-        setSelectedConversation(data.conversation.id);
-        await loadConversations();
-        await loadMessages(data.conversation.id);
+        return data.conversation.id; // Retornar el ID de la conversación
       }
     } catch (error) {
       console.error('Error creando conversación:', error);
     }
+    return null;
   };
 
   // Actualizar estado del usuario (en línea/offline)
@@ -414,6 +454,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (!isOpen) {
       setHasNewMessage(false);
       setIsBlinking(false);
+    } else {
+      // Limpiar usuario temporal al cerrar
+      setTempChatUser(null);
     }
   };
 
@@ -457,11 +500,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">AIM</span>
+                <span className="text-white font-bold text-sm">
+                  {tempChatUser ? tempChatUser.name.charAt(0).toUpperCase() : 'AIM'}
+                </span>
               </div>
               <div>
-                <h3 className="text-white font-semibold">AIM Assistant</h3>
-                <p className="text-gray-400 text-xs">Soporte y tips</p>
+                <h3 className="text-white font-semibold">
+                  {tempChatUser ? tempChatUser.name : 'AIM Assistant'}
+                </h3>
+                <p className="text-gray-400 text-xs">
+                  {tempChatUser ? tempChatUser.role : 'Soporte y tips'}
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -469,6 +518,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 onClick={() => {
                   setShowUserList(!showUserList);
                   setSelectedConversation(null);
+                  setTempChatUser(null);
                 }}
                 className="p-2 text-gray-400 hover:text-white transition-colors"
                 aria-label={showUserList ? "Ver conversaciones" : "Ver usuarios"}
@@ -524,7 +574,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                               .map((user) => (
                                 <button
                                   key={user.id}
-                                  onClick={() => createConversation(user.id)}
+                                  onClick={() => openChatWithUser(user.id)}
                                   className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors"
                                 >
                                   <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
@@ -567,7 +617,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                               .map((user) => (
                                 <button
                                   key={user.id}
-                                  onClick={() => createConversation(user.id)}
+                                  onClick={() => openChatWithUser(user.id)}
                                   className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors opacity-75"
                                 >
                                   <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
