@@ -574,7 +574,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Función para activar notificaciones (sonido + parpadeo + apertura automática)
   const triggerNotification = () => {
-    console.log('🔔 [ChatWidget] TRIGGER NOTIFICATION - Activando notificaciones...');
+    // Solo activar notificaciones si la ventana del chat está cerrada
+    if (isOpen) {
+      console.log('📂 [ChatWidget] Chat abierto - NO activando notificaciones');
+      return;
+    }
+    
+    console.log('🔔 [ChatWidget] TRIGGER NOTIFICATION - Activando notificaciones (chat cerrado)...');
     
     // Reproducir sonido
     console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
@@ -585,11 +591,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     setIsBlinking(true);
     setHasNewMessage(true);
     
-    // Abrir chat automáticamente si está cerrado
-    if (!isOpen) {
-      console.log('📂 [ChatWidget] Abriendo chat automáticamente...');
-      setIsOpen(true);
-    }
+    // Abrir chat automáticamente
+    console.log('📂 [ChatWidget] Abriendo chat automáticamente...');
+    setIsOpen(true);
     
     // Detener latido de corazón después de 6 segundos (4 ciclos de 1.5s)
     setTimeout(() => {
