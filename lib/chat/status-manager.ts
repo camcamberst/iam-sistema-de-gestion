@@ -51,25 +51,51 @@ export async function setUserOffline(userId: string): Promise<void> {
 }
 
 /**
- * 🧹 Limpiar estado de usuarios inactivos (más de 5 minutos)
+ * 🧹 Limpiar estado de usuarios inactivos (más de 2 minutos)
  * Función de mantenimiento para limpiar estados obsoletos
  */
 export async function cleanupInactiveUsers(): Promise<void> {
   try {
-    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     
-    const { error } = await supabase
+    const { error, count } = await supabase
       .from('chat_user_status')
       .update({ is_online: false })
-      .lt('updated_at', fiveMinutesAgo)
-      .eq('is_online', true);
+      .lt('updated_at', twoMinutesAgo)
+      .eq('is_online', true)
+      .select('*', { count: 'exact' });
 
     if (error) {
       console.error('❌ [CHAT-STATUS] Error limpiando usuarios inactivos:', error);
     } else {
-      console.log('✅ [CHAT-STATUS] Usuarios inactivos marcados como offline');
+      if (count && count > 0) {
+        console.log(`✅ [CHAT-STATUS] ${count} usuarios inactivos marcados como offline`);
+      }
     }
   } catch (error) {
     console.error('❌ [CHAT-STATUS] Error en limpieza:', error);
+  }
+}
+
+/**
+ * 💓 Actualizar heartbeat del usuario (mantener estado activo)
+ * @param userId - ID del usuario
+ */
+export async function updateUserHeartbeat(userId: string): Promise<void> {
+  try {
+    const { error } = await supabase
+      .from('chat_user_status')
+      .upsert({
+        user_id: userId,
+        is_online: true,
+        last_seen: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      });
+
+    if (error) {
+      console.error('❌ [CHAT-STATUS] Error actualizando heartbeat:', error);
+    }
+  } catch (error) {
+    console.error('❌ [CHAT-STATUS] Error en heartbeat:', error);
   }
 }

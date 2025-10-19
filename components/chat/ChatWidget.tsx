@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 
 interface ChatWidgetProps {
   userId?: string;
@@ -48,6 +49,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
+  const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Obtener sesión de Supabase
   useEffect(() => {
@@ -57,6 +59,71 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
     getSession();
   }, []);
+
+  // Sistema de heartbeat y detección de cierre de navegador
+  useEffect(() => {
+    if (!userId) return;
+
+    // Función para enviar heartbeat
+    const sendHeartbeat = async () => {
+      try {
+        await updateUserHeartbeat(userId);
+      } catch (error) {
+        console.error('❌ [ChatWidget] Error enviando heartbeat:', error);
+      }
+    };
+
+    // Enviar heartbeat inicial
+    sendHeartbeat();
+
+    // Configurar heartbeat cada 30 segundos
+    heartbeatIntervalRef.current = setInterval(sendHeartbeat, 30000);
+
+    // Detectar cierre de navegador/pestaña
+    const handleBeforeUnload = async () => {
+      try {
+        await setUserOffline(userId);
+      } catch (error) {
+        console.error('❌ [ChatWidget] Error marcando usuario offline:', error);
+      }
+    };
+
+    // Detectar pérdida de foco (usuario cambia de pestaña)
+    const handleVisibilityChange = async () => {
+      if (document.hidden) {
+        // Usuario cambió de pestaña, enviar heartbeat menos frecuente
+        if (heartbeatIntervalRef.current) {
+          clearInterval(heartbeatIntervalRef.current);
+        }
+        heartbeatIntervalRef.current = setInterval(sendHeartbeat, 60000); // 1 minuto
+      } else {
+        // Usuario volvió a la pestaña, heartbeat normal
+        if (heartbeatIntervalRef.current) {
+          clearInterval(heartbeatIntervalRef.current);
+        }
+        heartbeatIntervalRef.current = setInterval(sendHeartbeat, 30000); // 30 segundos
+        sendHeartbeat(); // Enviar inmediatamente
+      }
+    };
+
+    // Agregar event listeners
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    // Cleanup
+    return () => {
+      if (heartbeatIntervalRef.current) {
+        clearInterval(heartbeatIntervalRef.current);
+      }
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+      
+      // Marcar como offline al desmontar el componente
+      setUserOffline(userId).catch(error => {
+        console.error('❌ [ChatWidget] Error marcando usuario offline en cleanup:', error);
+      });
+    };
+  }, [userId]);
 
   // Cargar conversaciones
   const loadConversations = async () => {

@@ -1,12 +1,8 @@
 {
   "crons": [
     {
-      "path": "/api/admin/daily-earnings-maintenance",
-      "schedule": "0 2 * * *"
-    },
-    {
-      "path": "/api/cron/auto-close-calculator",
-      "schedule": "0 17 15,30 * *"
+      "path": "/api/cron/cleanup-chat",
+      "schedule": "*/2 * * * *"
     }
   ]
 }
