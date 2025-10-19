@@ -58,12 +58,19 @@ export async function cleanupInactiveUsers(): Promise<void> {
   try {
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     
-    const { error, count } = await supabase
+    // Primero obtener el conteo de usuarios que serán actualizados
+    const { count } = await supabase
+      .from('chat_user_status')
+      .select('*', { count: 'exact', head: true })
+      .lt('updated_at', twoMinutesAgo)
+      .eq('is_online', true);
+
+    // Luego actualizar los usuarios
+    const { error } = await supabase
       .from('chat_user_status')
       .update({ is_online: false })
       .lt('updated_at', twoMinutesAgo)
-      .eq('is_online', true)
-      .select('*', { count: 'exact', head: true });
+      .eq('is_online', true);
 
     if (error) {
       console.error('❌ [CHAT-STATUS] Error limpiando usuarios inactivos:', error);

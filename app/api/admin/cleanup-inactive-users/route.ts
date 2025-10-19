@@ -18,12 +18,19 @@ export async function POST(request: NextRequest) {
     // Limpiar usuarios inactivos (más de 2 minutos)
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     
-    const { error, count } = await supabaseAdmin
+    // Primero obtener el conteo de usuarios que serán actualizados
+    const { count } = await supabaseAdmin
+      .from('chat_user_status')
+      .select('*', { count: 'exact', head: true })
+      .lt('updated_at', twoMinutesAgo)
+      .eq('is_online', true);
+
+    // Luego actualizar los usuarios
+    const { error } = await supabaseAdmin
       .from('chat_user_status')
       .update({ is_online: false })
       .lt('updated_at', twoMinutesAgo)
-      .eq('is_online', true)
-      .select('*', { count: 'exact', head: true });
+      .eq('is_online', true);
 
     if (error) {
       console.error('❌ [ADMIN] Error limpiando usuarios inactivos:', error);
