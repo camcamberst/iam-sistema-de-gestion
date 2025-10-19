@@ -166,8 +166,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           hasNewMessage: unread > lastUnreadCount 
         });
         
-        // Si hay más mensajes no leídos que antes, activar notificación
-        if (unread > lastUnreadCount && lastUnreadCount > 0) {
+        // Si hay mensajes no leídos y el chat está cerrado, activar notificación
+        if (unread > 0 && !isOpen) {
           console.log('🔔 [ChatWidget] ¡NUEVO MENSAJE DETECTADO! Activando notificación...');
           triggerNotification();
         }
