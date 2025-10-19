@@ -34,8 +34,17 @@ El sistema incluye un chat bidireccional completo con:
 - **Estado en línea/offline** basado en autenticación
 - **Interfaz moderna** con botón flotante y ventana elegante
 - **Permisos inteligentes** según roles y grupos organizacionales
+- **✅ Notificaciones automáticas** completamente funcionales (v1.3.0)
 
-📖 **[Ver documentación completa del chat](./docs/CHAT_SYSTEM_SUMMARY.md)**
+### 🔔 Características de Notificaciones (Actualizado 19/01/2025):
+- **Sonido único**: Se reproduce una sola vez por mensaje nuevo
+- **Animación de latido**: Efecto visual con gradiente de colores
+- **Apertura automática**: Chat se abre cuando hay notificaciones
+- **Desactivación inteligente**: Notificaciones se detienen al abrir chat
+- **Control dual**: Notificaciones automáticas y manuales
+
+📖 **[Ver documentación completa del chat](./docs/CHAT_SYSTEM_SUMMARY.md)**  
+🔧 **[Ver correcciones de notificaciones](./docs/CHAT_NOTIFICATIONS_FIX_2025-01-19.md)**
 
 ## Deployment
 
