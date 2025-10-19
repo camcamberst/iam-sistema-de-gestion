@@ -574,6 +574,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Función para activar notificaciones (sonido + parpadeo + apertura automática)
   const triggerNotification = () => {
+    console.log('🔍 [ChatWidget] triggerNotification llamada - isOpen:', isOpen);
+    
     // Solo activar notificaciones si la ventana del chat está cerrada
     if (isOpen) {
       console.log('📂 [ChatWidget] Chat abierto - NO activando notificaciones');
@@ -759,13 +761,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   }, [conversations, selectedConversation]);
 
   const toggleChat = () => {
-    setIsOpen(!isOpen);
-    if (!isOpen && session) {
+    const newIsOpen = !isOpen;
+    setIsOpen(newIsOpen);
+    
+    if (newIsOpen && session) {
       loadConversations();
     }
     
     // Limpiar estado de notificación cuando se abre el chat
-    if (!isOpen) {
+    if (newIsOpen) {
       setHasNewMessage(false);
       setIsBlinking(false);
     } else {
