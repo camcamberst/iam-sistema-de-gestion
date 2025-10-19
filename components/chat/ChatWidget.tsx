@@ -150,14 +150,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const data = await response.json();
       if (data.success) {
         setConversations(data.conversations);
-        // Calcular mensajes no leídos
-        const unread = data.conversations.reduce((count: number, conv: any) => {
-          if (conv.last_message && conv.last_message.sender_id !== userId) {
-            return count + 1;
-          }
-          return count;
-        }, 0);
-        setUnreadCount(unread);
       }
     } catch (error) {
       console.error('Error cargando conversaciones:', error);
