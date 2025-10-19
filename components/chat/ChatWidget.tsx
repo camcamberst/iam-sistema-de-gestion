@@ -214,9 +214,38 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           return prev;
         });
         setSelectedConversation(conversationId);
+      } else {
+        console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
+        // Intentar diagnóstico si hay error
+        await diagnosePollingIssue(conversationId);
       }
     } catch (error) {
-      console.error('Error cargando mensajes:', error);
+      console.error('❌ [ChatWidget] Error cargando mensajes:', error);
+      // Intentar diagnóstico si hay error
+      await diagnosePollingIssue(conversationId);
+    }
+  };
+
+  // Función de diagnóstico para problemas de polling
+  const diagnosePollingIssue = async (conversationId: string) => {
+    if (!session) return;
+    
+    try {
+      console.log('🔍 [ChatWidget] Ejecutando diagnóstico de polling...');
+      const response = await fetch(`/api/chat/debug-polling?conversation_id=${conversationId}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+      
+      const data = await response.json();
+      if (data.success) {
+        console.log('✅ [ChatWidget] Diagnóstico exitoso:', data.debug);
+      } else {
+        console.error('❌ [ChatWidget] Diagnóstico falló:', data);
+      }
+    } catch (error) {
+      console.error('❌ [ChatWidget] Error en diagnóstico:', error);
     }
   };
 
