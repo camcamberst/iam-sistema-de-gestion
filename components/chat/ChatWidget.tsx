@@ -295,22 +295,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         };
         
         setMessages([infoMessage]);
-        setSelectedConversation(null);
+        // NO cerrar el chat - mantener abierto para que el usuario pueda seleccionar un usuario
+        setShowUserList(true); // Mostrar lista de usuarios para selección
         
       } else {
         // Si era una conversación temporal, simplemente limpiar
         console.log('🧹 [ChatWidget] Limpiando conversación temporal eliminada');
         setMessages([]);
         setTempChatUser(null);
-        setSelectedConversation(null);
+        // NO cerrar el chat - mantener abierto y mostrar lista de usuarios
+        setShowUserList(true);
       }
       
     } catch (error) {
       console.error('❌ [ChatWidget] Error manejando conversación eliminada:', error);
-      // En caso de error, limpiar todo
+      // En caso de error, limpiar todo pero mantener el chat abierto
       setMessages([]);
       setTempChatUser(null);
-      setSelectedConversation(null);
+      // NO cerrar el chat - mantener abierto para recuperación y mostrar lista de usuarios
+      setShowUserList(true);
     }
   };
 
