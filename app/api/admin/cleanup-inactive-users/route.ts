@@ -15,21 +15,21 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🧹 [ADMIN] Iniciando limpieza manual de usuarios inactivos...');
 
-    // Limpiar usuarios inactivos (más de 2 minutos)
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    // Limpiar usuarios inactivos (más de 1 minuto)
+    const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000).toISOString();
     
     // Primero obtener el conteo de usuarios que serán actualizados
     const { count } = await supabaseAdmin
       .from('chat_user_status')
       .select('*', { count: 'exact', head: true })
-      .lt('updated_at', twoMinutesAgo)
+      .lt('updated_at', oneMinuteAgo)
       .eq('is_online', true);
 
     // Luego actualizar los usuarios
     const { error } = await supabaseAdmin
       .from('chat_user_status')
       .update({ is_online: false })
-      .lt('updated_at', twoMinutesAgo)
+      .lt('updated_at', oneMinuteAgo)
       .eq('is_online', true);
 
     if (error) {
@@ -98,10 +98,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Obtener usuarios inactivos (más de 2 minutos)
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    // Obtener usuarios inactivos (más de 1 minuto)
+    const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000).toISOString();
     const inactiveUsers = allUsers?.filter(user => 
-      user.is_online && new Date(user.updated_at) < new Date(twoMinutesAgo)
+      user.is_online && new Date(user.updated_at) < new Date(oneMinuteAgo)
     ) || [];
 
     const stats = {

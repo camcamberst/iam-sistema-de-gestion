@@ -51,25 +51,25 @@ export async function setUserOffline(userId: string): Promise<void> {
 }
 
 /**
- * 🧹 Limpiar estado de usuarios inactivos (más de 2 minutos)
+ * 🧹 Limpiar estado de usuarios inactivos (más de 1 minuto)
  * Función de mantenimiento para limpiar estados obsoletos
  */
 export async function cleanupInactiveUsers(): Promise<void> {
   try {
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000).toISOString();
     
     // Primero obtener el conteo de usuarios que serán actualizados
     const { count } = await supabase
       .from('chat_user_status')
       .select('*', { count: 'exact', head: true })
-      .lt('updated_at', twoMinutesAgo)
+      .lt('updated_at', oneMinuteAgo)
       .eq('is_online', true);
 
     // Luego actualizar los usuarios
     const { error } = await supabase
       .from('chat_user_status')
       .update({ is_online: false })
-      .lt('updated_at', twoMinutesAgo)
+      .lt('updated_at', oneMinuteAgo)
       .eq('is_online', true);
 
     if (error) {
