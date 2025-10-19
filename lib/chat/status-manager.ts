@@ -63,7 +63,7 @@ export async function cleanupInactiveUsers(): Promise<void> {
       .update({ is_online: false })
       .lt('updated_at', twoMinutesAgo)
       .eq('is_online', true)
-      .select('*', { count: 'exact' });
+      .select('*', { count: 'exact', head: true });
 
     if (error) {
       console.error('❌ [CHAT-STATUS] Error limpiando usuarios inactivos:', error);

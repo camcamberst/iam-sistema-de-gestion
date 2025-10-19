@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       .update({ is_online: false })
       .lt('updated_at', twoMinutesAgo)
       .eq('is_online', true)
-      .select('*', { count: 'exact' });
+      .select('*', { count: 'exact', head: true });
 
     if (error) {
       console.error('❌ [ADMIN] Error limpiando usuarios inactivos:', error);
