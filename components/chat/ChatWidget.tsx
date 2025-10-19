@@ -46,6 +46,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [isBlinking, setIsBlinking] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [lastUnreadCount, setLastUnreadCount] = useState(0);
+  const [notificationTriggered, setNotificationTriggered] = useState(false);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   
@@ -166,27 +167,38 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           hasNewMessage: unread > lastUnreadCount 
         });
         
-        // Si hay mensajes no leídos y el chat está cerrado, activar notificación
-        if (unread > 0 && !isOpen) {
+        // Si hay mensajes no leídos y el chat está cerrado, activar notificación (solo una vez)
+        if (unread > 0 && !isOpen && !notificationTriggered) {
           console.log('🔔 [ChatWidget] ¡NUEVO MENSAJE DETECTADO! Activando notificación...');
+          setNotificationTriggered(true);
           triggerNotification();
         }
         
         // Detectar si hay un incremento en mensajes no leídos (nuevo mensaje)
-        if (unread > lastUnreadCount && lastUnreadCount >= 0) {
+        if (unread > lastUnreadCount && lastUnreadCount >= 0 && !notificationTriggered) {
           console.log('🔔 [ChatWidget] ¡INCREMENTO DE MENSAJES DETECTADO!', {
             unread,
             lastUnreadCount,
-            isOpen
+            isOpen,
+            notificationTriggered
           });
           
           // Solo activar notificación si el chat está cerrado
           if (!isOpen) {
             console.log('🔔 [ChatWidget] Chat cerrado - Activando notificación automática...');
+            setNotificationTriggered(true);
             triggerNotification();
           } else {
             console.log('🔔 [ChatWidget] Chat abierto - No activando notificación');
           }
+        }
+        
+        // Si el chat se abre, desactivar notificaciones
+        if (isOpen && notificationTriggered) {
+          console.log('🔔 [ChatWidget] Chat abierto - Desactivando notificaciones...');
+          setNotificationTriggered(false);
+          setIsBlinking(false);
+          setHasNewMessage(false);
         }
         
         setLastUnreadCount(unread);
@@ -833,6 +845,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (newIsOpen) {
       setHasNewMessage(false);
       setIsBlinking(false);
+      setNotificationTriggered(false);
+      console.log('🔔 [ChatWidget] Chat abierto - Desactivando todas las notificaciones');
     } else {
       // Limpiar usuario temporal al cerrar
       setTempChatUser(null);
