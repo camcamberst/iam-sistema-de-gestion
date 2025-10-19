@@ -692,7 +692,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             
             // Actualizar conversaciones para mostrar último mensaje
             console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
-            await loadConversations();
+            loadConversations();
             
             // Solo activar notificación si el mensaje no es del usuario actual
             if (newMessage.sender_id !== userId) {
