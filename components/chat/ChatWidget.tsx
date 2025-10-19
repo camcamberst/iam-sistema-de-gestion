@@ -210,20 +210,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !session) return;
     
+    console.log('📤 [ChatWidget] Enviando mensaje:', { 
+      content: newMessage.trim(), 
+      conversationId: selectedConversation,
+      userId 
+    });
+    
     setIsLoading(true);
     try {
       let conversationId = selectedConversation;
       
       // Si es una conversación temporal, crear la conversación real primero
       if (selectedConversation.startsWith('temp_')) {
+        console.log('🆕 [ChatWidget] Creando conversación temporal...');
         const userId = selectedConversation.replace('temp_', '');
         const newConversationId = await createConversation(userId);
         if (newConversationId) {
           conversationId = newConversationId;
           setSelectedConversation(newConversationId);
           setTempChatUser(null); // Limpiar usuario temporal
+          console.log('✅ [ChatWidget] Conversación creada:', newConversationId);
         } else {
-          console.error('Error creando conversación');
+          console.error('❌ [ChatWidget] Error creando conversación');
           return;
         }
       }
@@ -241,14 +249,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       });
       
       const data = await response.json();
+      console.log('📨 [ChatWidget] Respuesta del servidor:', data);
+      
       if (data.success) {
+        console.log('✅ [ChatWidget] Mensaje enviado exitosamente');
         setNewMessage('');
-        // El mensaje se agregará automáticamente via suscripción en tiempo real
-        // Solo actualizar conversaciones para mostrar último mensaje
+        
+        // Como fallback, si la suscripción no funciona, recargar mensajes
+        setTimeout(async () => {
+          console.log('🔄 [ChatWidget] Recargando mensajes como fallback...');
+          await loadMessages(conversationId);
+        }, 1000);
+        
+        // Actualizar conversaciones para mostrar último mensaje
         await loadConversations();
+      } else {
+        console.error('❌ [ChatWidget] Error en respuesta del servidor:', data);
       }
     } catch (error) {
-      console.error('Error enviando mensaje:', error);
+      console.error('❌ [ChatWidget] Error enviando mensaje:', error);
     } finally {
       setIsLoading(false);
     }
@@ -465,10 +484,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           const isRelevantMessage = conversations.some(conv => conv.id === newMessage.conversation_id);
           
           if (isRelevantMessage) {
+            console.log('✅ [ChatWidget] Mensaje relevante para el usuario');
+            
             // Si es la conversación activa, agregar el mensaje directamente
             if (selectedConversation === newMessage.conversation_id) {
               console.log('💬 [ChatWidget] Agregando mensaje a conversación activa');
-              setMessages(prev => [...prev, newMessage]);
+              setMessages(prev => {
+                // Verificar que el mensaje no esté ya en la lista
+                const messageExists = prev.some(msg => msg.id === newMessage.id);
+                if (messageExists) {
+                  console.log('⚠️ [ChatWidget] Mensaje ya existe en la lista, no agregando');
+                  return prev;
+                }
+                console.log('➕ [ChatWidget] Agregando nuevo mensaje a la lista');
+                return [...prev, newMessage];
+              });
             }
             
             // Actualizar conversaciones para mostrar último mensaje
@@ -478,7 +508,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             if (newMessage.sender_id !== userId) {
               console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario');
               triggerNotification();
+            } else {
+              console.log('👤 [ChatWidget] Mensaje del usuario actual, no notificando');
             }
+          } else {
+            console.log('❌ [ChatWidget] Mensaje no relevante para el usuario');
           }
         }
       )

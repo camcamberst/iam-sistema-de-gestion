@@ -152,6 +152,13 @@ export async function POST(request: NextRequest) {
     }
 
     // Crear mensaje
+    console.log('📤 [API] Creando mensaje:', {
+      conversation_id,
+      sender_id: user.id,
+      content: content.trim(),
+      message_type
+    });
+
     const { data: newMessage, error } = await supabase
       .from('chat_messages')
       .insert({
@@ -171,9 +178,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (error) {
-      console.error('Error creando mensaje:', error);
+      console.error('❌ [API] Error creando mensaje:', error);
       return NextResponse.json({ error: 'Error enviando mensaje' }, { status: 500 });
     }
+
+    console.log('✅ [API] Mensaje creado exitosamente:', newMessage);
 
     // Actualizar estado de usuario en línea
     await supabase
