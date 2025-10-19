@@ -216,6 +216,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         setSelectedConversation(conversationId);
       } else {
         console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
+        
+        // Si la conversación no existe (fue eliminada), limpiar estado
+        if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
+          console.log('🔄 [ChatWidget] Conversación eliminada durante carga de mensajes, limpiando estado...');
+          setSelectedConversation(null);
+          setMessages([]);
+          setTempChatUser(null);
+          await loadConversations(); // Recargar lista de conversaciones
+          return; // No hacer diagnóstico si la conversación no existe
+        }
+        
         // Intentar diagnóstico si hay error
         await diagnosePollingIssue(conversationId);
       }
@@ -308,6 +319,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         await loadConversations();
       } else {
         console.error('❌ [ChatWidget] Error en respuesta del servidor:', data);
+        
+        // Si la conversación no existe (fue eliminada), limpiar estado y permitir nueva conversación
+        if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
+          console.log('🔄 [ChatWidget] Conversación eliminada, limpiando estado...');
+          setSelectedConversation(null);
+          setMessages([]);
+          setTempChatUser(null);
+          await loadConversations(); // Recargar lista de conversaciones
+        }
       }
     } catch (error) {
       console.error('❌ [ChatWidget] Error enviando mensaje:', error);
@@ -381,17 +401,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        // Recargar conversaciones
+        console.log('🗑️ [ChatWidget] Conversación eliminada exitosamente');
+        
+        // Recargar conversaciones para actualizar la lista
         await loadConversations();
-        // Si la conversación eliminada estaba seleccionada, limpiar
+        
+        // Si la conversación eliminada estaba seleccionada, limpiar estado
         if (selectedConversation === conversationId) {
           setSelectedConversation(null);
           setMessages([]);
+          setTempChatUser(null); // Limpiar usuario temporal también
+          console.log('🧹 [ChatWidget] Estado de chat limpiado después de eliminación');
         }
+        
         setShowDeleteConfirm(null);
+      } else {
+        console.error('❌ [ChatWidget] Error eliminando conversación:', data.error);
       }
     } catch (error) {
-      console.error('Error eliminando conversación:', error);
+      console.error('❌ [ChatWidget] Error eliminando conversación:', error);
     }
   };
 
