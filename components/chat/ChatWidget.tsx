@@ -688,44 +688,60 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           schema: 'public',
           table: 'chat_messages'
         },
-        (payload) => {
+        async (payload) => {
           const newMessage = payload.new as any;
           console.log('📨 [ChatWidget] Nuevo mensaje recibido:', newMessage);
           
-          // Verificar si el mensaje pertenece a una conversación del usuario
-          const isRelevantMessage = conversations.some(conv => conv.id === newMessage.conversation_id);
-          
-          if (isRelevantMessage) {
-            console.log('✅ [ChatWidget] Mensaje relevante para el usuario');
+          // Verificar si el mensaje es para el usuario actual
+          // Hacer una consulta directa para verificar si el usuario es participante de la conversación
+          try {
+            const { data: conversation, error } = await supabase
+              .from('chat_conversations')
+              .select('participant_1_id, participant_2_id')
+              .eq('id', newMessage.conversation_id)
+              .single();
             
-            // Si es la conversación activa, agregar el mensaje directamente
-            if (selectedConversation === newMessage.conversation_id) {
-              console.log('💬 [ChatWidget] Agregando mensaje a conversación activa');
-              setMessages(prev => {
-                // Verificar que el mensaje no esté ya en la lista
-                const messageExists = prev.some(msg => msg.id === newMessage.id);
-                if (messageExists) {
-                  console.log('⚠️ [ChatWidget] Mensaje ya existe en la lista, no agregando');
-                  return prev;
-                }
-                console.log('➕ [ChatWidget] Agregando nuevo mensaje a la lista');
-                return [...prev, newMessage];
-              });
+            if (error || !conversation) {
+              console.log('❌ [ChatWidget] Error verificando conversación:', error);
+              return;
             }
             
-            // Actualizar conversaciones para mostrar último mensaje
-            console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
-            loadConversations();
+            const isParticipant = conversation.participant_1_id === userId || conversation.participant_2_id === userId;
             
-            // Solo activar notificación si el mensaje no es del usuario actual
-            if (newMessage.sender_id !== userId) {
-              console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario');
-              triggerNotification();
+            if (isParticipant) {
+              console.log('✅ [ChatWidget] Usuario es participante de la conversación');
+              
+              // Si es la conversación activa, agregar el mensaje directamente
+              if (selectedConversation === newMessage.conversation_id) {
+                console.log('💬 [ChatWidget] Agregando mensaje a conversación activa');
+                setMessages(prev => {
+                  // Verificar que el mensaje no esté ya en la lista
+                  const messageExists = prev.some(msg => msg.id === newMessage.id);
+                  if (messageExists) {
+                    console.log('⚠️ [ChatWidget] Mensaje ya existe en la lista, no agregando');
+                    return prev;
+                  }
+                  console.log('➕ [ChatWidget] Agregando nuevo mensaje a la lista');
+                  return [...prev, newMessage];
+                });
+              }
+              
+              // Actualizar conversaciones para mostrar último mensaje
+              console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
+              loadConversations();
+              
+              // Solo activar notificación si el mensaje no es del usuario actual
+              if (newMessage.sender_id !== userId) {
+                console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario');
+                triggerNotification();
+              } else {
+                console.log('👤 [ChatWidget] Mensaje del usuario actual, no notificando');
+              }
             } else {
-              console.log('👤 [ChatWidget] Mensaje del usuario actual, no notificando');
+              console.log('❌ [ChatWidget] Usuario no es participante de la conversación');
             }
-          } else {
-            console.log('❌ [ChatWidget] Mensaje no relevante para el usuario');
+          } catch (error) {
+            console.error('❌ [ChatWidget] Error en verificación de conversación:', error);
           }
         }
       )
