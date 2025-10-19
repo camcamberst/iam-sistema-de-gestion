@@ -198,7 +198,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        setMessages(data.messages);
+        // Solo actualizar si hay cambios en los mensajes
+        setMessages(prev => {
+          const newMessages = data.messages;
+          const hasChanges = prev.length !== newMessages.length || 
+            prev.some((msg, index) => !newMessages[index] || msg.id !== newMessages[index].id);
+          
+          if (hasChanges) {
+            console.log('📨 [ChatWidget] Mensajes actualizados:', { 
+              previous: prev.length, 
+              new: newMessages.length 
+            });
+            return newMessages;
+          }
+          return prev;
+        });
         setSelectedConversation(conversationId);
       }
     } catch (error) {
@@ -455,6 +469,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       clearInterval(usersUpdateInterval);
     };
   }, [session]);
+
+  // Polling de mensajes como respaldo al realtime (cada 3 segundos)
+  useEffect(() => {
+    if (!session || !selectedConversation) return;
+
+    console.log('🔄 [ChatWidget] Iniciando polling de mensajes como respaldo...');
+    
+    const messagesPollingInterval = setInterval(async () => {
+      console.log('🔄 [ChatWidget] Polling: verificando mensajes nuevos...');
+      await loadMessages(selectedConversation);
+    }, 3000); // Cada 3 segundos
+
+    // Cleanup
+    return () => {
+      console.log('🧹 [ChatWidget] Deteniendo polling de mensajes...');
+      clearInterval(messagesPollingInterval);
+    };
+  }, [session, selectedConversation]);
 
   // Auto-scroll a mensajes nuevos
   useEffect(() => {
