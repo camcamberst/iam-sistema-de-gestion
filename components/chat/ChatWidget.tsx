@@ -217,13 +217,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       } else {
         console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
         
-        // Si la conversación no existe (fue eliminada), limpiar estado
+        // Si la conversación no existe (fue eliminada), preparar para nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
-          console.log('🔄 [ChatWidget] Conversación eliminada durante carga de mensajes, limpiando estado...');
-          setMessages([]);
-          setTempChatUser(null);
-          // NO establecer selectedConversation a null para mantener la ventana de chat abierta
-          await loadConversations(); // Recargar lista de conversaciones
+          console.log('🔄 [ChatWidget] Conversación eliminada durante carga de mensajes, preparando nueva conversación...');
+          await handleConversationDeleted(conversationId);
           return; // No hacer diagnóstico si la conversación no existe
         }
         
@@ -234,6 +231,86 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       console.error('❌ [ChatWidget] Error cargando mensajes:', error);
       // Intentar diagnóstico si hay error
       await diagnosePollingIssue(conversationId);
+    }
+  };
+
+  // Manejar conversación eliminada - preparar para nueva conversación
+  const handleConversationDeleted = async (deletedConversationId: string) => {
+    if (!session) return;
+    
+    console.log('🔄 [ChatWidget] Manejando conversación eliminada:', deletedConversationId);
+    
+    try {
+      // Recargar conversaciones para obtener lista actualizada
+      await loadConversations();
+      
+      // Si la conversación eliminada era una conversación real (no temporal)
+      if (!deletedConversationId.startsWith('temp_')) {
+        console.log('💡 [ChatWidget] Conversación eliminada, preparando nueva conversación automáticamente');
+        
+        // Buscar el último mensaje para identificar al otro participante
+        // Esto nos ayudará a preparar automáticamente una nueva conversación
+        const lastMessage = messages[messages.length - 1];
+        
+        if (lastMessage && lastMessage.sender_id !== userId) {
+          // Encontrar al usuario con quien se estaba chateando
+          const otherUserId = lastMessage.sender_id;
+          const otherUser = availableUsers.find(u => u.id === otherUserId);
+          
+          if (otherUser) {
+            console.log('🎯 [ChatWidget] Usuario identificado para nueva conversación:', otherUser.name || otherUser.email);
+            
+            // Preparar automáticamente una nueva conversación con el mismo usuario
+            setTempChatUser(otherUser);
+            setSelectedConversation(`temp_${otherUserId}`);
+            setMessages([]);
+            
+            // Mostrar mensaje informativo
+            const infoMessage = {
+              id: `info_${Date.now()}`,
+              content: `💬 Conversación reiniciada con ${getDisplayName(otherUser)}. Puedes continuar chateando.`,
+              sender_id: 'system',
+              conversation_id: `temp_${otherUserId}`,
+              created_at: new Date().toISOString(),
+              is_system_message: true
+            };
+            
+            setMessages([infoMessage]);
+            return;
+          }
+        }
+        
+        // Si no pudimos identificar al usuario, mostrar mensaje genérico
+        console.log('⚠️ [ChatWidget] No se pudo identificar al usuario, mostrando mensaje genérico');
+        setMessages([]);
+        setTempChatUser(null);
+        
+        const infoMessage = {
+          id: `info_${Date.now()}`,
+          content: '💬 Esta conversación fue eliminada. Selecciona un usuario para iniciar una nueva conversación.',
+          sender_id: 'system',
+          conversation_id: deletedConversationId,
+          created_at: new Date().toISOString(),
+          is_system_message: true
+        };
+        
+        setMessages([infoMessage]);
+        setSelectedConversation(null);
+        
+      } else {
+        // Si era una conversación temporal, simplemente limpiar
+        console.log('🧹 [ChatWidget] Limpiando conversación temporal eliminada');
+        setMessages([]);
+        setTempChatUser(null);
+        setSelectedConversation(null);
+      }
+      
+    } catch (error) {
+      console.error('❌ [ChatWidget] Error manejando conversación eliminada:', error);
+      // En caso de error, limpiar todo
+      setMessages([]);
+      setTempChatUser(null);
+      setSelectedConversation(null);
     }
   };
 
@@ -320,13 +397,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       } else {
         console.error('❌ [ChatWidget] Error en respuesta del servidor:', data);
         
-        // Si la conversación no existe (fue eliminada), limpiar estado y permitir nueva conversación
+        // Si la conversación no existe (fue eliminada), preparar para nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
-          console.log('🔄 [ChatWidget] Conversación eliminada, limpiando estado...');
-          setMessages([]);
-          setTempChatUser(null);
-          // NO establecer selectedConversation a null para mantener la ventana de chat abierta
-          await loadConversations(); // Recargar lista de conversaciones
+          console.log('🔄 [ChatWidget] Conversación eliminada durante envío, preparando nueva conversación...');
+          await handleConversationDeleted(conversationId);
         }
       }
     } catch (error) {
@@ -874,25 +948,39 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             <>
               <div className="flex-1 overflow-y-auto p-4">
                 <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
-                    >
+                  {messages.map((message) => {
+                    // Mensaje del sistema
+                    if (message.is_system_message) {
+                      return (
+                        <div key={message.id} className="flex justify-center">
+                          <div className="max-w-[80%] p-2 rounded-lg bg-yellow-600/20 border border-yellow-600/30 text-yellow-200 text-center">
+                            <div className="text-sm">{message.content}</div>
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // Mensaje normal
+                    return (
                       <div
-                        className={`max-w-[80%] p-3 rounded-lg ${
-                          message.sender_id === userId
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-white'
-                        }`}
+                        key={message.id}
+                        className={`flex ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
                       >
-                        <div className="text-sm">{message.content}</div>
-                        <div className="text-xs opacity-70 mt-1">
-                          {new Date(message.created_at).toLocaleTimeString()}
+                        <div
+                          className={`max-w-[80%] p-3 rounded-lg ${
+                            message.sender_id === userId
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-white'
+                          }`}
+                        >
+                          <div className="text-sm">{message.content}</div>
+                          <div className="text-xs opacity-70 mt-1">
+                            {new Date(message.created_at).toLocaleTimeString()}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                   <div ref={messagesEndRef} />
                 </div>
               </div>
