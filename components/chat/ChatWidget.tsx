@@ -39,6 +39,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [showUserList, setShowUserList] = useState(true);
   const [unreadCount, setUnreadCount] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [expandedSections, setExpandedSections] = useState({
+    online: true,
+    offline: true
+  });
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -202,6 +206,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   };
 
+  // Toggle de secciones expandidas/contraídas
+  const toggleSection = (section: 'online' | 'offline') => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
   // Cargar datos iniciales
   useEffect(() => {
     if (session) {
@@ -332,72 +344,98 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             </div>
           </div>
 
-          {/* Lista de usuarios disponibles para chat */}
-          {showUserList && !selectedConversation && (
-            <div className="flex-1 overflow-y-auto p-4">
-              <h4 className="text-white text-sm font-medium mb-3">Usuarios disponibles</h4>
-              
-              {/* Usuarios en línea */}
-              <div className="mb-4">
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                  <span className="text-green-400 text-xs font-medium">En línea ({availableUsers.filter(u => u.is_online).length})</span>
-                </div>
-                <div className="space-y-2">
-                  {availableUsers
-                    .filter(user => user.is_online)
-                    .map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => createConversation(user.id)}
-                        className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                      >
-                        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="text-white text-sm font-medium">{user.name}</div>
-                          <div className="text-gray-400 text-xs">{user.role}</div>
-                        </div>
-                        <div className="w-2 h-2 bg-green-500 rounded-full" />
-                      </button>
-                    ))}
-                </div>
-              </div>
+                  {/* Lista de usuarios disponibles para chat */}
+                  {showUserList && !selectedConversation && (
+                    <div className="flex-1 overflow-y-auto p-4">
+                      <h4 className="text-white text-sm font-medium mb-3">Usuarios disponibles</h4>
+                      
+                      {/* Usuarios en línea */}
+                      <div className="mb-4">
+                        <button
+                          onClick={() => toggleSection('online')}
+                          className="flex items-center space-x-2 mb-2 w-full hover:bg-gray-700 rounded-lg p-1 transition-colors"
+                        >
+                          <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                          <span className="text-green-400 text-xs font-medium">En línea ({availableUsers.filter(u => u.is_online).length})</span>
+                          <svg 
+                            className={`w-3 h-3 text-green-400 transition-transform duration-200 ml-auto ${expandedSections.online ? 'rotate-180' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {expandedSections.online && (
+                          <div className="space-y-2">
+                            {availableUsers
+                              .filter(user => user.is_online)
+                              .map((user) => (
+                                <button
+                                  key={user.id}
+                                  onClick={() => createConversation(user.id)}
+                                  className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                                >
+                                  <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-xs font-medium">
+                                      {user.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div className="flex-1 text-left">
+                                    <div className="text-white text-sm font-medium">{user.name}</div>
+                                    <div className="text-gray-400 text-xs">{user.role}</div>
+                                  </div>
+                                  <div className="w-2 h-2 bg-green-500 rounded-full" />
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
 
-              {/* Usuarios offline */}
-              <div>
-                <div className="flex items-center space-x-2 mb-2">
-                  <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
-                  <span className="text-gray-400 text-xs font-medium">Offline ({availableUsers.filter(u => !u.is_online).length})</span>
-                </div>
-                <div className="space-y-2">
-                  {availableUsers
-                    .filter(user => !user.is_online)
-                    .map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => createConversation(user.id)}
-                        className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors opacity-75"
-                      >
-                        <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                          <span className="text-white text-xs font-medium">
-                            {user.name.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div className="flex-1 text-left">
-                          <div className="text-white text-sm font-medium">{user.name}</div>
-                          <div className="text-gray-400 text-xs">{user.role}</div>
-                        </div>
-                        <div className="w-2 h-2 bg-gray-500 rounded-full" />
-                      </button>
-                    ))}
-                </div>
-              </div>
-            </div>
-          )}
+                      {/* Usuarios offline */}
+                      <div>
+                        <button
+                          onClick={() => toggleSection('offline')}
+                          className="flex items-center space-x-2 mb-2 w-full hover:bg-gray-700 rounded-lg p-1 transition-colors"
+                        >
+                          <div className="w-2 h-2 bg-gray-500 rounded-full"></div>
+                          <span className="text-gray-400 text-xs font-medium">Offline ({availableUsers.filter(u => !u.is_online).length})</span>
+                          <svg 
+                            className={`w-3 h-3 text-gray-400 transition-transform duration-200 ml-auto ${expandedSections.offline ? 'rotate-180' : ''}`} 
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </button>
+                        {expandedSections.offline && (
+                          <div className="space-y-2">
+                            {availableUsers
+                              .filter(user => !user.is_online)
+                              .map((user) => (
+                                <button
+                                  key={user.id}
+                                  onClick={() => createConversation(user.id)}
+                                  className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors opacity-75"
+                                >
+                                  <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
+                                    <span className="text-white text-xs font-medium">
+                                      {user.name.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div className="flex-1 text-left">
+                                    <div className="text-white text-sm font-medium">{user.name}</div>
+                                    <div className="text-gray-400 text-xs">{user.role}</div>
+                                  </div>
+                                  <div className="w-2 h-2 bg-gray-500 rounded-full" />
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  )}
 
           {/* Lista de conversaciones */}
           {!showUserList && !selectedConversation && (
