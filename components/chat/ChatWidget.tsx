@@ -38,7 +38,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showUserList, setShowUserList] = useState(true);
-  const [unreadCount, setUnreadCount] = useState(0);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     online: true,
@@ -804,12 +803,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           <span className="text-white font-bold text-xs hidden group-hover:block whitespace-nowrap">AIM</span>
         </div>
         
-        {/* Contador de mensajes no leídos */}
-        {unreadCount > 0 && (
-          <div className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-            {unreadCount}
-          </div>
-        )}
       </button>
 
       {/* Ventana del chat */}
