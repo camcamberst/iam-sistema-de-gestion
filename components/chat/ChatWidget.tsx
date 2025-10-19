@@ -586,7 +586,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     
     // Reproducir sonido
     console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
-    playNotificationSound();
+    try {
+      playNotificationSound();
+      console.log('✅ [ChatWidget] Sonido iniciado correctamente');
+    } catch (error) {
+      console.error('❌ [ChatWidget] Error reproduciendo sonido:', error);
+    }
     
     // Activar parpadeo
     console.log('💫 [ChatWidget] Activando parpadeo del botón...');
@@ -790,10 +795,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante para abrir el chat */}
       <button
         onClick={toggleChat}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          console.log('🧪 [ChatWidget] Prueba manual de notificación');
+          triggerNotification();
+        }}
         className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden ${
           isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600' : ''
         }`}
-        aria-label="Abrir chat de soporte"
+        aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
       >
         <div className="flex items-center justify-center">
           {/* Versión miniatura - solo "A" */}
