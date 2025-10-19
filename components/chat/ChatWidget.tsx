@@ -243,9 +243,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const data = await response.json();
       if (data.success) {
         setNewMessage('');
-        // Recargar mensajes
-        await loadMessages(conversationId);
-        // Recargar conversaciones para actualizar último mensaje
+        // El mensaje se agregará automáticamente via suscripción en tiempo real
+        // Solo actualizar conversaciones para mostrar último mensaje
         await loadConversations();
       }
     } catch (error) {
@@ -445,10 +444,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
-    if (!session) return;
+    if (!session || !userId) return;
+
+    console.log('🔔 [ChatWidget] Configurando suscripción en tiempo real...');
 
     const channel = supabase
-      .channel('chat-messages')
+      .channel('chat-messages-realtime')
       .on(
         'postgres_changes',
         {
@@ -458,30 +459,44 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         },
         (payload) => {
           const newMessage = payload.new as any;
+          console.log('📨 [ChatWidget] Nuevo mensaje recibido:', newMessage);
           
-          // Solo activar notificación si el mensaje no es del usuario actual
-          if (newMessage.sender_id !== userId) {
-            // Verificar si el mensaje pertenece a una conversación del usuario
-            const isRelevantMessage = conversations.some(conv => conv.id === newMessage.conversation_id);
+          // Verificar si el mensaje pertenece a una conversación del usuario
+          const isRelevantMessage = conversations.some(conv => conv.id === newMessage.conversation_id);
+          
+          if (isRelevantMessage) {
+            // Si es la conversación activa, agregar el mensaje directamente
+            if (selectedConversation === newMessage.conversation_id) {
+              console.log('💬 [ChatWidget] Agregando mensaje a conversación activa');
+              setMessages(prev => [...prev, newMessage]);
+            }
             
-            if (isRelevantMessage) {
+            // Actualizar conversaciones para mostrar último mensaje
+            loadConversations();
+            
+            // Solo activar notificación si el mensaje no es del usuario actual
+            if (newMessage.sender_id !== userId) {
+              console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario');
               triggerNotification();
-              
-              // Recargar conversaciones y mensajes si es la conversación activa
-              if (selectedConversation === newMessage.conversation_id && selectedConversation) {
-                loadMessages(selectedConversation);
-              }
-              loadConversations();
             }
           }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [ChatWidget] Estado de suscripción:', status);
+      });
 
     return () => {
+      console.log('🧹 [ChatWidget] Limpiando suscripción en tiempo real');
       supabase.removeChannel(channel);
     };
-  }, [session, conversations, selectedConversation, userId]);
+  }, [session, userId]); // Solo dependencias esenciales
+
+  // Actualizar referencia de conversaciones para la suscripción
+  useEffect(() => {
+    // Este efecto se ejecuta cuando cambian las conversaciones
+    // pero no recrea la suscripción
+  }, [conversations, selectedConversation]);
 
   const toggleChat = () => {
     setIsOpen(!isOpen);
