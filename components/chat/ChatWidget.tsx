@@ -209,6 +209,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               previous: prev.length, 
               new: newMessages.length 
             });
+            
+            // Verificar si hay mensajes nuevos de otros usuarios
+            if (newMessages.length > prev.length) {
+              const latestMessage = newMessages[newMessages.length - 1];
+              if (latestMessage && latestMessage.sender_id !== userId) {
+                console.log('🔔 [ChatWidget] Nuevo mensaje detectado via polling, activando notificación...');
+                triggerNotification();
+              }
+            }
+            
             return newMessages;
           }
           return prev;
@@ -536,6 +546,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Función para reproducir sonido de notificación "N Dinámico"
   const playNotificationSound = () => {
     try {
+      console.log('🎵 [ChatWidget] Iniciando reproducción de sonido...');
       const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioContext.createOscillator();
       const gainNode = audioContext.createGain();
@@ -549,6 +560,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const frequencies = [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200];
       const duration = 0.5;
       
+      console.log('🎼 [ChatWidget] Configurando frecuencias:', frequencies);
+      
       frequencies.forEach((freq, index) => {
         const time = audioContext.currentTime + (index / frequencies.length) * duration;
         oscillator.frequency.setValueAtTime(freq, time);
@@ -561,27 +574,35 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       oscillator.start(audioContext.currentTime);
       oscillator.stop(audioContext.currentTime + duration);
+      
+      console.log('✅ [ChatWidget] Sonido de notificación reproducido exitosamente');
     } catch (error) {
-      console.error('Error reproduciendo sonido de notificación:', error);
+      console.error('❌ [ChatWidget] Error reproduciendo sonido de notificación:', error);
     }
   };
 
   // Función para activar notificaciones (sonido + parpadeo + apertura automática)
   const triggerNotification = () => {
+    console.log('🔔 [ChatWidget] TRIGGER NOTIFICATION - Activando notificaciones...');
+    
     // Reproducir sonido
+    console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
     playNotificationSound();
     
     // Activar parpadeo
+    console.log('💫 [ChatWidget] Activando parpadeo del botón...');
     setIsBlinking(true);
     setHasNewMessage(true);
     
     // Abrir chat automáticamente si está cerrado
     if (!isOpen) {
+      console.log('📂 [ChatWidget] Abriendo chat automáticamente...');
       setIsOpen(true);
     }
     
     // Detener parpadeo después de 3 segundos
     setTimeout(() => {
+      console.log('⏹️ [ChatWidget] Deteniendo parpadeo...');
       setIsBlinking(false);
     }, 3000);
   };
