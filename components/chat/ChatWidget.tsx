@@ -274,40 +274,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (session) {
       loadConversations();
       loadAvailableUsers();
-      updateUserStatus(true); // Marcar como en línea al cargar
     }
   }, [session]);
 
-  // Sistema de heartbeat para mantener estado en línea
+  // Actualizar lista de usuarios cada 10 segundos para ver cambios de estado
   useEffect(() => {
     if (!session) return;
 
-    // Actualizar estado como en línea inmediatamente
-    updateUserStatus(true);
-
-    // Configurar heartbeat cada 30 segundos
-    const heartbeatInterval = setInterval(() => {
-      updateUserStatus(true);
-    }, 30000);
-
-    // Actualizar lista de usuarios cada 10 segundos para ver cambios de estado
+    // Actualizar lista de usuarios cada 10 segundos
     const usersUpdateInterval = setInterval(() => {
       loadAvailableUsers();
     }, 10000);
 
-    // Marcar como offline cuando se cierre la ventana/pestaña
-    const handleBeforeUnload = () => {
-      updateUserStatus(false);
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-
     // Cleanup
     return () => {
-      clearInterval(heartbeatInterval);
       clearInterval(usersUpdateInterval);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      updateUserStatus(false);
     };
   }, [session]);
 

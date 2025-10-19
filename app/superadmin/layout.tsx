@@ -4,6 +4,7 @@ import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from '@/lib/supabase';
+import { modernLogout } from '@/lib/auth-modern';
 import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function SuperAdminLayout({ children }: { children: ReactNode }) {
@@ -371,7 +372,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                         <div className="pt-3 border-t border-gray-700">
                           <button
                             onClick={async () => {
-                              await supabase.auth.signOut();
+                              await modernLogout();
                               setUserInfo(null);
                               location.href = '/';
                             }}

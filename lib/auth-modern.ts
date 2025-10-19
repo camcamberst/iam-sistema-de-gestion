@@ -6,6 +6,7 @@
 // =====================================================
 
 import { supabase } from './supabase';
+import { setUserOnline, setUserOffline } from './chat/status-manager';
 import { User } from '@supabase/supabase-js';
 
 export interface AuthUser {
@@ -143,6 +144,15 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
       groups: user.groups.length
     });
 
+    // 🚀 Marcar usuario como en línea en el chat
+    try {
+      await setUserOnline(user.id);
+      console.log('📊 [AUTH] Usuario marcado como en línea en el chat');
+    } catch (error) {
+      console.error('❌ [AUTH] Error marcando usuario como en línea:', error);
+      // No fallar el login por este error
+    }
+
     return {
       success: true,
       user
@@ -162,9 +172,24 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
  */
 export async function modernLogout(): Promise<void> {
   try {
+    // Obtener usuario actual antes del logout
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    // Hacer logout de Supabase
     const { error } = await supabase.auth.signOut();
     if (error) {
       console.error('❌ [AUTH] Error en logout:', error.message);
+    }
+
+    // 🚪 Marcar usuario como offline en el chat
+    if (user) {
+      try {
+        await setUserOffline(user.id);
+        console.log('📊 [AUTH] Usuario marcado como offline en el chat');
+      } catch (error) {
+        console.error('❌ [AUTH] Error marcando usuario como offline:', error);
+        // No fallar el logout por este error
+      }
     }
   } catch (error) {
     console.error('❌ [AUTH] Error general en logout:', error);

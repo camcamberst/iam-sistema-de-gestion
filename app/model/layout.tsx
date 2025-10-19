@@ -7,6 +7,7 @@ import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { supabase } from '@/lib/supabase';
+import { modernLogout } from '@/lib/auth-modern';
 import ChatWidget from '@/components/chat/ChatWidget';
 
 export default function ModelLayout({ children }: { children: ReactNode }) {
@@ -336,7 +337,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                         <div className="pt-3 border-t border-gray-700">
                           <button
                             onClick={async () => {
-                              await supabase.auth.signOut();
+                              await modernLogout();
                               setUserInfo(null);
                               location.href = '/';
                             }}
