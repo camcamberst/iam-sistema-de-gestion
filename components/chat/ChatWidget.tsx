@@ -341,7 +341,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               triggerNotification();
               
               // Recargar conversaciones y mensajes si es la conversación activa
-              if (selectedConversation === newMessage.conversation_id) {
+              if (selectedConversation === newMessage.conversation_id && selectedConversation) {
                 loadMessages(selectedConversation);
               }
               loadConversations();
