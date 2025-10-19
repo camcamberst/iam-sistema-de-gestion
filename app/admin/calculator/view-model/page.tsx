@@ -393,8 +393,8 @@ export default function AdminViewModelPage() {
     console.log('🔍 [VALUE-CHANGE] Platform:', platformId, 'Value:', value);
     setEditValues(prev => {
       const newValues = {
-        ...prev,
-        [platformId]: value
+      ...prev,
+      [platformId]: value
       };
       console.log('🔍 [VALUE-CHANGE] Updated editValues:', newValues);
       return newValues;
@@ -480,7 +480,7 @@ export default function AdminViewModelPage() {
       Object.entries(editValues).forEach(([platformId, value]) => {
         const numericValue = Number.parseFloat(value) || 0;
         // 🔧 FIX: Guardar todos los valores, incluyendo 0
-        valuesToSave[platformId] = numericValue;
+          valuesToSave[platformId] = numericValue;
       });
 
       console.log('🔍 [ADMIN-EDIT] Saving values:', valuesToSave);
@@ -505,7 +505,7 @@ export default function AdminViewModelPage() {
       }
 
       console.log('✅ [ADMIN-EDIT] Values saved successfully');
-
+      
       // 🔧 FIX: Limpiar estado de edición ANTES de recargar
       setEditValues({});
       setHasChanges(false);
@@ -555,19 +555,19 @@ export default function AdminViewModelPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
         <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
-          <div className="text-center">
+        <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
             <p className="text-red-600 mb-4 text-sm">{error}</p>
-            <button 
-              onClick={() => window.location.reload()}
+          <button 
+            onClick={() => window.location.reload()}
               className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
-            >
-              Reintentar
-            </button>
+          >
+            Reintentar
+          </button>
           </div>
         </div>
       </div>
@@ -578,19 +578,19 @@ export default function AdminViewModelPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
         <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
-          <div className="text-center">
+        <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
             <p className="text-red-600 mb-4 text-sm">No tienes permisos para acceder a esta función</p>
-            <button 
-              onClick={() => router.push('/admin/dashboard')}
+          <button 
+            onClick={() => router.push('/admin/dashboard')}
               className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
-            >
-              Volver al Dashboard
-            </button>
+          >
+            Volver al Dashboard
+          </button>
           </div>
         </div>
       </div>
@@ -617,16 +617,16 @@ export default function AdminViewModelPage() {
             </div>
             
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900 mb-1">
-                  Calculadora de {selectedModel.name}
-                </h1>
-                <p className="text-gray-500 text-sm">
-                  {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
-                </p>
-              </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+                Calculadora de {selectedModel.name}
+              </h1>
+              <p className="text-gray-500 text-sm">
+                {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
+              </p>
+            </div>
 
-              {/* Footer actions */}
+            {/* Footer actions */}
               <div className="flex justify-end gap-3">
                 <button
                   onClick={syncTotals}
@@ -639,18 +639,18 @@ export default function AdminViewModelPage() {
                 >
                   {syncingTotals ? 'Sincronizando...' : 'Sincronizar Totales'}
                 </button>
-                <button
-                  onClick={handleSave}
-                  disabled={saving || !hasChanges}
-                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
-                    hasChanges && !saving
-                      ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
-                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                  }`}
-                >
-                  {saving ? 'Guardando...' : 'Guardar'}
-                </button>
-              </div>
+              <button
+                onClick={handleSave}
+                disabled={saving || !hasChanges}
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                  hasChanges && !saving
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
+                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {saving ? 'Guardando...' : 'Guardar'}
+              </button>
+            </div>
             </div>
           </div>
 
@@ -829,13 +829,13 @@ export default function AdminViewModelPage() {
                 // 🔧 OPTIMIZACIÓN: Calcular todos los totales en una sola iteración
                 const rates = selectedModel.calculatorData.rates;
                 const totals = selectedModel.calculatorData.platforms.reduce((acc: any, platform: any) => {
-                  const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
-                    v.platform_id === platform.id || v.platform === platform.name
-                  )?.value || 0;
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                            v.platform_id === platform.id || v.platform === platform.name
+                          )?.value || 0;
                   
                   // Calcular USD bruto con fórmulas específicas por plataforma
-                  let usdBruto = 0;
-                  if (platform.currency === 'EUR') {
+                          let usdBruto = 0;
+                          if (platform.currency === 'EUR') {
                     if (platform.id === 'big7') {
                       usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (platform.id === 'mondo') {
@@ -843,7 +843,7 @@ export default function AdminViewModelPage() {
                     } else {
                       usdBruto = currentValue * (rates?.eur_usd || 1.01);
                     }
-                  } else if (platform.currency === 'GBP') {
+                          } else if (platform.currency === 'GBP') {
                     if (platform.id === 'aw') {
                       usdBruto = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
                     } else {
@@ -860,14 +860,14 @@ export default function AdminViewModelPage() {
                       usdBruto = currentValue * 0.5;
                     } else if (platform.id === 'superfoon') {
                       usdBruto = currentValue;
-                    } else {
-                      usdBruto = currentValue;
-                    }
+                          } else {
+                            usdBruto = currentValue;
+                          }
                   }
                   
                   // Calcular USD modelo con fórmulas específicas
-                  let usdModelo = 0;
-                  if (platform.currency === 'EUR') {
+                          let usdModelo = 0;
+                          if (platform.currency === 'EUR') {
                     if (platform.id === 'big7') {
                       usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
                     } else if (platform.id === 'mondo') {
@@ -877,7 +877,7 @@ export default function AdminViewModelPage() {
                     } else {
                       usdModelo = currentValue * (rates?.eur_usd || 1.01);
                     }
-                  } else if (platform.currency === 'GBP') {
+                          } else if (platform.currency === 'GBP') {
                     if (platform.id === 'aw') {
                       usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
                     } else {
@@ -892,9 +892,9 @@ export default function AdminViewModelPage() {
                       usdModelo = currentValue * 0.60;
                     } else if (platform.id === 'secretfriends') {
                       usdModelo = currentValue * 0.5;
-                    } else {
-                      usdModelo = currentValue;
-                    }
+                          } else {
+                            usdModelo = currentValue;
+                          }
                   }
                   
                   // SUPERFOON: Aplicar 100% para la modelo (especial)
@@ -927,24 +927,24 @@ export default function AdminViewModelPage() {
                       <div className="text-center p-3 bg-green-50 rounded-md">
                         <div className="text-xl font-bold text-green-600 mb-1">
                           ${totals.usdModelo.toFixed(2)}
-                        </div>
-                        <div className="text-xs text-gray-600">USD Modelo</div>
                       </div>
-                      <div className="text-center p-3 bg-purple-50 rounded-md">
-                        <div className="text-xl font-bold text-purple-600 mb-1">
-                          ${totals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                        </div>
-                        <div className="text-xs text-gray-600">COP Modelo</div>
-                      </div>
+                      <div className="text-xs text-gray-600">USD Modelo</div>
                     </div>
-                    
-                    {/* 90% de anticipo - OPTIMIZADO */}
-                    <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                      <div className="text-sm text-gray-600">
-                        <strong>90% de anticipo disponible:</strong> ${(totals.copModelo * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                    <div className="text-center p-3 bg-purple-50 rounded-md">
+                      <div className="text-xl font-bold text-purple-600 mb-1">
+                          ${totals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                       </div>
+                      <div className="text-xs text-gray-600">COP Modelo</div>
                     </div>
                   </div>
+                  
+                    {/* 90% de anticipo - OPTIMIZADO */}
+                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                    <div className="text-sm text-gray-600">
+                        <strong>90% de anticipo disponible:</strong> ${(totals.copModelo * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                    </div>
+                  </div>
+                </div>
                 );
               })()}
             </div>
@@ -1034,14 +1034,14 @@ export default function AdminViewModelPage() {
                     </svg>
                   </button>
                 )}
-              </div>
+                </div>
               {nameFilter && (
                 <div className="mt-2 text-xs text-blue-600">
                   🔍 Filtrando por: "{nameFilter}" - {models.length} resultado{models.length !== 1 ? 's' : ''}
                 </div>
               )}
-            </div>
-
+              </div>
+              
             {/* Selección de Modelo */}
             <div>
               <h2 className="text-base font-semibold text-gray-900 mb-3">Seleccionar Modelo</h2>
@@ -1094,7 +1094,7 @@ export default function AdminViewModelPage() {
               {models.length === 0 && (
                 <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
                   <div className="text-gray-400 mb-2 text-2xl">👥</div>
-                  <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 mb-2">
                     {nameFilter || selectedGroup !== 'all' 
                       ? 'No se encontraron modelos con los filtros aplicados' 
                       : 'No hay modelos disponibles'
@@ -1115,8 +1115,8 @@ export default function AdminViewModelPage() {
                   )}
                 </div>
               )}
-            </div>
-
+              </div>
+              
             {/* Información de resultados */}
             <div className="p-3 bg-gray-50 rounded-lg">
               <p className="text-xs text-gray-600">
@@ -1132,8 +1132,8 @@ export default function AdminViewModelPage() {
                   Búsqueda: "{nameFilter}"
                 </p>
               )}
+              </div>
             </div>
-          </div>
         </div>
 
         {/* Panel derecho: Información adicional o vacío */}
@@ -1155,16 +1155,16 @@ export default function AdminViewModelPage() {
                 </p>
               </div>
             ) : (
-              <div className="text-center py-12">
+          <div className="text-center py-12">
                 <div className="text-gray-400 mb-4 text-4xl">👈</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
                   Selecciona un modelo
-                </h3>
-                <p className="text-gray-600">
+            </h3>
+            <p className="text-gray-600">
                   Usa los filtros de la izquierda para encontrar y seleccionar un modelo
-                </p>
-              </div>
-            )}
+            </p>
+          </div>
+        )}
           </div>
         </div>
         </div>

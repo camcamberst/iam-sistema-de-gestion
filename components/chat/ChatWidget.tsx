@@ -529,14 +529,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">
-                  {tempChatUser ? tempChatUser.name.charAt(0).toUpperCase() : 'AIM'}
-                </span>
+                 <span className="text-white font-bold text-sm">
+                   {tempChatUser ? getDisplayName(tempChatUser).charAt(0).toUpperCase() : 'AIM'}
+                 </span>
               </div>
               <div>
-                <h3 className="text-white font-semibold">
-                  {tempChatUser ? tempChatUser.name : 'AIM Assistant'}
-                </h3>
+                 <h3 className="text-white font-semibold">
+                   {tempChatUser ? getDisplayName(tempChatUser) : 'AIM Assistant'}
+                 </h3>
                 <p className="text-gray-400 text-xs">
                   {tempChatUser ? tempChatUser.role : 'Soporte y tips'}
                 </p>
@@ -607,12 +607,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                                   className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors"
                                 >
                                   <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                    <span className="text-white text-xs font-medium">
-                                      {user.name.charAt(0).toUpperCase()}
-                                    </span>
+                                     <span className="text-white text-xs font-medium">
+                                       {getDisplayName(user).charAt(0).toUpperCase()}
+                                     </span>
                                   </div>
                                   <div className="flex-1 text-left">
-                                    <div className="text-white text-sm font-medium">{user.name}</div>
+                                     <div className="text-white text-sm font-medium">{getDisplayName(user)}</div>
                                     <div className="text-gray-400 text-xs">{user.role}</div>
                                   </div>
                                   <div className="w-2 h-2 bg-green-500 rounded-full" />
@@ -650,12 +650,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                                   className="w-full flex items-center space-x-3 p-2 hover:bg-gray-700 rounded-lg transition-colors opacity-75"
                                 >
                                   <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center">
-                                    <span className="text-white text-xs font-medium">
-                                      {user.name.charAt(0).toUpperCase()}
-                                    </span>
+                                     <span className="text-white text-xs font-medium">
+                                       {getDisplayName(user).charAt(0).toUpperCase()}
+                                     </span>
                                   </div>
                                   <div className="flex-1 text-left">
-                                    <div className="text-white text-sm font-medium">{user.name}</div>
+                                     <div className="text-white text-sm font-medium">{getDisplayName(user)}</div>
                                     <div className="text-gray-400 text-xs">{user.role}</div>
                                   </div>
                                   <div className="w-2 h-2 bg-gray-500 rounded-full" />
@@ -682,14 +682,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                       className="flex-1 flex items-center space-x-2 min-w-0"
                     >
                       <div className="w-8 h-8 bg-gray-600 rounded-full flex items-center justify-center flex-shrink-0">
-                        <span className="text-white text-xs font-medium">
-                          {conversation.other_participant.name.charAt(0).toUpperCase()}
-                        </span>
+                         <span className="text-white text-xs font-medium">
+                           {getDisplayName(conversation.other_participant).charAt(0).toUpperCase()}
+                         </span>
                       </div>
                       <div className="flex-1 text-left min-w-0">
-                        <div className="text-white text-sm font-medium truncate">
-                          {conversation.other_participant.name}
-                        </div>
+                         <div className="text-white text-sm font-medium truncate">
+                           {getDisplayName(conversation.other_participant)}
+                         </div>
                         <div className="text-gray-400 text-xs truncate">
                           {conversation.last_message?.content || 'Sin mensajes'}
                         </div>
