@@ -172,6 +172,23 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           triggerNotification();
         }
         
+        // Detectar si hay un incremento en mensajes no leídos (nuevo mensaje)
+        if (unread > lastUnreadCount && lastUnreadCount >= 0) {
+          console.log('🔔 [ChatWidget] ¡INCREMENTO DE MENSAJES DETECTADO!', {
+            unread,
+            lastUnreadCount,
+            isOpen
+          });
+          
+          // Solo activar notificación si el chat está cerrado
+          if (!isOpen) {
+            console.log('🔔 [ChatWidget] Chat cerrado - Activando notificación automática...');
+            triggerNotification();
+          } else {
+            console.log('🔔 [ChatWidget] Chat abierto - No activando notificación');
+          }
+        }
+        
         setLastUnreadCount(unread);
       }
     } catch (error) {
