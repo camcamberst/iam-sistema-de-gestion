@@ -220,9 +220,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Si la conversación no existe (fue eliminada), limpiar estado
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
           console.log('🔄 [ChatWidget] Conversación eliminada durante carga de mensajes, limpiando estado...');
-          setSelectedConversation(null);
           setMessages([]);
           setTempChatUser(null);
+          // NO establecer selectedConversation a null para mantener la ventana de chat abierta
           await loadConversations(); // Recargar lista de conversaciones
           return; // No hacer diagnóstico si la conversación no existe
         }
@@ -323,9 +323,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Si la conversación no existe (fue eliminada), limpiar estado y permitir nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
           console.log('🔄 [ChatWidget] Conversación eliminada, limpiando estado...');
-          setSelectedConversation(null);
           setMessages([]);
           setTempChatUser(null);
+          // NO establecer selectedConversation a null para mantener la ventana de chat abierta
           await loadConversations(); // Recargar lista de conversaciones
         }
       }
@@ -340,6 +340,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const openChatWithUser = async (userId: string) => {
     if (!session) return;
     
+    console.log('💬 [ChatWidget] Abriendo chat con usuario:', userId);
+    
     // Buscar si ya existe una conversación con este usuario
     const existingConversation = conversations.find(conv => 
       conv.other_participant.id === userId
@@ -347,17 +349,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     
     if (existingConversation) {
       // Si ya existe conversación, abrirla
+      console.log('📂 [ChatWidget] Conversación existente encontrada:', existingConversation.id);
       setShowUserList(false);
       setSelectedConversation(existingConversation.id);
       setTempChatUser(null); // Limpiar usuario temporal
       await loadMessages(existingConversation.id);
     } else {
-      // Si no existe, solo abrir la ventana de chat sin crear conversación
+      // Si no existe, abrir la ventana de chat para nueva conversación
       const user = availableUsers.find(u => u.id === userId);
+      console.log('🆕 [ChatWidget] Iniciando nueva conversación con:', user?.name || user?.email);
       setShowUserList(false);
       setSelectedConversation(`temp_${userId}`); // ID temporal
       setTempChatUser(user || null); // Almacenar usuario temporal
       setMessages([]); // Sin mensajes aún
+      // Mantener la ventana de chat abierta para permitir escribir el primer mensaje
     }
   };
 
