@@ -627,6 +627,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, [session, selectedConversation]);
 
+  // Polling de conversaciones como respaldo al realtime (cada 5 segundos)
+  useEffect(() => {
+    if (!session) return;
+
+    console.log('🔄 [ChatWidget] Iniciando polling de conversaciones como respaldo...');
+    
+    const conversationsPollingInterval = setInterval(async () => {
+      console.log('🔄 [ChatWidget] Polling: verificando conversaciones actualizadas...');
+      await loadConversations();
+    }, 5000); // Cada 5 segundos
+
+    // Cleanup
+    return () => {
+      console.log('🧹 [ChatWidget] Deteniendo polling de conversaciones...');
+      clearInterval(conversationsPollingInterval);
+    };
+  }, [session]);
+
   // Auto-scroll a mensajes nuevos
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -673,7 +691,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             }
             
             // Actualizar conversaciones para mostrar último mensaje
-            loadConversations();
+            console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
+            await loadConversations();
             
             // Solo activar notificación si el mensaje no es del usuario actual
             if (newMessage.sender_id !== userId) {
@@ -684,6 +703,26 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             }
           } else {
             console.log('❌ [ChatWidget] Mensaje no relevante para el usuario');
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'chat_conversations'
+        },
+        (payload) => {
+          const updatedConversation = payload.new as any;
+          console.log('🔄 [ChatWidget] Conversación actualizada:', updatedConversation);
+          
+          // Verificar si la conversación actualizada pertenece al usuario
+          const isRelevantConversation = conversations.some(conv => conv.id === updatedConversation.id);
+          
+          if (isRelevantConversation) {
+            console.log('✅ [ChatWidget] Conversación relevante actualizada, recargando lista...');
+            loadConversations();
           }
         }
       )
