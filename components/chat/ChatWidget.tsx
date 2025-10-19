@@ -45,6 +45,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   });
   const [isBlinking, setIsBlinking] = useState(false);
   const [hasNewMessage, setHasNewMessage] = useState(false);
+  const [lastUnreadCount, setLastUnreadCount] = useState(0);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   
@@ -150,6 +151,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const data = await response.json();
       if (data.success) {
         setConversations(data.conversations);
+        
+        // 🔔 LÓGICA RESTAURADA: Detectar mensajes no leídos (como funcionaba el círculo rojo)
+        const unread = data.conversations.reduce((count: number, conv: any) => {
+          if (conv.last_message && conv.last_message.sender_id !== userId) {
+            return count + 1;
+          }
+          return count;
+        }, 0);
+        
+        console.log('📊 [ChatWidget] Mensajes no leídos detectados:', { 
+          unread, 
+          lastUnreadCount, 
+          hasNewMessage: unread > lastUnreadCount 
+        });
+        
+        // Si hay más mensajes no leídos que antes, activar notificación
+        if (unread > lastUnreadCount && lastUnreadCount > 0) {
+          console.log('🔔 [ChatWidget] ¡NUEVO MENSAJE DETECTADO! Activando notificación...');
+          triggerNotification();
+        }
+        
+        setLastUnreadCount(unread);
       }
     } catch (error) {
       console.error('Error cargando conversaciones:', error);
