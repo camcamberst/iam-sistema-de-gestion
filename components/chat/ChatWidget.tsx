@@ -53,6 +53,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [session, setSession] = useState<any>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
+  // Función helper para obtener el nombre de visualización
+  const getDisplayName = (user: User) => {
+    if (user.role === 'modelo') {
+      // Para modelos, mostrar solo la parte antes del @ del email
+      return user.email.split('@')[0];
+    }
+    // Para otros roles, mostrar el nombre completo
+    return user.name;
+  };
+
   // Obtener sesión de Supabase
   useEffect(() => {
     const getSession = async () => {
