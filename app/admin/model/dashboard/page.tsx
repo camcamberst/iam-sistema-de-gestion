@@ -302,7 +302,7 @@ export default function ModelDashboard() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold theme-text-primary">
-                    Mi Dashboard
+                    Mi Dashboard - Actualizado
                   </h1>
                   {user && (
                     <p className="mt-1 text-sm theme-text-secondary">
