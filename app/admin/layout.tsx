@@ -9,6 +9,7 @@ import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { supabase } from '@/lib/supabase';
 import { modernLogout } from '@/lib/auth-modern';
 import ChatWidget from '@/components/chat/ChatWidget';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -577,6 +578,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </button>
+              
+              {/* Theme Toggle */}
+              <ThemeToggle />
               {/* User Button */}
               <div className="relative" ref={userPanelRef}>
                 <button

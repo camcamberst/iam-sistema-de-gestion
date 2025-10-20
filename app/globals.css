@@ -2,6 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Variables CSS para temas */
+:root {
+  /* Tema claro (default) */
+  --bg-primary: #ffffff;
+  --bg-secondary: #f8fafc;
+  --bg-tertiary: #f1f5f9;
+  --bg-gradient-start: #f8fafc;
+  --bg-gradient-middle: #dbeafe;
+  --bg-gradient-end: #e0e7ff;
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --text-tertiary: #94a3b8;
+  --border-primary: #e2e8f0;
+  --border-secondary: #cbd5e1;
+  --shadow-primary: rgba(0, 0, 0, 0.1);
+  --shadow-secondary: rgba(0, 0, 0, 0.05);
+  --card-bg: rgba(255, 255, 255, 0.8);
+  --card-border: rgba(255, 255, 255, 0.2);
+  --accent-primary: #3b82f6;
+  --accent-secondary: #6366f1;
+}
+
+.dark {
+  /* Tema oscuro */
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
+  --bg-gradient-start: #0f172a;
+  --bg-gradient-middle: #1e293b;
+  --bg-gradient-end: #334155;
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-tertiary: #94a3b8;
+  --border-primary: #334155;
+  --border-secondary: #475569;
+  --shadow-primary: rgba(0, 0, 0, 0.3);
+  --shadow-secondary: rgba(0, 0, 0, 0.2);
+  --card-bg: rgba(30, 41, 59, 0.8);
+  --card-border: rgba(51, 65, 85, 0.3);
+  --accent-primary: #60a5fa;
+  --accent-secondary: #818cf8;
+}
+
+/* Aplicar variables a elementos base */
+body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Clases utilitarias para temas */
+.theme-bg-primary {
+  background-color: var(--bg-primary);
+}
+
+.theme-bg-secondary {
+  background-color: var(--bg-secondary);
+}
+
+.theme-bg-gradient {
+  background: linear-gradient(to bottom right, var(--bg-gradient-start), var(--bg-gradient-middle), var(--bg-gradient-end));
+}
+
+.theme-text-primary {
+  color: var(--text-primary);
+}
+
+.theme-text-secondary {
+  color: var(--text-secondary);
+}
+
+.theme-card {
+  background-color: var(--card-bg);
+  border-color: var(--card-border);
+}
+
+.theme-border {
+  border-color: var(--border-primary);
+}
+
+.theme-shadow {
+  box-shadow: 0 4px 6px -1px var(--shadow-primary), 0 2px 4px -1px var(--shadow-secondary);
+}
+
 /* Animaciones personalizadas para el dashboard */
 @keyframes fadeIn {
   from {
@@ -17,7 +101,7 @@
 @keyframes slideUp {
   from {
     opacity: 0;
-    transform: translateY(30px);
+    transform: translateY(20px);
   }
   to {
     opacity: 1;
@@ -26,40 +110,13 @@
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.6s ease-out forwards;
+  animation: fadeIn 0.6s ease-out;
 }
 
 .animate-fade-in-delay {
-  animation: fadeIn 0.6s ease-out 0.2s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delay-1 {
-  animation: fadeIn 0.6s ease-out 0.4s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delay-2 {
-  animation: fadeIn 0.6s ease-out 0.6s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delay-3 {
-  animation: fadeIn 0.6s ease-out 0.8s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delay-4 {
-  animation: fadeIn 0.6s ease-out 1.0s forwards;
-  opacity: 0;
-}
-
-.animate-fade-in-delay-5 {
-  animation: fadeIn 0.6s ease-out 1.2s forwards;
-  opacity: 0;
+  animation: fadeIn 0.6s ease-out 0.2s both;
 }
 
 .animate-slide-up {
-  animation: slideUp 0.8s ease-out 0.3s forwards;
-  opacity: 0;
+  animation: slideUp 0.6s ease-out;
 }
