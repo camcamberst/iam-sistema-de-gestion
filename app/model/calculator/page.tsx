@@ -947,10 +947,10 @@ export default function ModelCalculatorPage() {
               <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-800/50 backdrop-blur-sm">
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wide">PLATAFORMAS</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wide">VALORES</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wide">DÓLARES</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-gray-200 text-xs uppercase tracking-wide">COP MODELO</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-600 dark:text-gray-200 text-xs uppercase tracking-wide">PLATAFORMAS</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-600 dark:text-gray-200 text-xs uppercase tracking-wide">VALORES</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-600 dark:text-gray-200 text-xs uppercase tracking-wide">DÓLARES</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-600 dark:text-gray-200 text-xs uppercase tracking-wide">COP MODELO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1017,7 +1017,7 @@ export default function ModelCalculatorPage() {
                     return (
                       <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-700">
                         <td className="py-3 px-3">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
+                          <div className="font-medium text-gray-800 dark:text-gray-100 text-sm">{platform.name}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                           </div>
@@ -1070,12 +1070,12 @@ export default function ModelCalculatorPage() {
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                          <div className="text-gray-700 dark:text-gray-300 font-medium text-sm">
                             ${usdModelo.toFixed(2)} USD
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                          <div className="text-gray-700 dark:text-gray-300 font-medium text-sm">
                             ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                           </div>
                         </td>
