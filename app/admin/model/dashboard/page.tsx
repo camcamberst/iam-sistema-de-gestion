@@ -335,21 +335,21 @@ export default function ModelDashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
-                  <div className="text-xs theme-text-secondary">Ganancias Hoy</div>
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/40 text-center border border-blue-200/30 dark:border-blue-700/30">
+                  <div className="text-xs text-gray-600 dark:text-blue-200">Ganancias Hoy</div>
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-300">
                     {productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-center">
-                  <div className="text-xs theme-text-secondary">USD Modelo (hoy)</div>
-                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/40 text-center border border-green-200/30 dark:border-green-700/30">
+                  <div className="text-xs text-gray-600 dark:text-green-200">USD Modelo (hoy)</div>
+                  <div className="text-lg font-bold text-green-600 dark:text-green-300">
                     {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center">
-                  <div className="text-xs theme-text-secondary">COP Modelo (hoy)</div>
-                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/40 text-center border border-purple-200/30 dark:border-purple-700/30">
+                  <div className="text-xs text-gray-600 dark:text-purple-200">COP Modelo (hoy)</div>
+                  <div className="text-lg font-bold text-purple-600 dark:text-purple-300">
                     {productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
                   </div>
                 </div>
