@@ -200,8 +200,8 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/admin/model/dashboard" className="flex items-center space-x-3 group">
-                <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black rounded-xl flex items-center justify-center shadow-md border border-white/20 group-hover:shadow-lg transition-all duration-300">
-                  <span className="text-white font-bold text-sm tracking-wider">AIM</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300">
+                  <span className="text-white dark:text-gray-900 font-bold text-sm tracking-wider">AIM</span>
                 </div>
                 <div className="flex flex-col">
                   <span className="text-lg font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">Sistema de Gestión</span>
