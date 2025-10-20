@@ -12,6 +12,7 @@ import {
   getDefaultGroups,
   type CurrentUser 
 } from '../../../lib/hierarchy';
+import { supabase } from '../../../lib/supabase';
 import AppleSearchBar from '../../../components/AppleSearchBar';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 
@@ -60,22 +61,63 @@ export default function UsersListPage() {
     try {
       setLoading(true);
       
-      // Cargar usuarios y grupos con cliente autenticado
+      // Cargar usuario actual primero
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setError('Usuario no autenticado');
+        return;
+      }
+
+      // Obtener datos del usuario actual
+      const { data: currentUserData } = await supabase
+        .from('users')
+        .select('role, groups')
+        .eq('id', user.id)
+        .single();
+
+      if (!currentUserData) {
+        setError('Error obteniendo datos del usuario');
+        return;
+      }
+
+      setCurrentUser({
+        id: user.id,
+        role: currentUserData.role,
+        groups: currentUserData.groups || []
+      });
+      
+      // Cargar usuarios y grupos
       const [usersData, groupsData] = await Promise.all([
         getUsers(),
         getGroups()
       ]);
 
       if (usersData.success) {
-        setUsers(usersData.users);
-        setFilteredUsers([]); // Inicialmente vacío, solo mostrar con filtros
+        // Aplicar filtros de jerarquía
+        let filteredUsers = usersData.users;
         
-        // Obtener usuario actual para jerarquía (simular super_admin por ahora)
-        setCurrentUser({
-          id: 'temp-super-admin',
-          role: 'super_admin',
-          groups: groupsData.success ? groupsData.groups.map((g: any) => ({ id: g.id, name: g.name })) : []
-        });
+        if (currentUserData.role === 'admin') {
+          // Admin solo puede ver usuarios de sus grupos
+          const userGroups = currentUserData.groups || [];
+          filteredUsers = usersData.users.filter((user: any) => {
+            // Super admin puede ver todos
+            if (user.role === 'super_admin') return false;
+            
+            // Admin puede ver otros admins y modelos
+            if (user.role === 'admin' || user.role === 'modelo') {
+              // Si el usuario tiene grupos, debe tener al menos uno en común
+              if (user.groups && user.groups.length > 0) {
+                return user.groups.some((groupId: string) => userGroups.includes(groupId));
+              }
+              return false;
+            }
+            
+            return false;
+          });
+        }
+        
+        setUsers(filteredUsers);
+        setFilteredUsers([]); // Inicialmente vacío, solo mostrar con filtros
       } else {
         setError('Error cargando usuarios: ' + usersData.error);
       }

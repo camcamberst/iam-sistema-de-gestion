@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import { supabase } from '@/lib/supabase';
 
 export default function CreateUserPage() {
   const router = useRouter();
@@ -23,6 +24,7 @@ export default function CreateUserPage() {
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [currentUser, setCurrentUser] = useState<{role: string, groups: string[]} | null>(null);
 
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
@@ -42,9 +44,28 @@ export default function CreateUserPage() {
   const selectedGroupName = groups.find(g => g.id === form.groups[0])?.name || '';
 
   useEffect(() => {
-    const loadGroups = async () => {
+    const loadUserAndGroups = async () => {
       try {
         setLoadingGroups(true);
+        
+        // Cargar usuario actual
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('role, groups')
+            .eq('id', user.id)
+            .single();
+          
+          if (userData) {
+            setCurrentUser({
+              role: userData.role,
+              groups: userData.groups || []
+            });
+          }
+        }
+
+        // Cargar grupos
         const res = await fetch('/api/groups');
         const data = await res.json();
         if (data.success) setGroups(data.groups);
@@ -52,7 +73,7 @@ export default function CreateUserPage() {
         setLoadingGroups(false);
       }
     };
-    loadGroups();
+    loadUserAndGroups();
   }, []);
 
   // Función para cargar rooms por grupo
@@ -237,11 +258,22 @@ export default function CreateUserPage() {
           <label className="text-sm font-medium text-gray-700 self-center">Rol</label>
           <div>
             <AppleDropdown
-              options={[
-                { value: 'modelo', label: 'Modelo' },
-                { value: 'admin', label: 'Admin' },
-                { value: 'super_admin', label: 'Super Admin' }
-              ]}
+              options={(() => {
+                const allRoles = [
+                  { value: 'modelo', label: 'Modelo' },
+                  { value: 'admin', label: 'Admin' },
+                  { value: 'super_admin', label: 'Super Admin' }
+                ];
+                
+                // Aplicar límites de jerarquía
+                if (currentUser?.role === 'admin') {
+                  // Admin solo puede crear 'modelo' y 'admin'
+                  return allRoles.filter(role => role.value !== 'super_admin');
+                }
+                
+                // Super admin puede crear todos los roles
+                return allRoles;
+              })()}
               value={form.role}
               onChange={(value) => setForm({ ...form, role: value as any })}
               placeholder="Selecciona un rol"
@@ -272,11 +304,16 @@ export default function CreateUserPage() {
                     const isSelected = form.groups.includes(g.id);
                     const isSingleRole = form.role === 'modelo';
                     const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
+                    
+                    // Aplicar límites de jerarquía para grupos
+                    const canAssignGroup = currentUser?.role === 'super_admin' || 
+                      (currentUser?.role === 'admin' && currentUser?.groups.includes(g.id));
+                    
                     return (
                       <button
                         key={g.id}
                         type="button"
-                        disabled={isDisabled}
+                        disabled={isDisabled || !canAssignGroup}
                         onClick={() => {
                           if (isSingleRole) {
                             setForm({ ...form, groups: isSelected ? [] : [g.id] });
@@ -290,7 +327,7 @@ export default function CreateUserPage() {
                             });
                           }
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 flex items-center gap-2 ${isDisabled ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'}`}
+                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 flex items-center gap-2 ${isDisabled || !canAssignGroup ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'}`}
                       >
                         <span
                           aria-hidden
