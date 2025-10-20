@@ -288,18 +288,44 @@ export default function ModelDashboard() {
 
   return (
     <div className="min-h-screen theme-bg-gradient">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-semibold theme-text-primary mb-2 animate-fade-in">Mi Dashboard</h1>
-        {user && (
-          <p className="theme-text-secondary mb-6 text-sm animate-fade-in-delay">
-            Bienvenida, {user.name} · Rol: {String(user.role).replace('_',' ')}
-            {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
-          </p>
-        )}
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+        {/* Header */}
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl dark:from-blue-400/20 dark:to-indigo-400/20"></div>
+            <div className="relative theme-card backdrop-blur-sm rounded-xl p-6 theme-border theme-shadow">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold theme-text-primary">
+                    Mi Dashboard
+                  </h1>
+                  {user && (
+                    <p className="mt-1 text-sm theme-text-secondary">
+                      Bienvenida, {user.name} · Rol: {String(user.role).replace('_',' ')}
+                      {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Resumen de productividad y progreso de meta */}
-        <div className="theme-card rounded-xl theme-shadow theme-border p-6 transition-all duration-300 hover:shadow-md hover:scale-[1.01] animate-slide-up">
-          <h2 className="text-lg font-semibold theme-text-primary mb-4">Resumen de Productividad</h2>
+        <div className="relative theme-card backdrop-blur-sm rounded-xl theme-shadow theme-border p-6">
+          <div className="flex items-center space-x-2 mb-4">
+            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            </div>
+            <h2 className="text-base font-semibold theme-text-primary">Resumen de Productividad</h2>
+          </div>
           
           {productivityLoading ? (
             <div className="text-center py-4">
@@ -308,150 +334,41 @@ export default function ModelDashboard() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center transition-all duration-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:scale-105 hover:shadow-md animate-fade-in-delay-1">
-                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1 transition-colors duration-300">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
+                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
+                  <div className="text-xs theme-text-secondary">Ganancias Hoy</div>
+                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
                     {productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-sm theme-text-secondary">Ganancias Hoy</div>
                 </div>
-                <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-center transition-all duration-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:scale-105 hover:shadow-md animate-fade-in-delay-2">
-                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1 transition-colors duration-300">
+                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-center">
+                  <div className="text-xs theme-text-secondary">USD Modelo (hoy)</div>
+                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
                     {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-sm theme-text-secondary">USD Modelo (hoy)</div>
                 </div>
-                <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center transition-all duration-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 hover:shadow-md animate-fade-in-delay-3">
-                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1 transition-colors duration-300">
-                    {productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
+                <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center">
+                  <div className="text-xs theme-text-secondary">COP Modelo (hoy)</div>
+                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                    {productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
                   </div>
-                  <div className="text-sm theme-text-secondary">COP Modelo (hoy)</div>
                 </div>
               </div>
 
-              {/* Barra de alcance de meta - Copia exacta de Mi Calculadora */}
-              <div className="mt-4 animate-fade-in-delay-4">
-                {(() => {
-                  if (!productivityData) return null;
-                  
-                  const totalUsdBruto = productivityData.usdBruto;
-                  const cuotaMinima = productivityData.goalUsd;
-                  const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
-                  const estaPorDebajo = totalUsdBruto < cuotaMinima;
-                  
-                  // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
-                  const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
-                  
-                  // Paleta: Rojo -> Púrpura -> Esmeralda (sin amarillos)
-                  const RED = { r: 229, g: 57, b: 53 };     // #E53935
-                  const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
-                  const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
-
-                  const mix = (a: any, b: any, t: number) => ({
-                    r: Math.round(a.r + (b.r - a.r) * t),
-                    g: Math.round(a.g + (b.g - a.g) * t),
-                    b: Math.round(a.b + (b.b - a.b) * t)
-                  });
-
-                  const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
-                  const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
-                  const rgbToHex = (color: any) => 
-                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
-
-                  const t = progressPct / 100;
-                  // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
-                  const base = t <= 0.6
-                    ? mix(RED, PURPLE, t / 0.6)
-                    : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
-
-                  const progressStart = rgbToHex(shade(base, 0.05));
-                  const progressEnd = rgbToHex(shade(base, 0.15));
-                  const cardBgStart = rgbToHex(tint(base, 0.92));
-                  const cardBgEnd = rgbToHex(tint(base, 0.88));
-                  const cardBorder = rgbToHex(tint(base, 0.7));
-                  const iconStart = rgbToHex(shade(base, 0.0));
-                  const iconEnd = rgbToHex(shade(base, 0.2));
-                  const headingColor = rgbToHex(shade(base, 0.55));
-                  const subTextColor = rgbToHex(shade(base, 0.45));
-
-                  const milestone = progressPct >= 100 ? 100 : progressPct >= 75 ? 75 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
-
-                  return (
-                    <div
-                      className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
-                      style={{
-                        background: `linear-gradient(135deg, ${cardBgStart}, ${cardBgEnd})`,
-                        borderColor: cardBorder,
-                        boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)`
-                      }}
-                    >
-                      {/* Efecto de brillo animado */}
-                      <div
-                        className="absolute inset-0 opacity-10 animate-pulse"
-                        style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
-                      ></div>
-
-                      <div className="relative p-4">
-                        <div className="flex items-center space-x-3">
-                          {/* Icono animado */}
-                          <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
-                            <div
-                              className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md`}
-                              style={{
-                                background: `linear-gradient(135deg, ${iconStart}, ${iconEnd})`
-                              }}
-                            >
-                              <span className="text-white text-sm">✓</span>
-                            </div>
-                          </div>
-                          
-                          {/* Contenido compacto */}
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <div className={`font-bold text-sm`} style={{ color: headingColor }}>
-                                {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
-                              </div>
-                              {(() => {
-                                const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                                const remainingPct = Math.max(0, 100 - roundedProgress);
-                                return (
-                                  <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
-                                    {estaPorDebajo
-                                      ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
-                                      : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                            
-                            {/* Mensaje de progreso por hito */}
-                            {(() => {
-                              const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                              return <ProgressMilestone progress={roundedProgress} />;
-                            })()}
-                            
-                            {/* Barra de progreso compacta */}
-              <div className="mt-2">
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div 
-                                  className={`h-full transition-all duration-1000 ease-out`}
-                                  style={{ 
-                                    width: `${Math.min(porcentajeAlcanzado, 100)}%`,
-                                    background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
-                                  }}
-                  ></div>
+              {/* Barra de alcance de meta (compacta) */}
+              <div className="mt-4">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-xs font-medium theme-text-primary">Objetivo Básico</span>
+                  <span className="text-xs theme-text-secondary">${productivityData ? productivityData.usdBruto.toFixed(0) : '—'} / ${productivityData ? productivityData.goalUsd.toFixed(0) : '—'} USD</span>
                 </div>
-                            </div>
-                          </div>
-                        </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                  <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" style={{ width: `${productivityData ? Math.min(100, (productivityData.usdBruto / productivityData.goalUsd) * 100).toFixed(0) : 0}%` }}></div>
                 </div>
-                    </div>
-                  );
-                })()}
+                <div className="text-right text-xs theme-text-secondary mt-1">{productivityData ? Math.min(100, (productivityData.usdBruto / productivityData.goalUsd) * 100).toFixed(0) : 0}%</div>
               </div>
 
-              <div className="mt-4 text-sm theme-text-secondary animate-fade-in-delay-5">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors duration-300 hover:scale-105 inline-block">Mi Calculadora</a>.
+              <div className="mt-4 text-xs theme-text-secondary">
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
               </div>
             </>
           )}
