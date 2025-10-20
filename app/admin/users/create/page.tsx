@@ -144,16 +144,16 @@ export default function CreateUserPage() {
   }
 
   return (
-    <div className="min-h-screen theme-bg-gradient flex items-start justify-center p-4 pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-start justify-center p-4 pt-16">
       <div className="w-full max-w-4xl">
-        <div className="relative theme-card backdrop-blur-sm rounded-xl theme-shadow theme-border p-6">
+        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold theme-text-primary">Crear Usuario</h1>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Crear Usuario</h1>
           </div>
         
         {/* Mensajes de error y éxito */}
@@ -192,17 +192,17 @@ export default function CreateUserPage() {
         )}
         
         <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr] items-start">
-          <label className="text-sm font-medium theme-text-secondary self-center">Nombre</label>
+          <label className="text-sm font-medium text-gray-700 self-center">Nombre</label>
           <input
             placeholder="Nombre"
             value={form.name}
             onChange={e=>setForm({...form, name:e.target.value})}
             required
             autoComplete="name"
-            className="w-full px-3 py-2 text-sm theme-border rounded-lg theme-bg-secondary backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-sm font-medium theme-text-secondary self-center">Correo electrónico</label>
+          <label className="text-sm font-medium text-gray-700 self-center">Correo electrónico</label>
           <input
             placeholder="Correo electrónico"
             type="email"
@@ -210,10 +210,10 @@ export default function CreateUserPage() {
             onChange={e=>setForm({...form, email:e.target.value})}
             required
             autoComplete="email"
-            className="w-full px-3 py-2 text-sm theme-border rounded-lg theme-bg-secondary backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-sm font-medium theme-text-secondary self-center">Contraseña</label>
+          <label className="text-sm font-medium text-gray-700 self-center">Contraseña</label>
           <div className="relative">
             <input
               placeholder="Contraseña"
@@ -234,7 +234,7 @@ export default function CreateUserPage() {
             </button>
           </div>
 
-          <label className="text-sm font-medium theme-text-secondary self-center">Rol</label>
+          <label className="text-sm font-medium text-gray-700 self-center">Rol</label>
           <div>
             <AppleDropdown
               options={[

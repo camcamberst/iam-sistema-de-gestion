@@ -256,23 +256,23 @@ export default function UsersListPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen theme-bg-gradient flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 theme-text-secondary">Cargando usuarios...</p>
+          <p className="mt-4 text-gray-600">Cargando usuarios...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen theme-bg-gradient">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl dark:from-blue-400/20 dark:to-indigo-400/20"></div>
-            <div className="relative theme-card backdrop-blur-sm rounded-xl p-6 theme-border theme-shadow">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -281,10 +281,10 @@ export default function UsersListPage() {
                     </svg>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold theme-text-primary">
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                       Gestión de Usuarios
                     </h1>
-                    <p className="mt-1 text-sm theme-text-secondary">Administra usuarios del sistema</p>
+                    <p className="mt-1 text-sm text-gray-600">Administra usuarios del sistema</p>
                   </div>
                 </div>
 
