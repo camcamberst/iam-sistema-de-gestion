@@ -3,6 +3,8 @@
 // =====================================================
 // Solo maneja: Nombre, Email, Rol, Grupos
 // Sin complejidades que causen errores
+
+export const dynamic = 'force-dynamic';
 // =====================================================
 
 import { NextRequest, NextResponse } from 'next/server';
