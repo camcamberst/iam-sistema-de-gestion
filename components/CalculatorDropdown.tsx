@@ -91,7 +91,7 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
                       ? 'bg-blue-50/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-medium shadow-sm border border-blue-200/30 dark:border-blue-700/30'
-                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-sm'
+                      : 'text-gray-900 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
