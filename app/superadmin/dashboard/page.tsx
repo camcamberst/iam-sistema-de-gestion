@@ -76,13 +76,13 @@ export default function SuperAdminDashboard() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen theme-bg-gradient">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl dark:from-blue-400/20 dark:to-indigo-400/20"></div>
+            <div className="relative theme-card backdrop-blur-sm rounded-xl p-6 theme-border theme-shadow">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,11 +90,11 @@ export default function SuperAdminDashboard() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                  <h1 className="text-2xl font-bold theme-text-primary">
                     Dashboard
                   </h1>
                   {user && (
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm theme-text-secondary">
                       Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
                       {user.role !== 'super_admin' && user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
                     </p>

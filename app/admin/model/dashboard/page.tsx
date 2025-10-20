@@ -273,10 +273,10 @@ export default function ModelDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen theme-bg-gradient flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando dashboard...</p>
+          <p className="theme-text-secondary">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -287,45 +287,45 @@ export default function ModelDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen theme-bg-gradient">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-semibold text-gray-900 mb-2 animate-fade-in">Mi Dashboard</h1>
+        <h1 className="text-3xl font-semibold theme-text-primary mb-2 animate-fade-in">Mi Dashboard</h1>
         {user && (
-          <p className="text-gray-500 mb-6 text-sm animate-fade-in-delay">
+          <p className="theme-text-secondary mb-6 text-sm animate-fade-in-delay">
             Bienvenida, {user.name} · Rol: {String(user.role).replace('_',' ')}
             {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
           </p>
         )}
 
         {/* Resumen de productividad y progreso de meta */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 transition-all duration-300 hover:shadow-md hover:scale-[1.01] animate-slide-up">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Resumen de Productividad</h2>
+        <div className="theme-card rounded-xl theme-shadow theme-border p-6 transition-all duration-300 hover:shadow-md hover:scale-[1.01] animate-slide-up">
+          <h2 className="text-lg font-semibold theme-text-primary mb-4">Resumen de Productividad</h2>
           
           {productivityLoading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Cargando datos de productividad...</p>
+              <p className="text-sm theme-text-secondary">Cargando datos de productividad...</p>
             </div>
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                <div className="p-4 rounded-lg bg-blue-50 text-center transition-all duration-300 hover:bg-blue-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-1">
-                  <div className="text-2xl font-bold text-blue-600 mb-1 transition-colors duration-300">
+                <div className="p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center transition-all duration-300 hover:bg-blue-100 dark:hover:bg-blue-900/30 hover:scale-105 hover:shadow-md animate-fade-in-delay-1">
+                  <div className="text-2xl font-bold text-blue-600 dark:text-blue-400 mb-1 transition-colors duration-300">
                     {productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-sm text-gray-600">Ganancias Hoy</div>
+                  <div className="text-sm theme-text-secondary">Ganancias Hoy</div>
                 </div>
-                <div className="p-4 rounded-lg bg-green-50 text-center transition-all duration-300 hover:bg-green-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-2">
-                  <div className="text-2xl font-bold text-green-600 mb-1 transition-colors duration-300">
+                <div className="p-4 rounded-lg bg-green-50 dark:bg-green-900/20 text-center transition-all duration-300 hover:bg-green-100 dark:hover:bg-green-900/30 hover:scale-105 hover:shadow-md animate-fade-in-delay-2">
+                  <div className="text-2xl font-bold text-green-600 dark:text-green-400 mb-1 transition-colors duration-300">
                     {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
                   </div>
-                  <div className="text-sm text-gray-600">USD Modelo (hoy)</div>
+                  <div className="text-sm theme-text-secondary">USD Modelo (hoy)</div>
                 </div>
-                <div className="p-4 rounded-lg bg-purple-50 text-center transition-all duration-300 hover:bg-purple-100 hover:scale-105 hover:shadow-md animate-fade-in-delay-3">
-                  <div className="text-2xl font-bold text-purple-600 mb-1 transition-colors duration-300">
+                <div className="p-4 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center transition-all duration-300 hover:bg-purple-100 dark:hover:bg-purple-900/30 hover:scale-105 hover:shadow-md animate-fade-in-delay-3">
+                  <div className="text-2xl font-bold text-purple-600 dark:text-purple-400 mb-1 transition-colors duration-300">
                     {productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
                   </div>
-                  <div className="text-sm text-gray-600">COP Modelo (hoy)</div>
+                  <div className="text-sm theme-text-secondary">COP Modelo (hoy)</div>
                 </div>
               </div>
 
@@ -450,8 +450,8 @@ export default function ModelDashboard() {
                 })()}
               </div>
 
-              <div className="mt-4 text-sm text-gray-500 animate-fade-in-delay-5">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline transition-colors duration-300 hover:scale-105 inline-block">Mi Calculadora</a>.
+              <div className="mt-4 text-sm theme-text-secondary animate-fade-in-delay-5">
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors duration-300 hover:scale-105 inline-block">Mi Calculadora</a>.
               </div>
             </>
           )}
