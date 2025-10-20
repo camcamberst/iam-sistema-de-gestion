@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
+export const dynamic = 'force-dynamic';
+
 // Usar service role key para bypass RLS
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,

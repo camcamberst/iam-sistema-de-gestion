@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { canRequestAnticipo } from '@/utils/anticipo-restrictions';
 
+export const dynamic = 'force-dynamic';
+
 // Usar SERVICE_ROLE_KEY si está disponible, sino usar ANON_KEY
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 

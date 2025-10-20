@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 import { getAnticiposConfirmadosDelMes, getAnticiposPorPeriodo, getAnticiposPagadosPeriodo, getAnticiposPagadosDelCorte } from '@/lib/anticipos/anticipos-utils';
 
+export const dynamic = 'force-dynamic';
+
 // Usar service role key para bypass RLS
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
