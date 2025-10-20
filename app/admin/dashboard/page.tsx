@@ -232,17 +232,17 @@ export default function AdminDashboard() {
                 <h2 className="text-base font-semibold text-gray-900">Resumen de Productividad</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
+                <div className="p-3 rounded-lg bg-blue-50 text-center">
                   <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
+                  <div className="text-lg font-bold text-blue-600">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
                 </div>
-                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-center">
+                <div className="p-3 rounded-lg bg-green-50 text-center">
                   <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
-                  <div className="text-lg font-bold text-green-600 dark:text-green-400">${summary ? summary.usdModelo.toFixed(2) : '—'}</div>
+                  <div className="text-lg font-bold text-green-600">${summary ? summary.usdModelo.toFixed(2) : '—'}</div>
                 </div>
-                <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center">
+                <div className="p-3 rounded-lg bg-purple-50 text-center">
                   <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
-                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">{summary ? summary.copModelo.toLocaleString('es-CO', {maximumFractionDigits:0}) : '—'}</div>
+                  <div className="text-lg font-bold text-purple-600">{summary ? summary.copModelo.toLocaleString('es-CO', {maximumFractionDigits:0}) : '—'}</div>
                 </div>
               </div>
 
@@ -252,14 +252,14 @@ export default function AdminDashboard() {
                   <span className="text-xs font-medium text-gray-900">Objetivo Básico</span>
                   <span className="text-xs text-gray-600">${summary ? summary.usdBruto.toFixed(0) : '—'} / ${summary ? summary.goalUsd.toFixed(0) : '—'} USD</span>
                 </div>
-                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" style={{ width: `${summary ? Math.min(100, summary.pct).toFixed(0) : 0}%` }}></div>
                 </div>
                 <div className="text-right text-xs text-gray-600 mt-1">{summary ? Math.min(100, summary.pct).toFixed(0) : 0}%</div>
               </div>
 
               <div className="mt-4 text-xs text-gray-600">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline font-medium">Mi Calculadora</a>.
               </div>
             </div>
           </div>

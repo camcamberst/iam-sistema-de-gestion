@@ -458,7 +458,7 @@ export default function ModelDashboard() {
                             
                             {/* Barra de progreso compacta */}
                             <div className="mt-2">
-                              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2 overflow-hidden">
+                              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                                 <div 
                                   className={`h-full transition-all duration-1000 ease-out`}
                                   style={{ 
@@ -477,7 +477,7 @@ export default function ModelDashboard() {
               </div>
 
               <div className="mt-4 text-xs text-gray-500">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
+                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline font-medium">Mi Calculadora</a>.
               </div>
             </>
           )}

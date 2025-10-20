@@ -158,7 +158,7 @@ export default function CreateUserPage() {
         
         {/* Mensajes de error y éxito */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200/50 dark:border-red-700/50 rounded-lg shadow-sm">
+          <div className="mb-4 p-3 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg shadow-sm">
             <div className="flex">
               <div className="flex-shrink-0">
                 <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
@@ -168,14 +168,14 @@ export default function CreateUserPage() {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800 dark:text-red-200">{error}</p>
+                <p className="text-sm text-red-800">{error}</p>
               </div>
             </div>
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm border border-green-200/50 dark:border-green-700/50 rounded-lg shadow-sm">
+          <div className="mb-4 p-3 bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-lg shadow-sm">
             <div className="flex">
               <div className="flex-shrink-0">
                 <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
@@ -185,7 +185,7 @@ export default function CreateUserPage() {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-green-800 dark:text-green-200">{success}</p>
+                <p className="text-sm text-green-800">{success}</p>
               </div>
             </div>
           </div>
