@@ -62,10 +62,10 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
       {/* Botón del dropdown */}
       <button
         onClick={handleToggle}
-        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-700/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
+        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
           isActive 
-            ? 'text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-700/50 shadow-sm' 
-            : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+            ? 'text-gray-900 bg-white/50 shadow-sm' 
+            : 'text-gray-600 hover:text-gray-900'
         }`}
       >
         <span>Mis Anticipos</span>

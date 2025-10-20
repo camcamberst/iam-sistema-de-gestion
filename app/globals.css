@@ -2,20 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Forzar modo claro por defecto */
-html {
-  color-scheme: light;
-}
-
-html:not(.dark) {
-  color-scheme: light;
-}
-
-/* Asegurar que el modo claro no tenga interferencias */
-html:not(.dark) * {
-  color-scheme: light;
-}
-
 /* Animaciones personalizadas para el dashboard */
 @keyframes fadeIn {
   from {
