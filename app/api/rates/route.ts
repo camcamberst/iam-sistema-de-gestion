@@ -8,8 +8,6 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
-export const dynamic = 'force-dynamic';
-
 // GET /api/rates - Listar tasas vigentes desde Supabase
 export async function GET(request: NextRequest) {
   try {
