@@ -274,10 +274,10 @@ export default function ModelDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen theme-bg-gradient flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="theme-text-secondary">Cargando dashboard...</p>
+          <p className="text-gray-600">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -476,7 +476,7 @@ export default function ModelDashboard() {
                 })()}
               </div>
 
-              <div className="mt-4 text-xs theme-text-secondary">
+              <div className="mt-4 text-xs text-gray-500">
                 Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
               </div>
             </>
