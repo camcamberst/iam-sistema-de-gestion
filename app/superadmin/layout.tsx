@@ -223,12 +223,12 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/superadmin/dashboard" className="flex items-center space-x-3 group">
-                <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black rounded-xl flex items-center justify-center shadow-md border border-white/20 group-hover:shadow-lg transition-all duration-300">
-                  <span className="text-white font-bold text-sm tracking-wider">AIM</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300">
+                  <span className="text-white dark:text-gray-900 font-bold text-sm tracking-wider">AIM</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent whitespace-nowrap">Sistema de Gestión</span>
-                  <span className="text-xs text-gray-600 font-medium tracking-wide">Agencia Innova</span>
+                  <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent whitespace-nowrap">Sistema de Gestión</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Agencia Innova</span>
                 </div>
               </Link>
             </div>
