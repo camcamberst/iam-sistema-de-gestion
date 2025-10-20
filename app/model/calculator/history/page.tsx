@@ -399,13 +399,13 @@ export default function CalculatorHistory() {
   }
 
   return (
-    <div className="min-h-screen theme-bg-gradient">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl dark:from-blue-400/20 dark:to-indigo-400/20"></div>
-            <div className="relative theme-card backdrop-blur-sm rounded-xl p-6 theme-border theme-shadow">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -414,10 +414,10 @@ export default function CalculatorHistory() {
                     </svg>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold theme-text-primary">
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                       Mi Historial de Calculadora
                     </h1>
-                    <p className="mt-1 text-sm theme-text-secondary">
+                    <p className="mt-1 text-sm text-gray-600">
                       Período actual en progreso y valores archivados
                     </p>
                   </div>
@@ -435,14 +435,14 @@ export default function CalculatorHistory() {
 
 
         {/* Resumen con InfoCardGrid - Cuadros específicos solicitados */}
-        <div className="mb-10 relative theme-card backdrop-blur-sm rounded-xl theme-shadow theme-border p-6">
+        <div className="mb-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
               <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold theme-text-primary">Estadísticas de Rendimiento</h3>
+            <h3 className="text-base font-semibold text-gray-900">Estadísticas de Rendimiento</h3>
           </div>
           <InfoCardGrid 
             cards={[
@@ -474,14 +474,14 @@ export default function CalculatorHistory() {
 
         {/* Filtros con AppleDropdown (principio estético) */}
         {historicalPeriods.length > 0 && (
-          <div className="mb-10 relative theme-card backdrop-blur-sm rounded-xl theme-shadow theme-border p-6">
+          <div className="mb-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                 <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
               </div>
-              <h3 className="text-base font-semibold theme-text-primary">Filtrar Períodos Archivados</h3>
+              <h3 className="text-base font-semibold text-gray-900">Filtrar Períodos Archivados</h3>
             </div>
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[200px]">
@@ -566,7 +566,7 @@ export default function CalculatorHistory() {
               const isExpanded = expandedPeriod === periodKey;
               
               return (
-                <div key={periodKey} className="theme-card rounded-xl theme-shadow theme-border p-6">
+                <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
                   {/* Header del período con InfoCard clickeable */}
                   <div className="mb-4">
                     <InfoCard
