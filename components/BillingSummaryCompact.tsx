@@ -6,6 +6,7 @@ import Link from 'next/link';
 interface BillingSummaryCompactProps {
   userRole: 'admin' | 'super_admin';
   userId: string;
+  userGroups?: string[];
 }
 
 interface BillingData {
@@ -50,7 +51,7 @@ interface SedeData {
   totalUsdSede: number;
 }
 
-export default function BillingSummaryCompact({ userRole, userId }: BillingSummaryCompactProps) {
+export default function BillingSummaryCompact({ userRole, userId, userGroups = [] }: BillingSummaryCompactProps) {
   const [summary, setSummary] = useState<Summary | null>(null);
   const [groupedData, setGroupedData] = useState<SedeData[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,8 +89,17 @@ export default function BillingSummaryCompact({ userRole, userId }: BillingSumma
         throw new Error(data.error || 'Error al cargar los datos');
       }
 
+      // Aplicar filtros de jerarquía
+      let billingData: BillingData[] = data.data || [];
+      
+      // Si es admin, filtrar solo por sus grupos
+      if (userRole === 'admin' && userGroups.length > 0) {
+        billingData = billingData.filter(model => 
+          userGroups.includes(model.groupName)
+        );
+      }
+      
       // Calcular resumen
-      const billingData: BillingData[] = data.data || [];
       const summaryData: Summary = {
         totalModels: billingData.length,
         totalUsdBruto: billingData.reduce((sum, model) => sum + model.usdBruto, 0),
@@ -159,7 +169,7 @@ export default function BillingSummaryCompact({ userRole, userId }: BillingSumma
     if (userId && userRole) {
       loadBillingData();
     }
-  }, [userId, userRole]);
+  }, [userId, userRole, userGroups]);
 
   if (loading) {
     return (

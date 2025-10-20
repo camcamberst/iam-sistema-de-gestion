@@ -49,23 +49,13 @@ export default function SuperAdminDashboard() {
         };
         setUser(current);
 
-        // Load global stats (super admin) or filtered stats (admin)
+        // Super Admin ve todas las estadísticas globales sin filtros
         const { data: all } = await supabase.from('users').select('id,role');
         if (all) {
-          let filtered = all;
-          if (current.role === 'admin' && current.groups.length) {
-            // restrict to users within admin groups
-            const { data: usersInMyGroups } = await supabase
-              .from('user_groups')
-              .select('user_id, groups(name)')
-              .in('groups.name', current.groups);
-            const allowedIds = new Set((usersInMyGroups || []).map((r: any) => r.user_id));
-            filtered = all.filter((u: any) => allowedIds.has(u.id));
-          }
-          const total = filtered.length;
-          const super_admin = filtered.filter((u: any) => u.role === 'super_admin').length;
-          const admin = filtered.filter((u: any) => u.role === 'admin').length;
-          const modelo = filtered.filter((u: any) => u.role === 'modelo').length;
+          const total = all.length;
+          const super_admin = all.filter((u: any) => u.role === 'super_admin').length;
+          const admin = all.filter((u: any) => u.role === 'admin').length;
+          const modelo = all.filter((u: any) => u.role === 'modelo').length;
           setStats({ total, super_admin, admin, modelo });
         }
       } finally {
@@ -114,6 +104,7 @@ export default function SuperAdminDashboard() {
             <BillingSummaryCompact 
               userRole={user.role as 'admin' | 'super_admin'} 
               userId={user.id}
+              userGroups={user.groups}
             />
           </div>
         )}

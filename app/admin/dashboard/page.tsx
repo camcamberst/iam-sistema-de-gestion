@@ -57,15 +57,32 @@ export default function AdminDashboard() {
         const { data: all } = await supabase.from('users').select('id,role');
         if (all) {
           let filtered = all;
-          if (current.role === 'admin' && current.groups.length) {
-            // restrict to users within admin groups
+          
+          // Aplicar filtros de jerarquía según el rol
+          if (current.role === 'admin') {
+            if (current.groups.length === 0) {
+              // Admin sin grupos no puede ver estadísticas
+              setStats({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
+              return;
+            }
+            
+            // Restrict to users within admin groups
             const { data: usersInMyGroups } = await supabase
               .from('user_groups')
               .select('user_id, groups(name)')
               .in('groups.name', current.groups);
+            
+            if (!usersInMyGroups || usersInMyGroups.length === 0) {
+              // No hay usuarios en los grupos del admin
+              setStats({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
+              return;
+            }
+            
             const allowedIds = new Set((usersInMyGroups || []).map((r: any) => r.user_id));
             filtered = all.filter((u: any) => allowedIds.has(u.id));
           }
+          // Super admin ve todos los usuarios sin filtros
+          
           const total = filtered.length;
           const super_admin = filtered.filter((u: any) => u.role === 'super_admin').length;
           const admin = filtered.filter((u: any) => u.role === 'admin').length;
@@ -176,6 +193,27 @@ export default function AdminDashboard() {
           </div>
         </div>
 
+        {/* Mensaje informativo para Admin sin grupos */}
+        {user?.role === 'admin' && user.groups.length === 0 && (
+          <div className="mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <h3 className="text-sm font-medium text-yellow-800">
+                  Sin grupos asignados
+                </h3>
+                <div className="mt-2 text-sm text-yellow-700">
+                  <p>No tienes grupos asignados. Contacta al Super Admin para obtener acceso a los datos de gestión.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
         {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin y Admin */}
@@ -185,6 +223,7 @@ export default function AdminDashboard() {
             <BillingSummaryCompact 
               userRole={user.role as 'admin' | 'super_admin'} 
               userId={user.id}
+              userGroups={user.groups}
             />
           </div>
         )}
