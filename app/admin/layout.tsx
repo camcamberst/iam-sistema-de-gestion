@@ -415,9 +415,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen theme-bg-gradient">
       {/* Apple Style 2 Header */}
-      <header className="bg-white/80 backdrop-blur-md border-b border-white/20 sticky top-0 z-50 shadow-sm">
+      <header className="theme-card backdrop-blur-md theme-border sticky top-0 z-50 theme-shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -427,8 +427,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   <span className="text-white font-bold text-sm tracking-wider">AIM</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent whitespace-nowrap">Sistema de Gestión</span>
-                  <span className="text-xs text-gray-500 font-medium tracking-wide">Agencia Innova</span>
+                  <span className="text-lg font-bold theme-text-primary whitespace-nowrap">Sistema de Gestión</span>
+                  <span className="text-xs theme-text-secondary font-medium tracking-wide">Agencia Innova</span>
                 </div>
               </Link>
             </div>
@@ -486,10 +486,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     >
                       {item.href === '#' ? (
                         <span
-                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-700/60 hover:backdrop-blur-sm hover:shadow-sm ${
                             isParentActive(item) 
-                              ? 'text-gray-900 bg-white/50 shadow-sm' 
-                              : 'text-gray-700 hover:text-gray-900'
+                              ? 'theme-text-primary bg-white/50 dark:bg-gray-700/50 shadow-sm' 
+                              : 'theme-text-secondary hover:theme-text-primary'
                           }`}
                         >
                           {item.label}
@@ -497,10 +497,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       ) : (
                     <Link
                       href={item.href}
-                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-700/60 hover:backdrop-blur-sm hover:shadow-sm ${
                         isActive(item.href) || isParentActive(item) 
-                              ? 'text-gray-900 bg-white/50 shadow-sm' 
-                              : 'text-gray-700 hover:text-gray-900'
+                              ? 'theme-text-primary bg-white/50 dark:bg-gray-700/50 shadow-sm' 
+                              : 'theme-text-secondary hover:theme-text-primary'
                       }`}
                     >
                       {item.label}
@@ -526,8 +526,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             href={subItem.href}
                                 className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                                   isExactPath(pathname, subItem.href)
-                                    ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
-                                    : 'text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
+                                    ? 'bg-blue-50/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-medium shadow-sm border border-blue-200/30 dark:border-blue-700/30'
+                                    : 'theme-text-secondary hover:bg-white/60 dark:hover:bg-gray-700/60 hover:theme-text-primary hover:shadow-sm'
                                 }`}
                               >
                                 <div className="flex items-center space-x-3">
@@ -588,7 +588,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     setShowUserPanel((v) => !v);
                     if (!userInfo && !loadingUser) loadUser();
                   }}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-gray-900 px-3 py-2 rounded-lg border border-white/30 hover:bg-white/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                  className="flex items-center space-x-2 theme-text-secondary hover:theme-text-primary px-3 py-2 rounded-lg theme-border hover:bg-white/60 dark:hover:bg-gray-700/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -601,11 +601,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-gray-900 border border-gray-700 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 theme-bg-secondary theme-border rounded-lg theme-shadow p-4 z-50 animate-in slide-in-from-top-2 duration-200">
                     {loadingUser ? (
                       <div className="text-center py-4">
                         <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>
-                        <div className="text-xs text-gray-300">Cargando…</div>
+                        <div className="text-xs theme-text-secondary">Cargando…</div>
                       </div>
                     ) : userInfo ? (
                       <div className="space-y-3">
@@ -615,8 +615,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <span className="text-sm font-semibold">{userInfo.name.charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-100 truncate">{userInfo.name}</div>
-                            <div className="text-xs text-gray-300 truncate">
+                            <div className="text-sm font-semibold theme-text-primary truncate">{userInfo.name}</div>
+                            <div className="text-xs theme-text-secondary truncate">
                               {String(userInfo.role).replace('_',' ').charAt(0).toUpperCase() + String(userInfo.role).replace('_',' ').slice(1)} · {userInfo.email}
                           </div>
                           </div>
@@ -629,7 +629,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                               <span className="text-gray-400 font-medium">{userInfo.role === 'modelo' ? 'Grupo' : 'Grupos'}</span>
                               <div className="flex flex-wrap gap-1 justify-end">
                                 {userInfo.groups.map((group, index) => (
-                                  <span key={index} className="px-2 py-1 bg-gray-800 text-gray-300 rounded-md text-xs font-medium">
+                                  <span key={index} className="px-2 py-1 bg-gray-800 dark:bg-gray-600 theme-text-primary rounded-md text-xs font-medium">
                                     {group}
                                   </span>
                                 ))}
