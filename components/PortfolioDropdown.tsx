@@ -72,10 +72,10 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 theme-bg-secondary backdrop-blur-md theme-border rounded-xl theme-shadow z-50 animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
-              <h3 className="text-xs font-semibold theme-text-secondary uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-2">
                 Mi Portafolio
               </h3>
             </div>
@@ -92,7 +92,7 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
                       ? 'bg-blue-50/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-medium shadow-sm border border-blue-200/30 dark:border-blue-700/30'
-                      : 'theme-text-secondary hover:bg-white/60 dark:hover:bg-gray-700/60 hover:theme-text-primary hover:shadow-sm'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
@@ -104,14 +104,14 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{item.label}</div>
                       <div className={`text-xs ${
-                        isCurrentPage ? 'text-blue-600 dark:text-blue-400' : 'theme-text-secondary'
+                        isCurrentPage ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
                       }`}>
                         {item.description}
                       </div>
                     </div>
                     {isCurrentPage && (
                       <div className="flex-shrink-0">
-                        <Eye className="w-4 h-4 text-blue-600" />
+                        <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                       </div>
                     )}
                   </div>
