@@ -194,7 +194,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Apple Style 2 Header */}
-      <header className="bg-white/80 backdrop-blur-md border border-white/20 sticky top-0 z-50 shadow-lg">
+      <header className="bg-white/80 dark:bg-gray-900/80 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-50 shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -204,8 +204,8 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                   <span className="text-white font-bold text-sm tracking-wider">AIM</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-bold text-gray-900 whitespace-nowrap">Sistema de Gestión</span>
-                  <span className="text-xs text-gray-600 font-medium tracking-wide">Agencia Innova</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">Sistema de Gestión</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Agencia Innova</span>
                 </div>
               </Link>
             </div>
@@ -254,13 +254,13 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                   return null;
                 })
               ) : (
-                <div className="text-gray-600 text-sm">Cargando menú...</div>
+                <div className="text-gray-600 dark:text-gray-300 text-sm">Cargando menú...</div>
               )}
             </nav>
 
             {/* User Actions */}
             <div className="flex items-center space-x-3">
-              <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-lg transition-all duration-200 hover:shadow-sm">
+              <button className="p-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white/60 dark:hover:bg-gray-800/60 rounded-lg transition-all duration-200 hover:shadow-sm">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -276,7 +276,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                     setShowUserPanel((v) => !v);
                     if (!userInfo && !loadingUser) loadUser();
                   }}
-                  className="flex items-center space-x-2 text-gray-600 hover:text-gray-900 px-3 py-2 rounded-lg border border-white/20 hover:bg-white/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -284,16 +284,16 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                     </svg>
                   </div>
                   <span className="hidden sm:block text-sm font-medium">Cuenta</span>
-                  <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white/95 backdrop-blur-md border border-white/30 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
                     {loadingUser ? (
                       <div className="text-center py-4">
                         <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>
-                        <div className="text-xs text-gray-600">Cargando…</div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">Cargando…</div>
                       </div>
                     ) : userInfo ? (
                       <div className="space-y-3">
@@ -303,8 +303,8 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                             <span className="text-sm font-semibold">{userInfo.name.charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 truncate">{userInfo.name}</div>
-                            <div className="text-xs text-gray-600 truncate">
+                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{userInfo.name}</div>
+                            <div className="text-xs text-gray-600 dark:text-gray-300 truncate">
                               {String(userInfo.role).replace('_',' ').charAt(0).toUpperCase() + String(userInfo.role).replace('_',' ').slice(1)} · {userInfo.email}
                             </div>
                           </div>
