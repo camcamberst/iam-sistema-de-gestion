@@ -302,7 +302,7 @@ export default function ModelDashboard() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold theme-text-primary">
-                    Mi Dashboard - Actualizado
+                    Mi Dashboard
                   </h1>
                   {user && (
                     <p className="mt-1 text-sm theme-text-secondary">
@@ -335,22 +335,28 @@ export default function ModelDashboard() {
           ) : (
             <>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                <div className="p-3 rounded-lg bg-blue-50 dark:bg-blue-900/20 text-center">
-                  <div className="text-xs theme-text-secondary">Ganancias Hoy</div>
-                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/60 rounded-lg border border-blue-200 dark:border-blue-500/50 shadow-sm hover:shadow-lg hover:shadow-blue-200 dark:hover:shadow-blue-500/20 transition-all duration-200 transform hover:scale-105">
+                  <div className="text-lg font-bold text-blue-700 dark:text-blue-200 mb-1">
                     {productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
                   </div>
-                </div>
-                <div className="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 text-center">
-                  <div className="text-xs theme-text-secondary">USD Modelo (hoy)</div>
-                  <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                    {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
+                  <div className="text-xs font-medium text-blue-600 bg-blue-200 dark:bg-blue-700/50 dark:text-blue-100 px-2 py-1 rounded-full inline-block">
+                    Ganancias Hoy
                   </div>
                 </div>
-                <div className="p-3 rounded-lg bg-purple-50 dark:bg-purple-900/20 text-center">
-                  <div className="text-xs theme-text-secondary">COP Modelo (hoy)</div>
-                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
+                <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/60 rounded-lg border border-green-200 dark:border-green-500/50 shadow-sm hover:shadow-lg hover:shadow-green-200 dark:hover:shadow-green-500/20 transition-all duration-200 transform hover:scale-105">
+                  <div className="text-lg font-bold text-green-700 dark:text-green-200 mb-1">
+                    {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
+                  </div>
+                  <div className="text-xs font-medium text-green-600 bg-green-200 dark:bg-green-700/50 dark:text-green-100 px-2 py-1 rounded-full inline-block">
+                    USD Modelo (hoy)
+                  </div>
+                </div>
+                <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/60 rounded-lg border border-purple-200 dark:border-purple-500/50 shadow-sm hover:shadow-lg hover:shadow-purple-200 dark:hover:shadow-purple-500/20 transition-all duration-200 transform hover:scale-105">
+                  <div className="text-lg font-bold text-purple-700 dark:text-purple-200 mb-1">
                     {productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
+                  </div>
+                  <div className="text-xs font-medium text-purple-600 bg-purple-200 dark:bg-purple-700/50 dark:text-purple-100 px-2 py-1 rounded-full inline-block">
+                    COP Modelo (hoy)
                   </div>
                 </div>
               </div>
