@@ -99,7 +99,7 @@ export default function AppleDropdown({
         aria-expanded={isOpen}
       >
         <div className="flex items-center justify-between w-full">
-          <span className={selectedOption ? 'text-gray-900' : 'text-gray-500'}>
+          <span className={selectedOption ? 'theme-text-primary' : 'theme-text-secondary'}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <div className="flex items-center space-x-2">
@@ -125,7 +125,7 @@ export default function AppleDropdown({
       </button>
       
       {isOpen && (
-        <div className={`absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg ${maxHeight} overflow-auto apple-scroll`}>
+        <div className={`absolute z-50 w-full mt-1 theme-bg-secondary theme-border rounded-lg theme-shadow ${maxHeight} overflow-auto apple-scroll`}>
           {options.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-500">
               No hay opciones disponibles
