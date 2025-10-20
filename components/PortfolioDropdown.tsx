@@ -56,10 +56,10 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
       {/* Botón del dropdown */}
       <button
         onClick={handleToggle}
-        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
+        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-700/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
           isActive 
-            ? 'text-gray-900 bg-white/50 shadow-sm' 
-            : 'text-gray-700 hover:text-gray-900'
+            ? 'theme-text-primary bg-white/50 dark:bg-gray-700/50 shadow-sm' 
+            : 'theme-text-secondary hover:theme-text-primary'
         }`}
       >
         <span>Mi Portafolio</span>
@@ -72,10 +72,10 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-80 theme-bg-secondary backdrop-blur-md theme-border rounded-xl theme-shadow z-50 animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold theme-text-secondary uppercase tracking-wide mb-2">
                 Mi Portafolio
               </h3>
             </div>
@@ -91,20 +91,20 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
                   onClick={() => onToggle()}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
-                      ? 'bg-blue-50/80 text-blue-900 font-medium shadow-sm border border-blue-200/30'
-                      : 'text-gray-700 hover:bg-white/60 hover:text-gray-900 hover:shadow-sm'
+                      ? 'bg-blue-50/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-medium shadow-sm border border-blue-200/30 dark:border-blue-700/30'
+                      : 'theme-text-secondary hover:bg-white/60 dark:hover:bg-gray-700/60 hover:theme-text-primary hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div className={`flex-shrink-0 ${
-                      isCurrentPage ? 'text-blue-600' : 'text-gray-400 group-hover:text-gray-600'
+                      isCurrentPage ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                     }`}>
                       {item.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{item.label}</div>
                       <div className={`text-xs ${
-                        isCurrentPage ? 'text-blue-600' : 'text-gray-500'
+                        isCurrentPage ? 'text-blue-600 dark:text-blue-400' : 'theme-text-secondary'
                       }`}>
                         {item.description}
                       </div>

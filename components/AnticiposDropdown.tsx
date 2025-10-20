@@ -62,10 +62,10 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
       {/* Botón del dropdown */}
       <button
         onClick={handleToggle}
-        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
+        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-700/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
           isActive 
-            ? 'text-gray-900 bg-white/50 shadow-sm' 
-            : 'text-gray-700 hover:text-gray-900'
+            ? 'theme-text-primary bg-white/50 dark:bg-gray-700/50 shadow-sm' 
+            : 'theme-text-secondary hover:theme-text-primary'
         }`}
       >
         <span>Mis Anticipos</span>
@@ -78,10 +78,10 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-80 theme-bg-secondary backdrop-blur-md theme-border rounded-xl theme-shadow z-50 animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold theme-text-secondary uppercase tracking-wide mb-2">
                 Mis Anticipos
               </h3>
             </div>
