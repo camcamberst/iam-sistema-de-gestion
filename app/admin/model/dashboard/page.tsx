@@ -7,6 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import AIDashboard from '@/components/AIDashboard';
+import { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface User {
   id: string;
@@ -334,32 +335,27 @@ export default function ModelDashboard() {
             </div>
           ) : (
             <>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
-                <div className="text-center p-3 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/40 dark:to-blue-800/60 rounded-lg border border-blue-200 dark:border-blue-500/50 shadow-sm hover:shadow-lg hover:shadow-blue-200 dark:hover:shadow-blue-500/20 transition-all duration-200 transform hover:scale-105">
-                  <div className="text-lg font-bold text-blue-700 dark:text-blue-200 mb-1">
-                    {productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
-                  </div>
-                  <div className="text-xs font-medium text-blue-600 bg-blue-200 dark:bg-blue-700/50 dark:text-blue-100 px-2 py-1 rounded-full inline-block">
-                    Ganancias Hoy
-                  </div>
-                </div>
-                <div className="text-center p-3 bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/40 dark:to-green-800/60 rounded-lg border border-green-200 dark:border-green-500/50 shadow-sm hover:shadow-lg hover:shadow-green-200 dark:hover:shadow-green-500/20 transition-all duration-200 transform hover:scale-105">
-                  <div className="text-lg font-bold text-green-700 dark:text-green-200 mb-1">
-                    {productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
-                  </div>
-                  <div className="text-xs font-medium text-green-600 bg-green-200 dark:bg-green-700/50 dark:text-green-100 px-2 py-1 rounded-full inline-block">
-                    USD Modelo (hoy)
-                  </div>
-                </div>
-                <div className="text-center p-3 bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/40 dark:to-purple-800/60 rounded-lg border border-purple-200 dark:border-purple-500/50 shadow-sm hover:shadow-lg hover:shadow-purple-200 dark:hover:shadow-purple-500/20 transition-all duration-200 transform hover:scale-105">
-                  <div className="text-lg font-bold text-purple-700 dark:text-purple-200 mb-1">
-                    {productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
-                  </div>
-                  <div className="text-xs font-medium text-purple-600 bg-purple-200 dark:bg-purple-700/50 dark:text-purple-100 px-2 py-1 rounded-full inline-block">
-                    COP Modelo (hoy)
-                  </div>
-                </div>
-              </div>
+              <InfoCardGrid
+                cards={[
+                  {
+                    value: productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—',
+                    label: 'Ganancias Hoy',
+                    color: 'blue'
+                  },
+                  {
+                    value: productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—',
+                    label: 'USD Modelo (hoy)',
+                    color: 'green'
+                  },
+                  {
+                    value: productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—',
+                    label: 'COP Modelo (hoy)',
+                    color: 'purple'
+                  }
+                ]}
+                columns={3}
+                className="mb-4"
+              />
 
               {/* Barra de alcance de meta - Copia exacta de Mi Calculadora */}
               <div className="mt-4">
