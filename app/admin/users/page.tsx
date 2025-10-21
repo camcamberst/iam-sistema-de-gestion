@@ -181,6 +181,32 @@ export default function UsersListPage() {
     
     let filtered = users;
 
+    // Aplicar filtros de jerarquía primero (si es admin)
+    if (currentUser?.role === 'admin') {
+      const userGroupIds = Array.isArray(currentUser.groups) 
+        ? currentUser.groups.map((g: any) => typeof g === 'string' ? g : g.id)
+        : [];
+      
+      filtered = filtered.filter((user: any) => {
+        // Super admin no puede ser visto por admin
+        if (user.role === 'super_admin') return false;
+        
+        // Admin puede ver otros admins y modelos
+        if (user.role === 'admin' || user.role === 'modelo') {
+          // Si el usuario tiene grupos, debe tener al menos uno en común
+          if (user.groups && user.groups.length > 0) {
+            const targetUserGroupIds = Array.isArray(user.groups) 
+              ? user.groups.map((g: any) => typeof g === 'string' ? g : g.id)
+              : [];
+            return targetUserGroupIds.some((groupId: string) => userGroupIds.includes(groupId));
+          }
+          return false;
+        }
+        
+        return false;
+      });
+    }
+
     // Text search
     if (query.trim()) {
       filtered = filtered.filter(user => 
@@ -221,20 +247,48 @@ export default function UsersListPage() {
       id: 'role',
       label: 'Rol',
       value: searchFilters.role || '',
-      options: [
-        { label: 'Super Admin', value: 'super_admin' },
-        { label: 'Admin', value: 'admin' },
-        { label: 'Modelo', value: 'modelo' }
-      ]
+      options: (() => {
+        const allRoles = [
+          { label: 'Super Admin', value: 'super_admin' },
+          { label: 'Admin', value: 'admin' },
+          { label: 'Modelo', value: 'modelo' }
+        ];
+        
+        // Aplicar límites de jerarquía
+        if (currentUser?.role === 'admin') {
+          // Admin solo puede filtrar por 'admin' y 'modelo'
+          return allRoles.filter(role => role.value !== 'super_admin');
+        }
+        
+        // Super admin puede filtrar por todos los roles
+        return allRoles;
+      })()
     },
     {
       id: 'group',
       label: 'Grupo',
       value: searchFilters.group || '',
-      options: groups.map(group => ({
-        label: group.name,
-        value: group.id
-      }))
+      options: (() => {
+        // Aplicar límites de jerarquía para grupos
+        if (currentUser?.role === 'admin') {
+          const userGroupIds = Array.isArray(currentUser.groups) 
+            ? currentUser.groups.map((g: any) => typeof g === 'string' ? g : g.id)
+            : [];
+          
+          return groups
+            .filter(group => userGroupIds.includes(group.id))
+            .map(group => ({
+              label: group.name,
+              value: group.id
+            }));
+        }
+        
+        // Super admin puede filtrar por todos los grupos
+        return groups.map(group => ({
+          label: group.name,
+          value: group.id
+        }));
+      })()
     },
     {
       id: 'status',
