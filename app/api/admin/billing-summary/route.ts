@@ -46,8 +46,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No tienes permisos para ver este resumen' }, { status: 403 });
     }
 
-    // Obtener grupos del admin
-    const adminGroups = adminUser.user_groups?.map((ug: any) => ug.groups.id) || [];
+    // Obtener grupos del admin (solo para admin, no para super_admin)
+    const adminGroups = isSuperAdmin ? [] : (adminUser.user_groups?.map((ug: any) => ug.groups.id) || []);
     console.log('🔍 [BILLING-SUMMARY] Admin groups:', adminGroups);
     console.log('🔍 [BILLING-SUMMARY] User role:', adminUser.role);
     console.log('🔍 [BILLING-SUMMARY] Is Super Admin:', isSuperAdmin);
