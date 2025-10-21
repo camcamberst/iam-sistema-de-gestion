@@ -377,7 +377,7 @@ export async function GET(request: NextRequest) {
       totalCopSede: 0
     });
 
-    // 7. Para Super Admin: Agrupar por grupos (sedes)
+    // 7. Para Super Admin: Agrupar todo bajo "Agencia Innova"
     let groupedData = null;
     if (isSuperAdmin) {
       // Obtener información de grupos
@@ -391,15 +391,30 @@ export async function GET(request: NextRequest) {
         console.error('❌ [BILLING-SUMMARY] Error al obtener grupos:', groupsError);
       }
 
-      // Agrupar por grupo (sede)
+      // Crear una sola sede principal: "Agencia Innova"
+      const agenciaInnova = {
+        sedeId: 'agencia-innova',
+        sedeName: 'Agencia Innova',
+        groups: [],
+        models: [],
+        totalModels: 0,
+        totalUsdBruto: 0,
+        totalUsdModelo: 0,
+        totalUsdSede: 0,
+        totalCopModelo: 0,
+        totalCopSede: 0
+      };
+
+      // Agrupar modelos por grupo dentro de Agencia Innova
       const groupMap = new Map();
       billingData.forEach(model => {
         const groupId = model.groupId;
+        
+        // Crear o actualizar grupo dentro de Agencia Innova
         if (!groupMap.has(groupId)) {
           groupMap.set(groupId, {
-            sedeId: groupId,
-            sedeName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
-            groups: [], // Array de grupos dentro de la sede
+            groupId: groupId,
+            groupName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
             models: [],
             totalModels: 0,
             totalUsdBruto: 0,
@@ -419,33 +434,21 @@ export async function GET(request: NextRequest) {
         group.totalCopModelo += model.copModelo;
         group.totalCopSede += model.copSede;
 
-        // Crear estructura de grupos dentro de la sede
-        const existingGroup = group.groups.find((g: any) => g.groupId === model.groupId);
-        if (!existingGroup) {
-          group.groups.push({
-            groupId: model.groupId,
-            groupName: groups?.find(g => g.id === model.groupId)?.name || 'Grupo Desconocido',
-            models: [model],
-            totalModels: 1,
-            totalUsdBruto: model.usdBruto,
-            totalUsdModelo: model.usdModelo,
-            totalUsdSede: model.usdSede,
-            totalCopModelo: model.copModelo,
-            totalCopSede: model.copSede
-          });
-        } else {
-          existingGroup.models.push(model);
-          existingGroup.totalModels += 1;
-          existingGroup.totalUsdBruto += model.usdBruto;
-          existingGroup.totalUsdModelo += model.usdModelo;
-          existingGroup.totalUsdSede += model.usdSede;
-          existingGroup.totalCopModelo += model.copModelo;
-          existingGroup.totalCopSede += model.copSede;
-        }
+        // Acumular en Agencia Innova
+        agenciaInnova.models.push(model);
+        agenciaInnova.totalModels += 1;
+        agenciaInnova.totalUsdBruto += model.usdBruto;
+        agenciaInnova.totalUsdModelo += model.usdModelo;
+        agenciaInnova.totalUsdSede += model.usdSede;
+        agenciaInnova.totalCopModelo += model.copModelo;
+        agenciaInnova.totalCopSede += model.copSede;
       });
 
-      // Convertir Map a Array
-      groupedData = Array.from(groupMap.values());
+      // Agregar todos los grupos a Agencia Innova
+      agenciaInnova.groups = Array.from(groupMap.values());
+
+      // Retornar solo Agencia Innova como sede principal
+      groupedData = [agenciaInnova];
     }
 
     console.log('✅ [BILLING-SUMMARY] Resumen generado:', { 
