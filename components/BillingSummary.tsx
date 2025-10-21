@@ -336,7 +336,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                         </div>
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800">{sede.sedeName}</h3>
-                          <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups.length} grupos</p>
+                          <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
                         </div>
                       </div>
                     </div>
