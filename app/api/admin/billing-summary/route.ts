@@ -379,6 +379,13 @@ export async function GET(request: NextRequest) {
 
     // 7. Agrupar datos por sedes/grupos
     let groupedData = null;
+    console.log('🔍 [BILLING-SUMMARY] Condiciones para groupedData:', {
+      isSuperAdmin,
+      isAdmin,
+      adminGroupsLength: adminGroups.length,
+      shouldCreateGroupedData: isSuperAdmin || (isAdmin && adminGroups.length > 0)
+    });
+    
     if (isSuperAdmin || (isAdmin && adminGroups.length > 0)) {
       // Obtener información de grupos
       const uniqueGroupIds = Array.from(new Set(billingData.map(m => m.groupId).filter(Boolean)));
