@@ -420,7 +420,7 @@ export async function GET(request: NextRequest) {
         group.totalCopSede += model.copSede;
 
         // Crear estructura de grupos dentro de la sede
-        const existingGroup = group.groups.find(g => g.groupId === model.groupId);
+        const existingGroup = group.groups.find((g: any) => g.groupId === model.groupId);
         if (!existingGroup) {
           group.groups.push({
             groupId: model.groupId,
