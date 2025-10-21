@@ -236,8 +236,17 @@ export default function DashboardSedesPage() {
       
       // Filtrar modelos de manera segura
       let totalModelos = 0;
+      console.log('🔍 [DASHBOARD] usersData:', usersData);
       if (usersData.success && usersData.users && Array.isArray(usersData.users)) {
         totalModelos = usersData.users.filter((u: any) => u.role === 'modelo' && u.is_active).length;
+        console.log('✅ [DASHBOARD] Modelos encontrados:', totalModelos);
+      } else {
+        console.error('❌ [DASHBOARD] Error en usersData:', {
+          success: usersData.success,
+          hasUsers: !!usersData.users,
+          isArray: Array.isArray(usersData.users),
+          error: usersData.error
+        });
       }
       
       const asignacionesActivas = filteredAssignments.length;
