@@ -146,7 +146,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
       let filteredGroupedData = data.groupedData || [];
       let filteredSummary = data.summary || null;
 
-      if (userRole === 'admin' && userGroups.length > 0) {
+      if (userRole === 'admin' && userGroups && userGroups.length > 0) {
         // Filtrar datos de facturación por grupos del admin
         filteredData = filteredData.filter((item: BillingData) => 
           item.groupId && userGroups.includes(item.groupId)
