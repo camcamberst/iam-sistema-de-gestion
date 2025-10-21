@@ -49,6 +49,9 @@ export async function GET(request: NextRequest) {
     // Obtener grupos del admin
     const adminGroups = adminUser.user_groups?.map((ug: any) => ug.groups.id) || [];
     console.log('🔍 [BILLING-SUMMARY] Admin groups:', adminGroups);
+    console.log('🔍 [BILLING-SUMMARY] User role:', adminUser.role);
+    console.log('🔍 [BILLING-SUMMARY] Is Super Admin:', isSuperAdmin);
+    console.log('🔍 [BILLING-SUMMARY] Is Admin:', isAdmin);
 
     // 2. Obtener modelos según permisos
     let modelsQuery = supabase
@@ -63,6 +66,7 @@ export async function GET(request: NextRequest) {
 
     // Si es admin (no super_admin), filtrar por sus grupos asignados
     if (isAdmin && !isSuperAdmin && adminGroups.length > 0) {
+      console.log('🔍 [BILLING-SUMMARY] Aplicando filtros de admin para grupos:', adminGroups);
       // Obtener modelos que pertenecen a los grupos del admin
       const { data: modelGroups, error: modelGroupsError } = await supabase
         .from('user_groups')
