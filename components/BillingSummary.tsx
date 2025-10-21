@@ -164,11 +164,11 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
         if (filteredData.length > 0) {
           filteredSummary = {
             totalModels: filteredData.length,
-            totalUsdBruto: filteredData.reduce((sum, item) => sum + item.usdBruto, 0),
-            totalUsdModelo: filteredData.reduce((sum, item) => sum + item.usdModelo, 0),
-            totalUsdSede: filteredData.reduce((sum, item) => sum + item.usdSede, 0),
-            totalCopModelo: filteredData.reduce((sum, item) => sum + item.copModelo, 0),
-            totalCopSede: filteredData.reduce((sum, item) => sum + item.copSede, 0)
+            totalUsdBruto: filteredData.reduce((sum: number, item: BillingData) => sum + item.usdBruto, 0),
+            totalUsdModelo: filteredData.reduce((sum: number, item: BillingData) => sum + item.usdModelo, 0),
+            totalUsdSede: filteredData.reduce((sum: number, item: BillingData) => sum + item.usdSede, 0),
+            totalCopModelo: filteredData.reduce((sum: number, item: BillingData) => sum + item.copModelo, 0),
+            totalCopSede: filteredData.reduce((sum: number, item: BillingData) => sum + item.copSede, 0)
           };
         }
       }
