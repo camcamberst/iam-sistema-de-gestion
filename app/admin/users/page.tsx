@@ -117,9 +117,9 @@ export default function UsersListPage() {
         // Aplicar filtros de jerarquía
         let filteredUsers = usersData.users;
         
-        if (currentUserData.role === 'admin') {
+        if (currentUser?.role === 'admin') {
           // Admin solo puede ver usuarios de sus grupos
-          const userGroups = currentUserData.groups || [];
+          const userGroups = currentUser.groups || [];
           filteredUsers = usersData.users.filter((user: any) => {
             // Super admin puede ver todos
             if (user.role === 'super_admin') return false;
