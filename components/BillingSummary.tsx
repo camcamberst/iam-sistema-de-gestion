@@ -441,7 +441,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                 groupedDataLength: groupedData?.length, 
                 billingDataLength: billingData.length,
                 userRole,
-                userGroups 
+                userGroups,
+                groupedData
               })}
               {groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
