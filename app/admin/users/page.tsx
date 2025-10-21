@@ -120,6 +120,11 @@ export default function UsersListPage() {
         if (currentUser?.role === 'admin') {
           // Admin solo puede ver usuarios de sus grupos
           const userGroups = currentUser.groups || [];
+          // Normalizar userGroups a array de strings (IDs)
+          const userGroupIds = Array.isArray(userGroups) 
+            ? userGroups.map((g: any) => typeof g === 'string' ? g : g.id)
+            : [];
+          
           filteredUsers = usersData.users.filter((user: any) => {
             // Super admin puede ver todos
             if (user.role === 'super_admin') return false;
@@ -129,10 +134,10 @@ export default function UsersListPage() {
               // Si el usuario tiene grupos, debe tener al menos uno en común
               if (user.groups && user.groups.length > 0) {
                 // user.groups puede ser array de strings (IDs) o array de objetos
-                const userGroupIds = Array.isArray(user.groups) 
+                const targetUserGroupIds = Array.isArray(user.groups) 
                   ? user.groups.map((g: any) => typeof g === 'string' ? g : g.id)
                   : [];
-                return userGroupIds.some((groupId: string) => userGroups.includes(groupId));
+                return targetUserGroupIds.some((groupId: string) => userGroupIds.includes(groupId));
               }
               return false;
             }
