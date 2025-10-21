@@ -377,9 +377,9 @@ export async function GET(request: NextRequest) {
       totalCopSede: 0
     });
 
-    // 7. Para Super Admin: Agrupar todo bajo "Agencia Innova"
+    // 7. Agrupar datos por sedes/grupos
     let groupedData = null;
-    if (isSuperAdmin) {
+    if (isSuperAdmin || (isAdmin && adminGroups.length > 0)) {
       // Obtener información de grupos
       const uniqueGroupIds = Array.from(new Set(billingData.map(m => m.groupId).filter(Boolean)));
       const { data: groups, error: groupsError } = await supabase
@@ -391,64 +391,103 @@ export async function GET(request: NextRequest) {
         console.error('❌ [BILLING-SUMMARY] Error al obtener grupos:', groupsError);
       }
 
-      // Crear una sola sede principal: "Agencia Innova"
-      const agenciaInnova: any = {
-        sedeId: 'agencia-innova',
-        sedeName: 'Agencia Innova',
-        groups: [],
-        models: [],
-        totalModels: 0,
-        totalUsdBruto: 0,
-        totalUsdModelo: 0,
-        totalUsdSede: 0,
-        totalCopModelo: 0,
-        totalCopSede: 0
-      };
+      if (isSuperAdmin) {
+        // Para Super Admin: Agrupar todo bajo "Agencia Innova"
+        const agenciaInnova: any = {
+          sedeId: 'agencia-innova',
+          sedeName: 'Agencia Innova',
+          groups: [],
+          models: [],
+          totalModels: 0,
+          totalUsdBruto: 0,
+          totalUsdModelo: 0,
+          totalUsdSede: 0,
+          totalCopModelo: 0,
+          totalCopSede: 0
+        };
 
-      // Agrupar modelos por grupo dentro de Agencia Innova
-      const groupMap = new Map();
-      billingData.forEach(model => {
-        const groupId = model.groupId;
+        // Agrupar modelos por grupo dentro de Agencia Innova
+        const groupMap = new Map();
+        billingData.forEach(model => {
+          const groupId = model.groupId;
+          
+          // Crear o actualizar grupo dentro de Agencia Innova
+          if (!groupMap.has(groupId)) {
+            groupMap.set(groupId, {
+              groupId: groupId,
+              groupName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
+              models: [],
+              totalModels: 0,
+              totalUsdBruto: 0,
+              totalUsdModelo: 0,
+              totalUsdSede: 0,
+              totalCopModelo: 0,
+              totalCopSede: 0
+            });
+          }
+
+          const group = groupMap.get(groupId);
+          group.models.push(model);
+          group.totalModels += 1;
+          group.totalUsdBruto += model.usdBruto;
+          group.totalUsdModelo += model.usdModelo;
+          group.totalUsdSede += model.usdSede;
+          group.totalCopModelo += model.copModelo;
+          group.totalCopSede += model.copSede;
+
+          // Acumular en Agencia Innova
+          agenciaInnova.models.push(model);
+          agenciaInnova.totalModels += 1;
+          agenciaInnova.totalUsdBruto += model.usdBruto;
+          agenciaInnova.totalUsdModelo += model.usdModelo;
+          agenciaInnova.totalUsdSede += model.usdSede;
+          agenciaInnova.totalCopModelo += model.copModelo;
+          agenciaInnova.totalCopSede += model.copSede;
+        });
+
+        // Agregar todos los grupos a Agencia Innova
+        agenciaInnova.groups = Array.from(groupMap.values());
+
+        // Retornar solo Agencia Innova como sede principal
+        groupedData = [agenciaInnova];
+      } else if (isAdmin && adminGroups.length > 0) {
+        // Para Admin: Crear sedes individuales solo para las asignadas
+        const sedeMap = new Map();
         
-        // Crear o actualizar grupo dentro de Agencia Innova
-        if (!groupMap.has(groupId)) {
-          groupMap.set(groupId, {
-            groupId: groupId,
-            groupName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
-            models: [],
-            totalModels: 0,
-            totalUsdBruto: 0,
-            totalUsdModelo: 0,
-            totalUsdSede: 0,
-            totalCopModelo: 0,
-            totalCopSede: 0
-          });
-        }
+        billingData.forEach(model => {
+          const groupId = model.groupId;
+          
+          // Solo procesar si el grupo está asignado al admin
+          if (adminGroups.includes(groupId)) {
+            if (!sedeMap.has(groupId)) {
+              sedeMap.set(groupId, {
+                sedeId: groupId,
+                sedeName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
+                groups: [],
+                models: [],
+                totalModels: 0,
+                totalUsdBruto: 0,
+                totalUsdModelo: 0,
+                totalUsdSede: 0,
+                totalCopModelo: 0,
+                totalCopSede: 0
+              });
+            }
 
-        const group = groupMap.get(groupId);
-        group.models.push(model);
-        group.totalModels += 1;
-        group.totalUsdBruto += model.usdBruto;
-        group.totalUsdModelo += model.usdModelo;
-        group.totalUsdSede += model.usdSede;
-        group.totalCopModelo += model.copModelo;
-        group.totalCopSede += model.copSede;
+            const sede = sedeMap.get(groupId);
+            sede.models.push(model);
+            sede.totalModels += 1;
+            sede.totalUsdBruto += model.usdBruto;
+            sede.totalUsdModelo += model.usdModelo;
+            sede.totalUsdSede += model.usdSede;
+            sede.totalCopModelo += model.copModelo;
+            sede.totalCopSede += model.copSede;
+          }
+        });
 
-        // Acumular en Agencia Innova
-        agenciaInnova.models.push(model);
-        agenciaInnova.totalModels += 1;
-        agenciaInnova.totalUsdBruto += model.usdBruto;
-        agenciaInnova.totalUsdModelo += model.usdModelo;
-        agenciaInnova.totalUsdSede += model.usdSede;
-        agenciaInnova.totalCopModelo += model.copModelo;
-        agenciaInnova.totalCopSede += model.copSede;
-      });
-
-      // Agregar todos los grupos a Agencia Innova
-      agenciaInnova.groups = Array.from(groupMap.values());
-
-      // Retornar solo Agencia Innova como sede principal
-      groupedData = [agenciaInnova];
+        // Convertir Map a Array
+        groupedData = Array.from(sedeMap.values());
+      }
     }
 
     console.log('✅ [BILLING-SUMMARY] Resumen generado:', { 
