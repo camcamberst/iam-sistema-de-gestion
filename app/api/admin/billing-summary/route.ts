@@ -238,10 +238,10 @@ export async function GET(request: NextRequest) {
 
     // Combinar datos de ambas consultas, priorizando los más recientes
     const allTotalsData = [...(totalsData || []), ...(exactTotalsData || [])];
-    const uniqueTotalsData = allTotalsData.reduce((acc, current) => {
-      const existing = acc.find(item => item.model_id === current.model_id);
+    const uniqueTotalsData = allTotalsData.reduce((acc: any[], current: any) => {
+      const existing = acc.find((item: any) => item.model_id === current.model_id);
       if (!existing || new Date(current.updated_at) > new Date(existing.updated_at)) {
-        return acc.filter(item => item.model_id !== current.model_id).concat([current]);
+        return acc.filter((item: any) => item.model_id !== current.model_id).concat([current]);
       }
       return acc;
     }, []);
