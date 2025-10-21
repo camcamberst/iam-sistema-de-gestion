@@ -145,12 +145,13 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
         userGroups
       });
 
-      // Aplicar filtros de jerarquía para admins
+      // El API ya está filtrando los datos correctamente, no necesitamos filtrar en el frontend
       let filteredData = data.data || [];
       let filteredGroupedData = data.groupedData || [];
       let filteredSummary = data.summary || null;
 
-      if (userRole === 'admin' && userGroups && userGroups.length > 0) {
+      // No aplicar filtros adicionales, el API ya lo hace
+      if (false && userRole === 'admin' && userGroups && userGroups.length > 0) {
         // Filtrar datos de facturación por grupos del admin
         filteredData = filteredData.filter((item: BillingData) => 
           item.groupId && userGroups.includes(item.groupId)
