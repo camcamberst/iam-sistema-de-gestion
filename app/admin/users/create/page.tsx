@@ -53,14 +53,23 @@ export default function CreateUserPage() {
         if (user) {
           const { data: userData } = await supabase
             .from('users')
-            .select('role, groups')
+            .select(`
+              role,
+              user_groups(
+                groups!inner(
+                  id,
+                  name
+                )
+              )
+            `)
             .eq('id', user.id)
             .single();
           
           if (userData) {
+            const userGroups = userData.user_groups?.map((ug: any) => ug.groups.id) || [];
             setCurrentUser({
               role: userData.role,
-              groups: userData.groups || []
+              groups: userGroups
             });
           }
         }
@@ -267,8 +276,8 @@ export default function CreateUserPage() {
                 
                 // Aplicar límites de jerarquía
                 if (currentUser?.role === 'admin') {
-                  // Admin solo puede crear 'modelo' y 'admin'
-                  return allRoles.filter(role => role.value !== 'super_admin');
+                  // Admin solo puede crear 'modelo'
+                  return allRoles.filter(role => role.value === 'modelo');
                 }
                 
                 // Super admin puede crear todos los roles

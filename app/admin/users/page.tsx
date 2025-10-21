@@ -71,7 +71,15 @@ export default function UsersListPage() {
       // Obtener datos del usuario actual
       const { data: currentUserData } = await supabase
         .from('users')
-        .select('role, groups')
+        .select(`
+          role,
+          user_groups(
+            groups!inner(
+              id,
+              name
+            )
+          )
+        `)
         .eq('id', user.id)
         .single();
 
@@ -80,10 +88,11 @@ export default function UsersListPage() {
         return;
       }
 
+      const userGroups = currentUserData.user_groups?.map((ug: any) => ug.groups.id) || [];
       setCurrentUser({
         id: user.id,
         role: currentUserData.role,
-        groups: currentUserData.groups || []
+        groups: userGroups
       });
       
       // Cargar usuarios y grupos
