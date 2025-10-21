@@ -33,6 +33,7 @@ interface SedeData {
   sedeId: string;
   sedeName: string;
   groups: GroupData[];
+  models: BillingData[];
   totalModels: number;
   totalUsdBruto: number;
   totalUsdModelo: number;
