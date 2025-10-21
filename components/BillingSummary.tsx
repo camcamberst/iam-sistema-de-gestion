@@ -315,7 +315,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
           )}
 
           {/* Vista jerárquica para Super Admin - Estilo Apple */}
-          {userRole === 'super_admin' && groupedData.length > 0 ? (
+          {userRole === 'super_admin' && groupedData && groupedData.length > 0 ? (
             <div className="space-y-3">
               {groupedData.map((sede) => (
                 <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
@@ -435,7 +435,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
           ) : billingData.length > 0 ? (
             <div className="space-y-3">
               {/* Para admins: Mostrar cada sede por separado */}
-              {userRole === 'admin' && userGroups && userGroups.length > 0 ? (
+              {userRole === 'admin' && userGroups && userGroups.length > 0 && groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
                   {groupedData.map((sede) => (
                     <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
@@ -515,6 +515,80 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                       )}
                     </div>
                   ))}
+                </div>
+              ) : userRole === 'admin' && userGroups && userGroups.length > 0 ? (
+                /* Para admin sin groupedData: Mostrar modelos individuales */
+                <div className="space-y-3">
+                  {/* Botón para expandir/contraer todos los modelos */}
+                  <div className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-gray-200/50">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setShowAllModels(!showAllModels)}
+                        className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-all duration-200"
+                      >
+                        <svg 
+                          className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${showAllModels ? 'rotate-90' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      <div>
+                        <div className="font-medium text-gray-800">Mis Modelos ({billingData.length})</div>
+                        <div className="text-sm text-gray-500">Haz clic para {showAllModels ? 'ocultar' : 'mostrar'} detalles</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-6 text-sm">
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-700">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
+                        <div className="text-xs text-gray-500">USD Bruto</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-green-600">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
+                        <div className="text-xs text-gray-500">USD Modelo</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-orange-600">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdSede, 0))}</div>
+                        <div className="text-xs text-gray-500">USD Sede</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lista de modelos (expandible) */}
+                  {showAllModels && (
+                    <div className="space-y-2">
+                      {billingData.map((model) => (
+                        <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                              <span className="text-xs font-semibold text-blue-600">
+                                {model.email.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-800">{model.email}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="text-right">
+                              <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                              <div className="text-xs text-gray-500">USD Bruto</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-green-600">${formatCurrency(model.usdModelo)}</div>
+                              <div className="text-xs text-gray-500">USD Modelo</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
+                              <div className="text-xs text-gray-500">USD Sede</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 /* Para super_admin: Vista genérica de todos los modelos */
