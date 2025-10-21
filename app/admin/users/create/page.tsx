@@ -359,24 +359,18 @@ export default function CreateUserPage() {
                             });
                           }
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 transition-colors duration-150 ${
+                        className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
                           isDisabled || !canAssignGroup 
                             ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
                             : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        } ${
+                          isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
                         }`}
                       >
-                        <span className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
-                          isSelected 
-                            ? 'bg-blue-500 border-blue-500' 
-                            : 'border-gray-300 dark:border-gray-600'
-                        }`}>
-                          {isSelected && (
-                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
-                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                            </svg>
-                          )}
-                        </span>
                         <span>{g.name}</span>
+                        {isSelected && (
+                          <span className="text-blue-600 dark:text-blue-400 ml-auto">✓</span>
+                        )}
                       </button>
                     );
                   })
