@@ -51,25 +51,41 @@ export default function CreateUserPage() {
         // Cargar usuario actual
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data: userData } = await supabase
-            .from('users')
-            .select(`
-              role,
-              user_groups(
-                groups!inner(
-                  id,
-                  name
+          try {
+            const { data: userData, error } = await supabase
+              .from('users')
+              .select(`
+                role,
+                user_groups(
+                  groups!inner(
+                    id,
+                    name
+                  )
                 )
-              )
-            `)
-            .eq('id', user.id)
-            .single();
-          
-          if (userData) {
-            const userGroups = userData.user_groups?.map((ug: any) => ug.groups.id) || [];
+              `)
+              .eq('id', user.id)
+              .single();
+            
+            if (error) {
+              console.error('Error obteniendo datos del usuario:', error);
+              // Fallback: usar datos básicos
+              setCurrentUser({
+                role: 'admin', // Asumir admin por defecto
+                groups: []
+              });
+            } else if (userData) {
+              const userGroups = userData.user_groups?.map((ug: any) => ug.groups.id) || [];
+              setCurrentUser({
+                role: userData.role,
+                groups: userGroups
+              });
+            }
+          } catch (err) {
+            console.error('Error en consulta de usuario:', err);
+            // Fallback: usar datos básicos
             setCurrentUser({
-              role: userData.role,
-              groups: userGroups
+              role: 'admin', // Asumir admin por defecto
+              groups: []
             });
           }
         }

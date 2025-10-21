@@ -69,31 +69,43 @@ export default function UsersListPage() {
       }
 
       // Obtener datos del usuario actual
-      const { data: currentUserData } = await supabase
-        .from('users')
-        .select(`
-          role,
-          user_groups(
-            groups!inner(
-              id,
-              name
+      try {
+        const { data: currentUserData, error } = await supabase
+          .from('users')
+          .select(`
+            role,
+            user_groups(
+              groups!inner(
+                id,
+                name
+              )
             )
-          )
-        `)
-        .eq('id', user.id)
-        .single();
+          `)
+          .eq('id', user.id)
+          .single();
 
-      if (!currentUserData) {
+        if (error) {
+          console.error('Error obteniendo datos del usuario:', error);
+          setError('Error obteniendo datos del usuario: ' + error.message);
+          return;
+        }
+
+        if (!currentUserData) {
+          setError('Error obteniendo datos del usuario');
+          return;
+        }
+
+        const userGroups = currentUserData.user_groups?.map((ug: any) => ug.groups.id) || [];
+        setCurrentUser({
+          id: user.id,
+          role: currentUserData.role,
+          groups: userGroups
+        });
+      } catch (err) {
+        console.error('Error en consulta de usuario:', err);
         setError('Error obteniendo datos del usuario');
         return;
       }
-
-      const userGroups = currentUserData.user_groups?.map((ug: any) => ug.groups.id) || [];
-      setCurrentUser({
-        id: user.id,
-        role: currentUserData.role,
-        groups: userGroups
-      });
       
       // Cargar usuarios y grupos
       const [usersData, groupsData] = await Promise.all([
