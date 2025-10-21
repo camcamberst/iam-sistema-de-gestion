@@ -128,7 +128,11 @@ export default function UsersListPage() {
             if (user.role === 'admin' || user.role === 'modelo') {
               // Si el usuario tiene grupos, debe tener al menos uno en común
               if (user.groups && user.groups.length > 0) {
-                return user.groups.some((groupId: string) => userGroups.includes(groupId));
+                // user.groups puede ser array de strings (IDs) o array de objetos
+                const userGroupIds = Array.isArray(user.groups) 
+                  ? user.groups.map((g: any) => typeof g === 'string' ? g : g.id)
+                  : [];
+                return userGroupIds.some((groupId: string) => userGroups.includes(groupId));
               }
               return false;
             }
