@@ -90,7 +90,7 @@ export default function AppleDropdown({
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         type="button"
-        className={`apple-input text-sm text-left cursor-pointer flex items-center justify-between ${
+        className={`w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
         }`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -99,7 +99,7 @@ export default function AppleDropdown({
         aria-expanded={isOpen}
       >
         <div className="flex items-center justify-between w-full">
-          <span className={selectedOption ? 'theme-text-primary' : 'theme-text-secondary'}>
+          <span className={selectedOption ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <div className="flex items-center space-x-2">
@@ -125,9 +125,9 @@ export default function AppleDropdown({
       </button>
       
       {isOpen && (
-        <div className={`absolute z-50 w-full mt-1 theme-bg-secondary theme-border rounded-lg theme-shadow ${maxHeight} overflow-auto apple-scroll`}>
+        <div className={`absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg ${maxHeight} overflow-auto apple-scroll`}>
           {options.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500">
+            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
               No hay opciones disponibles
             </div>
           ) : (
@@ -135,13 +135,13 @@ export default function AppleDropdown({
               <div
                 key={option.value}
                 className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
-                  index > 0 ? 'border-t border-gray-100' : ''
+                  index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
                 } ${
                   option.disabled 
-                    ? 'text-gray-400 cursor-not-allowed' 
-                    : 'hover:bg-gray-50 text-gray-900'
+                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
                 } ${
-                  option.value === value ? 'bg-blue-50 text-blue-900' : ''
+                  option.value === value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
                 }`}
                 onClick={() => !option.disabled && handleSelect(option.value)}
               >
