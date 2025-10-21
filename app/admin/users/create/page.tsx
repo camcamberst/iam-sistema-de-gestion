@@ -360,6 +360,8 @@ export default function CreateUserPage() {
                           }
                         }}
                         className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
+                          index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
+                        } ${
                           isDisabled || !canAssignGroup 
                             ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
                             : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
