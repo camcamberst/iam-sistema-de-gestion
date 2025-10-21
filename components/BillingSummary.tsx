@@ -450,7 +450,12 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                     </svg>
                   </button>
                   <div>
-                    <div className="font-medium text-gray-800">Modelos ({billingData.length})</div>
+                    <div className="font-medium text-gray-800">
+                      {selectedSede && availableSedes.find(s => s.id === selectedSede)?.name 
+                        ? `${availableSedes.find(s => s.id === selectedSede)?.name} (${billingData.length})`
+                        : `Todas las Sedes (${billingData.length})`
+                      }
+                    </div>
                     <div className="text-sm text-gray-500">Haz clic para {showAllModels ? 'ocultar' : 'mostrar'} detalles</div>
                   </div>
                 </div>
