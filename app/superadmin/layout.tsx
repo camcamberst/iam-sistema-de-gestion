@@ -217,7 +217,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Apple Style 2 Header */}
-      <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-50 shadow-lg">
+      <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-[9999] shadow-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -268,7 +268,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (
                     <div 
-                      className="absolute top-full left-0 mt-2 w-72 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-50 animate-in slide-in-from-top-2 duration-200"
+                      className="absolute top-full left-0 mt-2 w-72 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9998] animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={handleDropdownEnter}
                       onMouseLeave={handleDropdownLeave}
                     >

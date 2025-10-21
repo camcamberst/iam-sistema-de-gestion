@@ -870,7 +870,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           console.log('🧪 [ChatWidget] Prueba manual de notificación');
           triggerNotification();
         }}
-        className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-50 group overflow-hidden ${
+        className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
           isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600' : ''
         }`}
         aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
@@ -887,7 +887,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       {/* Ventana del chat */}
       {isOpen && (
-        <div className="fixed bottom-6 right-24 w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-50">
+        <div className="fixed bottom-6 right-24 w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9995]">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
             <div className="flex items-center space-x-3">
@@ -1177,7 +1177,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
       {/* Modal de confirmación para eliminar conversación */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9995]">
           <div className="bg-gray-800 border border-gray-700 rounded-lg p-6 max-w-sm w-full mx-4">
             <h3 className="text-white text-lg font-semibold mb-4">Eliminar conversación</h3>
             <p className="text-gray-300 text-sm mb-6">
