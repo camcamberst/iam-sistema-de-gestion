@@ -192,7 +192,11 @@ export async function GET(request: NextRequest) {
     const endStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '15' : String(lastDay).padStart(2,'0')}`;
     const periodType = firstHalf ? '1-15' : '16-31';
 
-    console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { startStr, endStr, periodType });
+    // CORRECCIÓN: Incluir la fecha actual en el rango para capturar datos recientes
+    const todayStr = new Date().toISOString().split('T')[0];
+    const extendedEndStr = todayStr > endStr ? todayStr : endStr;
+
+    console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { startStr, endStr: extendedEndStr, periodType, originalEnd: endStr, today: todayStr });
 
     // 3.1. Obtener datos de calculator_history (período cerrado)
     const { data: historyData, error: historyError } = await supabase
@@ -200,7 +204,7 @@ export async function GET(request: NextRequest) {
       .select('model_id, platform_id, value, period_date, period_type')
       .in('model_id', modelIds)
       .gte('period_date', startStr)
-      .lte('period_date', endStr)
+      .lte('period_date', extendedEndStr)
       .eq('period_type', periodType);
 
     if (historyError) {
@@ -213,18 +217,41 @@ export async function GET(request: NextRequest) {
       .select('*')
       .in('model_id', modelIds)
       .gte('period_date', startStr)
-      .lte('period_date', endStr)
+      .lte('period_date', extendedEndStr)
       .order('period_date', { ascending: false });
 
     if (totalsError) {
       console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
     }
 
+    // 3.2.1. Búsqueda adicional por fecha exacta para capturar datos recientes
+    const { data: exactTotalsData, error: exactTotalsError } = await supabase
+      .from('calculator_totals')
+      .select('*')
+      .in('model_id', modelIds)
+      .eq('period_date', todayStr)
+      .order('updated_at', { ascending: false });
+
+    if (exactTotalsError) {
+      console.error('❌ [BILLING-SUMMARY] Error al obtener totales exactos:', exactTotalsError);
+    }
+
+    // Combinar datos de ambas consultas, priorizando los más recientes
+    const allTotalsData = [...(totalsData || []), ...(exactTotalsData || [])];
+    const uniqueTotalsData = allTotalsData.reduce((acc, current) => {
+      const existing = acc.find(item => item.model_id === current.model_id);
+      if (!existing || new Date(current.updated_at) > new Date(existing.updated_at)) {
+        return acc.filter(item => item.model_id !== current.model_id).concat([current]);
+      }
+      return acc;
+    }, []);
+
     console.log('🔍 [BILLING-SUMMARY] Datos encontrados:', {
       historyRecords: historyData?.length || 0,
-      totalsRecords: totalsData?.length || 0,
+      totalsRecords: uniqueTotalsData?.length || 0,
+      exactTotalsRecords: exactTotalsData?.length || 0,
       historyModels: historyData ? Array.from(new Set(historyData.map(h => h.model_id))) : [],
-      totalsModels: totalsData ? Array.from(new Set(totalsData.map(t => t.model_id))) : [],
+      totalsModels: uniqueTotalsData ? Array.from(new Set(uniqueTotalsData.map(t => t.model_id))) : [],
       timestamp: new Date().toISOString()
     });
 
@@ -267,10 +294,10 @@ export async function GET(request: NextRequest) {
 
     // 3.4. Procesar datos de calculator_totals (período activo) para modelos sin datos en historial
     const totalsMap = new Map();
-    if (totalsData && totalsData.length > 0) {
+    if (uniqueTotalsData && uniqueTotalsData.length > 0) {
       console.log('📊 [BILLING-SUMMARY] Procesando datos de calculator_totals');
       
-      totalsData.forEach(item => {
+      uniqueTotalsData.forEach(item => {
         // Solo agregar si no tiene datos en historial
         if (!historyMap.has(item.model_id)) {
           totalsMap.set(item.model_id, {
