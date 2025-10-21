@@ -365,13 +365,18 @@ export default function CreateUserPage() {
                             : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
                         }`}
                       >
-                        <span
-                          aria-hidden
-                          className={`relative w-[34px] h-[20px] rounded-full ${isSelected ? 'bg-gray-900 dark:bg-gray-100' : 'bg-gray-200 dark:bg-gray-600'} flex-shrink-0`}
-                        >
-                          <span className={`absolute top-[2px] ${isSelected ? 'left-[16px]' : 'left-[2px]'} w-[16px] h-[16px] rounded-full bg-white dark:bg-gray-800 shadow`}></span>
+                        <span className={`w-4 h-4 rounded border-2 flex items-center justify-center ${
+                          isSelected 
+                            ? 'bg-blue-500 border-blue-500' 
+                            : 'border-gray-300 dark:border-gray-600'
+                        }`}>
+                          {isSelected && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
                         </span>
-                        <span className="font-medium">{g.name}</span>
+                        <span>{g.name}</span>
                       </button>
                     );
                   })
