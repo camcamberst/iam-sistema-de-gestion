@@ -342,6 +342,7 @@ export default function DashboardSedesPage() {
           <BillingSummary 
             userRole={userRole as 'admin' | 'super_admin'} 
             userId={userId}
+            userGroups={userGroups}
           />
         )}
 

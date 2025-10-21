@@ -53,9 +53,10 @@ interface BillingSummary {
 interface BillingSummaryProps {
   userRole: 'admin' | 'super_admin';
   userId: string;
+  userGroups?: string[];
 }
 
-export default function BillingSummary({ userRole, userId }: BillingSummaryProps) {
+export default function BillingSummary({ userRole, userId, userGroups = [] }: BillingSummaryProps) {
   console.log('🔍 [BILLING-SUMMARY] Componente renderizado:', { userRole, userId });
   
   const [billingData, setBillingData] = useState<BillingData[]>([]);
@@ -140,9 +141,41 @@ export default function BillingSummary({ userRole, userId }: BillingSummaryProps
         groupedDataLength: data.groupedData?.length || 0
       });
 
-      setBillingData(data.data || []);
-      setGroupedData(data.groupedData || []);
-      setSummary(data.summary || null);
+      // Aplicar filtros de jerarquía para admins
+      let filteredData = data.data || [];
+      let filteredGroupedData = data.groupedData || [];
+      let filteredSummary = data.summary || null;
+
+      if (userRole === 'admin' && userGroups.length > 0) {
+        // Filtrar datos de facturación por grupos del admin
+        filteredData = filteredData.filter((item: BillingData) => 
+          item.groupId && userGroups.includes(item.groupId)
+        );
+
+        // Filtrar datos agrupados por grupos del admin
+        filteredGroupedData = filteredGroupedData.filter((sede: SedeData) => 
+          sede.groups.some((group: GroupData) => userGroups.includes(group.groupId))
+        ).map((sede: SedeData) => ({
+          ...sede,
+          groups: sede.groups.filter((group: GroupData) => userGroups.includes(group.groupId))
+        }));
+
+        // Recalcular resumen con datos filtrados
+        if (filteredData.length > 0) {
+          filteredSummary = {
+            totalModels: filteredData.length,
+            totalUsdBruto: filteredData.reduce((sum, item) => sum + item.usdBruto, 0),
+            totalUsdModelo: filteredData.reduce((sum, item) => sum + item.usdModelo, 0),
+            totalUsdSede: filteredData.reduce((sum, item) => sum + item.usdSede, 0),
+            totalCopModelo: filteredData.reduce((sum, item) => sum + item.copModelo, 0),
+            totalCopSede: filteredData.reduce((sum, item) => sum + item.copSede, 0)
+          };
+        }
+      }
+
+      setBillingData(filteredData);
+      setGroupedData(filteredGroupedData);
+      setSummary(filteredSummary);
 
     } catch (error: any) {
       console.error('Error al cargar resumen de facturación:', error);
