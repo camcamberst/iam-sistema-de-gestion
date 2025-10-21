@@ -397,8 +397,9 @@ export async function GET(request: NextRequest) {
         const groupId = model.groupId;
         if (!groupMap.has(groupId)) {
           groupMap.set(groupId, {
-            groupId,
-            groupName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
+            sedeId: groupId,
+            sedeName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
+            groups: [], // Array de grupos dentro de la sede
             models: [],
             totalModels: 0,
             totalUsdBruto: 0,
@@ -417,6 +418,30 @@ export async function GET(request: NextRequest) {
         group.totalUsdSede += model.usdSede;
         group.totalCopModelo += model.copModelo;
         group.totalCopSede += model.copSede;
+
+        // Crear estructura de grupos dentro de la sede
+        const existingGroup = group.groups.find(g => g.groupId === model.groupId);
+        if (!existingGroup) {
+          group.groups.push({
+            groupId: model.groupId,
+            groupName: groups?.find(g => g.id === model.groupId)?.name || 'Grupo Desconocido',
+            models: [model],
+            totalModels: 1,
+            totalUsdBruto: model.usdBruto,
+            totalUsdModelo: model.usdModelo,
+            totalUsdSede: model.usdSede,
+            totalCopModelo: model.copModelo,
+            totalCopSede: model.copSede
+          });
+        } else {
+          existingGroup.models.push(model);
+          existingGroup.totalModels += 1;
+          existingGroup.totalUsdBruto += model.usdBruto;
+          existingGroup.totalUsdModelo += model.usdModelo;
+          existingGroup.totalUsdSede += model.usdSede;
+          existingGroup.totalCopModelo += model.copModelo;
+          existingGroup.totalCopSede += model.copSede;
+        }
       });
 
       // Convertir Map a Array
