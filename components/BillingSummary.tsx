@@ -444,6 +444,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                 userGroups,
                 groupedData
               })}
+              {/* Forzar renderizado de sedes individuales cuando hay groupedData */}
               {groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
                   {console.log('🔍 [BILLING-SUMMARY] Renderizando sedes individuales:', groupedData)}
@@ -529,6 +530,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
               ) : (
                 /* Fallback: Vista de modelos individuales si no hay groupedData */
                 <div className="space-y-3">
+                  {console.log('🔍 [BILLING-SUMMARY] Usando vista fallback - modelos individuales')}
                   <div className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-gray-200/50">
                     <div className="flex items-center space-x-3">
                       <button
