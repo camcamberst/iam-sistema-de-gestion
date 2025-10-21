@@ -345,7 +345,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                   {/* Grupos de la Sede */}
                   {expandedSedes.has(sede.sedeId) && (
                     <div className="bg-gray-50/30 border-t border-gray-200/50">
-                      {sede.groups.map((group) => (
+                      {sede.groups?.map((group) => (
                         <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
                           {/* Header de Grupo */}
                           <div 
