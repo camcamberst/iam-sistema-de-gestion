@@ -289,46 +289,44 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-      // Solo mostrar "Gestión Sedes" si el usuario tiene sedes asignadas o es super_admin
-      if (userInfo?.role === 'super_admin' || (userInfo?.groups && userInfo.groups.length > 0)) {
-        baseItems.push({
-          id: 'sedes',
-          label: 'Gestión Sedes',
-          href: '#',
-          subItems: [
-            { 
-              label: 'Gestionar Sedes', 
-              href: '/admin/sedes/gestionar',
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              ),
-              description: 'Administra sedes y ubicaciones'
-            },
-            { 
-              label: 'Portafolio Modelos', 
-              href: '/admin/sedes/portafolio',
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                </svg>
-              ),
-              description: 'Gestiona portafolios por sede'
-            },
-            { 
-              label: 'Dashboard Sedes', 
-              href: '/admin/sedes/dashboard',
-              icon: (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              ),
-              description: 'Vista general de todas las sedes'
-            }
-          ]
-        });
-      }
+      // Mostrar "Gestión Sedes" para todos los usuarios (los límites se aplican en las páginas)
+      baseItems.push({
+        id: 'sedes',
+        label: 'Gestión Sedes',
+        href: '#',
+        subItems: [
+          { 
+            label: 'Gestionar Sedes', 
+            href: '/admin/sedes/gestionar',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            ),
+            description: 'Administra sedes y ubicaciones'
+          },
+          { 
+            label: 'Portafolio Modelos', 
+            href: '/admin/sedes/portafolio',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            ),
+            description: 'Gestiona portafolios por sede'
+          },
+          { 
+            label: 'Dashboard Sedes', 
+            href: '/admin/sedes/dashboard',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            ),
+            description: 'Vista general de todas las sedes'
+          }
+        ]
+      });
 
       // Agregar opciones administrativas de calculadora
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
