@@ -73,12 +73,12 @@ export default function GestionarSedesPage() {
     window.scrollTo(0, 0);
     
     loadUserInfo();
-    loadData();
   }, []);
 
-  // Cargar sedes disponibles después de cargar la información del usuario
+  // Cargar datos después de cargar la información del usuario
   useEffect(() => {
     if (userRole && userGroups.length >= 0) {
+      loadData();
       loadAvailableSedes();
     }
   }, [userRole, userGroups]);

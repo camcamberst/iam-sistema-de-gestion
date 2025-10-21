@@ -73,8 +73,14 @@ export default function DashboardSedesPage() {
     window.scrollTo(0, 0);
     
     loadUserInfo();
-    loadDashboardData();
   }, []);
+
+  // Cargar datos del dashboard después de cargar la información del usuario
+  useEffect(() => {
+    if (userRole && userGroups.length >= 0) {
+      loadDashboardData();
+    }
+  }, [userRole, userGroups]);
 
   // Cargar disponibilidad cuando se seleccione una sede
   useEffect(() => {
@@ -227,7 +233,13 @@ export default function DashboardSedesPage() {
       // Calcular estadísticas reales
       const totalSedes = filteredGroups.length;
       const totalRooms = filteredRooms.length;
-      const totalModelos = usersData.success ? usersData.users?.filter((u: any) => u.role === 'modelo' && u.is_active).length || 0 : 0;
+      
+      // Filtrar modelos de manera segura
+      let totalModelos = 0;
+      if (usersData.success && usersData.users && Array.isArray(usersData.users)) {
+        totalModelos = usersData.users.filter((u: any) => u.role === 'modelo' && u.is_active).length;
+      }
+      
       const asignacionesActivas = filteredAssignments.length;
       
       // Calcular sedes con y sin rooms

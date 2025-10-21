@@ -118,10 +118,12 @@ export default function PortafolioModelos() {
     loadUserInfo();
   }, []);
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales después de cargar la información del usuario
   useEffect(() => {
-    loadInitialData();
-  }, []);
+    if (userRole && userGroups.length >= 0) {
+      loadInitialData();
+    }
+  }, [userRole, userGroups]);
 
   // Procesar parámetros de URL para filtro automático
   useEffect(() => {
