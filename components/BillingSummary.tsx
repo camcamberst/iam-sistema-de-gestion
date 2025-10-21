@@ -446,6 +446,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
               })}
               {groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
+                  {console.log('🔍 [BILLING-SUMMARY] Renderizando sedes individuales:', groupedData)}
                   {groupedData.map((sede) => (
                     <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
                       {/* Header de Sede */}
