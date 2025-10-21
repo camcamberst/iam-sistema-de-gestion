@@ -435,6 +435,12 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
           ) : billingData.length > 0 ? (
             <div className="space-y-3">
               {/* Vista unificada: Sedes individuales para todos los usuarios */}
+              {console.log('🔍 [BILLING-SUMMARY] Renderizando vista:', { 
+                groupedDataLength: groupedData?.length, 
+                billingDataLength: billingData.length,
+                userRole,
+                userGroups 
+              })}
               {groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
                   {groupedData.map((sede) => (
