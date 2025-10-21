@@ -98,7 +98,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
 
   const loadBillingData = async () => {
     try {
-      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede });
+      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede, userGroups });
       setLoading(true);
       setError(null);
 
@@ -140,7 +140,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
       console.log('🔍 [BILLING-SUMMARY] Estableciendo nuevos datos:', {
         billingDataLength: data.data?.length || 0,
         summary: data.summary,
-        groupedDataLength: data.groupedData?.length || 0
+        groupedDataLength: data.groupedData?.length || 0,
+        groupedData: data.groupedData,
+        userGroups
       });
 
       // Aplicar filtros de jerarquía para admins
