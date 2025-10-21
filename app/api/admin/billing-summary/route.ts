@@ -459,13 +459,19 @@ export async function GET(request: NextRequest) {
         groupedData = [agenciaInnova];
       } else if (isAdmin && adminGroups.length > 0) {
         // Para Admin: Crear sedes individuales solo para las asignadas
+        console.log('🔍 [BILLING-SUMMARY] Creando sedes individuales para admin');
+        console.log('🔍 [BILLING-SUMMARY] Admin groups:', adminGroups);
+        console.log('🔍 [BILLING-SUMMARY] Billing data models:', billingData.length);
+        
         const sedeMap = new Map();
         
         billingData.forEach(model => {
           const groupId = model.groupId;
+          console.log('🔍 [BILLING-SUMMARY] Procesando modelo:', model.email, 'grupo:', groupId);
           
           // Solo procesar si el grupo está asignado al admin
           if (adminGroups.includes(groupId)) {
+            console.log('🔍 [BILLING-SUMMARY] Grupo asignado al admin, agregando modelo');
             if (!sedeMap.has(groupId)) {
               sedeMap.set(groupId, {
                 sedeId: groupId,
@@ -494,6 +500,8 @@ export async function GET(request: NextRequest) {
 
         // Convertir Map a Array
         groupedData = Array.from(sedeMap.values());
+        console.log('🔍 [BILLING-SUMMARY] Sedes creadas para admin:', groupedData.length);
+        console.log('🔍 [BILLING-SUMMARY] Sedes:', groupedData.map(s => ({ id: s.sedeId, name: s.sedeName, models: s.totalModels })));
       }
     }
 
