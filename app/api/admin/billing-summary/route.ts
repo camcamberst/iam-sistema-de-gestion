@@ -392,7 +392,7 @@ export async function GET(request: NextRequest) {
       }
 
       // Crear una sola sede principal: "Agencia Innova"
-      const agenciaInnova = {
+      const agenciaInnova: any = {
         sedeId: 'agencia-innova',
         sedeName: 'Agencia Innova',
         groups: [],
