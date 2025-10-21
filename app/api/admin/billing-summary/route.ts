@@ -19,10 +19,18 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [BILLING-SUMMARY] Obteniendo resumen:', { sedeId, periodDate, adminId });
 
-    // 1. Verificar permisos del admin
+    // 1. Verificar permisos del admin y obtener sus grupos
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
-      .select('role, organization_id')
+      .select(`
+        role,
+        user_groups(
+          groups!inner(
+            id,
+            name
+          )
+        )
+      `)
       .eq('id', adminId)
       .single();
 
@@ -38,26 +46,84 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'No tienes permisos para ver este resumen' }, { status: 403 });
     }
 
+    // Obtener grupos del admin
+    const adminGroups = adminUser.user_groups?.map((ug: any) => ug.groups.id) || [];
+    console.log('🔍 [BILLING-SUMMARY] Admin groups:', adminGroups);
+
     // 2. Obtener modelos según permisos
     let modelsQuery = supabase
       .from('users')
       .select(`
         id, 
         email, 
-        name, 
-        organization_id
+        name
       `)
       .eq('role', 'modelo')
       .eq('is_active', true);
 
-    // Si es admin (no super_admin), filtrar por su organización
-    if (isAdmin && !isSuperAdmin) {
-      modelsQuery = modelsQuery.eq('organization_id', adminUser.organization_id);
+    // Si es admin (no super_admin), filtrar por sus grupos asignados
+    if (isAdmin && !isSuperAdmin && adminGroups.length > 0) {
+      // Obtener modelos que pertenecen a los grupos del admin
+      const { data: modelGroups, error: modelGroupsError } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', adminGroups);
+
+      if (modelGroupsError) {
+        console.error('❌ [BILLING-SUMMARY] Error al obtener grupos de modelos:', modelGroupsError);
+        return NextResponse.json({ success: false, error: 'Error al obtener modelos' }, { status: 500 });
+      }
+
+      const modelIds = modelGroups?.map(mg => mg.user_id) || [];
+      if (modelIds.length === 0) {
+        return NextResponse.json({ 
+          success: true, 
+          data: [],
+          summary: {
+            totalModels: 0,
+            totalUsdBruto: 0,
+            totalUsdModelo: 0,
+            totalUsdSede: 0,
+            totalCopModelo: 0,
+            totalCopSede: 0
+          },
+          periodDate
+        });
+      }
+
+      modelsQuery = modelsQuery.in('id', modelIds);
     }
 
-    // Si se especifica una sede específica, filtrar por ella
+    // Si se especifica una sede específica, filtrar por ella (usando grupos)
     if (sedeId) {
-      modelsQuery = modelsQuery.eq('organization_id', sedeId);
+      const { data: sedeGroups, error: sedeGroupsError } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .eq('group_id', sedeId);
+
+      if (sedeGroupsError) {
+        console.error('❌ [BILLING-SUMMARY] Error al obtener grupos de sede:', sedeGroupsError);
+        return NextResponse.json({ success: false, error: 'Error al obtener grupos de sede' }, { status: 500 });
+      }
+
+      const sedeModelIds = sedeGroups?.map(sg => sg.user_id) || [];
+      if (sedeModelIds.length === 0) {
+        return NextResponse.json({ 
+          success: true, 
+          data: [],
+          summary: {
+            totalModels: 0,
+            totalUsdBruto: 0,
+            totalUsdModelo: 0,
+            totalUsdSede: 0,
+            totalCopModelo: 0,
+            totalCopSede: 0
+          },
+          periodDate
+        });
+      }
+
+      modelsQuery = modelsQuery.in('id', sedeModelIds);
     }
 
     const { data: models, error: modelsError } = await modelsQuery;
@@ -249,21 +315,12 @@ export async function GET(request: NextRequest) {
       const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
       const modelGroup = modelGroupsMap.get(model.id);
       
-      // 🔧 CORRECCIÓN: Si el modelo no tiene organization_id, usar el del grupo
-      const effectiveOrganizationId = model.organization_id || modelGroup?.organization_id || null;
-      
-      // Log cuando se aplique la corrección
-      if (!model.organization_id && modelGroup?.organization_id) {
-        console.log(`🔧 [BILLING-SUMMARY] Corrigiendo organizationId para modelo ${model.email}: null → ${modelGroup.organization_id} (grupo: ${modelGroup.name})`);
-      }
-      
       if (!totalsForModel || totalsForModel.length === 0) {
         // Si no hay totales, retornar ceros
         return {
           modelId: model.id,
           email: model.email.split('@')[0], // Solo parte antes del '@'
           name: model.name,
-          organizationId: effectiveOrganizationId,
           groupId: modelGroup?.id,
           groupName: modelGroup?.name,
           usdBruto: 0,
@@ -289,7 +346,6 @@ export async function GET(request: NextRequest) {
         modelId: model.id,
         email: model.email.split('@')[0], // Solo parte antes del '@'
         name: model.name,
-        organizationId: effectiveOrganizationId,
         groupId: modelGroup?.id,
         groupName: modelGroup?.name,
         usdBruto,
@@ -317,52 +373,28 @@ export async function GET(request: NextRequest) {
       totalCopSede: 0
     });
 
-    // 7. Para Super Admin: Agrupar por sedes y grupos
+    // 7. Para Super Admin: Agrupar por grupos (sedes)
     let groupedData = null;
     if (isSuperAdmin) {
-      // Obtener información de sedes
-      const uniqueOrgIds = Array.from(new Set(billingData.map(m => m.organizationId).filter(Boolean)));
-      const { data: sedes, error: sedesError } = await supabase
-        .from('organizations')
+      // Obtener información de grupos
+      const uniqueGroupIds = Array.from(new Set(billingData.map(m => m.groupId).filter(Boolean)));
+      const { data: groups, error: groupsError } = await supabase
+        .from('groups')
         .select('id, name')
-        .in('id', uniqueOrgIds);
+        .in('id', uniqueGroupIds);
 
-      if (sedesError) {
-        console.error('❌ [BILLING-SUMMARY] Error al obtener sedes:', sedesError);
+      if (groupsError) {
+        console.error('❌ [BILLING-SUMMARY] Error al obtener grupos:', groupsError);
       }
 
-      // Agrupar por sede
-      const sedeGroups = new Map();
+      // Agrupar por grupo (sede)
+      const groupMap = new Map();
       billingData.forEach(model => {
-        const sedeId = model.organizationId;
-        if (!sedeGroups.has(sedeId)) {
-          sedeGroups.set(sedeId, {
-            sedeId,
-            sedeName: sedes?.find(s => s.id === sedeId)?.name || 'Sede Desconocida',
-            groups: new Map(),
-            totalModels: 0,
-            totalUsdBruto: 0,
-            totalUsdModelo: 0,
-            totalUsdSede: 0,
-            totalCopModelo: 0,
-            totalCopSede: 0
-          });
-        }
-
-        const sede = sedeGroups.get(sedeId);
-        sede.totalModels += 1;
-        sede.totalUsdBruto += model.usdBruto;
-        sede.totalUsdModelo += model.usdModelo;
-        sede.totalUsdSede += model.usdSede;
-        sede.totalCopModelo += model.copModelo;
-        sede.totalCopSede += model.copSede;
-
-        // Agrupar por grupo dentro de la sede
         const groupId = model.groupId;
-        if (!sede.groups.has(groupId)) {
-          sede.groups.set(groupId, {
+        if (!groupMap.has(groupId)) {
+          groupMap.set(groupId, {
             groupId,
-            groupName: model.groupName || 'Sin Grupo',
+            groupName: groups?.find(g => g.id === groupId)?.name || 'Grupo Desconocido',
             models: [],
             totalModels: 0,
             totalUsdBruto: 0,
@@ -373,7 +405,7 @@ export async function GET(request: NextRequest) {
           });
         }
 
-        const group = sede.groups.get(groupId);
+        const group = groupMap.get(groupId);
         group.models.push(model);
         group.totalModels += 1;
         group.totalUsdBruto += model.usdBruto;
@@ -384,10 +416,7 @@ export async function GET(request: NextRequest) {
       });
 
       // Convertir Map a Array
-      groupedData = Array.from(sedeGroups.values()).map(sede => ({
-        ...sede,
-        groups: Array.from(sede.groups.values())
-      }));
+      groupedData = Array.from(groupMap.values());
     }
 
     console.log('✅ [BILLING-SUMMARY] Resumen generado:', { 
