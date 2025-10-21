@@ -332,7 +332,7 @@ export default function CreateUserPage() {
                 {loadingGroups ? (
                   <div className="p-3 text-sm text-gray-500 dark:text-gray-400">Cargando grupos…</div>
                 ) : (
-                  groups.map(g => {
+                  groups.map((g, index) => {
                     const isSelected = form.groups.includes(g.id);
                     const isSingleRole = form.role === 'modelo';
                     const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
