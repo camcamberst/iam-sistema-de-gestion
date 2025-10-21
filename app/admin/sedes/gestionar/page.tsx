@@ -31,8 +31,10 @@ export default function GestionarSedesPage() {
   const [newRoomName, setNewRoomName] = useState('');
   const [submitting, setSubmitting] = useState(false);
   
-  // Estados simplificados (sin distinción de roles)
+  // Estados de usuario y jerarquía
   const [userRole, setUserRole] = useState<string>('super_admin');
+  const [userGroups, setUserGroups] = useState<string[]>([]);
+  const [userId, setUserId] = useState<string>('');
   const [selectedSede, setSelectedSede] = useState<string>('');
   const [availableSedes, setAvailableSedes] = useState<any[]>([]);
   const [selectedSedeInfo, setSelectedSedeInfo] = useState<any>(null);
@@ -70,17 +72,41 @@ export default function GestionarSedesPage() {
     // Scroll automático al top cuando se carga la página
     window.scrollTo(0, 0);
     
+    loadUserInfo();
     loadData();
-    loadAvailableSedes();
   }, []);
+
+  // Cargar sedes disponibles después de cargar la información del usuario
+  useEffect(() => {
+    if (userRole && userGroups.length >= 0) {
+      loadAvailableSedes();
+    }
+  }, [userRole, userGroups]);
+
+  const loadUserInfo = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        setUserRole(parsed.role || 'admin');
+        setUserGroups(parsed.groups?.map((g: any) => g.id) || []);
+        setUserId(parsed.id || '');
+      }
+    } catch (error) {
+      console.warn('Error parsing user data from localStorage:', error);
+    }
+  };
 
   const loadAvailableSedes = async () => {
     try {
-      // Obtener todas las sedes disponibles
+      // Obtener sedes disponibles según jerarquía del usuario
       const groupsResponse = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userRole: 'super_admin', userGroups: [] })
+        body: JSON.stringify({ 
+          userRole: userRole, 
+          userGroups: userGroups 
+        })
       });
       const groupsData = await groupsResponse.json();
       
@@ -200,13 +226,13 @@ export default function GestionarSedesPage() {
       setLoading(true);
       setError(''); // Limpiar errores previos
       
-      // Cargar grupos (sedes)
+      // Cargar grupos (sedes) según jerarquía del usuario
       const groupsResponse = await fetch('/api/groups', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          userRole: 'super_admin',
-          userGroups: []
+          userRole: userRole,
+          userGroups: userGroups
         })
       });
       
@@ -224,7 +250,7 @@ export default function GestionarSedesPage() {
         
         setGroups(filteredGroups);
         
-        // Seleccionar primera sede por defecto
+        // Seleccionar primera sede por defecto solo si hay sedes disponibles
         if (filteredGroups.length > 0) {
           setSelectedGroup(filteredGroups[0].id);
         }
@@ -627,6 +653,27 @@ export default function GestionarSedesPage() {
             </div>
           </div>
         </div>
+
+        {/* Mensaje de alerta para admins sin sedes asignadas */}
+        {userRole === 'admin' && availableSedes.length === 0 && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-800">Sin Sedes Asignadas</h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    No tienes sedes asignadas para gestionar. Contacta al Super Admin para que te asigne sedes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
 
         {/* Acciones principales */}

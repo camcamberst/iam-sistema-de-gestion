@@ -98,6 +98,7 @@ export default function PortafolioModelos() {
 
   // Información del usuario
   const [userRole, setUserRole] = useState('');
+  const [userGroups, setUserGroups] = useState<string[]>([]);
   const [userId, setUserId] = useState('');
 
   const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
@@ -109,6 +110,7 @@ export default function PortafolioModelos() {
       if (userData) {
         const user = JSON.parse(userData);
         setUserRole(user.role || '');
+        setUserGroups(user.groups?.map((g: any) => g.id) || []);
         setUserId(user.id || '');
       }
     };
@@ -156,15 +158,21 @@ export default function PortafolioModelos() {
     try {
       setLoading(true);
       
-      // Cargar grupos
-      const groupsResponse = await fetch('/api/groups');
+      // Cargar grupos según jerarquía del usuario
+      const groupsResponse = await fetch('/api/groups', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          userRole: userRole,
+          userGroups: userGroups
+        })
+      });
       if (groupsResponse.ok) {
-        const groupsRaw = await groupsResponse.json();
-        const list = Array.isArray(groupsRaw)
-          ? groupsRaw
-          : (Array.isArray(groupsRaw?.groups) ? groupsRaw.groups : []);
-        const clean = list.filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites');
-        setGroups(clean);
+        const groupsData = await groupsResponse.json();
+        if (groupsData.success) {
+          const clean = groupsData.groups.filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites');
+          setGroups(clean);
+        }
       }
 
       // Cargar catálogo de plataformas
@@ -439,6 +447,27 @@ export default function PortafolioModelos() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        
+        {/* Mensaje de alerta para admins sin sedes asignadas */}
+        {userRole === 'admin' && groups.length === 0 && (
+          <div className="mb-8">
+            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-800">Sin Sedes Asignadas</h3>
+                  <p className="text-sm text-yellow-700 mt-1">
+                    No tienes sedes asignadas para ver portafolios. Contacta al Super Admin para que te asigne sedes.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Header */}
         <div className="mb-10">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
