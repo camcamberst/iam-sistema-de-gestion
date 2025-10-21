@@ -433,81 +433,166 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
             </div>
           ) : billingData.length > 0 ? (
             <div className="space-y-3">
-              {/* Botón para expandir/contraer todos los modelos */}
-              <div className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-gray-200/50">
-                <div className="flex items-center space-x-3">
-                  <button
-                    onClick={() => setShowAllModels(!showAllModels)}
-                    className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-all duration-200"
-                  >
-                    <svg 
-                      className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${showAllModels ? 'rotate-90' : ''}`}
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
-                    </svg>
-                  </button>
-                  <div>
-                    <div className="font-medium text-gray-800">
-                      {userRole === 'admin' && userGroups && userGroups.length > 0
-                        ? `Mis Sedes (${billingData.length})`
-                        : selectedSede && availableSedes.find(s => s.id === selectedSede)?.name 
-                          ? `${availableSedes.find(s => s.id === selectedSede)?.name} (${billingData.length})`
-                          : `Todas las Sedes (${billingData.length})`
-                      }
-                    </div>
-                    <div className="text-sm text-gray-500">Haz clic para {showAllModels ? 'ocultar' : 'mostrar'} detalles</div>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-6 text-sm">
-                  <div className="text-right">
-                    <div className="font-semibold text-gray-700">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
-                    <div className="text-xs text-gray-500">USD Bruto</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-green-600">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
-                    <div className="text-xs text-gray-500">USD Modelo</div>
-                  </div>
-                  <div className="text-right">
-                    <div className="font-semibold text-orange-600">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdSede, 0))}</div>
-                    <div className="text-xs text-gray-500">USD Sede</div>
-                  </div>
-                </div>
-              </div>
+              {/* Para admins: Mostrar cada sede por separado */}
+              {userRole === 'admin' && userGroups && userGroups.length > 0 ? (
+                <div className="space-y-3">
+                  {groupedData.map((sede) => (
+                    <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
+                      {/* Header de Sede */}
+                      <div 
+                        className="px-6 py-4 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
+                        onClick={() => toggleSedeExpansion(sede.sedeId)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl flex items-center justify-center">
+                              <svg 
+                                className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                                fill="none" 
+                                stroke="currentColor" 
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                              </svg>
+                            </div>
+                            <div>
+                              <h3 className="text-lg font-semibold text-gray-800">{sede.sedeName}</h3>
+                              <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="text-right">
+                              <div className="font-semibold text-gray-700">${formatCurrency(sede.totalUsdBruto)}</div>
+                              <div className="text-xs text-gray-500">USD Bruto</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-green-600">${formatCurrency(sede.totalUsdModelo)}</div>
+                              <div className="text-xs text-gray-500">USD Modelo</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-orange-600">${formatCurrency(sede.totalUsdSede)}</div>
+                              <div className="text-xs text-gray-500">USD Sede</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
 
-              {/* Lista de modelos (expandible) */}
-              {showAllModels && (
-                <div className="space-y-2">
-                  {billingData.map((model) => (
-                    <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
-                          <span className="text-xs font-semibold text-blue-600">
-                            {model.email.charAt(0).toUpperCase()}
-                          </span>
+                      {/* Modelos de la Sede (expandible) */}
+                      {expandedSedes.has(sede.sedeId) && (
+                        <div className="bg-gray-50/30 border-t border-gray-200/50">
+                          <div className="space-y-2 p-4">
+                            {sede.models.map((model) => (
+                              <div key={model.modelId} className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                                <div className="flex items-center space-x-3">
+                                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                                    <span className="text-xs font-semibold text-blue-600">
+                                      {model.email.charAt(0).toUpperCase()}
+                                    </span>
+                                  </div>
+                                  <div>
+                                    <div className="font-medium text-gray-800 text-sm">{model.email}</div>
+                                  </div>
+                                </div>
+                                <div className="flex items-center space-x-4 text-xs">
+                                  <div className="text-right">
+                                    <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                                    <div className="text-xs text-gray-500">USD Bruto</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-semibold text-green-600">${formatCurrency(model.usdModelo)}</div>
+                                    <div className="text-xs text-gray-500">USD Modelo</div>
+                                  </div>
+                                  <div className="text-right">
+                                    <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
+                                    <div className="text-xs text-gray-500">USD Sede</div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-800">{model.email}</div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-6 text-sm">
-                        <div className="text-right">
-                          <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
-                          <div className="text-xs text-gray-500">USD Bruto</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-green-600">${formatCurrency(model.usdModelo)}</div>
-                          <div className="text-xs text-gray-500">USD Modelo</div>
-                        </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
-                          <div className="text-xs text-gray-500">USD Sede</div>
-                        </div>
-                      </div>
+                      )}
                     </div>
                   ))}
+                </div>
+              ) : (
+                /* Para super_admin: Vista genérica de todos los modelos */
+                <div className="space-y-3">
+                  {/* Botón para expandir/contraer todos los modelos */}
+                  <div className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-gray-200/50">
+                    <div className="flex items-center space-x-3">
+                      <button
+                        onClick={() => setShowAllModels(!showAllModels)}
+                        className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-all duration-200"
+                      >
+                        <svg 
+                          className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${showAllModels ? 'rotate-90' : ''}`}
+                          fill="none" 
+                          stroke="currentColor" 
+                          viewBox="0 0 24 24"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </button>
+                      <div>
+                        <div className="font-medium text-gray-800">
+                          {selectedSede && availableSedes.find(s => s.id === selectedSede)?.name 
+                            ? `${availableSedes.find(s => s.id === selectedSede)?.name} (${billingData.length})`
+                            : `Todas las Sedes (${billingData.length})`
+                          }
+                        </div>
+                        <div className="text-sm text-gray-500">Haz clic para {showAllModels ? 'ocultar' : 'mostrar'} detalles</div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-6 text-sm">
+                      <div className="text-right">
+                        <div className="font-semibold text-gray-700">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
+                        <div className="text-xs text-gray-500">USD Bruto</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-green-600">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
+                        <div className="text-xs text-gray-500">USD Modelo</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold text-orange-600">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdSede, 0))}</div>
+                        <div className="text-xs text-gray-500">USD Sede</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Lista de modelos (expandible) */}
+                  {showAllModels && (
+                    <div className="space-y-2">
+                      {billingData.map((model) => (
+                        <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                              <span className="text-xs font-semibold text-blue-600">
+                                {model.email.charAt(0).toUpperCase()}
+                              </span>
+                            </div>
+                            <div>
+                              <div className="font-medium text-gray-800">{model.email}</div>
+                            </div>
+                          </div>
+                          <div className="flex items-center space-x-6 text-sm">
+                            <div className="text-right">
+                              <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                              <div className="text-xs text-gray-500">USD Bruto</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-green-600">${formatCurrency(model.usdModelo)}</div>
+                              <div className="text-xs text-gray-500">USD Modelo</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
+                              <div className="text-xs text-gray-500">USD Sede</div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
