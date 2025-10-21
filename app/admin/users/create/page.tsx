@@ -311,19 +311,26 @@ export default function CreateUserPage() {
             <button
               type="button"
               onClick={() => setOpenGroups(v => !v)}
-              className="w-full text-left border border-gray-300 rounded-lg px-3 py-2 bg-white flex items-center justify-between text-sm"
+              className="w-full text-left border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
             >
-              <span className={form.groups.length ? 'text-gray-900' : 'text-gray-400'}>
+              <span className={form.groups.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
                 {form.groups.length
                   ? groups.filter(g => form.groups.includes(g.id)).map(g => g.name).join(', ')
                   : (form.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos')}
               </span>
-              <span>▾</span>
+              <svg 
+                className="w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
             </button>
             {openGroups && (
-              <div className="apple-scroll absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-md shadow-xl max-h-56 overflow-y-auto">
+              <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-y-auto">
                 {loadingGroups ? (
-                  <div className="p-3 text-sm text-gray-500">Cargando grupos…</div>
+                  <div className="p-3 text-sm text-gray-500 dark:text-gray-400">Cargando grupos…</div>
                 ) : (
                   groups.map(g => {
                     const isSelected = form.groups.includes(g.id);
@@ -352,13 +359,17 @@ export default function CreateUserPage() {
                             });
                           }
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 flex items-center gap-2 ${isDisabled || !canAssignGroup ? 'text-gray-400 cursor-not-allowed' : 'text-gray-700'}`}
+                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 dark:border-gray-700 flex items-center gap-2 transition-colors duration-150 ${
+                          isDisabled || !canAssignGroup 
+                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                            : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        }`}
                       >
                         <span
                           aria-hidden
-                          className={`relative w-[34px] h-[20px] rounded-full ${isSelected ? 'bg-gray-900' : 'bg-gray-200'} flex-shrink-0`}
+                          className={`relative w-[34px] h-[20px] rounded-full ${isSelected ? 'bg-gray-900 dark:bg-gray-100' : 'bg-gray-200 dark:bg-gray-600'} flex-shrink-0`}
                         >
-                          <span className={`absolute top-[2px] ${isSelected ? 'left-[16px]' : 'left-[2px]'} w-[16px] h-[16px] rounded-full bg-white shadow`}></span>
+                          <span className={`absolute top-[2px] ${isSelected ? 'left-[16px]' : 'left-[2px]'} w-[16px] h-[16px] rounded-full bg-white dark:bg-gray-800 shadow`}></span>
                         </span>
                         <span className="font-medium">{g.name}</span>
                       </button>
