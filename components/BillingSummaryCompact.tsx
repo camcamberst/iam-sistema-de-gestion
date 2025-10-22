@@ -71,9 +71,12 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
     }).format(amount);
   };
 
-  const loadBillingData = async () => {
+  const loadBillingData = async (silent = false) => {
     try {
-      setLoading(true);
+      // Solo mostrar loading si no es una actualización silenciosa
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
 
       const today = new Date().toISOString().split('T')[0];
@@ -162,17 +165,21 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
       console.error('Error loading billing data:', error);
       setError(error.message || 'Error al cargar los datos');
     } finally {
-      setLoading(false);
+      // Solo ocultar loading si no es una actualización silenciosa
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
   // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 30 segundos
-  const { isPolling } = useBillingPolling(
+  const { isPolling, isSilentUpdating } = useBillingPolling(
     loadBillingData,
     [userId, userRole, userGroups],
     {
       refreshInterval: 30000, // 30 segundos
       enabled: true,
+      silentUpdate: true, // Actualizaciones silenciosas sin parpadeos
       onRefresh: () => {
         console.log('🔄 [BILLING-SUMMARY-COMPACT] Datos actualizados automáticamente');
       }

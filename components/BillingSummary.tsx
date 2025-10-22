@@ -97,16 +97,22 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
     }
   };
 
-  const loadBillingData = async () => {
+  const loadBillingData = async (silent = false) => {
     try {
-      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede, userGroups });
-      setLoading(true);
+      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede, userGroups, silent });
+      
+      // Solo mostrar loading si no es una actualización silenciosa
+      if (!silent) {
+        setLoading(true);
+      }
       setError(null);
 
-      // Limpiar datos anteriores para evitar cache
-      setBillingData([]);
-      setGroupedData([]);
-      setSummary(null);
+      // Solo limpiar datos si no es una actualización silenciosa
+      if (!silent) {
+        setBillingData([]);
+        setGroupedData([]);
+        setSummary(null);
+      }
 
       const params = new URLSearchParams({
         adminId: userId,
@@ -187,17 +193,21 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
       console.error('Error al cargar resumen de facturación:', error);
       setError(error.message || 'Error al cargar datos');
     } finally {
-      setLoading(false);
+      // Solo ocultar loading si no es una actualización silenciosa
+      if (!silent) {
+        setLoading(false);
+      }
     }
   };
 
   // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 30 segundos
-  const { isPolling, manualRefresh } = useBillingPolling(
+  const { isPolling, isSilentUpdating, manualRefresh } = useBillingPolling(
     loadBillingData,
     [selectedDate, selectedSede, userId],
     {
       refreshInterval: 30000, // 30 segundos
       enabled: true,
+      silentUpdate: true, // Actualizaciones silenciosas sin parpadeos
       onRefresh: () => {
         console.log('🔄 [BILLING-SUMMARY] Datos actualizados automáticamente');
       }
@@ -291,9 +301,10 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
           <div className="flex items-center space-x-1">
             <div className={`w-2 h-2 rounded-full ${
               isPolling ? 'bg-green-500' : 'bg-gray-400'
-            }`}></div>
+            } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
             <span className="text-xs text-gray-500">
-              {isPolling ? 'Actualización automática' : 'Manual'}
+              {isSilentUpdating ? 'Actualizando...' : 
+               isPolling ? 'Actualización automática' : 'Manual'}
             </span>
           </div>
           

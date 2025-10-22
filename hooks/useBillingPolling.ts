@@ -4,6 +4,7 @@ interface UseBillingPollingOptions {
   refreshInterval?: number; // in milliseconds
   enabled?: boolean;
   onRefresh?: () => void;
+  silentUpdate?: boolean; // Si true, no muestra loading durante actualizaciones automáticas
 }
 
 export function useBillingPolling(
@@ -11,14 +12,32 @@ export function useBillingPolling(
   dependencies: any[],
   options: UseBillingPollingOptions = {}
 ) {
-  const { refreshInterval = 30000, enabled = true, onRefresh } = options;
+  const { refreshInterval = 30000, enabled = true, onRefresh, silentUpdate = true } = options;
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const isMounted = useRef(true);
   const [isPolling, setIsPolling] = useState(false);
+  const [isSilentUpdating, setIsSilentUpdating] = useState(false);
 
   const manualRefresh = useCallback(() => {
     if (onRefresh) onRefresh();
     fetchData();
+  }, [fetchData, onRefresh]);
+
+  const silentRefresh = useCallback(async () => {
+    if (!isMounted.current) return;
+    
+    setIsSilentUpdating(true);
+    try {
+      if (onRefresh) onRefresh();
+      // Pasar true para indicar que es una actualización silenciosa
+      await fetchData(true);
+    } catch (error) {
+      console.error('🔄 [BILLING-POLLING] Error en actualización silenciosa:', error);
+    } finally {
+      if (isMounted.current) {
+        setIsSilentUpdating(false);
+      }
+    }
   }, [fetchData, onRefresh]);
 
   useEffect(() => {
@@ -37,9 +56,13 @@ export function useBillingPolling(
       setIsPolling(true);
       intervalRef.current = setInterval(() => {
         if (isMounted.current) {
-          console.log('🔄 [BILLING-POLLING] Actualizando datos automáticamente');
-          if (onRefresh) onRefresh();
-          fetchData();
+          console.log('🔄 [BILLING-POLLING] Actualización silenciosa iniciada');
+          if (silentUpdate) {
+            silentRefresh();
+          } else {
+            if (onRefresh) onRefresh();
+            fetchData();
+          }
         }
       }, refreshInterval);
     } else {
@@ -51,7 +74,7 @@ export function useBillingPolling(
         clearInterval(intervalRef.current);
       }
     };
-  }, [refreshInterval, enabled, fetchData, onRefresh, ...dependencies]);
+  }, [refreshInterval, enabled, fetchData, onRefresh, silentUpdate, silentRefresh, ...dependencies]);
 
   // Limpiar al desmontar
   useEffect(() => {
@@ -64,6 +87,7 @@ export function useBillingPolling(
 
   return {
     isPolling,
+    isSilentUpdating,
     manualRefresh
   };
 }
