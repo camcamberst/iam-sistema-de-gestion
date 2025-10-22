@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
 const supabase = supabaseServer;
@@ -181,17 +181,29 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 3. Determinar si el período está cerrado o activo
-    const d = new Date(periodDate);
-    const y = d.getFullYear();
-    const m = d.getMonth();
-    const day = d.getDate();
-    const firstHalf = day >= 1 && day <= 15;
-    const startStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '01' : '16'}`;
-    const lastDay = new Date(y, m + 1, 0).getDate();
-    const endStr = `${y}-${String(m + 1).padStart(2,'0')}-${firstHalf ? '15' : String(lastDay).padStart(2,'0')}`;
-    const periodType = firstHalf ? '1-15' : '16-31';
+    // 3. Usar el mismo sistema de períodos que Mi Calculadora
+    // 3.1. Crear período si no existe (igual que Mi Calculadora)
+    await createPeriodIfNeeded(periodDate);
 
+    // 3.2. Obtener el período actual desde la tabla periods
+    const { data: period, error: periodError } = await supabase
+      .from('periods')
+      .select('id, start_date, end_date, is_active')
+      .eq('start_date', periodDate)
+      .single();
+
+    if (periodError) {
+      console.error('❌ [BILLING-SUMMARY] Error al obtener período:', periodError);
+      return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
+    }
+
+    const startStr = period.start_date;
+    const endStr = period.end_date;
+    const periodType = period.is_active ? 'active' : 'closed';
+
+    // 3.3. Determinar si usar calculator_totals (período activo) o calculator_history (período cerrado)
+    const isActivePeriod = period.is_active;
+    
     // CORRECCIÓN: Incluir la fecha actual en el rango para capturar datos recientes
     const todayStr = new Date().toISOString().split('T')[0];
     const extendedEndStr = todayStr > endStr ? todayStr : endStr;
@@ -211,33 +223,46 @@ export async function GET(request: NextRequest) {
       extendedStart: extendedStartStr, 
       extendedEnd: finalEndStr, 
       periodType, 
+      isActivePeriod,
       today: todayStr 
     });
 
-    // 3.1. Obtener datos de calculator_history (período cerrado)
-    const { data: historyData, error: historyError } = await supabase
-      .from('calculator_history')
-      .select('model_id, platform_id, value, period_date, period_type')
-      .in('model_id', modelIds)
-      .gte('period_date', extendedStartStr)
-      .lte('period_date', finalEndStr)
-      .eq('period_type', periodType);
+    // 3.4. Obtener datos según el estado del período (igual que Mi Calculadora)
+    let historyData = null;
+    let totalsData = null;
+    
+    if (isActivePeriod) {
+      // Período activo: usar calculator_totals
+      console.log('🔍 [BILLING-SUMMARY] Período activo - consultando calculator_totals');
+      const { data: totals, error: totalsError } = await supabase
+        .from('calculator_totals')
+        .select('*')
+        .in('model_id', modelIds)
+        .gte('period_date', extendedStartStr)
+        .lte('period_date', finalEndStr)
+        .order('period_date', { ascending: false });
 
-    if (historyError) {
-      console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
-    }
+      if (totalsError) {
+        console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
+      } else {
+        totalsData = totals;
+      }
+    } else {
+      // Período cerrado: usar calculator_history
+      console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history');
+      const { data: history, error: historyError } = await supabase
+        .from('calculator_history')
+        .select('model_id, platform_id, value, period_date, period_type')
+        .in('model_id', modelIds)
+        .gte('period_date', extendedStartStr)
+        .lte('period_date', finalEndStr)
+        .eq('period_type', periodType);
 
-    // 3.2. Obtener datos de calculator_totals (período activo) - buscar en rango más amplio
-    const { data: totalsData, error: totalsError } = await supabase
-      .from('calculator_totals')
-      .select('*')
-      .in('model_id', modelIds)
-      .gte('period_date', extendedStartStr)
-      .lte('period_date', finalEndStr)
-      .order('period_date', { ascending: false });
-
-    if (totalsError) {
-      console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
+      if (historyError) {
+        console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
+      } else {
+        historyData = history;
+      }
     }
 
     // 3.2.1. Búsqueda adicional por fecha exacta para capturar datos recientes
