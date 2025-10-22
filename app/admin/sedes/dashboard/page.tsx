@@ -389,7 +389,7 @@ export default function DashboardSedesPage() {
 
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
-        <div className="mb-24">
+        <div className="mb-48">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 pb-8">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
@@ -593,24 +593,6 @@ export default function DashboardSedesPage() {
         )}
 
 
-        {/* Development Notice */}
-        <div className="mt-16 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-              </div>
-            </div>
-            <div className="ml-3">
-              <p className="text-xs text-gray-700">
-                🚧 Este dashboard está en desarrollo. Los datos mostrados son de ejemplo y se actualizarán 
-                con información real del sistema una vez que se complete la implementación.
-              </p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );
