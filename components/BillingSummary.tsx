@@ -333,21 +333,6 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                 className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 placeholder-gray-400"
               />
               
-              {/* Selector de sede (solo para super_admin) */}
-              {userRole === 'super_admin' && (
-                <select
-                  value={selectedSede}
-                  onChange={(e) => setSelectedSede(e.target.value)}
-                  className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700"
-                >
-                  <option value="">Todas las sedes</option>
-                  {availableSedes.map((sede) => (
-                    <option key={sede.id} value={sede.id}>
-                      {sede.name}
-                    </option>
-                  ))}
-                </select>
-              )}
             </div>
           </div>
         </div>
