@@ -427,11 +427,11 @@ export default function DashboardSedesPage() {
                             setSelectedSede('');
                             setDropdownOpen(false);
                           }}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-blue-50/80 transition-colors duration-200 flex items-center"
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-blue-50/80 transition-colors duration-200 flex items-center border-b border-gray-100/50"
                         >
                           <span className="text-gray-500">Selecciona una sede...</span>
                         </button>
-                        {availableSedes.map((sede) => (
+                        {availableSedes.map((sede, index) => (
                           <button
                             key={sede.id}
                             onClick={() => {
@@ -439,6 +439,8 @@ export default function DashboardSedesPage() {
                               setDropdownOpen(false);
                             }}
                             className={`w-full px-4 py-3 text-left text-sm transition-colors duration-200 flex items-center ${
+                              index < availableSedes.length - 1 ? 'border-b border-gray-100/50' : ''
+                            } ${
                               selectedSede === sede.id 
                                 ? 'bg-blue-50/80 text-blue-900 font-medium' 
                                 : 'text-gray-700 hover:bg-gray-50/80'
