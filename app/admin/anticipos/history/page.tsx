@@ -708,7 +708,7 @@ export default function HistorialAnticiposPage() {
         />
 
         {/* Filtros */}
-        <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 mb-6">
+        <div className="relative z-[99998] bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 mb-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* 1. Grupo (primero) */}
@@ -879,10 +879,13 @@ export default function HistorialAnticiposPage() {
         )}
 
         {/* Elementos decorativos de navegación */}
-        <div className="mt-8 flex justify-center space-x-4">
-          <div className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors duration-200 cursor-default">
+        <div className="mt-8 flex justify-center">
+          <button
+            onClick={() => router.push('/admin/anticipos/pending')}
+            className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+          >
             Solicitudes Pendientes
-          </div>
+          </button>
         </div>
       </div>
     </div>
