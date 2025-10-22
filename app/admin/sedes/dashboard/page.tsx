@@ -56,6 +56,13 @@ export default function DashboardSedesPage() {
     sedesConRooms: 0,
     sedesSinRooms: 0
   });
+  
+  // Estados para consulta de períodos históricos
+  const [showHistoricalQuery, setShowHistoricalQuery] = useState(false);
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('P1');
+  const [targetDate, setTargetDate] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [userRole, setUserRole] = useState<string>('admin');
@@ -69,12 +76,45 @@ export default function DashboardSedesPage() {
   const [availableSedes, setAvailableSedes] = useState<Group[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState(false);
 
+  // Funciones para consulta histórica
+  const getMonthName = (month: string) => {
+    const months = [
+      'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+      'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+    ];
+    return months[parseInt(month) - 1] || '';
+  };
+
+  const calculateTargetDate = () => {
+    if (!selectedMonth || !selectedYear) return;
+
+    const year = parseInt(selectedYear);
+    const month = parseInt(selectedMonth);
+    
+    let day: number;
+    if (selectedPeriod === 'P1') {
+      day = 15; // Período 1: día 15
+    } else {
+      // Período 2: último día del mes
+      day = new Date(year, month, 0).getDate();
+    }
+
+    const targetDateStr = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    setTargetDate(targetDateStr);
+  };
+
   useEffect(() => {
     // Scroll automático al top cuando se carga la página
     window.scrollTo(0, 0);
     
     loadUserInfo();
   }, []);
+
+  useEffect(() => {
+    if (selectedMonth && selectedYear && selectedPeriod) {
+      calculateTargetDate();
+    }
+  }, [selectedMonth, selectedYear, selectedPeriod]);
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
@@ -375,12 +415,111 @@ export default function DashboardSedesPage() {
           </div>
         </div>
 
+        {/* Consulta de Períodos Históricos */}
+        <div className="mb-8">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-3">
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">Consulta Histórica</h2>
+                  <p className="text-sm text-gray-600">Consulta períodos históricos de facturación</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowHistoricalQuery(!showHistoricalQuery)}
+                className="px-4 py-2 bg-gradient-to-r from-purple-500 to-indigo-600 text-white rounded-lg hover:from-purple-600 hover:to-indigo-700 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 shadow-md"
+              >
+                {showHistoricalQuery ? 'Ocultar' : 'Consultar Períodos'}
+              </button>
+            </div>
+            
+            {showHistoricalQuery && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Año */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Año</label>
+                  <select
+                    value={selectedYear}
+                    onChange={(e) => setSelectedYear(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                  >
+                    <option value="">Seleccionar año</option>
+                    {Array.from({ length: 5 }, (_, i) => {
+                      const year = new Date().getFullYear() - i;
+                      return (
+                        <option key={year} value={year.toString()}>
+                          {year}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Mes */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Mes</label>
+                  <select
+                    value={selectedMonth}
+                    onChange={(e) => setSelectedMonth(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                  >
+                    <option value="">Seleccionar mes</option>
+                    {Array.from({ length: 12 }, (_, i) => {
+                      const month = i + 1;
+                      const monthName = getMonthName(month.toString());
+                      return (
+                        <option key={month} value={month.toString()}>
+                          {monthName}
+                        </option>
+                      );
+                    })}
+                  </select>
+                </div>
+
+                {/* Período */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                  <select
+                    value={selectedPeriod}
+                    onChange={(e) => setSelectedPeriod(e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                  >
+                    <option value="P1">P1</option>
+                    <option value="P2">P2</option>
+                  </select>
+                </div>
+
+                {/* Información del período seleccionado */}
+                <div className="flex items-end">
+                  {selectedMonth && selectedYear && selectedPeriod && (
+                    <div className="w-full p-3 bg-blue-50 rounded-lg border border-blue-200">
+                      <div className="text-sm font-medium text-blue-800">
+                        {getMonthName(selectedMonth)} {selectedYear} - {selectedPeriod}
+                      </div>
+                      <div className="text-xs text-blue-600 mt-1">
+                        {selectedPeriod === 'P1' ? 'Días 1-15' : 'Días 16-31'}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
         {/* Resumen de Facturación */}
         {userId && (userRole === 'super_admin' || userRole === 'admin') && (
           <BillingSummary 
             userRole={userRole as 'admin' | 'super_admin'} 
             userId={userId}
             userGroups={userGroups}
+            selectedDate={targetDate}
+            selectedPeriod={selectedPeriod}
           />
         )}
 
