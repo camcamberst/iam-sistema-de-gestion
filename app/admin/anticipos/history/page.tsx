@@ -716,10 +716,7 @@ export default function HistorialAnticiposPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Grupo</label>
                 <AppleDropdown
-                  options={[
-                    { value: '', label: 'Todos los grupos' },
-                    ...grupos.map(g => ({ value: g.id, label: g.name }))
-                  ]}
+                options={grupos.map(g => ({ value: g.id, label: g.name }))}
                   value={filters.grupo}
                   onChange={(value) => setFilters(prev => ({ ...prev, grupo: value }))}
                   placeholder="Seleccionar grupo"
@@ -732,7 +729,6 @@ export default function HistorialAnticiposPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Mes</label>
               <AppleDropdown
                 options={[
-                  { value: '', label: 'Todos los meses' },
                   { value: 'enero', label: 'Enero' },
                   { value: 'febrero', label: 'Febrero' },
                   { value: 'marzo', label: 'Marzo' },
@@ -757,7 +753,6 @@ export default function HistorialAnticiposPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">Periodo</label>
               <AppleDropdown
                 options={[
-                  { value: '', label: 'Todos los periodos' },
                   { value: 'periodo-1', label: 'Periodo 1' },
                   { value: 'periodo-2', label: 'Periodo 2' }
                 ]}

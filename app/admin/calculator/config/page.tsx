@@ -407,13 +407,10 @@ export default function ConfigCalculatorPage() {
                   <h2 className="text-base font-semibold text-gray-900">Filtrar por Grupo</h2>
                 </div>
                 <AppleDropdown
-                  options={[
-                    { value: 'all', label: 'Todos los grupos' },
-                    ...availableGroups.map(group => ({
-                      value: group.id,
-                      label: group.name
-                    }))
-                  ]}
+                  options={availableGroups.map(group => ({
+                    value: group.id,
+                    label: group.name
+                  }))}
                   value={selectedGroup}
                   onChange={handleGroupFilter}
                   placeholder="Selecciona un grupo"

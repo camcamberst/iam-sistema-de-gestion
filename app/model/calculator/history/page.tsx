@@ -350,21 +350,14 @@ export default function CalculatorHistory() {
   // };
 
   // Preparar opciones para AppleDropdown
-  const yearOptions = [
-    { value: 'all', label: 'Todos los años' },
-    ...availableYears.map(year => ({ value: year, label: year }))
-  ];
+  const yearOptions = availableYears.map(year => ({ value: year, label: year }));
 
-  const monthOptions = [
-    { value: 'all', label: 'Todos los meses' },
-    ...availableMonths.map(month => ({ 
-      value: month, 
-      label: monthNames[month as keyof typeof monthNames] 
-    }))
-  ];
+  const monthOptions = availableMonths.map(month => ({ 
+    value: month, 
+    label: monthNames[month as keyof typeof monthNames] 
+  }));
 
   const typeOptions = [
-    { value: 'all', label: 'Todos los tipos' },
     { value: '1-15', label: 'Período 1 (1-15)' },
     { value: '16-31', label: 'Período 2 (16-31)' }
   ];
