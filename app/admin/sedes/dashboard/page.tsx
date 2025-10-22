@@ -541,7 +541,7 @@ export default function DashboardSedesPage() {
 
 
         {/* Development Notice */}
-        <div className="mt-8 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
+        <div className="mt-16 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
           <div className="flex">
             <div className="flex-shrink-0">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
