@@ -57,6 +57,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
   const [groupedData, setGroupedData] = useState<SedeData[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     if (currency === 'COP') {
@@ -79,11 +80,24 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
       }
       setError(null);
 
+      // Calcular fecha basada en período seleccionado
       const today = new Date().toISOString().split('T')[0];
+      let targetDate = today;
+      if (selectedPeriod === 'period-1') {
+        // Período 1: día 15 del mes actual
+        const date = new Date();
+        targetDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-15`;
+      } else if (selectedPeriod === 'period-2') {
+        // Período 2: último día del mes actual
+        const date = new Date();
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+        targetDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      }
+
       const params = new URLSearchParams({
         adminId: userId,
         userRole,
-        periodDate: today,
+        periodDate: targetDate,
       });
 
       const response = await fetch(`/api/admin/billing-summary?${params}`);
@@ -190,7 +204,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
     if (userId && userRole) {
       loadBillingData();
     }
-  }, [userId, userRole, userGroups]);
+  }, [userId, userRole, userGroups, selectedPeriod]);
 
   if (loading) {
     return (
@@ -243,14 +257,32 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-gray-900">Resumen de Facturación</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900">Resumen de Facturación</h3>
+            {selectedPeriod !== 'current' && (
+              <div className="text-xs text-blue-600 font-medium">
+                {selectedPeriod === 'period-1' ? 'Período 1 (1-15)' : 'Período 2 (16-31)'}
+              </div>
+            )}
+          </div>
         </div>
-        <Link 
-          href="/admin/sedes/dashboard" 
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
-        >
-          Ver completo →
-        </Link>
+        <div className="flex items-center space-x-2">
+          <select
+            value={selectedPeriod}
+            onChange={(e) => setSelectedPeriod(e.target.value)}
+            className="text-xs px-2 py-1 border-0 bg-gray-50/80 rounded-lg focus:ring-1 focus:ring-blue-500/20 focus:bg-white text-gray-700"
+          >
+            <option value="current">Actual</option>
+            <option value="period-1">P1 (1-15)</option>
+            <option value="period-2">P2 (16-31)</option>
+          </select>
+          <Link 
+            href="/admin/sedes/dashboard" 
+            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Ver completo →
+          </Link>
+        </div>
       </div>
 
       {summary && (

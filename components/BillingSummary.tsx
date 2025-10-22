@@ -68,6 +68,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
   const [error, setError] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(getColombiaDate());
   const [selectedSede, setSelectedSede] = useState<string>('');
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('current'); // 'current', 'period-1', 'period-2'
   const [availableSedes, setAvailableSedes] = useState<Array<{id: string, name: string}>>([]);
   const [expandedSedes, setExpandedSedes] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -83,7 +84,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
   // Cargar datos de facturación
   useEffect(() => {
     loadBillingData();
-  }, [selectedDate, selectedSede, userId]);
+  }, [selectedDate, selectedSede, selectedPeriod, userId]);
 
   const loadAvailableSedes = async () => {
     try {
@@ -99,7 +100,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
 
   const loadBillingData = async (silent = false) => {
     try {
-      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede, userGroups, silent });
+      console.log('🔍 [BILLING-SUMMARY] Iniciando carga de datos:', { userId, userRole, selectedDate, selectedSede, selectedPeriod, userGroups, silent });
       
       // Solo mostrar loading si no es una actualización silenciosa
       if (!silent) {
@@ -114,9 +115,22 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
         setSummary(null);
       }
 
+      // Calcular fecha basada en período seleccionado
+      let targetDate = selectedDate;
+      if (selectedPeriod === 'period-1') {
+        // Período 1: día 15 del mes seleccionado
+        const date = new Date(selectedDate);
+        targetDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-15`;
+      } else if (selectedPeriod === 'period-2') {
+        // Período 2: último día del mes seleccionado
+        const date = new Date(selectedDate);
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+        targetDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+      }
+
       const params = new URLSearchParams({
         adminId: userId,
-        periodDate: selectedDate
+        periodDate: targetDate
       });
 
       if (selectedSede) {
@@ -292,7 +306,14 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
+              <div>
+                <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
+                {selectedPeriod !== 'current' && (
+                  <div className="text-sm text-blue-600 font-medium mt-1">
+                    {selectedPeriod === 'period-1' ? 'Período 1 (1-15)' : 'Período 2 (16-31)'} - {new Date(selectedDate).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                  </div>
+                )}
+              </div>
             </div>
             <div className="flex items-center space-x-3">
         {/* Botón de refresh manual con estado de polling */}
@@ -324,6 +345,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
             </svg>
           </button>
         </div>
+              
+              {/* Selector de período */}
+              <select
+                value={selectedPeriod}
+                onChange={(e) => setSelectedPeriod(e.target.value)}
+                className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700"
+              >
+                <option value="current">Período Actual</option>
+                <option value="period-1">Período 1 (1-15)</option>
+                <option value="period-2">Período 2 (16-31)</option>
+              </select>
               
               {/* Selector de fecha */}
               <input
