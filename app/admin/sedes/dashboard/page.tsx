@@ -372,40 +372,50 @@ export default function DashboardSedesPage() {
         )}
 
 
-        {/* Selector Compacto de Disponibilidad */}
-        <div className="mb-6">
-          <div className="flex items-center space-x-4">
-            <div className="flex items-center space-x-2">
-              <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
-                <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
+        {/* Selector de Disponibilidad con Espacio Adecuado */}
+        <div className="mb-8">
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                  </svg>
+                </div>
+                <span className="text-sm font-medium text-gray-700">Consultar Disponibilidad:</span>
               </div>
-              <span className="text-sm font-medium text-gray-700">Consultar Disponibilidad:</span>
+              <div className="flex-1 max-w-xs">
+                <select
+                  value={selectedSede}
+                  onChange={(e) => setSelectedSede(e.target.value)}
+                  className="w-full px-4 py-3 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 appearance-none cursor-pointer"
+                  style={{
+                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
+                    backgroundPosition: 'right 12px center',
+                    backgroundRepeat: 'no-repeat',
+                    backgroundSize: '16px'
+                  }}
+                >
+                  <option value="">Selecciona una sede...</option>
+                  {availableSedes.map((sede) => (
+                    <option key={sede.id} value={sede.id}>
+                      {sede.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedSede && (
+                <button
+                  onClick={() => setSelectedSede('')}
+                  className="p-2 hover:bg-gray-100/80 rounded-lg transition-colors duration-200"
+                  title="Cerrar consulta"
+                >
+                  <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
             </div>
-            <select
-              value={selectedSede}
-              onChange={(e) => setSelectedSede(e.target.value)}
-              className="px-3 py-1.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white/80 backdrop-blur-sm text-sm"
-            >
-              <option value="">Selecciona una sede...</option>
-              {availableSedes.map((sede) => (
-                <option key={sede.id} value={sede.id}>
-                  {sede.name}
-                </option>
-              ))}
-            </select>
-            {selectedSede && (
-              <button
-                onClick={() => setSelectedSede('')}
-                className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors duration-200"
-                title="Cerrar consulta"
-              >
-                <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-            )}
           </div>
         </div>
 
