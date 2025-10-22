@@ -420,13 +420,13 @@ export default function CalculatorHistory() {
                   </p>
                 </div>
               </div>
-              <button
-                onClick={() => window.history.back()}
-                className="px-3 py-2 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-white/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 shadow-sm hover:shadow-md"
-              >
-                Regresar
-              </button>
-            </div>
+                <button
+                  onClick={() => window.history.back()}
+                  className="px-3 py-2 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-white/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 shadow-sm hover:shadow-md"
+                >
+                  Regresar
+                </button>
+              </div>
             </div>
           </div>
         </div>
