@@ -384,8 +384,8 @@ export default function MiHistorialPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="mb-10">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+        <div className="mb-10 relative z-[9998]">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg relative z-[9998]">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
@@ -438,8 +438,9 @@ export default function MiHistorialPage() {
         )}
 
         {/* Resumen */}
-        <InfoCardGrid 
-          cards={[
+        <div className="relative z-0">
+          <InfoCardGrid 
+            cards={[
             {
               value: `$${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
               label: 'Total Realizado',
@@ -459,8 +460,10 @@ export default function MiHistorialPage() {
           columns={3}
           className="mb-6"
         />
+        </div>
 
         {/* Lista de Anticipos por Período (Realizados y Confirmados) */}
+        <div className="relative z-0">
         {anticipos.length === 0 ? (
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 text-center py-8 px-6">
             <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -577,6 +580,7 @@ export default function MiHistorialPage() {
           >
             Nueva Solicitud
           </button>
+        </div>
         </div>
       </div>
     </div>
