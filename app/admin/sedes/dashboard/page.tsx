@@ -389,8 +389,8 @@ export default function DashboardSedesPage() {
 
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
-        <div className="mb-8">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+        <div className="mb-24">
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 pb-8">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -420,7 +420,7 @@ export default function DashboardSedesPage() {
                   </button>
                   
                   {dropdownOpen && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 z-50 overflow-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 z-[9999] overflow-hidden">
                       <div className="py-2">
                         <button
                           onClick={() => {
