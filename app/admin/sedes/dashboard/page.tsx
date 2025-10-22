@@ -91,6 +91,23 @@ export default function DashboardSedesPage() {
     };
   }, [dropdownOpen]);
 
+  // Scroll automático cuando se abre el dropdown
+  useEffect(() => {
+    if (dropdownOpen) {
+      // Pequeño delay para asegurar que el dropdown se renderice
+      setTimeout(() => {
+        const dropdownElement = document.querySelector('.dropdown-container');
+        if (dropdownElement) {
+          dropdownElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'center',
+            inline: 'nearest'
+          });
+        }
+      }, 100);
+    }
+  }, [dropdownOpen]);
+
   // Cargar datos del dashboard después de cargar la información del usuario
   useEffect(() => {
     if (userRole && userGroups.length >= 0) {
