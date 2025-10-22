@@ -99,7 +99,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
-        <span className="truncate">{selected ? selected.label : placeholder}</span>
+        <span className="truncate">{selected ? selected.label : (value === '' ? 'Todos' : placeholder)}</span>
         <svg 
           className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
             open ? 'rotate-180' : ''

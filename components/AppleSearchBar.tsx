@@ -120,7 +120,7 @@ export default function AppleSearchBar({
       <div className="relative">
         <AppleSelect
           value={selectedFilters[filter.id] || ''}
-          options={[{ label: 'Todos', value: '' }, ...filter.options]}
+          options={filter.options}
           onChange={(v) => handleFilterChange(filter.id, v)}
           className="text-sm bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-md shadow-sm hover:shadow-md transition-all duration-200"
           onFocus={() => handleFilterFocus(filter.id)}
