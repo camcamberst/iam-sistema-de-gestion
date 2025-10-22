@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Building2, BarChart3, Eye } from 'lucide-react';
+import { ChevronDown, Building2, Eye } from 'lucide-react';
 
 interface PortfolioDropdownProps {
   isActive: boolean;
@@ -42,12 +42,6 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
       href: '/model/portafolio',
       icon: <Building2 className="w-4 h-4" />,
       description: 'Gestiona tus plataformas'
-    },
-    {
-      label: 'Análisis y Estadísticas',
-      href: '/model/portafolio?tab=analytics',
-      icon: <BarChart3 className="w-4 h-4" />,
-      description: 'Ve tus métricas'
     }
   ];
 
