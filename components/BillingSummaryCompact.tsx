@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { useBillingStream } from '@/hooks/useBillingStream';
+import { useBillingPolling } from '@/hooks/useBillingPolling';
 
 interface BillingSummaryCompactProps {
   userRole: 'admin' | 'super_admin';
@@ -166,17 +166,15 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
     }
   };
 
-  // 🔄 ACTUALIZACIÓN EN TIEMPO REAL: Usar SSE para actualizaciones inteligentes
-  const { connectionStatus } = useBillingStream(
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 30 segundos
+  const { isPolling } = useBillingPolling(
     loadBillingData,
     [userId, userRole, userGroups],
     {
+      refreshInterval: 30000, // 30 segundos
       enabled: true,
-      onUpdate: (message) => {
-        console.log('🔄 [BILLING-SUMMARY-COMPACT] Actualización en tiempo real recibida:', message);
-      },
-      onError: (error) => {
-        console.error('🔄 [BILLING-SUMMARY-COMPACT] Error en stream:', error);
+      onRefresh: () => {
+        console.log('🔄 [BILLING-SUMMARY-COMPACT] Datos actualizados automáticamente');
       }
     }
   );

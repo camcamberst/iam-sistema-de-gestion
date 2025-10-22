@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getColombiaDate } from '@/utils/calculator-dates';
-import { useBillingStream } from '@/hooks/useBillingStream';
+import { useBillingPolling } from '@/hooks/useBillingPolling';
 
 interface BillingData {
   modelId: string;
@@ -191,32 +191,18 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
     }
   };
 
-  // 🔄 ACTUALIZACIÓN EN TIEMPO REAL: Usar SSE para actualizaciones inteligentes
-  const { connectionStatus, isConnected, reconnect } = useBillingStream(
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 30 segundos
+  const { isPolling, manualRefresh } = useBillingPolling(
     loadBillingData,
     [selectedDate, selectedSede, userId],
     {
+      refreshInterval: 30000, // 30 segundos
       enabled: true,
-      onUpdate: (message) => {
-        console.log('🔄 [BILLING-SUMMARY] Actualización en tiempo real recibida:', message);
-      },
-      onError: (error) => {
-        console.error('🔄 [BILLING-SUMMARY] Error en stream:', error);
-      },
-      onConnect: () => {
-        console.log('🔄 [BILLING-SUMMARY] Conectado al stream de actualizaciones');
-      },
-      onDisconnect: () => {
-        console.log('🔄 [BILLING-SUMMARY] Desconectado del stream');
+      onRefresh: () => {
+        console.log('🔄 [BILLING-SUMMARY] Datos actualizados automáticamente');
       }
     }
   );
-
-  // Función para refresh manual (fallback)
-  const manualRefresh = () => {
-    console.log('🔄 [BILLING-SUMMARY] Actualización manual solicitada');
-    loadBillingData();
-  };
 
   const formatCurrency = (amount: number, currency: 'USD' | 'COP' = 'USD') => {
     if (currency === 'COP') {
@@ -299,21 +285,15 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
               <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
             </div>
             <div className="flex items-center space-x-3">
-        {/* Botón de refresh manual con estado de conexión */}
+        {/* Botón de refresh manual con estado de polling */}
         <div className="flex items-center space-x-2">
-          {/* Indicador de conexión */}
+          {/* Indicador de polling */}
           <div className="flex items-center space-x-1">
             <div className={`w-2 h-2 rounded-full ${
-              connectionStatus === 'connected' ? 'bg-green-500' :
-              connectionStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' :
-              connectionStatus === 'error' ? 'bg-red-500' :
-              'bg-gray-400'
+              isPolling ? 'bg-green-500' : 'bg-gray-400'
             }`}></div>
             <span className="text-xs text-gray-500">
-              {connectionStatus === 'connected' ? 'En vivo' :
-               connectionStatus === 'connecting' ? 'Conectando...' :
-               connectionStatus === 'error' ? 'Sin conexión' :
-               'Desconectado'}
+              {isPolling ? 'Actualización automática' : 'Manual'}
             </span>
           </div>
           
@@ -332,19 +312,6 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
             </svg>
             <span>{loading ? 'Actualizando...' : 'Actualizar'}</span>
           </button>
-          
-          {/* Botón de reconexión si hay error */}
-          {connectionStatus === 'error' && (
-            <button
-              onClick={reconnect}
-              className="flex items-center space-x-1 px-2 py-1 bg-orange-500 hover:bg-orange-600 text-white text-xs font-medium rounded transition-colors duration-200"
-            >
-              <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              <span>Reconectar</span>
-            </button>
-          )}
         </div>
               
               {/* Selector de fecha */}
