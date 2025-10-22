@@ -56,9 +56,11 @@ interface BillingSummaryProps {
   userRole: 'admin' | 'super_admin';
   userId: string;
   userGroups?: string[];
+  selectedDate?: string;
+  selectedPeriod?: string;
 }
 
-export default function BillingSummary({ userRole, userId, userGroups = [] }: BillingSummaryProps) {
+export default function BillingSummary({ userRole, userId, userGroups = [], selectedDate: propSelectedDate, selectedPeriod: propSelectedPeriod }: BillingSummaryProps) {
   console.log('🔍 [BILLING-SUMMARY] Componente renderizado:', { userRole, userId });
   
   const [billingData, setBillingData] = useState<BillingData[]>([]);
@@ -66,9 +68,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedDate, setSelectedDate] = useState<string>(getColombiaDate());
+  const [selectedDate, setSelectedDate] = useState<string>(propSelectedDate || getColombiaDate());
   const [selectedSede, setSelectedSede] = useState<string>('');
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('current'); // 'current', 'period-1', 'period-2'
+  const [selectedPeriod, setSelectedPeriod] = useState<string>(propSelectedPeriod || 'current'); // 'current', 'period-1', 'period-2'
   const [availableSedes, setAvailableSedes] = useState<Array<{id: string, name: string}>>([]);
   const [expandedSedes, setExpandedSedes] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
@@ -306,14 +308,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
               </div>
-              <div>
-                <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
-                {selectedPeriod !== 'current' && (
-                  <div className="text-sm text-blue-600 font-medium mt-1">
-                    {selectedPeriod === 'period-1' ? 'Período 1 (1-15)' : 'Período 2 (16-31)'} - {new Date(selectedDate).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
-                  </div>
-                )}
-              </div>
+              <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
             </div>
             <div className="flex items-center space-x-3">
         {/* Botón de refresh manual con estado de polling */}
@@ -345,17 +340,6 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
             </svg>
           </button>
         </div>
-              
-              {/* Selector de período */}
-              <select
-                value={selectedPeriod}
-                onChange={(e) => setSelectedPeriod(e.target.value)}
-                className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700"
-              >
-                <option value="current">Período Actual</option>
-                <option value="period-1">Período 1 (1-15)</option>
-                <option value="period-2">Período 2 (16-31)</option>
-              </select>
               
               {/* Selector de fecha */}
               <input
