@@ -85,19 +85,6 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
     loadBillingData();
   }, [selectedDate, selectedSede, userId]);
 
-  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar hook personalizado para refresh inteligente
-  const { manualRefresh } = useBillingRefresh(
-    loadBillingData,
-    [selectedDate, selectedSede, userId],
-    {
-      refreshInterval: 30000, // 30 segundos
-      enabled: true,
-      onRefresh: () => {
-        console.log('🔄 [BILLING-SUMMARY] Datos actualizados automáticamente');
-      }
-    }
-  );
-
   const loadAvailableSedes = async () => {
     try {
       const response = await fetch('/api/groups');
@@ -203,6 +190,19 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
       setLoading(false);
     }
   };
+
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar hook personalizado para refresh inteligente
+  const { manualRefresh } = useBillingRefresh(
+    loadBillingData,
+    [selectedDate, selectedSede, userId],
+    {
+      refreshInterval: 30000, // 30 segundos
+      enabled: true,
+      onRefresh: () => {
+        console.log('🔄 [BILLING-SUMMARY] Datos actualizados automáticamente');
+      }
+    }
+  );
 
   const formatCurrency = (amount: number, currency: 'USD' | 'COP' = 'USD') => {
     if (currency === 'COP') {

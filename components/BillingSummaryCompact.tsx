@@ -166,12 +166,6 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
     }
   };
 
-  useEffect(() => {
-    if (userId && userRole) {
-      loadBillingData();
-    }
-  }, [userId, userRole, userGroups]);
-
   // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar hook personalizado para refresh inteligente
   const { manualRefresh } = useBillingRefresh(
     loadBillingData,
@@ -184,6 +178,12 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
       }
     }
   );
+
+  useEffect(() => {
+    if (userId && userRole) {
+      loadBillingData();
+    }
+  }, [userId, userRole, userGroups]);
 
   if (loading) {
     return (
