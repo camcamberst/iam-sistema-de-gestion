@@ -125,7 +125,7 @@ export default function AppleDropdown({
       </button>
       
       {isOpen && (
-        <div className={`absolute z-[9996] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg ${maxHeight} overflow-auto apple-scroll`}>
+        <div className={`absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg ${maxHeight} overflow-auto apple-scroll`}>
           {options.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
               No hay opciones disponibles
