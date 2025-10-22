@@ -415,6 +415,17 @@ export default function DashboardSedesPage() {
           </div>
         </div>
 
+        {/* Resumen de Facturación */}
+        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
+          <BillingSummary 
+            userRole={userRole as 'admin' | 'super_admin'} 
+            userId={userId}
+            userGroups={userGroups}
+            selectedDate={targetDate}
+            selectedPeriod={selectedPeriod}
+          />
+        )}
+
         {/* Consulta de Períodos Históricos */}
         <div className="mb-8">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
@@ -511,17 +522,6 @@ export default function DashboardSedesPage() {
             )}
           </div>
         </div>
-
-        {/* Resumen de Facturación */}
-        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
-          <BillingSummary 
-            userRole={userRole as 'admin' | 'super_admin'} 
-            userId={userId}
-            userGroups={userGroups}
-            selectedDate={targetDate}
-            selectedPeriod={selectedPeriod}
-          />
-        )}
 
         {/* Messages */}
         {error && (
