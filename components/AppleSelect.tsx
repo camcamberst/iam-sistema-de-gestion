@@ -81,7 +81,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     >
       {label && <div className="text-gray-500 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white text-sm text-gray-900 flex items-center justify-between cursor-default"
+        className="w-full border border-gray-300 rounded-lg px-3 py-2.5 bg-white/80 backdrop-blur-sm text-sm text-gray-900 flex items-center justify-between cursor-pointer hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
@@ -89,13 +89,17 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         <svg className={`w-4 h-4 text-gray-400 ml-2 flex-none transition-transform duration-200 ${open ? 'rotate-180' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M5.23 7.21a.75.75 0 011.06.02L10 11.085l3.71-3.855a.75.75 0 111.08 1.04l-4.24 4.41a.75.75 0 01-1.08 0L5.21 8.27a.75.75 0 01.02-1.06z"/></svg>
       </div>
       {open && (
-        <div className="apple-scroll absolute z-[200] mt-2 left-0 w-full bg-white border border-gray-200 rounded-xl shadow-xl max-h-56 overflow-auto">
+        <div className="apple-scroll absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
           {options.map(opt => (
             <button
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between ${value === opt.value ? 'bg-gray-100 text-gray-900' : 'text-gray-700 hover:bg-gray-50'}`}
+              className={`w-full text-left px-3 py-2.5 text-sm flex items-center justify-between transition-colors duration-200 ${
+                value === opt.value 
+                  ? 'bg-blue-50 text-blue-900 font-medium' 
+                  : 'text-gray-700 hover:bg-gray-50'
+              } ${opt.value !== options[options.length - 1]?.value ? 'border-b border-gray-100/50' : ''}`}
             >
               <span>{opt.label}</span>
               {opt.color && (
