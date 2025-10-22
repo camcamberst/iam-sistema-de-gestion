@@ -384,25 +384,43 @@ export default function MiHistorialPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-2">Mi Historial</h1>
-              <p className="text-gray-600">Anticipos realizados y pagados</p>
+        <div className="mb-10">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-900">
+                    Mi Historial
+                  </h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    Anticipos realizados y pagados
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-500">
+                  Acceso: <span className="font-medium text-blue-600">Modelo</span>
+                </div>
+                
+                {/* Filtro por Período - AppleDropdown */}
+                <AppleDropdown
+                  options={availablePeriods.map(period => ({
+                    value: period.key,
+                    label: period.label
+                  }))}
+                  value={selectedPeriod}
+                  onChange={handlePeriodChange}
+                  placeholder="Selecciona período"
+                  className="min-w-[200px]"
+                  maxHeight="max-h-48"
+                />
+              </div>
             </div>
-            
-            {/* Filtro por Período - AppleDropdown */}
-            <AppleDropdown
-              options={availablePeriods.map(period => ({
-                value: period.key,
-                label: period.label
-              }))}
-              value={selectedPeriod}
-              onChange={handlePeriodChange}
-              placeholder="Selecciona período"
-              className="min-w-[200px]"
-              maxHeight="max-h-48"
-            />
           </div>
         </div>
 
