@@ -8,7 +8,7 @@ interface UseBillingPollingOptions {
 }
 
 export function useBillingPolling(
-  fetchData: () => Promise<void> | void,
+  fetchData: (silent?: boolean) => Promise<void> | void,
   dependencies: any[],
   options: UseBillingPollingOptions = {}
 ) {
