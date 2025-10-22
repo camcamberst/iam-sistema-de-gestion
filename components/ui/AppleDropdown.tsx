@@ -40,7 +40,21 @@ export default function AppleDropdown({
   autoOpen = false
 }: AppleDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+
+  // Calcular posición del dropdown
+  const updateDropdownPosition = () => {
+    if (buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  };
 
   // Auto-abrir dropdown cuando autoOpen es true
   useEffect(() => {
@@ -50,6 +64,13 @@ export default function AppleDropdown({
       setIsOpen(false);
     }
   }, [autoOpen, options.length]);
+
+  // Actualizar posición cuando se abre el dropdown
+  useEffect(() => {
+    if (isOpen) {
+      updateDropdownPosition();
+    }
+  }, [isOpen]);
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
@@ -89,6 +110,7 @@ export default function AppleDropdown({
   return (
     <div className={`relative z-10 ${className}`} ref={dropdownRef}>
       <button
+        ref={buttonRef}
         type="button"
         className={`w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 ${
           disabled ? 'opacity-50 cursor-not-allowed' : ''
@@ -125,7 +147,14 @@ export default function AppleDropdown({
       </button>
       
       {isOpen && (
-        <div className={`absolute z-[99999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg ${maxHeight} overflow-auto apple-scroll`}>
+        <div 
+          className={`fixed z-[99999] bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg ${maxHeight} overflow-auto apple-scroll`}
+          style={{
+            top: `${dropdownPosition.top}px`,
+            left: `${dropdownPosition.left}px`,
+            width: `${dropdownPosition.width}px`
+          }}
+        >
           {options.length === 0 ? (
             <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
               No hay opciones disponibles
