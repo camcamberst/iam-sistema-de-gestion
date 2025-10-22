@@ -663,7 +663,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.nombre_titular || ''}
                       onChange={(e) => handleInputChange('nombre_titular', e.target.value)}
                       placeholder="Nombre completo del titular"
-                      className="apple-input w-full"
+                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                       required
                     />
                   </div>
@@ -699,7 +699,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.banco_otro || ''}
                       onChange={(e) => handleInputChange('banco_otro', e.target.value)}
                       placeholder="Escribe el nombre del banco"
-                      className="apple-input w-full"
+                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                       required
                     />
                   </div>
@@ -734,7 +734,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.numero_cuenta || ''}
                       onChange={(e) => handleInputChange('numero_cuenta', e.target.value)}
                       placeholder="Número de cuenta"
-                      className="apple-input w-full"
+                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                       required
                     />
                   </div>
@@ -750,7 +750,7 @@ export default function SolicitarAnticipoPage() {
                     value={anticipoData.documento_titular || ''}
                     onChange={(e) => handleInputChange('documento_titular', e.target.value)}
                     placeholder="Cédula o documento de identidad"
-                    className="apple-input w-full"
+                    className="w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                     required
                   />
                 </div>
