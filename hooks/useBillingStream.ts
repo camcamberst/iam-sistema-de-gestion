@@ -35,6 +35,25 @@ export function useBillingStream(
 
     console.log('🔄 [BILLING-STREAM] Conectando al stream...');
     setConnectionStatus('connecting');
+    
+    // Timeout de conexión para detectar si no se conecta
+    const connectionTimeout = setTimeout(() => {
+      console.error('🔄 [BILLING-STREAM] Timeout de conexión - usando fallback polling');
+      setConnectionStatus('error');
+      
+      // Fallback a polling cada 30 segundos
+      const pollInterval = setInterval(() => {
+        if (isMounted.current) {
+          console.log('🔄 [BILLING-STREAM] Polling fallback - actualizando datos');
+          fetchData();
+        }
+      }, 30000);
+      
+      // Guardar referencia para limpiar después
+      (eventSourceRef as any).pollInterval = pollInterval;
+      
+      onError?.(new Error('SSE no disponible - usando polling fallback'));
+    }, 10000); // 10 segundos timeout
 
     try {
       const eventSource = new EventSource('/api/billing-summary/stream');
@@ -42,6 +61,7 @@ export function useBillingStream(
 
       eventSource.onopen = () => {
         console.log('🔄 [BILLING-STREAM] Conexión establecida');
+        clearTimeout(connectionTimeout);
         isConnectedRef.current = true;
         setConnectionStatus('connected');
         reconnectAttempts.current = 0;
@@ -90,6 +110,7 @@ export function useBillingStream(
 
       eventSource.onerror = (error) => {
         console.error('🔄 [BILLING-STREAM] Error de conexión:', error);
+        clearTimeout(connectionTimeout);
         isConnectedRef.current = false;
         setConnectionStatus('error');
         onError?.(new Error('Error de conexión al stream'));
@@ -123,6 +144,12 @@ export function useBillingStream(
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
+    }
+    
+    // Limpiar polling fallback si existe
+    if ((eventSourceRef as any).pollInterval) {
+      clearInterval((eventSourceRef as any).pollInterval);
+      (eventSourceRef as any).pollInterval = null;
     }
     
     if (eventSourceRef.current) {
