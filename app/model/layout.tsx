@@ -56,6 +56,11 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
     setAnticiposDropdownOpen(false);
   }, [pathname]);
 
+  // Scroll al inicio de la página en cada cambio de ruta
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
   // Cleanup timeout al desmontar el componente
   useEffect(() => {
     return () => {
