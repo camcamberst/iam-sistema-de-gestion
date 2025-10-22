@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { getColombiaDate } from '@/utils/calculator-dates';
+import { useBillingRefresh } from '@/hooks/useBillingRefresh';
 
 interface BillingData {
   modelId: string;
@@ -83,6 +84,19 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
   useEffect(() => {
     loadBillingData();
   }, [selectedDate, selectedSede, userId]);
+
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar hook personalizado para refresh inteligente
+  const { manualRefresh } = useBillingRefresh(
+    loadBillingData,
+    [selectedDate, selectedSede, userId],
+    {
+      refreshInterval: 30000, // 30 segundos
+      enabled: true,
+      onRefresh: () => {
+        console.log('🔄 [BILLING-SUMMARY] Datos actualizados automáticamente');
+      }
+    }
+  );
 
   const loadAvailableSedes = async () => {
     try {
@@ -271,6 +285,23 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
               <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
             </div>
             <div className="flex items-center space-x-3">
+              {/* Botón de refresh manual */}
+              <button
+                onClick={manualRefresh}
+                disabled={loading}
+                className="flex items-center space-x-2 px-3 py-2 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white text-sm font-medium rounded-lg transition-colors duration-200"
+              >
+                <svg 
+                  className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>{loading ? 'Actualizando...' : 'Actualizar'}</span>
+              </button>
+              
               {/* Selector de fecha */}
               <input
                 type="date"

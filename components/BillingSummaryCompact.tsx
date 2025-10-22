@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useBillingRefresh } from '@/hooks/useBillingRefresh';
 
 interface BillingSummaryCompactProps {
   userRole: 'admin' | 'super_admin';
@@ -170,6 +171,19 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
       loadBillingData();
     }
   }, [userId, userRole, userGroups]);
+
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar hook personalizado para refresh inteligente
+  const { manualRefresh } = useBillingRefresh(
+    loadBillingData,
+    [userId, userRole, userGroups],
+    {
+      refreshInterval: 30000, // 30 segundos
+      enabled: true,
+      onRefresh: () => {
+        console.log('🔄 [BILLING-SUMMARY-COMPACT] Datos actualizados automáticamente');
+      }
+    }
+  );
 
   if (loading) {
     return (
