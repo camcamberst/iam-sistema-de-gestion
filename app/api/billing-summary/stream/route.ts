@@ -1,12 +1,26 @@
 import { NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Forzar que esta ruta sea dinámica (no estática)
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 export async function GET(request: NextRequest) {
+  // Verificar si es una petición de build (sin User-Agent o con vercel)
+  const userAgent = request.headers.get('user-agent') || '';
+  if (userAgent.includes('vercel') || !userAgent) {
+    // Durante el build, retornar una respuesta simple
+    return new Response('SSE endpoint - not available during build', {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain' }
+    });
+  }
+
   // Configurar headers para SSE
   const headers = new Headers({
     'Content-Type': 'text/event-stream',
