@@ -70,6 +70,20 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     }, 100);
   };
 
+  // Scroll automático cuando se abre el dropdown
+  useEffect(() => {
+    if (open && ref.current) {
+      // Pequeño delay para asegurar que el dropdown se renderice
+      setTimeout(() => {
+        ref.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }, 100);
+    }
+  }, [open]);
+
   const selected = options.find(o => o.value === value);
 
   return (

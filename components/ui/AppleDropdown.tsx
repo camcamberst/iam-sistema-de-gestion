@@ -79,6 +79,20 @@ export default function AppleDropdown({
     };
   }, []);
 
+  // Scroll automático cuando se abre el dropdown
+  useEffect(() => {
+    if (isOpen && dropdownRef.current) {
+      // Pequeño delay para asegurar que el dropdown se renderice
+      setTimeout(() => {
+        dropdownRef.current?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center',
+          inline: 'nearest'
+        });
+      }, 100);
+    }
+  }, [isOpen]);
+
   const selectedOption = options.find(option => option.value === value);
 
   const handleSelect = (optionValue: string) => {
