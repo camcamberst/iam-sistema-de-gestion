@@ -195,16 +195,32 @@ export async function GET(request: NextRequest) {
     // CORRECCIÓN: Incluir la fecha actual en el rango para capturar datos recientes
     const todayStr = new Date().toISOString().split('T')[0];
     const extendedEndStr = todayStr > endStr ? todayStr : endStr;
+    
+    // AMPLIAR BÚSQUEDA: Incluir rango más amplio para capturar datos con fechas diferentes
+    const extendedStartDate = new Date(startStr);
+    extendedStartDate.setDate(extendedStartDate.getDate() - 2); // 2 días antes
+    const extendedStartStr = extendedStartDate.toISOString().split('T')[0];
+    
+    const extendedEndDate = new Date(extendedEndStr);
+    extendedEndDate.setDate(extendedEndDate.getDate() + 2); // 2 días después
+    const finalEndStr = extendedEndDate.toISOString().split('T')[0];
 
-    console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { startStr, endStr: extendedEndStr, periodType, originalEnd: endStr, today: todayStr });
+    console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { 
+      originalStart: startStr, 
+      originalEnd: endStr, 
+      extendedStart: extendedStartStr, 
+      extendedEnd: finalEndStr, 
+      periodType, 
+      today: todayStr 
+    });
 
     // 3.1. Obtener datos de calculator_history (período cerrado)
     const { data: historyData, error: historyError } = await supabase
       .from('calculator_history')
       .select('model_id, platform_id, value, period_date, period_type')
       .in('model_id', modelIds)
-      .gte('period_date', startStr)
-      .lte('period_date', extendedEndStr)
+      .gte('period_date', extendedStartStr)
+      .lte('period_date', finalEndStr)
       .eq('period_type', periodType);
 
     if (historyError) {
@@ -216,8 +232,8 @@ export async function GET(request: NextRequest) {
       .from('calculator_totals')
       .select('*')
       .in('model_id', modelIds)
-      .gte('period_date', startStr)
-      .lte('period_date', extendedEndStr)
+      .gte('period_date', extendedStartStr)
+      .lte('period_date', finalEndStr)
       .order('period_date', { ascending: false });
 
     if (totalsError) {

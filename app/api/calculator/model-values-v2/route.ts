@@ -102,8 +102,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId y values son requeridos' }, { status: 400 });
     }
 
-    // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha simple sin timezone complejo
-    const effectiveDate = periodDate || new Date().toISOString().split('T')[0];
+    // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha de Colombia para consistencia
+    const effectiveDate = getColombiaDate();
     console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values });
 
     const rows = Object.entries(values).map(([platformId, value]) => ({
