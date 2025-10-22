@@ -107,7 +107,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
   if (compact) {
     return (
-      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300 cursor-pointer z-0">
+      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
         {showTitle && (
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -150,7 +150,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
   }
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-md relative z-0">
+    <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
