@@ -43,10 +43,8 @@ export function useBillingStream(
       
       // Fallback a polling cada 30 segundos
       const pollInterval = setInterval(() => {
-        if (isMounted.current) {
-          console.log('🔄 [BILLING-STREAM] Polling fallback - actualizando datos');
-          fetchData();
-        }
+        console.log('🔄 [BILLING-STREAM] Polling fallback - actualizando datos');
+        fetchData();
       }, 30000);
       
       // Guardar referencia para limpiar después
