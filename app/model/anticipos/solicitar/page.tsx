@@ -622,7 +622,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.nombre_beneficiario || ''}
                       onChange={(e) => handleInputChange('nombre_beneficiario', e.target.value)}
                       placeholder="Nombre completo"
-                      className="apple-input w-full"
+                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                       required
                     />
                   </div>
@@ -635,7 +635,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.numero_telefono || ''}
                       onChange={(e) => handleTelefonoChange(e.target.value)}
                       placeholder="Número de teléfono (10 dígitos)"
-                      className={`apple-input w-full ${telefonoError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      className={`w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 ${telefonoError ? 'border-red-500 focus:ring-red-500' : ''}`}
                       maxLength={10}
                       required
                     />
