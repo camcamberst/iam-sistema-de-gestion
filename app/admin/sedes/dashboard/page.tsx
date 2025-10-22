@@ -345,35 +345,31 @@ export default function DashboardSedesPage() {
         )}
 
         {/* Header */}
-        <div className="mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                      Dashboard Sedes
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-600">
-                      {userRole === 'super_admin' 
-                        ? 'Vista global del estado de todas las sedes y asignaciones' 
-                        : 'Vista del estado de tus sedes asignadas'
-                      }
-                    </p>
-                  </div>
+        <div className="mb-10">
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
                 </div>
-                {userRole === 'super_admin' && (
-                  <div className="flex items-center space-x-1.5 bg-purple-100 px-2 py-1 rounded-full">
-                    <div className="w-1.5 h-1.5 bg-purple-500 rounded-full"></div>
-                    <span className="text-xs font-medium text-purple-700">Super Admin</span>
-                  </div>
-                )}
+                <div>
+                  <h1 className="text-2xl font-semibold text-gray-900">
+                    Dashboard Sedes
+                  </h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {userRole === 'super_admin' 
+                      ? 'Vista global del estado de todas las sedes y asignaciones' 
+                      : 'Vista del estado de tus sedes asignadas'
+                    }
+                  </p>
+                </div>
+              </div>
+              <div className="text-sm text-gray-500">
+                Acceso: <span className="font-medium text-blue-600">
+                  {userRole === 'super_admin' ? 'Super Admin' : 'Admin'}
+                </span>
               </div>
             </div>
           </div>
