@@ -67,6 +67,7 @@ export default function DashboardSedesPage() {
   const [sedeDisponibilidad, setSedeDisponibilidad] = useState<SedeDisponibilidad | null>(null);
   const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(false);
   const [availableSedes, setAvailableSedes] = useState<Group[]>([]);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
 
   useEffect(() => {
     // Scroll automático al top cuando se carga la página
@@ -74,6 +75,21 @@ export default function DashboardSedesPage() {
     
     loadUserInfo();
   }, []);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (dropdownOpen && !target.closest('.dropdown-container')) {
+        setDropdownOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
 
   // Cargar datos del dashboard después de cargar la información del usuario
   useEffect(() => {
@@ -372,7 +388,7 @@ export default function DashboardSedesPage() {
         )}
 
 
-        {/* Selector de Disponibilidad con Espacio Adecuado */}
+        {/* Selector de Disponibilidad con Dropdown Personalizado */}
         <div className="mb-8">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
             <div className="flex items-center space-x-4">
@@ -384,25 +400,62 @@ export default function DashboardSedesPage() {
                 </div>
                 <span className="text-sm font-medium text-gray-700">Consultar Disponibilidad:</span>
               </div>
-              <div className="flex-1 max-w-xs">
-                <select
-                  value={selectedSede}
-                  onChange={(e) => setSelectedSede(e.target.value)}
-                  className="w-full px-4 py-3 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 appearance-none cursor-pointer"
-                  style={{
-                    backgroundImage: `url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e")`,
-                    backgroundPosition: 'right 12px center',
-                    backgroundRepeat: 'no-repeat',
-                    backgroundSize: '16px'
-                  }}
-                >
-                  <option value="">Selecciona una sede...</option>
-                  {availableSedes.map((sede) => (
-                    <option key={sede.id} value={sede.id}>
-                      {sede.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="flex-1 max-w-xs relative">
+                <div className="relative dropdown-container">
+                  <button
+                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    className="w-full px-4 py-3 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 cursor-pointer text-left flex items-center justify-between"
+                  >
+                    <span className={selectedSede ? 'text-gray-900' : 'text-gray-500'}>
+                      {selectedSede ? availableSedes.find(s => s.id === selectedSede)?.name || 'Selecciona una sede...' : 'Selecciona una sede...'}
+                    </span>
+                    <svg 
+                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  
+                  {dropdownOpen && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 z-50 overflow-hidden">
+                      <div className="py-2">
+                        <button
+                          onClick={() => {
+                            setSelectedSede('');
+                            setDropdownOpen(false);
+                          }}
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-blue-50/80 transition-colors duration-200 flex items-center"
+                        >
+                          <span className="text-gray-500">Selecciona una sede...</span>
+                        </button>
+                        {availableSedes.map((sede) => (
+                          <button
+                            key={sede.id}
+                            onClick={() => {
+                              setSelectedSede(sede.id);
+                              setDropdownOpen(false);
+                            }}
+                            className={`w-full px-4 py-3 text-left text-sm transition-colors duration-200 flex items-center ${
+                              selectedSede === sede.id 
+                                ? 'bg-blue-50/80 text-blue-900 font-medium' 
+                                : 'text-gray-700 hover:bg-gray-50/80'
+                            }`}
+                          >
+                            <span>{sede.name}</span>
+                            {selectedSede === sede.id && (
+                              <svg className="w-4 h-4 text-blue-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                              </svg>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
               {selectedSede && (
                 <button
