@@ -269,7 +269,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [] }: Bi
             <div className="text-red-600 font-medium">Error al cargar datos</div>
             <div className="text-gray-600 text-sm mt-1">{error}</div>
             <button 
-              onClick={loadBillingData}
+              onClick={() => loadBillingData()}
               className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             >
               Reintentar
