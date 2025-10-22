@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
             // Enviar notificación de cambio
             sendData({
               type: 'calculator_updated',
-              modelId: payload.new?.model_id || payload.old?.model_id,
+              modelId: (payload.new as any)?.model_id || (payload.old as any)?.model_id,
               event: payload.eventType,
               timestamp: new Date().toISOString(),
               data: payload.new || payload.old
@@ -68,7 +68,7 @@ export async function GET(request: NextRequest) {
             
             sendData({
               type: 'history_updated',
-              modelId: payload.new?.model_id || payload.old?.model_id,
+              modelId: (payload.new as any)?.model_id || (payload.old as any)?.model_id,
               event: payload.eventType,
               timestamp: new Date().toISOString(),
               data: payload.new || payload.old
