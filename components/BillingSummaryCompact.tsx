@@ -224,7 +224,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         <div className="text-center py-4">
           <div className="text-sm text-red-600 mb-2">{error}</div>
           <button
-            onClick={loadBillingData}
+            onClick={() => loadBillingData()}
             className="text-xs text-blue-600 hover:text-blue-800 font-medium"
           >
             Reintentar
