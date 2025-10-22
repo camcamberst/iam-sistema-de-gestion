@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from "@supabase/supabase-js";
+import PortfolioAnalytics from '@/components/PortfolioAnalytics';
 import { 
   Building2, 
   CheckCircle, 
@@ -324,6 +325,16 @@ export default function MiPortafolio() {
           >
             Mis Plataformas
           </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+              activeTab === 'analytics'
+                ? 'bg-blue-600 text-white shadow-md'
+                : 'bg-white/70 text-gray-600 hover:bg-white/90'
+            }`}
+          >
+            Análisis y Estadísticas
+          </button>
         </div>
 
         {activeTab === 'platforms' && (
@@ -539,6 +550,11 @@ export default function MiPortafolio() {
           </>
         )}
 
+        {activeTab === 'analytics' && (
+          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <PortfolioAnalytics modelId={user?.id} />
+          </div>
+        )}
       </div>
     </div>
   );
