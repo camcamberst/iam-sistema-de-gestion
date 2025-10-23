@@ -126,14 +126,14 @@ export async function GET(request: NextRequest) {
     // 5. Calcular totales usando la misma lógica que Mi Calculadora
     const platformsWithValues = platformData?.map(platform => {
       const value = modelValues?.find(v => v.platform_id === platform.id);
-      // 🔧 FIX: Usar porcentaje específico de cada plataforma (MISMA LÓGICA QUE MI CALCULADORA)
-      const platformPercentage = platform.percentage_override || platform.group_percentage || 80;
+      // 🔧 FIX: Usar porcentaje de reparto del modelo (no de cada plataforma)
+      const modelPercentage = config.percentage_override || config.group_percentage || 80;
 
 
       return {
         ...platform,
         value: value ? Number(value.value) || 0 : 0,
-        percentage: platformPercentage
+        percentage: modelPercentage
       };
     }) || [];
 
