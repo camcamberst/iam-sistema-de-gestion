@@ -650,7 +650,7 @@ export default function DashboardSedesPage() {
 
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
-        <div className="mb-96 min-h-[400px] relative z-0">
+        <div className="mb-6 relative z-0">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 pb-8">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
