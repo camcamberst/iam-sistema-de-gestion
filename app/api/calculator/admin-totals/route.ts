@@ -122,19 +122,12 @@ export async function GET(request: NextRequest) {
     });
 
     const modelValues = Array.from(platformMap.values());
-    console.log('🔍 [ADMIN-TOTALS] Found unique values:', modelValues.length);
-    console.log('🔍 [ADMIN-TOTALS] Model values data:', modelValues);
 
     // 5. Calcular totales usando la misma lógica que Mi Calculadora
     const platformsWithValues = platformData?.map(platform => {
       const value = modelValues?.find(v => v.platform_id === platform.id);
       const platformPercentage = config.percentage_override || config.group_percentage || 80;
 
-      console.log(`🔍 [ADMIN-TOTALS] Platform ${platform.name} (${platform.id}):`, {
-        foundValue: !!value,
-        value: value ? value.value : 0,
-        percentage: platformPercentage
-      });
 
       return {
         ...platform,
@@ -143,12 +136,6 @@ export async function GET(request: NextRequest) {
       };
     }) || [];
 
-    console.log('🔍 [ADMIN-TOTALS] Platforms with values:', platformsWithValues.map(p => ({
-      name: p.name,
-      id: p.id,
-      value: p.value,
-      percentage: p.percentage
-    })));
 
     // Calcular USD Bruto y USD Modelo
     const totals = platformsWithValues.reduce((acc, platform) => {
@@ -233,7 +220,6 @@ export async function GET(request: NextRequest) {
       };
     }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
 
-    console.log('✅ [ADMIN-TOTALS] Totals calculated:', totals);
 
     return NextResponse.json({
       success: true,
