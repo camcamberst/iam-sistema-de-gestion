@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 export const dynamic = 'force-dynamic';
 
@@ -148,7 +149,7 @@ export async function GET(request: NextRequest) {
 
     // 7. Obtener valores actuales del modelo (solo lectura)
     // 🔧 FIX: Usar la misma lógica que model-values-v2 para consistencia
-    const today = new Date().toISOString().split('T')[0];
+    const today = getColombiaDate(); // Usar getColombiaDate() como Mi Calculadora
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
