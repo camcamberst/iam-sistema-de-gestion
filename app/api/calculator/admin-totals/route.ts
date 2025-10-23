@@ -173,7 +173,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Calcular USD Modelo con fórmulas específicas
+      // Calcular USD Modelo con fórmulas específicas (MISMA LÓGICA QUE MI CALCULADORA)
       let usdModelo = 0;
       if (platform.currency === 'EUR') {
         if (platform.id === 'big7') {
@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // SUPERFOON: Aplicar 100% para la modelo (especial)
+      // SUPERFOON: Aplicar 100% para la modelo (especial) - MISMA LÓGICA
       let usdModeloFinal;
       if (platform.id === 'superfoon') {
         usdModeloFinal = usdModelo; // 100% directo, sin porcentaje
