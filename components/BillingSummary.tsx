@@ -355,7 +355,6 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               />
             </div>
           </div>
-          </div>
         </div>
 
         <div className="px-6 pb-6">
