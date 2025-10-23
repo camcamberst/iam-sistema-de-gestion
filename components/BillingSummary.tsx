@@ -394,9 +394,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                           <svg 
-                            className={`w-5 h-5 text-white transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                            className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
                             fill="none" 
                             stroke="currentColor" 
                             viewBox="0 0 24 24"
@@ -424,9 +424,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
-                                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
+                                <div className="w-6 h-6 bg-gray-100 rounded-md flex items-center justify-center">
                                   <svg 
-                                    className={`w-4 h-4 text-white transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                    className={`w-3 h-3 text-gray-600 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
                                     fill="none" 
                                     stroke="currentColor" 
                                     viewBox="0 0 24 24"
@@ -441,7 +441,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               </div>
                               <div className="flex items-center space-x-6 text-sm">
                                 <div className="text-right">
-                                  <div className="font-semibold text-gray-700">${formatCurrency(group.totalUsdBruto)}</div>
+                                  <div className="font-semibold text-blue-600">${formatCurrency(group.totalUsdBruto)}</div>
                                   <div className="text-xs text-gray-500">USD Bruto</div>
                                 </div>
                                 <div className="text-right">
@@ -449,7 +449,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   <div className="text-xs text-gray-500">USD Modelo</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-semibold text-orange-600">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="font-semibold text-purple-600">${formatCurrency(group.totalUsdSede)}</div>
                                   <div className="text-xs text-gray-500">USD Sede</div>
                                 </div>
                               </div>
@@ -464,8 +464,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   {group.models.map((model) => (
                                     <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
                                       <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
-                                          <span className="text-xs font-semibold text-blue-600">
+                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                                          <span className="text-sm font-medium text-gray-600">
                                             {model.email.charAt(0).toUpperCase()}
                                           </span>
                                         </div>
@@ -475,7 +475,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                       </div>
                                       <div className="flex items-center space-x-6 text-sm">
                                         <div className="text-right">
-                                          <div className="font-semibold text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                                          <div className="font-semibold text-blue-600">${formatCurrency(model.usdBruto)}</div>
                                           <div className="text-xs text-gray-500">USD Bruto</div>
                                         </div>
                                         <div className="text-right">
@@ -483,7 +483,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                           <div className="text-xs text-gray-500">USD Modelo</div>
                                         </div>
                                         <div className="text-right">
-                                          <div className="font-semibold text-orange-600">${formatCurrency(model.usdSede)}</div>
+                                          <div className="font-semibold text-purple-600">${formatCurrency(model.usdSede)}</div>
                                           <div className="text-xs text-gray-500">USD Sede</div>
                                         </div>
                                       </div>
@@ -515,9 +515,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
                               <svg 
-                                className={`w-5 h-5 text-white transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                                className={`w-4 h-4 text-gray-600 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
                                 fill="none" 
                                 stroke="currentColor" 
                                 viewBox="0 0 24 24"
@@ -532,7 +532,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
                             <div className="text-right">
-                              <div className="font-semibold text-gray-700">${formatCurrency(sede.totalUsdBruto)}</div>
+                              <div className="font-semibold text-blue-600">${formatCurrency(sede.totalUsdBruto)}</div>
                               <div className="text-xs text-gray-500">USD Bruto</div>
                             </div>
                             <div className="text-right">
@@ -540,7 +540,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               <div className="text-xs text-gray-500">USD Modelo</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-orange-600">${formatCurrency(sede.totalUsdSede)}</div>
+                              <div className="font-semibold text-purple-600">${formatCurrency(sede.totalUsdSede)}</div>
                               <div className="text-xs text-gray-500">USD Sede</div>
                             </div>
                           </div>
