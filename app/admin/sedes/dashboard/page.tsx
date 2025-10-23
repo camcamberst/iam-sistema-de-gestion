@@ -427,7 +427,7 @@ export default function DashboardSedesPage() {
         )}
 
         {/* Consulta de Períodos Históricos */}
-        <div className="mb-8">
+        <div className="mb-8 relative z-[99998]">
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -650,7 +650,7 @@ export default function DashboardSedesPage() {
 
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
-        <div className="mb-96 min-h-[400px]">
+        <div className="mb-96 min-h-[400px] relative z-0">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 pb-8">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
