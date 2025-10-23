@@ -48,6 +48,7 @@ export default function AdminViewModelPage() {
   const [editValues, setEditValues] = useState<Record<string, string>>({});
   const [hasChanges, setHasChanges] = useState(false);
   const [syncingTotals, setSyncingTotals] = useState(false);
+  const [calculatedTotals, setCalculatedTotals] = useState<any>(null);
   
   // Estados para filtros
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
@@ -177,104 +178,37 @@ export default function AdminViewModelPage() {
     }
   };
 
+  const loadCalculatedTotals = async (modelId: string) => {
+    try {
+      console.log('🔍 [ADMIN-TOTALS] Loading calculated totals for model:', modelId);
+      const response = await fetch(`/api/calculator/admin-totals?modelId=${modelId}&adminId=${user?.id}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ [ADMIN-TOTALS] Totals loaded:', data.totals);
+        setCalculatedTotals(data.totals);
+      } else {
+        console.error('❌ [ADMIN-TOTALS] Error loading totals:', data.error);
+        setCalculatedTotals(null);
+      }
+    } catch (err: any) {
+      console.error('❌ [ADMIN-TOTALS] Error loading totals:', err);
+      setCalculatedTotals(null);
+    }
+  };
+
   const syncTotals = async () => {
     try {
-      if (!selectedModel || !selectedModel.calculatorData) return;
-      const calc = selectedModel.calculatorData;
-      const rates = calc.rates || { usd_cop: 3900, eur_usd: 1.01, gbp_usd: 1.20 };
-      const platforms = calc.platforms || [];
-      const values = calc.values || [];
-
-      // Recalcular totales como en "Totales y Alertas"
-      const totals = platforms.reduce((acc: any, platform: any) => {
-        const currentValue = values.find((v: any) => v.platform_id === platform.id || v.platform === platform.name)?.value || 0;
-        let usdBruto = 0;
-        if (platform.currency === 'EUR') {
-          if (platform.id === 'big7') {
-            usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.84;
-          } else if (platform.id === 'mondo') {
-            usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.78;
-          } else {
-            usdBruto = currentValue * (rates.eur_usd || 1.01);
-          }
-        } else if (platform.currency === 'GBP') {
-          if (platform.id === 'aw') {
-            usdBruto = (currentValue * (rates.gbp_usd || 1.20)) * 0.677;
-          } else {
-            usdBruto = currentValue * (rates.gbp_usd || 1.20);
-          }
-        } else if (platform.currency === 'USD') {
-          if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-            usdBruto = currentValue * 0.75;
-          } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-            usdBruto = currentValue * 0.05;
-          } else if (platform.id === 'dxlive') {
-            usdBruto = currentValue * 0.60;
-          } else if (platform.id === 'secretfriends') {
-            usdBruto = currentValue * 0.5;
-          } else if (platform.id === 'superfoon') {
-            usdBruto = currentValue;
-          } else {
-            usdBruto = currentValue;
-          }
-        }
-
-        let usdModelo = 0;
-        if (platform.currency === 'EUR') {
-          if (platform.id === 'big7') {
-            usdModelo = (currentValue * (rates.eur_usd || 1.01)) * 0.84;
-          } else if (platform.id === 'mondo') {
-            usdModelo = (currentValue * (rates.eur_usd || 1.01)) * 0.78;
-          } else if (platform.id === 'superfoon') {
-            usdModelo = currentValue * (rates.eur_usd || 1.01);
-          } else {
-            usdModelo = currentValue * (rates.eur_usd || 1.01);
-          }
-        } else if (platform.currency === 'GBP') {
-          if (platform.id === 'aw') {
-            usdModelo = (currentValue * (rates.gbp_usd || 1.20)) * 0.677;
-          } else {
-            usdModelo = currentValue * (rates.gbp_usd || 1.20);
-          }
-        } else if (platform.currency === 'USD') {
-          if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-            usdModelo = currentValue * 0.75;
-          } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-            usdModelo = currentValue * 0.05;
-          } else if (platform.id === 'dxlive') {
-            usdModelo = currentValue * 0.60;
-          } else if (platform.id === 'secretfriends') {
-            usdModelo = currentValue * 0.5;
-          } else {
-            usdModelo = currentValue;
-          }
-        }
-
-        const usdModeloFinal = platform.id === 'superfoon' ? usdModelo : (usdModelo * platform.percentage / 100);
-        return {
-          usdBruto: acc.usdBruto + usdBruto,
-          usdModelo: acc.usdModelo + usdModeloFinal,
-          copModelo: acc.copModelo + (usdModeloFinal * (rates.usd_cop || 3900))
-        };
-      }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
+      if (!selectedModel) return;
 
       setSyncingTotals(true);
-      const res = await fetch('/api/calculator/totals', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          modelId: selectedModel.id,
-          totalUsdBruto: totals.usdBruto,
-          totalUsdModelo: totals.usdModelo,
-          totalCopModelo: totals.copModelo
-        })
-      });
-      const data = await res.json();
-      if (!data.success) {
-        console.error('❌ [ADMIN VIEW] Error al sincronizar totales:', data.error);
-      }
+      
+      // Recargar totales calculados desde el servidor
+      await loadCalculatedTotals(selectedModel.id);
+      
+      console.log('✅ [ADMIN-VIEW] Totales sincronizados desde el servidor');
     } catch (e) {
-      console.error('❌ [ADMIN VIEW] Error en syncTotals:', e);
+      console.error('❌ [ADMIN-VIEW] Error en syncTotals:', e);
     } finally {
       setSyncingTotals(false);
     }
@@ -312,6 +246,9 @@ export default function AdminViewModelPage() {
           ...model,
           calculatorData: data
         });
+
+        // Cargar totales calculados desde el servidor
+        await loadCalculatedTotals(model.id);
       } else {
         setError(data.error || 'Error al cargar datos de la calculadora');
       }
@@ -824,129 +761,50 @@ export default function AdminViewModelPage() {
                 )}
               </div>
 
-              {/* Totales y Alertas - OPTIMIZADO */}
-              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (() => {
-                // 🔧 OPTIMIZACIÓN: Calcular todos los totales en una sola iteración
-                const rates = selectedModel.calculatorData.rates;
-                const totals = selectedModel.calculatorData.platforms.reduce((acc: any, platform: any) => {
-                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
-                            v.platform_id === platform.id || v.platform === platform.name
-                          )?.value || 0;
+              {/* Totales y Alertas - USANDO TOTALES DEL SERVIDOR */}
+              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
+                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
                   
-                  // Calcular USD bruto con fórmulas específicas por plataforma
-                          let usdBruto = 0;
-                          if (platform.currency === 'EUR') {
-                    if (platform.id === 'big7') {
-                      usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
-                    } else if (platform.id === 'mondo') {
-                      usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
-                    } else {
-                      usdBruto = currentValue * (rates?.eur_usd || 1.01);
-                    }
-                          } else if (platform.currency === 'GBP') {
-                    if (platform.id === 'aw') {
-                      usdBruto = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
-                    } else {
-                      usdBruto = currentValue * (rates?.gbp_usd || 1.20);
-                    }
-                  } else if (platform.currency === 'USD') {
-                    if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                      usdBruto = currentValue * 0.75;
-                    } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                      usdBruto = currentValue * 0.05;
-                    } else if (platform.id === 'dxlive') {
-                      usdBruto = currentValue * 0.60;
-                    } else if (platform.id === 'secretfriends') {
-                      usdBruto = currentValue * 0.5;
-                    } else if (platform.id === 'superfoon') {
-                      usdBruto = currentValue;
-                          } else {
-                            usdBruto = currentValue;
-                          }
-                  }
-                  
-                  // Calcular USD modelo con fórmulas específicas
-                          let usdModelo = 0;
-                          if (platform.currency === 'EUR') {
-                    if (platform.id === 'big7') {
-                      usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
-                    } else if (platform.id === 'mondo') {
-                      usdModelo = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
-                    } else if (platform.id === 'superfoon') {
-                      usdModelo = currentValue * (rates?.eur_usd || 1.01); // EUR a USD directo
-                    } else {
-                      usdModelo = currentValue * (rates?.eur_usd || 1.01);
-                    }
-                          } else if (platform.currency === 'GBP') {
-                    if (platform.id === 'aw') {
-                      usdModelo = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
-                    } else {
-                      usdModelo = currentValue * (rates?.gbp_usd || 1.20);
-                    }
-                  } else if (platform.currency === 'USD') {
-                    if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                      usdModelo = currentValue * 0.75;
-                    } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                      usdModelo = currentValue * 0.05;
-                    } else if (platform.id === 'dxlive') {
-                      usdModelo = currentValue * 0.60;
-                    } else if (platform.id === 'secretfriends') {
-                      usdModelo = currentValue * 0.5;
-                          } else {
-                            usdModelo = currentValue;
-                          }
-                  }
-                  
-                  // SUPERFOON: Aplicar 100% para la modelo (especial)
-                  let usdModeloFinal;
-                  if (platform.id === 'superfoon') {
-                    usdModeloFinal = usdModelo; // 100% directo, sin porcentaje
-                  } else {
-                    usdModeloFinal = usdModelo * platform.percentage / 100;
-                  }
-                  
-                  return {
-                    usdBruto: acc.usdBruto + usdBruto,
-                    usdModelo: acc.usdModelo + usdModeloFinal,
-                    copModelo: acc.copModelo + (usdModeloFinal * (rates?.usd_cop || 3900))
-                  };
-                }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
-                
-                return (
-                  <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-                    <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
-                    
-                    {/* Totales principales - OPTIMIZADO */}
-                    <div className="grid grid-cols-3 gap-3 mb-4">
-                      <div className="text-center p-3 bg-blue-50 rounded-md">
-                        <div className="text-xl font-bold text-blue-600 mb-1">
-                          ${totals.usdBruto.toFixed(2)}
+                  {calculatedTotals ? (
+                    <>
+                      {/* Totales principales - DESDE SERVIDOR */}
+                      <div className="grid grid-cols-3 gap-3 mb-4">
+                        <div className="text-center p-3 bg-blue-50 rounded-md">
+                          <div className="text-xl font-bold text-blue-600 mb-1">
+                            ${calculatedTotals.usdBruto.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-600">USD Bruto</div>
                         </div>
-                        <div className="text-xs text-gray-600">USD Bruto</div>
+                        <div className="text-center p-3 bg-green-50 rounded-md">
+                          <div className="text-xl font-bold text-green-600 mb-1">
+                            ${calculatedTotals.usdModelo.toFixed(2)}
+                          </div>
+                          <div className="text-xs text-gray-600">USD Modelo</div>
+                        </div>
+                        <div className="text-center p-3 bg-purple-50 rounded-md">
+                          <div className="text-xl font-bold text-purple-600 mb-1">
+                            ${calculatedTotals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </div>
+                          <div className="text-xs text-gray-600">COP Modelo</div>
+                        </div>
                       </div>
-                      <div className="text-center p-3 bg-green-50 rounded-md">
-                        <div className="text-xl font-bold text-green-600 mb-1">
-                          ${totals.usdModelo.toFixed(2)}
+                      
+                      {/* 90% de anticipo - DESDE SERVIDOR */}
+                      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                        <div className="text-sm text-gray-600">
+                          <strong>90% de anticipo disponible:</strong> ${calculatedTotals.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-600">USD Modelo</div>
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-500">Calculando totales...</p>
                     </div>
-                    <div className="text-center p-3 bg-purple-50 rounded-md">
-                      <div className="text-xl font-bold text-purple-600 mb-1">
-                          ${totals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                      </div>
-                      <div className="text-xs text-gray-600">COP Modelo</div>
-                    </div>
-                  </div>
-                  
-                    {/* 90% de anticipo - OPTIMIZADO */}
-                  <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                    <div className="text-sm text-gray-600">
-                        <strong>90% de anticipo disponible:</strong> ${(totals.copModelo * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
-                    </div>
-                  </div>
+                  )}
                 </div>
-                );
-              })()}
+              )}
             </div>
           ) : (
             <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
