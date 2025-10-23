@@ -74,7 +74,7 @@ export default function DashboardSedesPage() {
   const [sedeDisponibilidad, setSedeDisponibilidad] = useState<SedeDisponibilidad | null>(null);
   const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(false);
   const [availableSedes, setAvailableSedes] = useState<Group[]>([]);
-  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
   // Funciones para consulta histórica
   const getMonthName = (month: string) => {
@@ -116,25 +116,9 @@ export default function DashboardSedesPage() {
     }
   }, [selectedMonth, selectedYear, selectedPeriod]);
 
-  // Cerrar dropdown al hacer clic fuera
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (dropdownOpen && !target.closest('.dropdown-container')) {
-        setDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [dropdownOpen]);
-
-  // Scroll automático cuando se abre el dropdown
+  // Scroll automático cuando se abre un dropdown
   useEffect(() => {
     if (dropdownOpen) {
-      // Pequeño delay para asegurar que el dropdown se renderice
       setTimeout(() => {
         const dropdownElement = document.querySelector('.dropdown-container');
         if (dropdownElement) {
@@ -147,6 +131,22 @@ export default function DashboardSedesPage() {
       }, 100);
     }
   }, [dropdownOpen]);
+
+  // Cerrar dropdown al hacer clic fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (dropdownOpen && !target.closest('.dropdown-container')) {
+        setDropdownOpen(null);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
 
   // Cargar datos del dashboard después de cargar la información del usuario
   useEffect(() => {
@@ -452,57 +452,166 @@ export default function DashboardSedesPage() {
             {showHistoricalQuery && (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Año */}
-                <div>
+                <div className="dropdown-container">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Año</label>
-                  <select
-                    value={selectedYear}
-                    onChange={(e) => setSelectedYear(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                  >
-                    <option value="">Seleccionar año</option>
-                    {Array.from({ length: 5 }, (_, i) => {
-                      const year = new Date().getFullYear() - i;
-                      return (
-                        <option key={year} value={year.toString()}>
-                          {year}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <div className="relative">
+                    <button
+                      onClick={() => setDropdownOpen(dropdownOpen === 'year' ? null : 'year')}
+                      className="w-full px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 flex items-center justify-between"
+                    >
+                      <span>{selectedYear || 'Seleccionar año'}</span>
+                      <svg 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          dropdownOpen === 'year' ? 'rotate-180' : ''
+                        }`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {dropdownOpen === 'year' && (
+                      <div className="absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
+                        <div className="py-2">
+                          {Array.from({ length: 5 }, (_, i) => {
+                            const year = new Date().getFullYear() - i;
+                            return (
+                              <button
+                                key={year}
+                                onClick={() => {
+                                  setSelectedYear(year.toString());
+                                  setDropdownOpen(null);
+                                }}
+                                className={`w-full text-left px-4 py-3 text-sm transition-colors duration-200 flex items-center justify-between ${
+                                  i < 4 ? 'border-b border-gray-100/50' : ''
+                                } ${
+                                  selectedYear === year.toString() 
+                                    ? 'bg-blue-50 text-blue-900 font-medium' 
+                                    : 'hover:bg-gray-50 text-gray-900'
+                                }`}
+                              >
+                                <span>{year}</span>
+                                {selectedYear === year.toString() && (
+                                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Mes */}
-                <div>
+                <div className="dropdown-container">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Mes</label>
-                  <select
-                    value={selectedMonth}
-                    onChange={(e) => setSelectedMonth(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                  >
-                    <option value="">Seleccionar mes</option>
-                    {Array.from({ length: 12 }, (_, i) => {
-                      const month = i + 1;
-                      const monthName = getMonthName(month.toString());
-                      return (
-                        <option key={month} value={month.toString()}>
-                          {monthName}
-                        </option>
-                      );
-                    })}
-                  </select>
+                  <div className="relative">
+                    <button
+                      onClick={() => setDropdownOpen(dropdownOpen === 'month' ? null : 'month')}
+                      className="w-full px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 flex items-center justify-between"
+                    >
+                      <span>{selectedMonth ? getMonthName(selectedMonth) : 'Seleccionar mes'}</span>
+                      <svg 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          dropdownOpen === 'month' ? 'rotate-180' : ''
+                        }`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {dropdownOpen === 'month' && (
+                      <div className="absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
+                        <div className="py-2">
+                          {Array.from({ length: 12 }, (_, i) => {
+                            const month = i + 1;
+                            const monthName = getMonthName(month.toString());
+                            return (
+                              <button
+                                key={month}
+                                onClick={() => {
+                                  setSelectedMonth(month.toString());
+                                  setDropdownOpen(null);
+                                }}
+                                className={`w-full text-left px-4 py-3 text-sm transition-colors duration-200 flex items-center justify-between ${
+                                  i < 11 ? 'border-b border-gray-100/50' : ''
+                                } ${
+                                  selectedMonth === month.toString() 
+                                    ? 'bg-blue-50 text-blue-900 font-medium' 
+                                    : 'hover:bg-gray-50 text-gray-900'
+                                }`}
+                              >
+                                <span>{monthName}</span>
+                                {selectedMonth === month.toString() && (
+                                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                  </svg>
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Período */}
-                <div>
+                <div className="dropdown-container">
                   <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
-                  <select
-                    value={selectedPeriod}
-                    onChange={(e) => setSelectedPeriod(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg bg-white text-gray-900 hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                  >
-                    <option value="P1">P1</option>
-                    <option value="P2">P2</option>
-                  </select>
+                  <div className="relative">
+                    <button
+                      onClick={() => setDropdownOpen(dropdownOpen === 'period' ? null : 'period')}
+                      className="w-full px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 flex items-center justify-between"
+                    >
+                      <span>{selectedPeriod}</span>
+                      <svg 
+                        className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+                          dropdownOpen === 'period' ? 'rotate-180' : ''
+                        }`}
+                        fill="none" 
+                        stroke="currentColor" 
+                        viewBox="0 0 24 24"
+                      >
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {dropdownOpen === 'period' && (
+                      <div className="absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
+                        <div className="py-2">
+                          {['P1', 'P2'].map((period, index) => (
+                            <button
+                              key={period}
+                              onClick={() => {
+                                setSelectedPeriod(period);
+                                setDropdownOpen(null);
+                              }}
+                              className={`w-full text-left px-4 py-3 text-sm transition-colors duration-200 flex items-center justify-between ${
+                                index < 1 ? 'border-b border-gray-100/50' : ''
+                              } ${
+                                selectedPeriod === period 
+                                  ? 'bg-blue-50 text-blue-900 font-medium' 
+                                  : 'hover:bg-gray-50 text-gray-900'
+                              }`}
+                            >
+                              <span>{period}</span>
+                              {selectedPeriod === period && (
+                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                </svg>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* Información del período seleccionado */}
