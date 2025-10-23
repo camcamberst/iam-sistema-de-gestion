@@ -358,25 +358,25 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
         </div>
 
         <div className="px-6 pb-6">
-          {/* Resumen general - Aplicando políticas estéticas */}
+          {/* Resumen general - Aplicando estilo de ejemplo estético */}
           {summary && (
             <div className="grid grid-cols-3 gap-6 mb-8">
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-blue-50 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
-                  <div className="text-sm font-medium text-gray-600">USD Bruto</div>
+                  <div className="text-3xl font-bold text-blue-600 mb-3">${formatCurrency(summary.totalUsdBruto)}</div>
+                  <div className="inline-block bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm font-medium">USD Bruto</div>
                 </div>
               </div>
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-green-50 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
-                  <div className="text-sm font-medium text-gray-600">USD Modelo</div>
+                  <div className="text-3xl font-bold text-green-600 mb-3">${formatCurrency(summary.totalUsdModelo)}</div>
+                  <div className="inline-block bg-green-100 text-green-700 px-3 py-1 rounded-full text-sm font-medium">USD Modelo</div>
                 </div>
               </div>
-              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300">
+              <div className="bg-purple-50 rounded-xl p-6 hover:shadow-lg transition-all duration-300">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">${formatCurrency(summary.totalUsdSede)}</div>
-                  <div className="text-sm font-medium text-gray-600">USD Sede</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-3">${formatCurrency(summary.totalUsdSede)}</div>
+                  <div className="inline-block bg-purple-100 text-purple-700 px-3 py-1 rounded-full text-sm font-medium">USD Sede</div>
                 </div>
               </div>
             </div>
