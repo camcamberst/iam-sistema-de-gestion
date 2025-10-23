@@ -314,48 +314,47 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               </p>
             </div>
           </div>
-            <div className="flex items-center space-x-3">
-        {/* Botón de refresh manual con estado de polling */}
-        <div className="flex items-center space-x-2">
-          {/* Indicador de polling */}
-          <div className="flex items-center space-x-1">
-            <div className={`w-2 h-2 rounded-full ${
-              isPolling ? 'bg-green-500' : 'bg-gray-400'
-            } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
-            <span className="text-xs text-gray-500">
-              {isSilentUpdating ? 'Actualizando...' : 
-               isPolling ? 'Actualización automática' : 'Manual'}
-            </span>
-          </div>
-          
-          <button
-            onClick={manualRefresh}
-            disabled={loading}
-            className="flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200"
-            title={loading ? 'Actualizando...' : 'Actualizar'}
-          >
-            <svg 
-              className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} 
-              fill="none" 
-              stroke="currentColor" 
-              viewBox="0 0 24 24"
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-            </svg>
-          </button>
-        </div>
-              
-              {/* Selector de fecha - Aplicando políticas de dropdown */}
-              <div className="relative">
-                <input
-                  type="date"
-                  value={selectedDate}
-                  onChange={(e) => setSelectedDate(e.target.value)}
-                  className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 text-sm text-gray-700"
-                />
+          <div className="flex items-center space-x-3">
+            {/* Botón de refresh manual con estado de polling */}
+            <div className="flex items-center space-x-2">
+              {/* Indicador de polling */}
+              <div className="flex items-center space-x-1">
+                <div className={`w-2 h-2 rounded-full ${
+                  isPolling ? 'bg-green-500' : 'bg-gray-400'
+                } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
+                <span className="text-xs text-gray-500">
+                  {isSilentUpdating ? 'Actualizando...' : 
+                   isPolling ? 'Actualización automática' : 'Manual'}
+                </span>
               </div>
               
+              <button
+                onClick={manualRefresh}
+                disabled={loading}
+                className="flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200"
+                title={loading ? 'Actualizando...' : 'Actualizar'}
+              >
+                <svg 
+                  className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+              </button>
             </div>
+                  
+            {/* Selector de fecha - Aplicando políticas de dropdown */}
+            <div className="relative">
+              <input
+                type="date"
+                value={selectedDate}
+                onChange={(e) => setSelectedDate(e.target.value)}
+                className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 text-sm text-gray-700"
+              />
+            </div>
+          </div>
           </div>
         </div>
 
