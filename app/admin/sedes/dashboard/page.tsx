@@ -664,14 +664,14 @@ export default function DashboardSedesPage() {
               <div className="flex-1 max-w-xs relative">
                 <div className="relative dropdown-container">
                   <button
-                    onClick={() => setDropdownOpen(!dropdownOpen)}
+                    onClick={() => setDropdownOpen(dropdownOpen === 'sede' ? null : 'sede')}
                     className="w-full px-4 py-3 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 cursor-pointer text-left flex items-center justify-between"
                   >
                     <span className={selectedSede ? 'text-gray-900' : 'text-gray-500'}>
                       {selectedSede ? availableSedes.find(s => s.id === selectedSede)?.name || 'Selecciona una sede...' : 'Selecciona una sede...'}
                     </span>
                     <svg 
-                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} 
+                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${dropdownOpen === 'sede' ? 'rotate-180' : ''}`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -680,7 +680,7 @@ export default function DashboardSedesPage() {
                     </svg>
                   </button>
                   
-                  {dropdownOpen && (
+                  {dropdownOpen === 'sede' && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 z-[9999] overflow-hidden">
                       <div className="py-2">
                         <button
