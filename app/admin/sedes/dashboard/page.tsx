@@ -650,7 +650,7 @@ export default function DashboardSedesPage() {
 
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
-        <div className="mb-6 relative z-0">
+        <div className="mb-6 relative z-[99998]">
           <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 pb-8">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
@@ -737,7 +737,7 @@ export default function DashboardSedesPage() {
 
         {/* Resumen de Disponibilidad - Solo se muestra cuando hay una sede seleccionada */}
         {selectedSede && (
-          <div className="mb-10">
+          <div className="mb-10 relative z-0">
             <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20">
               <div className="px-6 py-4 border-b border-gray-200/50">
                 <div className="flex items-center justify-between">
