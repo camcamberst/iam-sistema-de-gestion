@@ -168,6 +168,8 @@ export async function GET(request: NextRequest) {
           usdBruto = platform.value * 0.5;
         } else if (platform.id === 'superfoon') {
           usdBruto = platform.value;
+        } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
+          usdBruto = platform.value;
         } else {
           usdBruto = platform.value;
         }
@@ -200,6 +202,8 @@ export async function GET(request: NextRequest) {
           usdModelo = platform.value * 0.60;
         } else if (platform.id === 'secretfriends') {
           usdModelo = platform.value * 0.5;
+        } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
+          usdModelo = platform.value;
         } else {
           usdModelo = platform.value;
         }
