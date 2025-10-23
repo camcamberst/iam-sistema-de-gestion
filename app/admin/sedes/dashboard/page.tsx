@@ -686,7 +686,7 @@ export default function DashboardSedesPage() {
                         <button
                           onClick={() => {
                             setSelectedSede('');
-                            setDropdownOpen(false);
+                            setDropdownOpen(null);
                           }}
                           className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-blue-50/80 transition-colors duration-200 flex items-center border-b border-gray-100/50"
                         >
@@ -697,7 +697,7 @@ export default function DashboardSedesPage() {
                             key={sede.id}
                             onClick={() => {
                               setSelectedSede(sede.id);
-                              setDropdownOpen(false);
+                              setDropdownOpen(null);
                             }}
                             className={`w-full px-4 py-3 text-left text-sm transition-colors duration-200 flex items-center ${
                               index < availableSedes.length - 1 ? 'border-b border-gray-100/50' : ''
