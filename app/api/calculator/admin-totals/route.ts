@@ -84,22 +84,28 @@ export async function GET(request: NextRequest) {
       gbp_usd: latestGbpUsd?.value || 1.20
     };
 
-    // 4. Obtener valores actuales del modelo
+    // 4. Obtener valores actuales del modelo - USAR MISMA LÓGICA QUE ADMIN-VIEW
     const today = getColombiaDate();
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
     const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
+
+    console.log('🔍 [ADMIN-TOTALS] Loading values with date filter:', { modelId, today, sevenDaysAgoStr });
 
     const { data: allRecentValues, error: valuesError } = await supabase
       .from('model_values')
       .select(`
         platform_id,
         value,
+        tokens,
+        value_usd,
+        platform,
         period_date,
+        created_at,
         updated_at
       `)
       .eq('model_id', modelId)
-      .gte('period_date', sevenDaysAgoStr)
+      .gte('period_date', sevenDaysAgoStr) // Últimos 7 días
       .order('updated_at', { ascending: false });
 
     if (valuesError) {
@@ -107,7 +113,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
-    // Obtener solo el valor más reciente por plataforma
+    // Obtener solo el valor más reciente por plataforma (misma lógica que admin-view)
     const platformMap = new Map<string, any>();
     allRecentValues?.forEach((value: any) => {
       if (!platformMap.has(value.platform_id)) {
@@ -116,7 +122,7 @@ export async function GET(request: NextRequest) {
     });
 
     const modelValues = Array.from(platformMap.values());
-    console.log('🔍 [ADMIN-TOTALS] Found model values:', modelValues.length);
+    console.log('🔍 [ADMIN-TOTALS] Found unique values:', modelValues.length);
     console.log('🔍 [ADMIN-TOTALS] Model values data:', modelValues);
 
     // 5. Calcular totales usando la misma lógica que Mi Calculadora
