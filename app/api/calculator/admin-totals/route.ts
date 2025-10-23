@@ -141,7 +141,7 @@ export async function GET(request: NextRequest) {
     const totals = platformsWithValues.reduce((acc, platform) => {
       if (platform.value === 0) return acc;
 
-      // Calcular USD Bruto con fórmulas específicas por plataforma
+      // Calcular USD Bruto con fórmulas específicas por plataforma (SIN porcentaje de reparto)
       let usdBruto = 0;
       if (platform.currency === 'EUR') {
         if (platform.id === 'big7') {
