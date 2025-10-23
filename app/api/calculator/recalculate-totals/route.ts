@@ -109,7 +109,7 @@ export async function POST(request: NextRequest) {
       // Calcular USD Bruto usando la nueva lógica simple
       let totalUsdBruto = 0;
       
-      for (const [platformId, value] of platformMap) {
+      for (const [platformId, value] of Array.from(platformMap.entries())) {
         const platform = platforms?.find(p => p.id === platformId);
         if (!platform || !value.value) continue;
 
