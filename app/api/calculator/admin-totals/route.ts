@@ -138,11 +138,10 @@ export async function GET(request: NextRequest) {
     }) || [];
 
 
-    // Calcular USD Bruto y USD Modelo
-    const totals = platformsWithValues.reduce((acc, platform) => {
-      if (platform.value === 0) return acc;
+    // Calcular USD Bruto (SIN porcentaje de reparto)
+    const totalUsdBruto = platformsWithValues.reduce((sum, platform) => {
+      if (platform.value === 0) return sum;
 
-      // Calcular USD Bruto con fórmulas específicas por plataforma (SIN porcentaje de reparto)
       let usdBruto = 0;
       if (platform.currency === 'EUR') {
         if (platform.id === 'big7') {
@@ -176,54 +175,19 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // Calcular USD Modelo con fórmulas específicas (MISMA LÓGICA QUE MI CALCULADORA)
-      let usdModelo = 0;
-      if (platform.currency === 'EUR') {
-        if (platform.id === 'big7') {
-          usdModelo = (platform.value * rates.eur_usd) * 0.84;
-        } else if (platform.id === 'mondo') {
-          usdModelo = (platform.value * rates.eur_usd) * 0.78;
-        } else if (platform.id === 'superfoon') {
-          usdModelo = platform.value * rates.eur_usd; // EUR a USD directo
-        } else {
-          usdModelo = platform.value * rates.eur_usd;
-        }
-      } else if (platform.currency === 'GBP') {
-        if (platform.id === 'aw') {
-          usdModelo = (platform.value * rates.gbp_usd) * 0.677;
-        } else {
-          usdModelo = platform.value * rates.gbp_usd;
-        }
-      } else if (platform.currency === 'USD') {
-        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-          usdModelo = platform.value * 0.75;
-        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-          usdModelo = platform.value * 0.05;
-        } else if (platform.id === 'dxlive') {
-          usdModelo = platform.value * 0.60;
-        } else if (platform.id === 'secretfriends') {
-          usdModelo = platform.value * 0.5;
-        } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
-          usdModelo = platform.value;
-        } else {
-          usdModelo = platform.value;
-        }
-      }
+      return sum + usdBruto;
+    }, 0);
 
-      // SUPERFOON: Aplicar 100% para la modelo (especial) - MISMA LÓGICA
-      let usdModeloFinal;
-      if (platform.id === 'superfoon') {
-        usdModeloFinal = usdModelo; // 100% directo, sin porcentaje
-      } else {
-        usdModeloFinal = usdModelo * platform.percentage / 100;
-      }
+    // 🔧 SOLUCIÓN SIMPLE: USD Modelo = USD Bruto × Porcentaje de Reparto de la Modelo
+    const modelPercentage = config.percentage_override || config.group_percentage || 80;
+    const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
+    const totalCopModelo = totalUsdModelo * rates.usd_cop;
 
-      return {
-        usdBruto: acc.usdBruto + usdBruto,
-        usdModelo: acc.usdModelo + usdModeloFinal,
-        copModelo: acc.copModelo + (usdModeloFinal * rates.usd_cop)
-      };
-    }, { usdBruto: 0, usdModelo: 0, copModelo: 0 });
+    const totals = {
+      usdBruto: totalUsdBruto,
+      usdModelo: totalUsdModelo,
+      copModelo: totalCopModelo
+    };
 
 
     return NextResponse.json({
