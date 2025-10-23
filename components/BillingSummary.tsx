@@ -298,18 +298,22 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
 
   return (
     <div className="mb-8">
-      <div className="bg-white/60 backdrop-blur-xl rounded-2xl border border-white/30 shadow-sm">
-        {/* Header minimalista */}
-        <div className="px-6 py-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500/20 to-indigo-500/20 rounded-xl flex items-center justify-center">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
-              </div>
-              <h2 className="text-lg font-medium text-gray-800">Resumen de Facturación</h2>
+      {/* Card Header - Aplicando políticas estéticas */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg mb-10">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
             </div>
+            <div>
+              <h1 className="text-2xl font-semibold text-gray-900">Resumen de Facturación</h1>
+              <p className="text-sm text-gray-600 mt-1">
+                {userRole === 'super_admin' ? 'Vista consolidada de todas las sedes' : 'Vista de tus sedes asignadas'}
+              </p>
+            </div>
+          </div>
             <div className="flex items-center space-x-3">
         {/* Botón de refresh manual con estado de polling */}
         <div className="flex items-center space-x-2">
@@ -341,61 +345,69 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
           </button>
         </div>
               
-              {/* Selector de fecha */}
-              <input
-                type="date"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 placeholder-gray-400"
-              />
+              {/* Selector de fecha - Aplicando políticas de dropdown */}
+              <div className="relative">
+                <input
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 text-sm text-gray-700"
+                />
+              </div>
               
             </div>
           </div>
         </div>
 
         <div className="px-6 pb-6">
-          {/* Resumen general - Estilo Apple minimalista */}
+          {/* Resumen general - Aplicando políticas estéticas */}
           {summary && (
-            <div className="grid grid-cols-3 gap-5 mb-8">
-              <div className="bg-gradient-to-br from-gray-50/90 to-gray-100/70 rounded-2xl p-6 border border-gray-200/50">
-                <div className="text-3xl font-semibold text-gray-800 mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
-                <div className="text-sm font-medium text-gray-500">USD Bruto</div>
+            <div className="grid grid-cols-3 gap-6 mb-8">
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-blue-600 mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
+                  <div className="text-sm font-medium text-gray-600">USD Bruto</div>
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-green-50/90 to-emerald-100/70 rounded-2xl p-6 border border-green-200/50">
-                <div className="text-3xl font-semibold text-green-700 mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
-                <div className="text-sm font-medium text-green-600">USD Modelo</div>
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-green-600 mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
+                  <div className="text-sm font-medium text-gray-600">USD Modelo</div>
+                </div>
               </div>
-              <div className="bg-gradient-to-br from-orange-50/90 to-amber-100/70 rounded-2xl p-6 border border-orange-200/50">
-                <div className="text-3xl font-semibold text-orange-700 mb-2">${formatCurrency(summary.totalUsdSede)}</div>
-                <div className="text-sm font-medium text-orange-600">USD Sede</div>
+              <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-lg transition-all duration-300">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-purple-600 mb-2">${formatCurrency(summary.totalUsdSede)}</div>
+                  <div className="text-sm font-medium text-gray-600">USD Sede</div>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Vista jerárquica para Super Admin - Estilo Apple */}
+          {/* Vista jerárquica para Super Admin - Aplicando políticas estéticas */}
           {userRole === 'super_admin' && groupedData && groupedData.length > 0 ? (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {groupedData.map((sede) => (
-                <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
-                  {/* Header de Sede */}
+                <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 overflow-hidden hover:shadow-lg transition-all duration-300">
+                  {/* Header de Sede - Aplicando políticas estéticas */}
                   <div 
-                    className="px-6 py-4 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
+                    className="px-6 py-5 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
                     onClick={() => toggleSedeExpansion(sede.sedeId)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-4">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl flex items-center justify-center">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                           <svg 
-                            className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                            className={`w-5 h-5 text-white transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
                             fill="none" 
                             stroke="currentColor" 
                             viewBox="0 0 24 24"
                           >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-lg font-semibold text-gray-800">{sede.sedeName}</h3>
+                          <h3 className="text-xl font-semibold text-gray-900">{sede.sedeName}</h3>
                           <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
                         </div>
                       </div>
@@ -407,26 +419,26 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     <div className="bg-gray-50/30 border-t border-gray-200/50">
                       {sede.groups?.map((group) => (
                         <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
-                          {/* Header de Grupo */}
+                          {/* Header de Grupo - Aplicando políticas estéticas */}
                           <div 
                             className="px-6 py-4 cursor-pointer hover:bg-white/50 transition-all duration-200"
                             onClick={() => toggleGroupExpansion(group.groupId)}
                           >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
-                                <div className="w-6 h-6 bg-gradient-to-br from-gray-400/20 to-gray-500/20 rounded-lg flex items-center justify-center">
+                                <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-sm">
                                   <svg 
-                                    className={`w-3 h-3 text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                    className={`w-4 h-4 text-white transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
                                     fill="none" 
                                     stroke="currentColor" 
                                     viewBox="0 0 24 24"
                                   >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                   </svg>
                                 </div>
                                 <div>
-                                  <h4 className="font-semibold text-gray-700">{group.groupName}</h4>
-                                  <p className="text-sm text-gray-500">{group.totalModels} modelos</p>
+                                  <h4 className="text-lg font-semibold text-gray-900">{group.groupName}</h4>
+                                  <p className="text-sm text-gray-600">{group.totalModels} modelos</p>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-6 text-sm">
@@ -452,9 +464,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               <div className="px-6 py-4">
                                 <div className="space-y-3">
                                   {group.models.map((model) => (
-                                    <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                                    <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
                                       <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                                        <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-lg flex items-center justify-center shadow-sm">
                                           <span className="text-xs font-semibold text-blue-600">
                                             {model.email.charAt(0).toUpperCase()}
                                           </span>
@@ -497,27 +509,27 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               {groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
                   {groupedData.map((sede) => (
-                    <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200/50 overflow-hidden">
-                      {/* Header de Sede */}
+                    <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 overflow-hidden hover:shadow-lg transition-all duration-300">
+                      {/* Header de Sede - Aplicando políticas estéticas */}
                       <div 
-                        className="px-6 py-4 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
+                        className="px-6 py-5 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
                         onClick={() => toggleSedeExpansion(sede.sedeId)}
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex items-center space-x-4">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-xl flex items-center justify-center">
+                            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                               <svg 
-                                className={`w-4 h-4 text-blue-600 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                                className={`w-5 h-5 text-white transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
                                 fill="none" 
                                 stroke="currentColor" 
                                 viewBox="0 0 24 24"
                               >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                               </svg>
                             </div>
                             <div>
-                              <h3 className="text-lg font-semibold text-gray-800">{sede.sedeName}</h3>
-                              <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
+                              <h3 className="text-xl font-semibold text-gray-900">{sede.sedeName}</h3>
+                              <p className="text-sm text-gray-600">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
