@@ -119,7 +119,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
               className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
-                opt.value !== options[0]?.value ? 'border-t border-gray-100 dark:border-gray-700' : ''
+                opt.value !== options[0]?.value ? 'border-t border-gray-100 dark:border-gray-600/30 dark:shadow-sm dark:shadow-blue-900/5' : ''
               } ${
                 value === opt.value 
                   ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' 

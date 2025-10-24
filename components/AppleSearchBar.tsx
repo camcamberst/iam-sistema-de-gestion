@@ -221,7 +221,7 @@ export default function AppleSearchBar({
             {filters.map(renderFilter)}
           </div>
           
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200/50">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200/50 dark:border-gray-600/30 dark:shadow-sm dark:shadow-blue-900/5">
             <div className="text-xs text-gray-500">
               {hasActiveFilters ? `${Object.values(selectedFilters).filter(v => v).length} filtro(s) activo(s)` : 'Sin filtros aplicados'}
             </div>
