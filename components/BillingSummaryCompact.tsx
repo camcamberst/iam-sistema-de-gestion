@@ -272,7 +272,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           {/* Resumen compacto */}
           <div className="grid grid-cols-3 gap-2">
             <div className="text-center p-2 rounded-lg bg-gray-50/80">
-              <div className="text-sm font-bold text-gray-700 dark:text-gray-100">${formatCurrency(summary.totalUsdBruto)}</div>
+              <div className="text-sm font-bold text-gray-900 dark:text-gray-900">${formatCurrency(summary.totalUsdBruto)}</div>
               <div className="text-xs text-gray-600 dark:text-gray-300">USD Bruto</div>
             </div>
             <div className="text-center p-2 rounded-lg bg-green-50/80">
@@ -325,7 +325,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-xs font-semibold text-gray-700 dark:text-gray-100">${formatCurrency(group.totalUsdBruto)}</div>
+                                <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">${formatCurrency(group.totalUsdBruto)}</div>
                                 <div className="text-xs text-gray-600 dark:text-gray-300">USD Bruto</div>
                               </div>
                             </div>
