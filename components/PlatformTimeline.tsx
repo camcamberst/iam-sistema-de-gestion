@@ -125,7 +125,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
       <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-          <span className="ml-3 text-gray-600 text-sm">Cargando timeline...</span>
+          <span className="ml-3 text-gray-600 dark:text-gray-300 text-sm">Cargando timeline...</span>
         </div>
       </div>
     );
@@ -145,11 +145,11 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
   return (
     <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4" style={{ overflow: 'visible' }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-900 flex items-center">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
           <Clock className="w-4 h-4 mr-2" />
           Timeline Portafolio Modelos
         </h3>
-        <span className="text-sm text-gray-500">
+        <span className="text-sm text-gray-500 dark:text-gray-400">
           {requests.length} solicitud{requests.length !== 1 ? 'es' : ''}
         </span>
       </div>
@@ -157,7 +157,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
       {requests.length === 0 ? (
         <div className="text-center py-4">
           <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500 text-sm">No hay solicitudes de plataformas activas</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">No hay solicitudes de plataformas activas</p>
         </div>
       ) : (
         <div className="max-h-80 overflow-y-auto space-y-3 relative" style={{ overflowX: 'visible' }}>
@@ -173,10 +173,10 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                     className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: getStatusColor(request.status) }}
                   />
-                  <span className="text-sm font-medium text-gray-900">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {getModelDisplayName(request.model_email)}
                   </span>
-                  <span className="text-xs text-gray-500">•</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
                   <span 
                     className="text-xs font-medium px-2 py-1 rounded-full text-white"
                     style={{ 
@@ -187,8 +187,8 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                   >
                     {request.platform_name}
                   </span>
-                  <span className="text-xs text-gray-500">•</span>
-                  <span className="text-xs text-gray-600">{request.group_name}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">•</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">{request.group_name}</span>
                 </div>
                 
                 {canClose(request.status) && (
@@ -219,7 +219,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                   </div>
-                  <span className="text-xs text-gray-600">Solicitada</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">Solicitada</span>
                 </div>
 
                 {/* Mostrar Pendiente solo si el estado es pendiente, entregada o inviable */}
@@ -240,7 +240,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
-                      <span className="text-xs text-gray-600">Pendiente</span>
+                      <span className="text-xs text-gray-600 dark:text-gray-300">Pendiente</span>
                     </div>
                   </>
                 )}
@@ -268,7 +268,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
-                      <span className="text-xs text-gray-600 capitalize">
+                      <span className="text-xs text-gray-600 dark:text-gray-300 capitalize">
                         {request.status === 'entregada' ? 'Entregada' : 'Inviable'}
                       </span>
                     </div>
@@ -281,7 +281,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
           {/* Indicador si hay más de 5 registros */}
           {requests.length > 5 && (
             <div className="text-center py-2">
-              <span className="text-xs text-gray-500">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
                 Y {requests.length - 5} solicitud{requests.length - 5 !== 1 ? 'es' : ''} más...
               </span>
             </div>
