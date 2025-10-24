@@ -428,7 +428,7 @@ export default function CalculatorHistory() {
 
 
         {/* Resumen con InfoCardGrid - Cuadros específicos solicitados */}
-        <div className="mb-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+        <div className="mb-10 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
               <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -467,7 +467,7 @@ export default function CalculatorHistory() {
 
         {/* Filtros con AppleDropdown (principio estético) */}
         {historicalPeriods.length > 0 && (
-          <div className="mb-10 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="mb-10 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                 <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

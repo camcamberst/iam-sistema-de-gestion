@@ -124,7 +124,7 @@ export default function SuperAdminDashboard() {
         {user?.role === 'modelo' && (
           <div className="space-y-6">
             {/* Panel de perfil */}
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                   <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -128,7 +128,7 @@ export default function GestionAnticiposPage() {
         {/* Opciones principales */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Solicitudes Pendientes */}
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
+          <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
             <div className="flex items-center mb-3">
               <div className="w-6 h-6 bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg flex items-center justify-center shadow-md">
                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@ export default function GestionAnticiposPage() {
           </div>
 
           {/* Historial de Anticipos */}
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
+          <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-lg transition-all duration-300 flex flex-col h-full group">
             <div className="flex items-center mb-3">
               <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
                 <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -165,7 +165,7 @@ export default function GestionAnticiposPage() {
         </div>
 
         {/* Estadísticas rápidas */}
-        <div className="mt-6 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4">
+        <div className="mt-6 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-4 h-4 bg-gradient-to-br from-purple-500 to-violet-600 rounded flex items-center justify-center">
               <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

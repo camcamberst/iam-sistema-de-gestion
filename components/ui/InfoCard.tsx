@@ -19,46 +19,46 @@ interface InfoCardProps {
 
 const colorVariants = {
   blue: {
-    gradient: 'bg-gradient-to-br from-blue-50 to-blue-100',
-    border: 'border-blue-200',
-    text: 'text-blue-700',
-    badge: 'text-blue-600 bg-blue-200',
-    shadow: 'hover:shadow-blue-200'
+    gradient: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/30',
+    border: 'border-blue-200 dark:border-blue-700/50',
+    text: 'text-blue-700 dark:text-blue-300',
+    badge: 'text-blue-600 bg-blue-200 dark:text-blue-300 dark:bg-blue-800/40',
+    shadow: 'hover:shadow-blue-200 dark:hover:shadow-blue-900/20'
   },
   green: {
-    gradient: 'bg-gradient-to-br from-green-50 to-green-100',
-    border: 'border-green-200',
-    text: 'text-green-700',
-    badge: 'text-green-600 bg-green-200',
-    shadow: 'hover:shadow-green-200'
+    gradient: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/30',
+    border: 'border-green-200 dark:border-green-700/50',
+    text: 'text-green-700 dark:text-green-300',
+    badge: 'text-green-600 bg-green-200 dark:text-green-300 dark:bg-green-800/40',
+    shadow: 'hover:shadow-green-200 dark:hover:shadow-green-900/20'
   },
   purple: {
-    gradient: 'bg-gradient-to-br from-purple-50 to-purple-100',
-    border: 'border-purple-200',
-    text: 'text-purple-700',
-    badge: 'text-purple-600 bg-purple-200',
-    shadow: 'hover:shadow-purple-200'
+    gradient: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-900/20 dark:to-purple-800/30',
+    border: 'border-purple-200 dark:border-purple-700/50',
+    text: 'text-purple-700 dark:text-purple-300',
+    badge: 'text-purple-600 bg-purple-200 dark:text-purple-300 dark:bg-purple-800/40',
+    shadow: 'hover:shadow-purple-200 dark:hover:shadow-purple-900/20'
   },
   orange: {
-    gradient: 'bg-gradient-to-br from-orange-50 to-orange-100',
-    border: 'border-orange-200',
-    text: 'text-orange-700',
-    badge: 'text-orange-600 bg-orange-200',
-    shadow: 'hover:shadow-orange-200'
+    gradient: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/30',
+    border: 'border-orange-200 dark:border-orange-700/50',
+    text: 'text-orange-700 dark:text-orange-300',
+    badge: 'text-orange-600 bg-orange-200 dark:text-orange-300 dark:bg-orange-800/40',
+    shadow: 'hover:shadow-orange-200 dark:hover:shadow-orange-900/20'
   },
   red: {
-    gradient: 'bg-gradient-to-br from-red-50 to-red-100',
-    border: 'border-red-200',
-    text: 'text-red-700',
-    badge: 'text-red-600 bg-red-200',
-    shadow: 'hover:shadow-red-200'
+    gradient: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/30',
+    border: 'border-red-200 dark:border-red-700/50',
+    text: 'text-red-700 dark:text-red-300',
+    badge: 'text-red-600 bg-red-200 dark:text-red-300 dark:bg-red-800/40',
+    shadow: 'hover:shadow-red-200 dark:hover:shadow-red-900/20'
   },
   yellow: {
-    gradient: 'bg-gradient-to-br from-yellow-50 to-yellow-100',
-    border: 'border-yellow-200',
-    text: 'text-yellow-700',
-    badge: 'text-yellow-600 bg-yellow-200',
-    shadow: 'hover:shadow-yellow-200'
+    gradient: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-900/20 dark:to-yellow-800/30',
+    border: 'border-yellow-200 dark:border-yellow-700/50',
+    text: 'text-yellow-700 dark:text-yellow-300',
+    badge: 'text-yellow-600 bg-yellow-200 dark:text-yellow-300 dark:bg-yellow-800/40',
+    shadow: 'hover:shadow-yellow-200 dark:hover:shadow-yellow-900/20'
   }
 };
 

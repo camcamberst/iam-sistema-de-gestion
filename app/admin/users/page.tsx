@@ -427,7 +427,7 @@ export default function UsersListPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-16 relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 z-50">
+        <div className="mb-16 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 z-50">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -493,7 +493,7 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className={`relative bg-white/70 backdrop-blur-sm border border-white/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0 z-10 ${isDropdownOpen ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}>
+        <div className={`relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0 z-10 ${isDropdownOpen ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}>
           <div className="pt-6 px-6 pb-0">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">

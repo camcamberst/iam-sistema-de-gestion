@@ -342,7 +342,7 @@ export default function MiPortafolio() {
             {/* Resumen */}
             {portfolioData && (
               <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+                <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Total Plataformas</p>
@@ -352,7 +352,7 @@ export default function MiPortafolio() {
                   </div>
                 </div>
 
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+                <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Activas</p>
@@ -362,7 +362,7 @@ export default function MiPortafolio() {
                   </div>
                 </div>
 
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+                <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Pendientes</p>
@@ -372,7 +372,7 @@ export default function MiPortafolio() {
                   </div>
                 </div>
 
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+                <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm font-medium text-gray-600">Ganancias (30 días)</p>
@@ -387,7 +387,7 @@ export default function MiPortafolio() {
             )}
 
             {/* Etiquetas de Plataformas */}
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Mis Plataformas</h2>
                 <div className="flex items-center space-x-2">
@@ -551,7 +551,7 @@ export default function MiPortafolio() {
         )}
 
         {activeTab === 'analytics' && (
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
             <PortfolioAnalytics modelId={user?.id} />
           </div>
         )}
