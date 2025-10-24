@@ -389,7 +389,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                 <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 overflow-hidden hover:shadow-lg transition-all duration-300">
                   {/* Header de Sede - Aplicando políticas estéticas */}
                   <div 
-                    className="px-6 py-5 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
+                    className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
                     onClick={() => toggleSedeExpansion(sede.sedeId)}
                   >
                     <div className="flex items-center justify-between">
@@ -405,8 +405,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           </svg>
                         </div>
                         <div>
-                          <h3 className="text-xl font-semibold text-gray-900">{sede.sedeName}</h3>
-                          <p className="text-sm text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
+                          <h3 className="text-lg font-semibold text-gray-900">{sede.sedeName}</h3>
+                          <p className="text-xs text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
                         </div>
                       </div>
                     </div>
@@ -435,8 +435,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   </svg>
                                 </div>
                                 <div>
-                                  <h4 className="text-lg font-semibold text-gray-900">{group.groupName}</h4>
-                                  <p className="text-sm text-gray-600">{group.totalModels} modelos</p>
+                                  <h4 className="text-base font-semibold text-gray-900">{group.groupName}</h4>
+                                  <p className="text-xs text-gray-600">{group.totalModels} modelos</p>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-6 text-sm">
@@ -510,7 +510,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     <div key={sede.sedeId} className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 overflow-hidden hover:shadow-lg transition-all duration-300">
                       {/* Header de Sede - Aplicando políticas estéticas */}
                       <div 
-                        className="px-6 py-5 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
+                        className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 transition-all duration-200"
                         onClick={() => toggleSedeExpansion(sede.sedeId)}
                       >
                         <div className="flex items-center justify-between">
@@ -526,8 +526,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               </svg>
                             </div>
                             <div>
-                              <h3 className="text-xl font-semibold text-gray-900">{sede.sedeName}</h3>
-                              <p className="text-sm text-gray-600">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
+                              <h3 className="text-lg font-semibold text-gray-900">{sede.sedeName}</h3>
+                              <p className="text-xs text-gray-600">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-6 text-sm">
