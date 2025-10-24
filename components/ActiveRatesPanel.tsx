@@ -131,14 +131,14 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
               <p className="text-gray-500 dark:text-gray-300 text-xs text-center py-2">No hay tasas de calculadora</p>
             ) : (
               rates.map((rate) => (
-                <div key={rate.id} className="flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-md">
+                <div key={rate.id} className="flex items-center justify-between py-1.5 px-2 bg-gray-50 dark:bg-white rounded-md">
                   <div className="flex items-center space-x-2">
                     <span className="text-xs">{getSourceIcon(rate.source)}</span>
-                    <span className="text-xs font-medium">{getKindLabel(rate.kind)}</span>
+                    <span className="text-xs font-medium text-gray-900 dark:text-gray-900">{getKindLabel(rate.kind)}</span>
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{rate.value}</div>
-                    <div className="text-xs text-gray-800 dark:text-gray-800">{getScopeLabel(rate.scope)}</div>
+                    <div className="text-xs text-gray-800 dark:text-gray-900">{getScopeLabel(rate.scope)}</div>
                   </div>
                 </div>
               ))
@@ -199,19 +199,19 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
             </div>
           ) : (
             rates.map((rate) => (
-              <div key={rate.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-gray-600/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-500/30 shadow-sm">
+              <div key={rate.id} className="flex items-center justify-between p-3 bg-white dark:bg-white backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-500/30 shadow-sm">
                 <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-50 dark:bg-gray-50 rounded-lg flex items-center justify-center">
                     <span className="text-sm">{getSourceIcon(rate.source)}</span>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{getKindLabel(rate.kind)}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-300">{getScopeLabel(rate.scope)}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-900">{getKindLabel(rate.kind)}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-900">{getScopeLabel(rate.scope)}</div>
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-base font-bold text-gray-900 dark:text-gray-900">{rate.value}</div>
-                  <div className="text-xs text-gray-800 dark:text-gray-800">
+                  <div className="text-xs text-gray-800 dark:text-gray-900">
                     {new Date(rate.valid_from).toLocaleDateString('es-ES', {
                       day: '2-digit',
                       month: '2-digit',
