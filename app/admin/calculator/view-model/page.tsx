@@ -568,9 +568,9 @@ export default function AdminViewModelPage() {
                 <button
                   onClick={syncTotals}
                   disabled={syncingTotals || !selectedModel?.calculatorData}
-                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
+                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                     !syncingTotals
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200 hover:shadow-indigo-300'
+                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md hover:shadow-lg'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
                 >
@@ -579,9 +579,9 @@ export default function AdminViewModelPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
+                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                   hasChanges && !saving
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
+                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                 }`}
               >
