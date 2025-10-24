@@ -855,7 +855,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
               autoComplete="name"
               required
             />
@@ -867,7 +867,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
               autoComplete="email"
               required
             />
@@ -885,23 +885,14 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="Ingresa nueva contraseña"
                 autoComplete="new-password"
-                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 pr-12 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
+                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
               >
-                {showPassword ? (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.878 9.878L3 3m6.878 6.878L21 21" />
-                  </svg>
-                ) : (
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                )}
+                {showPassword ? 'Ocultar' : 'Ver'}
               </button>
             </div>
             {formData.password && formData.password.length < 6 && (
@@ -915,7 +906,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                   type="button"
                   onClick={handleSavePassword}
                   disabled={savingPassword}
-                  className="bg-green-500 hover:bg-green-600 disabled:bg-green-300 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center gap-2"
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:from-green-600 hover:to-emerald-700 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 shadow-md flex items-center gap-2"
                 >
                   {savingPassword ? (
                     <>
@@ -949,6 +940,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               value={formData.role}
               onChange={(value) => setFormData({ ...formData, role: value as 'super_admin' | 'admin' | 'modelo' })}
               placeholder="Selecciona un rol"
+              className="text-sm"
             />
           </div>
 
@@ -978,6 +970,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
               onChange={handleGroupChange}
               placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
+              className="text-sm"
             />
             {restrictionMessage && (
               <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
@@ -991,13 +984,13 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
             >
               Actualizar Usuario
             </button>
