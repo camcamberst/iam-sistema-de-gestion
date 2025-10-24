@@ -560,10 +560,10 @@ export default function HistorialAnticiposPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando...</p>
         </div>
       </div>
     );
@@ -571,16 +571,16 @@ export default function HistorialAnticiposPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h1>
-            <p className="text-sm text-gray-600">No tienes permisos para acceder a esta página.</p>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
           </div>
         </div>
       </div>
@@ -590,7 +590,7 @@ export default function HistorialAnticiposPage() {
   const estadisticas = getEstadisticas();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <style jsx>{`
         /* Estilos Apple para dropdowns con altura limitada */
         .bank-select {
@@ -642,17 +642,20 @@ export default function HistorialAnticiposPage() {
       `}</style>
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-10">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-              </div>
-              <div>
-                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Historial de Anticipos</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Gestiona el historial completo de anticipos de tu grupo</p>
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div className="flex items-center space-x-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Historial de Anticipos</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Gestiona el historial completo de anticipos de tu grupo</p>
+                </div>
               </div>
             </div>
           </div>
@@ -660,14 +663,14 @@ export default function HistorialAnticiposPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              <span className="text-red-800 font-medium">Error</span>
+              <span className="text-red-800 dark:text-red-300 font-medium">Error</span>
             </div>
-            <p className="text-red-700 text-sm mt-1">{error}</p>
+            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
           </div>
         )}
 
@@ -708,25 +711,26 @@ export default function HistorialAnticiposPage() {
         />
 
         {/* Filtros */}
-        <div className="relative z-[99998] bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 mb-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Filtros</h2>
+        <div className="relative z-[99998] bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 mb-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Filtros</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* 1. Grupo (primero) */}
             {user?.role === 'super_admin' && (
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Grupo</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Grupo</label>
                 <AppleDropdown
                 options={grupos.map(g => ({ value: g.id, label: g.name }))}
                   value={filters.grupo}
                   onChange={(value) => setFilters(prev => ({ ...prev, grupo: value }))}
                   placeholder="Seleccionar grupo"
+                  className="text-sm"
                 />
               </div>
             )}
             
             {/* 2. Mes */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Mes</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Mes</label>
               <AppleDropdown
                 options={[
                   { value: 'enero', label: 'Enero' },
@@ -745,12 +749,13 @@ export default function HistorialAnticiposPage() {
                 value={filters.mes}
                 onChange={(value) => setFilters(prev => ({ ...prev, mes: value }))}
                 placeholder="Seleccionar mes"
+                className="text-sm"
               />
             </div>
             
             {/* 3. Periodo */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Periodo</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Periodo</label>
               <AppleDropdown
                 options={[
                   { value: 'periodo-1', label: 'Periodo 1' },
@@ -759,18 +764,19 @@ export default function HistorialAnticiposPage() {
                 value={filters.periodo}
                 onChange={(value) => setFilters(prev => ({ ...prev, periodo: value }))}
                 placeholder="Seleccionar periodo"
+                className="text-sm"
               />
             </div>
             
             {/* 4. Modelo (búsqueda con sugerencias) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Modelo</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Modelo</label>
               <input
                 type="text"
                 value={filters.modelo}
                 onChange={(e) => setFilters(prev => ({ ...prev, modelo: e.target.value }))}
                 placeholder="Buscar por nombre o email"
-                className="w-full border border-gray-300 rounded-md px-3 py-2.5 bg-white text-sm text-gray-900"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2.5 bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100"
                 list="modelos-suggestions"
               />
               <datalist id="modelos-suggestions">
@@ -792,12 +798,12 @@ export default function HistorialAnticiposPage() {
 
         {/* Lista de Anticipos */}
         {!showResults ? null : filteredAnticipos.length === 0 ? (
-          <div className="relative z-0 bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 text-center">
-            <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative z-0 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 dark:border-gray-600/20 text-center dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <svg className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay anticipos</h3>
-            <p className="text-gray-500">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay anticipos</h3>
+            <p className="text-gray-500 dark:text-gray-400">
               {anticipos.length === 0 
                 ? 'Aún no hay anticipos en el sistema'
                 : 'No se encontraron anticipos con los filtros aplicados'
@@ -807,23 +813,23 @@ export default function HistorialAnticiposPage() {
         ) : (
           <div className="space-y-4">
             {filteredAnticipos.map((anticipo) => (
-              <div key={anticipo.id} className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/20 p-4">
+              <div key={anticipo.id} className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                 <div className="flex items-center justify-between">
                   <div className="flex-1">
                     {/* Primera línea: Modelo, monto y estado */}
                     <div className="flex items-center justify-between mb-1">
                       <div>
-                        <h3 className="text-base font-semibold text-gray-900">
+                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                           {anticipo.model.name}
                         </h3>
-                        <div className="text-xs text-gray-500 mt-1">
+                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                           <span className="font-medium">Email:</span> {anticipo.model.email} | 
                           <span className="font-medium ml-1">Grupo:</span> {anticipo.model.group?.name || 'Sin grupo'}
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
                         <div className="text-right">
-                          <div className="text-base font-bold text-gray-900">
+                          <div className="text-base font-bold text-gray-900 dark:text-gray-100">
                             ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                           </div>
                         </div>
@@ -856,13 +862,13 @@ export default function HistorialAnticiposPage() {
 
                     {/* Comentarios - solo si existen */}
                     {anticipo.comentarios_admin && (
-                      <div className="mt-1 p-1 bg-blue-50 rounded text-xs text-blue-800">
+                      <div className="mt-1 p-1 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-800 dark:text-blue-300">
                         <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
                       </div>
                     )}
 
                     {anticipo.comentarios_rechazo && (
-                      <div className="mt-1 p-1 bg-red-50 rounded text-xs text-red-800">
+                      <div className="mt-1 p-1 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-800 dark:text-red-300">
                         <span className="font-medium">Rechazo:</span> {anticipo.comentarios_rechazo}
                       </div>
                     )}
@@ -877,7 +883,7 @@ export default function HistorialAnticiposPage() {
         <div className="mt-8 flex justify-center">
           <button
             onClick={() => router.push('/admin/anticipos/pending')}
-            className="px-6 py-2.5 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+            className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
           >
             Solicitudes Pendientes
           </button>
