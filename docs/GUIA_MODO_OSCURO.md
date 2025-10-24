@@ -138,12 +138,26 @@ border-gray-200/30 dark:border-gray-500/30
 
 #### Headers de Tabla
 ```css
-text-gray-700 dark:text-gray-200
+/* Encabezados de tabla estándar */
+text-gray-700 dark:text-white
+
+/* Aplicar a todas las columnas */
+<th className="px-4 py-4 text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+  Nombre de Columna
+</th>
 ```
 
 #### Celdas de Datos
 ```css
 text-gray-900 dark:text-gray-100
+```
+
+#### Tabla de Usuarios
+```css
+/* Headers específicos para tabla de usuarios */
+text-gray-700 dark:text-white
+
+/* Columnas: Usuario, Email, Rol, Grupos, Estado, Acciones */
 ```
 
 #### Badges y Estados
@@ -176,6 +190,31 @@ hover:bg-gray-50 dark:hover:bg-gray-700
 /* Opciones activas */
 bg-blue-50 dark:bg-blue-900/20
 text-blue-900 dark:text-blue-100
+```
+
+#### Líneas Divisorias de Dropdowns
+```css
+/* Líneas divisorias de borde a borde */
+w-full h-px bg-gray-100 dark:bg-gray-600/50 
+dark:shadow-sm dark:shadow-blue-900/10
+
+/* Estructura recomendada */
+{index > 0 && (
+  <div className="w-full h-px bg-gray-100 dark:bg-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10"></div>
+)}
+```
+
+#### Filtros Avanzados
+```css
+/* Contenedor de Filtros Avanzados */
+bg-white/95 dark:bg-white/80
+backdrop-blur-sm rounded-lg
+border-white/30 dark:border-gray-600/30
+shadow-xl dark:shadow-2xl dark:shadow-blue-900/20
+dark:ring-1 dark:ring-blue-400/20
+
+/* Título de Filtros Avanzados */
+text-gray-700 dark:text-gray-800
 ```
 
 ---
@@ -547,6 +586,25 @@ shadow-lg dark:shadow-lg
 
 ---
 
+## 📝 Cambios de Contenido
+
+### 🏢 Nombres de Agencia
+```tsx
+// Cambio implementado en BillingSummaryCompact.tsx
+// Antes: 'Sede Desconocida'
+// Después: 'Agencia Innova'
+
+sedeName: model.organizationId ? 'Agencia Innova' : 'Agencia Innova'
+```
+
+### 📊 Resumen de Facturación
+- ✅ **"Sede Desconocida"** → **"Agencia Innova"**
+- ✅ **Consistencia** en nombres de agencia
+- ✅ **Mejor identificación** en el sistema
+- ✅ **Experiencia de usuario** mejorada
+
+---
+
 ## 📚 Recursos Adicionales
 
 ### 🎨 Paleta de Colores
@@ -583,6 +641,31 @@ shadow-lg dark:shadow-lg
 - ✅ Texto "X modelos • Todas las sedes" en blanco
 - ✅ Legibilidad mejorada en modo oscuro
 - ✅ Estándar completo para implementación
+
+### v1.2.0 - Líneas Divisorias y Dropdowns
+- ✅ Líneas divisorias de dropdowns de borde a borde
+- ✅ Efectos de iluminación completa en líneas divisorias
+- ✅ Elementos separados para líneas divisorias
+- ✅ Aplicado a AppleSelect y AppleDropdown
+- ✅ Efectos de luz sutil con dark:shadow-blue-900/10
+
+### v1.2.1 - Encabezados de Tabla
+- ✅ Encabezados de tabla de usuarios en blanco
+- ✅ Consistencia en todos los encabezados de columnas
+- ✅ Mejor contraste en modo oscuro
+- ✅ Aplicado a: Usuario, Email, Rol, Grupos, Estado, Acciones
+
+### v1.2.2 - Filtros Avanzados
+- ✅ Fondo de Filtros Avanzados menos brillante
+- ✅ dark:bg-white/80 para reducir brillo sin cambiar color
+- ✅ Título con dark:text-gray-800 para mejor contraste
+- ✅ Efectos de luz sutil mantenidos
+- ✅ Experiencia visual más cómoda
+
+### v1.2.3 - Cambios de Contenido
+- ✅ "Sede Desconocida" cambiado por "Agencia Innova"
+- ✅ Consistencia en nombres de agencia
+- ✅ Mejor identificación en Resumen de Facturación
 
 ---
 
