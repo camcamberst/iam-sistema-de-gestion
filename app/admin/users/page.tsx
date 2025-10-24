@@ -392,13 +392,13 @@ export default function UsersListPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
+            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex justify-between items-center">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -427,7 +427,7 @@ export default function UsersListPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className="mb-16 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 z-50">
+        <div className="mb-16 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 z-50 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -480,7 +480,7 @@ export default function UsersListPage() {
         </div>
 
         {error && (
-          <div className="mb-6 relative bg-red-50/80 backdrop-blur-sm border border-red-200/50 text-red-700 px-4 py-3 rounded-xl shadow-md">
+          <div className="mb-6 relative bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200/50 dark:border-red-700/50 text-red-700 dark:text-red-300 px-4 py-3 rounded-xl shadow-md">
             <div className="flex items-center space-x-2">
               <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
                 <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -493,7 +493,7 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className={`relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm border border-white/20 dark:border-gray-700/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0 z-10 ${isDropdownOpen ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}>
+        <div className={`relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${isDropdownOpen ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}>
           <div className="pt-6 px-6 pb-0">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -513,7 +513,7 @@ export default function UsersListPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                   </svg>
                 </div>
-                <div className="text-gray-400 text-base font-medium">No hay usuarios registrados</div>
+                <div className="text-gray-400 dark:text-gray-500 text-base font-medium">No hay usuarios registrados</div>
                 <button
                   onClick={() => router.push('/admin/users/create')}
                   className="mt-4 px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white rounded-lg transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
@@ -529,7 +529,7 @@ export default function UsersListPage() {
                   </svg>
                 </div>
                 <div className="text-gray-400 dark:text-gray-500 text-base font-medium">No hay resultados</div>
-                <div className="text-gray-500 text-xs mt-2">
+                <div className="text-gray-500 dark:text-gray-400 text-xs mt-2">
                   {searchQuery.trim() || Object.values(searchFilters).some(f => f) 
                     ? 'Intenta ajustar los filtros de búsqueda' 
                     : 'Usa los filtros de búsqueda para encontrar usuarios'
@@ -539,7 +539,7 @@ export default function UsersListPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="min-w-full text-left text-xs table-fixed">
-                  <thead className="border-b border-white/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 backdrop-blur-sm">
+                  <thead className="border-b border-white/20 dark:border-gray-600/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 dark:from-gray-700/80 dark:to-gray-600/60 backdrop-blur-sm">
                     <tr>
                       <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-gray-200 font-medium text-sm uppercase tracking-wide text-center">
                         Usuario
