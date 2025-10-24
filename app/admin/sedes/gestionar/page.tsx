@@ -723,10 +723,10 @@ export default function GestionarSedesPage() {
           <div className="flex flex-col space-y-6 h-full">
             {/* Crear Nueva Sede */}
             <div className="relative flex-1">
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-slate-500/5 rounded-2xl blur-sm"></div>
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
               <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                 <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-slate-700 rounded-md flex items-center justify-center">
+                  <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
@@ -736,7 +736,7 @@ export default function GestionarSedesPage() {
                 <div className="mt-auto flex justify-center">
                   <button
                     onClick={() => setShowCreateGroup(true)}
-                    className="px-4 py-1.5 text-xs font-medium bg-gradient-to-r from-gray-700 to-slate-800 text-white rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
                     + Crear Sede
                   </button>
@@ -760,7 +760,7 @@ export default function GestionarSedesPage() {
                   <div className="mt-auto flex justify-center">
                     <button
                       onClick={() => setShowCreateRoom(true)}
-                      className="px-4 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-5 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       + Crear Room
                     </button>
