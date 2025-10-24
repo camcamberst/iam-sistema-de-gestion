@@ -378,7 +378,7 @@ export default function SolicitarAnticipoPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               Solicitud No Disponible
             </h2>
             <p className="text-gray-600 mb-4">
@@ -494,7 +494,7 @@ export default function SolicitarAnticipoPage() {
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 hover:shadow-md transition-all duration-300">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
             Resumen de Productividad
           </h2>
@@ -524,7 +524,7 @@ export default function SolicitarAnticipoPage() {
 
         {/* Formulario */}
         <div className="apple-card">
-          <h2 className="text-lg font-semibold text-gray-900 mb-6">Datos del Anticipo</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Datos del Anticipo</h2>
           
           {success && (
             <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">

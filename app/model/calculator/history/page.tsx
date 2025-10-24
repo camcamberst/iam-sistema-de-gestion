@@ -383,7 +383,7 @@ export default function CalculatorHistory() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h1>
             <p className="text-sm text-gray-600">Solo las modelos pueden acceder a esta página.</p>
           </div>
         </div>
@@ -435,7 +435,7 @@ export default function CalculatorHistory() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-base font-semibold text-gray-900">Estadísticas de Rendimiento</h3>
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Estadísticas de Rendimiento</h3>
           </div>
           <InfoCardGrid 
             cards={[
@@ -474,7 +474,7 @@ export default function CalculatorHistory() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                 </svg>
               </div>
-              <h3 className="text-base font-semibold text-gray-900">Filtrar Períodos Archivados</h3>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Filtrar Períodos Archivados</h3>
             </div>
             <div className="flex flex-wrap gap-4">
               <div className="flex-1 min-w-[200px]">
@@ -541,7 +541,7 @@ export default function CalculatorHistory() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
               {historicalPeriods.length === 0 ? 'No hay períodos archivados' : 'No hay períodos que coincidan con los filtros'}
             </h3>
             <p className="text-gray-500 text-sm">
@@ -553,7 +553,7 @@ export default function CalculatorHistory() {
           </div>
         ) : (
           <div className="space-y-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Períodos Archivados</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Períodos Archivados</h3>
             {filteredPeriods.map((period, index) => {
               const periodKey = `${period.period_date}-${period.period_type}`;
               const isExpanded = expandedPeriod === periodKey;
