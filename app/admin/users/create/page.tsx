@@ -192,7 +192,7 @@ export default function CreateUserPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-start justify-center p-4 pt-16">
       <div className="w-full max-w-4xl">
-        <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-2xl dark:shadow-blue-900/20 dark:ring-1 dark:ring-blue-400/30">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
