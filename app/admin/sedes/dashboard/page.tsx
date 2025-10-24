@@ -437,7 +437,7 @@ export default function DashboardSedesPage() {
                   </svg>
                 </div>
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">Consulta Histórica</h2>
+                  <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Consulta Histórica</h2>
                   <p className="text-sm text-gray-600">Consulta períodos históricos de facturación</p>
                 </div>
               </div>
@@ -747,7 +747,7 @@ export default function DashboardSedesPage() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                       </svg>
                     </div>
-                    <h2 className="text-base font-semibold text-gray-900">Resumen de Disponibilidad</h2>
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Disponibilidad</h2>
                   </div>
                   <button
                     onClick={() => setSelectedSede('')}
@@ -772,7 +772,7 @@ export default function DashboardSedesPage() {
                     <div className="space-y-4">
                       {/* Header de la sede */}
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200/50">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                           {sedeDisponibilidad.sede_nombre}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -807,7 +807,7 @@ export default function DashboardSedesPage() {
                           <div key={jornada.key} className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50">
                             <div className="flex items-center space-x-2 mb-3">
                               <div className={`w-3 h-3 bg-gradient-to-r ${jornada.color} rounded-full`}></div>
-                              <h4 className="font-medium text-gray-900">{jornada.label}</h4>
+                              <h4 className="font-medium text-gray-900 dark:text-gray-100">{jornada.label}</h4>
                             </div>
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">

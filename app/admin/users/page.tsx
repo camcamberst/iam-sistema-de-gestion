@@ -528,7 +528,7 @@ export default function UsersListPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                   </svg>
                 </div>
-                <div className="text-gray-400 text-base font-medium">No hay resultados</div>
+                <div className="text-gray-400 dark:text-gray-500 text-base font-medium">No hay resultados</div>
                 <div className="text-gray-500 text-xs mt-2">
                   {searchQuery.trim() || Object.values(searchFilters).some(f => f) 
                     ? 'Intenta ajustar los filtros de búsqueda' 
