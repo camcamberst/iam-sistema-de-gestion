@@ -487,10 +487,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     >
                       {item.href === '#' ? (
                         <span
-                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 ${item.subItems && item.subItems.length > 0 ? 'cursor-pointer' : 'cursor-default'} whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm ${
                             isParentActive(item) 
-                              ? 'text-gray-900 bg-white/50 shadow-sm' 
-                              : 'text-gray-600 hover:text-gray-900'
+                              ? 'text-gray-900 dark:text-white bg-white/50 dark:bg-gray-800/50 shadow-sm' 
+                              : 'text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-200'
                           }`}
                         >
                           {item.label}
@@ -498,10 +498,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       ) : (
                     <Link
                       href={item.href}
-                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 hover:backdrop-blur-sm hover:shadow-sm ${
+                          className={`px-4 py-2 text-sm font-medium transition-all duration-300 whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm ${
                         isActive(item.href) || isParentActive(item) 
-                              ? 'text-gray-900 bg-white/50 shadow-sm' 
-                              : 'text-gray-600 hover:text-gray-900'
+                              ? 'text-gray-900 dark:text-white bg-white/50 dark:bg-gray-800/50 shadow-sm' 
+                              : 'text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-200'
                       }`}
                     >
                       {item.label}
