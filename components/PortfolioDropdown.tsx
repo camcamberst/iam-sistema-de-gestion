@@ -69,7 +69,7 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
         <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-xl shadow-xl z-[9998] animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-100 uppercase tracking-wide mb-2">
                 Mi Portafolio
               </h3>
             </div>

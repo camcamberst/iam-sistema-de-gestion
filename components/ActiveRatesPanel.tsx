@@ -210,7 +210,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-base font-bold text-gray-900 dark:text-white">{rate.value}</div>
+                  <div className="text-base font-bold text-gray-900 dark:text-gray-100">{rate.value}</div>
                   <div className="text-xs text-gray-500 dark:text-gray-300">
                     {new Date(rate.valid_from).toLocaleDateString('es-ES', {
                       day: '2-digit',
