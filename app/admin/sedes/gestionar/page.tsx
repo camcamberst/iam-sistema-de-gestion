@@ -620,23 +620,23 @@ export default function GestionarSedesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando datos...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando datos...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-16">
+        <div className="mb-12">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-2xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -682,14 +682,14 @@ export default function GestionarSedesPage() {
           <div className="flex flex-col h-full">
             <div className="relative flex-1">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 h-full flex flex-col">
+              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h2 className="text-base font-semibold text-gray-900">Seleccionar Sede</h2>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Seleccionar Sede</h2>
                 </div>
               <AppleDropdown
                 options={availableSedes.map(sede => ({
@@ -708,9 +708,10 @@ export default function GestionarSedesPage() {
                   }
                 }}
                 placeholder="Selecciona una sede para gestionar"
+                className="text-sm"
               />
               {availableSedes.length === 0 && (
-                <p className="text-sm text-gray-500 mt-2">
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
                   No hay sedes disponibles para gestionar
                 </p>
               )}
@@ -723,19 +724,19 @@ export default function GestionarSedesPage() {
             {/* Crear Nueva Sede */}
             <div className="relative flex-1">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/5 to-slate-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 h-full flex flex-col">
+              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-6 h-6 bg-gradient-to-br from-gray-600 to-slate-700 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                   </div>
-                  <h2 className="text-base font-semibold text-gray-900">Crear Nueva Sede</h2>
+                  <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
                 </div>
                 <div className="mt-auto">
                   <button
                     onClick={() => setShowCreateGroup(true)}
-                    className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-2 px-3 rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-1.5 px-3 rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-xs font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
                     + Crear Sede
                   </button>
@@ -747,19 +748,19 @@ export default function GestionarSedesPage() {
             {selectedSede && (
               <div className="relative flex-1">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 h-full flex flex-col">
+                <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                   <div className="flex items-center space-x-2 mb-4">
                     <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                       <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
-                    <h2 className="text-base font-semibold text-gray-900">Crear Room</h2>
+                    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crear Room</h2>
                   </div>
                   <div className="mt-auto">
                     <button
                       onClick={() => setShowCreateRoom(true)}
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-sm font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-1.5 px-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xs font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       + Crear Room
                     </button>
@@ -774,7 +775,7 @@ export default function GestionarSedesPage() {
         {selectedSedeInfo && (
           <div className="relative mb-10">
             <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-xl blur-sm"></div>
-            <div className="relative bg-white/80 backdrop-blur-sm rounded-lg shadow-md border border-white/20 p-4">
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg shadow-md border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -783,23 +784,23 @@ export default function GestionarSedesPage() {
                     </svg>
                   </div>
                   <div>
-                    <h2 className="text-lg font-semibold text-gray-900">{selectedSedeInfo.name}</h2>
-                    <p className="text-xs text-gray-500">
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{selectedSedeInfo.name}</h2>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
                       {selectedSedeInfo.rooms?.length || 0} rooms configurados
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-1.5 bg-blue-100 px-2 py-1 rounded-full">
+                <div className="flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
                   <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-blue-700 font-medium">Activa</span>
+                  <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">Activa</span>
                 </div>
               </div>
 
             {/* Información del Admin Asignado */}
             {sedeAdminInfo ? (
-              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 backdrop-blur-sm rounded-lg p-4 mb-4 border border-blue-200/30">
+              <div className="bg-gradient-to-r from-blue-50/80 to-indigo-50/80 dark:from-blue-900/20 dark:to-indigo-900/20 backdrop-blur-sm rounded-lg p-4 mb-4 border border-blue-200/30 dark:border-blue-700/30">
                 <div className="mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900">Admin Asignado</h3>
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Admin Asignado</h3>
                 </div>
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -808,23 +809,23 @@ export default function GestionarSedesPage() {
                     </span>
                   </div>
                   <div>
-                    <p className="text-sm font-semibold text-gray-900">{sedeAdminInfo.name}</p>
-                    <p className="text-xs text-gray-600">{sedeAdminInfo.email}</p>
-                    <p className="text-xs text-blue-600 font-medium">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{sedeAdminInfo.name}</p>
+                    <p className="text-xs text-gray-600 dark:text-gray-400">{sedeAdminInfo.email}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 font-medium">
                       {sedeAdminInfo.user_groups?.length || 0} sede{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''} asignada{(sedeAdminInfo.user_groups?.length || 0) !== 1 ? 's' : ''}
                     </p>
                   </div>
                 </div>
               </div>
             ) : (
-              <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-5 mb-6 border border-yellow-200/30">
+              <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 dark:from-yellow-900/20 dark:to-orange-900/20 backdrop-blur-sm rounded-xl p-5 mb-6 border border-yellow-200/30 dark:border-yellow-700/30">
                 <div className="flex items-center space-x-3">
                   <div className="w-6 h-6 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   </div>
-                  <p className="text-sm font-medium text-yellow-800">No hay admin asignado a esta sede</p>
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">No hay admin asignado a esta sede</p>
                 </div>
               </div>
             )}
@@ -837,7 +838,7 @@ export default function GestionarSedesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-semibold text-gray-900">Rooms Disponibles</h3>
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Rooms Disponibles</h3>
               </div>
               {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
@@ -845,7 +846,7 @@ export default function GestionarSedesPage() {
                     <button
                       key={room.id}
                       onClick={() => handleRoomClick(room)}
-                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 text-gray-800 hover:from-gray-200 hover:to-slate-200 hover:text-gray-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50"
+                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-600 dark:to-slate-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-500 dark:hover:to-slate-500 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50 dark:border-gray-500/50"
                     >
                       <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -855,14 +856,14 @@ export default function GestionarSedesPage() {
                   ))}
                 </div>
               ) : (
-                <div className="bg-gradient-to-r from-gray-50/80 to-slate-50/80 backdrop-blur-sm rounded-xl p-6 text-center border border-gray-200/30">
-                  <div className="w-12 h-12 bg-gray-100 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="bg-gradient-to-r from-gray-50/80 to-slate-50/80 dark:from-gray-600/80 dark:to-slate-600/80 backdrop-blur-sm rounded-xl p-6 text-center border border-gray-200/30 dark:border-gray-500/30">
+                  <div className="w-12 h-12 bg-gray-100 dark:bg-gray-600 rounded-xl flex items-center justify-center mx-auto mb-3">
+                    <svg className="w-6 h-6 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <p className="text-sm font-medium text-gray-600">No hay rooms configurados en esta sede</p>
-                  <p className="text-xs text-gray-500 mt-1">Usa el botón "Crear Room" para agregar rooms</p>
+                  <p className="text-sm font-medium text-gray-600 dark:text-gray-300">No hay rooms configurados en esta sede</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Usa el botón "Crear Room" para agregar rooms</p>
                 </div>
               )}
             </div>
@@ -915,14 +916,14 @@ export default function GestionarSedesPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900">Crear Nueva Sede</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
                 </div>
               
               <form onSubmit={handleCreateGroup} className="space-y-6">
@@ -954,7 +955,7 @@ export default function GestionarSedesPage() {
                 )}
               
                 <div>
-                  <label className="block text-gray-700 text-sm font-semibold mb-2">
+                  <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
                     Nombre de la Sede
                   </label>
                   <input
@@ -974,7 +975,7 @@ export default function GestionarSedesPage() {
                       setShowCreateGroup(false);
                       setNewGroupName('');
                     }}
-                    className="flex-1 bg-gray-100/80 backdrop-blur-sm text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200/80 transition-all duration-200 font-medium border border-gray-200/50"
+                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50"
                   >
                     Cancelar
                   </button>
@@ -997,14 +998,14 @@ export default function GestionarSedesPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900">Crear Room</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Crear Room</h2>
                 </div>
               
               <form onSubmit={handleCreateRoom} className="space-y-6">
@@ -1036,16 +1037,16 @@ export default function GestionarSedesPage() {
                 )}
               
                 <div>
-                  <label className="block text-gray-700 text-sm font-semibold mb-2">
+                  <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
                     Sede Seleccionada
                   </label>
-                  <div className="w-full border border-gray-200 rounded-xl px-4 py-3 text-gray-900 bg-white/50 backdrop-blur-sm">
+                  <div className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                     {groups.find(g => g.id === selectedGroup)?.name || 'Ninguna sede seleccionada'}
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-gray-700 text-sm font-semibold mb-2">
+                  <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
                     Nombre del Room
                   </label>
                   <input
@@ -1066,7 +1067,7 @@ export default function GestionarSedesPage() {
                       setNewRoomName('');
                       setSelectedGroup('');
                     }}
-                    className="flex-1 bg-gray-100/80 backdrop-blur-sm text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200/80 transition-all duration-200 font-medium border border-gray-200/50"
+                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50"
                   >
                     Cancelar
                   </button>
@@ -1087,9 +1088,9 @@ export default function GestionarSedesPage() {
         {/* Modal Configuración de Room */}
         {showRoomConfig && selectedRoom && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Configuración de {selectedRoom.room_name}
                 </h2>
                 <button
@@ -1100,7 +1101,7 @@ export default function GestionarSedesPage() {
                     setRoomConfigError('');
                     setRoomConfigSuccess('');
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1147,8 +1148,8 @@ export default function GestionarSedesPage() {
                   );
                   
                   return (
-                    <div key={jornada} className="border border-gray-200 rounded-lg p-4">
-                      <h3 className="text-md font-medium text-gray-900 mb-3 flex items-center">
+                    <div key={jornada} className="border border-gray-200 dark:border-gray-600 rounded-lg p-4 dark:bg-gray-700/50">
+                      <h3 className="text-md font-medium text-gray-900 dark:text-gray-100 mb-3 flex items-center">
                         <span className="w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
                         {jornada}
                       </h3>
@@ -1156,36 +1157,36 @@ export default function GestionarSedesPage() {
                       {assignmentsForJornada.length > 0 ? (
                         <div className="space-y-2">
                           {assignmentsForJornada.map((assignment) => (
-                            <div key={assignment.id} className="flex items-center justify-between bg-gray-50 rounded-lg p-3 hover:bg-gray-100 transition-colors">
+                            <div key={assignment.id} className="flex items-center justify-between bg-gray-50 dark:bg-gray-600 rounded-lg p-3 hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors">
                               <div className="flex items-center space-x-3">
-                                <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                  <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                                <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                                   </svg>
                                 </div>
                                 <div 
-                                  className="cursor-pointer hover:bg-blue-50 rounded-lg p-2 -m-2 transition-colors group"
+                                  className="cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg p-2 -m-2 transition-colors group"
                                   onClick={() => handleModelClick(assignment.model_id, assignment.model_email)}
                                   title="Ver portafolio de la modelo"
                                 >
-                                  <p className="text-sm font-medium text-gray-900 group-hover:text-blue-700 transition-colors">
+                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 group-hover:text-blue-700 dark:group-hover:text-blue-300 transition-colors">
                                     {getModelDisplayName(assignment.model_email) || assignment.model_name || 'Modelo no especificada'}
                                   </p>
-                                  <p className="text-xs text-gray-500 group-hover:text-blue-600 transition-colors">
+                                  <p className="text-xs text-gray-500 dark:text-gray-400 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
                                     {assignment.model_email || 'Email no disponible'}
                                   </p>
                                 </div>
                               </div>
                               <div className="flex items-center space-x-2">
-                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-300">
                                   Asignada
                                 </span>
                                 <button
                                   onClick={() => confirmDeleteAssignment(assignment)}
-                                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors group bg-red-100 hover:bg-red-200 cursor-pointer"
+                                  className="w-8 h-8 rounded-full flex items-center justify-center transition-colors group bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-800/50 cursor-pointer"
                                   title="Eliminar modelo de esta jornada"
                                 >
-                                  <svg className="w-4 h-4 text-red-600 group-hover:text-red-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 text-red-600 dark:text-red-400 group-hover:text-red-700 dark:group-hover:text-red-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                                   </svg>
                                 </button>
@@ -1195,22 +1196,22 @@ export default function GestionarSedesPage() {
                         </div>
                       ) : (
                         <div 
-                          className="flex items-center justify-between bg-gray-50 rounded-lg p-3 cursor-pointer hover:bg-gray-100 transition-colors"
+                          className="flex items-center justify-between bg-gray-50 dark:bg-gray-600 rounded-lg p-3 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-500 transition-colors"
                           onClick={() => handleJornadaClick(jornada)}
                         >
                           <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-                              <svg className="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="w-8 h-8 bg-gray-100 dark:bg-gray-500 rounded-full flex items-center justify-center">
+                              <svg className="w-4 h-4 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
                               </svg>
                             </div>
                             <div>
-                              <p className="text-sm font-medium text-gray-500">No hay modelos asignadas</p>
-                              <p className="text-xs text-gray-400">Haz clic para asignar</p>
+                              <p className="text-sm font-medium text-gray-500 dark:text-gray-400">No hay modelos asignadas</p>
+                              <p className="text-xs text-gray-400 dark:text-gray-500">Haz clic para asignar</p>
                             </div>
                           </div>
                           <div className="flex items-center space-x-2">
-                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-500 text-gray-600 dark:text-gray-300">
                               Disponible
                             </span>
                           </div>
@@ -1221,14 +1222,14 @@ export default function GestionarSedesPage() {
                 })}
               </div>
               
-              <div className="mt-6 pt-4 border-t border-gray-200">
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
                 <button
                   onClick={() => {
                     setShowRoomConfig(false);
                     setSelectedRoom(null);
                     setRoomAssignments([]);
                   }}
-                  className="w-full bg-gray-100 text-gray-700 py-2 px-4 rounded-lg hover:bg-gray-200 transition-colors"
+                  className="w-full bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-4 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-500 transition-colors"
                 >
                   Cerrar
                 </button>
@@ -1240,9 +1241,9 @@ export default function GestionarSedesPage() {
         {/* Modal Selector de Modelos */}
         {showModelSelector && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Seleccionar Modelo para {selectedJornada}
                 </h2>
                 <button
@@ -1251,7 +1252,7 @@ export default function GestionarSedesPage() {
                     setAvailableModels([]);
                     setSelectedJornada('');
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1264,19 +1265,19 @@ export default function GestionarSedesPage() {
                   <button
                     key={model.id}
                     onClick={() => handleModelSelect(model)}
-                    className="w-full text-left p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+                    className="w-full text-left p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                   >
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {model.name || 'Nombre no disponible'}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
                           {model.email || 'Email no disponible'}
                         </p>
                       </div>
@@ -1287,7 +1288,7 @@ export default function GestionarSedesPage() {
               
               {availableModels.length === 0 && (
                 <div className="text-center py-8">
-                  <p className="text-sm text-gray-500">No hay modelos disponibles</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400">No hay modelos disponibles</p>
                 </div>
               )}
             </div>
@@ -1297,9 +1298,9 @@ export default function GestionarSedesPage() {
         {/* Modal de Confirmación de Conflicto */}
         {showConflictModal && conflictInfo && (
           <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-6 w-full max-w-md">
+            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Conflicto de Asignación
                 </h2>
                 <button
@@ -1308,7 +1309,7 @@ export default function GestionarSedesPage() {
                     setConflictInfo(null);
                     setSelectedModel(null);
                   }}
-                  className="text-gray-400 hover:text-gray-600"
+                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1317,16 +1318,16 @@ export default function GestionarSedesPage() {
               </div>
               
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-3">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                   <strong>{conflictInfo.model.name}</strong> ya está asignada en:
                 </p>
                 
                 <div className="space-y-2">
                   {conflictInfo.existingAssignments.map((assignment: any, index: number) => (
-                    <div key={index} className="bg-gray-50 rounded-lg p-3">
+                    <div key={index} className="bg-gray-50 dark:bg-gray-600 rounded-lg p-3">
                       <div className="flex items-center space-x-2">
                         <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                           {assignment.room_name} - {assignment.jornada}
                         </span>
                       </div>
@@ -1334,7 +1335,7 @@ export default function GestionarSedesPage() {
                   ))}
                 </div>
                 
-                <p className="text-sm text-gray-600 mt-3">
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-3">
                   ¿Qué deseas hacer?
                 </p>
               </div>
@@ -1354,7 +1355,7 @@ export default function GestionarSedesPage() {
                 </button>
               </div>
               
-              <div className="mt-3 text-xs text-gray-500">
+              <div className="mt-3 text-xs text-gray-500 dark:text-gray-400">
                 <p><strong>Mover:</strong> Desasigna de ubicación actual y asigna aquí</p>
                 <p><strong>Doblar:</strong> Mantiene ubicación actual y asigna también aquí</p>
               </div>
@@ -1367,30 +1368,30 @@ export default function GestionarSedesPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 backdrop-blur-sm border border-white/20 rounded-3xl shadow-2xl p-8 w-full max-w-md">
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-6">
                   <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-semibold text-gray-900">Confirmar Eliminación</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Confirmar Eliminación</h2>
                 </div>
                 
                 <div className="mb-6">
-                  <p className="text-sm text-gray-600 mb-4">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                     ¿Estás seguro de que deseas eliminar a <strong>{assignmentToDelete.model_name}</strong> de la jornada <strong>{assignmentToDelete.jornada}</strong>?
                   </p>
-                  <div className="bg-gray-50 rounded-lg p-4">
+                  <div className="bg-gray-50 dark:bg-gray-600 rounded-lg p-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <svg className="w-4 h-4 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
+                      <div className="w-8 h-8 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-900">{assignmentToDelete.model_name}</p>
-                        <p className="text-xs text-gray-500">{assignmentToDelete.model_email}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{assignmentToDelete.model_name}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400">{assignmentToDelete.model_email}</p>
                       </div>
                     </div>
                   </div>
@@ -1402,7 +1403,7 @@ export default function GestionarSedesPage() {
                       setShowDeleteConfirm(false);
                       setAssignmentToDelete(null);
                     }}
-                    className="flex-1 bg-gray-100/80 backdrop-blur-sm text-gray-700 py-3 px-4 rounded-xl hover:bg-gray-200/80 transition-all duration-200 font-medium border border-gray-200/50"
+                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50"
                   >
                     Cancelar
                   </button>
