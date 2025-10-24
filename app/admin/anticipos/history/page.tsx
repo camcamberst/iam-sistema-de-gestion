@@ -701,7 +701,7 @@ export default function HistorialAnticiposPage() {
             {
               value: `$${stats.totalPagado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
               label: selectedCardType === 'pagados' ? 'Total Pagado (Activo)' : 'Total Pagado (COP)',
-              color: 'green',
+              color: 'purple',
               onClick: () => handleCardClick('pagados'),
               clickable: true
             }
