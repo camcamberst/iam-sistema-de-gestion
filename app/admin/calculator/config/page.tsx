@@ -668,14 +668,16 @@ export default function ConfigCalculatorPage() {
                 </div>
               </div>
 
-              <button
-                type="button"
-                onClick={handleSave}
-                disabled={saving}
-                className="w-full inline-flex justify-center px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
-              >
-                {saving ? 'Guardando...' : 'Guardar Configuración'}
-              </button>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+                >
+                  {saving ? 'Guardando...' : 'Guardar Configuración'}
+                </button>
+              </div>
             </div>
           </div>
         )}
