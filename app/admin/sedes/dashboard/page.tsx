@@ -681,7 +681,7 @@ export default function DashboardSedesPage() {
                   </button>
                   
                   {dropdownOpen === 'sede' && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 z-[99999] max-h-60 overflow-y-auto">
+                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 z-[99999] max-h-60 overflow-y-auto">
                       <div className="py-2">
                         <button
                           onClick={() => {
