@@ -91,7 +91,7 @@ export default function InfoCard({
     <div 
       className={`
         text-center ${paddingClass} ${colors.gradient} rounded-xl border ${colors.border} 
-        hover:shadow-lg ${colors.shadow} transition-all duration-200 transform hover:scale-105
+        hover:shadow-lg ${colors.shadow} dark:shadow-2xl dark:ring-1 transition-all duration-200 transform hover:scale-105
         ${clickable || onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
