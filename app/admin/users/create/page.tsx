@@ -324,80 +324,78 @@ export default function CreateUserPage() {
           </div>
 
           <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Grupos</label>
-          <div>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setOpenGroups(v => !v)}
-                className="w-full text-left border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between text-xs hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setOpenGroups(v => !v)}
+              className="w-full text-left border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between text-xs hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            >
+              <span className={form.groups.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
+                {form.groups.length
+                  ? groups.filter(g => form.groups.includes(g.id)).map(g => g.name).join(', ')
+                  : (form.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos')}
+              </span>
+              <svg 
+                className="w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200"
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
               >
-                <span className={form.groups.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
-                  {form.groups.length
-                    ? groups.filter(g => form.groups.includes(g.id)).map(g => g.name).join(', ')
-                    : (form.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona uno o varios grupos')}
-                </span>
-                <svg 
-                  className="w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200"
-                  fill="none" 
-                  stroke="currentColor" 
-                  viewBox="0 0 24 24"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-              </button>
-              {openGroups && (
-                <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
-                  {loadingGroups ? (
-                    <div className="p-2 text-xs text-gray-500 dark:text-gray-400">Cargando grupos…</div>
-                  ) : (
-                    groups.map((g, index) => {
-                      const isSelected = form.groups.includes(g.id);
-                      const isSingleRole = form.role === 'modelo';
-                      const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
-                      
-                      // Aplicar límites de jerarquía para grupos
-                      const canAssignGroup = currentUser?.role === 'super_admin' || 
-                        (currentUser?.role === 'admin' && currentUser?.groups.includes(g.id));
-                      
-                      return (
-                        <button
-                          key={g.id}
-                          type="button"
-                          disabled={isDisabled || !canAssignGroup}
-                          onClick={() => {
-                            if (isSingleRole) {
-                              setForm({ ...form, groups: isSelected ? [] : [g.id] });
-                              setOpenGroups(false);
-                            } else {
-                              setForm({
-                                ...form,
-                                groups: isSelected
-                                  ? form.groups.filter(id => id !== g.id)
-                                  : [...form.groups, g.id]
-                              });
-                            }
-                          }}
-                          className={`w-full text-left px-2.5 py-1.5 text-xs transition-colors duration-150 ${
-                            index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
-                          } ${
-                            isDisabled || !canAssignGroup 
-                              ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                              : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
-                          } ${
-                            isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
-                          }`}
-                        >
-                          <span>{g.name}</span>
-                          {isSelected && (
-                            <span className="text-blue-600 dark:text-blue-400 ml-auto">✓</span>
-                          )}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              )}
-            </div>
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {openGroups && (
+              <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
+                {loadingGroups ? (
+                  <div className="p-2 text-xs text-gray-500 dark:text-gray-400">Cargando grupos…</div>
+                ) : (
+                  groups.map((g, index) => {
+                    const isSelected = form.groups.includes(g.id);
+                    const isSingleRole = form.role === 'modelo';
+                    const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
+                    
+                    // Aplicar límites de jerarquía para grupos
+                    const canAssignGroup = currentUser?.role === 'super_admin' || 
+                      (currentUser?.role === 'admin' && currentUser?.groups.includes(g.id));
+                    
+                    return (
+                      <button
+                        key={g.id}
+                        type="button"
+                        disabled={isDisabled || !canAssignGroup}
+                        onClick={() => {
+                          if (isSingleRole) {
+                            setForm({ ...form, groups: isSelected ? [] : [g.id] });
+                            setOpenGroups(false);
+                          } else {
+                            setForm({
+                              ...form,
+                              groups: isSelected
+                                ? form.groups.filter(id => id !== g.id)
+                                : [...form.groups, g.id]
+                            });
+                          }
+                        }}
+                        className={`w-full text-left px-2.5 py-1.5 text-xs transition-colors duration-150 ${
+                          index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
+                        } ${
+                          isDisabled || !canAssignGroup 
+                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                            : 'text-gray-900 dark:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700'
+                        } ${
+                          isSelected ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
+                        }`}
+                      >
+                        <span>{g.name}</span>
+                        {isSelected && (
+                          <span className="text-blue-600 dark:text-blue-400 ml-auto">✓</span>
+                        )}
+                      </button>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
 
           {form.role === 'modelo' && (
