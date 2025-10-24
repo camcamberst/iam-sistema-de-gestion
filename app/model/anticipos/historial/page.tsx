@@ -403,8 +403,8 @@ export default function MiHistorialPage() {
                 </div>
               </div>
               <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500">
-                  Acceso: <span className="font-medium text-blue-600">Modelo</span>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
                 </div>
                 
                 {/* Filtro por Período - AppleDropdown */}

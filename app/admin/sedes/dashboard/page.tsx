@@ -406,8 +406,8 @@ export default function DashboardSedesPage() {
                   </p>
                 </div>
               </div>
-              <div className="text-sm text-gray-500">
-                Acceso: <span className="font-medium text-blue-600">
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">
                   {userRole === 'super_admin' ? 'Super Admin' : 'Admin'}
                 </span>
               </div>
