@@ -118,8 +118,8 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
-                opt.value !== options[0]?.value ? 'border-t border-gray-100 dark:border-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10' : ''
+              className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between relative ${
+                opt.value !== options[0]?.value ? 'before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gray-100 dark:before:bg-gray-600/50 before:shadow-sm dark:before:shadow-blue-900/10' : ''
               } ${
                 value === opt.value 
                   ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' 
