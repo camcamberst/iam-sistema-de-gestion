@@ -288,7 +288,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           {/* Listado de sedes y grupos con scrollbar */}
           {groupedData.length > 0 && (
             <div className="border-t border-gray-200/50 pt-3">
-              <div className="text-xs font-medium text-gray-900 dark:text-gray-900 mb-2">
+              <div className="text-xs font-medium text-gray-900 dark:text-white mb-2">
                 {summary.totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
               </div>
               <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
