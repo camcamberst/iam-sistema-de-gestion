@@ -288,7 +288,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           {/* Listado de sedes y grupos con scrollbar */}
           {groupedData.length > 0 && (
             <div className="border-t border-gray-200/50 pt-3">
-              <div className="text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">
+              <div className="text-xs font-medium text-gray-900 dark:text-gray-900 mb-2">
                 {summary.totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
               </div>
               <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
@@ -303,8 +303,8 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
                           </svg>
                         </div>
                         <div>
-                          <div className="text-xs font-semibold text-gray-800 dark:text-gray-100">{sede.sedeName}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-300">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
+                          <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{sede.sedeName}</div>
+                          <div className="text-xs text-gray-900 dark:text-gray-900">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
                         </div>
                       </div>
 
@@ -320,13 +320,13 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
                                   </svg>
                                 </div>
                                 <div>
-                                  <div className="text-xs font-medium text-gray-700 dark:text-gray-100">{group.groupName}</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-300">{group.totalModels} modelos</div>
+                                  <div className="text-xs font-medium text-gray-900 dark:text-gray-900">{group.groupName}</div>
+                                  <div className="text-xs text-gray-900 dark:text-gray-900">{group.totalModels} modelos</div>
                                 </div>
                               </div>
                               <div className="text-right">
                                 <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">${formatCurrency(group.totalUsdBruto)}</div>
-                                <div className="text-xs text-gray-600 dark:text-gray-300">USD Bruto</div>
+                                <div className="text-xs text-gray-900 dark:text-gray-900">USD Bruto</div>
                               </div>
                             </div>
                           ))}
