@@ -210,7 +210,8 @@ export default function CreateUserPage() {
         </div>
 
         {/* Formulario Compacto */}
-        <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="max-w-2xl mx-auto">
+          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
         
         {/* Mensajes de error y éxito */}
         {error && (
@@ -247,8 +248,8 @@ export default function CreateUserPage() {
           </div>
         )}
         
-        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 md:grid-cols-[180px_1fr] items-start">
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Nombre</label>
+        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-3 items-start">
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Nombre</label>
           <input
             placeholder="Nombre"
             value={form.name}
@@ -258,7 +259,7 @@ export default function CreateUserPage() {
             className="w-full px-2.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Correo electrónico</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Correo electrónico</label>
           <input
             placeholder="Correo electrónico"
             type="email"
@@ -269,7 +270,7 @@ export default function CreateUserPage() {
             className="w-full px-2.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Contraseña</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Contraseña</label>
           <div className="relative">
             <input
               placeholder="Contraseña"
@@ -290,7 +291,7 @@ export default function CreateUserPage() {
             </button>
           </div>
 
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Rol</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Rol</label>
           <div>
             <AppleDropdown
               options={(() => {
@@ -316,7 +317,7 @@ export default function CreateUserPage() {
             />
           </div>
 
-          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Grupos</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Grupos</label>
           <div className="relative">
             <button
               type="button"
@@ -393,7 +394,7 @@ export default function CreateUserPage() {
 
           {form.role === 'modelo' && (
             <>
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
               <div>
                 <AppleDropdown
                   options={availableRooms.map(room => ({ value: room.id, label: room.room_name }))}
@@ -411,7 +412,7 @@ export default function CreateUserPage() {
                 )}
               </div>
 
-              <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
               <div>
                 <AppleDropdown
                   options={[
@@ -430,7 +431,7 @@ export default function CreateUserPage() {
             </>
           )}
 
-          <div className="md:col-span-2 flex gap-2 pt-1">
+          <div className="flex gap-2 pt-1">
             <button 
               disabled={submitting} 
               type="submit"
@@ -447,6 +448,7 @@ export default function CreateUserPage() {
             </button>
           </div>
         </form>
+          </div>
         </div>
       </div>
     </div>
