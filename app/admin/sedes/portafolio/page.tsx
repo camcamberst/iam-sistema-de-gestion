@@ -435,11 +435,11 @@ export default function PortafolioModelos() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            <span className="ml-3 text-gray-600">Cargando portafolio...</span>
+            <span className="ml-3 text-gray-600 dark:text-gray-300">Cargando portafolio...</span>
           </div>
         </div>
       </div>
@@ -447,13 +447,13 @@ export default function PortafolioModelos() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         
         {/* Mensaje de alerta para admins sin sedes asignadas */}
         {userRole === 'admin' && groups.length === 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30">
+            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 dark:bg-yellow-900/20 dark:border-yellow-700/50 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30 dark:border-yellow-700/50">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -461,8 +461,8 @@ export default function PortafolioModelos() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-yellow-800">Sin Sedes Asignadas</h3>
-                  <p className="text-sm text-yellow-700 mt-1">
+                  <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-300">Sin Sedes Asignadas</h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-400 mt-1">
                     No tienes sedes asignadas para ver portafolios. Contacta al Super Admin para que te asigne sedes.
                   </p>
                 </div>
@@ -471,15 +471,16 @@ export default function PortafolioModelos() {
           </div>
         )}
         {/* Header */}
-        <div className="mb-10">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
-            <div className="flex items-center space-x-3">
+        <div className="mb-12">
+          <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-900 to-black rounded-xl flex items-center justify-center shadow-md border border-white/20">
                 <Grid3X3 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Portafolio Modelos</h1>
-                <p className="text-sm text-gray-600 mt-1">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Portafolio Modelos</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                   Gestión de plataformas por modelo y sede
                 </p>
               </div>
@@ -489,27 +490,27 @@ export default function PortafolioModelos() {
 
         {/* Messages */}
         {error && (
-          <div className="mb-6 bg-red-50/80 backdrop-blur-sm border border-red-200/50 text-red-700 px-4 py-3 rounded-lg shadow-sm">
+          <div className="mb-6 bg-red-50/80 dark:bg-red-900/20 dark:border-red-700/50 backdrop-blur-sm border border-red-200/50 dark:border-red-700/50 text-red-700 dark:text-red-400 px-4 py-3 rounded-lg shadow-sm">
             {error}
           </div>
         )}
         {success && (
-          <div className="mb-6 bg-green-50/80 backdrop-blur-sm border border-green-200/50 text-green-700 px-4 py-3 rounded-lg shadow-sm">
+          <div className="mb-6 bg-green-50/80 dark:bg-green-900/20 dark:border-green-700/50 backdrop-blur-sm border border-green-200/50 dark:border-green-700/50 text-green-700 dark:text-green-400 px-4 py-3 rounded-lg shadow-sm">
             {success}
           </div>
         )}
 
         {/* Filters */}
         <div className="mb-8 z-50 relative">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 flex items-center">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
                 <Filter className="w-5 h-5 mr-2" />
                 Filtros
               </h3>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
               >
                 {showFilters ? 'Ocultar' : 'Mostrar'}
               </button>
@@ -524,6 +525,7 @@ export default function PortafolioModelos() {
                   onChange={(val) => handleGroupChange(val)}
                   onFocus={() => setOpenFiltersCount(c => c + 1)}
                   onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
+                  className="text-sm"
                 />
                 <AppleSelect
                   label="Modelo"
@@ -532,6 +534,7 @@ export default function PortafolioModelos() {
                   onChange={(val) => setSelectedModel(val)}
                   onFocus={() => setOpenFiltersCount(c => c + 1)}
                   onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
+                  className="text-sm"
                 />
                 <AppleSelect
                   label="Jornada"
@@ -540,6 +543,7 @@ export default function PortafolioModelos() {
                   onChange={(val) => setSelectedJornada(val)}
                   onFocus={() => setOpenFiltersCount(c => c + 1)}
                   onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
+                  className="text-sm"
                 />
                 <AppleSelect
                   label="Plataforma"
@@ -548,6 +552,7 @@ export default function PortafolioModelos() {
                   onChange={(val) => setSelectedPlatform(val)}
                   onFocus={() => setOpenFiltersCount(c => c + 1)}
                   onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
+                  className="text-sm"
                 />
               </div>
             )}
@@ -555,24 +560,24 @@ export default function PortafolioModelos() {
         </div>
 
         {/* Results */}
-        <div className={`bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 transition-all ${openFiltersCount > 0 ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100'}`}>
+        <div className={`bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 transition-all dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${openFiltersCount > 0 ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100'}`}>
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Modelos ({modelsList.length})
             </h3>
           </div>
 
           {modelsList.length === 0 ? (
             <div className="text-center py-12">
-              <User className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Aplica un filtro de Grupo, Modelo, Room, Jornada o Plataforma para ver resultados.</p>
+              <User className="w-12 h-12 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
+              <p className="text-gray-500 dark:text-gray-400">Aplica un filtro de Grupo, Modelo, Room, Jornada o Plataforma para ver resultados.</p>
             </div>
           ) : (
             <div className="space-y-6">
               {modelsList.map((model) => (
                 <div
                   key={model.model_id}
-                  className="bg-white/80 backdrop-blur-sm rounded-xl border border-white/30 shadow-lg p-6"
+                  className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/30 dark:border-gray-600/30 shadow-lg p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"
                 >
                   {/* Header del Modelo */}
                   <div className="flex items-center space-x-4 mb-6">
@@ -581,13 +586,13 @@ export default function PortafolioModelos() {
                     </div>
                     <div>
                       <h4 
-                        className="text-lg font-semibold text-gray-900 cursor-pointer hover:text-blue-700 transition-colors"
+                        className="text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
                         onClick={() => handleModelNameClick(model.model_id, model.model_email)}
                         title="Ver calculadora de la modelo"
                       >
                         {getModelDisplayName(model.model_email)}
                       </h4>
-                      <p className="text-sm text-gray-600 flex items-center">
+                      <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
                         <Building2 className="w-4 h-4 mr-1" />
                         {model.group_name}
                       </p>
@@ -645,11 +650,11 @@ export default function PortafolioModelos() {
                   </div>
 
                   {/* Estadísticas del Modelo */}
-                  <div className="mt-4 pt-4 border-t border-gray-200/50">
-                    <div className="flex items-center justify-between text-xs text-gray-600">
+                  <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-600/50">
+                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                       <span>Total: {allPlatforms.length} plataformas</span>
                       <div className="flex space-x-4">
-                        <span className="text-green-600">
+                        <span className="text-green-600 dark:text-green-400">
                           {(() => {
                             // Contar como entregadas: 'entregada' o 'confirmada' o inicial activa
                             const deliveredCount = model.platforms.filter(p => {
@@ -660,10 +665,10 @@ export default function PortafolioModelos() {
                             return <>Entregadas: {deliveredCount}</>;
                           })()}
                         </span>
-                        <span className="text-blue-600">
+                        <span className="text-blue-600 dark:text-blue-400">
                           Solicitadas: {model.platforms.filter(p => p.status === 'solicitada').length}
                         </span>
-                        <span className="text-gray-500">
+                        <span className="text-gray-500 dark:text-gray-500">
                           Disponibles: {allPlatforms.length - model.platforms.length}
                         </span>
                       </div>
@@ -678,8 +683,8 @@ export default function PortafolioModelos() {
         {/* Action Modal */}
         {showActionModal && selectedPlatformForAction && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl border border-white/20">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <div className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-500/20">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 {actionType === 'request' && 'Solicitar Plataforma'}
                 {actionType === 'deliver' && 'Entregar Plataforma'}
                 {actionType === 'deactivate' && 'Desactivar Plataforma'}
@@ -687,19 +692,19 @@ export default function PortafolioModelos() {
               </h3>
               
               <div className="mb-4">
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
                 </p>
-                <p className="text-sm text-gray-600 mb-2">
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                   <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
                 </p>
-                <p className="text-sm text-gray-600">
+                <p className="text-sm text-gray-600 dark:text-gray-400">
                   <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
                 </p>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">Estado</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
                 <AppleSelect
                   value={modalStatus}
                   onChange={(v) => setModalStatus(v as any)}
@@ -711,18 +716,19 @@ export default function PortafolioModelos() {
                     { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
                     { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
                   ]}
+                  className="text-sm"
                 />
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                   Notas (opcional)
                 </label>
                 <textarea
                   value={actionNotes}
                   onChange={(e) => setActionNotes(e.target.value)}
                   rows={3}
-                  className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                   placeholder="Agregar notas sobre esta acción..."
                 />
               </div>
@@ -730,7 +736,7 @@ export default function PortafolioModelos() {
               <div className="flex space-x-3">
                 <button
                   onClick={() => setShowActionModal(false)}
-                  className="flex-1 px-4 py-2 border border-gray-200 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                  className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
                   disabled={processingAction}
                 >
                   Cancelar
@@ -738,7 +744,7 @@ export default function PortafolioModelos() {
                 <button
                   onClick={executeAction}
                   disabled={processingAction}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                  className="flex-1 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md disabled:opacity-50"
                 >
                   {processingAction ? 'Procesando...' : 'Confirmar'}
                 </button>
