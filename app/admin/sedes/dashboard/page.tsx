@@ -665,13 +665,13 @@ export default function DashboardSedesPage() {
                 <div className="relative dropdown-container">
                   <button
                     onClick={() => setDropdownOpen(dropdownOpen === 'sede' ? null : 'sede')}
-                    className="w-full px-4 py-3 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 cursor-pointer text-left flex items-center justify-between"
+                    className="w-full px-4 py-3 border-0 bg-gray-50/80 dark:bg-gray-700/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-600 text-sm text-gray-700 dark:text-gray-200 transition-all duration-200 cursor-pointer text-left flex items-center justify-between"
                   >
-                    <span className={selectedSede ? 'text-gray-900' : 'text-gray-500'}>
+                    <span className={selectedSede ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
                       {selectedSede ? availableSedes.find(s => s.id === selectedSede)?.name || 'Selecciona una sede...' : 'Selecciona una sede...'}
                     </span>
                     <svg 
-                      className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${dropdownOpen === 'sede' ? 'rotate-180' : ''}`} 
+                      className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${dropdownOpen === 'sede' ? 'rotate-180' : ''}`} 
                       fill="none" 
                       stroke="currentColor" 
                       viewBox="0 0 24 24"
@@ -681,16 +681,16 @@ export default function DashboardSedesPage() {
                   </button>
                   
                   {dropdownOpen === 'sede' && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 z-[9999] overflow-hidden">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 z-[9999] overflow-hidden">
                       <div className="py-2">
                         <button
                           onClick={() => {
                             setSelectedSede('');
                             setDropdownOpen(null);
                           }}
-                          className="w-full px-4 py-3 text-left text-sm text-gray-700 hover:bg-blue-50/80 transition-colors duration-200 flex items-center border-b border-gray-100/50"
+                          className="w-full px-4 py-3 text-left text-sm text-gray-700 dark:text-gray-200 hover:bg-blue-50/80 dark:hover:bg-blue-900/20 transition-colors duration-200 flex items-center border-b border-gray-100/50 dark:border-gray-700/50"
                         >
-                          <span className="text-gray-500">Selecciona una sede...</span>
+                          <span className="text-gray-500 dark:text-gray-400">Selecciona una sede...</span>
                         </button>
                         {availableSedes.map((sede, index) => (
                           <button
@@ -700,16 +700,16 @@ export default function DashboardSedesPage() {
                               setDropdownOpen(null);
                             }}
                             className={`w-full px-4 py-3 text-left text-sm transition-colors duration-200 flex items-center ${
-                              index < availableSedes.length - 1 ? 'border-b border-gray-100/50' : ''
+                              index < availableSedes.length - 1 ? 'border-b border-gray-100/50 dark:border-gray-700/50' : ''
                             } ${
                               selectedSede === sede.id 
-                                ? 'bg-blue-50/80 text-blue-900 font-medium' 
-                                : 'text-gray-700 hover:bg-gray-50/80'
+                                ? 'bg-blue-50/80 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 font-medium' 
+                                : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50/80 dark:hover:bg-gray-700/50'
                             }`}
                           >
                             <span>{sede.name}</span>
                             {selectedSede === sede.id && (
-                              <svg className="w-4 h-4 text-blue-600 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                             )}
