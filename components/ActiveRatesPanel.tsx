@@ -151,7 +151,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
   return (
     <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-8 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-8">
         <div className="flex items-center space-x-2">
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
@@ -186,7 +186,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
           </button>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-5">
           {rates.length === 0 ? (
             <div className="text-center py-6">
               <div className="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-3">
@@ -199,10 +199,10 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
             </div>
           ) : (
             rates.map((rate) => (
-              <div key={rate.id} className="flex items-center justify-between p-4 bg-white dark:bg-white backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-500/30 shadow-sm">
+              <div key={rate.id} className="flex items-center justify-between px-4 py-5 bg-white dark:bg-white backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-500/30 shadow-sm">
                 <div className="flex items-center space-x-4">
-                  <div className="w-10 h-10 bg-gray-50 dark:bg-gray-50 rounded-lg flex items-center justify-center">
-                    <span className="text-base">{getSourceIcon(rate.source)}</span>
+                  <div className="w-12 h-12 bg-gray-50 dark:bg-gray-50 rounded-lg flex items-center justify-center">
+                    <span className="text-lg">{getSourceIcon(rate.source)}</span>
                   </div>
                   <div>
                     <div className="text-base font-semibold text-gray-900 dark:text-gray-900">{getKindLabel(rate.kind)}</div>
@@ -210,7 +210,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900 dark:text-gray-900">{rate.value}</div>
+                  <div className="text-xl font-bold text-gray-900 dark:text-gray-900">{rate.value}</div>
                   <div className="text-sm text-gray-800 dark:text-gray-900">
                     {new Date(rate.valid_from).toLocaleDateString('es-ES', {
                       day: '2-digit',
