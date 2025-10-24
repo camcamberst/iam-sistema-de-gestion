@@ -143,7 +143,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
   }
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4" style={{ overflow: 'visible' }}>
+    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-2xl dark:shadow-purple-900/20 dark:ring-1 dark:ring-purple-500/20 border border-white/20 dark:border-gray-700/20 p-4" style={{ overflow: 'visible' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
           <Clock className="w-4 h-4 mr-2" />
