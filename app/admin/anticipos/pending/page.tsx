@@ -243,7 +243,7 @@ export default function SolicitudesPendientesPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h1>
             <p className="text-sm text-gray-600">No tienes permisos para acceder a esta página.</p>
           </div>
         </div>
@@ -349,7 +349,7 @@ export default function SolicitudesPendientesPage() {
             <svg className="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay solicitudes pendientes</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay solicitudes pendientes</h3>
             <p className="text-gray-500">Todas las solicitudes han sido procesadas</p>
           </div>
         ) : (
@@ -365,7 +365,7 @@ export default function SolicitudesPendientesPage() {
                       <div className="flex items-center justify-between mb-1">
                         <div>
                           <div className="flex items-center gap-2">
-                            <h3 className="text-base font-semibold text-gray-900">
+                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                               {anticipo.model.name}
                             </h3>
                             {/* Mostrar grupos del modelo de forma discreta */}

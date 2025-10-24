@@ -596,7 +596,7 @@ export default function AdminViewModelPage() {
             <div className="space-y-4">
               {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 hover:shadow-md transition-all duration-300">
-                <h2 className="text-sm font-semibold text-gray-900 mb-3 flex items-center">
+                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   Tasas Actualizadas
                 </h2>

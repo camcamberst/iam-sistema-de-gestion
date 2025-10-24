@@ -95,7 +95,7 @@ export default function GestionAnticiposPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h1>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h1>
             <p className="text-sm text-gray-600">Solo administradores pueden acceder a esta página.</p>
           </div>
         </div>
@@ -136,7 +136,7 @@ export default function GestionAnticiposPage() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Solicitudes Pendientes</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Solicitudes Pendientes</h3>
             <p className="text-gray-500 text-xs mb-3 flex-grow">
               Revisa y gestiona las solicitudes pendientes de aprobación
             </p>
@@ -154,7 +154,7 @@ export default function GestionAnticiposPage() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">Historial de Anticipos</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2">Historial de Anticipos</h3>
             <p className="text-gray-500 text-xs mb-3 flex-grow">
               Consulta el historial completo de anticipos procesados
             </p>
@@ -172,7 +172,7 @@ export default function GestionAnticiposPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h3 className="text-sm font-semibold text-gray-900">Resumen del Sistema</h3>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen del Sistema</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
             <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">

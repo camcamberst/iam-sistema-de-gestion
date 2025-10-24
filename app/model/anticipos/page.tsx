@@ -101,7 +101,7 @@ export default function MisAnticiposPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-semibold text-gray-900 mb-2">Mis Anticipos</h1>
+          <h1 className="text-3xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Mis Anticipos</h1>
           <p className="text-gray-500 text-sm">
             Gestiona tus solicitudes de anticipo
           </p>
@@ -118,7 +118,7 @@ export default function MisAnticiposPage() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Solicitar Anticipo</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Solicitar Anticipo</h3>
             <p className="text-gray-500 text-sm mb-4 flex-grow">
               Crea una nueva solicitud de anticipo
             </p>
@@ -139,7 +139,7 @@ export default function MisAnticiposPage() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Mis Solicitudes</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Mis Solicitudes</h3>
             <p className="text-gray-500 text-sm mb-4 flex-grow">
               Revisa el estado de tus solicitudes
             </p>
@@ -160,7 +160,7 @@ export default function MisAnticiposPage() {
                 </svg>
               </div>
             </div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">Mi Historial</h3>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Mi Historial</h3>
             <p className="text-gray-500 text-sm mb-4 flex-grow">
               Consulta tu historial de anticipos
             </p>

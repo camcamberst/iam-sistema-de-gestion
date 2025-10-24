@@ -321,7 +321,7 @@ export default function MisSolicitudesPage() {
             <svg className="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No hay solicitudes</h3>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay solicitudes</h3>
             <p className="text-gray-500 mb-4">Aún no has realizado ninguna solicitud de anticipo</p>
             <button
               onClick={() => router.push('/model/anticipos/solicitar')}
@@ -338,7 +338,7 @@ export default function MisSolicitudesPage() {
                   <div className="flex-1">
                     {/* Primera línea: Monto y Estado */}
                     <div className="flex items-center space-x-3 mb-1">
-                      <h3 className="text-base font-semibold text-gray-900">
+                      <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                         ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                       </h3>
                       <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(anticipo.estado)}`}>
