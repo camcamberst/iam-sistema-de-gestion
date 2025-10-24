@@ -374,8 +374,8 @@ export default function DashboardSedesPage() {
                   </svg>
                 </div>
                 <div>
-                  <h3 className="text-lg font-semibold text-yellow-800">Sin Sedes Asignadas</h3>
-                  <p className="text-sm text-yellow-700 mt-1">
+                  <h3 className="text-lg font-semibold text-yellow-800 dark:text-yellow-200">Sin Sedes Asignadas</h3>
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300 mt-1">
                     No tienes sedes asignadas para ver estadísticas. Contacta al Super Admin para que te asigne sedes.
                   </p>
                 </div>
@@ -395,10 +395,10 @@ export default function DashboardSedesPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     Dashboard Sedes
                   </h1>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                     {userRole === 'super_admin' 
                       ? 'Vista global del estado de todas las sedes y asignaciones' 
                       : 'Vista del estado de tus sedes asignadas'

@@ -383,8 +383,8 @@ export default function ConfigCalculatorPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">Gestión de Calculadora</h1>
-                  <p className="text-sm text-gray-600 mt-1">Configura las tasas y parámetros de cálculo para cada modelo</p>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Calculadora</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Configura las tasas y parámetros de cálculo para cada modelo</p>
                 </div>
               </div>
             </div>

@@ -840,8 +840,8 @@ export default function AdminViewModelPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">Ver Calculadora de Modelo</h1>
-                  <p className="text-sm text-gray-600 mt-1">Selecciona un modelo para ver y editar su calculadora</p>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Ver Calculadora de Modelo</h1>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Selecciona un modelo para ver y editar su calculadora</p>
                 </div>
               </div>
             </div>

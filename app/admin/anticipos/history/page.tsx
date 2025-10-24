@@ -651,8 +651,8 @@ export default function HistorialAnticiposPage() {
                 </svg>
               </div>
               <div>
-                <h1 className="text-2xl font-semibold text-gray-900">Historial de Anticipos</h1>
-                <p className="text-sm text-gray-600 mt-1">Gestiona el historial completo de anticipos de tu grupo</p>
+                <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Historial de Anticipos</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Gestiona el historial completo de anticipos de tu grupo</p>
               </div>
             </div>
           </div>

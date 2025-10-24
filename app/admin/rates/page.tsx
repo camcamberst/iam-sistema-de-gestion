@@ -316,8 +316,8 @@ export default function RatesPage() {
 									</svg>
 								</div>
 								<div>
-									<h1 className="text-2xl font-semibold text-gray-900">Definir RATES</h1>
-									<p className="text-sm text-gray-600 mt-1">
+									<h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Definir RATES</h1>
+									<p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
 										{userInfo.role === 'super_admin' 
 											? 'Puedes gestionar RATES globales y por grupo'
 											: 'Solo puedes gestionar RATES de tus grupos asignados'
