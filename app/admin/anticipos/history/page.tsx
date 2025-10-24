@@ -834,7 +834,7 @@ export default function HistorialAnticiposPage() {
                     </div>
                     
                     {/* Segunda línea: Información compacta con datos de transferencia */}
-                    <div className="flex items-center justify-between text-xs text-gray-600">
+                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
                       <div className="flex items-center space-x-3">
                         {anticipo.nombre_beneficiario && <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>}
                         <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
@@ -849,7 +849,7 @@ export default function HistorialAnticiposPage() {
                           )
                         )}
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
                         {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
                       </div>
                     </div>

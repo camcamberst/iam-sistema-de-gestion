@@ -649,11 +649,11 @@ export default function AdminViewModelPage() {
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">PLATAFORMAS</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">VALORES</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">USD BRUTO</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">USD MODELO</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 text-sm">COP MODELO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">PLATAFORMAS</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">VALORES</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">USD BRUTO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">USD MODELO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">COP MODELO</th>
                         </tr>
                       </thead>
                       <tbody>
