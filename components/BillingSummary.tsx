@@ -297,29 +297,29 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   }
 
   return (
-    <div className="mb-8">
-      {/* Card Header - Aplicando políticas estéticas */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg mb-10">
+    <div className="mb-6">
+      {/* Card Header - Versión compacta */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-white/20 shadow-lg mb-6">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900">Resumen de Facturación</h1>
-              <p className="text-sm text-gray-600 mt-1">
+              <h1 className="text-lg font-semibold text-gray-900">Resumen de Facturación</h1>
+              <p className="text-xs text-gray-600">
                 {userRole === 'super_admin' ? 'Vista consolidada de todas las sedes' : 'Vista de tus sedes asignadas'}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2">
             {/* Botón de refresh manual con estado de polling */}
             <div className="flex items-center space-x-2">
               {/* Indicador de polling */}
               <div className="flex items-center space-x-1">
-                <div className={`w-2 h-2 rounded-full ${
+                <div className={`w-1.5 h-1.5 rounded-full ${
                   isPolling ? 'bg-green-500' : 'bg-gray-400'
                 } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
                 <span className="text-xs text-gray-500">
@@ -331,11 +331,11 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               <button
                 onClick={manualRefresh}
                 disabled={loading}
-                className="flex items-center justify-center w-10 h-10 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200"
+                className="flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200"
                 title={loading ? 'Actualizando...' : 'Actualizar'}
               >
                 <svg 
-                  className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} 
+                  className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -345,19 +345,19 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               </button>
             </div>
                   
-            {/* Selector de fecha - Aplicando políticas de dropdown */}
+            {/* Selector de fecha - Versión compacta */}
             <div className="relative">
               <input
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-50/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 text-sm text-gray-700"
+                className="px-2 py-1.5 bg-gray-50/80 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 text-xs text-gray-700"
               />
             </div>
           </div>
         </div>
 
-        <div className="px-6 pb-6">
+        <div className="px-4 pb-4">
           {/* Resumen general - Versión compacta */}
           {summary && (
             <div className="grid grid-cols-3 gap-4 mb-6">
