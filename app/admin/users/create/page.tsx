@@ -192,15 +192,25 @@ export default function CreateUserPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-        <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-2xl dark:shadow-blue-900/20 dark:ring-1 dark:ring-blue-400/30">
-          <div className="flex items-center space-x-3 mb-4">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
+        {/* Header Card Separado */}
+        <div className="mb-8">
+          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Crear Usuario</h1>
+                <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Registra un nuevo usuario en el sistema</p>
+              </div>
             </div>
-            <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Crear Usuario</h1>
           </div>
+        </div>
+
+        {/* Formulario Compacto */}
+        <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
         
         {/* Mensajes de error y éxito */}
         {error && (
@@ -237,7 +247,7 @@ export default function CreateUserPage() {
           </div>
         )}
         
-        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr] items-start">
+        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-[200px_1fr] items-start">
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Nombre</label>
           <input
             placeholder="Nombre"
@@ -420,7 +430,7 @@ export default function CreateUserPage() {
             </>
           )}
 
-          <div className="md:col-span-2 flex gap-3 pt-2">
+          <div className="md:col-span-2 flex gap-3 pt-1">
             <button 
               disabled={submitting} 
               type="submit"
