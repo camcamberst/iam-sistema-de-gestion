@@ -190,21 +190,21 @@ export default function CreateUserPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-start justify-center p-4 pt-16">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-start justify-center p-4 pt-16">
       <div className="w-full max-w-4xl">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-6">
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 p-6">
           <div className="flex items-center space-x-3 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
               </svg>
             </div>
-            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Crear Usuario</h1>
+            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Crear Usuario</h1>
           </div>
         
         {/* Mensajes de error y éxito */}
         {error && (
-          <div className="mb-4 p-3 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg shadow-sm">
+          <div className="mb-4 p-3 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200/50 dark:border-red-700/50 rounded-lg shadow-sm">
             <div className="flex">
               <div className="flex-shrink-0">
                 <div className="w-4 h-4 bg-red-500 rounded-sm flex items-center justify-center">
@@ -214,14 +214,14 @@ export default function CreateUserPage() {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
               </div>
             </div>
           </div>
         )}
 
         {success && (
-          <div className="mb-4 p-3 bg-green-50/80 backdrop-blur-sm border border-green-200/50 rounded-lg shadow-sm">
+          <div className="mb-4 p-3 bg-green-50/80 dark:bg-green-900/20 backdrop-blur-sm border border-green-200/50 dark:border-green-700/50 rounded-lg shadow-sm">
             <div className="flex">
               <div className="flex-shrink-0">
                 <div className="w-4 h-4 bg-green-500 rounded-sm flex items-center justify-center">
@@ -231,7 +231,7 @@ export default function CreateUserPage() {
                 </div>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-green-800">{success}</p>
+                <p className="text-sm text-green-800 dark:text-green-300">{success}</p>
               </div>
             </div>
           </div>
@@ -245,7 +245,7 @@ export default function CreateUserPage() {
             onChange={e=>setForm({...form, name:e.target.value})}
             required
             autoComplete="name"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Correo electrónico</label>
@@ -256,7 +256,7 @@ export default function CreateUserPage() {
             onChange={e=>setForm({...form, email:e.target.value})}
             required
             autoComplete="email"
-            className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
           <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Contraseña</label>
@@ -268,13 +268,13 @@ export default function CreateUserPage() {
               onChange={e=>setForm({...form, password:e.target.value})}
               required
               autoComplete="new-password"
-              className="w-full px-3 py-2 pr-14 text-sm theme-border rounded-lg theme-bg-secondary backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              className="w-full px-3 py-2 pr-14 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
             />
             <button
               type="button"
               onClick={() => setShowPassword(v=>!v)}
               aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-              className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 hover:bg-gray-800"
+              className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
             >
               {showPassword ? 'Ocultar' : 'Ver'}
             </button>
@@ -394,10 +394,10 @@ export default function CreateUserPage() {
                   maxHeight="max-h-40"
                 />
                 {form.groups.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-500">Primero selecciona un grupo</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Primero selecciona un grupo</p>
                 )}
                 {!groupRequiresRooms(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-1 text-xs text-gray-500">Opcional para {selectedGroupName}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
                 )}
               </div>
 
@@ -414,7 +414,7 @@ export default function CreateUserPage() {
                   placeholder="Selecciona una jornada"
                 />
                 {!groupRequiresJornada(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-1 text-xs text-gray-500">Opcional para {selectedGroupName}</p>
+                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
                 )}
               </div>
             </>
@@ -431,7 +431,7 @@ export default function CreateUserPage() {
             <button 
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-blue-600 bg-white/80 backdrop-blur-sm border border-blue-200/50 rounded-lg hover:bg-blue-50/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             >
               Volver
             </button>
