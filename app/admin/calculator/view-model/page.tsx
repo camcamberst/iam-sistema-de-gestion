@@ -479,10 +479,10 @@ export default function AdminViewModelPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando...</p>
         </div>
       </div>
     );
@@ -490,15 +490,15 @@ export default function AdminViewModelPage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
         <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             </div>
-            <p className="text-red-600 mb-4 text-sm">{error}</p>
+            <p className="text-red-600 dark:text-red-400 mb-4 text-sm">{error}</p>
           <button 
             onClick={() => window.location.reload()}
               className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
@@ -513,15 +513,15 @@ export default function AdminViewModelPage() {
 
   if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
         <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <p className="text-red-600 mb-4 text-sm">No tienes permisos para acceder a esta función</p>
+            <p className="text-red-600 dark:text-red-400 mb-4 text-sm">No tienes permisos para acceder a esta función</p>
           <button 
             onClick={() => router.push('/admin/dashboard')}
               className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
@@ -537,14 +537,14 @@ export default function AdminViewModelPage() {
   // Si hay un modelo seleccionado, mostrar su calculadora
   if (selectedModel) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
           {/* Header */}
           <div className="mb-6">
             <div className="flex items-center justify-between mb-4">
               <button
                 onClick={handleBackToModels}
-                className="flex items-center space-x-2 text-blue-600 hover:text-blue-700 transition-colors"
+                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -555,10 +555,10 @@ export default function AdminViewModelPage() {
             
             <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1">
                 Calculadora de {selectedModel.name}
               </h1>
-              <p className="text-gray-500 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
               </p>
             </div>
@@ -595,7 +595,7 @@ export default function AdminViewModelPage() {
           {selectedModel.calculatorData ? (
             <div className="space-y-4">
               {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 mb-4 hover:shadow-md transition-all duration-300">
+              <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                 <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
                   <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
                   Tasas Actualizadas
@@ -620,15 +620,15 @@ export default function AdminViewModelPage() {
                     <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 mt-3 text-center font-medium">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center font-medium">
                   Configuradas por tu administrador
                 </p>
               </div>
 
 
               {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
-              <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-4 hover:shadow-md transition-all duration-300">
-                <h2 className="text-base font-semibold text-gray-900 mb-4 flex items-center">
+              <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
                   <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
                   Calculadora de Ingresos
                 </h2>
@@ -636,11 +636,11 @@ export default function AdminViewModelPage() {
                 {!selectedModel.calculatorData.isConfigured || !selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0 ? (
                   <div className="text-center py-8">
                     <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"></div>
-                    <h4 className="text-lg font-medium text-gray-900 mb-2">No hay plataformas habilitadas</h4>
-                    <p className="text-gray-500 mb-4">
+                    <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
+                    <p className="text-gray-500 dark:text-gray-400 mb-4">
                       Esta modelo no tiene configuración de calculadora o plataformas habilitadas.
                     </p>
-                    <p className="text-sm text-gray-400">
+                    <p className="text-sm text-gray-400 dark:text-gray-500">
                       Contacta al administrador para que configure las plataformas.
                     </p>
                   </div>
@@ -648,12 +648,12 @@ export default function AdminViewModelPage() {
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-gray-200">
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">PLATAFORMAS</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">VALORES</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">USD BRUTO</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">USD MODELO</th>
-                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-gray-200 text-sm">COP MODELO</th>
+                        <tr className="border-b border-gray-200 dark:border-gray-600">
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">PLATAFORMAS</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">VALORES</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">USD BRUTO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">USD MODELO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">COP MODELO</th>
                         </tr>
                       </thead>
                       <tbody>
@@ -704,10 +704,10 @@ export default function AdminViewModelPage() {
                           const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
                           
                           return (
-                            <tr key={platform.id} className="border-b border-gray-100 hover:bg-gray-50 transition-colors duration-200 group">
+                            <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-200 group">
                               <td className="py-3 px-3">
-                                <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
-                                <div className="text-xs text-gray-500">Reparto: {platform.percentage}%</div>
+                                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">Reparto: {platform.percentage}%</div>
                               </td>
                               <td className="py-3 px-3">
                                 <div className="relative group">
@@ -724,10 +724,10 @@ export default function AdminViewModelPage() {
                                         const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
                                         handleValueChange(platform.id, safeNormalized);
                                       }}
-                                      className="w-24 px-3 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 focus:shadow-lg focus:shadow-blue-100"
+                                      className="w-24 px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100"
                                       placeholder="0.00"
                                     />
-                                    <span className="text-xs font-medium text-gray-500 bg-gray-50 px-2 py-1 rounded-md">
+                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 px-2 py-1 rounded-md">
                                       {platform.currency || 'USD'}
                                     </span>
                                   </div>
@@ -738,17 +738,17 @@ export default function AdminViewModelPage() {
                                 </div>
                               </td>
                               <td className="py-3 px-3">
-                                <div className="text-gray-600 font-medium text-sm">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
                                   ${usdBruto.toFixed(2)} USD
                                 </div>
                               </td>
                               <td className="py-3 px-3">
-                                <div className="text-gray-600 font-medium text-sm">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
                                   ${usdModeloFinal.toFixed(2)} USD
                                 </div>
                               </td>
                               <td className="py-3 px-3">
-                                <div className="text-gray-600 font-medium text-sm">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
                                   ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                                 </div>
                               </td>
@@ -763,36 +763,36 @@ export default function AdminViewModelPage() {
 
               {/* Totales y Alertas - USANDO TOTALES DEL SERVIDOR */}
               {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
-                <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-                  <h3 className="text-sm font-semibold text-gray-900 mb-3">Totales y Alertas</h3>
+                <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Totales y Alertas</h3>
                   
                   {calculatedTotals ? (
                     <>
                       {/* Totales principales - DESDE SERVIDOR */}
                       <div className="grid grid-cols-3 gap-3 mb-4">
-                        <div className="text-center p-3 bg-blue-50 rounded-md">
-                          <div className="text-xl font-bold text-blue-600 mb-1">
+                        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
+                          <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">
                             ${calculatedTotals.usdBruto.toFixed(2)}
                           </div>
-                          <div className="text-xs text-gray-600">USD Bruto</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">USD Bruto</div>
                         </div>
-                        <div className="text-center p-3 bg-green-50 rounded-md">
-                          <div className="text-xl font-bold text-green-600 mb-1">
+                        <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-md">
+                          <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">
                             ${calculatedTotals.usdModelo.toFixed(2)}
                           </div>
-                          <div className="text-xs text-gray-600">USD Modelo</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">USD Modelo</div>
                         </div>
-                        <div className="text-center p-3 bg-purple-50 rounded-md">
-                          <div className="text-xl font-bold text-purple-600 mb-1">
+                        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-md">
+                          <div className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-1">
                             ${calculatedTotals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </div>
-                          <div className="text-xs text-gray-600">COP Modelo</div>
+                          <div className="text-xs text-gray-600 dark:text-gray-400">COP Modelo</div>
                         </div>
                       </div>
                       
                       {/* 90% de anticipo - DESDE SERVIDOR */}
-                      <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                        <div className="text-sm text-gray-600">
+                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
+                        <div className="text-sm text-gray-600 dark:text-gray-300">
                           <strong>90% de anticipo disponible:</strong> ${calculatedTotals.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                         </div>
                       </div>
@@ -800,20 +800,20 @@ export default function AdminViewModelPage() {
                   ) : (
                     <div className="text-center py-4">
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-                      <p className="text-sm text-gray-500">Calculando totales...</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Calculando totales...</p>
                     </div>
                   )}
                 </div>
               )}
             </div>
           ) : (
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                   <div className="text-center py-12">
                 <div className="text-gray-400 mb-4"></div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   Calculadora de {selectedModel.name}
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Cargando datos de la calculadora...
                 </p>
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
@@ -827,21 +827,24 @@ export default function AdminViewModelPage() {
 
   // Mostrar lista de modelos con panel de filtros
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-10">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Ver Calculadora de Modelo</h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Selecciona un modelo para ver y editar su calculadora</p>
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Ver Calculadora de Modelo</h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">Selecciona un modelo para ver y editar su calculadora</p>
+                  </div>
                 </div>
               </div>
             </div>
@@ -851,11 +854,11 @@ export default function AdminViewModelPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Panel izquierdo: Filtros */}
           <div className="lg:col-span-1">
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 space-y-6">
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 space-y-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             {/* Filtro por Grupo */}
             {availableGroups.length > 0 && (
               <div>
-                <h2 className="text-base font-semibold text-gray-900 mb-3">Filtrar por Grupo</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Filtrar por Grupo</h2>
                 <AppleDropdown
                   options={[
                     { value: 'all', label: 'Todos los grupos' },
@@ -867,25 +870,26 @@ export default function AdminViewModelPage() {
                   value={selectedGroup}
                   onChange={handleGroupFilter}
                   placeholder="Selecciona un grupo"
+                  className="text-sm"
                 />
               </div>
             )}
             
             {/* Filtro por Nombre */}
             <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Buscar por Nombre</h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Buscar por Nombre</h2>
               <div className="relative">
                 <input
                   type="text"
                   value={nameFilter}
                   onChange={(e) => handleNameFilter(e.target.value)}
                   placeholder="Buscar modelo..."
-                  className="w-full px-3 py-2 text-sm bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 focus:shadow-lg focus:shadow-blue-100 pr-10"
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100 pr-10 text-gray-900 dark:text-gray-100"
                 />
                 {nameFilter && (
                   <button
                     onClick={() => handleNameFilter('')}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -894,7 +898,7 @@ export default function AdminViewModelPage() {
                 )}
                 </div>
               {nameFilter && (
-                <div className="mt-2 text-xs text-blue-600">
+                <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
                   🔍 Filtrando por: "{nameFilter}" - {models.length} resultado{models.length !== 1 ? 's' : ''}
                 </div>
               )}
@@ -902,7 +906,7 @@ export default function AdminViewModelPage() {
               
             {/* Selección de Modelo */}
             <div>
-              <h2 className="text-base font-semibold text-gray-900 mb-3">Seleccionar Modelo</h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Seleccionar Modelo</h2>
               <AppleDropdown
                 options={[
                   { value: '', label: models.length === 0 ? 'No hay modelos disponibles' : 'Selecciona un modelo' },
@@ -921,22 +925,23 @@ export default function AdminViewModelPage() {
                     : `${models.length} modelo${models.length !== 1 ? 's' : ''} disponible${models.length !== 1 ? 's' : ''}`
                 }
                 autoOpen={nameFilter.length > 0 && models.length > 0}
+                className="text-sm"
               />
 
               {/* Información del modelo seleccionado */}
               {selectedModelId && models.find(m => m.id === selectedModelId) && (
-                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
                   {(() => {
                     const model = models.find(m => m.id === selectedModelId);
                     return model ? (
                       <>
-                        <p className="text-sm font-medium text-gray-900 mb-2">{model.email.split('@')[0]}</p>
-                        <p className="text-xs text-gray-600 mb-2">{model.email}</p>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{model.email.split('@')[0]}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{model.email}</p>
                         <div className="flex flex-wrap gap-1">
                           {model.groups.map((group) => (
                             <span
                               key={group.id}
-                              className="inline-block px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full"
+                              className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
                             >
                               {group.name}
                             </span>
@@ -950,9 +955,9 @@ export default function AdminViewModelPage() {
 
               {/* Estado cuando no hay modelos */}
               {models.length === 0 && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg text-center">
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg text-center">
                   <div className="text-gray-400 mb-2 text-2xl">👥</div>
-              <p className="text-sm text-gray-600 mb-2">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                     {nameFilter || selectedGroup !== 'all' 
                       ? 'No se encontraron modelos con los filtros aplicados' 
                       : 'No hay modelos disponibles'
@@ -966,7 +971,7 @@ export default function AdminViewModelPage() {
                         setSelectedModelId('');
                         setModels(allModels);
                       }}
-                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 transition-colors"
+                      className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
                     >
                       Limpiar filtros
                     </button>
@@ -976,17 +981,17 @@ export default function AdminViewModelPage() {
               </div>
               
             {/* Información de resultados */}
-            <div className="p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs text-gray-600">
+            <div className="p-3 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
                 Mostrando {models.length} de {allModels.length} modelos
               </p>
               {selectedGroup !== 'all' && (
-                <p className="text-xs text-blue-600 mt-1">
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                   Filtrado por: {availableGroups.find(g => g.id === selectedGroup)?.name}
                 </p>
               )}
               {nameFilter && (
-                <p className="text-xs text-green-600 mt-1">
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
                   Búsqueda: "{nameFilter}"
                 </p>
               )}
@@ -996,29 +1001,29 @@ export default function AdminViewModelPage() {
 
         {/* Panel derecho: Información adicional o vacío */}
         <div className="lg:col-span-2">
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
-            <h2 className="text-base font-semibold text-gray-900 mb-4">Información</h2>
+          <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Información</h2>
             
             {selectedModelId && models.find(m => m.id === selectedModelId) ? (
               <div className="text-center py-8">
                 <div className="text-green-500 mb-4 text-4xl">✅</div>
-                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   Modelo seleccionado
                 </h3>
-                <p className="text-gray-600 mb-4">
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
                   {models.find(m => m.id === selectedModelId)?.email.split('@')[0]} está listo para ver su calculadora
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   La calculadora se abrirá automáticamente
                 </p>
               </div>
             ) : (
           <div className="text-center py-12">
                 <div className="text-gray-400 mb-4 text-4xl">👈</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                   Selecciona un modelo
             </h3>
-            <p className="text-gray-600">
+            <p className="text-gray-600 dark:text-gray-400">
                   Usa los filtros de la izquierda para encontrar y seleccionar un modelo
             </p>
           </div>
