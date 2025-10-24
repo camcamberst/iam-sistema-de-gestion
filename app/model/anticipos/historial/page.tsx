@@ -373,7 +373,7 @@ export default function MiHistorialPage() {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4">Acceso Denegado</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
           <p className="text-gray-600">No tienes permisos para acceder a esta página.</p>
         </div>
       </div>
@@ -394,7 +394,7 @@ export default function MiHistorialPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     Mi Historial
                   </h1>
                   <p className="text-sm text-gray-600 mt-1">

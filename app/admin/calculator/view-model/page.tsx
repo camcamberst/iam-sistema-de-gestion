@@ -555,7 +555,7 @@ export default function AdminViewModelPage() {
             
             <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-semibold text-gray-900 mb-1">
+              <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
                 Calculadora de {selectedModel.name}
               </h1>
               <p className="text-gray-500 text-sm">

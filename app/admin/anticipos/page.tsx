@@ -117,7 +117,7 @@ export default function GestionAnticiposPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">Gestión de Anticipos</h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Anticipos</h1>
                   <p className="text-sm text-gray-600 mt-1">Administra las solicitudes de anticipo del sistema</p>
                 </div>
               </div>

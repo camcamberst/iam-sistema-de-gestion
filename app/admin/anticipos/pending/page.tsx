@@ -265,7 +265,7 @@ export default function SolicitudesPendientesPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900">Gestión de Solicitudes</h1>
+                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Gestión de Solicitudes</h1>
                   <p className="text-sm text-gray-600 mt-1">Gestiona las solicitudes de anticipo de tu grupo</p>
                 </div>
               </div>

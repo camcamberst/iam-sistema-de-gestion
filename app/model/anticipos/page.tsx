@@ -89,7 +89,7 @@ export default function MisAnticiposPage() {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 mb-4">Acceso Denegado</h1>
+          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
           <p className="text-gray-600">Solo las modelos pueden acceder a esta página.</p>
         </div>
       </div>
