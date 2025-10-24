@@ -350,10 +350,12 @@ export default function DashboardSedesPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando dashboard...</p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando dashboard...</p>
+          </div>
         </div>
       </div>
     );
@@ -361,12 +363,12 @@ export default function DashboardSedesPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pb-48">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         
         {/* Mensaje de alerta para admins sin sedes asignadas */}
         {userRole === 'admin' && availableSedes.length === 0 && (
           <div className="mb-8">
-            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30">
+            <div className="bg-gradient-to-r from-yellow-50/80 to-orange-50/80 dark:bg-yellow-900/20 dark:border-yellow-700/50 backdrop-blur-sm rounded-xl p-6 border border-yellow-200/30 dark:border-yellow-700/50">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg flex items-center justify-center">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -385,8 +387,8 @@ export default function DashboardSedesPage() {
         )}
 
         {/* Header */}
-        <div className="mb-10">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
+        <div className="mb-12">
+          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
@@ -395,7 +397,7 @@ export default function DashboardSedesPage() {
                   </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
                     Dashboard Sedes
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -428,7 +430,7 @@ export default function DashboardSedesPage() {
 
         {/* Consulta de Períodos Históricos */}
         <div className="mb-8 relative z-[99998]">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
                 <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
@@ -443,7 +445,7 @@ export default function DashboardSedesPage() {
               </div>
               <button
                 onClick={() => setShowHistoricalQuery(!showHistoricalQuery)}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+                className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
               >
                 {showHistoricalQuery ? 'Ocultar' : 'Consultar Períodos'}
               </button>
@@ -634,7 +636,7 @@ export default function DashboardSedesPage() {
 
         {/* Messages */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 dark:border-red-700/50 border border-red-200 dark:border-red-700/50 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -642,7 +644,7 @@ export default function DashboardSedesPage() {
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
               </div>
             </div>
           </div>
@@ -651,7 +653,7 @@ export default function DashboardSedesPage() {
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
         <div className="mb-6 relative z-[99998] overflow-visible">
-          <div className="bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 pb-8 overflow-visible">
+          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 pb-8 overflow-visible dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             <div className="flex items-center space-x-4">
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -738,8 +740,8 @@ export default function DashboardSedesPage() {
         {/* Resumen de Disponibilidad - Solo se muestra cuando hay una sede seleccionada */}
         {selectedSede && (
           <div className="mb-10 relative z-0">
-            <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20">
-              <div className="px-6 py-4 border-b border-gray-200/50">
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+              <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-600/50">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-2">
                     <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -751,10 +753,10 @@ export default function DashboardSedesPage() {
                   </div>
                   <button
                     onClick={() => setSelectedSede('')}
-                    className="p-1.5 hover:bg-gray-100 rounded-lg transition-colors duration-200"
+                    className="p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200"
                     title="Cerrar consulta"
                   >
-                    <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                     </svg>
                   </button>
@@ -771,28 +773,28 @@ export default function DashboardSedesPage() {
                   ) : sedeDisponibilidad ? (
                     <div className="space-y-4">
                       {/* Header de la sede */}
-                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200/50">
+                      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200/50 dark:border-blue-700/50">
                         <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                           {sedeDisponibilidad.sede_nombre}
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-600">
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
                               {sedeDisponibilidad.rooms_disponibles}/{sedeDisponibilidad.rooms_totales}
                             </p>
-                            <p className="text-sm text-gray-600">Rooms Disponibles</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Rooms Disponibles</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-2xl font-bold text-green-600">
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">
                               {sedeDisponibilidad.total_espacios}
                             </p>
-                            <p className="text-sm text-gray-600">Total Espacios</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Total Espacios</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-2xl font-bold text-purple-600">
+                            <p className="text-2xl font-bold text-purple-600 dark:text-purple-400">
                               {Object.values(sedeDisponibilidad.jornadas_dobladas).reduce((a, b) => a + b, 0)}
                             </p>
-                            <p className="text-sm text-gray-600">Doblajes Activos</p>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Doblajes Activos</p>
                           </div>
                         </div>
                       </div>
@@ -804,21 +806,21 @@ export default function DashboardSedesPage() {
                           { key: 'tarde', label: 'Tarde', color: 'from-blue-500 to-indigo-600' },
                           { key: 'noche', label: 'Noche', color: 'from-purple-500 to-violet-600' }
                         ].map((jornada) => (
-                          <div key={jornada.key} className="bg-white/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50">
+                          <div key={jornada.key} className="bg-white/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg p-4 border border-gray-200/50 dark:border-gray-500/50">
                             <div className="flex items-center space-x-2 mb-3">
                               <div className={`w-3 h-3 bg-gradient-to-r ${jornada.color} rounded-full`}></div>
                               <h4 className="font-medium text-gray-900 dark:text-gray-100">{jornada.label}</h4>
                             </div>
                             <div className="space-y-2">
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">Disponibles:</span>
-                                <span className="font-semibold text-green-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Disponibles:</span>
+                                <span className="font-semibold text-green-600 dark:text-green-400">
                                   {sedeDisponibilidad.jornadas_disponibles[jornada.key as keyof typeof sedeDisponibilidad.jornadas_disponibles]}
                                 </span>
                               </div>
                               <div className="flex justify-between items-center">
-                                <span className="text-sm text-gray-600">Dobladas:</span>
-                                <span className="font-semibold text-blue-600">
+                                <span className="text-sm text-gray-600 dark:text-gray-400">Dobladas:</span>
+                                <span className="font-semibold text-blue-600 dark:text-blue-400">
                                   {sedeDisponibilidad.jornadas_dobladas[jornada.key as keyof typeof sedeDisponibilidad.jornadas_dobladas]}
                                 </span>
                               </div>
@@ -828,14 +830,14 @@ export default function DashboardSedesPage() {
                       </div>
 
                       {/* Información adicional */}
-                      <div className="bg-gray-50/80 rounded-lg p-4 border border-gray-200/50">
+                      <div className="bg-gray-50/80 dark:bg-gray-600/80 rounded-lg p-4 border border-gray-200/50 dark:border-gray-500/50">
                         <div className="flex items-start space-x-2">
                           <div className="w-4 h-4 bg-blue-500 rounded-full flex items-center justify-center mt-0.5">
                             <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 8 8">
                               <circle cx="4" cy="4" r="3" />
                             </svg>
                           </div>
-                          <div className="text-sm text-gray-700">
+                          <div className="text-sm text-gray-700 dark:text-gray-300">
                             <p className="font-medium mb-1">Información para nuevas modelos:</p>
                             <p>• <strong>Disponibles:</strong> Espacios libres para asignar nuevas modelos</p>
                             <p>• <strong>Dobladas:</strong> Modelos que trabajan en múltiples jornadas</p>
@@ -845,7 +847,7 @@ export default function DashboardSedesPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="text-center py-8 text-gray-500">
+                    <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <p>No se pudo cargar la disponibilidad de esta sede</p>
                     </div>
                   )}
