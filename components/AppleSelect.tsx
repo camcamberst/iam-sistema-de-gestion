@@ -95,7 +95,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:shadow-lg dark:shadow-orange-900/20 dark:ring-1 dark:ring-orange-500/20 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+        className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 dark:shadow-sm dark:shadow-orange-900/10 dark:ring-0.5 dark:ring-orange-500/15 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
         onFocus={handleFocus}
         onBlur={handleBlur}
       >

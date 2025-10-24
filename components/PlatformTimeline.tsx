@@ -122,7 +122,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
 
   if (loading) {
     return (
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-2xl dark:shadow-purple-900/20 dark:ring-1 dark:ring-purple-500/20 border border-white/20 dark:border-gray-700/20 p-4">
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-purple-900/10 dark:ring-0.5 dark:ring-purple-500/15 border border-white/20 dark:border-gray-700/20 p-4">
         <div className="flex items-center justify-center py-4">
           <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
           <span className="ml-3 text-gray-600 dark:text-gray-300 text-sm">Cargando timeline...</span>
@@ -133,7 +133,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
 
   if (error) {
     return (
-      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-2xl dark:shadow-purple-900/20 dark:ring-1 dark:ring-purple-500/20 border border-white/20 dark:border-gray-700/20 p-4">
+      <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-purple-900/10 dark:ring-0.5 dark:ring-purple-500/15 border border-white/20 dark:border-gray-700/20 p-4">
         <div className="text-center py-4">
           <XCircle className="w-6 h-6 text-red-500 mx-auto mb-2" />
           <p className="text-red-600 text-sm">{error}</p>
@@ -143,7 +143,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
   }
 
   return (
-    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-2xl dark:shadow-purple-900/20 dark:ring-1 dark:ring-purple-500/20 border border-white/20 dark:border-gray-700/20 p-4" style={{ overflow: 'visible' }}>
+    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-purple-900/10 dark:ring-0.5 dark:ring-purple-500/15 border border-white/20 dark:border-gray-700/20 p-4" style={{ overflow: 'visible' }}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
           <Clock className="w-4 h-4 mr-2" />

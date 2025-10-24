@@ -464,7 +464,7 @@ export default function ModelCalculator({
         )}
 
         {/* Calculadora */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-2xl dark:shadow-indigo-900/20 dark:ring-1 dark:ring-indigo-500/20 border border-gray-200 dark:border-gray-700 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm dark:shadow-lg dark:shadow-indigo-900/10 dark:ring-0.5 dark:ring-indigo-500/15 border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Calculadora de Ingresos</h2>
           
           {platforms.length === 0 ? (
