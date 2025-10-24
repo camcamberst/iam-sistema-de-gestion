@@ -478,7 +478,7 @@ export default function PortafolioModelos() {
                 <Grid3X3 className="w-5 h-5 text-white" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Portafolio Modelos</h1>
+                <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Portafolio Modelos</h1>
                 <p className="text-sm text-gray-600 mt-1">
                   Gestión de plataformas por modelo y sede
                 </p>

@@ -407,7 +407,7 @@ export default function CalculatorHistory() {
                     </svg>
                   </div>
                   <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                       Mi Historial de Calculadora
                     </h1>
                     <p className="mt-1 text-sm text-gray-600">
