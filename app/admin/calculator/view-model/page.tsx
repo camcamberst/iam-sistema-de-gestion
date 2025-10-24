@@ -763,8 +763,11 @@ export default function AdminViewModelPage() {
 
               {/* Totales y Alertas - USANDO TOTALES DEL SERVIDOR */}
               {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
-                <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3">Totales y Alertas</h3>
+                <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                    Totales y Alertas
+                  </h3>
                   
                   {calculatedTotals ? (
                     <>
