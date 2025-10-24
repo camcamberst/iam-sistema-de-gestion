@@ -238,7 +238,7 @@ export default function CreateUserPage() {
         )}
         
         <form onSubmit={onSubmit} className="grid grid-cols-1 gap-4 md:grid-cols-[220px_1fr] items-start">
-          <label className="text-sm font-medium text-gray-700 self-center">Nombre</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Nombre</label>
           <input
             placeholder="Nombre"
             value={form.name}
@@ -248,7 +248,7 @@ export default function CreateUserPage() {
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-sm font-medium text-gray-700 self-center">Correo electrónico</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Correo electrónico</label>
           <input
             placeholder="Correo electrónico"
             type="email"
@@ -259,7 +259,7 @@ export default function CreateUserPage() {
             className="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg bg-white backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-sm font-medium text-gray-700 self-center">Contraseña</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Contraseña</label>
           <div className="relative">
             <input
               placeholder="Contraseña"
@@ -280,7 +280,7 @@ export default function CreateUserPage() {
             </button>
           </div>
 
-          <label className="text-sm font-medium text-gray-700 self-center">Rol</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Rol</label>
           <div>
             <AppleDropdown
               options={(() => {
@@ -306,7 +306,7 @@ export default function CreateUserPage() {
             />
           </div>
 
-          <label className="text-sm font-medium text-gray-700 self-center">Grupos</label>
+          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Grupos</label>
           <div className="relative">
             <button
               type="button"
@@ -383,7 +383,7 @@ export default function CreateUserPage() {
 
           {form.role === 'modelo' && (
             <>
-              <label className="text-sm font-medium text-gray-700 self-center">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
               <div>
                 <AppleDropdown
                   options={availableRooms.map(room => ({ value: room.id, label: room.room_name }))}
@@ -401,7 +401,7 @@ export default function CreateUserPage() {
                 )}
               </div>
 
-              <label className="text-sm font-medium text-gray-700 self-center">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
+              <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
               <div>
                 <AppleDropdown
                   options={[

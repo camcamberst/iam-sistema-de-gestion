@@ -385,7 +385,7 @@ export default function UsersListPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando usuarios...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando usuarios...</p>
         </div>
       </div>
     );
@@ -410,7 +410,7 @@ export default function UsersListPage() {
                     <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
                       Gestión de Usuarios
                     </h1>
-                    <p className="mt-1 text-sm text-gray-600">Administra usuarios del sistema</p>
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">Administra usuarios del sistema</p>
                   </div>
                 </div>
 
@@ -435,10 +435,10 @@ export default function UsersListPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <span className="text-base font-semibold text-gray-900">Búsqueda y Filtros</span>
+              <span className="text-base font-semibold text-gray-900 dark:text-gray-100">Búsqueda y Filtros</span>
             </div>
             {filteredUsers.length > 0 && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
+              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span>{filteredUsers.length} resultado(s) encontrado(s)</span>
               </div>
@@ -501,7 +501,7 @@ export default function UsersListPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197m13.5-9a2.5 2.5 0 11-5 0 2.5 2.5 0 015 0z" />
                 </svg>
               </div>
-              <h2 className="text-base font-semibold text-gray-900">
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                 Usuarios del Sistema ({users.length})
               </h2>
             </div>
@@ -541,10 +541,10 @@ export default function UsersListPage() {
                 <table className="min-w-full text-left text-xs table-fixed">
                   <thead className="border-b border-white/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 backdrop-blur-sm">
                     <tr>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-gray-200 font-medium text-sm uppercase tracking-wide text-center">
                         Usuario
                       </th>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-gray-200 font-medium text-sm uppercase tracking-wide text-center">
                         Email
                       </th>
                       <th className="px-4 py-4 w-[10%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
@@ -570,8 +570,8 @@ export default function UsersListPage() {
                               {user.name.charAt(0).toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                              <div className="text-gray-900 font-medium text-xs truncate" title={user.name}>{user.name}</div>
-                              <div className="text-gray-400 text-xs truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
+                              <div className="text-gray-900 dark:text-gray-100 font-medium text-xs truncate" title={user.name}>{user.name}</div>
+                              <div className="text-gray-400 dark:text-gray-500 text-xs truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>
                             </div>
                           </div>
                         </td>
@@ -830,7 +830,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
       <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col">
-        <h2 className="text-lg font-semibold text-gray-900 mb-3">Editar Usuario</h2>
+        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Editar Usuario</h2>
 
         {/* Mensaje de error del modal */}
         {modalError && (
@@ -850,7 +850,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
         <form onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-y-auto pr-2">
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-1">Nombre</label>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
             <input
               type="text"
               value={formData.name}
@@ -862,7 +862,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-1">Email</label>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Email</label>
             <input
               type="email"
               value={formData.email}
@@ -874,9 +874,9 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-1">
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">
               Nueva Contraseña 
-              <span className="text-gray-500 text-xs ml-1">(opcional - dejar vacío para mantener actual)</span>
+              <span className="text-gray-500 dark:text-gray-400 text-xs ml-1">(opcional - dejar vacío para mantener actual)</span>
             </label>
             <div className="relative">
               <input
@@ -939,7 +939,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-1">Rol</label>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
             <AppleDropdown
               options={[
                 { value: 'modelo', label: 'Modelo' },
@@ -953,7 +953,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-1">Usuario Activo</label>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
             <button
               type="button"
               onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
@@ -969,7 +969,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
 
           <div>
-            <label className="block text-gray-700 text-sm font-medium mb-1">Grupos</label>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
             <AppleDropdown
               options={groups.map(group => ({
                 value: group.id,
