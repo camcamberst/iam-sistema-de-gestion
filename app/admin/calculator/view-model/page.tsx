@@ -553,22 +553,22 @@ export default function AdminViewModelPage() {
               </button>
             </div>
             
-            <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap">
+            <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap truncate">
                 Calculadora de {selectedModel.name}
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 text-sm">
+              <p className="text-gray-500 dark:text-gray-400 text-sm truncate">
                 {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
               </p>
             </div>
 
             {/* Footer actions */}
-              <div className="flex justify-end gap-3">
+              <div className="flex justify-end gap-2 flex-shrink-0">
                 <button
                   onClick={syncTotals}
                   disabled={syncingTotals || !selectedModel?.calculatorData}
-                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
+                  className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                     !syncingTotals
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200 hover:shadow-indigo-300'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -579,7 +579,7 @@ export default function AdminViewModelPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
+                className={`px-4 py-2 rounded-lg text-xs font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                   hasChanges && !saving
                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
