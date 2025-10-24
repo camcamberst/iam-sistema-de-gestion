@@ -7,9 +7,10 @@
 4. [Componentes](#componentes)
 5. [Layouts y Navegación](#layouts-y-navegación)
 6. [Efectos de Luz/Glow](#efectos-de-luzglow)
-7. [Contraste y Legibilidad](#contraste-y-legibilidad)
-8. [Implementación](#implementación)
-9. [Mejores Prácticas](#mejores-prácticas)
+7. [Efectos de Transición](#efectos-de-transición)
+8. [Contraste y Legibilidad](#contraste-y-legibilidad)
+9. [Implementación](#implementación)
+10. [Mejores Prácticas](#mejores-prácticas)
 
 ---
 
@@ -263,6 +264,102 @@ dark:ring-0.5 dark:ring-COLOR-500/15
 
 ---
 
+## ✨ Efectos de Transición
+
+### 🎭 Sistema de Transiciones
+
+El sistema incluye efectos de transición suaves y profesionales para el cambio entre modos claro y oscuro.
+
+#### 🎯 Componente ThemeTransition
+```tsx
+// components/ThemeTransition.tsx
+// Envuelve toda la aplicación para detectar cambios de tema
+<ThemeTransition>
+  {children}
+</ThemeTransition>
+```
+
+#### 🔄 Efectos Durante Transición
+```css
+/* Efectos aplicados durante el cambio de tema */
+opacity-90 scale-[0.98] blur-[1px]
+
+/* Overlay con gradientes */
+bg-gradient-to-br from-blue-500/10 via-purple-500/10 to-indigo-500/10
+dark:from-gray-900/20 dark:via-gray-800/20 dark:to-gray-900/20
+
+/* Partículas sutiles */
+bg-gradient-radial from-blue-400/20 via-transparent to-transparent animate-ping
+```
+
+#### ⚡ Transiciones CSS Globales
+```css
+/* Transiciones suaves para todos los elementos */
+* {
+  transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+```
+
+#### 🎨 Animaciones Keyframes
+```css
+@keyframes themeTransition {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.8; transform: scale(0.98); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+@keyframes themeGlow {
+  0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0.2); }
+  100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+@keyframes ripple {
+  0% { transform: scale(0); opacity: 1; }
+  100% { transform: scale(4); opacity: 0; }
+}
+```
+
+#### 🎯 Botón de Tema Mejorado
+```tsx
+// Efectos en ThemeToggle
+const toggleTheme = () => {
+  // Transiciones CSS avanzadas
+  document.documentElement.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+  document.body.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+  
+  // Efecto ripple en el botón
+  button.style.transform = 'scale(0.95)';
+  setTimeout(() => button.style.transform = 'scale(1)', 150);
+};
+```
+
+### 🎨 Características de Transición
+
+#### ✨ Efectos Visuales
+- **Scale sutil** - La página se reduce ligeramente (0.98)
+- **Blur temporal** - Efecto de desenfoque suave (1px)
+- **Overlay gradiente** - Capas de color que cambian según el tema
+- **Partículas animadas** - Efecto ping con gradiente radial
+- **Backdrop blur** - Efecto de cristal esmerilado
+
+#### ⚡ Optimizaciones
+- **MutationObserver** para detectar cambios eficientemente
+- **Cleanup automático** de event listeners
+- **Transiciones CSS nativas** para mejor rendimiento
+- **Z-index alto** para overlay sin interferir con UI
+
+#### 🎭 Duración y Timing
+- **Duración total:** 0.6 segundos
+- **Easing:** `cubic-bezier(0.4, 0, 0.2, 1)`
+- **Efecto ripple:** 0.15 segundos
+- **Cleanup:** 0.6 segundos
+
+---
+
 ## 👁️ Contraste y Legibilidad
 
 ### 📏 Reglas de Contraste
@@ -301,6 +398,12 @@ text-gray-900 dark:text-gray-900
 text-gray-600 dark:text-gray-300
 ```
 
+#### Textos Informativos
+```css
+/* Textos como "X modelos • Todas las sedes" */
+text-gray-900 dark:text-white
+```
+
 ---
 
 ## 🛠️ Implementación
@@ -309,13 +412,14 @@ text-gray-600 dark:text-gray-300
 
 ```
 app/
-├── layout.tsx                 # Layout raíz
+├── layout.tsx                 # Layout raíz (con ThemeTransition)
 ├── admin/layout.tsx           # Layout Admin
 ├── superadmin/layout.tsx      # Layout Super Admin
 └── model/layout.tsx           # Layout Model
 
 components/
-├── ThemeToggle.tsx           # Toggle de tema
+├── ThemeToggle.tsx           # Toggle de tema (con efectos)
+├── ThemeTransition.tsx       # Componente de transición
 ├── BillingSummary.tsx        # Resumen de facturación
 ├── BillingSummaryCompact.tsx # Resumen compacto
 ├── ActiveRatesPanel.tsx      # Panel de tasas
@@ -415,6 +519,32 @@ shadow-lg dark:shadow-lg
 />
 ```
 
+### 🎭 Componente de Transición
+```tsx
+// Envolver toda la aplicación
+<ThemeTransition>
+  {children}
+</ThemeTransition>
+```
+
+### 🔄 Toggle de Tema con Efectos
+```tsx
+<button
+  data-theme-toggle
+  onClick={toggleTheme}
+  className="p-2.5 text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-200 rounded-lg transition-all duration-200"
+>
+  {/* Iconos de sol/luna */}
+</button>
+```
+
+### 📊 Texto Informativo
+```tsx
+<div className="text-xs font-medium text-gray-900 dark:text-white">
+  {totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
+</div>
+```
+
 ---
 
 ## 📚 Recursos Adicionales
@@ -440,6 +570,19 @@ shadow-lg dark:shadow-lg
 - ✅ Efectos de luz implementados
 - ✅ Contraste optimizado
 - ✅ Guía de implementación completa
+
+### v1.1.0 - Efectos de Transición
+- ✅ Sistema de transiciones suaves
+- ✅ Componente ThemeTransition
+- ✅ Efectos visuales durante cambio de tema
+- ✅ Animaciones keyframes personalizadas
+- ✅ Botón de tema con efectos ripple
+- ✅ Transiciones CSS globales
+
+### v1.1.1 - Correcciones Finales
+- ✅ Texto "X modelos • Todas las sedes" en blanco
+- ✅ Legibilidad mejorada en modo oscuro
+- ✅ Estándar completo para implementación
 
 ---
 
