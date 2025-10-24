@@ -199,7 +199,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
             </div>
           ) : (
             rates.map((rate) => (
-              <div key={rate.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-600/30 shadow-sm">
+              <div key={rate.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-gray-600/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-500/30 shadow-sm">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center">
                     <span className="text-sm">{getSourceIcon(rate.source)}</span>
