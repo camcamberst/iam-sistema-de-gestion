@@ -265,11 +265,11 @@ export default function RatesPage() {
 	// ===========================================
 	if (authLoading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-8">
+			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-8">
 				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-					<div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 shadow-lg text-center">
+					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
 						<div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
-						<p className="text-sm text-gray-600">Verificando permisos...</p>
+						<p className="text-sm text-gray-600 dark:text-gray-300">Verificando permisos...</p>
 					</div>
 				</div>
 			</div>
@@ -278,16 +278,16 @@ export default function RatesPage() {
 
 	if (!userInfo) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-8">
+			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-8">
 				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-					<div className="bg-white/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 shadow-lg text-center">
-						<div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-							<svg className="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
+						<div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
+							<svg className="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
 							</svg>
 						</div>
-						<h2 className="text-lg font-semibold text-gray-900 mb-2">Acceso Denegado</h2>
-						<p className="text-sm text-gray-600 mb-6">
+						<h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h2>
+						<p className="text-sm text-gray-600 dark:text-gray-300 mb-6">
 							No tienes permisos para acceder a esta función.
 						</p>
 						<button 
@@ -303,11 +303,11 @@ export default function RatesPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-8">
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-8">
 			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 				{/* Header */}
 				<div className="mb-10">
-					<div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
+					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
 								<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
@@ -336,16 +336,16 @@ export default function RatesPage() {
 
 				{/* Formulario Establecer rates manual */}
 				<div className="mb-8 relative z-[9999]">
-					<div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-md relative z-[9999]">
+					<div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 relative z-[9999]">
 						<div className="flex items-center space-x-2 mb-4">
 							<svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 							</svg>
-							<h2 className="text-base font-semibold text-gray-900">Establecer rates manual</h2>
+							<h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Establecer rates manual</h2>
 						</div>
 						<form onSubmit={onCreate} className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
 							<div>
-								<label className="block text-xs font-medium text-gray-600 mb-2">Aplicar a</label>
+								<label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Aplicar a</label>
 								<AppleDropdown
 									options={availableScopes.map(scope => ({
 										value: scope.value,
@@ -358,7 +358,7 @@ export default function RatesPage() {
 								/>
 							</div>
 							<div>
-								<label className="block text-xs font-medium text-gray-600 mb-2">Divisa</label>
+								<label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Divisa</label>
 								<AppleDropdown
 									options={[
 										{ value: 'USD→COP', label: 'USD → COP' },
@@ -372,11 +372,11 @@ export default function RatesPage() {
 								/>
 							</div>
 							<div>
-								<label className="block text-xs font-medium text-gray-600 mb-2">Valor</label>
+								<label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-2">Valor</label>
 								<input
 									type="number"
 									step="any"
-									className="w-full px-3 py-2 text-sm border border-gray-200/50 rounded-lg bg-white/80 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+									className="w-full px-3 py-2 text-sm border border-gray-200/50 dark:border-gray-600/50 rounded-lg bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
 									value={form.value}
 									onChange={(e) => setForm({ ...form, value: e.target.value })}
 									required
@@ -399,8 +399,8 @@ export default function RatesPage() {
 							</div>
 						</form>
 						{error && (
-							<div className="mt-4 p-3 bg-red-50/80 backdrop-blur-sm border border-red-200/50 rounded-lg">
-								<p className="text-red-600 text-xs">{error}</p>
+							<div className="mt-4 p-3 bg-red-50/80 dark:bg-red-900/20 backdrop-blur-sm border border-red-200/50 dark:border-red-800/50 rounded-lg">
+								<p className="text-red-600 dark:text-red-400 text-xs">{error}</p>
 							</div>
 						)}
 					</div>
