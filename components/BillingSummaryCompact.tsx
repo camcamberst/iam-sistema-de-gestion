@@ -138,7 +138,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         if (!sedeMap.has(sedeId)) {
           sedeMap.set(sedeId, {
             sedeId,
-            sedeName: model.organizationId ? 'Agencia Innova' : 'Sede Desconocida',
+            sedeName: model.organizationId ? 'Agencia Innova' : 'Agencia Innova',
             totalModels: 0,
             groups: [],
             totalUsdBruto: 0,
