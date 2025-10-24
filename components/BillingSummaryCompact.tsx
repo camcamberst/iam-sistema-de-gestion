@@ -294,7 +294,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
               <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                 <div className="space-y-2 pr-2">
                   {groupedData.map((sede) => (
-                    <div key={sede.sedeId} className="bg-white dark:bg-white rounded-lg border border-gray-200/40 dark:border-gray-600/40 p-2">
+                    <div key={sede.sedeId} className="bg-white/60 dark:bg-gray-700/60 rounded-lg border border-gray-200/40 dark:border-gray-600/40 p-2">
                       {/* Header de Sede */}
                       <div className="flex items-center space-x-2 mb-1">
                         <div className="w-4 h-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded flex items-center justify-center">
