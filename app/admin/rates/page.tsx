@@ -265,9 +265,9 @@ export default function RatesPage() {
 	// ===========================================
 	if (authLoading) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-8">
-				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
+			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+				<div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
 						<div className="animate-spin w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full mx-auto mb-3"></div>
 						<p className="text-sm text-gray-600 dark:text-gray-300">Verificando permisos...</p>
 					</div>
@@ -278,9 +278,9 @@ export default function RatesPage() {
 
 	if (!userInfo) {
 		return (
-			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-8">
-				<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-8 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
+			<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+				<div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 text-center">
 						<div className="w-12 h-12 bg-red-50 dark:bg-red-900/20 rounded-full flex items-center justify-center mx-auto mb-4">
 							<svg className="w-6 h-6 text-red-500 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
@@ -303,10 +303,10 @@ export default function RatesPage() {
 	}
 
 	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-8">
-			<div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+			<div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
 				{/* Header */}
-				<div className="mb-10">
+				<div className="mb-12">
 					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
 						<div className="flex items-center justify-between">
 							<div className="flex items-center space-x-3">
@@ -316,7 +316,7 @@ export default function RatesPage() {
 									</svg>
 								</div>
 								<div>
-									<h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">Definir RATES</h1>
+									<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Definir RATES</h1>
 									<p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
 										{userInfo.role === 'super_admin' 
 											? 'Puedes gestionar RATES globales y por grupo'
