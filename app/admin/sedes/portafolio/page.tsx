@@ -472,7 +472,7 @@ export default function PortafolioModelos() {
         )}
         {/* Header */}
         <div className="mb-10">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-lg">
+          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-gradient-to-br from-gray-900 to-black rounded-xl flex items-center justify-center shadow-md border border-white/20">
                 <Grid3X3 className="w-5 h-5 text-white" />
