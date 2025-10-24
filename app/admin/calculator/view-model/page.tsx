@@ -555,7 +555,7 @@ export default function AdminViewModelPage() {
             
             <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1">
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap">
                 Calculadora de {selectedModel.name}
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
@@ -568,7 +568,7 @@ export default function AdminViewModelPage() {
                 <button
                   onClick={syncTotals}
                   disabled={syncingTotals || !selectedModel?.calculatorData}
-                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                  className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                     !syncingTotals
                       ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg shadow-indigo-200 hover:shadow-indigo-300'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -579,7 +579,7 @@ export default function AdminViewModelPage() {
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+                className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                   hasChanges && !saving
                     ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
                     : 'bg-gray-100 text-gray-400 cursor-not-allowed'
