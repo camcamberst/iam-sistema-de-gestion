@@ -149,7 +149,7 @@ export default function AppleDropdown({
               <div
                 key={option.value}
                 className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
-                  index > 0 ? 'border-t border-gray-100 dark:border-gray-600/30 dark:shadow-sm dark:shadow-blue-900/5' : ''
+                  index > 0 ? 'border-t border-gray-100 dark:border-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10' : ''
                 } ${
                   option.disabled 
                     ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
