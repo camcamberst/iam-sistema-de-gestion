@@ -431,8 +431,8 @@ export default function ModelCalculator({
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-1">Mi Calculadora</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">
+            <h1 className="text-2xl font-semibold text-gray-900 dark:text-white mb-1">Mi Calculadora</h1>
+            <p className="text-gray-500 dark:text-gray-300 text-sm">
               Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
             </p>
           </div>
@@ -441,7 +441,7 @@ export default function ModelCalculator({
         {/* Tasas */}
         {rates && (
           <div className="mb-6">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Tasas Actualizadas</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-3">Tasas Actualizadas</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 p-4 rounded-lg">
                 <div className="text-2xl font-bold text-blue-900">
@@ -459,13 +459,13 @@ export default function ModelCalculator({
                 </div>
               </div>
             </div>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Configuradas por tu administrador</p>
+            <p className="text-sm text-gray-500 dark:text-gray-300 mt-2">Configuradas por tu administrador</p>
           </div>
         )}
 
         {/* Calculadora */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Calculadora de Ingresos</h2>
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Calculadora de Ingresos</h2>
           
           {platforms.length === 0 ? (
             <div className="text-center py-12">
@@ -474,8 +474,8 @@ export default function ModelCalculator({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h3>
-              <p className="text-gray-500 dark:text-gray-400">Tu administrador aún no ha configurado las plataformas para tu calculadora.</p>
+              <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No hay plataformas habilitadas</h3>
+              <p className="text-gray-500 dark:text-gray-300">Tu administrador aún no ha configurado las plataformas para tu calculadora.</p>
             </div>
           ) : (
             <div className="space-y-4">
@@ -492,7 +492,7 @@ export default function ModelCalculator({
                       }}
                       className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                     />
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{platform.name}</span>
+                    <span className="font-medium text-gray-900 dark:text-white">{platform.name}</span>
                   </div>
                   
                   {platform.enabled && (
@@ -504,8 +504,8 @@ export default function ModelCalculator({
                         className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="0"
                       />
-                      <span className="text-sm text-gray-500 dark:text-gray-400">{platform.currency}</span>
-                      <span className="text-sm text-gray-500 dark:text-gray-400">({platform.percentage}%)</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-300">{platform.currency}</span>
+                      <span className="text-sm text-gray-500 dark:text-gray-300">({platform.percentage}%)</span>
                     </div>
                   )}
                 </div>
@@ -518,19 +518,19 @@ export default function ModelCalculator({
             <div className="mt-6 p-4 bg-blue-50 rounded-lg">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Total USD:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-white">Total USD:</span>
                   <div className="text-lg font-bold text-blue-900">
                     ${result.totalUsdModelo.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Total COP:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-white">Total COP:</span>
                   <div className="text-lg font-bold text-green-900">
                     ${result.totalCopModelo.toLocaleString('es-CO')}
                   </div>
                 </div>
                 <div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Anticipo Máximo:</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-white">Anticipo Máximo:</span>
                   <div className="text-lg font-bold text-purple-900">
                     ${result.anticipoMaxCop.toLocaleString('es-CO')}
                   </div>

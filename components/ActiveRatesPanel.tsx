@@ -116,8 +116,8 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
               </svg>
             </div>
             <div>
-              <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Tasas de Calculadora</h3>
-              <p className="text-xs text-gray-500 dark:text-gray-400">Solo manuales</p>
+              <h3 className="text-base font-semibold text-gray-900 dark:text-white">Tasas de Calculadora</h3>
+              <p className="text-xs text-gray-500 dark:text-gray-300">Solo manuales</p>
             </div>
             {loading && <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin ml-auto"></div>}
           </div>
@@ -128,7 +128,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
         ) : (
           <div className="space-y-2">
             {rates.length === 0 ? (
-              <p className="text-gray-500 dark:text-gray-400 text-xs text-center py-2">No hay tasas de calculadora</p>
+              <p className="text-gray-500 dark:text-gray-300 text-xs text-center py-2">No hay tasas de calculadora</p>
             ) : (
               rates.map((rate) => (
                 <div key={rate.id} className="flex items-center justify-between py-1.5 px-2 bg-gray-50 rounded-md">
@@ -137,8 +137,8 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                     <span className="text-xs font-medium">{getKindLabel(rate.kind)}</span>
                   </div>
                   <div className="text-right">
-                    <div className="text-xs font-semibold text-gray-900 dark:text-gray-100">{rate.value}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{getScopeLabel(rate.scope)}</div>
+                    <div className="text-xs font-semibold text-gray-900 dark:text-white">{rate.value}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-300">{getScopeLabel(rate.scope)}</div>
                   </div>
                 </div>
               ))
@@ -157,7 +157,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
           <div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Tasas de Calculadora</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-white">Tasas de Calculadora</h2>
             <p className="text-xs text-gray-600 dark:text-gray-300">Solo tasas manuales</p>
           </div>
         </div>
@@ -194,8 +194,8 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <p className="text-gray-500 dark:text-gray-400 text-sm font-medium mb-1">No hay tasas de calculadora</p>
-              <p className="text-gray-400 dark:text-gray-500 text-xs">Configura las tasas manualmente</p>
+              <p className="text-gray-500 dark:text-gray-300 text-sm font-medium mb-1">No hay tasas de calculadora</p>
+              <p className="text-gray-400 dark:text-gray-400 text-xs">Configura las tasas manualmente</p>
             </div>
           ) : (
             rates.map((rate) => (
@@ -205,13 +205,13 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                     <span className="text-sm">{getSourceIcon(rate.source)}</span>
                   </div>
                   <div>
-                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">{getKindLabel(rate.kind)}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-400">{getScopeLabel(rate.scope)}</div>
+                    <div className="text-sm font-semibold text-gray-900 dark:text-white">{getKindLabel(rate.kind)}</div>
+                    <div className="text-xs text-gray-500 dark:text-gray-300">{getScopeLabel(rate.scope)}</div>
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-base font-bold text-gray-900 dark:text-gray-100">{rate.value}</div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-base font-bold text-gray-900 dark:text-white">{rate.value}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-300">
                     {new Date(rate.valid_from).toLocaleDateString('es-ES', {
                       day: '2-digit',
                       month: '2-digit',
