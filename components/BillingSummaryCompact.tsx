@@ -261,7 +261,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         </div>
         <Link 
           href="/admin/sedes/dashboard" 
-          className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+          className="text-xs text-blue-600 dark:text-white hover:text-blue-800 dark:hover:text-gray-200 font-medium"
         >
           Ver completo →
         </Link>
