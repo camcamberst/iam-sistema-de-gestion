@@ -207,14 +207,14 @@ export default function AppleSearchBar({
 
       {/* Filters Panel */}
       {filters.length > 0 && isExpanded && (
-        <div className="mt-3 relative bg-white/95 dark:bg-gray-800/90 backdrop-blur-sm rounded-lg border border-white/30 dark:border-gray-600/30 shadow-xl dark:shadow-2xl dark:shadow-blue-900/20 dark:ring-1 dark:ring-blue-400/20 p-4 animate-in slide-in-from-top-2 duration-200 z-[100]">
+        <div className="mt-3 relative bg-white/95 dark:bg-white/80 backdrop-blur-sm rounded-lg border border-white/30 dark:border-gray-600/30 shadow-xl dark:shadow-2xl dark:shadow-blue-900/20 dark:ring-1 dark:ring-blue-400/20 p-4 animate-in slide-in-from-top-2 duration-200 z-[100]">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
               <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-100">Filtros Avanzados</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-800">Filtros Avanzados</span>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
