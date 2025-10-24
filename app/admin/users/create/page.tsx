@@ -210,7 +210,7 @@ export default function CreateUserPage() {
         </div>
 
         {/* Formulario Compacto */}
-        <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
         
         {/* Mensajes de error y éxito */}
         {error && (
@@ -247,18 +247,18 @@ export default function CreateUserPage() {
           </div>
         )}
         
-        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-3 md:grid-cols-[200px_1fr] items-start">
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Nombre</label>
+        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 md:grid-cols-[180px_1fr] items-start">
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Nombre</label>
           <input
             placeholder="Nombre"
             value={form.name}
             onChange={e=>setForm({...form, name:e.target.value})}
             required
             autoComplete="name"
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Correo electrónico</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Correo electrónico</label>
           <input
             placeholder="Correo electrónico"
             type="email"
@@ -266,10 +266,10 @@ export default function CreateUserPage() {
             onChange={e=>setForm({...form, email:e.target.value})}
             required
             autoComplete="email"
-            className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+            className="w-full px-2.5 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
           />
 
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Contraseña</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Contraseña</label>
           <div className="relative">
             <input
               placeholder="Contraseña"
@@ -278,19 +278,19 @@ export default function CreateUserPage() {
               onChange={e=>setForm({...form, password:e.target.value})}
               required
               autoComplete="new-password"
-              className="w-full px-3 py-2 pr-14 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              className="w-full px-2.5 py-1.5 pr-12 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
             />
             <button
               type="button"
               onClick={() => setShowPassword(v=>!v)}
               aria-label={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
-              className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
+              className="absolute right-1.5 top-1.5 px-1.5 py-0.5 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
             >
               {showPassword ? 'Ocultar' : 'Ver'}
             </button>
           </div>
 
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Rol</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Rol</label>
           <div>
             <AppleDropdown
               options={(() => {
@@ -312,16 +312,16 @@ export default function CreateUserPage() {
               value={form.role}
               onChange={(value) => setForm({ ...form, role: value as any })}
               placeholder="Selecciona un rol"
-              className="text-sm"
+              className="text-xs"
             />
           </div>
 
-          <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Grupos</label>
+          <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Grupos</label>
           <div className="relative">
             <button
               type="button"
               onClick={() => setOpenGroups(v => !v)}
-              className="w-full text-left border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between text-sm hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              className="w-full text-left border border-gray-300 dark:border-gray-600 rounded-lg px-2.5 py-1.5 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 flex items-center justify-between text-xs hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
             >
               <span className={form.groups.length ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
                 {form.groups.length
@@ -338,9 +338,9 @@ export default function CreateUserPage() {
               </svg>
             </button>
             {openGroups && (
-              <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-y-auto">
+              <div className="apple-scroll absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-48 overflow-y-auto">
                 {loadingGroups ? (
-                  <div className="p-3 text-sm text-gray-500 dark:text-gray-400">Cargando grupos…</div>
+                  <div className="p-2 text-xs text-gray-500 dark:text-gray-400">Cargando grupos…</div>
                 ) : (
                   groups.map((g, index) => {
                     const isSelected = form.groups.includes(g.id);
@@ -369,7 +369,7 @@ export default function CreateUserPage() {
                             });
                           }
                         }}
-                        className={`w-full text-left px-3 py-2 text-sm transition-colors duration-150 ${
+                        className={`w-full text-left px-2.5 py-1.5 text-xs transition-colors duration-150 ${
                           index > 0 ? 'border-t border-gray-100 dark:border-gray-700' : ''
                         } ${
                           isDisabled || !canAssignGroup 
@@ -393,7 +393,7 @@ export default function CreateUserPage() {
 
           {form.role === 'modelo' && (
             <>
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Room {groupRequiresRooms(selectedGroupName) && <span className="text-red-500">*</span>}</label>
               <div>
                 <AppleDropdown
                   options={availableRooms.map(room => ({ value: room.id, label: room.room_name }))}
@@ -404,14 +404,14 @@ export default function CreateUserPage() {
                   maxHeight="max-h-40"
                 />
                 {form.groups.length === 0 && (
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Primero selecciona un grupo</p>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Primero selecciona un grupo</p>
                 )}
                 {!groupRequiresRooms(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
                 )}
               </div>
 
-              <label className="text-sm font-medium text-gray-700 dark:text-gray-200 self-center">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
+              <label className="text-xs font-medium text-gray-700 dark:text-gray-200 self-center">Jornada {groupRequiresJornada(selectedGroupName) && <span className="text-red-500">*</span>}</label>
               <div>
                 <AppleDropdown
                   options={[
@@ -424,24 +424,24 @@ export default function CreateUserPage() {
                   placeholder="Selecciona una jornada"
                 />
                 {!groupRequiresJornada(selectedGroupName) && selectedGroupName && (
-                  <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
+                  <p className="mt-0.5 text-xs text-gray-500 dark:text-gray-400">Opcional para {selectedGroupName}</p>
                 )}
               </div>
             </>
           )}
 
-          <div className="md:col-span-2 flex gap-3 pt-1">
+          <div className="md:col-span-2 flex gap-2 pt-1">
             <button 
               disabled={submitting} 
               type="submit"
-              className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
             >
               {submitting ? 'Creando...' : 'Crear Usuario'}
             </button>
             <button 
               type="button"
               onClick={() => router.back()}
-              className="px-4 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              className="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             >
               Volver
             </button>
