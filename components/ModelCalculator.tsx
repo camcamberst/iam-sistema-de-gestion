@@ -405,7 +405,7 @@ export default function ModelCalculator({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Cargando calculadora...</p>
@@ -416,7 +416,7 @@ export default function ModelCalculator({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center p-6 bg-red-50 rounded-xl border border-red-200">
           <h1 className="text-2xl font-semibold text-red-800 mb-4">Error</h1>
           <p className="text-red-700">{error}</p>
@@ -426,7 +426,7 @@ export default function ModelCalculator({
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
         {/* Header */}
         <div className="mb-6 flex items-center justify-between">
@@ -464,7 +464,7 @@ export default function ModelCalculator({
         )}
 
         {/* Calculadora */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-6">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Calculadora de Ingresos</h2>
           
           {platforms.length === 0 ? (

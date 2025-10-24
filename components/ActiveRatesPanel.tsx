@@ -107,7 +107,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
   if (compact) {
     return (
-      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
         {showTitle && (
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -150,7 +150,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
   }
 
   return (
-    <div className="bg-white/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 shadow-md">
+    <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-md">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center space-x-2">
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -199,7 +199,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
             </div>
           ) : (
             rates.map((rate) => (
-              <div key={rate.id} className="flex items-center justify-between p-3 bg-white/60 backdrop-blur-sm rounded-lg border border-gray-200/30 shadow-sm">
+              <div key={rate.id} className="flex items-center justify-between p-3 bg-white/60 dark:bg-gray-700/60 backdrop-blur-sm rounded-lg border border-gray-200/30 dark:border-gray-600/30 shadow-sm">
                 <div className="flex items-center space-x-3">
                   <div className="w-8 h-8 bg-gray-50 rounded-lg flex items-center justify-center">
                     <span className="text-sm">{getSourceIcon(rate.source)}</span>

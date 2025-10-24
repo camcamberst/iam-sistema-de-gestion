@@ -208,7 +208,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
 
   if (loading) {
     return (
-      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
         <div className="flex items-center space-x-2 mb-4">
           <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,7 +226,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
 
   if (error) {
     return (
-      <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6">
+      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
         <div className="flex items-center space-x-2 mb-4">
           <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -249,7 +249,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
   }
 
   return (
-    <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-4 hover:shadow-xl hover:bg-white/95 hover:scale-[1.02] transition-all duration-300">
+    <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
@@ -294,7 +294,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
               <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                 <div className="space-y-2 pr-2">
                   {groupedData.map((sede) => (
-                    <div key={sede.sedeId} className="bg-white/60 rounded-lg border border-gray-200/40 p-2">
+                    <div key={sede.sedeId} className="bg-white/60 dark:bg-gray-700/60 rounded-lg border border-gray-200/40 dark:border-gray-600/40 p-2">
                       {/* Header de Sede */}
                       <div className="flex items-center space-x-2 mb-1">
                         <div className="w-4 h-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded flex items-center justify-center">
