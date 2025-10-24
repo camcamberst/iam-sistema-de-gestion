@@ -249,7 +249,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
   }
 
   return (
-    <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
+    <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-2xl dark:shadow-green-900/20 dark:ring-1 dark:ring-green-500/20 border border-white/20 dark:border-gray-700/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-700/80 hover:scale-[1.02] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
