@@ -88,7 +88,7 @@ export default function GestionAnticiposPage() {
   if (!user || (user.role !== 'admin' && user.role !== 'super_admin')) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 p-8 max-w-md">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,15 +175,15 @@ export default function GestionAnticiposPage() {
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen del Sistema</h3>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
+            <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
               <div className="text-base font-bold text-gray-900">-</div>
               <div className="text-xs text-gray-500 font-medium">Solicitudes Pendientes</div>
             </div>
-            <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
+            <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
               <div className="text-base font-bold text-gray-900">-</div>
               <div className="text-xs text-gray-500 font-medium">Solicitudes Aprobadas</div>
             </div>
-            <div className="text-center p-3 bg-white/80 backdrop-blur-sm rounded-lg border border-gray-200/50 shadow-sm">
+            <div className="text-center p-3 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-700/50 shadow-sm">
               <div className="text-base font-bold text-gray-900">-</div>
               <div className="text-xs text-gray-500 font-medium">Total Procesadas</div>
             </div>

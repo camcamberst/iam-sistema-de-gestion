@@ -417,7 +417,7 @@ export default function CalculatorHistory() {
                 </div>
                 <button
                   onClick={() => window.history.back()}
-                  className="px-3 py-2 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-white/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 shadow-sm hover:shadow-md"
+                  className="px-3 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md"
                 >
                   Regresar
                 </button>

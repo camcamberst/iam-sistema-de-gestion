@@ -192,7 +192,7 @@ export default function MiPortafolio() {
       case 'inviable':
         return 'bg-red-300 text-red-800 border border-red-400 hover:bg-red-400';
       default:
-        return 'bg-gray-50 text-gray-600 border border-gray-200';
+        return 'bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-300 border border-gray-200 dark:border-gray-600';
     }
   };
 
@@ -429,7 +429,7 @@ export default function MiPortafolio() {
                       : 'max-h-0 opacity-0 translate-y-0 scale-100'
                   }`}>
                     {selectedPlatform && (
-                      <div className="border border-gray-200 rounded-lg p-4 bg-white hover:shadow-lg transition-shadow duration-300">
+                      <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800 hover:shadow-lg transition-shadow duration-300">
                         {/* Header con información principal */}
                         <div className="flex items-center justify-between mb-4">
                           <div className="flex items-center space-x-3">

@@ -381,7 +381,7 @@ export default function SolicitarAnticipoPage() {
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
               Solicitud No Disponible
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
               {restrictionInfo.reason}
             </p>
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
@@ -398,7 +398,7 @@ export default function SolicitarAnticipoPage() {
           </div>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700"
+            className="px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600"
           >
             Regresar
           </button>
@@ -412,7 +412,7 @@ export default function SolicitarAnticipoPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
         </div>
       </div>
     );
@@ -423,7 +423,7 @@ export default function SolicitarAnticipoPage() {
       <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
-          <p className="text-gray-600">No tienes permisos para acceder a esta página.</p>
+          <p className="text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
         </div>
       </div>
     );
@@ -467,7 +467,7 @@ export default function SolicitarAnticipoPage() {
                   <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
                     Solicitar Anticipo
                   </h1>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
                     Solicita un anticipo de hasta el 90% de tu productividad
                   </p>
                 </div>
@@ -493,7 +493,7 @@ export default function SolicitarAnticipoPage() {
               </div>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 mb-6 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6 hover:shadow-md transition-all duration-300">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
             Resumen de Productividad
@@ -555,7 +555,7 @@ export default function SolicitarAnticipoPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
               {/* Monto Solicitado */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                   Monto Solicitado (COP)
                 </label>
                 <div className="relative">
@@ -568,7 +568,7 @@ export default function SolicitarAnticipoPage() {
                     className={`apple-input w-full pr-20 ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500 focus:ring-red-500' : ''}`}
                     style={{ paddingLeft: '2rem' }}
                   />
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 font-medium select-none pointer-events-none">
+                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">
                     $
                   </div>
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-blue-600">
@@ -578,19 +578,19 @@ export default function SolicitarAnticipoPage() {
                 {montoError && anticipoData.monto_solicitado > 0 && (
                   <p className="text-red-500 text-xs mt-1">{montoError}</p>
                 )}
-                <p className="text-xs text-gray-500 mt-2">
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
                   Máximo disponible: ${roundDownToNearestTenThousand(productivityData.anticipoDisponible).toLocaleString('es-CO')} COP (múltiplos de 10.000)
                 </p>
               </div>
 
               {/* Medio de Pago */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                   Medio de Pago
                 </label>
                 <div className="space-y-3">
                   {['nequi', 'daviplata', 'cuenta_bancaria'].map((medio) => (
-                    <label key={medio} className="flex items-center p-3 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors">
+                    <label key={medio} className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
                       <input
                         type="radio"
                         name="medio_pago"
@@ -599,7 +599,7 @@ export default function SolicitarAnticipoPage() {
                         onChange={(e) => handleInputChange('medio_pago', e.target.value)}
                         className="mr-3 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm font-medium text-gray-700">
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
                         {medio === 'cuenta_bancaria' ? 'CUENTA BANCARIA' : medio.toUpperCase()}
                       </span>
                     </label>
@@ -614,7 +614,7 @@ export default function SolicitarAnticipoPage() {
                 <h3 className="text-lg font-semibold text-blue-900 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Nombre del Beneficiario
                     </label>
                     <input
@@ -627,7 +627,7 @@ export default function SolicitarAnticipoPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Número de {anticipoData.medio_pago.toUpperCase()}
                     </label>
                     <input
@@ -655,7 +655,7 @@ export default function SolicitarAnticipoPage() {
                 {/* Primera fila: Nombre del Titular y Banco */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Nombre del Titular
                     </label>
                     <input
@@ -669,7 +669,7 @@ export default function SolicitarAnticipoPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Banco
                     </label>
                     <AppleDropdown
@@ -691,7 +691,7 @@ export default function SolicitarAnticipoPage() {
                 {/* Banco Otros */}
                 {anticipoData.banco === 'Otros' && (
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Nombre del Banco
                     </label>
                     <input
@@ -708,7 +708,7 @@ export default function SolicitarAnticipoPage() {
                 {/* Segunda fila: Tipo de Cuenta y Número de Cuenta */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Tipo de Cuenta
                     </label>
                     <AppleDropdown
@@ -726,7 +726,7 @@ export default function SolicitarAnticipoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                       Número de Cuenta
                     </label>
                     <input
@@ -742,7 +742,7 @@ export default function SolicitarAnticipoPage() {
 
                 {/* Tercera fila: Documento del Titular */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                     Documento del Titular
                   </label>
                   <input
@@ -758,7 +758,7 @@ export default function SolicitarAnticipoPage() {
             )}
 
             {/* Botones */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200">
+            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
               <button
                 type="button"
                 onClick={() => router.back()}

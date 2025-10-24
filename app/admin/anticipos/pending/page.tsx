@@ -236,7 +236,7 @@ export default function SolicitudesPendientesPage() {
   if (!user) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-24">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+        <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 p-8 max-w-md">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -345,7 +345,7 @@ export default function SolicitudesPendientesPage() {
 
         {/* Lista de Solicitudes */}
         {anticipos.length === 0 ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 text-center py-8 px-6">
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 text-center py-8 px-6">
             <svg className="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -358,7 +358,7 @@ export default function SolicitudesPendientesPage() {
               const medioPagoInfo = getMedioPagoInfo(anticipo);
               
               return (
-                <div key={anticipo.id} className="bg-white rounded-xl shadow-sm border border-gray-200 p-3">
+                <div key={anticipo.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex-1">
                       {/* Primera línea: Modelo y monto */}

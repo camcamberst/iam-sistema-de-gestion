@@ -591,7 +591,7 @@ export default function UsersListPage() {
                           {user.groups.length > 0 ? (
                             <div className="flex items-center justify-center gap-1 overflow-hidden">
                               {user.groups.slice(0,2).map((group) => (
-                                <span key={group.id} className="bg-gradient-to-r from-gray-50 to-slate-50 text-gray-700 px-2 py-1 rounded-md text-xs whitespace-nowrap border border-gray-200/30 shadow-sm backdrop-blur-sm">
+                                <span key={group.id} className="bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-200 px-2 py-1 rounded-md text-xs whitespace-nowrap border border-gray-200/30 dark:border-gray-600/30 shadow-sm backdrop-blur-sm">
                                   {group.name}
                                 </span>
                               ))}
@@ -609,7 +609,7 @@ export default function UsersListPage() {
                           )}
                         </td>
                         <td className="px-4 py-2 text-center">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-green-200/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 text-gray-600 border-gray-200/50'}`}>
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
@@ -829,7 +829,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   return (
     <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white border border-gray-200 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col">
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col">
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Editar Usuario</h2>
 
         {/* Mensaje de error del modal */}
@@ -855,7 +855,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoComplete="name"
               required
             />
@@ -867,7 +867,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               autoComplete="email"
               required
             />
@@ -885,7 +885,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 onChange={(e) => handlePasswordChange(e.target.value)}
                 placeholder="Ingresa nueva contraseña"
                 autoComplete="new-password"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 pr-12 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 pr-12 text-gray-900 dark:text-gray-100 dark:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               <button
                 type="button"
