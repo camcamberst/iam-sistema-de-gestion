@@ -570,7 +570,7 @@ export default function AdminViewModelPage() {
                   disabled={syncingTotals || !selectedModel?.calculatorData}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                     !syncingTotals
-                      ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md hover:shadow-lg'
+                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:shadow-lg'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
                 >
