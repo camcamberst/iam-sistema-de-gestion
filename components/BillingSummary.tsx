@@ -360,7 +360,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
         <div className="px-4 pb-4">
           {/* Resumen general - Versión compacta */}
           {summary && (
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-3 gap-4 mb-6 mt-6">
               <div className="bg-blue-50/80 backdrop-blur-sm rounded-lg p-4 hover:shadow-md transition-all duration-300">
                 <div className="text-center">
                   <div className="text-xl font-bold text-blue-600 mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
