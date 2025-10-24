@@ -773,23 +773,23 @@ export default function AdminViewModelPage() {
                     <>
                       {/* Totales principales - DESDE SERVIDOR */}
                       <div className="grid grid-cols-3 gap-3 mb-4">
-                        <div className="text-center p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md">
-                          <div className="text-xl font-bold text-blue-600 dark:text-blue-400 mb-1">
+                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-xl font-bold text-blue-700 mb-1">
                             ${calculatedTotals.usdBruto.toFixed(2)}
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">USD Bruto</div>
+                          <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD Bruto</div>
                         </div>
-                        <div className="text-center p-3 bg-green-50 dark:bg-green-900/30 rounded-md">
-                          <div className="text-xl font-bold text-green-600 dark:text-green-400 mb-1">
+                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-xl font-bold text-green-700 mb-1">
                             ${calculatedTotals.usdModelo.toFixed(2)}
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">USD Modelo</div>
+                          <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">USD Modelo</div>
                         </div>
-                        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/30 rounded-md">
-                          <div className="text-xl font-bold text-purple-600 dark:text-purple-400 mb-1">
+                        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-xl font-bold text-purple-700 mb-1">
                             ${calculatedTotals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </div>
-                          <div className="text-xs text-gray-600 dark:text-gray-400">COP Modelo</div>
+                          <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">COP Modelo</div>
                         </div>
                       </div>
                       
