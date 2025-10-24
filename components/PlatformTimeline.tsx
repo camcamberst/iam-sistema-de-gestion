@@ -145,7 +145,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
   return (
     <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4" style={{ overflow: 'visible' }}>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-white flex items-center">
+        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
           <Clock className="w-4 h-4 mr-2" />
           Timeline Portafolio Modelos
         </h3>
@@ -173,7 +173,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                     className="w-2 h-2 rounded-full"
                     style={{ backgroundColor: getStatusColor(request.status) }}
                   />
-                  <span className="text-sm font-medium text-gray-900 dark:text-white">
+                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {getModelDisplayName(request.model_email)}
                   </span>
                   <span className="text-xs text-gray-500 dark:text-gray-300">•</span>
