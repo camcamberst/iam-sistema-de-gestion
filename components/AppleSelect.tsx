@@ -93,15 +93,15 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       onMouseEnter={() => setIsHovering(true)}
       onMouseLeave={() => setIsHovering(false)}
     >
-      {label && <div className="text-gray-500 text-xs font-medium mb-1">{label}</div>}
+      {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="w-full px-3 py-2 text-sm text-left border border-gray-300 rounded-lg bg-white text-gray-900 cursor-pointer flex items-center justify-between hover:border-gray-400 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+        className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
         onFocus={handleFocus}
         onBlur={handleBlur}
       >
         <span className="truncate">{selected ? selected.label : (value === '' ? 'Todos' : placeholder)}</span>
         <svg 
-          className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+          className={`w-5 h-5 text-gray-400 dark:text-gray-500 transition-transform duration-200 ${
             open ? 'rotate-180' : ''
           }`}
           fill="none" 
@@ -112,18 +112,18 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         </svg>
       </div>
       {open && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto apple-scroll">
+        <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-auto apple-scroll">
           {options.map(opt => (
             <button
               key={opt.value}
               type="button"
               onClick={() => { onChange(opt.value); setOpen(false); }}
               className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
-                opt.value !== options[0]?.value ? 'border-t border-gray-100' : ''
+                opt.value !== options[0]?.value ? 'border-t border-gray-100 dark:border-gray-700' : ''
               } ${
                 value === opt.value 
-                  ? 'bg-blue-50 text-blue-900' 
-                  : 'hover:bg-gray-50 text-gray-900'
+                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' 
+                  : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
               }`}
             >
               <span>{opt.label}</span>
