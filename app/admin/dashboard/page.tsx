@@ -182,7 +182,7 @@ export default function AdminDashboard() {
                     Dashboard
                   </h1>
                   {user && (
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                       Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
                       {user.role !== 'super_admin' && user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
                     </p>
@@ -251,12 +251,12 @@ export default function AdminDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-semibold text-gray-900">Mi perfil</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Mi perfil</h2>
               </div>
-              <p className="text-xs text-gray-600 mb-4">Revisa tu información</p>
+              <p className="text-xs text-gray-600 dark:text-gray-300 mb-4">Revisa tu información</p>
               <div className="space-y-2">
-                <div className="text-sm text-gray-900">Email: {user.email}</div>
-                <div className="text-sm text-gray-900">Grupo: {user.groups[0] || '—'}</div>
+                <div className="text-sm text-gray-900 dark:text-gray-100">Email: {user.email}</div>
+                <div className="text-sm text-gray-900 dark:text-gray-100">Grupo: {user.groups[0] || '—'}</div>
               </div>
             </div>
 
@@ -268,19 +268,19 @@ export default function AdminDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-semibold text-gray-900">Resumen de Productividad</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Productividad</h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-4">
                 <div className="p-3 rounded-lg bg-blue-50 text-center">
-                  <div className="text-xs text-gray-600">USD Bruto (hoy)</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-300">USD Bruto (hoy)</div>
                   <div className="text-lg font-bold text-blue-600">${summary ? summary.usdBruto.toFixed(2) : '—'}</div>
                 </div>
                 <div className="p-3 rounded-lg bg-green-50 text-center">
-                  <div className="text-xs text-gray-600">USD Modelo (hoy)</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-300">USD Modelo (hoy)</div>
                   <div className="text-lg font-bold text-green-600">${summary ? summary.usdModelo.toFixed(2) : '—'}</div>
                 </div>
                 <div className="p-3 rounded-lg bg-purple-50 text-center">
-                  <div className="text-xs text-gray-600">COP Modelo (hoy)</div>
+                  <div className="text-xs text-gray-600 dark:text-gray-300">COP Modelo (hoy)</div>
                   <div className="text-lg font-bold text-purple-600">{summary ? summary.copModelo.toLocaleString('es-CO', {maximumFractionDigits:0}) : '—'}</div>
                 </div>
               </div>
@@ -288,16 +288,16 @@ export default function AdminDashboard() {
               {/* Barra de alcance de meta (compacta) */}
               <div className="mt-4">
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-gray-900">Objetivo Básico</span>
-                  <span className="text-xs text-gray-600">${summary ? summary.usdBruto.toFixed(0) : '—'} / ${summary ? summary.goalUsd.toFixed(0) : '—'} USD</span>
+                  <span className="text-xs font-medium text-gray-900 dark:text-gray-100">Objetivo Básico</span>
+                  <span className="text-xs text-gray-600 dark:text-gray-300">${summary ? summary.usdBruto.toFixed(0) : '—'} / ${summary ? summary.goalUsd.toFixed(0) : '—'} USD</span>
                 </div>
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div className="h-2 bg-gradient-to-r from-green-500 to-emerald-500 transition-all" style={{ width: `${summary ? Math.min(100, summary.pct).toFixed(0) : 0}%` }}></div>
                 </div>
-                <div className="text-right text-xs text-gray-600 mt-1">{summary ? Math.min(100, summary.pct).toFixed(0) : 0}%</div>
+                <div className="text-right text-xs text-gray-600 dark:text-gray-300 mt-1">{summary ? Math.min(100, summary.pct).toFixed(0) : 0}%</div>
               </div>
 
-              <div className="mt-4 text-xs text-gray-600">
+              <div className="mt-4 text-xs text-gray-600 dark:text-gray-300">
                 Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline font-medium">Mi Calculadora</a>.
               </div>
             </div>

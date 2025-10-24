@@ -277,7 +277,7 @@ export default function ModelDashboard() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando dashboard...</p>
+          <p className="text-gray-600 dark:text-gray-300">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -306,7 +306,7 @@ export default function ModelDashboard() {
                     Mi Dashboard
                   </h1>
                   {user && (
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                       Bienvenida, {user.name} · Rol: {String(user.role).replace('_',' ')}
                       {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
                     </p>
@@ -325,13 +325,13 @@ export default function ModelDashboard() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <h2 className="text-base font-semibold text-gray-900">Resumen de Productividad</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Productividad</h2>
           </div>
           
           {productivityLoading ? (
             <div className="text-center py-4">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">Cargando datos de productividad...</p>
+              <p className="text-sm text-gray-600 dark:text-gray-300">Cargando datos de productividad...</p>
             </div>
           ) : (
             <>
@@ -476,7 +476,7 @@ export default function ModelDashboard() {
                 })()}
               </div>
 
-              <div className="mt-4 text-xs text-gray-500">
+              <div className="mt-4 text-xs text-gray-500 dark:text-gray-400">
                 Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 underline font-medium">Mi Calculadora</a>.
               </div>
             </>

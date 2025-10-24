@@ -84,7 +84,7 @@ export default function SuperAdminDashboard() {
                     Dashboard
                   </h1>
                   {user && (
-                    <p className="mt-1 text-sm text-gray-600">
+                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
                       Bienvenido, {user.name} · Rol: {String(user.role).replace('_',' ')}
                       {user.role !== 'super_admin' && user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
                     </p>
@@ -131,12 +131,12 @@ export default function SuperAdminDashboard() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-semibold text-gray-900">Mi perfil</h2>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Mi perfil</h2>
               </div>
-              <p className="text-xs text-gray-500 mb-4">Revisa tu información</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">Revisa tu información</p>
               <div className="space-y-2">
-                <div className="text-sm text-gray-700">Email: {user.email}</div>
-                <div className="text-sm text-gray-700">Grupo: {user.groups[0] || '—'}</div>
+                <div className="text-sm text-gray-700 dark:text-gray-200">Email: {user.email}</div>
+                <div className="text-sm text-gray-700 dark:text-gray-200">Grupo: {user.groups[0] || '—'}</div>
               </div>
             </div>
 

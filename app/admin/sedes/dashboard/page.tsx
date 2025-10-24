@@ -353,7 +353,7 @@ export default function DashboardSedesPage() {
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando dashboard...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando dashboard...</p>
         </div>
       </div>
     );
@@ -438,7 +438,7 @@ export default function DashboardSedesPage() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">Consulta Histórica</h2>
-                  <p className="text-sm text-gray-600">Consulta períodos históricos de facturación</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300">Consulta períodos históricos de facturación</p>
                 </div>
               </div>
               <button
@@ -453,11 +453,11 @@ export default function DashboardSedesPage() {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Año */}
                 <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Año</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Año</label>
                   <div className="relative">
                     <button
                       onClick={() => setDropdownOpen(dropdownOpen === 'year' ? null : 'year')}
-                      className="w-full px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 flex items-center justify-between"
+                      className="w-full px-3 py-2 border-0 bg-gray-50/80 dark:bg-gray-700/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-600 text-sm text-gray-700 dark:text-gray-200 transition-all duration-200 flex items-center justify-between"
                     >
                       <span>{selectedYear || 'Seleccionar año'}</span>
                       <svg 
@@ -508,11 +508,11 @@ export default function DashboardSedesPage() {
 
                 {/* Mes */}
                 <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Mes</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Mes</label>
                   <div className="relative">
                     <button
                       onClick={() => setDropdownOpen(dropdownOpen === 'month' ? null : 'month')}
-                      className="w-full px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 flex items-center justify-between"
+                      className="w-full px-3 py-2 border-0 bg-gray-50/80 dark:bg-gray-700/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-600 text-sm text-gray-700 dark:text-gray-200 transition-all duration-200 flex items-center justify-between"
                     >
                       <span>{selectedMonth ? getMonthName(selectedMonth) : 'Seleccionar mes'}</span>
                       <svg 
@@ -564,11 +564,11 @@ export default function DashboardSedesPage() {
 
                 {/* Período */}
                 <div className="dropdown-container">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Período</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Período</label>
                   <div className="relative">
                     <button
                       onClick={() => setDropdownOpen(dropdownOpen === 'period' ? null : 'period')}
-                      className="w-full px-3 py-2 border-0 bg-gray-50/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white text-sm text-gray-700 transition-all duration-200 flex items-center justify-between"
+                      className="w-full px-3 py-2 border-0 bg-gray-50/80 dark:bg-gray-700/80 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:bg-white dark:focus:bg-gray-600 text-sm text-gray-700 dark:text-gray-200 transition-all duration-200 flex items-center justify-between"
                     >
                       <span>{selectedPeriod}</span>
                       <svg 
@@ -659,7 +659,7 @@ export default function DashboardSedesPage() {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <span className="text-sm font-medium text-gray-700">Consultar Disponibilidad:</span>
+                <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Consultar Disponibilidad:</span>
               </div>
               <div className="flex-1 max-w-xs relative">
                 <div className="relative dropdown-container">
