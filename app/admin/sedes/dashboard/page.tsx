@@ -360,7 +360,7 @@ export default function DashboardSedesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pb-32">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         
         {/* Mensaje de alerta para admins sin sedes asignadas */}
@@ -681,7 +681,7 @@ export default function DashboardSedesPage() {
                   </button>
                   
                   {dropdownOpen === 'sede' && (
-                    <div className="absolute bottom-full left-0 right-0 mb-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 z-[99999] max-h-60 overflow-y-auto">
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-700/20 z-[99999] max-h-60 overflow-y-auto">
                       <div className="py-2">
                         <button
                           onClick={() => {
