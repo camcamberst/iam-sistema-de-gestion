@@ -541,22 +541,22 @@ export default function UsersListPage() {
                 <table className="min-w-full text-left text-xs table-fixed">
                   <thead className="border-b border-white/20 dark:border-gray-600/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 dark:from-gray-700/80 dark:to-gray-600/60 backdrop-blur-sm">
                     <tr>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-gray-200 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
                         Usuario
                       </th>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-gray-200 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
                         Email
                       </th>
-                      <th className="px-4 py-4 w-[10%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[10%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
                         Rol
                       </th>
-                      <th className="px-4 py-4 w-[20%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[20%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
                         Grupos
                       </th>
-                      <th className="px-4 py-4 w-[8%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[8%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
                         Estado
                       </th>
-                      <th className="px-4 py-4 w-[6%] text-gray-700 font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-4 py-4 w-[6%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
                         Acciones
                       </th>
                     </tr>
