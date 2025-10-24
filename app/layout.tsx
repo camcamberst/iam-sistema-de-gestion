@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import ThemeTransition from "@/components/ThemeTransition";
 
 export const metadata: Metadata = {
   title: "AIM Sistema de Gestión",
@@ -20,7 +21,9 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="min-h-screen bg-white text-gray-900 antialiased">
-        {children}
+        <ThemeTransition>
+          {children}
+        </ThemeTransition>
       </body>
     </html>
   );

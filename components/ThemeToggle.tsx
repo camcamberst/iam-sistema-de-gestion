@@ -24,9 +24,30 @@ const ThemeToggle = () => {
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
+    
+    // Efecto de transición suave con múltiples propiedades
+    document.documentElement.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    document.body.style.transition = 'all 0.6s cubic-bezier(0.4, 0, 0.2, 1)';
+    
+    // Aplicar el cambio de tema
     setTheme(newTheme);
     localStorage.setItem('theme', newTheme);
     document.documentElement.classList.toggle('dark', newTheme === 'dark');
+    
+    // Efecto de ripple en el botón
+    const button = document.querySelector('[data-theme-toggle]') as HTMLElement;
+    if (button) {
+      button.style.transform = 'scale(0.95)';
+      setTimeout(() => {
+        button.style.transform = 'scale(1)';
+      }, 150);
+    }
+    
+    // Remover las transiciones después de completarse
+    setTimeout(() => {
+      document.documentElement.style.transition = '';
+      document.body.style.transition = '';
+    }, 600);
   };
 
   if (!mounted) {
@@ -39,6 +60,7 @@ const ThemeToggle = () => {
 
   return (
     <button
+      data-theme-toggle
       onClick={toggleTheme}
       className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-lg transition-all duration-200 hover:shadow-sm
                  dark:text-gray-300 dark:hover:text-white dark:hover:bg-gray-700"
