@@ -113,27 +113,29 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       </div>
       {open && (
         <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-auto apple-scroll">
-          {options.map(opt => (
-            <button
-              key={opt.value}
-              type="button"
-              onClick={() => { onChange(opt.value); setOpen(false); }}
-              className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between relative ${
-                opt.value !== options[0]?.value ? 'before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gray-100 dark:before:bg-gray-600/50 before:shadow-sm dark:before:shadow-blue-900/10' : ''
-              } ${
-                value === opt.value 
-                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' 
-                  : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
-              }`}
-            >
-              <span>{opt.label}</span>
-              {opt.color && (
-                <div 
-                  className="w-3 h-3 rounded-full flex-shrink-0 ml-2"
-                  style={{ backgroundColor: opt.color }}
-                />
+          {options.map((opt, index) => (
+            <div key={opt.value}>
+              {index > 0 && (
+                <div className="w-full h-px bg-gray-100 dark:bg-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10"></div>
               )}
-            </button>
+              <button
+                type="button"
+                onClick={() => { onChange(opt.value); setOpen(false); }}
+                className={`w-full px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
+                  value === opt.value 
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' 
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+                }`}
+              >
+                <span>{opt.label}</span>
+                {opt.color && (
+                  <div 
+                    className="w-3 h-3 rounded-full flex-shrink-0 ml-2"
+                    style={{ backgroundColor: opt.color }}
+                  />
+                )}
+              </button>
+            </div>
           ))}
         </div>
       )}

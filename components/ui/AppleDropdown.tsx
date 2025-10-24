@@ -146,27 +146,29 @@ export default function AppleDropdown({
             </div>
           ) : (
             options.map((option, index) => (
-              <div
-                key={option.value}
-                className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between relative ${
-                  index > 0 ? 'before:absolute before:top-0 before:left-0 before:right-0 before:h-px before:bg-gray-100 dark:before:bg-gray-600/50 before:shadow-sm dark:before:shadow-blue-900/10' : ''
-                } ${
-                  option.disabled 
-                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
-                } ${
-                  option.value === value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
-                }`}
-                onClick={() => !option.disabled && handleSelect(option.value)}
-              >
-                <span>{option.label}</span>
-                {option.badge && (
-                  <span className={`text-xs px-2 py-1 rounded-full ${
-                    badgeColors[option.badgeColor || 'gray']
-                  }`}>
-                    {option.badge}
-                  </span>
+              <div key={option.value}>
+                {index > 0 && (
+                  <div className="w-full h-px bg-gray-100 dark:bg-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10"></div>
                 )}
+                <div
+                  className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
+                    option.disabled 
+                      ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                      : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+                  } ${
+                    option.value === value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
+                  }`}
+                  onClick={() => !option.disabled && handleSelect(option.value)}
+                >
+                  <span>{option.label}</span>
+                  {option.badge && (
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      badgeColors[option.badgeColor || 'gray']
+                    }`}>
+                      {option.badge}
+                    </span>
+                  )}
+                </div>
               </div>
             ))
           )}
