@@ -733,10 +733,10 @@ export default function GestionarSedesPage() {
                   </div>
                   <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
                 </div>
-                <div className="mt-auto">
+                <div className="mt-auto flex justify-center">
                   <button
                     onClick={() => setShowCreateGroup(true)}
-                    className="w-full bg-gradient-to-r from-gray-700 to-slate-800 text-white py-1.5 px-3 rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 text-xs font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-gray-700 to-slate-800 text-white rounded-lg hover:from-gray-800 hover:to-slate-900 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                   >
                     + Crear Sede
                   </button>
@@ -757,10 +757,10 @@ export default function GestionarSedesPage() {
                     </div>
                     <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crear Room</h2>
                   </div>
-                  <div className="mt-auto">
+                  <div className="mt-auto flex justify-center">
                     <button
                       onClick={() => setShowCreateRoom(true)}
-                      className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-1.5 px-3 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 text-xs font-medium shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                      className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                     >
                       + Crear Room
                     </button>
