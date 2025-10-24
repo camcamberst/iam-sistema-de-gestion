@@ -210,8 +210,8 @@ export default function CreateUserPage() {
         </div>
 
         {/* Formulario Compacto */}
-        <div className="max-w-2xl mx-auto">
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="max-w-lg">
+          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-2 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
         
         {/* Mensajes de error y éxito */}
         {error && (
@@ -248,7 +248,7 @@ export default function CreateUserPage() {
           </div>
         )}
         
-        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-3 items-start">
+        <form onSubmit={onSubmit} className="grid grid-cols-1 gap-2 items-start">
           <label className="text-xs font-medium text-gray-700 dark:text-gray-200">Nombre</label>
           <input
             placeholder="Nombre"
