@@ -762,7 +762,7 @@ export default function SolicitarAnticipoPage() {
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="flex-1 px-8 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-all duration-200 font-medium"
+                className="flex-1 px-8 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium"
               >
                 Cancelar
               </button>

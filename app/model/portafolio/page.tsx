@@ -251,7 +251,7 @@ export default function MiPortafolio() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -263,12 +263,12 @@ export default function MiPortafolio() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-16">
         <div className="container mx-auto px-4 py-8">
           <div className="text-center">
             <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Error</h2>
-            <p className="text-gray-600">{error}</p>
+            <p className="text-gray-600 dark:text-gray-300">{error}</p>
           </div>
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function MiPortafolio() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 pt-24">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 pt-24">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-10">
@@ -470,7 +470,7 @@ export default function MiPortafolio() {
                         </div>
 
                         {/* Estadísticas de la plataforma */}
-                        <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                        <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 mb-4">
                           <h4 className="text-sm font-semibold text-gray-700 mb-3">Estadísticas de Rendimiento</h4>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                             <div className="text-center">
