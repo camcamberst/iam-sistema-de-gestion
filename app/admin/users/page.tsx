@@ -834,7 +834,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
         {/* Mensaje de error del modal */}
         {modalError && (
-          <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
                 <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
@@ -842,7 +842,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800">{modalError}</p>
+                <p className="text-sm text-red-800 dark:text-red-300">{modalError}</p>
               </div>
             </div>
           </div>
@@ -890,7 +890,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none"
+                className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 focus:outline-none"
               >
                 {showPassword ? (
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -905,7 +905,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               </button>
             </div>
             {formData.password && formData.password.length < 6 && (
-              <p className="text-red-500 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
             )}
             
             {/* Botón para guardar solo la contraseña */}
@@ -962,7 +962,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               aria-pressed={formData.is_active}
             >
               <span
-                className="absolute top-[3px] rounded-full bg-white shadow"
+                className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow"
                 style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
               />
             </button>
@@ -980,7 +980,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
               placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
             />
             {restrictionMessage && (
-              <div className="mt-3 text-sm text-blue-600 bg-blue-50 p-3 rounded-lg border border-blue-200">
+              <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
                 {restrictionMessage}
               </div>
             )}
@@ -991,7 +991,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 bg-gray-100 hover:bg-gray-200 text-gray-700 py-2 px-3 rounded-md text-sm font-medium transition-colors"
+              className="flex-1 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 py-2 px-3 rounded-md text-sm font-medium transition-colors"
             >
               Cancelar
             </button>
