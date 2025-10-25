@@ -266,7 +266,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   if (loading) {
     return (
       <div className="mb-10">
-        <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="relative bg-white/70 dark:bg-white backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-200/50 p-6">
           <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
             <span className="ml-3 text-gray-600 dark:text-gray-400 dark:text-gray-500 dark:text-gray-300">Cargando resumen de facturación...</span>
@@ -279,7 +279,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   if (error) {
     return (
       <div className="mb-10">
-        <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="relative bg-white/70 dark:bg-white backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-200/50 p-6">
           <div className="text-center py-8">
             <div className="text-red-500 text-lg mb-2">⚠️</div>
             <div className="text-red-600 dark:text-red-400 font-medium">Error al cargar datos</div>
@@ -299,7 +299,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   return (
     <div className="mb-6">
       {/* Card Header - Versión compacta */}
-      <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 mb-8">
+      <div className="bg-white/80 dark:bg-white backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-200/50 shadow-lg mb-8">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -386,7 +386,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
           {userRole === 'super_admin' && groupedData && groupedData.length > 0 ? (
             <div className="space-y-4">
               {groupedData.map((sede) => (
-                <div key={sede.sedeId} className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 overflow-hidden hover:shadow-lg transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <div key={sede.sedeId} className="bg-white/70 dark:bg-white backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-200/50 overflow-hidden hover:shadow-lg transition-all duration-300">
                   {/* Header de Sede - Aplicando políticas estéticas */}
                   <div 
                     className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-600/50 transition-all duration-200"
@@ -507,7 +507,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               {groupedData && groupedData.length > 0 ? (
                 <div className="space-y-3">
                   {groupedData.map((sede) => (
-                    <div key={sede.sedeId} className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 overflow-hidden hover:shadow-lg transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                    <div key={sede.sedeId} className="bg-white/70 dark:bg-white backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-200/50 overflow-hidden hover:shadow-lg transition-all duration-300">
                       {/* Header de Sede - Aplicando políticas estéticas */}
                       <div 
                         className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-600/50 transition-all duration-200"
