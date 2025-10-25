@@ -763,21 +763,23 @@ export default function SolicitarAnticipoPage() {
             )}
 
             {/* Botones */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-8 border-t border-gray-200 dark:border-gray-700">
-              <button
-                type="button"
-                onClick={() => router.back()}
-                className="flex-1 px-8 py-3 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 font-medium"
-              >
-                Cancelar
-              </button>
-              <button
-                type="submit"
-                disabled={submitting || productivityData.anticipoDisponible <= 0 || !!montoError || anticipoData.monto_solicitado <= 0 || !!telefonoError}
-                className="flex-1 px-8 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 font-medium shadow-sm"
-              >
-                {submitting ? 'Enviando...' : 'Enviar Solicitud'}
-              </button>
+            <div className="flex justify-center pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="px-3 py-1.5 text-xs font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || productivityData.anticipoDisponible <= 0 || !!montoError || anticipoData.monto_solicitado <= 0 || !!telefonoError}
+                  className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                >
+                  {submitting ? 'Enviando...' : 'Enviar Solicitud'}
+                </button>
+              </div>
             </div>
           </form>
         </div>
