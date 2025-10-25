@@ -288,6 +288,47 @@ export default function SolicitarAnticipoPage() {
     setTelefonoError(error);
   };
 
+  // Función para validar si el formulario está completo
+  const isFormValid = (): boolean => {
+    // Validar monto
+    const montoError = validateMonto(anticipoData.monto_solicitado);
+    if (montoError || anticipoData.monto_solicitado <= 0) {
+      return false;
+    }
+
+    // Validar según el medio de pago seleccionado
+    if (anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') {
+      // Para NEQUI/DAVIPLATA: nombre y teléfono son requeridos
+      if (!anticipoData.nombre_beneficiario?.trim() || !anticipoData.numero_telefono?.trim()) {
+        return false;
+      }
+      
+      // Validar formato del teléfono
+      const telefonoError = validateTelefono(anticipoData.numero_telefono);
+      if (telefonoError) {
+        return false;
+      }
+    }
+
+    if (anticipoData.medio_pago === 'cuenta_bancaria') {
+      // Para cuenta bancaria: todos los campos son requeridos
+      if (!anticipoData.nombre_titular?.trim() || 
+          !anticipoData.banco?.trim() || 
+          !anticipoData.tipo_cuenta?.trim() || 
+          !anticipoData.numero_cuenta?.trim() || 
+          !anticipoData.documento_titular?.trim()) {
+        return false;
+      }
+      
+      // Si seleccionó "Otros" como banco, validar que haya escrito el nombre
+      if (anticipoData.banco === 'Otros' && !anticipoData.banco_otro?.trim()) {
+        return false;
+      }
+    }
+
+    return true;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -774,7 +815,7 @@ export default function SolicitarAnticipoPage() {
                 </button>
                 <button
                   type="submit"
-                  disabled={submitting || productivityData.anticipoDisponible <= 0 || !!montoError || anticipoData.monto_solicitado <= 0 || !!telefonoError}
+                  disabled={submitting || productivityData.anticipoDisponible <= 0 || !isFormValid()}
                   className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
                 >
                   {submitting ? 'Enviando...' : 'Enviar Solicitud'}
