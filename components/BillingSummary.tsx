@@ -308,8 +308,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               </svg>
             </div>
             <div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-gray-900 dark:text-gray-100">Resumen de Facturación</h1>
-              <p className="text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500 dark:text-gray-300">
+              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Resumen de Facturación</h1>
+              <p className="text-xs text-gray-600 dark:text-white">
                 {userRole === 'super_admin' ? 'Vista consolidada de todas las sedes' : 'Vista de tus sedes asignadas'}
               </p>
             </div>
