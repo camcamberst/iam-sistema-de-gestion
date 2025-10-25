@@ -39,13 +39,13 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
   const menuItems = [
     {
       label: 'Ingresar Valores',
-      href: '/model/calculator',
+      href: '/admin/model/calculator',
       icon: <Calculator className="w-4 h-4" />,
       description: 'Registra tus ganancias diarias'
     },
     {
       label: 'Mi Historial',
-      href: '/model/calculator/history',
+      href: '/admin/model/anticipos/historial',
       icon: <History className="w-4 h-4" />,
       description: 'Ve tu historial de ingresos'
     }
