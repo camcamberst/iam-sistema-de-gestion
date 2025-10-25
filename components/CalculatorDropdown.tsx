@@ -72,10 +72,10 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 dark:bg-gray-700/95 backdrop-blur-md border border-white/30 dark:border-gray-600/30 rounded-xl shadow-xl dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 z-[9998] animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 dark:bg-white/80 backdrop-blur-md border border-white/30 dark:border-gray-200/50 rounded-xl shadow-xl dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[9998] animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-100 uppercase tracking-wide mb-2">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-800 uppercase tracking-wide mb-2">
                 Mi Calculadora
               </h3>
             </div>
@@ -90,27 +90,27 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
                   onClick={() => onToggle()}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
-                      ? 'bg-blue-50/80 dark:bg-blue-900/30 text-blue-900 dark:text-blue-100 font-medium shadow-sm border border-blue-200/30 dark:border-blue-700/30'
-                      : 'text-gray-900 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:text-gray-900 dark:hover:text-gray-100 hover:shadow-sm'
+                      ? 'bg-blue-50/80 dark:bg-blue-50/90 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200/30 dark:border-blue-200/50'
+                      : 'text-gray-900 dark:text-gray-800 hover:bg-white/60 dark:hover:bg-gray-50/60 hover:text-gray-900 dark:hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
                     <div className={`flex-shrink-0 ${
-                      isCurrentPage ? 'text-blue-600 dark:text-blue-400' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                      isCurrentPage ? 'text-blue-600 dark:text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-600'
                     }`}>
                       {item.icon}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="font-medium">{item.label}</div>
                       <div className={`text-xs ${
-                        isCurrentPage ? 'text-blue-600 dark:text-blue-400' : 'text-gray-500 dark:text-gray-400'
+                        isCurrentPage ? 'text-blue-600 dark:text-blue-500' : 'text-gray-500 dark:text-gray-600'
                       }`}>
                         {item.description}
                       </div>
                     </div>
                     {isCurrentPage && (
                       <div className="flex-shrink-0">
-                        <Settings className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        <Settings className="w-4 h-4 text-blue-600 dark:text-blue-500" />
                       </div>
                     )}
                   </div>
