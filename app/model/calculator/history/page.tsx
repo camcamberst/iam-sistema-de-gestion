@@ -393,12 +393,12 @@ export default function CalculatorHistory() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -417,7 +417,7 @@ export default function CalculatorHistory() {
                 </div>
                 <button
                   onClick={() => window.history.back()}
-                  className="px-3 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 dark:border-gray-700/50 shadow-sm hover:shadow-md"
+                  className="px-3 py-2 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 rounded-lg hover:bg-white/90 dark:hover:bg-gray-700/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 dark:border-gray-600/50 shadow-sm hover:shadow-md"
                 >
                   Regresar
                 </button>
@@ -428,7 +428,7 @@ export default function CalculatorHistory() {
 
 
         {/* Resumen con InfoCardGrid - Cuadros específicos solicitados */}
-        <div className="mb-10 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
+        <div className="mb-10 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
               <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -467,7 +467,7 @@ export default function CalculatorHistory() {
 
         {/* Filtros con AppleDropdown (principio estético) */}
         {historicalPeriods.length > 0 && (
-          <div className="mb-10 relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
+          <div className="mb-10 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                 <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -486,7 +486,7 @@ export default function CalculatorHistory() {
                   value={selectedYear}
                   onChange={setSelectedYear}
                   placeholder="Seleccionar año"
-                  className="w-full"
+                  className="w-full text-sm"
                 />
               </div>
               <div className="flex-1 min-w-[200px]">
@@ -498,7 +498,7 @@ export default function CalculatorHistory() {
                   value={selectedMonth}
                   onChange={setSelectedMonth}
                   placeholder="Seleccionar mes"
-                  className="w-full"
+                  className="w-full text-sm"
                 />
               </div>
               <div className="flex-1 min-w-[200px]">
@@ -510,7 +510,7 @@ export default function CalculatorHistory() {
                   value={selectedType}
                   onChange={setSelectedType}
                   placeholder="Seleccionar tipo"
-                  className="w-full"
+                  className="w-full text-sm"
                 />
               </div>
             </div>
@@ -519,15 +519,15 @@ export default function CalculatorHistory() {
 
         {/* Error State */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
             <div className="flex">
               <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <svg className="h-5 w-5 text-red-400 dark:text-red-300" viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
               </div>
               <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
               </div>
             </div>
           </div>
@@ -536,8 +536,8 @@ export default function CalculatorHistory() {
         {/* Historical Periods */}
         {filteredPeriods.length === 0 ? (
           <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-gray-100 dark:bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
             </div>
@@ -559,7 +559,7 @@ export default function CalculatorHistory() {
               const isExpanded = expandedPeriod === periodKey;
               
               return (
-                <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+                <div key={periodKey} className="bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                   {/* Header del período con InfoCard clickeable */}
                   <div className="mb-4">
                     <InfoCard
@@ -591,7 +591,7 @@ export default function CalculatorHistory() {
                       />
                       
                       {/* Información adicional */}
-                      <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                      <div className="bg-gray-50 dark:bg-gray-600/80 rounded-lg p-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
                           <div>
                             <span className="font-medium text-gray-700 dark:text-gray-200">Fecha de archivado:</span>
