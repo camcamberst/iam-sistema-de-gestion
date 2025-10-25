@@ -717,13 +717,10 @@ export default function SolicitarAnticipoPage() {
                       Banco
                     </label>
                     <AppleDropdown
-                      options={[
-                        { value: '', label: 'Selecciona un banco' },
-                        ...bancosColombia.map(banco => ({
-                          value: banco,
-                          label: banco
-                        }))
-                      ]}
+                      options={bancosColombia.map(banco => ({
+                        value: banco,
+                        label: banco
+                      }))}
                       value={anticipoData.banco || ''}
                       onChange={(value) => handleInputChange('banco', value)}
                       placeholder="Selecciona un banco"
@@ -757,13 +754,10 @@ export default function SolicitarAnticipoPage() {
                       Tipo de Cuenta
                     </label>
                     <AppleDropdown
-                      options={[
-                        { value: '', label: 'Selecciona tipo de cuenta' },
-                        ...tiposCuenta.map(tipo => ({
-                          value: tipo.toLowerCase(),
-                          label: tipo
-                        }))
-                      ]}
+                      options={tiposCuenta.map(tipo => ({
+                        value: tipo.toLowerCase(),
+                        label: tipo
+                      }))}
                       value={anticipoData.tipo_cuenta || ''}
                       onChange={(value) => handleInputChange('tipo_cuenta', value)}
                       placeholder="Selecciona tipo de cuenta"
