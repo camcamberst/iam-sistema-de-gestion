@@ -197,10 +197,10 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Apple Style 2 Header */}
       <header className="bg-white dark:bg-gray-800/80 backdrop-blur-md border border-white/20 dark:border-gray-600/20 sticky top-0 z-[99999] shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
@@ -385,7 +385,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
 
       {/* Main Content */}
       <main className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
           {children}
         </div>
       </main>
