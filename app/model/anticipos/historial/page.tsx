@@ -360,10 +360,10 @@ export default function MiHistorialPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-          <p className="text-gray-600">Cargando...</p>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-300 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
         </div>
       </div>
     );
@@ -371,54 +371,57 @@ export default function MiHistorialPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
-          <p className="text-gray-600">No tienes permisos para acceder a esta página.</p>
+          <p className="text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-10 relative z-[99998]">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg relative z-[99998]">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                      Mi Historial
+                    </h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      Anticipos realizados y pagados
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
-                    Mi Historial
-                  </h1>
-                  <p className="text-sm text-gray-600 mt-1">
-                    Anticipos realizados y pagados
-                  </p>
+                <div className="flex items-center space-x-4">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
+                    Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
+                  </div>
+                  
+                  {/* Filtro por Período - AppleDropdown */}
+                  <AppleDropdown
+                    options={availablePeriods.map(period => ({
+                      value: period.key,
+                      label: period.label
+                    }))}
+                    value={selectedPeriod}
+                    onChange={handlePeriodChange}
+                    placeholder="Selecciona período"
+                    className="min-w-[200px] text-sm"
+                    maxHeight="max-h-48"
+                  />
                 </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
-                </div>
-                
-                {/* Filtro por Período - AppleDropdown */}
-                <AppleDropdown
-                  options={availablePeriods.map(period => ({
-                    value: period.key,
-                    label: period.label
-                  }))}
-                  value={selectedPeriod}
-                  onChange={handlePeriodChange}
-                  placeholder="Selecciona período"
-                  className="min-w-[200px]"
-                  maxHeight="max-h-48"
-                />
               </div>
             </div>
           </div>
@@ -426,14 +429,14 @@ export default function MiHistorialPage() {
 
         {/* Error Message */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
             <div className="flex items-center">
-              <svg className="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                 <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
               </svg>
-              <span className="text-red-800 font-medium">Error</span>
+              <span className="text-red-800 dark:text-red-400 font-medium">Error</span>
             </div>
-            <p className="text-red-700 text-sm mt-1">{error}</p>
+            <p className="text-red-700 dark:text-red-300 text-sm mt-1">{error}</p>
           </div>
         )}
 
@@ -465,31 +468,31 @@ export default function MiHistorialPage() {
         {/* Lista de Anticipos por Período (Realizados y Confirmados) */}
         <div className="relative z-0">
         {anticipos.length === 0 ? (
-          <div className="relative z-0 bg-white rounded-xl shadow-sm border border-gray-200 text-center py-8 px-6">
-            <svg className="w-10 h-10 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative z-0 bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 text-center py-8 px-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <svg className="w-10 h-10 text-gray-400 dark:text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
             <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay anticipos realizados</h3>
-            <p className="text-gray-500">Aún no tienes anticipos que hayan sido pagados</p>
+            <p className="text-gray-500 dark:text-gray-400">Aún no tienes anticipos que hayan sido pagados</p>
           </div>
         ) : (
           <div className="space-y-4">
             {groupedByPeriod.map(([periodKey, items]) => (
-              <div key={periodKey} className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="px-3 py-2 border-b border-gray-100 flex items-center justify-between">
-                  <div className="text-sm font-medium text-gray-900">
+              <div key={periodKey} className="bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-600/20 flex items-center justify-between">
+                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
                     {items.length > 0 && items[0].period ? 
                       formatPeriod(items[0].period.start_date, items[0].period.end_date) : 
                       'Período no disponible'
                     }
                   </div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {items.length} {items.length === 1 ? 'solicitud' : 'solicitudes'}
                   </div>
                 </div>
                 <div className="p-3 space-y-3">
                   {items.map((anticipo) => (
-                    <div key={anticipo.id} className="bg-gray-50 rounded-lg border border-gray-200 p-3">
+                    <div key={anticipo.id} className="bg-gray-50 dark:bg-gray-600/80 rounded-lg border border-gray-200 dark:border-gray-500/50 p-3">
                       <div className="flex items-center justify-between">
                         <div className="flex-1">
                           {/* Primera línea: Monto y Estado */}
@@ -498,14 +501,14 @@ export default function MiHistorialPage() {
                               ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                             </h3>
                             {anticipo.estado === 'confirmado' ? (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-800">Confirmado</span>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">Confirmado</span>
                             ) : (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">Realizado</span>
+                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">Realizado</span>
                             )}
                           </div>
                           
                           {/* Segunda línea: Información ultra compacta en una sola línea */}
-                          <div className="flex items-center justify-between text-xs text-gray-600">
+                          <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
                             <div className="flex items-center space-x-2 overflow-hidden">
                               {anticipo.nombre_beneficiario && (
                                 <span className="whitespace-nowrap truncate max-w-[120px]">
@@ -534,7 +537,7 @@ export default function MiHistorialPage() {
                                 )
                               )}
                             </div>
-                            <span className="text-gray-500 whitespace-nowrap text-xs">
+                            <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">
                               {new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO', { 
                                 day: '2-digit', 
                                 month: '2-digit', 
@@ -545,7 +548,7 @@ export default function MiHistorialPage() {
 
                           {/* Comentarios del admin - solo si existen */}
                           {anticipo.comentarios_admin && (
-                            <div className="mt-1 p-1 bg-green-50 rounded text-xs text-green-800">
+                            <div className="mt-1 p-1 bg-green-50 dark:bg-green-900/20 rounded text-xs text-green-800 dark:text-green-300">
                               <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
                             </div>
                           )}
@@ -553,7 +556,7 @@ export default function MiHistorialPage() {
 
                         {/* Icono de realizado compacto */}
                         <div className="ml-2 flex items-center">
-                          <svg className="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                          <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -570,13 +573,13 @@ export default function MiHistorialPage() {
         <div className="mt-6 flex justify-center space-x-3">
           <button
             onClick={() => router.push('/model/anticipos/solicitudes')}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
+            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 text-sm font-medium"
           >
             Mis Solicitudes
           </button>
           <button
             onClick={() => router.push('/model/anticipos/solicitar')}
-            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 text-sm font-medium"
+            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-sm font-medium shadow-md"
           >
             Nueva Solicitud
           </button>
