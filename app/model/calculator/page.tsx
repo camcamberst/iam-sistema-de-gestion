@@ -1037,7 +1037,7 @@ export default function ModelCalculatorPage() {
                               placeholder="0.00"
                               title="Ingresa valores con decimales (punto o coma se convierten a punto)"
                             />
-                            <span className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+                            <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
                               {platform.currency || 'USD'}
                             </span>
                           </div>
