@@ -463,31 +463,32 @@ export default function SolicitarAnticipoPage() {
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                </svg>
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                      Solicitar Anticipo
+                    </h1>
+                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                      Solicita un anticipo de hasta el 90% de tu productividad
+                    </p>
+                  </div>
                 </div>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                    Solicitar Anticipo
-                  </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    Solicita un anticipo de hasta el 90% de tu productividad
-                  </p>
+                <div className="text-sm text-gray-500 dark:text-gray-400">
+                  Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
                 </div>
               </div>
-              <div className="text-sm text-gray-500 dark:text-gray-400">
-                Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
-              </div>
-            </div>
 
-            {/* Indicador de política activa integrado */}
-            <div className="mt-4 p-3 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-                </svg>
-                <div>
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
-                  <p className="text-xs text-blue-700 dark:text-blue-400">No disponible del fin de mes al 5 y del 15 al 20</p>
+              {/* Indicador de política activa integrado */}
+              <div className="mt-4 p-3 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
+                <div className="flex items-center">
+                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                  </svg>
+                  <div>
+                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
+                    <p className="text-xs text-blue-700 dark:text-blue-400">No disponible del fin de mes al 5 y del 15 al 20</p>
+                  </div>
                 </div>
               </div>
             </div>
