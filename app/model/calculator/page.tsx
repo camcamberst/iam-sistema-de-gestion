@@ -1007,8 +1007,7 @@ export default function ModelCalculatorPage() {
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="relative">
-                            {/* INPUT DE PRUEBA COMPLETAMENTE AISLADO */}
+                          <div className="flex items-center space-x-2">
                             <input
                               type="text"
                               inputMode="decimal"
@@ -1034,15 +1033,13 @@ export default function ModelCalculatorPage() {
                                   numeric: numericValue 
                                 });
                               }}
-                              className="w-28 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                              className="w-20 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                               placeholder="0.00"
                               title="Ingresa valores con decimales (punto o coma se convierten a punto)"
                             />
-                            <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <span className="text-gray-500 dark:text-gray-400 text-xs">
-                                {platform.currency || 'USD'}
-                              </span>
-                            </div>
+                            <span className="text-gray-500 dark:text-gray-400 text-xs font-medium">
+                              {platform.currency || 'USD'}
+                            </span>
                           </div>
                         </td>
                         <td className="py-3 px-3">
