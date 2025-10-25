@@ -613,8 +613,8 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos NEQUI/DAVIPLATA */}
             {(anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700/50">
-                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
+              <div className="bg-blue-50 dark:bg-blue-50/90 rounded-xl p-6 border border-blue-200 dark:border-blue-200/50 shadow-sm">
+                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-600 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
@@ -652,8 +652,8 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos Cuenta Bancaria */}
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
-              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700/50">
-                <h3 className="text-lg font-semibold text-green-900 dark:text-green-300 mb-6">Datos de CUENTA BANCARIA</h3>
+              <div className="bg-green-50 dark:bg-green-50/90 rounded-xl p-6 border border-green-200 dark:border-green-200/50 shadow-sm">
+                <h3 className="text-lg font-semibold text-green-900 dark:text-green-600 mb-6">Datos de CUENTA BANCARIA</h3>
                 
                 {/* Primera fila: Nombre del Titular y Banco */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
