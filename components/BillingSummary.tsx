@@ -322,7 +322,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                 <div className={`w-1.5 h-1.5 rounded-full ${
                   isPolling ? 'bg-green-500' : 'bg-gray-400'
                 } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
-                <span className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                <span className="text-xs text-gray-500 dark:text-white">
                   {isSilentUpdating ? 'Actualizando...' : 
                    isPolling ? 'Actualización automática' : 'Manual'}
                 </span>
@@ -351,7 +351,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                 type="date"
                 value={selectedDate}
                 onChange={(e) => setSelectedDate(e.target.value)}
-                className="px-2 py-1.5 bg-gray-50/80 dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 dark:hover:bg-gray-600/90 text-xs text-gray-700 dark:text-gray-700 dark:text-gray-200"
+                className="px-2 py-1.5 bg-gray-50/80 dark:bg-gray-700/80 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:bg-gray-50/90 dark:hover:bg-gray-600/90 text-xs text-gray-700 dark:text-white"
               />
             </div>
           </div>
