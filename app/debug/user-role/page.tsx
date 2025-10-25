@@ -46,9 +46,9 @@ export default function UserRoleDebugPage() {
 
         setUserInfo({
           auth: {
-            id: auth.user.id,
-            email: auth.user.email,
-            created_at: auth.user.created_at
+            id: auth.user?.id || '',
+            email: auth.user?.email || '',
+            created_at: auth.user?.created_at || ''
           },
           profile: userRow,
           expectedRedirect: userRow.role === 'modelo' ? '/admin/model/dashboard' : '/admin/dashboard'
