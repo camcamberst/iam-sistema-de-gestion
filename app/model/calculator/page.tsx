@@ -816,69 +816,57 @@ export default function ModelCalculatorPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
         {/* Header */}
-        <div className="mb-16">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                      Mi Calculadora
-                    </h1>
-                    <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                      Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center space-x-4">
-                  <button
-                    onClick={() => window.history.back()}
-                    className="px-3 py-2 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-white/90 dark:hover:bg-gray-600/80 transition-all duration-300 text-sm font-medium border border-gray-200/50 dark:border-gray-600/50 shadow-sm hover:shadow-md"
-                  >
-                    ← Volver
-                  </button>
-                </div>
-              </div>
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <button
+              onClick={() => window.history.back()}
+              className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              </svg>
+              <span className="font-medium">Volver</span>
+            </button>
+          </div>
+          
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap truncate">
+                Mi Calculadora
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-sm truncate">
+                Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
+              </p>
             </div>
           </div>
         </div>
 
-        {/* Tasas Actualizadas - ESTILO APPLE REFINADO UNIFICADO */}
-        <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 mb-6 hover:shadow-lg transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-              </svg>
+        {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+            Tasas Actualizadas
+          </h2>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-xl font-bold text-blue-700 mb-1">
+                ${rates?.usd_cop || 3900}
+              </div>
+              <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
             </div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Tasas Actualizadas</h2>
+            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-xl font-bold text-green-700 mb-1">
+                {rates?.eur_usd || 1.01}
+              </div>
+              <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
+            </div>
+            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-xl font-bold text-purple-700 mb-1">
+                {rates?.gbp_usd || 1.20}
+              </div>
+              <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
+            </div>
           </div>
-          <InfoCardGrid
-            cards={[
-              {
-                value: `$${rates?.usd_cop || 3900}`,
-                label: 'USD→COP',
-                color: 'blue'
-              },
-              {
-                value: rates?.eur_usd || 1.01,
-                label: 'EUR→USD',
-                color: 'green'
-              },
-              {
-                value: rates?.gbp_usd || 1.20,
-                label: 'GBP→USD',
-                color: 'purple'
-              }
-            ]}
-            columns={3}
-          />
           <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center font-medium">
             Configuradas por tu administrador
           </p>
@@ -911,16 +899,12 @@ export default function ModelCalculatorPage() {
           </div>
         )}
 
-        {/* Tabla de Calculadora */}
-        <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 mb-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <div className="flex items-center space-x-2 mb-4">
-            <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-              <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            </div>
-            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Calculadora de Ingresos</h2>
-          </div>
+        {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
+            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+            Calculadora de Ingresos
+          </h2>
           
           {(() => {
             console.log('🔍 [RENDER] platforms.length:', platforms.length);
@@ -934,11 +918,11 @@ export default function ModelCalculatorPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
-              <p className="text-gray-500 dark:text-gray-300 mb-4 text-sm">
+              <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
+              <p className="text-gray-500 dark:text-gray-400 mb-4">
                 Tu administrador aún no ha configurado las plataformas para tu calculadora.
               </p>
-              <p className="text-xs text-gray-400 dark:text-gray-500">
+              <p className="text-sm text-gray-400 dark:text-gray-500">
                 Contacta a tu administrador para que habilite las plataformas que usarás.
               </p>
             </div>
@@ -1092,16 +1076,16 @@ export default function ModelCalculatorPage() {
         {/* Totales y Alertas - ESTILO APPLE REFINADO */}
         <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
               Totales y Alertas
             </h3>
             <button
               onClick={saveValues}
               disabled={saving || platforms.filter(p => p.enabled).length === 0}
-              className={`px-5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 transform hover:scale-105 active:scale-95 ${
+              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
                 !saving && platforms.filter(p => p.enabled).length > 0
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-lg shadow-blue-200 hover:shadow-blue-300'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
