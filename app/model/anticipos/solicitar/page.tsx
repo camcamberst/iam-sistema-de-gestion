@@ -617,7 +617,7 @@ export default function SolicitarAnticipoPage() {
                 <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-600 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Nombre del Beneficiario
                     </label>
                     <input
@@ -630,7 +630,7 @@ export default function SolicitarAnticipoPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Número de {anticipoData.medio_pago.toUpperCase()}
                     </label>
                     <input
@@ -658,7 +658,7 @@ export default function SolicitarAnticipoPage() {
                 {/* Primera fila: Nombre del Titular y Banco */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Nombre del Titular
                     </label>
                     <input
@@ -672,7 +672,7 @@ export default function SolicitarAnticipoPage() {
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Banco
                     </label>
                     <AppleDropdown
@@ -695,7 +695,7 @@ export default function SolicitarAnticipoPage() {
                 {/* Banco Otros */}
                 {anticipoData.banco === 'Otros' && (
                   <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Nombre del Banco
                     </label>
                     <input
@@ -712,7 +712,7 @@ export default function SolicitarAnticipoPage() {
                 {/* Segunda fila: Tipo de Cuenta y Número de Cuenta */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Tipo de Cuenta
                     </label>
                     <AppleDropdown
@@ -731,7 +731,7 @@ export default function SolicitarAnticipoPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Número de Cuenta
                     </label>
                     <input
@@ -747,7 +747,7 @@ export default function SolicitarAnticipoPage() {
 
                 {/* Tercera fila: Documento del Titular */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                     Documento del Titular
                   </label>
                   <input
