@@ -66,7 +66,7 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white/95 dark:bg-white/80 backdrop-blur-md border border-white/30 dark:border-gray-200/50 rounded-xl shadow-xl dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[9998] animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-gray-100 border border-gray-200 dark:border-gray-300 rounded-xl shadow-xl dark:shadow-lg z-[9998] animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
               <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-800 uppercase tracking-wide mb-2">
@@ -85,8 +85,8 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
                   onClick={() => onToggle()}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
-                      ? 'bg-blue-50/80 dark:bg-blue-50/90 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200/30 dark:border-blue-200/50'
-                      : 'text-gray-900 dark:text-gray-800 hover:bg-white/60 dark:hover:bg-gray-50/60 hover:text-gray-900 dark:hover:text-gray-900 hover:shadow-sm'
+                      ? 'bg-blue-50 dark:bg-blue-50 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200 dark:border-blue-200'
+                      : 'text-gray-900 dark:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-50 hover:text-gray-900 dark:hover:text-gray-900 hover:shadow-sm'
                   }`}
                 >
                   <div className="flex items-center space-x-3">
