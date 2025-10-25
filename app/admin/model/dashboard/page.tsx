@@ -477,7 +477,7 @@ export default function ModelDashboard() {
               </div>
 
               <div className="mt-4 text-xs text-gray-500 dark:text-gray-300">
-                Para actualizar tus valores usa el menú <a href="/model/calculator" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
+                Para actualizar tus valores usa el menú <a href="/admin/model/calculator" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
               </div>
             </>
           )}

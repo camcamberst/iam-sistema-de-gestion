@@ -202,9 +202,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {
         id: 'calculator',
         label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
-        href: userRole === 'modelo' ? '/model/calculator' : '#',
-        subItems: userRole === 'modelo' 
-          ? [ { label: 'Ingresar Valores', href: '/model/calculator' } ]
+        href: userRole === 'modelo' ? '/admin/model/calculator' : '#',
+        subItems: userRole === 'modelo'
+          ? [ { label: 'Ingresar Valores', href: '/admin/model/calculator' } ]
           : []
       }
     ];
@@ -214,11 +214,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'anticipos',
         label: 'Mis Anticipos',
-        href: '/model/anticipos/solicitar',
+        href: '/admin/model/anticipos/solicitar',
         subItems: [
-          { label: 'Solicitar Anticipo', href: '/model/anticipos/solicitar' },
-          { label: 'Mis Solicitudes', href: '/model/anticipos/solicitudes' },
-          { label: 'Mi Historial', href: '/model/anticipos/historial' }
+          { label: 'Solicitar Anticipo', href: '/admin/model/anticipos/solicitar' },
+          { label: 'Mis Solicitudes', href: '/admin/model/anticipos/solicitudes' },
+          { label: 'Mi Historial', href: '/admin/model/anticipos/historial' }
         ]
       });
 
@@ -226,7 +226,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       baseItems.push({
         id: 'portafolio',
         label: 'Mi Portafolio',
-        href: '/model/portafolio',
+        href: '/admin/model/portafolio',
         subItems: []
       });
     }
