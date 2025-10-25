@@ -53,6 +53,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  
+  // 🔧 NUEVO: Estado para posición dinámica del botón
+  const [scrollPosition, setScrollPosition] = useState(0);
+  const [isScrolling, setIsScrolling] = useState(false);
 
   // Función helper para obtener el nombre de visualización
   const getDisplayName = (user: User) => {
@@ -71,6 +75,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       setSession(session);
     };
     getSession();
+  }, []);
+
+  // 🔧 NUEVO: Manejar scroll dinámico del botón
+  useEffect(() => {
+    let scrollTimeout: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      const currentScroll = window.scrollY;
+      setScrollPosition(currentScroll);
+      setIsScrolling(true);
+      
+      // Limpiar timeout anterior
+      clearTimeout(scrollTimeout);
+      
+      // Detener el estado de scrolling después de 150ms de inactividad
+      scrollTimeout = setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+    };
+
+    // Agregar listener de scroll
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    
+    // Cleanup
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimeout);
+    };
   }, []);
 
   // Sistema de heartbeat y detección de cierre de navegador
@@ -862,7 +894,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   return (
     <>
-      {/* Botón flotante para abrir el chat */}
+      {/* Botón flotante para abrir el chat - POSICIÓN DINÁMICA */}
       <button
         onClick={toggleChat}
         onContextMenu={(e) => {
@@ -870,9 +902,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           console.log('🧪 [ChatWidget] Prueba manual de notificación');
           triggerNotification();
         }}
-        className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
+        className={`fixed right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
           isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600' : ''
         }`}
+        style={{
+          // 🔧 POSICIÓN DINÁMICA: Seguir la scrollbar
+          bottom: Math.max(24, 24 + scrollPosition) + 'px',
+          // 🔧 TRANSICIÓN SUAVE: Solo cuando no está scrolling
+          transition: isScrolling ? 'none' : 'bottom 0.3s ease-out'
+        }}
         aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
       >
         <div className="flex items-center justify-center">
