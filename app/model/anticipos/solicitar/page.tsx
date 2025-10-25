@@ -370,11 +370,11 @@ export default function SolicitarAnticipoPage() {
   // Mostrar pantalla de restricción si no está permitido solicitar anticipo
   if (restrictionInfo && !restrictionInfo.allowed) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-6">
           <div className="mb-4">
-            <div className="w-16 h-16 bg-yellow-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <svg className="w-8 h-8 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+              <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
@@ -384,8 +384,8 @@ export default function SolicitarAnticipoPage() {
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               {restrictionInfo.reason}
             </p>
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <p className="text-sm text-blue-800">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
+              <p className="text-sm text-blue-800 dark:text-blue-300">
                 <strong>Próxima fecha disponible:</strong><br />
                 {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
                   weekday: 'long',
@@ -409,9 +409,9 @@ export default function SolicitarAnticipoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-300 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
         </div>
       </div>
@@ -420,7 +420,7 @@ export default function SolicitarAnticipoPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
           <p className="text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
@@ -430,7 +430,7 @@ export default function SolicitarAnticipoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <style jsx>{`
         /* Dropdown compacto con scrollbar */
         .bank-select {
@@ -452,19 +452,21 @@ export default function SolicitarAnticipoPage() {
           background: #94a3b8;
         }
       `}</style>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-10">
-          <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+        <div className="mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                 </svg>
                 </div>
                 <div>
-                  <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100">
+                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
                     Solicitar Anticipo
                   </h1>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
@@ -478,14 +480,14 @@ export default function SolicitarAnticipoPage() {
         </div>
 
             {/* Indicador de política activa integrado */}
-            <div className="mt-4 p-3 bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-lg">
+            <div className="mt-4 p-3 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
               <div className="flex items-center">
-                <svg className="w-5 h-5 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
                 </svg>
                 <div>
-                  <p className="text-sm font-medium text-blue-800">Política de fechas activa</p>
-                  <p className="text-xs text-blue-700">No disponible del fin de mes al 5 y del 15 al 20</p>
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
+                  <p className="text-xs text-blue-700 dark:text-blue-400">No disponible del fin de mes al 5 y del 15 al 20</p>
               </div>
             </div>
               </div>
@@ -493,7 +495,7 @@ export default function SolicitarAnticipoPage() {
               </div>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 mb-6 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
             Resumen de Productividad
@@ -523,30 +525,30 @@ export default function SolicitarAnticipoPage() {
         </div>
 
         {/* Formulario */}
-        <div className="apple-card">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Datos del Anticipo</h2>
           
           {success && (
-            <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+            <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
               <div className="flex items-center">
-                <svg className="w-5 h-5 text-green-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-green-600 dark:text-green-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
-                <span className="text-green-800 font-medium">¡Solicitud enviada correctamente!</span>
+                <span className="text-green-800 dark:text-green-300 font-medium">¡Solicitud enviada correctamente!</span>
               </div>
-              <p className="text-green-700 text-sm mt-1">Serás redirigido a "Mis Solicitudes" en unos segundos...</p>
+              <p className="text-green-700 dark:text-green-400 text-sm mt-1">Serás redirigido a "Mis Solicitudes" en unos segundos...</p>
             </div>
           )}
 
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
               <div className="flex items-center">
-                <svg className="w-5 h-5 text-red-600 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                <svg className="w-5 h-5 text-red-600 dark:text-red-400 mr-2" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
                 </svg>
-                <span className="text-red-800 font-medium">Error</span>
+                <span className="text-red-800 dark:text-red-300 font-medium">Error</span>
               </div>
-              <p className="text-red-700 text-sm mt-1">{error}</p>
+              <p className="text-red-700 dark:text-red-400 text-sm mt-1">{error}</p>
             </div>
           )}
 
@@ -610,8 +612,8 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos NEQUI/DAVIPLATA */}
             {(anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') && (
-              <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-900 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
+              <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-6 border border-blue-200 dark:border-blue-700/50">
+                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-300 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
@@ -649,8 +651,8 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos Cuenta Bancaria */}
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
-              <div className="bg-green-50 rounded-xl p-6 border border-green-200">
-                <h3 className="text-lg font-semibold text-green-900 mb-6">Datos de CUENTA BANCARIA</h3>
+              <div className="bg-green-50 dark:bg-green-900/20 rounded-xl p-6 border border-green-200 dark:border-green-700/50">
+                <h3 className="text-lg font-semibold text-green-900 dark:text-green-300 mb-6">Datos de CUENTA BANCARIA</h3>
                 
                 {/* Primera fila: Nombre del Titular y Banco */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -684,6 +686,7 @@ export default function SolicitarAnticipoPage() {
                       onChange={(value) => handleInputChange('banco', value)}
                       placeholder="Selecciona un banco"
                       maxHeight="max-h-32"
+                      className="text-sm"
                     />
                   </div>
                 </div>
@@ -722,6 +725,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.tipo_cuenta || ''}
                       onChange={(value) => handleInputChange('tipo_cuenta', value)}
                       placeholder="Selecciona tipo de cuenta"
+                      className="text-sm"
                     />
                   </div>
 
