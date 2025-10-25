@@ -476,8 +476,8 @@ export default function SolicitarAnticipoPage() {
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
+              </div>
             </div>
-        </div>
 
             {/* Indicador de política activa integrado */}
             <div className="mt-4 p-3 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
@@ -488,11 +488,11 @@ export default function SolicitarAnticipoPage() {
                 <div>
                   <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
                   <p className="text-xs text-blue-700 dark:text-blue-400">No disponible del fin de mes al 5 y del 15 al 20</p>
+                </div>
               </div>
             </div>
-              </div>
-            </div>
-              </div>
+          </div>
+        </div>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
         <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
