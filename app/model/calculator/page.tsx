@@ -1034,16 +1034,7 @@ export default function ModelCalculatorPage() {
                                   numeric: numericValue 
                                 });
                               }}
-                              style={{
-                                width: '112px',
-                                height: '32px',
-                                border: '1px solid #d1d5db',
-                                borderRadius: '6px',
-                                padding: '4px 8px',
-                                fontSize: '14px',
-                                backgroundColor: 'white'
-                              }}
-                              className="dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
+                              className="w-28 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                               placeholder="0.00"
                               title="Ingresa valores con decimales (punto o coma se convierten a punto)"
                             />
