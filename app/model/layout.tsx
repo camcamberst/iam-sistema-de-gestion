@@ -199,17 +199,17 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Apple Style 2 Header */}
-      <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-[99999] shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+      <header className="bg-white dark:bg-gray-800/80 backdrop-blur-md border border-white/20 dark:border-gray-600/20 sticky top-0 z-[99999] shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
               <Link href="/admin/model/dashboard" className="flex items-center space-x-3 group">
-                <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300">
-                  <span className="text-white dark:text-gray-900 font-bold text-sm tracking-wider">AIM</span>
+                <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-600/20 group-hover:shadow-lg transition-all duration-300">
+                  <span className="text-white font-bold text-sm tracking-wider">AIM</span>
                 </div>
                 <div className="flex flex-col">
-                  <span className="text-lg font-bold text-gray-900 dark:text-gray-100 whitespace-nowrap">Sistema de Gestión</span>
+                  <span className="text-lg font-bold text-gray-900 dark:text-white whitespace-nowrap">Sistema de Gestión</span>
                   <span className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Agencia Innova</span>
                 </div>
               </Link>
@@ -259,13 +259,13 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                   return null;
                 })
               ) : (
-                <div className="text-gray-600 dark:text-gray-300 text-sm">Cargando menú...</div>
+                <div className="text-gray-600 dark:text-white text-sm">Cargando menú...</div>
               )}
             </nav>
 
             {/* User Actions */}
             <div className="flex items-center space-x-3">
-              <button className="p-2.5 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white/60 dark:hover:bg-gray-800/60 rounded-lg transition-all duration-200 hover:shadow-sm">
+              <button className="p-2.5 text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-100 hover:bg-white/60 dark:hover:bg-gray-700/60 rounded-lg transition-all duration-200 hover:shadow-sm">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -281,7 +281,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                     setShowUserPanel((v) => !v);
                     if (!userInfo && !loadingUser) loadUser();
                   }}
-                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                  className="flex items-center space-x-2 text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-lg border border-white/20 dark:border-gray-600/20 hover:bg-white/60 dark:hover:bg-gray-700/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                 >
                   <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
                     <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
@@ -289,26 +289,26 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                     </svg>
                   </div>
                   <span className="hidden sm:block text-sm font-medium">Cuenta</span>
-                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-700/95 backdrop-blur-md border border-white/30 dark:border-gray-600/30 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                     {loadingUser ? (
                       <div className="text-center py-4">
-                        <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>
-                        <div className="text-xs text-gray-600 dark:text-gray-300">Cargando…</div>
+                        <div className="animate-spin w-4 h-4 border-2 border-gray-600 dark:border-gray-400 border-t-gray-400 dark:border-t-gray-200 rounded-full mx-auto mb-2"></div>
+                        <div className="text-xs text-gray-600 dark:text-white">Cargando…</div>
                       </div>
                     ) : userInfo ? (
                       <div className="space-y-3">
                         {/* Header compacto */}
                         <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-md bg-gray-700 text-white flex items-center justify-center shadow-sm">
+                          <div className="w-10 h-10 rounded-md bg-gray-700 dark:bg-gray-600 text-white flex items-center justify-center shadow-sm">
                             <span className="text-sm font-semibold">{userInfo.name.charAt(0).toUpperCase()}</span>
                           </div>
                           <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{userInfo.name}</div>
+                            <div className="text-sm font-semibold text-gray-900 dark:text-white truncate">{userInfo.name}</div>
                             <div className="text-xs text-gray-600 dark:text-gray-300 truncate">
                               {String(userInfo.role).replace('_',' ').charAt(0).toUpperCase() + String(userInfo.role).replace('_',' ').slice(1)} · {userInfo.email}
                             </div>
@@ -319,10 +319,10 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                         <div className="space-y-2">
                           {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400 font-medium">{userInfo.role === 'modelo' ? 'Grupo' : 'Grupos'}</span>
+                              <span className="text-gray-400 dark:text-gray-400 font-medium">{userInfo.role === 'modelo' ? 'Grupo' : 'Grupos'}</span>
                               <div className="flex flex-wrap gap-1 justify-end">
                                 {userInfo.groups.map((group, index) => (
-                                  <span key={index} className="px-2 py-1 bg-gray-800 text-gray-300 rounded-md text-xs font-medium">
+                                  <span key={index} className="px-2 py-1 bg-gray-800 dark:bg-gray-600 text-gray-300 dark:text-gray-200 rounded-md text-xs font-medium">
                                     {group}
                                   </span>
                                 ))}
@@ -331,10 +331,10 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                           )}
                           <div className="space-y-1">
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400 font-medium">ID</span>
+                              <span className="text-gray-400 dark:text-gray-400 font-medium">ID</span>
                               <button
                                 onClick={() => navigator.clipboard.writeText(userInfo.id)}
-                                className="text-gray-200 font-mono text-xs hover:text-gray-400 transition-colors duration-200 cursor-pointer"
+                                className="text-gray-200 dark:text-gray-300 font-mono text-xs hover:text-gray-400 dark:hover:text-gray-200 transition-colors duration-200 cursor-pointer"
                                 title="Hacer clic para copiar"
                               >
                                 {userInfo.id}
@@ -344,14 +344,14 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                         </div>
 
                         {/* Botón de logout elegante */}
-                        <div className="pt-3 border-t border-gray-700">
+                        <div className="pt-3 border-t border-gray-700 dark:border-gray-600">
                           <button
                             onClick={async () => {
                               await modernLogout();
                               setUserInfo(null);
                               location.href = '/';
                             }}
-                            className="w-full px-3 py-2 text-xs rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 hover:text-gray-100 transition-all duration-200 font-medium flex items-center justify-center space-x-1.5"
+                            className="w-full px-3 py-2 text-xs rounded-md bg-gray-800 dark:bg-gray-600 hover:bg-gray-700 dark:hover:bg-gray-500 border border-gray-600 dark:border-gray-500 text-gray-200 dark:text-gray-100 hover:text-gray-100 dark:hover:text-white transition-all duration-200 font-medium flex items-center justify-center space-x-1.5"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013 3v1" />
@@ -362,10 +362,10 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
                       </div>
                     ) : (
                       <div className="text-center py-4">
-                        <svg className="w-6 h-6 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <svg className="w-6 h-6 text-gray-400 dark:text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
                         </svg>
-                        <div className="text-xs text-gray-600">No autenticado</div>
+                        <div className="text-xs text-gray-600 dark:text-white">No autenticado</div>
                       </div>
                     )}
                   </div>
@@ -374,7 +374,7 @@ export default function ModelLayout({ children }: { children: ReactNode }) {
             </div>
 
             {/* Mobile Menu Button */}
-            <button className="md:hidden text-gray-600 hover:text-gray-900 p-2">
+            <button className="md:hidden text-gray-600 dark:text-white hover:text-gray-900 dark:hover:text-gray-100 p-2">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
