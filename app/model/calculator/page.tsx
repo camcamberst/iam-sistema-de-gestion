@@ -780,10 +780,10 @@ export default function ModelCalculatorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Cargando calculadora...</p>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando calculadora...</p>
         </div>
       </div>
     );
@@ -794,16 +794,16 @@ export default function ModelCalculatorPage() {
 
   if (!allowed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center pt-16">
-        <div className="relative bg-white/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 p-8 max-w-md">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
               </svg>
             </div>
-            <h1 className="text-lg font-bold text-gray-900 mb-2">Acceso Denegado</h1>
-            <p className="text-sm text-gray-600">No tienes permisos para acceder a esta página.</p>
+            <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Acceso Denegado</h1>
+            <p className="text-sm text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
           </div>
         </div>
       </div>
@@ -813,13 +813,13 @@ export default function ModelCalculatorPage() {
   
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
         {/* Header */}
         <div className="mb-16">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-700/20 shadow-lg">
+            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
@@ -839,7 +839,7 @@ export default function ModelCalculatorPage() {
                 <div className="flex items-center space-x-4">
                   <button
                     onClick={() => window.history.back()}
-                    className="px-3 py-2 bg-white/80 backdrop-blur-sm text-gray-700 rounded-lg hover:bg-white/90 transition-all duration-300 text-sm font-medium border border-gray-200/50 shadow-sm hover:shadow-md"
+                    className="px-3 py-2 bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm text-gray-700 dark:text-gray-300 rounded-lg hover:bg-white/90 dark:hover:bg-gray-600/80 transition-all duration-300 text-sm font-medium border border-gray-200/50 dark:border-gray-600/50 shadow-sm hover:shadow-md"
                   >
                     ← Volver
                   </button>
@@ -850,14 +850,14 @@ export default function ModelCalculatorPage() {
         </div>
 
         {/* Tasas Actualizadas - ESTILO APPLE REFINADO UNIFICADO */}
-        <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6 hover:shadow-lg transition-all duration-300">
+        <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 mb-6 hover:shadow-lg transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
               <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <h2 className="text-base font-semibold text-gray-900">Tasas Actualizadas</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Tasas Actualizadas</h2>
           </div>
           <InfoCardGrid
             cards={[
@@ -879,22 +879,22 @@ export default function ModelCalculatorPage() {
             ]}
             columns={3}
           />
-          <p className="text-xs text-gray-500 mt-3 text-center font-medium">
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center font-medium">
             Configuradas por tu administrador
           </p>
         </div>
 
         {/* Error Message */}
         {error && (
-          <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
+          <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 mb-6 dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
             <div className="text-center py-8">
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                 </svg>
               </div>
-              <h4 className="text-base font-semibold text-gray-900 mb-2">Error al cargar calculadora</h4>
-              <p className="text-gray-500 mb-4 text-sm">{error}</p>
+              <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Error al cargar calculadora</h4>
+              <p className="text-gray-500 dark:text-gray-300 mb-4 text-sm">{error}</p>
               <button
                 onClick={() => {
                   if (user?.id) {
@@ -912,14 +912,14 @@ export default function ModelCalculatorPage() {
         )}
 
         {/* Tabla de Calculadora */}
-        <div className="relative bg-white/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 p-6 mb-6">
+        <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 mb-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
               <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
             </div>
-            <h2 className="text-base font-semibold text-gray-900">Calculadora de Ingresos</h2>
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Calculadora de Ingresos</h2>
           </div>
           
           {(() => {
@@ -934,11 +934,11 @@ export default function ModelCalculatorPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                 </svg>
               </div>
-              <h4 className="text-base font-semibold text-gray-900 mb-2">No hay plataformas habilitadas</h4>
-              <p className="text-gray-500 mb-4 text-sm">
+              <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
+              <p className="text-gray-500 dark:text-gray-300 mb-4 text-sm">
                 Tu administrador aún no ha configurado las plataformas para tu calculadora.
               </p>
-              <p className="text-xs text-gray-400">
+              <p className="text-xs text-gray-400 dark:text-gray-500">
                 Contacta a tu administrador para que habilite las plataformas que usarás.
               </p>
             </div>
@@ -946,11 +946,11 @@ export default function ModelCalculatorPage() {
             <div className="overflow-x-auto">
               <table className="w-full">
                 <thead>
-                  <tr className="border-b border-gray-200/50 bg-gray-50/50 backdrop-blur-sm">
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">PLATAFORMAS</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">VALORES</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">DÓLARES</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 text-xs uppercase tracking-wide">COP MODELO</th>
+                  <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-600/50 backdrop-blur-sm">
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">PLATAFORMAS</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">VALORES</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">DÓLARES</th>
+                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">COP MODELO</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1015,10 +1015,10 @@ export default function ModelCalculatorPage() {
                     const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
                     return (
-                      <tr key={platform.id} className="border-b border-gray-100">
+                      <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3">
-                          <div className="font-medium text-gray-900 text-sm">{platform.name}</div>
-                          <div className="text-xs text-gray-500">
+                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
                             Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                           </div>
                         </td>
@@ -1059,23 +1059,24 @@ export default function ModelCalculatorPage() {
                                 fontSize: '14px',
                                 backgroundColor: 'white'
                               }}
+                              className="dark:bg-gray-800 dark:border-gray-600 dark:text-gray-100"
                               placeholder="0.00"
                               title="Ingresa valores con decimales (punto o coma se convierten a punto)"
                             />
                             <div className="absolute inset-y-0 right-0 flex items-center pr-2">
-                              <span className="text-gray-500 text-xs">
+                              <span className="text-gray-500 dark:text-gray-400 text-xs">
                                 {platform.currency || 'USD'}
                               </span>
                             </div>
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="text-gray-600 font-medium text-sm">
+                          <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
                             ${usdModelo.toFixed(2)} USD
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="text-gray-600 font-medium text-sm">
+                          <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
                             ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                           </div>
                         </td>
@@ -1089,9 +1090,9 @@ export default function ModelCalculatorPage() {
         </div>
 
         {/* Totales y Alertas - ESTILO APPLE REFINADO */}
-        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-all duration-300">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center justify-between mb-4">
-            <h3 className="text-base font-semibold text-gray-900 flex items-center">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
               Totales y Alertas
             </h3>
@@ -1206,8 +1207,8 @@ export default function ModelCalculatorPage() {
           />
           
           {/* 90% de anticipo - estilo sutil */}
-          <div className="mb-6 p-4 bg-gray-50 rounded-xl border border-gray-200">
-            <div className="text-sm text-gray-600">
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
+            <div className="text-sm text-gray-600 dark:text-gray-300">
               <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
                 // Calcular USD modelo usando fórmulas específicas + porcentaje
                 let usdModelo = 0;
