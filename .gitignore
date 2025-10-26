@@ -1,28 +1,48 @@
-# Next.js
-.next/
-out/
+# n8n specific
+data/
+workflows/*.json
+!workflows/README.md
 
 # Node.js
 node_modules/
-
-# Environment variables
-.env.local
-.env.development.local
-.env.production.local
-
-# Supabase
-supabase/
-.supabase/
-
-# Logs
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
-# Misc
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Logs
+logs/
+*.log
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+
+# OS generated files
 .DS_Store
-*.pem
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Vercel
-.vercel/
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Docker
+.docker/
