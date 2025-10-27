@@ -54,6 +54,17 @@ export default function DebugCalculatorSyncPage() {
       console.log('🔍 [DIAGNÓSTICO] Todos los usuarios (primeros 50):', allUsers);
       console.log('🔍 [DIAGNÓSTICO] Error obteniendo todos los usuarios:', allUsersError);
       
+      // Mostrar detalles del usuario encontrado
+      if (allUsers && allUsers.length > 0) {
+        console.log('🔍 [DIAGNÓSTICO] Detalles del usuario encontrado:', {
+          id: allUsers[0].id,
+          email: allUsers[0].email,
+          name: allUsers[0].name,
+          role: allUsers[0].role,
+          is_active: allUsers[0].is_active
+        });
+      }
+      
       // Ahora filtrar por modelos activos
       const { data: modelsData, error: modelsError } = await supabase
         .from('users')
@@ -63,6 +74,20 @@ export default function DebugCalculatorSyncPage() {
 
       console.log('🔍 [DIAGNÓSTICO] Error obteniendo modelos:', modelsError);
       console.log('🔍 [DIAGNÓSTICO] Modelos encontrados:', modelsData);
+
+      // Consulta alternativa: buscar usuarios con diferentes roles
+      const { data: allRoles, error: rolesError } = await supabase
+        .from('users')
+        .select('role')
+        .eq('is_active', true);
+      
+      if (rolesError) {
+        console.log('❌ [DIAGNÓSTICO] Error obteniendo roles:', rolesError);
+      } else {
+        const uniqueRoles = [...new Set(allRoles?.map(u => u.role) || [])];
+        console.log('🔍 [DIAGNÓSTICO] Roles únicos encontrados:', uniqueRoles);
+        console.log('🔍 [DIAGNÓSTICO] ¿Existe rol "modelo"?', uniqueRoles.includes('modelo'));
+      }
 
       if (modelsError) {
         throw new Error(`Error obteniendo modelos: ${modelsError.message}`);
