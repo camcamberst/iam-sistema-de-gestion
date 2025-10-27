@@ -805,28 +805,30 @@ export default function GestionarSedesPage() {
 
           {/* Columna Derecha: Crear Sede y Crear Room */}
           <div className="flex flex-col space-y-6 h-full">
-            {/* Crear Nueva Sede */}
-            <div className="relative flex-1">
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                <div className="flex items-center justify-between h-full">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                      </svg>
+            {/* Crear Nueva Sede - Solo para Super Admin */}
+            {userRole === 'super_admin' && (
+              <div className="relative flex-1">
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
+                <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex items-center justify-between h-full">
+                    <div className="flex items-center space-x-2">
+                      <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                        </svg>
+                      </div>
+                      <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
                     </div>
-                    <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
+                    <button
+                      onClick={() => setShowCreateGroup(true)}
+                      className="w-32 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                    >
+                      + Crear Sede
+                    </button>
                   </div>
-                  <button
-                    onClick={() => setShowCreateGroup(true)}
-                    className="w-32 px-4 py-2 text-sm font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
-                  >
-                    + Crear Sede
-                  </button>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Crear Room */}
             {selectedSede && (
@@ -1025,8 +1027,8 @@ export default function GestionarSedesPage() {
         </div>
         */}
 
-        {/* Modal Crear Sede */}
-        {showCreateGroup && (
+        {/* Modal Crear Sede - Solo para Super Admin */}
+        {showCreateGroup && userRole === 'super_admin' && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-3xl blur-xl"></div>
