@@ -602,7 +602,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-[9998] animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-[999999] animate-in slide-in-from-top-2 duration-200">
                     {loadingUser ? (
                       <div className="text-center py-4">
                         <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>

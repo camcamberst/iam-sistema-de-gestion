@@ -268,7 +268,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (
                     <div 
-                      className="absolute top-full left-0 mt-2 w-72 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9998] animate-in slide-in-from-top-2 duration-200"
+                      className="absolute top-full left-0 mt-2 w-72 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[999999] animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={handleDropdownEnter}
                       onMouseLeave={handleDropdownLeave}
                     >
