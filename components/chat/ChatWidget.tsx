@@ -695,6 +695,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (session) {
       loadConversations();
       loadAvailableUsers();
+      // Marcar usuario como online cuando se carga el chat
+      updateUserStatus(true);
     }
   }, [session]);
 
