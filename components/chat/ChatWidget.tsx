@@ -900,16 +900,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           triggerNotification();
         }}
         className={`fixed bottom-6 right-6 w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
-          isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600' : ''
+          isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
         }`}
         aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
       >
         <div className="flex items-center justify-center">
           {/* Versión miniatura - solo "A" */}
-          <span className="text-white font-bold text-sm group-hover:hidden">A</span>
+          <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
           
           {/* Versión expandida - "AIM" */}
-          <span className="text-white font-bold text-xs hidden group-hover:block whitespace-nowrap">AIM</span>
+          <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
         </div>
         
       </button>
