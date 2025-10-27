@@ -32,7 +32,7 @@ export default function GestionarSedesPage() {
   const [submitting, setSubmitting] = useState(false);
   
   // Estados de usuario y jerarquía
-  const [userRole, setUserRole] = useState<string>('super_admin');
+  const [userRole, setUserRole] = useState<string>('');
   const [userGroups, setUserGroups] = useState<string[]>([]);
   const [userId, setUserId] = useState<string>('');
   const [selectedSede, setSelectedSede] = useState<string>('');
@@ -77,7 +77,8 @@ export default function GestionarSedesPage() {
 
   // Cargar datos después de cargar la información del usuario
   useEffect(() => {
-    if (userRole && userGroups.length >= 0) {
+    if (userRole && userRole !== '') {
+      console.log('🔍 [GESTIONAR-SEDES] Ejecutando useEffect con:', { userRole, userGroups });
       loadData();
       loadAvailableSedes();
     }
@@ -110,6 +111,12 @@ export default function GestionarSedesPage() {
 
   const loadAvailableSedes = async () => {
     try {
+      // Verificar que tenemos datos válidos del usuario
+      if (!userRole || userRole === '') {
+        console.log('🔍 [GESTIONAR-SEDES] Saltando carga de sedes - userRole vacío');
+        return;
+      }
+      
       console.log('🔍 [GESTIONAR-SEDES] Cargando sedes disponibles con:', {
         userRole,
         userGroups
