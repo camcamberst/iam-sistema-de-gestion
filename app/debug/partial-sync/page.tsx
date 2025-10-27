@@ -139,7 +139,7 @@ export default function PartialSyncDiagnostic() {
             totalUsdBruto: 0,
             totalUsdModelo: 0,
             status: 'error',
-            issue: `Error: ${error.message}`
+            issue: `Error: ${(error as any)?.message || 'Error desconocido'}`
           });
         }
       }
