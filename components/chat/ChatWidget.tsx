@@ -899,7 +899,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           console.log('🧪 [ChatWidget] Prueba manual de notificación');
           triggerNotification();
         }}
-        className={`fixed bottom-6 right-6 w-10 h-10 bg-gray-900 hover:w-16 hover:h-10 text-white rounded-2xl shadow-lg transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
+        className={`fixed bottom-6 right-6 w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
           isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600' : ''
         }`}
         aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
@@ -920,8 +920,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                 <span className="text-white font-bold text-sm">
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30">
+                 <span className="text-white dark:text-gray-900 font-bold text-xs tracking-wider">
                    {tempChatUser ? getDisplayName(tempChatUser).charAt(0).toUpperCase() : 'AIM'}
                  </span>
               </div>
