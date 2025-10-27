@@ -429,7 +429,7 @@ export default function DashboardSedesPage() {
         )}
 
         {/* Consulta de Períodos Históricos */}
-        <div className="mb-8 relative z-[99998]">
+        <div className="mb-8 relative z-[99999]">
           <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center space-x-3">
@@ -474,7 +474,7 @@ export default function DashboardSedesPage() {
                       </svg>
                     </button>
                     {dropdownOpen === 'year' && (
-                      <div className="absolute z-[99999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
+                      <div className="absolute z-[999999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
                         <div className="py-2">
                           {Array.from({ length: 5 }, (_, i) => {
                             const year = new Date().getFullYear() - i;
@@ -529,7 +529,7 @@ export default function DashboardSedesPage() {
                       </svg>
                     </button>
                     {dropdownOpen === 'month' && (
-                      <div className="absolute z-[99999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
+                      <div className="absolute z-[999999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
                         <div className="py-2">
                           {Array.from({ length: 12 }, (_, i) => {
                             const month = i + 1;
@@ -585,7 +585,7 @@ export default function DashboardSedesPage() {
                       </svg>
                     </button>
                     {dropdownOpen === 'period' && (
-                      <div className="absolute z-[99999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
+                      <div className="absolute z-[999999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
                         <div className="py-2">
                           {['P1', 'P2'].map((period, index) => (
                             <button
