@@ -409,7 +409,7 @@ export default function DashboardSedesPage() {
                 </div>
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">
+                Acceso: <span className="font-medium text-blue-600 dark:text-blue-400 dark:text-blue-400">
                   {userRole === 'super_admin' ? 'Super Admin' : 'Admin'}
                 </span>
               </div>
@@ -474,7 +474,7 @@ export default function DashboardSedesPage() {
                       </svg>
                     </button>
                     {dropdownOpen === 'year' && (
-                      <div className="absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
+                      <div className="absolute z-[99999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
                         <div className="py-2">
                           {Array.from({ length: 5 }, (_, i) => {
                             const year = new Date().getFullYear() - i;
@@ -486,16 +486,16 @@ export default function DashboardSedesPage() {
                                   setDropdownOpen(null);
                                 }}
                                 className={`w-full text-left px-4 py-3 text-sm transition-colors duration-200 flex items-center justify-between ${
-                                  i < 4 ? 'border-b border-gray-100/50' : ''
+                                  i < 4 ? 'border-b border-gray-100/50 dark:border-gray-600/50' : ''
                                 } ${
                                   selectedYear === year.toString() 
-                                    ? 'bg-blue-50 text-blue-900 font-medium' 
-                                    : 'hover:bg-gray-50 text-gray-900'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300 font-medium' 
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
                                 }`}
                               >
                                 <span>{year}</span>
                                 {selectedYear === year.toString() && (
-                                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                   </svg>
                                 )}
@@ -529,7 +529,7 @@ export default function DashboardSedesPage() {
                       </svg>
                     </button>
                     {dropdownOpen === 'month' && (
-                      <div className="absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
+                      <div className="absolute z-[99999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
                         <div className="py-2">
                           {Array.from({ length: 12 }, (_, i) => {
                             const month = i + 1;
@@ -542,16 +542,16 @@ export default function DashboardSedesPage() {
                                   setDropdownOpen(null);
                                 }}
                                 className={`w-full text-left px-4 py-3 text-sm transition-colors duration-200 flex items-center justify-between ${
-                                  i < 11 ? 'border-b border-gray-100/50' : ''
+                                  i < 11 ? 'border-b border-gray-100/50 dark:border-gray-600/50' : ''
                                 } ${
                                   selectedMonth === month.toString() 
-                                    ? 'bg-blue-50 text-blue-900 font-medium' 
-                                    : 'hover:bg-gray-50 text-gray-900'
+                                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300 font-medium' 
+                                    : 'hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
                                 }`}
                               >
                                 <span>{monthName}</span>
                                 {selectedMonth === month.toString() && (
-                                  <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                   </svg>
                                 )}
@@ -585,7 +585,7 @@ export default function DashboardSedesPage() {
                       </svg>
                     </button>
                     {dropdownOpen === 'period' && (
-                      <div className="absolute z-[9999] mt-2 left-0 w-full bg-white/95 backdrop-blur-sm border border-gray-200/50 rounded-xl shadow-lg max-h-56 overflow-auto">
+                      <div className="absolute z-[99999] mt-2 left-0 w-full bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-xl shadow-lg max-h-56 overflow-auto">
                         <div className="py-2">
                           {['P1', 'P2'].map((period, index) => (
                             <button
@@ -595,16 +595,16 @@ export default function DashboardSedesPage() {
                                 setDropdownOpen(null);
                               }}
                               className={`w-full text-left px-4 py-3 text-sm transition-colors duration-200 flex items-center justify-between ${
-                                index < 1 ? 'border-b border-gray-100/50' : ''
+                                index < 1 ? 'border-b border-gray-100/50 dark:border-gray-600/50' : ''
                               } ${
                                 selectedPeriod === period 
-                                  ? 'bg-blue-50 text-blue-900 font-medium' 
-                                  : 'hover:bg-gray-50 text-gray-900'
+                                  ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-300 font-medium' 
+                                  : 'hover:bg-gray-50 dark:hover:bg-gray-600 text-gray-900 dark:text-gray-100'
                               }`}
                             >
                               <span>{period}</span>
                               {selectedPeriod === period && (
-                                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-4 h-4 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                               )}
@@ -623,7 +623,7 @@ export default function DashboardSedesPage() {
                       <div className="text-sm font-medium text-blue-800">
                         {getMonthName(selectedMonth)} {selectedYear} - {selectedPeriod}
                       </div>
-                      <div className="text-xs text-blue-600 mt-1">
+                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
                         {selectedPeriod === 'P1' ? 'Días 1-15' : 'Días 16-31'}
                       </div>
                     </div>
@@ -711,7 +711,7 @@ export default function DashboardSedesPage() {
                           >
                             <span>{sede.name}</span>
                             {selectedSede === sede.id && (
-                              <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <svg className="w-4 h-4 text-blue-600 dark:text-blue-400 dark:text-blue-400 ml-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                               </svg>
                             )}
@@ -779,7 +779,7 @@ export default function DashboardSedesPage() {
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div className="text-center">
-                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                            <p className="text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">
                               {sedeDisponibilidad.rooms_disponibles}/{sedeDisponibilidad.rooms_totales}
                             </p>
                             <p className="text-sm text-gray-600 dark:text-gray-400">Rooms Disponibles</p>
@@ -820,7 +820,7 @@ export default function DashboardSedesPage() {
                               </div>
                               <div className="flex justify-between items-center">
                                 <span className="text-sm text-gray-600 dark:text-gray-400">Dobladas:</span>
-                                <span className="font-semibold text-blue-600 dark:text-blue-400">
+                                <span className="font-semibold text-blue-600 dark:text-blue-400 dark:text-blue-400">
                                   {sedeDisponibilidad.jornadas_dobladas[jornada.key as keyof typeof sedeDisponibilidad.jornadas_dobladas]}
                                 </span>
                               </div>
