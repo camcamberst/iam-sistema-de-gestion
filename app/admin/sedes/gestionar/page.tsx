@@ -88,8 +88,19 @@ export default function GestionarSedesPage() {
       const userData = localStorage.getItem('user');
       if (userData) {
         const parsed = JSON.parse(userData);
+        console.log('🔍 [GESTIONAR-SEDES] Datos del usuario desde localStorage:', {
+          id: parsed.id,
+          role: parsed.role,
+          groups: parsed.groups
+        });
+        
         setUserRole(parsed.role || 'admin');
-        setUserGroups(parsed.groups?.map((g: any) => g.id) || []);
+        
+        // Extraer IDs de grupos correctamente
+        const groupIds = parsed.groups?.map((g: any) => g.id) || [];
+        console.log('🔍 [GESTIONAR-SEDES] IDs de grupos extraídos:', groupIds);
+        
+        setUserGroups(groupIds);
         setUserId(parsed.id || '');
       }
     } catch (error) {
@@ -99,6 +110,11 @@ export default function GestionarSedesPage() {
 
   const loadAvailableSedes = async () => {
     try {
+      console.log('🔍 [GESTIONAR-SEDES] Cargando sedes disponibles con:', {
+        userRole,
+        userGroups
+      });
+      
       // Obtener sedes disponibles según jerarquía del usuario
       const groupsResponse = await fetch('/api/groups', {
         method: 'POST',
@@ -110,6 +126,8 @@ export default function GestionarSedesPage() {
       });
       const groupsData = await groupsResponse.json();
       
+      console.log('🔍 [GESTIONAR-SEDES] Respuesta de API:', groupsData);
+      
       if (!groupsData.success) return;
       
       // Filtrar sedes operativas (excluir Otros y Satélites)
@@ -117,6 +135,9 @@ export default function GestionarSedesPage() {
         group.name !== 'Otros' && 
         group.name !== 'Satélites'
       );
+      
+      console.log('🔍 [GESTIONAR-SEDES] Sedes operativas filtradas:', sedesOperativas);
+      
       setAvailableSedes(sedesOperativas);
       
       // Iniciar sin sede seleccionada (estado "Todas las sedes")
