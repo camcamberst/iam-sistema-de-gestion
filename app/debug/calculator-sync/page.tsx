@@ -84,7 +84,7 @@ export default function DebugCalculatorSyncPage() {
       if (rolesError) {
         console.log('❌ [DIAGNÓSTICO] Error obteniendo roles:', rolesError);
       } else {
-        const uniqueRoles = [...new Set(allRoles?.map(u => u.role) || [])];
+        const uniqueRoles = Array.from(new Set(allRoles?.map(u => u.role) || []));
         console.log('🔍 [DIAGNÓSTICO] Roles únicos encontrados:', uniqueRoles);
         console.log('🔍 [DIAGNÓSTICO] ¿Existe rol "modelo"?', uniqueRoles.includes('modelo'));
       }
