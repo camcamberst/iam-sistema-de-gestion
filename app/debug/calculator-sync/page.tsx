@@ -32,6 +32,10 @@ export default function DebugCalculatorSyncPage() {
       setError(null);
       
       console.log('🔍 [DIAGNÓSTICO] Iniciando análisis de sincronización...');
+      console.log('🔍 [DIAGNÓSTICO] Variables de entorno:', {
+        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurado' : '❌ No configurado',
+        supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurado' : '❌ No configurado'
+      });
 
       // 1. Obtener fecha actual
       const today = new Date();
@@ -40,11 +44,25 @@ export default function DebugCalculatorSyncPage() {
 
       // 2. Obtener todos los modelos activos
       console.log('👥 [DIAGNÓSTICO] Obteniendo modelos activos...');
+      
+      // Primero intentar obtener todos los usuarios para debugging
+      const { data: allUsers, error: allUsersError } = await supabase
+        .from('users')
+        .select('id, email, name, role, is_active')
+        .limit(50);
+      
+      console.log('🔍 [DIAGNÓSTICO] Todos los usuarios (primeros 50):', allUsers);
+      console.log('🔍 [DIAGNÓSTICO] Error obteniendo todos los usuarios:', allUsersError);
+      
+      // Ahora filtrar por modelos activos
       const { data: modelsData, error: modelsError } = await supabase
         .from('users')
         .select('id, email, name, role')
         .eq('role', 'modelo')
         .eq('is_active', true);
+
+      console.log('🔍 [DIAGNÓSTICO] Error obteniendo modelos:', modelsError);
+      console.log('🔍 [DIAGNÓSTICO] Modelos encontrados:', modelsData);
 
       if (modelsError) {
         throw new Error(`Error obteniendo modelos: ${modelsError.message}`);
@@ -356,6 +374,27 @@ export default function DebugCalculatorSyncPage() {
             <p><strong>Tablas Analizadas:</strong> model_values, calculator_totals</p>
             <p><strong>Período:</strong> {new Date().toISOString().split('T')[0]}</p>
             <p><strong>Filtros:</strong> role = 'modelo', is_active = true</p>
+            <p><strong>Supabase URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurado' : '❌ No configurado'}</p>
+            <p><strong>Supabase Key:</strong> {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurado' : '❌ No configurado'}</p>
+          </div>
+        </div>
+
+        <div className="mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+          <div className="flex items-center mb-2">
+            <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+            </svg>
+            <h3 className="font-medium text-yellow-800 dark:text-yellow-200">⚠️ Información de Debugging</h3>
+          </div>
+          <div className="text-sm text-yellow-700 dark:text-yellow-300">
+            <p className="mb-2">Si el diagnóstico muestra "0 modelos", esto puede indicar:</p>
+            <ul className="list-disc list-inside space-y-1 ml-4">
+              <li>Problema de permisos RLS (Row Level Security) en Supabase</li>
+              <li>Error en la consulta de usuarios</li>
+              <li>Problema con las variables de entorno</li>
+              <li>Filtros incorrectos en la consulta</li>
+            </ul>
+            <p className="mt-2"><strong>Revisa la consola del navegador</strong> para ver los logs detallados del diagnóstico.</p>
           </div>
         </div>
       </div>
