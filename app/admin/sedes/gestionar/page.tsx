@@ -764,9 +764,9 @@ export default function GestionarSedesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Columna Izquierda: Selector de Sedes */}
           <div className="flex flex-col h-full">
-            <div className="relative flex-1">
+            <div className="relative flex-1 z-[99999]">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
