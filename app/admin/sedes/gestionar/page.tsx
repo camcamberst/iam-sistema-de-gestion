@@ -56,6 +56,8 @@ export default function GestionarSedesPage() {
   const [conflictInfo, setConflictInfo] = useState<any>(null);
   
   // Estados para confirmación de eliminación
+  const [showDeleteRoomModal, setShowDeleteRoomModal] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState<any>(null);
   
@@ -646,6 +648,50 @@ export default function GestionarSedesPage() {
     }
   };
 
+  // NUEVA FUNCIÓN: Eliminar room
+  const handleDeleteRoom = async () => {
+    if (!roomToDelete) return;
+
+    try {
+      setSubmitting(true);
+      setError('');
+      setSuccess('');
+
+      console.log('🔍 [FRONTEND] Eliminando room:', {
+        room_id: roomToDelete.id,
+        room_name: roomToDelete.room_name,
+        group_id: roomToDelete.group_id
+      });
+
+      const response = await fetch(`/api/groups/rooms?id=${roomToDelete.id}`, {
+        method: 'DELETE'
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message);
+        setError('');
+        
+        // Recargar datos
+        await loadData();
+        
+        // Cerrar modal
+        setShowDeleteRoomModal(false);
+        setRoomToDelete(null);
+      } else {
+        setError(result.error || 'Error eliminando room');
+        setSuccess('');
+      }
+    } catch (err) {
+      console.error('Error eliminando room:', err);
+      setError('Error de conexión eliminando room');
+      setSuccess('');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
@@ -871,16 +917,30 @@ export default function GestionarSedesPage() {
               {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
                 <div className="flex flex-wrap gap-2">
                   {selectedSedeInfo.rooms.map((room: any) => (
-                    <button
-                      key={room.id}
-                      onClick={() => handleRoomClick(room)}
-                      className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-600 dark:to-slate-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-500 dark:hover:to-slate-500 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50 dark:border-gray-500/50"
-                    >
-                      <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                      </svg>
-                      {room.room_name}
-                    </button>
+                    <div key={room.id} className="inline-flex items-center group">
+                      <button
+                        onClick={() => handleRoomClick(room)}
+                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-600 dark:to-slate-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-500 dark:hover:to-slate-500 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50 dark:border-gray-500/50"
+                      >
+                        <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        {room.room_name}
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setRoomToDelete(room);
+                          setShowDeleteRoomModal(true);
+                        }}
+                        className="ml-1 p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                        title="Eliminar room"
+                      >
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                        </svg>
+                      </button>
+                    </div>
                   ))}
                 </div>
               ) : (
@@ -922,13 +982,27 @@ export default function GestionarSedesPage() {
                     <p className="text-sm text-gray-600 mb-2">Rooms disponibles:</p>
                     <div className="flex flex-wrap gap-2">
                       {getRoomsForGroup(group.id).map((room) => (
-                        <button
-                          key={room.id}
-                          onClick={() => handleRoomClick(room)}
-                          className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 transition-colors cursor-pointer"
-                        >
-                          {room.room_name}
-                        </button>
+                        <div key={room.id} className="inline-flex items-center group">
+                          <button
+                            onClick={() => handleRoomClick(room)}
+                            className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 hover:bg-blue-200 hover:text-blue-900 transition-colors cursor-pointer"
+                          >
+                            {room.room_name}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setRoomToDelete(room);
+                              setShowDeleteRoomModal(true);
+                            }}
+                            className="ml-1 p-0.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                            title="Eliminar room"
+                          >
+                            <svg className="w-2.5 h-2.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                        </div>
                       ))}
                     </div>
                   </div>
@@ -1445,6 +1519,65 @@ export default function GestionarSedesPage() {
                     }`}
                   >
                     {assignmentToDelete?.isDeleting ? 'Eliminando...' : 'Eliminar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal de Confirmación de Eliminación de Room */}
+        {showDeleteRoomModal && roomToDelete && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
+            <div className="relative">
+              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+                <div className="flex items-center space-x-3 mb-6">
+                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Confirmar Eliminación de Room</h2>
+                </div>
+                
+                <div className="mb-6">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    ¿Estás seguro de que deseas eliminar el room <strong>{roomToDelete.room_name}</strong>?
+                  </p>
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-8 h-8 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                        <svg className="w-4 h-4 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                        </svg>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">Advertencia</p>
+                        <p className="text-xs text-yellow-700 dark:text-yellow-300">
+                          Esta acción no se puede deshacer. Si el room tiene asignaciones activas, no se podrá eliminar.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-3">
+                  <button
+                    onClick={() => {
+                      setShowDeleteRoomModal(false);
+                      setRoomToDelete(null);
+                    }}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleDeleteRoom}
+                    disabled={submitting}
+                    className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {submitting ? 'Eliminando...' : 'Eliminar Room'}
                   </button>
                 </div>
               </div>
