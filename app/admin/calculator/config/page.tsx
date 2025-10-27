@@ -397,7 +397,7 @@ export default function ConfigCalculatorPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Panel izquierdo: Filtros y Selección de modelo */}
         <div className="md:col-span-1">
-          <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 space-y-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 space-y-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
             {/* Filtro por Grupo */}
             {availableGroups.length > 0 && (
               <div>
