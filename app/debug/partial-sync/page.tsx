@@ -99,7 +99,7 @@ export default function PartialSyncDiagnostic() {
             issue = 'Totales en $0.00 (posible problema de cálculo)';
           } else if (valuesError || totalsError) {
             status = 'error';
-            const errorMessage = valuesError?.message || totalsError?.message || 'Error desconocido';
+            const errorMessage = (valuesError as any)?.message || (totalsError as any)?.message || 'Error desconocido';
             issue = `Error en consulta: ${errorMessage}`;
           }
           
@@ -124,8 +124,8 @@ export default function PartialSyncDiagnostic() {
             calculatorTotals: hasTotals ? `${calculatorTotals.length} registros` : 'Sin datos',
             totalUsdBruto,
             totalUsdModelo,
-            valuesError: valuesError?.message,
-            totalsError: totalsError?.message
+            valuesError: (valuesError as any)?.message,
+            totalsError: (totalsError as any)?.message
           });
           
         } catch (error) {
