@@ -96,6 +96,12 @@ export default function UsersListPage() {
         }
 
         const userGroups = currentUserData.user_groups?.map((ug: any) => ug.groups.id) || [];
+        console.log('🔍 [USUARIOS] Datos del usuario actual:', {
+          id: user.id,
+          role: currentUserData.role,
+          groups: userGroups
+        });
+        
         setCurrentUser({
           id: user.id,
           role: currentUserData.role,
@@ -117,6 +123,9 @@ export default function UsersListPage() {
         // Aplicar filtros de jerarquía
         let filteredUsers = usersData.users;
         
+        console.log('🔍 [USUARIOS] Usuarios obtenidos de API:', usersData.users.length);
+        console.log('🔍 [USUARIOS] Usuario actual para filtrado:', currentUser);
+        
         if (currentUser?.role === 'admin') {
           // Admin solo puede ver usuarios de sus grupos
           const userGroups = currentUser.groups || [];
@@ -124,6 +133,11 @@ export default function UsersListPage() {
           const userGroupIds = Array.isArray(userGroups) 
             ? userGroups.map((g: any) => typeof g === 'string' ? g : g.id)
             : [];
+          
+          console.log('🔍 [USUARIOS] Aplicando filtro de jerarquía para admin:', {
+            userGroupIds,
+            totalUsers: usersData.users.length
+          });
           
           filteredUsers = usersData.users.filter((user: any) => {
             // Super admin puede ver todos
@@ -144,6 +158,8 @@ export default function UsersListPage() {
             
             return false;
           });
+          
+          console.log('🔍 [USUARIOS] Usuarios después del filtro:', filteredUsers.length);
         }
         
         setUsers(filteredUsers);
