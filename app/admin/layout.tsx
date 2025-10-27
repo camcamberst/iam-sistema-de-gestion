@@ -418,7 +418,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Apple Style 2 Header */}
-      <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-[99999] shadow-lg dark:shadow-lg dark:shadow-green-900/15 dark:ring-0.5 dark:ring-green-400/20">
+      <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-[9999999] shadow-lg dark:shadow-lg dark:shadow-green-900/15 dark:ring-0.5 dark:ring-green-400/20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
@@ -511,7 +511,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   {/* Dropdown Menu */}
                       {shouldShowDropdown(item) && (
                         <div
-                          className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[999999] animate-in slide-in-from-top-2 duration-200"
+                          className="absolute top-full left-0 mt-2 w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9999999] animate-in slide-in-from-top-2 duration-200"
                           onMouseEnter={handleDropdownEnter}
                           onMouseLeave={handleDropdownLeave}
                         >
@@ -602,7 +602,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-[999999] animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-[9999999] animate-in slide-in-from-top-2 duration-200">
                     {loadingUser ? (
                       <div className="text-center py-4">
                         <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>

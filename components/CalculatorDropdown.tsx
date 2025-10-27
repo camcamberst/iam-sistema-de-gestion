@@ -72,7 +72,7 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-gray-100 border border-gray-200 dark:border-gray-300 rounded-xl shadow-xl dark:shadow-lg z-[999999] animate-in slide-in-from-top-2 duration-200">
+        <div className="absolute top-full left-0 mt-2 w-80 bg-white dark:bg-gray-100 border border-gray-200 dark:border-gray-300 rounded-xl shadow-xl dark:shadow-lg z-[9999999] animate-in slide-in-from-top-2 duration-200">
           <div className="p-3">
             <div className="mb-2">
               <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-800 uppercase tracking-wide mb-2">
