@@ -5,12 +5,15 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🏠 [API] Obteniendo rooms...');
     
+    const { searchParams } = new URL(request.url);
+    const groupId = searchParams.get('groupId');
+    
     const supabase = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const { data: rooms, error } = await supabase
+    let query = supabase
       .from('group_rooms')
       .select(`
         id,
@@ -21,8 +24,15 @@ export async function GET(request: NextRequest) {
           id,
           name
         )
-      `)
-      .order('room_name', { ascending: true });
+      `);
+
+    // Filtrar por grupo si se especifica
+    if (groupId) {
+      console.log('🔍 [API] Filtrando rooms por grupo:', groupId);
+      query = query.eq('group_id', groupId);
+    }
+
+    const { data: rooms, error } = await query.order('room_name', { ascending: true });
 
     if (error) {
       console.error('❌ [API] Error obteniendo rooms:', error);
