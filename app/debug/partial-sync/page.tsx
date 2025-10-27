@@ -99,7 +99,8 @@ export default function PartialSyncDiagnostic() {
             issue = 'Totales en $0.00 (posible problema de cálculo)';
           } else if (valuesError || totalsError) {
             status = 'error';
-            issue = `Error en consulta: ${valuesError?.message || totalsError?.message}`;
+            const errorMessage = valuesError?.message || totalsError?.message || 'Error desconocido';
+            issue = `Error en consulta: ${errorMessage}`;
           }
           
           const modelData: ModelData = {
