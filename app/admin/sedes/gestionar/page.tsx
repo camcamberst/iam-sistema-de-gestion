@@ -681,8 +681,10 @@ export default function GestionarSedesPage() {
         setSuccess(result.message);
         setError('');
         
-        // Recargar datos
-        await loadData();
+        // Recargar datos de la sede actual para actualizar la lista de rooms
+        if (selectedSede) {
+          await loadSedeInfo(selectedSede);
+        }
         
         // Cerrar modal
         setShowDeleteRoomModal(false);
