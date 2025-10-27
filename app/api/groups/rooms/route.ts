@@ -176,8 +176,7 @@ export async function DELETE(request: NextRequest) {
     const { data: assignments, error: assignmentsError } = await supabase
       .from('room_assignments')
       .select('id')
-      .eq('room_id', roomId)
-      .eq('is_active', true);
+      .eq('room_id', roomId);
 
     if (assignmentsError) {
       console.error('❌ [API] Error verificando asignaciones:', assignmentsError);
