@@ -650,7 +650,12 @@ export default function GestionarSedesPage() {
 
   // NUEVA FUNCIÓN: Eliminar room
   const handleDeleteRoom = async () => {
-    if (!roomToDelete) return;
+    console.log('🔍 [DELETE-ROOM] handleDeleteRoom ejecutándose con:', roomToDelete);
+    
+    if (!roomToDelete) {
+      console.log('❌ [DELETE-ROOM] No hay room para eliminar');
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -667,7 +672,10 @@ export default function GestionarSedesPage() {
         method: 'DELETE'
       });
 
+      console.log('🔍 [DELETE-ROOM] Respuesta de API:', response.status);
+
       const result = await response.json();
+      console.log('🔍 [DELETE-ROOM] Resultado:', result);
 
       if (result.success) {
         setSuccess(result.message);
@@ -684,7 +692,7 @@ export default function GestionarSedesPage() {
         setSuccess('');
       }
     } catch (err) {
-      console.error('Error eliminando room:', err);
+      console.error('❌ [DELETE-ROOM] Error eliminando room:', err);
       setError('Error de conexión eliminando room');
       setSuccess('');
     } finally {
@@ -930,6 +938,7 @@ export default function GestionarSedesPage() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
+                          console.log('🔍 [DELETE-ROOM] Botón de eliminar clickeado:', room);
                           setRoomToDelete(room);
                           setShowDeleteRoomModal(true);
                         }}
@@ -992,6 +1001,7 @@ export default function GestionarSedesPage() {
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
+                              console.log('🔍 [DELETE-ROOM] Botón de eliminar clickeado (lista grupos):', room);
                               setRoomToDelete(room);
                               setShowDeleteRoomModal(true);
                             }}
@@ -1565,6 +1575,7 @@ export default function GestionarSedesPage() {
                 <div className="flex space-x-3">
                   <button
                     onClick={() => {
+                      console.log('🔍 [DELETE-ROOM] Cancelando eliminación');
                       setShowDeleteRoomModal(false);
                       setRoomToDelete(null);
                     }}
@@ -1573,7 +1584,10 @@ export default function GestionarSedesPage() {
                     Cancelar
                   </button>
                   <button
-                    onClick={handleDeleteRoom}
+                    onClick={() => {
+                      console.log('🔍 [DELETE-ROOM] Confirmando eliminación de:', roomToDelete);
+                      handleDeleteRoom();
+                    }}
                     disabled={submitting}
                     className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
                   >
