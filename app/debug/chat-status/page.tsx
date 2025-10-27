@@ -124,7 +124,7 @@ export default function ChatStatusDiagnostic() {
     } catch (error) {
       console.error('❌ [CHAT-STATUS-DIAGNOSTIC] Error general:', error);
       setDiagnosticData({
-        error: error.message,
+        error: (error as any)?.message || 'Error desconocido',
         timestamp: new Date().toISOString()
       });
     } finally {
