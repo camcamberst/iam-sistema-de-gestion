@@ -698,14 +698,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [session]);
 
-  // Actualizar lista de usuarios cada 10 segundos para ver cambios de estado
+  // Actualizar lista de usuarios cada 30 segundos como respaldo (tiempo real es principal)
   useEffect(() => {
     if (!session) return;
 
-    // Actualizar lista de usuarios cada 10 segundos
+    // Actualizar lista de usuarios cada 30 segundos como respaldo
     const usersUpdateInterval = setInterval(() => {
+      console.log('🔄 [ChatWidget] Polling de respaldo: actualizando lista de usuarios...');
       loadAvailableUsers();
-    }, 10000);
+    }, 30000);
 
     // Cleanup
     return () => {
@@ -855,6 +856,38 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       supabase.removeChannel(channel);
     };
   }, [session, userId]); // Solo dependencias esenciales
+
+  // Suscripción en tiempo real para estados de usuarios (online/offline)
+  useEffect(() => {
+    if (!session) return;
+
+    console.log('👥 [ChatWidget] Configurando suscripción para estados de usuarios...');
+
+    const userStatusChannel = supabase
+      .channel('chat-user-status-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'chat_user_status'
+        },
+        async (payload) => {
+          console.log('👥 [ChatWidget] Estado de usuario actualizado:', payload);
+          
+          // Recargar lista de usuarios para reflejar cambios
+          await loadAvailableUsers();
+        }
+      )
+      .subscribe((status) => {
+        console.log('👥 [ChatWidget] Estado de suscripción de usuarios:', status);
+      });
+
+    return () => {
+      console.log('🧹 [ChatWidget] Limpiando suscripción de estados de usuarios');
+      supabase.removeChannel(userStatusChannel);
+    };
+  }, [session]);
 
   // Actualizar referencia de conversaciones para la suscripción
   useEffect(() => {
