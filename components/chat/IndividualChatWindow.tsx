@@ -33,44 +33,51 @@ export default function IndividualChatWindow({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [position, setPosition] = useState<{ x?: number; y?: number; right?: number }>({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Calcular posición inicial basada en el índice de la ventana
   const getInitialPosition = () => {
+    const windowWidth = 320; // w-80 = 320px
+    const margin = 8; // Margen entre ventanas en la barra
+    const rightOffset = 24; // right-6 = 24px (igual que la ventana principal)
+    const mainChatWidth = 320; // w-80 de la ventana principal
+
     if (isInChatBar) {
-      // En la barra de chat, usar posicionamiento horizontal simple
-      const windowWidth = 320; // w-80 = 320px
-      const margin = 8; // Margen entre ventanas en la barra
-      const finalX = windowIndex * (windowWidth + margin);
+      // En la barra de chat, calcular posición desde la derecha hacia la izquierda
+      // La ventana principal está en: rightOffset desde el borde derecho
+      // Las ventanas individuales van a la izquierda de la ventana principal
+      const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
+      const finalRight = window.innerWidth - mainChatLeftEdge + margin + (windowIndex * (windowWidth + margin));
       
-      console.log('🪟 [IndividualChatWindow] Posición en barra de chat:', {
+      console.log('🪟 [IndividualChatWindow] Posición en barra de chat (derecha a izquierda):', {
         windowIndex,
-        finalX,
+        windowInnerWidth: window.innerWidth,
+        mainChatLeftEdge,
+        finalRight,
         isInChatBar
       });
       
-      return { x: finalX, y: 0 }; // Y = 0 porque está en la barra
+      return { right: finalRight, y: 0 }; // Y = 0 porque está en la barra
     } else {
       // Modo flotante original
-      const windowWidth = 320; // w-80 = 320px
       const windowHeight = 500; // h-[500px]
-      const margin = 20; // Margen entre ventanas
-      const bottomOffset = 24; // bottom-6 = 24px (igual que la ventana principal)
-      const rightOffset = 24; // right-6 = 24px (igual que la ventana principal)
-      const mainChatWidth = 320; // w-80 de la ventana principal
+      const marginFloat = 20; // Margen entre ventanas flotantes
+      const bottomOffsetFloat = 24; // bottom-6 = 24px (igual que la ventana principal)
+      const rightOffsetFloat = 24; // right-6 = 24px (igual que la ventana principal)
+      const mainChatWidthFloat = 320; // w-80 de la ventana principal
 
       // Y: Anclar al bottom exactamente igual que la ventana principal
-      const finalY = window.innerHeight - windowHeight - bottomOffset;
+      const finalY = window.innerHeight - windowHeight - bottomOffsetFloat;
 
       // X: Posicionar a la izquierda de la ventana principal
-      // La ventana principal está en: window.innerWidth - rightOffset - mainChatWidth
+      // La ventana principal está en: window.innerWidth - rightOffsetFloat - mainChatWidthFloat
       // Las ventanas individuales van a la izquierda con cascading
-      const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
-      const individualWindowRightEdge = mainChatLeftEdge - margin;
-      const finalX = individualWindowRightEdge - windowWidth - (windowIndex * (windowWidth + margin));
+      const mainChatLeftEdge = window.innerWidth - rightOffsetFloat - mainChatWidthFloat;
+      const individualWindowRightEdge = mainChatLeftEdge - marginFloat;
+      const finalX = individualWindowRightEdge - windowWidth - (windowIndex * (windowWidth + marginFloat));
 
       // Asegurar que no se vaya fuera de la pantalla
       const minX = 20; // Margen mínimo del borde izquierdo
@@ -244,7 +251,7 @@ export default function IndividualChatWindow({
       ref={windowRef}
       className="w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={isInChatBar ? {
-        left: `${position.x}px`,
+        right: `${position.right}px`,
         bottom: '0px',
         cursor: 'default'
       } : {
