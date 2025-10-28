@@ -39,7 +39,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [showUserList, setShowUserList] = useState(true);
+  const [mainView, setMainView] = useState<'users' | 'conversations' | 'chat'>('users');
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [expandedSections, setExpandedSections] = useState({
     online: true,
@@ -1069,8 +1069,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         session={session}
         isMainChatOpen={isOpen}
         onCloseMainChat={() => setIsOpen(false)}
-        view={showUserList ? 'users' : 'conversations'}
-        setView={(newView) => setShowUserList(newView === 'users')}
+        view={mainView}
+        setView={setMainView}
         availableUsers={availableUsers}
         expandedSections={expandedSections}
         setExpandedSections={setExpandedSections}
