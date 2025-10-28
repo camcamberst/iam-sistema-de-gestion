@@ -62,6 +62,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   // Calcular posición desde la derecha (ventana principal siempre en la posición más a la derecha)
   const finalRight = rightOffset;
+  // Solo mostrar conversaciones con actividad (mensajes entrantes o iniciadas)
+  const conversationsWithMessages = (conversations || []).filter((c: any) => {
+    const content = c?.last_message?.content;
+    return typeof content === 'string' && content.trim().length > 0;
+  });
 
   return (
     <div
@@ -95,26 +100,26 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       </div>
 
       {/* Pestañas de navegación */}
-      <div className="flex border-b border-gray-700">
+      <div className="flex border-b border-gray-700 px-2 gap-2">
         <button
           onClick={() => setView?.('users')}
-          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 px-3 py-2 text-xs font-medium rounded-t-md transition-colors ${
             view === 'users'
-              ? 'text-white bg-gray-700 border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              ? 'text-white bg-gray-700/60 ring-1 ring-inset ring-gray-600'
+              : 'text-gray-300 hover:text-white hover:bg-gray-700/40'
           }`}
         >
           Usuarios disponibles
         </button>
         <button
           onClick={() => setView?.('conversations')}
-          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+          className={`flex-1 px-3 py-2 text-xs font-medium rounded-t-md transition-colors ${
             view === 'conversations'
-              ? 'text-white bg-gray-700 border-b-2 border-blue-500'
-              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+              ? 'text-white bg-gray-700/60 ring-1 ring-inset ring-gray-600'
+              : 'text-gray-300 hover:text-white hover:bg-gray-700/40'
           }`}
         >
-          Conversaciones ({conversations.length})
+          Conversaciones ({conversationsWithMessages.length})
         </button>
       </div>
 
@@ -204,7 +209,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           <>
             <div className="p-4 flex-1 flex flex-col min-h-0">
               <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-0">
-                {conversations.length === 0 ? (
+                {conversationsWithMessages.length === 0 ? (
                   <div className="flex flex-col items-center justify-center h-full text-gray-400">
                     <svg className="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
@@ -213,34 +218,48 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                     <p className="text-xs text-center mt-1">Los mensajes aparecerán aquí cuando inicies una conversación</p>
                   </div>
                 ) : (
-                  conversations.map((conversation) => (
-                  <button
-                    key={conversation.id}
-                    onClick={() => {
-                      setSelectedConversation?.(conversation.id);
-                      setView?.('chat');
-                    }}
-                    className={`flex items-center w-full p-2 text-left rounded-lg transition-colors ${
-                      selectedConversation === conversation.id
-                        ? 'bg-blue-600 text-white'
-                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
-                    }`}
-                  >
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
-                      <span className="text-white text-xs font-bold">
-                        {getDisplayName(conversation.other_participant).charAt(0).toUpperCase()}
-                      </span>
+                  conversationsWithMessages.map((conversation: any) => (
+                    <div
+                      key={conversation.id}
+                      className={`flex items-center w-full p-2 text-left rounded-lg transition-colors ${
+                        selectedConversation === conversation.id
+                          ? 'bg-blue-600 text-white'
+                          : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      }`}
+                    >
+                      <button
+                        onClick={() => {
+                          setSelectedConversation?.(conversation.id);
+                          setView?.('chat');
+                        }}
+                        className="flex items-center flex-1 min-w-0 text-left"
+                      >
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-xs font-bold">
+                            {getDisplayName(conversation.other_participant).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{getDisplayName(conversation.other_participant)}</p>
+                          <p className="text-xs text-gray-400 truncate">{conversation.last_message?.content}</p>
+                        </div>
+                      </button>
+                      {conversation.unread_count > 0 && (
+                        <div className="bg-red-500 text-white text-[10px] rounded-full px-2 py-1 min-w-[20px] text-center ml-2">
+                          {conversation.unread_count}
+                        </div>
+                      )}
+                      <button
+                        onClick={(e) => { e.stopPropagation(); setShowDeleteConfirm?.(conversation.id); }}
+                        className="ml-2 p-2 rounded-md text-gray-400 hover:text-white hover:bg-gray-600/50"
+                        aria-label="Eliminar conversación"
+                        title="Eliminar conversación"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m-7 0a2 2 0 012-2h4a2 2 0 012 2m-8 0H5" />
+                        </svg>
+                      </button>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{getDisplayName(conversation.other_participant)}</p>
-                      <p className="text-xs text-gray-400 truncate">{conversation.last_message?.content || 'Sin mensajes'}</p>
-                    </div>
-                    {conversation.unread_count > 0 && (
-                      <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
-                        {conversation.unread_count}
-                      </div>
-                    )}
-                  </button>
                   ))
                 )}
               </div>
