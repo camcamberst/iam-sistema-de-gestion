@@ -167,6 +167,41 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, [userId]);
 
+  // Detectar pérdida de conexión a internet
+  useEffect(() => {
+    const handleOnline = async () => {
+      console.log('🌐 [ChatWidget] Conexión restaurada');
+      if (userId) {
+        try {
+          await updateUserStatus(true);
+          console.log('🟢 [ChatWidget] Usuario marcado como online tras restaurar conexión');
+        } catch (error) {
+          console.error('❌ [ChatWidget] Error marcando usuario online:', error);
+        }
+      }
+    };
+
+    const handleOffline = async () => {
+      console.log('🌐 [ChatWidget] Conexión perdida');
+      if (userId) {
+        try {
+          await updateUserStatus(false);
+          console.log('🔴 [ChatWidget] Usuario marcado como offline por pérdida de conexión');
+        } catch (error) {
+          console.error('❌ [ChatWidget] Error marcando usuario offline:', error);
+        }
+      }
+    };
+
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, [userId]);
+
   // Cargar conversaciones
   const loadConversations = async () => {
     if (!session) return;
