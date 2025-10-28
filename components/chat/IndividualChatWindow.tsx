@@ -242,10 +242,10 @@ export default function IndividualChatWindow({
   return (
     <div
       ref={windowRef}
-      className={`w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] ${
-        isInChatBar ? 'relative' : 'fixed'
-      }`}
+      className="w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={isInChatBar ? {
+        left: `${position.x}px`,
+        bottom: '0px',
         cursor: 'default'
       } : {
         left: `${position.x}px`,
