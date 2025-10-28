@@ -3,9 +3,9 @@
 
 Write-Host "Validando estandar de modales..." -ForegroundColor Cyan
 
-# Buscar modales manuales con 'fixed inset-0' (excluyendo StandardModal)
+# Buscar modales manuales con 'fixed inset-0' (excluyendo StandardModal y ThemeTransition)
 $manualModals = Get-ChildItem -Recurse -Include "*.tsx", "*.ts", "*.jsx", "*.js" | 
-    Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*components/ui/StandardModal.tsx*" } |
+    Where-Object { $_.FullName -notlike "*node_modules*" -and $_.FullName -notlike "*components/ui/StandardModal.tsx*" -and $_.FullName -notlike "*components/ThemeTransition.tsx*" } |
     Select-String "fixed inset-0"
 
 if ($manualModals) {
