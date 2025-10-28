@@ -1015,8 +1015,8 @@ export default function GestionarSedesPage() {
 
         {/* Modal Crear Sede - Solo para Super Admin */}
         {showCreateGroup && userRole === 'super_admin' && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
-            <div className="relative">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50" onClick={() => setShowCreateGroup(false)}>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-3xl blur-xl"></div>
               <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-7 w-[92vw] max-w-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-5">
@@ -1097,8 +1097,8 @@ export default function GestionarSedesPage() {
 
         {/* Modal Crear Room */}
         {showCreateRoom && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
-            <div className="relative">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50" onClick={() => setShowCreateRoom(false)}>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-3xl blur-xl"></div>
               <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-7 w-[92vw] max-w-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-5">
@@ -1189,8 +1189,9 @@ export default function GestionarSedesPage() {
 
         {/* Modal Configuración de Room */}
         {showRoomConfig && selectedRoom && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => { setShowRoomConfig(false); setSelectedRoom(null); setRoomAssignments([]); }}>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Configuración de {selectedRoom.room_name}
@@ -1353,14 +1354,16 @@ export default function GestionarSedesPage() {
                   Cerrar
                 </button>
               </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Modal Selector de Modelos */}
         {showModelSelector && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => { setShowModelSelector(false); setAvailableModels([]); setSelectedJornada(''); }}>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Seleccionar Modelo para {selectedJornada}
@@ -1410,14 +1413,16 @@ export default function GestionarSedesPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">No hay modelos disponibles</p>
                 </div>
               )}
+              </div>
             </div>
           </div>
         )}
 
         {/* Modal de Confirmación de Conflicto */}
         {showConflictModal && conflictInfo && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={() => { setShowConflictModal(false); setConflictInfo(null); setSelectedModel(null); }}>
             <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Conflicto de Asignación
@@ -1478,14 +1483,15 @@ export default function GestionarSedesPage() {
                 <p><strong>Mover:</strong> Desasigna de ubicación actual y asigna aquí</p>
                 <p><strong>Doblar:</strong> Mantiene ubicación actual y asigna también aquí</p>
               </div>
+              </div>
             </div>
           </div>
         )}
 
         {/* Modal de Confirmación de Eliminación */}
         {showDeleteConfirm && assignmentToDelete && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
-            <div className="relative">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50" onClick={() => { setShowDeleteConfirm(false); setAssignmentToDelete(null); }}>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
               <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-6">
@@ -1545,8 +1551,8 @@ export default function GestionarSedesPage() {
 
         {/* Modal de Confirmación de Eliminación de Room */}
         {showDeleteRoomModal && roomToDelete && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
-            <div className="relative">
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50" onClick={() => { setShowDeleteRoomModal(false); setRoomToDelete(null); }}>
+            <div className="relative" onClick={(e) => e.stopPropagation()}>
               <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
               <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
                 <div className="flex items-center space-x-3 mb-6">

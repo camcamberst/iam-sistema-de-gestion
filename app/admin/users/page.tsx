@@ -847,9 +847,18 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     }));
   };
 
+  // Cerrar con ESC
+  useEffect(() => {
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    window.addEventListener('keydown', handleKey);
+    return () => window.removeEventListener('keydown', handleKey);
+  }, [onClose]);
+
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col">
+    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
+      <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col" onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Editar Usuario</h2>
 
         {/* Mensaje de error del modal */}
