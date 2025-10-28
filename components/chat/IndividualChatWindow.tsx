@@ -118,7 +118,7 @@ export default function IndividualChatWindow({
     
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`, {
+      const response = await fetch(`/api/chat/messages?conversation_id=${conversationId}`, {
         headers: {
           'Authorization': `Bearer ${session.access_token}`
         }
@@ -162,7 +162,7 @@ export default function IndividualChatWindow({
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          conversationId,
+          conversation_id: conversationId,
           content: newMessage.trim()
         })
       });
