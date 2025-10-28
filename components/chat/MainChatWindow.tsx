@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import StandardModal from '@/components/ui/StandardModal';
 
 interface MainChatWindowProps {
   onClose: () => void;
@@ -319,28 +320,25 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
         {/* Modal de confirmación para eliminar conversación */}
         {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
-            <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
-              <h3 className="text-white text-lg font-semibold mb-4">Eliminar conversación</h3>
-              <p className="text-gray-300 mb-6">
-                ¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.
-              </p>
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowDeleteConfirm?.(null)}
-                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={() => deleteConversation?.(showDeleteConfirm)}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-                >
-                  Eliminar
-                </button>
-              </div>
+          <StandardModal isOpen={true} onClose={() => setShowDeleteConfirm?.(null)} title="Eliminar conversación" maxWidthClass="max-w-md">
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              ¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.
+            </p>
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm?.(null)}
+                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => deleteConversation?.(showDeleteConfirm)}
+                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Eliminar
+              </button>
             </div>
-          </div>
+          </StandardModal>
         )}
       </div>
     </div>
