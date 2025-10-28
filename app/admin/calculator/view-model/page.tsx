@@ -793,6 +793,49 @@ export default function AdminViewModelPage() {
                         </div>
                       </div>
                       
+                      {/* Barra de Objetivo Básico */}
+                      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50">
+                        <div className="flex items-center justify-between mb-3">
+                          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                            {calculatedTotals.estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
+                          </h4>
+                          <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
+                            ${calculatedTotals.usdModelo.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD
+                          </div>
+                        </div>
+                        
+                        {/* Barra de progreso */}
+                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden mb-2">
+                          <div 
+                            className={`h-3 transition-all duration-500 ${
+                              calculatedTotals.estaPorDebajo 
+                                ? 'bg-gradient-to-r from-orange-400 to-red-500' 
+                                : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                            }`}
+                            style={{ 
+                              width: `${Math.min(100, Math.max(0, calculatedTotals.porcentajeAlcanzado))}%` 
+                            }}
+                          ></div>
+                        </div>
+                        
+                        {/* Información de progreso */}
+                        <div className="flex items-center justify-between text-xs">
+                          <div className={`font-medium ${
+                            calculatedTotals.estaPorDebajo 
+                              ? 'text-orange-600 dark:text-orange-400' 
+                              : 'text-green-600 dark:text-green-400'
+                          }`}>
+                            {calculatedTotals.estaPorDebajo 
+                              ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdModelo)} USD`
+                              : `Excelente +${Math.max(0, calculatedTotals.porcentajeAlcanzado - 100).toFixed(0)}%`
+                            }
+                          </div>
+                          <div className="text-gray-600 dark:text-gray-300">
+                            {Math.min(100, Math.max(0, calculatedTotals.porcentajeAlcanzado)).toFixed(0)}%
+                          </div>
+                        </div>
+                      </div>
+
                       {/* 90% de anticipo - DESDE SERVIDOR */}
                       <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
                         <div className="text-sm text-gray-600 dark:text-gray-300">

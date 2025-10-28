@@ -183,10 +183,18 @@ export async function GET(request: NextRequest) {
     const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
     const totalCopModelo = totalUsdModelo * rates.usd_cop;
 
+    // Calcular objetivo básico (cuota mínima)
+    const cuotaMinima = config.min_quota_override || config.group_min_quota || 470;
+    const porcentajeAlcanzado = (totalUsdModelo / cuotaMinima) * 100;
+    const estaPorDebajo = totalUsdModelo < cuotaMinima;
+
     const totals = {
       usdBruto: totalUsdBruto,
       usdModelo: totalUsdModelo,
-      copModelo: totalCopModelo
+      copModelo: totalCopModelo,
+      cuotaMinima,
+      porcentajeAlcanzado,
+      estaPorDebajo
     };
 
 
@@ -196,7 +204,10 @@ export async function GET(request: NextRequest) {
         usdBruto: Math.round(totals.usdBruto * 100) / 100,
         usdModelo: Math.round(totals.usdModelo * 100) / 100,
         copModelo: Math.round(totals.copModelo),
-        anticipoDisponible: Math.round(totals.copModelo * 0.9)
+        anticipoDisponible: Math.round(totals.copModelo * 0.9),
+        cuotaMinima: totals.cuotaMinima,
+        porcentajeAlcanzado: Math.round(totals.porcentajeAlcanzado * 100) / 100,
+        estaPorDebajo: totals.estaPorDebajo
       },
       rates,
       periodDate: today
