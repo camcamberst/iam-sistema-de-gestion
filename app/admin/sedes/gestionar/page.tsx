@@ -764,9 +764,9 @@ export default function GestionarSedesPage() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
           {/* Columna Izquierda: Selector de Sedes */}
           <div className="flex flex-col h-full">
-            <div className="relative flex-1 z-[99999]">
+            <div className="relative flex-1 z-10">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
-              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
+              <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                 <div className="flex items-center space-x-2 mb-4">
                   <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                     <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1032,8 +1032,8 @@ export default function GestionarSedesPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-                <div className="flex items-center space-x-3 mb-6">
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-7 w-[92vw] max-w-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+                <div className="flex items-center space-x-3 mb-5">
                   <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -1042,7 +1042,7 @@ export default function GestionarSedesPage() {
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
                 </div>
               
-              <form onSubmit={handleCreateGroup} className="space-y-6">
+              <form onSubmit={handleCreateGroup} className="space-y-5">
                 {/* Mensajes de estado dentro del modal */}
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -1078,27 +1078,27 @@ export default function GestionarSedesPage() {
                     type="text"
                     value={newGroupName}
                     onChange={(e) => setNewGroupName(e.target.value)}
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
                     placeholder="Ej: Sede Norte"
                     required
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-2">
+                <div className="flex space-x-3 pt-2 flex-nowrap">
                   <button
                     type="button"
                     onClick={() => {
                       setShowCreateGroup(false);
                       setNewGroupName('');
                     }}
-                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50"
+                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting}
-                    className="flex-1 bg-gradient-to-r from-gray-700 to-slate-800 text-white py-3 px-4 rounded-xl hover:from-gray-800 hover:to-slate-900 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="flex-1 bg-gradient-to-r from-gray-700 to-slate-800 text-white py-2 px-4 rounded-xl hover:from-gray-800 hover:to-slate-900 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
                   >
                     {submitting ? 'Creando...' : 'Crear Sede'}
                   </button>
@@ -1114,8 +1114,8 @@ export default function GestionarSedesPage() {
           <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50">
             <div className="relative">
               <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-                <div className="flex items-center space-x-3 mb-6">
+              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-7 w-[92vw] max-w-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+                <div className="flex items-center space-x-3 mb-5">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -1124,7 +1124,7 @@ export default function GestionarSedesPage() {
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Crear Room</h2>
                 </div>
               
-              <form onSubmit={handleCreateRoom} className="space-y-6">
+              <form onSubmit={handleCreateRoom} className="space-y-5">
                 {/* Mensajes de estado dentro del modal */}
                 {error && (
                   <div className="bg-red-50 border border-red-200 rounded-xl p-4">
@@ -1156,7 +1156,7 @@ export default function GestionarSedesPage() {
                   <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
                     Sede Seleccionada
                   </label>
-                  <div className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
+                  <div className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm">
                     {groups.find(g => g.id === selectedGroup)?.name || 'Ninguna sede seleccionada'}
                   </div>
                 </div>
@@ -1169,13 +1169,13 @@ export default function GestionarSedesPage() {
                     type="text"
                     value={newRoomName}
                     onChange={(e) => setNewRoomName(e.target.value)}
-                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-3 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
                     placeholder="Ej: ROOM01"
                     required
                   />
                 </div>
 
-                <div className="flex space-x-3 pt-2">
+                <div className="flex space-x-3 pt-2 flex-nowrap">
                   <button
                     type="button"
                     onClick={() => {
@@ -1183,14 +1183,14 @@ export default function GestionarSedesPage() {
                       setNewRoomName('');
                       setSelectedGroup('');
                     }}
-                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-3 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50"
+                    className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
                   >
                     Cancelar
                   </button>
                   <button
                     type="submit"
                     disabled={submitting || !selectedGroup}
-                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                    className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 px-4 rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
                   >
                     {submitting ? 'Creando...' : 'Crear Room'}
                   </button>
