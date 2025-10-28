@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle } from 'lucide-react';
 import AppleSelect from '@/components/AppleSelect';
+import StandardModal from '@/components/ui/StandardModal';
 import { getModelDisplayName } from '@/utils/model-display';
 
 interface ModeloPlatform {
@@ -681,75 +682,77 @@ export default function PortafolioModelos() {
 
         {/* Action Modal */}
         {showActionModal && selectedPlatformForAction && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-white/90 dark:bg-gray-700/90 backdrop-blur-md rounded-2xl p-6 w-full max-w-md mx-4 shadow-2xl border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-500/20">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                {actionType === 'request' && 'Solicitar Plataforma'}
-                {actionType === 'deliver' && 'Entregar Plataforma'}
-                {actionType === 'deactivate' && 'Desactivar Plataforma'}
-                {actionType === 'revert' && 'Revertir Plataforma'}
-              </h3>
-              
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
-                </p>
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
-                <AppleSelect
-                  value={modalStatus}
-                  onChange={(v) => setModalStatus(v as any)}
-                  options={[
-                    { label: 'Disponible', value: 'disponible', color: '#e2e8f0' },
-                    { label: 'Solicitada', value: 'solicitada', color: '#93c5fd' },
-                    { label: 'Pendiente', value: 'pendiente', color: '#fde047' },
-                    { label: 'Entregada', value: 'entregada', color: '#86efac' },
-                    { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
-                    { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
-                  ]}
-                  className="text-sm"
-                />
-              </div>
-
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Notas (opcional)
-                </label>
-                <textarea
-                  value={actionNotes}
-                  onChange={(e) => setActionNotes(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Agregar notas sobre esta acción..."
-                />
-              </div>
-
-              <div className="flex space-x-3">
-                <button
-                  onClick={() => setShowActionModal(false)}
-                  className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
-                  disabled={processingAction}
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={executeAction}
-                  disabled={processingAction}
-                  className="flex-1 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md disabled:opacity-50"
-                >
-                  {processingAction ? 'Procesando...' : 'Confirmar'}
-                </button>
-              </div>
+          <StandardModal 
+            isOpen={true} 
+            onClose={() => setShowActionModal(false)} 
+            title={
+              actionType === 'request' && 'Solicitar Plataforma' ||
+              actionType === 'deliver' && 'Entregar Plataforma' ||
+              actionType === 'deactivate' && 'Desactivar Plataforma' ||
+              actionType === 'revert' && 'Revertir Plataforma' ||
+              'Acción'
+            }
+            maxWidthClass="max-w-md"
+          >
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
+              </p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
+              </p>
             </div>
-          </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
+              <AppleSelect
+                value={modalStatus}
+                onChange={(v) => setModalStatus(v as any)}
+                options={[
+                  { label: 'Disponible', value: 'disponible', color: '#e2e8f0' },
+                  { label: 'Solicitada', value: 'solicitada', color: '#93c5fd' },
+                  { label: 'Pendiente', value: 'pendiente', color: '#fde047' },
+                  { label: 'Entregada', value: 'entregada', color: '#86efac' },
+                  { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
+                  { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
+                ]}
+                className="text-sm"
+              />
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                Notas (opcional)
+              </label>
+              <textarea
+                value={actionNotes}
+                onChange={(e) => setActionNotes(e.target.value)}
+                rows={3}
+                className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                placeholder="Agregar notas sobre esta acción..."
+              />
+            </div>
+
+            <div className="flex space-x-3">
+              <button
+                onClick={() => setShowActionModal(false)}
+                className="flex-1 px-3 py-1.5 text-xs font-medium border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors"
+                disabled={processingAction}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={executeAction}
+                disabled={processingAction}
+                className="flex-1 px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md disabled:opacity-50"
+              >
+                {processingAction ? 'Procesando...' : 'Confirmar'}
+              </button>
+            </div>
+          </StandardModal>
         )}
       </div>
     </div>
