@@ -65,6 +65,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     otherUser: User;
   }>>([]);
 
+  // Debug: Log cuando cambien las ventanas abiertas
+  useEffect(() => {
+    console.log('🪟 [ChatWidget] Ventanas abiertas actualizadas:', openChatWindows.length, openChatWindows);
+  }, [openChatWindows]);
+
   // Función helper para obtener el nombre de visualización
   const getDisplayName = (user: User) => {
     if (user.role === 'modelo') {
@@ -540,7 +545,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Abrir chat con usuario en ventana individual
   const openChatWithUser = async (userId: string) => {
-    if (!session) return;
+    console.log('🖱️ [ChatWidget] Click detectado en usuario:', userId);
+    console.log('🖱️ [ChatWidget] Sesión disponible:', !!session);
+    console.log('🖱️ [ChatWidget] Usuarios disponibles:', availableUsers.length);
+    
+    if (!session) {
+      console.log('❌ [ChatWidget] No hay sesión disponible');
+      return;
+    }
     
     console.log('💬 [ChatWidget] Abriendo chat con usuario:', userId);
     
@@ -550,7 +562,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     );
     
     const user = availableUsers.find(u => u.id === userId);
-    if (!user) return;
+    console.log('👤 [ChatWidget] Usuario encontrado:', user);
+    
+    if (!user) {
+      console.log('❌ [ChatWidget] Usuario no encontrado en availableUsers');
+      return;
+    }
     
     // Verificar si ya hay una ventana abierta para este usuario
     const existingWindow = openChatWindows.find(window => window.otherUser.id === userId);
@@ -567,7 +584,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         conversationId: existingConversation.id,
         otherUser: user
       };
-      setOpenChatWindows(prev => [...prev, newWindow]);
+      setOpenChatWindows(prev => {
+        console.log('🪟 [ChatWidget] Agregando ventana:', newWindow);
+        return [...prev, newWindow];
+      });
     } else {
       // Si no existe, crear nueva conversación y abrir ventana
       console.log('🆕 [ChatWidget] Creando nueva conversación en ventana individual con:', user.name || user.email);
@@ -585,6 +605,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         });
         
         const data = await response.json();
+        console.log('📡 [ChatWidget] Respuesta API crear conversación:', data);
         
         if (data.success) {
           const newWindow = {
@@ -592,13 +613,18 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             conversationId: data.conversation.id,
             otherUser: user
           };
-          setOpenChatWindows(prev => [...prev, newWindow]);
+          setOpenChatWindows(prev => {
+            console.log('🪟 [ChatWidget] Agregando nueva ventana:', newWindow);
+            return [...prev, newWindow];
+          });
           
           // Recargar conversaciones para incluir la nueva
           await loadConversations();
+        } else {
+          console.error('❌ [ChatWidget] Error creando conversación:', data.error);
         }
       } catch (error) {
-        console.error('Error creando conversación:', error);
+        console.error('❌ [ChatWidget] Error creando conversación:', error);
       }
     }
   };
