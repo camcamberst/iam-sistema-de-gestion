@@ -247,6 +247,8 @@ export default function IndividualChatWindow({
     }
   }, [isDragging, dragOffset]);
 
+  const minimizedLabel = (otherUser?.email || '').split('@')[0] || getDisplayName(otherUser);
+
   return (
     <div
       ref={windowRef}
@@ -255,37 +257,45 @@ export default function IndividualChatWindow({
         right: `${position.right}px`,
         bottom: '0px',
         cursor: 'default',
-        height: isMinimized ? '56px' : '500px'
+        height: isMinimized ? '48px' : '500px'
       } : {
         left: `${position.x}px`,
         top: `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'default',
-        height: isMinimized ? '56px' : '500px'
+        height: isMinimized ? '48px' : '500px'
       }}
     >
       {/* Header */}
       <div 
-        className={`flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg ${
+        className={`flex items-center justify-between ${isMinimized ? 'px-3 py-2' : 'p-4'} border-b border-gray-700 bg-gray-900 rounded-t-lg ${
           isInChatBar ? 'cursor-default' : 'cursor-grab active:cursor-grabbing'
         }`}
         onMouseDown={isInChatBar ? undefined : handleMouseDown}
       >
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-            <span className="text-white font-bold text-xs tracking-wider">
-              {getDisplayName(otherUser).charAt(0).toUpperCase()}
+        {isMinimized ? (
+          <div className="flex items-center min-w-0 pr-2">
+            <span className="text-white text-sm font-medium truncate" title={minimizedLabel}>
+              {minimizedLabel}
             </span>
           </div>
-          <div>
-            <h3 className="text-white font-semibold">
-              {getDisplayName(otherUser)}
-            </h3>
-            <p className="text-gray-400 text-xs">
-              {otherUser.role}
-            </p>
+        ) : (
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+              <span className="text-white font-bold text-xs tracking-wider">
+                {getDisplayName(otherUser).charAt(0).toUpperCase()}
+              </span>
+            </div>
+            <div>
+              <h3 className="text-white font-semibold">
+                {getDisplayName(otherUser)}
+              </h3>
+              <p className="text-gray-400 text-xs">
+                {otherUser.role}
+              </p>
+            </div>
           </div>
-        </div>
-        <div className="flex items-center space-x-2">
+        )}
+        <div className="flex items-center space-x-2 flex-shrink-0">
           <button
             onClick={() => setIsMinimized(prev => !prev)}
             className="p-1 text-gray-400 hover:text-white transition-colors"
