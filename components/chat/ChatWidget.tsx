@@ -1408,7 +1408,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       )}
 
       {/* Ventanas individuales de chat */}
-      {openChatWindows.map((window) => (
+      {openChatWindows.map((window, index) => (
         <IndividualChatWindow
           key={window.id}
           conversationId={window.conversationId}
@@ -1417,6 +1417,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           userId={userId}
           userRole={userRole}
           session={session}
+          windowIndex={index}
         />
       ))}
     </>

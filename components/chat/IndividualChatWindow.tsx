@@ -15,6 +15,7 @@ interface IndividualChatWindowProps {
   userId?: string;
   userRole?: string;
   session?: any;
+  windowIndex?: number; // Nueva prop para el índice de la ventana
 }
 
 export default function IndividualChatWindow({ 
@@ -23,7 +24,8 @@ export default function IndividualChatWindow({
   onClose, 
   userId, 
   userRole,
-  session
+  session,
+  windowIndex = 0
 }: IndividualChatWindowProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -33,6 +35,33 @@ export default function IndividualChatWindow({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Calcular posición inicial basada en el índice de la ventana
+  const getInitialPosition = () => {
+    const windowWidth = 320; // w-80 = 320px
+    const windowHeight = 500; // h-[500px]
+    const margin = 20; // Margen entre ventanas
+    const rightMargin = 100; // Margen desde el borde derecho
+    
+    // Posición base: a la izquierda de la ventana principal del chat
+    const baseX = window.innerWidth - rightMargin - windowWidth - 400; // 400px es el ancho del chat principal
+    const baseY = 100; // Altura base
+    
+    // Calcular offset basado en el índice
+    const offsetX = windowIndex * (windowWidth + margin);
+    const offsetY = windowIndex * 50; // Offset vertical pequeño
+    
+    return {
+      x: Math.max(20, baseX - offsetX), // No ir más allá del borde izquierdo
+      y: baseY + offsetY
+    };
+  };
+
+  // Inicializar posición
+  useEffect(() => {
+    const initialPos = getInitialPosition();
+    setPosition(initialPos);
+  }, [windowIndex]);
 
   // Función para obtener nombre de usuario
   const getDisplayName = (user: any) => {
@@ -179,8 +208,8 @@ export default function IndividualChatWindow({
       ref={windowRef}
       className="fixed w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996]"
       style={{
-        left: position.x || 'calc(100vw - 400px)',
-        top: position.y || '100px',
+        left: `${position.x}px`,
+        top: `${position.y}px`,
         cursor: isDragging ? 'grabbing' : 'default'
       }}
     >
