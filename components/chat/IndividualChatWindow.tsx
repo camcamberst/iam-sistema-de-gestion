@@ -41,20 +41,29 @@ export default function IndividualChatWindow({
     const windowWidth = 320; // w-80 = 320px
     const windowHeight = 500; // h-[500px]
     const margin = 20; // Margen entre ventanas
-    const rightMargin = 100; // Margen desde el borde derecho
-    
-    // Posición base: a la izquierda de la ventana principal del chat
-    const baseX = window.innerWidth - rightMargin - windowWidth - 400; // 400px es el ancho del chat principal
-    const baseY = 100; // Altura base
-    
-    // Calcular offset basado en el índice
-    const offsetX = windowIndex * (windowWidth + margin);
-    const offsetY = windowIndex * 50; // Offset vertical pequeño
-    
-    return {
-      x: Math.max(20, baseX - offsetX), // No ir más allá del borde izquierdo
-      y: baseY + offsetY
-    };
+    const chatWidgetRightOffset = 24; // From right-6 in ChatWidget.tsx
+    const chatWidgetBottomOffset = 24; // From bottom-6 in ChatWidget.tsx
+    const mainChatWindowWidth = 320; // Assuming main chat window is also w-80
+
+    // Calculate Y position: anchored to the bottom, same as main chat widget
+    const finalY = window.innerHeight - windowHeight - chatWidgetBottomOffset;
+
+    // Calculate X position: to the left of the main chat window, cascading
+    // The rightmost point of the main chat window is at `window.innerWidth - chatWidgetRightOffset`
+    // The left edge of the main chat window is at `window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth`
+    // For windowIndex = 0, its right edge should be at `window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth - margin`
+    // So its left edge (finalX) would be `window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth - margin - windowWidth`
+    // Generalizing:
+    let finalX = window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth - (windowIndex * (windowWidth + margin)) - windowWidth - margin;
+
+    // Ensure it doesn't go off-screen to the left
+    if (finalX < 0) {
+      // If it goes off screen, stack them vertically or limit the number of open windows
+      // For now, let's just set a minimum left position
+      finalX = 10; // Small margin from left edge
+    }
+
+    return { x: finalX, y: finalY };
   };
 
   // Inicializar posición
