@@ -26,12 +26,9 @@ interface ChatBarProps {
   // Props para la funcionalidad del chat principal
   view?: string;
   setView?: (view: string) => void;
-  onlineUsers?: any[];
-  offlineUsers?: any[];
-  showOnlineUsers?: boolean;
-  setShowOnlineUsers?: (show: boolean) => void;
-  showOfflineUsers?: boolean;
-  setShowOfflineUsers?: (show: boolean) => void;
+  availableUsers?: any[];
+  expandedSections?: { online: boolean; offline: boolean };
+  setExpandedSections?: (sections: { online: boolean; offline: boolean }) => void;
   openChatWithUser?: (userId: string) => void;
   conversations?: any[];
   selectedConversation?: string;
@@ -58,12 +55,9 @@ const ChatBar: React.FC<ChatBarProps> = ({
   onCloseMainChat,
   view,
   setView,
-  onlineUsers,
-  offlineUsers,
-  showOnlineUsers,
-  setShowOnlineUsers,
-  showOfflineUsers,
-  setShowOfflineUsers,
+  availableUsers = [],
+  expandedSections = { online: true, offline: false },
+  setExpandedSections,
   openChatWithUser,
   conversations,
   selectedConversation,
@@ -96,12 +90,9 @@ const ChatBar: React.FC<ChatBarProps> = ({
           windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
           view={view}
           setView={setView}
-          onlineUsers={onlineUsers}
-          offlineUsers={offlineUsers}
-          showOnlineUsers={showOnlineUsers}
-          setShowOnlineUsers={setShowOnlineUsers}
-          showOfflineUsers={showOfflineUsers}
-          setShowOfflineUsers={setShowOfflineUsers}
+          availableUsers={availableUsers}
+          expandedSections={expandedSections}
+          setExpandedSections={setExpandedSections}
           openChatWithUser={openChatWithUser}
           conversations={conversations}
           selectedConversation={selectedConversation}

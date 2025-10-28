@@ -1069,14 +1069,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         session={session}
         isMainChatOpen={isOpen}
         onCloseMainChat={() => setIsOpen(false)}
-        view={view}
-        setView={setView}
-        onlineUsers={onlineUsers}
-        offlineUsers={offlineUsers}
-        showOnlineUsers={showOnlineUsers}
-        setShowOnlineUsers={setShowOnlineUsers}
-        showOfflineUsers={showOfflineUsers}
-        setShowOfflineUsers={setShowOfflineUsers}
+        view={showUserList ? 'users' : 'conversations'}
+        setView={(newView) => setShowUserList(newView === 'users')}
+        availableUsers={availableUsers}
+        expandedSections={expandedSections}
+        setExpandedSections={setExpandedSections}
         openChatWithUser={openChatWithUser}
         conversations={conversations}
         selectedConversation={selectedConversation}

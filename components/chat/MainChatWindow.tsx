@@ -11,12 +11,9 @@ interface MainChatWindowProps {
   // Props para la funcionalidad del chat
   view?: string;
   setView?: (view: string) => void;
-  onlineUsers?: any[];
-  offlineUsers?: any[];
-  showOnlineUsers?: boolean;
-  setShowOnlineUsers?: (show: boolean) => void;
-  showOfflineUsers?: boolean;
-  setShowOfflineUsers?: (show: boolean) => void;
+  availableUsers?: any[];
+  expandedSections?: { online: boolean; offline: boolean };
+  setExpandedSections?: (sections: { online: boolean; offline: boolean }) => void;
   openChatWithUser?: (userId: string) => void;
   conversations?: any[];
   selectedConversation?: string;
@@ -41,12 +38,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   windowIndex = 0,
   view = 'users',
   setView,
-  onlineUsers = [],
-  offlineUsers = [],
-  showOnlineUsers = false,
-  setShowOnlineUsers,
-  showOfflineUsers = false,
-  setShowOfflineUsers,
+  availableUsers = [],
+  expandedSections = { online: true, offline: false },
+  setExpandedSections,
   openChatWithUser,
   conversations = [],
   selectedConversation,
@@ -106,20 +100,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
               <h4 className="text-white text-sm font-semibold mb-3">Usuarios disponibles</h4>
               <div className="space-y-2">
                 <button
-                  onClick={() => setShowOnlineUsers?.(!showOnlineUsers)}
+                  onClick={() => setExpandedSections?.({ ...expandedSections, online: !expandedSections.online })}
                   className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <span className="flex items-center">
                     <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    En línea ({onlineUsers.length})
+                    En línea ({availableUsers.filter(u => u.is_online).length})
                   </span>
-                  <svg className={`w-4 h-4 transition-transform ${showOnlineUsers ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 transition-transform ${expandedSections.online ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                {showOnlineUsers && (
+                {expandedSections.online && (
                   <div className="ml-4 space-y-1">
-                    {onlineUsers.map((user) => (
+                    {availableUsers.filter(u => u.is_online).map((user) => (
                       <button
                         key={user.id}
                         onClick={() => openChatWithUser?.(user.id)}
@@ -139,20 +133,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   </div>
                 )}
                 <button
-                  onClick={() => setShowOfflineUsers?.(!showOfflineUsers)}
+                  onClick={() => setExpandedSections?.({ ...expandedSections, offline: !expandedSections.offline })}
                   className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
                 >
                   <span className="flex items-center">
                     <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                    Offline ({offlineUsers.length})
+                    Offline ({availableUsers.filter(u => !u.is_online).length})
                   </span>
-                  <svg className={`w-4 h-4 transition-transform ${showOfflineUsers ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 transition-transform ${expandedSections.offline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
-                {showOfflineUsers && (
+                {expandedSections.offline && (
                   <div className="ml-4 space-y-1">
-                    {offlineUsers.map((user) => (
+                    {availableUsers.filter(u => !u.is_online).map((user) => (
                       <button
                         key={user.id}
                         onClick={() => openChatWithUser?.(user.id)}
