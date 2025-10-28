@@ -96,9 +96,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       <div className="flex-1 flex flex-col">
         {view === 'users' && (
           <>
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col">
               <h4 className="text-white text-sm font-semibold mb-3">Usuarios disponibles</h4>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
                 <button
                   onClick={() => setExpandedSections?.({ ...expandedSections, online: !expandedSections.online })}
                   className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
@@ -172,9 +172,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
         {view === 'conversations' && (
           <>
-            <div className="p-4 border-b border-gray-700">
+            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col">
               <h4 className="text-white text-sm font-semibold mb-3">Conversaciones</h4>
-              <div className="space-y-2">
+              <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
                 {conversations.map((conversation) => (
                   <button
                     key={conversation.id}
