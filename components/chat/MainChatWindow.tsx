@@ -94,12 +94,35 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         </button>
       </div>
 
+      {/* Pestañas de navegación */}
+      <div className="flex border-b border-gray-700">
+        <button
+          onClick={() => setView?.('users')}
+          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+            view === 'users'
+              ? 'text-white bg-gray-700 border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+        >
+          Usuarios disponibles
+        </button>
+        <button
+          onClick={() => setView?.('conversations')}
+          className={`flex-1 px-4 py-3 text-sm font-medium transition-colors ${
+            view === 'conversations'
+              ? 'text-white bg-gray-700 border-b-2 border-blue-500'
+              : 'text-gray-400 hover:text-white hover:bg-gray-700'
+          }`}
+        >
+          Conversaciones ({conversations.length})
+        </button>
+      </div>
+
       {/* Contenido principal */}
       <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {view === 'users' && (
           <>
-            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col min-h-0">
-              <h4 className="text-white text-sm font-semibold mb-3 flex-shrink-0">Usuarios disponibles</h4>
+            <div className="p-4 flex-1 flex flex-col min-h-0">
               <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-0">
                 <div className="space-y-1">
                   <button
@@ -179,10 +202,18 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
         {view === 'conversations' && (
           <>
-            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col min-h-0">
-              <h4 className="text-white text-sm font-semibold mb-3 flex-shrink-0">Conversaciones</h4>
+            <div className="p-4 flex-1 flex flex-col min-h-0">
               <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-0">
-                {conversations.map((conversation) => (
+                {conversations.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full text-gray-400">
+                    <svg className="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
+                    </svg>
+                    <p className="text-sm text-center">No hay conversaciones activas</p>
+                    <p className="text-xs text-center mt-1">Los mensajes aparecerán aquí cuando inicies una conversación</p>
+                  </div>
+                ) : (
+                  conversations.map((conversation) => (
                   <button
                     key={conversation.id}
                     onClick={() => {
@@ -210,7 +241,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                       </div>
                     )}
                   </button>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </>
