@@ -9,8 +9,8 @@ interface MainChatWindowProps {
   session?: any;
   windowIndex?: number;
   // Props para la funcionalidad del chat
-  view?: string;
-  setView?: (view: string) => void;
+  view?: 'users' | 'conversations' | 'chat';
+  setView?: (view: 'users' | 'conversations' | 'chat') => void;
   availableUsers?: any[];
   expandedSections?: { online: boolean; offline: boolean };
   setExpandedSections?: (sections: { online: boolean; offline: boolean }) => void;

@@ -24,8 +24,8 @@ interface ChatBarProps {
   isMainChatOpen?: boolean; // Nueva prop para la ventana principal
   onCloseMainChat?: () => void; // Nueva prop para cerrar la ventana principal
   // Props para la funcionalidad del chat principal
-  view?: string;
-  setView?: (view: string) => void;
+  view?: 'users' | 'conversations' | 'chat';
+  setView?: (view: 'users' | 'conversations' | 'chat') => void;
   availableUsers?: any[];
   expandedSections?: { online: boolean; offline: boolean };
   setExpandedSections?: (sections: { online: boolean; offline: boolean }) => void;
