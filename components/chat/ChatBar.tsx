@@ -17,9 +17,9 @@ interface ChatWindow {
 interface ChatBarProps {
   openChatWindows: ChatWindow[];
   onCloseWindow: (windowId: string) => void;
-  userId: string;
-  userRole: string;
-  session: any;
+  userId?: string;
+  userRole?: string;
+  session?: any;
 }
 
 const ChatBar: React.FC<ChatBarProps> = ({
