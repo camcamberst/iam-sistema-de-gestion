@@ -1,0 +1,35 @@
+{
+  "extends": ["next/core-web-vitals"],
+  "rules": {
+    "no-restricted-syntax": [
+      "error",
+      {
+        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value.value && attr.value.value.includes('fixed inset-0'))]",
+        "message": "❌ MODAL ESTÁNDAR REQUERIDO: Usa el componente StandardModal en lugar de crear modales manuales con 'fixed inset-0'. Importa desde 'components/ui/StandardModal' y sigue el estándar del proyecto."
+      },
+      {
+        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value.value && attr.value.value.includes('z-50'))]",
+        "message": "⚠️ Z-INDEX ALTO DETECTADO: Considera usar StandardModal para consistencia. Si necesitas z-index alto, asegúrate de que sea parte del sistema de modales estándar."
+      }
+    ],
+    "no-restricted-imports": [
+      "error",
+      {
+        "patterns": [
+          {
+            "group": ["**/Modal", "**/modal"],
+            "message": "💡 SUGERENCIA: Usa 'components/ui/StandardModal' para modales consistentes en lugar de crear componentes Modal personalizados."
+          }
+        ]
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["components/ui/StandardModal.tsx"],
+      "rules": {
+        "no-restricted-syntax": "off"
+      }
+    }
+  ]
+}

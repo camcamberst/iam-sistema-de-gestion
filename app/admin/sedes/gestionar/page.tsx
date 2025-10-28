@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import StandardModal from '@/components/ui/StandardModal';
 import { getModelDisplayName } from '@/utils/model-display';
 
 interface Group {
@@ -1015,18 +1016,22 @@ export default function GestionarSedesPage() {
 
         {/* Modal Crear Sede - Solo para Super Admin */}
         {showCreateGroup && userRole === 'super_admin' && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => setShowCreateGroup(false)}>
-            <div className="relative transform transition-all duration-200 ease-out opacity-100 scale-100" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute inset-0 bg-gradient-to-br from-gray-500/10 to-slate-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-7 w-[92vw] max-w-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Crear Nueva Sede</h2>
-                </div>
+          <StandardModal
+            isOpen={showCreateGroup}
+            onClose={() => setShowCreateGroup(false)}
+            title="Crear Nueva Sede"
+            maxWidthClass="max-w-lg"
+            paddingClass="p-7"
+            headerMarginClass="mb-5"
+            formSpaceYClass="space-y-5"
+          >
+            <div className="flex items-center space-x-3 mb-5">
+              <div className="w-10 h-10 bg-gradient-to-br from-gray-600 to-slate-700 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                </svg>
+              </div>
+            </div>
               
               <form onSubmit={handleCreateGroup} className="space-y-5">
                 {/* Mensajes de estado dentro del modal */}
@@ -1090,25 +1095,27 @@ export default function GestionarSedesPage() {
                   </button>
                 </div>
               </form>
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
 
         {/* Modal Crear Room */}
         {showCreateRoom && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => setShowCreateRoom(false)}>
-            <div className="relative transform transition-all duration-200 ease-out opacity-100 scale-100" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-7 w-[92vw] max-w-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-                <div className="flex items-center space-x-3 mb-5">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Crear Room</h2>
-                </div>
+          <StandardModal
+            isOpen={showCreateRoom}
+            onClose={() => setShowCreateRoom(false)}
+            title="Crear Room"
+            maxWidthClass="max-w-lg"
+            paddingClass="p-7"
+            headerMarginClass="mb-5"
+            formSpaceYClass="space-y-5"
+          >
+            <div className="flex items-center space-x-3 mb-5">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+              </div>
+            </div>
               
               <form onSubmit={handleCreateRoom} className="space-y-5">
                 {/* Mensajes de estado dentro del modal */}
@@ -1182,52 +1189,39 @@ export default function GestionarSedesPage() {
                   </button>
                 </div>
               </form>
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
 
         {/* Modal Configuración de Room */}
         {showRoomConfig && selectedRoom && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => { setShowRoomConfig(false); setSelectedRoom(null); setRoomAssignments([]); }}>
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-2xl max-h-[80vh] overflow-y-auto dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 transform transition-all duration-200 ease-out opacity-100 scale-100">
-              <div onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Configuración de {selectedRoom.room_name}
-                </h2>
-                <div className="flex items-center space-x-2">
-                  <button
-                    onClick={() => {
-                      setRoomToDelete(selectedRoom);
-                      setShowDeleteRoomModal(true);
-                    }}
-                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors border border-red-200/60 dark:border-red-700/40"
-                    title="Eliminar room"
-                  >
-                    <span className="inline-flex items-center">
-                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                      Eliminar
-                    </span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      setShowRoomConfig(false);
-                      setSelectedRoom(null);
-                      setRoomAssignments([]);
-                      setRoomConfigError('');
-                      setRoomConfigSuccess('');
-                    }}
-                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                  >
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          <StandardModal
+            isOpen={showRoomConfig}
+            onClose={() => { setShowRoomConfig(false); setSelectedRoom(null); setRoomAssignments([]); }}
+            title={`Configuración de ${selectedRoom.room_name}`}
+            maxWidthClass="max-w-2xl"
+            paddingClass="p-6"
+            headerMarginClass="mb-4"
+            formSpaceYClass="space-y-4"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <button
+                  onClick={() => {
+                    setRoomToDelete(selectedRoom);
+                    setShowDeleteRoomModal(true);
+                  }}
+                  className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors border border-red-200/60 dark:border-red-700/40"
+                  title="Eliminar room"
+                >
+                  <span className="inline-flex items-center">
+                    <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
-                  </button>
-                </div>
+                    Eliminar
+                  </span>
+                </button>
               </div>
+            </div>
               
               {/* Mensajes de error y éxito del modal */}
               {roomConfigError && (
@@ -1354,33 +1348,20 @@ export default function GestionarSedesPage() {
                   Cerrar
                 </button>
               </div>
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
 
         {/* Modal Selector de Modelos */}
         {showModelSelector && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => { setShowModelSelector(false); setAvailableModels([]); setSelectedJornada(''); }}>
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-md max-h-[80vh] overflow-y-auto dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 transform transition-all duration-200 ease-out opacity-100 scale-100">
-              <div onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Seleccionar Modelo para {selectedJornada}
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowModelSelector(false);
-                    setAvailableModels([]);
-                    setSelectedJornada('');
-                  }}
-                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+          <StandardModal
+            isOpen={showModelSelector}
+            onClose={() => { setShowModelSelector(false); setAvailableModels([]); setSelectedJornada(''); }}
+            title={`Seleccionar Modelo para ${selectedJornada}`}
+            maxWidthClass="max-w-md"
+            paddingClass="p-6"
+            headerMarginClass="mb-4"
+            formSpaceYClass="space-y-4"
+          >
               
               <div className="space-y-2">
                 {availableModels.map((model) => (
@@ -1413,33 +1394,20 @@ export default function GestionarSedesPage() {
                   <p className="text-sm text-gray-500 dark:text-gray-400">No hay modelos disponibles</p>
                 </div>
               )}
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
 
         {/* Modal de Confirmación de Conflicto */}
         {showConflictModal && conflictInfo && (
-          <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => { setShowConflictModal(false); setConflictInfo(null); setSelectedModel(null); }}>
-            <div className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl p-6 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 transform transition-all duration-200 ease-out opacity-100 scale-100">
-              <div onClick={(e) => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                  Conflicto de Asignación
-                </h2>
-                <button
-                  onClick={() => {
-                    setShowConflictModal(false);
-                    setConflictInfo(null);
-                    setSelectedModel(null);
-                  }}
-                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
-              </div>
+          <StandardModal
+            isOpen={showConflictModal}
+            onClose={() => { setShowConflictModal(false); setConflictInfo(null); setSelectedModel(null); }}
+            title="Conflicto de Asignación"
+            maxWidthClass="max-w-md"
+            paddingClass="p-6"
+            headerMarginClass="mb-4"
+            formSpaceYClass="space-y-4"
+          >
               
               <div className="mb-4">
                 <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
@@ -1483,25 +1451,27 @@ export default function GestionarSedesPage() {
                 <p><strong>Mover:</strong> Desasigna de ubicación actual y asigna aquí</p>
                 <p><strong>Doblar:</strong> Mantiene ubicación actual y asigna también aquí</p>
               </div>
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
 
         {/* Modal de Confirmación de Eliminación */}
         {showDeleteConfirm && assignmentToDelete && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => { setShowDeleteConfirm(false); setAssignmentToDelete(null); }}>
-            <div className="relative transform transition-all duration-200 ease-out opacity-100 scale-100" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Confirmar Eliminación</h2>
-                </div>
+          <StandardModal
+            isOpen={showDeleteConfirm}
+            onClose={() => { setShowDeleteConfirm(false); setAssignmentToDelete(null); }}
+            title="Confirmar Eliminación"
+            maxWidthClass="max-w-md"
+            paddingClass="p-8"
+            headerMarginClass="mb-6"
+            formSpaceYClass="space-y-6"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
                 
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
@@ -1544,25 +1514,27 @@ export default function GestionarSedesPage() {
                     {assignmentToDelete?.isDeleting ? 'Eliminando...' : 'Eliminar'}
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
 
         {/* Modal de Confirmación de Eliminación de Room */}
         {showDeleteRoomModal && roomToDelete && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex items-center justify-center z-50 transition-opacity duration-200" onClick={() => { setShowDeleteRoomModal(false); setRoomToDelete(null); }}>
-            <div className="relative transform transition-all duration-200 ease-out opacity-100 scale-100" onClick={(e) => e.stopPropagation()}>
-              <div className="absolute inset-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 rounded-3xl blur-xl"></div>
-              <div className="relative bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-3xl shadow-2xl p-8 w-full max-w-md dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-                <div className="flex items-center space-x-3 mb-6">
-                  <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                  </div>
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Confirmar Eliminación de Room</h2>
-                </div>
+          <StandardModal
+            isOpen={showDeleteRoomModal}
+            onClose={() => { setShowDeleteRoomModal(false); setRoomToDelete(null); }}
+            title="Confirmar Eliminación de Room"
+            maxWidthClass="max-w-md"
+            paddingClass="p-8"
+            headerMarginClass="mb-6"
+            formSpaceYClass="space-y-6"
+          >
+            <div className="flex items-center space-x-3 mb-6">
+              <div className="w-10 h-10 bg-gradient-to-br from-red-500 to-orange-500 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                </svg>
+              </div>
+            </div>
                 
                 <div className="mb-6">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
@@ -1607,9 +1579,7 @@ export default function GestionarSedesPage() {
                     {submitting ? 'Eliminando...' : 'Eliminar Room'}
                   </button>
                 </div>
-              </div>
-            </div>
-          </div>
+          </StandardModal>
         )}
       </div>
     </div>

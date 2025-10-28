@@ -7,11 +7,13 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "cron:auto-close": "node scripts/auto-close-period-cron.js"
+    "cron:auto-close": "node scripts/auto-close-period-cron.js",
+    "validate-modals": "powershell -ExecutionPolicy Bypass -File scripts/validate-modals.ps1"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
     "@supabase/supabase-js": "^2.39.0",
+    "dotenv": "^17.2.3",
     "lucide-react": "^0.545.0",
     "next": "14.0.4",
     "node-fetch": "^3.3.2",
