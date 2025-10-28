@@ -33,6 +33,7 @@ export default function IndividualChatWindow({
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
   const [position, setPosition] = useState<{ x?: number; y?: number; right?: number }>({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
@@ -249,15 +250,17 @@ export default function IndividualChatWindow({
   return (
     <div
       ref={windowRef}
-      className="w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
+      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={isInChatBar ? {
         right: `${position.right}px`,
         bottom: '0px',
-        cursor: 'default'
+        cursor: 'default',
+        height: isMinimized ? '56px' : '500px'
       } : {
         left: `${position.x}px`,
         top: `${position.y}px`,
-        cursor: isDragging ? 'grabbing' : 'default'
+        cursor: isDragging ? 'grabbing' : 'default',
+        height: isMinimized ? '56px' : '500px'
       }}
     >
       {/* Header */}
@@ -284,16 +287,22 @@ export default function IndividualChatWindow({
         </div>
         <div className="flex items-center space-x-2">
           <button
-            onClick={() => {
-              // Minimizar ventana (opcional)
-              console.log('Minimizar ventana');
-            }}
+            onClick={() => setIsMinimized(prev => !prev)}
             className="p-1 text-gray-400 hover:text-white transition-colors"
             aria-label="Minimizar"
+            aria-expanded={!isMinimized}
           >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
-            </svg>
+            {isMinimized ? (
+              // Icono restaurar (cuadrado)
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8h12a2 2 0 0 1 2 2v8H6a2 2 0 0 1-2-2V8z" />
+              </svg>
+            ) : (
+              // Icono minimizar (línea)
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+              </svg>
+            )}
           </button>
           <button
             onClick={onClose}
@@ -308,6 +317,7 @@ export default function IndividualChatWindow({
       </div>
 
       {/* Mensajes */}
+      {!isMinimized && (
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {isLoading ? (
           <div className="flex justify-center items-center h-full">
@@ -343,8 +353,10 @@ export default function IndividualChatWindow({
         )}
         <div ref={messagesEndRef} />
       </div>
+      )}
 
       {/* Input de mensaje */}
+      {!isMinimized && (
       <div className="p-4 border-t border-gray-700">
         <div className="flex items-center space-x-2">
           <input
@@ -367,6 +379,7 @@ export default function IndividualChatWindow({
           </button>
         </div>
       </div>
+      )}
     </div>
   );
 }
