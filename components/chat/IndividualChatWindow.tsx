@@ -41,29 +41,38 @@ export default function IndividualChatWindow({
     const windowWidth = 320; // w-80 = 320px
     const windowHeight = 500; // h-[500px]
     const margin = 20; // Margen entre ventanas
-    const chatWidgetRightOffset = 24; // From right-6 in ChatWidget.tsx
-    const chatWidgetBottomOffset = 24; // From bottom-6 in ChatWidget.tsx
-    const mainChatWindowWidth = 320; // Assuming main chat window is also w-80
+    const bottomOffset = 24; // bottom-6 = 24px (igual que la ventana principal)
+    const rightOffset = 24; // right-6 = 24px (igual que la ventana principal)
+    const mainChatWidth = 320; // w-80 de la ventana principal
 
-    // Calculate Y position: anchored to the bottom, same as main chat widget
-    const finalY = window.innerHeight - windowHeight - chatWidgetBottomOffset;
+    // Y: Anclar al bottom exactamente igual que la ventana principal
+    const finalY = window.innerHeight - windowHeight - bottomOffset;
 
-    // Calculate X position: to the left of the main chat window, cascading
-    // The rightmost point of the main chat window is at `window.innerWidth - chatWidgetRightOffset`
-    // The left edge of the main chat window is at `window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth`
-    // For windowIndex = 0, its right edge should be at `window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth - margin`
-    // So its left edge (finalX) would be `window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth - margin - windowWidth`
-    // Generalizing:
-    let finalX = window.innerWidth - chatWidgetRightOffset - mainChatWindowWidth - (windowIndex * (windowWidth + margin)) - windowWidth - margin;
+    // X: Posicionar a la izquierda de la ventana principal
+    // La ventana principal está en: window.innerWidth - rightOffset - mainChatWidth
+    // Las ventanas individuales van a la izquierda con cascading
+    const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
+    const individualWindowRightEdge = mainChatLeftEdge - margin;
+    const finalX = individualWindowRightEdge - windowWidth - (windowIndex * (windowWidth + margin));
 
-    // Ensure it doesn't go off-screen to the left
-    if (finalX < 0) {
-      // If it goes off screen, stack them vertically or limit the number of open windows
-      // For now, let's just set a minimum left position
-      finalX = 10; // Small margin from left edge
-    }
+    // Asegurar que no se vaya fuera de la pantalla
+    const minX = 20; // Margen mínimo del borde izquierdo
+    const adjustedX = Math.max(minX, finalX);
 
-    return { x: finalX, y: finalY };
+    console.log('🪟 [IndividualChatWindow] Calculando posición:', {
+      windowIndex,
+      windowWidth,
+      windowHeight,
+      windowInnerWidth: window.innerWidth,
+      windowInnerHeight: window.innerHeight,
+      mainChatLeftEdge,
+      individualWindowRightEdge,
+      finalX,
+      adjustedX,
+      finalY
+    });
+
+    return { x: adjustedX, y: finalY };
   };
 
   // Inicializar posición
