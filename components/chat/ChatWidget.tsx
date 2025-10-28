@@ -427,7 +427,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         setMessages([infoMessage]);
         // NO cerrar el chat - mantener abierto para que el usuario pueda seleccionar un usuario
-        setShowUserList(true); // Mostrar lista de usuarios para selección
+        setMainView('users'); // Mostrar lista de usuarios para selección
         
       } else {
         // Si era una conversación temporal, simplemente limpiar
@@ -435,7 +435,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         setMessages([]);
         setTempChatUser(null);
         // NO cerrar el chat - mantener abierto y mostrar lista de usuarios
-        setShowUserList(true);
+        setMainView('users');
       }
       
     } catch (error) {
@@ -444,7 +444,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       setMessages([]);
       setTempChatUser(null);
       // NO cerrar el chat - mantener abierto para recuperación y mostrar lista de usuarios
-      setShowUserList(true);
+      setMainView('users');
     }
   };
 
