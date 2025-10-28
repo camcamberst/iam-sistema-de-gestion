@@ -183,10 +183,10 @@ export async function GET(request: NextRequest) {
     const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
     const totalCopModelo = totalUsdModelo * rates.usd_cop;
 
-    // Calcular objetivo básico (cuota mínima)
+    // Calcular objetivo básico (cuota mínima) - USAR USD BRUTO
     const cuotaMinima = config.min_quota_override || config.group_min_quota || 470;
-    const porcentajeAlcanzado = (totalUsdModelo / cuotaMinima) * 100;
-    const estaPorDebajo = totalUsdModelo < cuotaMinima;
+    const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
+    const estaPorDebajo = totalUsdBruto < cuotaMinima;
 
     const totals = {
       usdBruto: totalUsdBruto,

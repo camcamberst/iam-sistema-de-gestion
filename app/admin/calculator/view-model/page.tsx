@@ -800,7 +800,7 @@ export default function AdminViewModelPage() {
                             {calculatedTotals.estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                           </h4>
                           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                            ${calculatedTotals.usdModelo.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD
+                            ${calculatedTotals.usdBruto.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD Bruto
                           </div>
                         </div>
                         
@@ -809,8 +809,8 @@ export default function AdminViewModelPage() {
                           <div 
                             className={`h-3 transition-all duration-500 ${
                               calculatedTotals.estaPorDebajo 
-                                ? 'bg-gradient-to-r from-orange-400 to-red-500' 
-                                : 'bg-gradient-to-r from-green-500 to-emerald-500'
+                                ? 'bg-gradient-to-r from-blue-400 to-blue-600' 
+                                : 'bg-gradient-to-r from-indigo-500 to-blue-600'
                             }`}
                             style={{ 
                               width: `${Math.min(100, Math.max(0, calculatedTotals.porcentajeAlcanzado))}%` 
@@ -822,11 +822,11 @@ export default function AdminViewModelPage() {
                         <div className="flex items-center justify-between text-xs">
                           <div className={`font-medium ${
                             calculatedTotals.estaPorDebajo 
-                              ? 'text-orange-600 dark:text-orange-400' 
-                              : 'text-green-600 dark:text-green-400'
+                              ? 'text-blue-600 dark:text-blue-400' 
+                              : 'text-indigo-600 dark:text-indigo-400'
                           }`}>
                             {calculatedTotals.estaPorDebajo 
-                              ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdModelo)} USD`
+                              ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdBruto)} USD Bruto`
                               : `Excelente +${Math.max(0, calculatedTotals.porcentajeAlcanzado - 100).toFixed(0)}%`
                             }
                           </div>
