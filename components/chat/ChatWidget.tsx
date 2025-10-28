@@ -600,7 +600,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             'Authorization': `Bearer ${session.access_token}`
           },
           body: JSON.stringify({
-            otherUserId: userId
+            participant_2_id: userId
           })
         });
         
