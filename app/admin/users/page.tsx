@@ -864,7 +864,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50" onClick={onClose}>
+    <div className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`} onClick={onClose}>
       <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col transform transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} onClick={(e) => e.stopPropagation()}>
         <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Editar Usuario</h2>
 
