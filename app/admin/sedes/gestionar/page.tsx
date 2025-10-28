@@ -927,31 +927,17 @@ export default function GestionarSedesPage() {
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Rooms Disponibles</h3>
               </div>
               {selectedSedeInfo.rooms && selectedSedeInfo.rooms.length > 0 ? (
-                <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-1.5">
                   {selectedSedeInfo.rooms.map((room: any) => (
-                    <div key={room.id} className="inline-flex items-center group">
+                    <div key={room.id} className="inline-flex items-center">
                       <button
                         onClick={() => handleRoomClick(room)}
-                        className="inline-flex items-center px-3 py-1.5 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-600 dark:to-slate-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-500 dark:hover:to-slate-500 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50 dark:border-gray-500/50"
+                        className="inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-medium bg-gradient-to-r from-gray-100 to-slate-100 dark:from-gray-600 dark:to-slate-600 text-gray-800 dark:text-gray-200 hover:from-gray-200 hover:to-slate-200 dark:hover:from-gray-500 dark:hover:to-slate-500 hover:text-gray-900 dark:hover:text-gray-100 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-sm hover:shadow-md transform hover:-translate-y-0.5 border border-gray-200/50 dark:border-gray-500/50"
                       >
                         <svg className="w-3 h-3 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                         </svg>
                         {room.room_name}
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          console.log('🔍 [DELETE-ROOM] Botón de eliminar clickeado:', room);
-                          setRoomToDelete(room);
-                          setShowDeleteRoomModal(true);
-                        }}
-                        className="ml-1 p-1 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-900/20 opacity-0 group-hover:opacity-100 transition-opacity duration-200"
-                        title="Eliminar room"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
                       </button>
                     </div>
                   ))}
@@ -1209,20 +1195,37 @@ export default function GestionarSedesPage() {
                 <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                   Configuración de {selectedRoom.room_name}
                 </h2>
-                <button
-                  onClick={() => {
-                    setShowRoomConfig(false);
-                    setSelectedRoom(null);
-                    setRoomAssignments([]);
-                    setRoomConfigError('');
-                    setRoomConfigSuccess('');
-                  }}
-                  className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={() => {
+                      setRoomToDelete(selectedRoom);
+                      setShowDeleteRoomModal(true);
+                    }}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors border border-red-200/60 dark:border-red-700/40"
+                    title="Eliminar room"
+                  >
+                    <span className="inline-flex items-center">
+                      <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                      Eliminar
+                    </span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowRoomConfig(false);
+                      setSelectedRoom(null);
+                      setRoomAssignments([]);
+                      setRoomConfigError('');
+                      setRoomConfigSuccess('');
+                    }}
+                    className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
               </div>
               
               {/* Mensajes de error y éxito del modal */}
