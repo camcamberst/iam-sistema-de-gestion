@@ -16,8 +16,8 @@ interface MainChatWindowProps {
   setExpandedSections?: (sections: { online: boolean; offline: boolean }) => void;
   openChatWithUser?: (userId: string) => void;
   conversations?: any[];
-  selectedConversation?: string;
-  setSelectedConversation?: (id: string) => void;
+  selectedConversation?: string | null;
+  setSelectedConversation?: (id: string | null) => void;
   messages?: any[];
   newMessage?: string;
   setNewMessage?: (message: string) => void;
