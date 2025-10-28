@@ -1416,6 +1416,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           onClose={() => closeChatWindow(window.id)}
           userId={userId}
           userRole={userRole}
+          session={session}
         />
       ))}
     </>

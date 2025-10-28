@@ -14,6 +14,7 @@ interface IndividualChatWindowProps {
   onClose: () => void;
   userId?: string;
   userRole?: string;
+  session?: any;
 }
 
 export default function IndividualChatWindow({ 
@@ -21,7 +22,8 @@ export default function IndividualChatWindow({
   otherUser, 
   onClose, 
   userId, 
-  userRole 
+  userRole,
+  session
 }: IndividualChatWindowProps) {
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
@@ -39,11 +41,15 @@ export default function IndividualChatWindow({
 
   // Cargar mensajes
   const loadMessages = async () => {
-    if (!conversationId) return;
+    if (!conversationId || !session) return;
     
     try {
       setIsLoading(true);
-      const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`);
+      const response = await fetch(`/api/chat/messages?conversationId=${conversationId}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
       const data = await response.json();
       
       if (data.success) {
@@ -58,13 +64,14 @@ export default function IndividualChatWindow({
 
   // Enviar mensaje
   const sendMessage = async () => {
-    if (!newMessage.trim() || !conversationId) return;
+    if (!newMessage.trim() || !conversationId || !session) return;
     
     try {
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
           conversationId,
