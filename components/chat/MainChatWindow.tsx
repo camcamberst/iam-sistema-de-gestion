@@ -229,8 +229,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                     >
                       <button
                         onClick={() => {
-                          setSelectedConversation?.(conversation.id);
-                          setView?.('chat');
+                          // Abrir ventana independiente en la barra usando el otro participante
+                          openChatWithUser?.(conversation.other_participant.id);
                         }}
                         className="flex items-center flex-1 min-w-0 text-left"
                       >
