@@ -2,6 +2,7 @@
 
 import React from 'react';
 import IndividualChatWindow from './IndividualChatWindow';
+import MainChatWindow from './MainChatWindow';
 
 interface ChatWindow {
   id: string;
@@ -20,6 +21,8 @@ interface ChatBarProps {
   userId?: string;
   userRole?: string;
   session?: any;
+  isMainChatOpen?: boolean; // Nueva prop para la ventana principal
+  onCloseMainChat?: () => void; // Nueva prop para cerrar la ventana principal
 }
 
 const ChatBar: React.FC<ChatBarProps> = ({
@@ -27,15 +30,28 @@ const ChatBar: React.FC<ChatBarProps> = ({
   onCloseWindow,
   userId,
   userRole,
-  session
+  session,
+  isMainChatOpen = false,
+  onCloseMainChat
 }) => {
-  // Solo mostrar la barra si hay ventanas abiertas
-  if (openChatWindows.length === 0) {
+  // Solo mostrar la barra si hay ventanas abiertas o la ventana principal está abierta
+  if (openChatWindows.length === 0 && !isMainChatOpen) {
     return null;
   }
 
   return (
     <>
+      {/* Ventana principal del AIM Assistant */}
+      {isMainChatOpen && (
+        <MainChatWindow
+          onClose={onCloseMainChat!}
+          userId={userId}
+          userRole={userRole}
+          session={session}
+          windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
+        />
+      )}
+      
       {/* Ventanas individuales de chat posicionadas absolutamente */}
       {openChatWindows.map((window, index) => (
         <IndividualChatWindow

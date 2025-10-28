@@ -1059,8 +1059,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
       </button>
 
-      {/* Ventana del chat */}
-      {isOpen && (
+      {/* Ventana del chat - COMENTADA: Ahora se maneja en ChatBar */}
+      {/* {isOpen && (
         <div className="fixed bottom-6 right-24 w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9995]">
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg">
@@ -1406,15 +1406,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             </div>
           </div>
         </div>
-      )}
+      )} */}
 
-      {/* Barra de chat con ventanas individuales */}
+      {/* Barra de chat con ventana principal y ventanas individuales */}
       <ChatBar
         openChatWindows={openChatWindows}
         onCloseWindow={closeChatWindow}
         userId={userId}
         userRole={userRole}
         session={session}
+        isMainChatOpen={isOpen}
+        onCloseMainChat={() => setIsOpen(false)}
       />
     </>
   );
