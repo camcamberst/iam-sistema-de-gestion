@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
+import IndividualChatWindow from './IndividualChatWindow';
 
 interface ChatWidgetProps {
   userId?: string;
@@ -56,6 +57,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   
   // 🔧 NUEVO: Estado para visibilidad del botón (sin cambiar posición)
   const [isScrolling, setIsScrolling] = useState(false);
+  
+  // 🪟 Estado para ventanas individuales de chat
+  const [openChatWindows, setOpenChatWindows] = useState<Array<{
+    id: string;
+    conversationId: string;
+    otherUser: User;
+  }>>([]);
 
   // Función helper para obtener el nombre de visualización
   const getDisplayName = (user: User) => {
@@ -530,7 +538,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   };
 
-  // Abrir chat con usuario (sin crear conversación aún)
+  // Abrir chat con usuario en ventana individual
   const openChatWithUser = async (userId: string) => {
     if (!session) return;
     
@@ -541,23 +549,63 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       conv.other_participant.id === userId
     );
     
-    if (existingConversation) {
-      // Si ya existe conversación, abrirla
-      console.log('📂 [ChatWidget] Conversación existente encontrada:', existingConversation.id);
-      setShowUserList(false);
-      setSelectedConversation(existingConversation.id);
-      setTempChatUser(null); // Limpiar usuario temporal
-      await loadMessages(existingConversation.id);
-    } else {
-      // Si no existe, abrir la ventana de chat para nueva conversación
-      const user = availableUsers.find(u => u.id === userId);
-      console.log('🆕 [ChatWidget] Iniciando nueva conversación con:', user?.name || user?.email);
-      setShowUserList(false);
-      setSelectedConversation(`temp_${userId}`); // ID temporal
-      setTempChatUser(user || null); // Almacenar usuario temporal
-      setMessages([]); // Sin mensajes aún
-      // Mantener la ventana de chat abierta para permitir escribir el primer mensaje
+    const user = availableUsers.find(u => u.id === userId);
+    if (!user) return;
+    
+    // Verificar si ya hay una ventana abierta para este usuario
+    const existingWindow = openChatWindows.find(window => window.otherUser.id === userId);
+    if (existingWindow) {
+      console.log('🪟 [ChatWidget] Ventana ya abierta para este usuario');
+      return;
     }
+    
+    if (existingConversation) {
+      // Si ya existe conversación, abrir ventana individual
+      console.log('📂 [ChatWidget] Abriendo conversación existente en ventana individual:', existingConversation.id);
+      const newWindow = {
+        id: `window_${existingConversation.id}`,
+        conversationId: existingConversation.id,
+        otherUser: user
+      };
+      setOpenChatWindows(prev => [...prev, newWindow]);
+    } else {
+      // Si no existe, crear nueva conversación y abrir ventana
+      console.log('🆕 [ChatWidget] Creando nueva conversación en ventana individual con:', user.name || user.email);
+      
+      try {
+        const response = await fetch('/api/chat/conversations', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({
+            otherUserId: userId
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const newWindow = {
+            id: `window_${data.conversation.id}`,
+            conversationId: data.conversation.id,
+            otherUser: user
+          };
+          setOpenChatWindows(prev => [...prev, newWindow]);
+          
+          // Recargar conversaciones para incluir la nueva
+          await loadConversations();
+        }
+      } catch (error) {
+        console.error('Error creando conversación:', error);
+      }
+    }
+  };
+
+  // Cerrar ventana individual de chat
+  const closeChatWindow = (windowId: string) => {
+    setOpenChatWindows(prev => prev.filter(window => window.id !== windowId));
   };
 
   // Crear nueva conversación (solo cuando se envía el primer mensaje)
@@ -1332,6 +1380,18 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           </div>
         </div>
       )}
+
+      {/* Ventanas individuales de chat */}
+      {openChatWindows.map((window) => (
+        <IndividualChatWindow
+          key={window.id}
+          conversationId={window.conversationId}
+          otherUser={window.otherUser}
+          onClose={() => closeChatWindow(window.id)}
+          userId={userId}
+          userRole={userRole}
+        />
+      ))}
     </>
   );
 }
