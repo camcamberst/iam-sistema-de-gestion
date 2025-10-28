@@ -15,6 +15,7 @@ import {
 import { supabase } from '../../../lib/supabase';
 import AppleSearchBar from '../../../components/AppleSearchBar';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import StandardModal from '@/components/ui/StandardModal';
 
 interface User {
   id: string;
@@ -864,10 +865,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   }, []);
 
   return (
-    <div className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`} onClick={onClose}>
-      <div className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-xl p-4 w-full max-w-md max-h-[95vh] flex flex-col transform transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`} onClick={(e) => e.stopPropagation()}>
-        <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-3">Editar Usuario</h2>
-
+    <StandardModal isOpen={true} onClose={onClose} title="Editar Usuario" maxWidthClass="max-w-md">
+        {/* Contenido */}
         {/* Mensaje de error del modal */}
         {modalError && (
           <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
@@ -884,7 +883,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
         )}
 
-        <form onSubmit={handleSubmit} className="space-y-4 flex-1 overflow-y-auto pr-2">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
             <input
@@ -1015,7 +1014,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             )}
           </div>
 
-
           <div className="flex space-x-3 pt-10">
             <button
               type="button"
@@ -1032,7 +1030,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             </button>
           </div>
         </form>
-      </div>
-    </div>
+    </StandardModal>
   );
 }
