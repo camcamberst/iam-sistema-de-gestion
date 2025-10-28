@@ -328,8 +328,29 @@ export default function UsersListPage() {
     }
     
     // Verificar permisos de jerarquía
-    if (!currentUser || !canEditUser(currentUser, user)) {
-      setError('No tienes permisos para editar este usuario');
+    if (!currentUser) {
+      setError('Debes estar autenticado para editar usuarios');
+      return;
+    }
+    
+    if (!canEditUser(currentUser, user)) {
+      let errorMessage = 'No tienes permisos para editar este usuario';
+      
+      if (currentUser.role === 'admin' && user.role !== 'modelo') {
+        errorMessage = 'Los administradores solo pueden editar modelos';
+      } else if (currentUser.role === 'admin' && user.role === 'modelo') {
+        const userGroupIds = currentUser.groups.map(g => g.id);
+        const targetUserGroupIds = user.groups.map(g => g.id);
+        const hasSharedGroup = targetUserGroupIds.some(groupId => userGroupIds.includes(groupId));
+        
+        if (!hasSharedGroup) {
+          errorMessage = 'Solo puedes editar modelos de tus grupos asignados';
+        }
+      } else if (currentUser.role === 'modelo') {
+        errorMessage = 'Los modelos no pueden editar otros usuarios';
+      }
+      
+      setError(errorMessage);
       return;
     }
     
@@ -348,8 +369,29 @@ export default function UsersListPage() {
     }
 
     // Verificar permisos de jerarquía
-    if (!currentUser || !canDeleteUser(currentUser, userToDelete)) {
-      setError('No tienes permisos para eliminar este usuario');
+    if (!currentUser) {
+      setError('Debes estar autenticado para eliminar usuarios');
+      return;
+    }
+    
+    if (!canDeleteUser(currentUser, userToDelete)) {
+      let errorMessage = 'No tienes permisos para eliminar este usuario';
+      
+      if (currentUser.role === 'admin' && userToDelete.role !== 'modelo') {
+        errorMessage = 'Los administradores solo pueden eliminar modelos';
+      } else if (currentUser.role === 'admin' && userToDelete.role === 'modelo') {
+        const userGroupIds = currentUser.groups.map(g => g.id);
+        const targetUserGroupIds = userToDelete.groups.map(g => g.id);
+        const hasSharedGroup = targetUserGroupIds.some(groupId => userGroupIds.includes(groupId));
+        
+        if (!hasSharedGroup) {
+          errorMessage = 'Solo puedes eliminar modelos de tus grupos asignados';
+        }
+      } else if (currentUser.role === 'modelo') {
+        errorMessage = 'Los modelos no pueden eliminar otros usuarios';
+      }
+      
+      setError(errorMessage);
       return;
     }
 
@@ -630,21 +672,40 @@ export default function UsersListPage() {
                           )}
                         </td>
                         <td className="px-4 py-2 text-center">
-                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
-                            {user.is_active ? 'Activo' : 'Inactivo'}
-                          </span>
+                          <div className="flex flex-col items-center space-y-1">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
+                              {user.is_active ? 'Activo' : 'Inactivo'}
+                            </span>
+                            {currentUser && canEditUser(currentUser, user) && (
+                              <span className="px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700/50">
+                                Editable
+                              </span>
+                            )}
+                          </div>
                         </td>
                          <td className="px-4 py-2 text-center">
                            <div className="flex justify-center space-x-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
                             <button
                               onClick={() => handleEditUser(user)}
-                              className="px-2.5 py-1.5 text-xs rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200/30 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                              disabled={!currentUser || !canEditUser(currentUser, user)}
+                              className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all duration-200 backdrop-blur-sm ${
+                                !currentUser || !canEditUser(currentUser, user)
+                                  ? 'bg-gray-100 dark:bg-gray-700 border-gray-200/30 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                  : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/30 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:shadow-sm'
+                              }`}
+                              title={!currentUser || !canEditUser(currentUser, user) ? 'No tienes permisos para editar este usuario' : 'Editar usuario'}
                             >
                               Editar
                             </button>
                             <button
                               onClick={() => handleDeleteUser(user.id)}
-                              className="px-2.5 py-1.5 text-xs rounded-lg bg-gradient-to-r from-red-50 to-rose-50 border border-red-200/30 text-red-700 hover:from-red-100 hover:to-rose-100 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                              disabled={!currentUser || !canDeleteUser(currentUser, user)}
+                              className={`px-2.5 py-1.5 text-xs rounded-lg border transition-all duration-200 backdrop-blur-sm ${
+                                !currentUser || !canDeleteUser(currentUser, user)
+                                  ? 'bg-gray-100 dark:bg-gray-700 border-gray-200/30 text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                  : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200/30 text-red-700 hover:from-red-100 hover:to-rose-100 hover:shadow-sm'
+                              }`}
+                              title={!currentUser || !canDeleteUser(currentUser, user) ? 'No tienes permisos para eliminar este usuario' : 'Eliminar usuario'}
                             >
                               Eliminar
                             </button>
