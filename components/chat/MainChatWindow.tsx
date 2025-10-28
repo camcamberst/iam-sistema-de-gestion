@@ -65,11 +65,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   return (
     <div
-      className="w-80 h-[500px] bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
+      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={{
         right: `${finalRight}px`,
         bottom: '0px',
-        cursor: 'default'
+        cursor: 'default',
+        maxHeight: 'calc(100vh - 20px)', // Altura máxima respetando márgenes
+        height: '500px' // Altura fija
       }}
     >
       {/* Header */}
@@ -93,12 +95,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       </div>
 
       {/* Contenido principal */}
-      <div className="flex-1 flex flex-col">
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
         {view === 'users' && (
           <>
             <div className="p-4 border-b border-gray-700 flex-1 flex flex-col min-h-0">
               <h4 className="text-white text-sm font-semibold mb-3 flex-shrink-0">Usuarios disponibles</h4>
-              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-0">
                 <div className="space-y-1">
                   <button
                     onClick={() => setExpandedSections?.({ ...expandedSections, online: !expandedSections.online })}
@@ -179,7 +181,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           <>
             <div className="p-4 border-b border-gray-700 flex-1 flex flex-col min-h-0">
               <h4 className="text-white text-sm font-semibold mb-3 flex-shrink-0">Conversaciones</h4>
-              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2 min-h-0">
                 {conversations.map((conversation) => (
                   <button
                     key={conversation.id}
@@ -217,7 +219,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         {view === 'chat' && selectedConversation && (
           <>
             {/* Mensajes */}
-            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -240,7 +242,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
             </div>
 
             {/* Input de mensaje */}
-            <div className="p-4 border-t border-gray-700">
+            <div className="p-4 border-t border-gray-700 flex-shrink-0">
               <div className="flex space-x-2">
                 <input
                   type="text"
