@@ -137,9 +137,24 @@ export default function IndividualChatWindow({
 
   // Enviar mensaje
   const sendMessage = async () => {
-    if (!newMessage.trim() || !conversationId || !session) return;
+    console.log('📤 [IndividualChat] Intentando enviar mensaje:', {
+      newMessage: newMessage.trim(),
+      conversationId,
+      hasSession: !!session,
+      sessionToken: session?.access_token ? 'Presente' : 'Ausente'
+    });
+    
+    if (!newMessage.trim() || !conversationId || !session) {
+      console.log('❌ [IndividualChat] Validación fallida:', {
+        hasMessage: !!newMessage.trim(),
+        hasConversationId: !!conversationId,
+        hasSession: !!session
+      });
+      return;
+    }
     
     try {
+      console.log('🚀 [IndividualChat] Enviando mensaje a API...');
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
         headers: {
@@ -152,21 +167,28 @@ export default function IndividualChatWindow({
         })
       });
       
+      console.log('📡 [IndividualChat] Respuesta de API:', response.status, response.statusText);
       const data = await response.json();
+      console.log('📋 [IndividualChat] Datos de respuesta:', data);
       
       if (data.success) {
+        console.log('✅ [IndividualChat] Mensaje enviado exitosamente');
         setNewMessage('');
         await loadMessages(); // Recargar mensajes
+      } else {
+        console.log('❌ [IndividualChat] Error en respuesta:', data.error);
       }
     } catch (error) {
-      console.error('Error enviando mensaje:', error);
+      console.error('❌ [IndividualChat] Error enviando mensaje:', error);
     }
   };
 
   // Manejar tecla Enter
-  const handleKeyPress = (e: React.KeyboardEvent) => {
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    console.log('⌨️ [IndividualChat] Tecla presionada:', e.key);
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
+      console.log('🚀 [IndividualChat] Enter presionado, enviando mensaje...');
       sendMessage();
     }
   };
@@ -373,12 +395,15 @@ export default function IndividualChatWindow({
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
+            onKeyDown={handleKeyDown}
             placeholder="Escribe tu mensaje..."
             className="flex-1 bg-gray-700 text-white placeholder-gray-400 border border-gray-600 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button
-            onClick={sendMessage}
+            onClick={() => {
+              console.log('🖱️ [IndividualChat] Botón enviar clickeado');
+              sendMessage();
+            }}
             disabled={!newMessage.trim()}
             className="p-2 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 text-white rounded-lg transition-colors"
             aria-label="Enviar mensaje"
