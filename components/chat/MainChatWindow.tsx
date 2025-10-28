@@ -96,75 +96,80 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       <div className="flex-1 flex flex-col">
         {view === 'users' && (
           <>
-            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col">
-              <h4 className="text-white text-sm font-semibold mb-3">Usuarios disponibles</h4>
-              <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
-                <button
-                  onClick={() => setExpandedSections?.({ ...expandedSections, online: !expandedSections.online })}
-                  className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-                    En línea ({availableUsers.filter(u => u.is_online).length})
-                  </span>
-                  <svg className={`w-4 h-4 transition-transform ${expandedSections.online ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {expandedSections.online && (
-                  <div className="ml-4 space-y-1">
-                    {availableUsers.filter(u => u.is_online).map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => openChatWithUser?.(user.id)}
-                        className="flex items-center w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                      >
-                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white text-xs font-bold">
-                            {getDisplayName(user).charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{getDisplayName(user)}</p>
-                          <p className="text-xs text-gray-400">{user.role}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
-                <button
-                  onClick={() => setExpandedSections?.({ ...expandedSections, offline: !expandedSections.offline })}
-                  className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                >
-                  <span className="flex items-center">
-                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
-                    Offline ({availableUsers.filter(u => !u.is_online).length})
-                  </span>
-                  <svg className={`w-4 h-4 transition-transform ${expandedSections.offline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                {expandedSections.offline && (
-                  <div className="ml-4 space-y-1">
-                    {availableUsers.filter(u => !u.is_online).map((user) => (
-                      <button
-                        key={user.id}
-                        onClick={() => openChatWithUser?.(user.id)}
-                        className="flex items-center w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
-                      >
-                        <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mr-3">
-                          <span className="text-white text-xs font-bold">
-                            {getDisplayName(user).charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{getDisplayName(user)}</p>
-                          <p className="text-xs text-gray-400">{user.role}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                )}
+            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col min-h-0">
+              <h4 className="text-white text-sm font-semibold mb-3 flex-shrink-0">Usuarios disponibles</h4>
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setExpandedSections?.({ ...expandedSections, online: !expandedSections.online })}
+                    className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                      En línea ({availableUsers.filter(u => u.is_online).length})
+                    </span>
+                    <svg className={`w-4 h-4 transition-transform ${expandedSections.online ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedSections.online && (
+                    <div className="ml-4 space-y-1">
+                      {availableUsers.filter(u => u.is_online).map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => openChatWithUser?.(user.id)}
+                          className="flex items-center w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white text-xs font-bold">
+                              {getDisplayName(user).charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{getDisplayName(user)}</p>
+                            <p className="text-xs text-gray-400">{user.role}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                
+                <div className="space-y-1">
+                  <button
+                    onClick={() => setExpandedSections?.({ ...expandedSections, offline: !expandedSections.offline })}
+                    className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <span className="flex items-center">
+                      <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                      Offline ({availableUsers.filter(u => !u.is_online).length})
+                    </span>
+                    <svg className={`w-4 h-4 transition-transform ${expandedSections.offline ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  </button>
+                  {expandedSections.offline && (
+                    <div className="ml-4 space-y-1">
+                      {availableUsers.filter(u => !u.is_online).map((user) => (
+                        <button
+                          key={user.id}
+                          onClick={() => openChatWithUser?.(user.id)}
+                          className="flex items-center w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                        >
+                          <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mr-3">
+                            <span className="text-white text-xs font-bold">
+                              {getDisplayName(user).charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <p className="text-sm font-medium">{getDisplayName(user)}</p>
+                            <p className="text-xs text-gray-400">{user.role}</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </>
@@ -172,9 +177,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
         {view === 'conversations' && (
           <>
-            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col">
-              <h4 className="text-white text-sm font-semibold mb-3">Conversaciones</h4>
-              <div className="space-y-2 flex-1 overflow-y-auto custom-scrollbar">
+            <div className="p-4 border-b border-gray-700 flex-1 flex flex-col min-h-0">
+              <h4 className="text-white text-sm font-semibold mb-3 flex-shrink-0">Conversaciones</h4>
+              <div className="flex-1 overflow-y-auto custom-scrollbar space-y-2">
                 {conversations.map((conversation) => (
                   <button
                     key={conversation.id}
