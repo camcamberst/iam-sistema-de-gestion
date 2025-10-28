@@ -992,15 +992,48 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30">
                  <span className="text-white dark:text-gray-900 font-bold text-xs tracking-wider">
-                   {tempChatUser ? getDisplayName(tempChatUser).charAt(0).toUpperCase() : 'AIM'}
+                   {(() => {
+                     if (tempChatUser) {
+                       return getDisplayName(tempChatUser).charAt(0).toUpperCase();
+                     }
+                     if (selectedConversation) {
+                       const activeConversation = conversations.find(conv => conv.id === selectedConversation);
+                       if (activeConversation?.other_participant) {
+                         return getDisplayName(activeConversation.other_participant).charAt(0).toUpperCase();
+                       }
+                     }
+                     return 'AIM';
+                   })()}
                  </span>
               </div>
               <div>
                  <h3 className="text-white font-semibold">
-                   {tempChatUser ? getDisplayName(tempChatUser) : 'AIM Assistant'}
+                   {(() => {
+                     if (tempChatUser) {
+                       return getDisplayName(tempChatUser);
+                     }
+                     if (selectedConversation) {
+                       const activeConversation = conversations.find(conv => conv.id === selectedConversation);
+                       if (activeConversation?.other_participant) {
+                         return getDisplayName(activeConversation.other_participant);
+                       }
+                     }
+                     return 'AIM Assistant';
+                   })()}
                  </h3>
                 <p className="text-gray-400 text-xs">
-                  {tempChatUser ? tempChatUser.role : 'Soporte y tips'}
+                   {(() => {
+                     if (tempChatUser) {
+                       return tempChatUser.role;
+                     }
+                     if (selectedConversation) {
+                       const activeConversation = conversations.find(conv => conv.id === selectedConversation);
+                       if (activeConversation?.other_participant) {
+                         return activeConversation.other_participant.role;
+                       }
+                     }
+                     return 'Soporte y tips';
+                   })()}
                 </p>
               </div>
             </div>
