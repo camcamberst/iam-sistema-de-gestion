@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 import IndividualChatWindow from './IndividualChatWindow';
+import ChatBar from './ChatBar';
 
 interface ChatWidgetProps {
   userId?: string;
@@ -1407,19 +1408,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         </div>
       )}
 
-      {/* Ventanas individuales de chat */}
-      {openChatWindows.map((window, index) => (
-        <IndividualChatWindow
-          key={window.id}
-          conversationId={window.conversationId}
-          otherUser={window.otherUser}
-          onClose={() => closeChatWindow(window.id)}
-          userId={userId}
-          userRole={userRole}
-          session={session}
-          windowIndex={index}
-        />
-      ))}
+      {/* Barra de chat con ventanas individuales */}
+      <ChatBar
+        openChatWindows={openChatWindows}
+        onCloseWindow={closeChatWindow}
+        userId={userId}
+        userRole={userRole}
+        session={session}
+      />
     </>
   );
 }
