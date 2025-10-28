@@ -23,6 +23,29 @@ interface ChatBarProps {
   session?: any;
   isMainChatOpen?: boolean; // Nueva prop para la ventana principal
   onCloseMainChat?: () => void; // Nueva prop para cerrar la ventana principal
+  // Props para la funcionalidad del chat principal
+  view?: string;
+  setView?: (view: string) => void;
+  onlineUsers?: any[];
+  offlineUsers?: any[];
+  showOnlineUsers?: boolean;
+  setShowOnlineUsers?: (show: boolean) => void;
+  showOfflineUsers?: boolean;
+  setShowOfflineUsers?: (show: boolean) => void;
+  openChatWithUser?: (userId: string) => void;
+  conversations?: any[];
+  selectedConversation?: string;
+  setSelectedConversation?: (id: string) => void;
+  messages?: any[];
+  newMessage?: string;
+  setNewMessage?: (message: string) => void;
+  sendMessage?: () => void;
+  handleKeyPress?: (e: React.KeyboardEvent) => void;
+  showDeleteConfirm?: string | null;
+  setShowDeleteConfirm?: (id: string | null) => void;
+  deleteConversation?: (id: string) => void;
+  tempChatUser?: any;
+  getDisplayName?: (user: any) => string;
 }
 
 const ChatBar: React.FC<ChatBarProps> = ({
@@ -32,7 +55,29 @@ const ChatBar: React.FC<ChatBarProps> = ({
   userRole,
   session,
   isMainChatOpen = false,
-  onCloseMainChat
+  onCloseMainChat,
+  view,
+  setView,
+  onlineUsers,
+  offlineUsers,
+  showOnlineUsers,
+  setShowOnlineUsers,
+  showOfflineUsers,
+  setShowOfflineUsers,
+  openChatWithUser,
+  conversations,
+  selectedConversation,
+  setSelectedConversation,
+  messages,
+  newMessage,
+  setNewMessage,
+  sendMessage,
+  handleKeyPress,
+  showDeleteConfirm,
+  setShowDeleteConfirm,
+  deleteConversation,
+  tempChatUser,
+  getDisplayName
 }) => {
   // Solo mostrar la barra si hay ventanas abiertas o la ventana principal está abierta
   if (openChatWindows.length === 0 && !isMainChatOpen) {
@@ -49,6 +94,28 @@ const ChatBar: React.FC<ChatBarProps> = ({
           userRole={userRole}
           session={session}
           windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
+          view={view}
+          setView={setView}
+          onlineUsers={onlineUsers}
+          offlineUsers={offlineUsers}
+          showOnlineUsers={showOnlineUsers}
+          setShowOnlineUsers={setShowOnlineUsers}
+          showOfflineUsers={showOfflineUsers}
+          setShowOfflineUsers={setShowOfflineUsers}
+          openChatWithUser={openChatWithUser}
+          conversations={conversations}
+          selectedConversation={selectedConversation}
+          setSelectedConversation={setSelectedConversation}
+          messages={messages}
+          newMessage={newMessage}
+          setNewMessage={setNewMessage}
+          sendMessage={sendMessage}
+          handleKeyPress={handleKeyPress}
+          showDeleteConfirm={showDeleteConfirm}
+          setShowDeleteConfirm={setShowDeleteConfirm}
+          deleteConversation={deleteConversation}
+          tempChatUser={tempChatUser}
+          getDisplayName={getDisplayName}
         />
       )}
       

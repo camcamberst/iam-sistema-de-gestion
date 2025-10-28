@@ -1069,6 +1069,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         session={session}
         isMainChatOpen={isOpen}
         onCloseMainChat={() => setIsOpen(false)}
+        view={view}
+        setView={setView}
+        onlineUsers={onlineUsers}
+        offlineUsers={offlineUsers}
+        showOnlineUsers={showOnlineUsers}
+        setShowOnlineUsers={setShowOnlineUsers}
+        showOfflineUsers={showOfflineUsers}
+        setShowOfflineUsers={setShowOfflineUsers}
+        openChatWithUser={openChatWithUser}
+        conversations={conversations}
+        selectedConversation={selectedConversation}
+        setSelectedConversation={setSelectedConversation}
+        messages={messages}
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        sendMessage={sendMessage}
+        handleKeyPress={handleKeyPress}
+        showDeleteConfirm={showDeleteConfirm}
+        setShowDeleteConfirm={setShowDeleteConfirm}
+        deleteConversation={deleteConversation}
+        tempChatUser={tempChatUser}
+        getDisplayName={getDisplayName}
       />
     </>
   );

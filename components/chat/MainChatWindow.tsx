@@ -8,6 +8,29 @@ interface MainChatWindowProps {
   userRole?: string;
   session?: any;
   windowIndex?: number;
+  // Props para la funcionalidad del chat
+  view?: string;
+  setView?: (view: string) => void;
+  onlineUsers?: any[];
+  offlineUsers?: any[];
+  showOnlineUsers?: boolean;
+  setShowOnlineUsers?: (show: boolean) => void;
+  showOfflineUsers?: boolean;
+  setShowOfflineUsers?: (show: boolean) => void;
+  openChatWithUser?: (userId: string) => void;
+  conversations?: any[];
+  selectedConversation?: string;
+  setSelectedConversation?: (id: string) => void;
+  messages?: any[];
+  newMessage?: string;
+  setNewMessage?: (message: string) => void;
+  sendMessage?: () => void;
+  handleKeyPress?: (e: React.KeyboardEvent) => void;
+  showDeleteConfirm?: string | null;
+  setShowDeleteConfirm?: (id: string | null) => void;
+  deleteConversation?: (id: string) => void;
+  tempChatUser?: any;
+  getDisplayName?: (user: any) => string;
 }
 
 const MainChatWindow: React.FC<MainChatWindowProps> = ({
@@ -15,7 +38,29 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   userId,
   userRole,
   session,
-  windowIndex = 0
+  windowIndex = 0,
+  view = 'users',
+  setView,
+  onlineUsers = [],
+  offlineUsers = [],
+  showOnlineUsers = false,
+  setShowOnlineUsers,
+  showOfflineUsers = false,
+  setShowOfflineUsers,
+  openChatWithUser,
+  conversations = [],
+  selectedConversation,
+  setSelectedConversation,
+  messages = [],
+  newMessage = '',
+  setNewMessage,
+  sendMessage,
+  handleKeyPress,
+  showDeleteConfirm,
+  setShowDeleteConfirm,
+  deleteConversation,
+  tempChatUser,
+  getDisplayName = (user) => user.name || user.email
 }) => {
   const windowWidth = 320; // w-80 = 320px
   const margin = 8; // Margen entre ventanas en la barra
@@ -53,12 +98,198 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         </button>
       </div>
 
-      {/* Content placeholder - aquí iría el contenido del chat principal */}
-      <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
-        <div className="text-center text-gray-400">
-          <p>Contenido del AIM Assistant</p>
-          <p className="text-xs mt-2">Esta es la ventana principal del chat</p>
-        </div>
+      {/* Contenido principal */}
+      <div className="flex-1 flex flex-col">
+        {view === 'users' && (
+          <>
+            <div className="p-4 border-b border-gray-700">
+              <h4 className="text-white text-sm font-semibold mb-3">Usuarios disponibles</h4>
+              <div className="space-y-2">
+                <button
+                  onClick={() => setShowOnlineUsers?.(!showOnlineUsers)}
+                  className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+                    En línea ({onlineUsers.length})
+                  </span>
+                  <svg className={`w-4 h-4 transition-transform ${showOnlineUsers ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showOnlineUsers && (
+                  <div className="ml-4 space-y-1">
+                    {onlineUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => openChatWithUser?.(user.id)}
+                        className="flex items-center w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-xs font-bold">
+                            {getDisplayName(user).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{getDisplayName(user)}</p>
+                          <p className="text-xs text-gray-400">{user.role}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+                <button
+                  onClick={() => setShowOfflineUsers?.(!showOfflineUsers)}
+                  className="flex items-center justify-between w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                >
+                  <span className="flex items-center">
+                    <span className="w-2 h-2 bg-gray-500 rounded-full mr-2"></span>
+                    Offline ({offlineUsers.length})
+                  </span>
+                  <svg className={`w-4 h-4 transition-transform ${showOfflineUsers ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {showOfflineUsers && (
+                  <div className="ml-4 space-y-1">
+                    {offlineUsers.map((user) => (
+                      <button
+                        key={user.id}
+                        onClick={() => openChatWithUser?.(user.id)}
+                        className="flex items-center w-full p-2 text-left text-gray-300 hover:text-white hover:bg-gray-700 rounded-lg transition-colors"
+                      >
+                        <div className="w-6 h-6 bg-gradient-to-br from-gray-500 to-gray-600 rounded-full flex items-center justify-center mr-3">
+                          <span className="text-white text-xs font-bold">
+                            {getDisplayName(user).charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{getDisplayName(user)}</p>
+                          <p className="text-xs text-gray-400">{user.role}</p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+
+        {view === 'conversations' && (
+          <>
+            <div className="p-4 border-b border-gray-700">
+              <h4 className="text-white text-sm font-semibold mb-3">Conversaciones</h4>
+              <div className="space-y-2">
+                {conversations.map((conversation) => (
+                  <button
+                    key={conversation.id}
+                    onClick={() => {
+                      setSelectedConversation?.(conversation.id);
+                      setView?.('chat');
+                    }}
+                    className={`flex items-center w-full p-2 text-left rounded-lg transition-colors ${
+                      selectedConversation === conversation.id
+                        ? 'bg-blue-600 text-white'
+                        : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                    }`}
+                  >
+                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center mr-3">
+                      <span className="text-white text-xs font-bold">
+                        {getDisplayName(conversation.other_participant).charAt(0).toUpperCase()}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium truncate">{getDisplayName(conversation.other_participant)}</p>
+                      <p className="text-xs text-gray-400 truncate">{conversation.last_message?.content || 'Sin mensajes'}</p>
+                    </div>
+                    {conversation.unread_count > 0 && (
+                      <div className="bg-red-500 text-white text-xs rounded-full px-2 py-1 min-w-[20px] text-center">
+                        {conversation.unread_count}
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
+
+        {view === 'chat' && selectedConversation && (
+          <>
+            {/* Mensajes */}
+            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={`flex mb-4 ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
+                >
+                  <div
+                    className={`max-w-[70%] p-3 rounded-lg ${
+                      message.sender_id === userId
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-gray-700 text-white'
+                    }`}
+                  >
+                    <p className="text-sm">{message.content}</p>
+                    <span className="text-xs text-gray-300 block text-right mt-1">
+                      {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Input de mensaje */}
+            <div className="p-4 border-t border-gray-700">
+              <div className="flex space-x-2">
+                <input
+                  type="text"
+                  value={newMessage}
+                  onChange={(e) => setNewMessage?.(e.target.value)}
+                  onKeyPress={handleKeyPress}
+                  placeholder="Escribe tu mensaje..."
+                  className="flex-1 p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim()}
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
+
+        {/* Modal de confirmación para eliminar conversación */}
+        {showDeleteConfirm && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]">
+            <div className="bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full mx-4">
+              <h3 className="text-white text-lg font-semibold mb-4">Eliminar conversación</h3>
+              <p className="text-gray-300 mb-6">
+                ¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.
+              </p>
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => setShowDeleteConfirm?.(null)}
+                  className="flex-1 px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => deleteConversation?.(showDeleteConfirm)}
+                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                >
+                  Eliminar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
