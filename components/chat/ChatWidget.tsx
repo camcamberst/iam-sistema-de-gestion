@@ -49,6 +49,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [hasNewMessage, setHasNewMessage] = useState(false);
   const [lastUnreadCount, setLastUnreadCount] = useState(0);
   const [notificationTriggered, setNotificationTriggered] = useState(false);
+  const [lastProcessedMessageId, setLastProcessedMessageId] = useState<string | null>(null);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   
@@ -334,8 +335,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             // Verificar si hay mensajes nuevos de otros usuarios
             if (newMessages.length > prev.length) {
               const latestMessage = newMessages[newMessages.length - 1];
-              if (latestMessage && latestMessage.sender_id !== userId && !notificationTriggered && !isOpen) {
-                console.log('🔔 [ChatWidget] Nuevo mensaje detectado via polling, activando notificación...');
+              if (latestMessage && 
+                  latestMessage.sender_id !== userId && 
+                  latestMessage.id !== lastProcessedMessageId &&
+                  !notificationTriggered && 
+                  !isOpen) {
+                console.log('🔔 [ChatWidget] Nuevo mensaje detectado via polling, activando notificación...', {
+                  messageId: latestMessage.id,
+                  lastProcessedId: lastProcessedMessageId
+                });
+                setLastProcessedMessageId(latestMessage.id);
                 setNotificationTriggered(true);
                 triggerNotification();
               }
@@ -926,12 +935,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               loadConversations();
               
               // Solo activar notificación si el mensaje no es del usuario actual
-              if (newMessage.sender_id !== userId && !notificationTriggered && !isOpen) {
-                console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario');
+              if (newMessage.sender_id !== userId && 
+                  newMessage.id !== lastProcessedMessageId &&
+                  !notificationTriggered && 
+                  !isOpen) {
+                console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario', {
+                  messageId: newMessage.id,
+                  lastProcessedId: lastProcessedMessageId
+                });
+                setLastProcessedMessageId(newMessage.id);
                 setNotificationTriggered(true);
                 triggerNotification();
               } else {
-                console.log('👤 [ChatWidget] Mensaje del usuario actual, no notificando');
+                console.log('👤 [ChatWidget] Mensaje del usuario actual o ya procesado, no notificando');
               }
             } else {
               console.log('❌ [ChatWidget] Usuario no es participante de la conversación');

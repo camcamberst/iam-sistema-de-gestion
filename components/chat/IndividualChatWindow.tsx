@@ -109,6 +109,11 @@ export default function IndividualChatWindow({
 
   // Función para obtener nombre de usuario
   const getDisplayName = (user: any) => {
+    if (user.role === 'modelo') {
+      // Para modelos, mostrar solo la parte antes del @ del email
+      return user.email.split('@')[0];
+    }
+    // Para otros roles, mostrar el nombre completo
     return user.name || user.email || 'Usuario';
   };
 
@@ -307,11 +312,11 @@ export default function IndividualChatWindow({
                 {getDisplayName(otherUser).charAt(0).toUpperCase()}
               </span>
             </div>
-            <div>
-              <h3 className="text-white font-semibold">
+            <div className="min-w-0 flex-1">
+              <h3 className="text-white font-semibold truncate">
                 {getDisplayName(otherUser)}
               </h3>
-              <p className="text-gray-400 text-xs">
+              <p className="text-gray-400 text-xs truncate">
                 {otherUser.role}
               </p>
             </div>
