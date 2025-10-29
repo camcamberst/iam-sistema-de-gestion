@@ -672,16 +672,9 @@ export default function UsersListPage() {
                           )}
                         </td>
                         <td className="px-4 py-2 text-center">
-                          <div className="flex flex-col items-center space-y-1">
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
-                              {user.is_active ? 'Activo' : 'Inactivo'}
-                            </span>
-                            {currentUser && canEditUser(currentUser, user) && (
-                              <span className="px-1.5 py-0.5 rounded text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-700/50">
-                                Editable
-                              </span>
-                            )}
-                          </div>
+                          <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
+                            {user.is_active ? 'Activo' : 'Inactivo'}
+                          </span>
                         </td>
                          <td className="px-4 py-2 text-center">
                            <div className="flex justify-center space-x-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
@@ -693,7 +686,7 @@ export default function UsersListPage() {
                                   ? 'bg-gray-100 dark:bg-gray-700 border-gray-200/30 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                                   : 'bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200/30 text-blue-700 hover:from-blue-100 hover:to-indigo-100 hover:shadow-sm'
                               }`}
-                              title={!currentUser || !canEditUser(currentUser, user) ? 'No tienes permisos para editar este usuario' : 'Editar usuario'}
+                              title={!currentUser || !canEditUser(currentUser, user) ? 'Solo puedes editar modelos de tus grupos' : 'Editar usuario'}
                             >
                               Editar
                             </button>
@@ -705,7 +698,7 @@ export default function UsersListPage() {
                                   ? 'bg-gray-100 dark:bg-gray-700 border-gray-200/30 text-gray-400 dark:text-gray-500 cursor-not-allowed'
                                   : 'bg-gradient-to-r from-red-50 to-rose-50 border-red-200/30 text-red-700 hover:from-red-100 hover:to-rose-100 hover:shadow-sm'
                               }`}
-                              title={!currentUser || !canDeleteUser(currentUser, user) ? 'No tienes permisos para eliminar este usuario' : 'Eliminar usuario'}
+                              title={!currentUser || !canDeleteUser(currentUser, user) ? 'Solo puedes eliminar modelos de tus grupos' : 'Eliminar usuario'}
                             >
                               Eliminar
                             </button>
