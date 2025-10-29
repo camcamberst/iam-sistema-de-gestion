@@ -140,9 +140,41 @@ export async function PUT(
       }
 
       try {
+        // Normalizar platform_id contra catálogo para evitar desajustes
+        const normalizePlatformId = async (incomingId: string): Promise<string> => {
+          let { data: byId } = await supabase
+            .from('calculator_platforms')
+            .select('id, name')
+            .eq('id', incomingId)
+            .maybeSingle();
+          if (byId) return byId.id;
+          let { data: byIlike } = await supabase
+            .from('calculator_platforms')
+            .select('id, name')
+            .ilike('id', incomingId)
+            .maybeSingle();
+          if (byIlike) return byIlike.id;
+          let { data: byName } = await supabase
+            .from('calculator_platforms')
+            .select('id, name')
+            .eq('name', incomingId)
+            .maybeSingle();
+          if (byName) return byName.id;
+          const compact = incomingId.replace(/\s+/g, '');
+          let { data: byCompact } = await supabase
+            .from('calculator_platforms')
+            .select('id, name')
+            .ilike('name', `%${compact}%`)
+            .maybeSingle();
+          if (byCompact) return byCompact.id;
+          return incomingId;
+        };
+
+        const normalizedId = await normalizePlatformId(platform_id);
+
         const { data, error } = await supabase.rpc('change_platform_status', {
           p_model_id: modelId,
-          p_platform_id: platform_id,
+          p_platform_id: normalizedId,
           p_new_status: new_status,
           p_changed_by: changed_by,
           p_reason: reason || null
@@ -152,7 +184,7 @@ export async function PUT(
           errors.push(`Plataforma ${platform_id}: ${error.message}`);
         } else {
           results.push({
-            platform_id,
+            platform_id: normalizedId,
             status: new_status,
             success: true
           });
@@ -177,8 +209,8 @@ export async function PUT(
                 const enabled: string[] = Array.isArray(existingConfig.enabled_platforms)
                   ? existingConfig.enabled_platforms
                   : [];
-                if (!enabled.includes(platform_id)) {
-                  const newEnabled = [...enabled, platform_id];
+                if (!enabled.includes(normalizedId)) {
+                  const newEnabled = [...enabled, normalizedId];
                   const { error: updateConfigError } = await supabase
                     .from('calculator_config')
                     .update({ enabled_platforms: newEnabled, updated_at: nowIso })
@@ -194,7 +226,7 @@ export async function PUT(
                   .insert({
                     model_id: modelId,
                     active: true,
-                    enabled_platforms: [platform_id],
+                    enabled_platforms: [normalizedId],
                     created_at: nowIso,
                     updated_at: nowIso
                   });

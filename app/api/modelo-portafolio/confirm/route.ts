@@ -18,12 +18,53 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // 0) Normalizar platformId contra el catálogo para evitar desajustes (espacios/mayúsculas)
+    const normalizePlatformId = async (incomingId: string): Promise<string> => {
+      // Intento directo por id exacto
+      let { data: byId } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .eq('id', incomingId)
+        .maybeSingle();
+      if (byId) return byId.id;
+
+      // Intento por id case-insensitive
+      let { data: byIlike } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .ilike('id', incomingId)
+        .maybeSingle();
+      if (byIlike) return byIlike.id;
+
+      // Intento por name exacto
+      let { data: byName } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .eq('name', incomingId)
+        .maybeSingle();
+      if (byName) return byName.id;
+
+      // Intento por name sin espacios / case-insensitive
+      const compact = incomingId.replace(/\s+/g, '');
+      let { data: byCompact } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .ilike('name', `%${compact}%`)
+        .maybeSingle();
+      if (byCompact) return byCompact.id;
+
+      // fallback a incomingId
+      return incomingId;
+    };
+
+    const normalizedPlatformId = await normalizePlatformId(platformId);
+
     // Verificar que la plataforma existe y está en estado 'entregada'
     const { data: platform, error: platformError } = await supabase
       .from('modelo_plataformas')
       .select('*')
       .eq('model_id', modelId)
-      .eq('platform_id', platformId)
+      .eq('platform_id', normalizedPlatformId)
       .single();
 
     if (platformError || !platform) {
@@ -53,7 +94,7 @@ export async function POST(request: NextRequest) {
         updated_at: nowIso
       })
       .eq('model_id', modelId)
-      .eq('platform_id', platformId)
+      .eq('platform_id', normalizedPlatformId)
       .select()
       .single();
 
@@ -83,8 +124,8 @@ export async function POST(request: NextRequest) {
         const enabled: string[] = Array.isArray(existingConfig.enabled_platforms)
           ? existingConfig.enabled_platforms
           : [];
-        if (!enabled.includes(platformId)) {
-          const newEnabled = [...enabled, platformId];
+        if (!enabled.includes(normalizedPlatformId)) {
+          const newEnabled = [...enabled, normalizedPlatformId];
           const { error: updateConfigError } = await supabase
             .from('calculator_config')
             .update({ enabled_platforms: newEnabled, updated_at: nowIso })
@@ -100,7 +141,7 @@ export async function POST(request: NextRequest) {
           .insert({
             model_id: modelId,
             active: true,
-            enabled_platforms: [platformId],
+            enabled_platforms: [normalizedPlatformId],
             created_at: nowIso,
             updated_at: nowIso
           });
