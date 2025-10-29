@@ -125,8 +125,8 @@ export default function AppleSearchBar({
   // ===========================================
   const renderFilter = (filter: SearchFilter) => (
     <div key={filter.id} className="space-y-2 min-w-0">
-      <label className="flex items-center space-x-1 text-gray-600 text-xs font-medium">
-        <div className="w-2 h-2 bg-gray-400 rounded-full"></div>
+      <label className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-xs font-medium">
+        <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
         <span>{filter.label}</span>
       </label>
       <div className="relative">
@@ -134,7 +134,7 @@ export default function AppleSearchBar({
           value={selectedFilters[filter.id] || ''}
           options={filter.options}
           onChange={(v) => handleFilterChange(filter.id, v)}
-          className="text-sm bg-white/80 backdrop-blur-sm border border-gray-200/50 rounded-md shadow-sm hover:shadow-md transition-all duration-200"
+          className="text-sm bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-md shadow-sm hover:shadow-md transition-all duration-200"
           onFocus={() => handleFilterFocus(filter.id)}
           onBlur={() => {
             setTimeout(() => setActiveDropdown(null), 100);
@@ -153,7 +153,7 @@ export default function AppleSearchBar({
   return (
     <div ref={searchBarRef} className={`relative ${className}`}>
       {/* Search Input Container */}
-      <div className="relative bg-white/80 backdrop-blur-sm rounded-lg border border-white/30 shadow-sm hover:shadow-md transition-all duration-200">
+      <div className="relative bg-white dark:bg-gray-800 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-600 shadow-sm hover:shadow-md transition-all duration-200">
         <div className="flex items-center space-x-2 p-3">
           {/* Search Icon */}
           <div className="flex-shrink-0">
@@ -170,7 +170,7 @@ export default function AppleSearchBar({
               onChange={(e) => setQuery(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
               placeholder={placeholder}
-              className="w-full bg-transparent border-none outline-none text-sm text-gray-700 placeholder-gray-400 focus:ring-0"
+              className="w-full bg-transparent border-none outline-none text-sm text-gray-700 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-0"
             />
           </div>
 
@@ -188,7 +188,7 @@ export default function AppleSearchBar({
                 className={`p-2 rounded-md text-xs transition-all duration-200 ${
                   isExpanded 
                     ? 'bg-blue-500 text-white shadow-md' 
-                    : 'text-gray-500 hover:text-blue-500 hover:bg-blue-50/50'
+                    : 'text-gray-500 dark:text-gray-400 hover:text-blue-500 dark:hover:text-blue-400 hover:bg-blue-50/50 dark:hover:bg-blue-900/20'
                 }`}
                 title={isExpanded ? 'Ocultar filtros' : 'Mostrar filtros'}
               >
@@ -205,7 +205,7 @@ export default function AppleSearchBar({
             {(query || hasActiveFilters) && (
               <button
                 onClick={clearFilters}
-                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50/50 rounded-md transition-all duration-200"
+                className="p-2 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-900/20 rounded-md transition-all duration-200"
                 title="Limpiar búsqueda y filtros"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,29 +219,29 @@ export default function AppleSearchBar({
 
       {/* Filters Panel */}
       {filters.length > 0 && isExpanded && (
-        <div className="mt-3 relative bg-white/95 dark:bg-white/80 backdrop-blur-sm rounded-lg border border-white/30 dark:border-gray-600/30 shadow-xl dark:shadow-2xl dark:shadow-blue-900/20 dark:ring-1 dark:ring-blue-400/20 p-4 animate-in slide-in-from-top-2 duration-200 z-[100]">
+        <div className="mt-3 relative bg-white dark:bg-gray-800 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-600 shadow-xl p-4 animate-in slide-in-from-top-2 duration-200 z-[100]">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
               <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
               </svg>
             </div>
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-800">Filtros Avanzados</span>
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Filtros Avanzados</span>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filters.map(renderFilter)}
           </div>
           
-          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200/50 dark:border-gray-600/30 dark:shadow-sm dark:shadow-blue-900/5">
-            <div className="text-xs text-gray-500">
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
+            <div className="text-xs text-gray-500 dark:text-gray-400">
               {hasActiveFilters ? `${Object.values(selectedFilters).filter(v => v).length} filtro(s) activo(s)` : 'Sin filtros aplicados'}
             </div>
             <div className="flex items-center space-x-2">
               {hasActiveFilters && (
                 <button
                   onClick={clearFilters}
-                  className="px-3 py-1.5 text-xs text-gray-600 hover:text-red-600 hover:bg-red-50/50 rounded-md transition-all duration-200"
+                  className="px-3 py-1.5 text-xs text-gray-600 dark:text-gray-400 hover:text-red-600 dark:hover:text-red-400 hover:bg-red-50/50 dark:hover:bg-red-900/20 rounded-md transition-all duration-200"
                 >
                   Limpiar todo
                 </button>
@@ -259,12 +259,12 @@ export default function AppleSearchBar({
 
       {/* Active Filters Display */}
       {(hasActiveFilters || query || (showResultsInfo && totalUsers > 0)) && !isExpanded && (
-        <div className="mt-3 relative bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/30 p-3">
+        <div className="mt-3 relative bg-blue-50 dark:bg-blue-900/20 backdrop-blur-sm rounded-lg border border-blue-200 dark:border-blue-700/50 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-wrap">
               {/* Información de resultados */}
               {showResultsInfo && totalUsers > 0 && (
-                <div className="flex items-center space-x-2 text-sm text-blue-700">
+                <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -282,7 +282,7 @@ export default function AppleSearchBar({
                 <div className="flex items-center space-x-2 flex-wrap">
                   <div className="flex items-center space-x-1">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                    <span className="text-blue-700 text-xs font-medium">Filtros activos:</span>
+                    <span className="text-blue-700 dark:text-blue-300 text-xs font-medium">Filtros activos:</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {Object.entries(selectedFilters).map(([key, value]) => {
@@ -292,13 +292,13 @@ export default function AppleSearchBar({
                       return (
                         <span
                           key={key}
-                          className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100/80 text-blue-800 rounded-full text-xs border border-blue-200/50"
+                          className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100 dark:bg-blue-800/50 text-blue-800 dark:text-blue-200 rounded-full text-xs border border-blue-200 dark:border-blue-600/50"
                         >
                           <span className="font-medium">{filter?.label}:</span>
                           <span>{option?.label}</span>
                           <button
                             onClick={() => handleFilterChange(key, '')}
-                            className="ml-1 hover:text-blue-600 transition-colors duration-150"
+                            className="ml-1 hover:text-blue-600 dark:hover:text-blue-400 transition-colors duration-150"
                           >
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -317,7 +317,7 @@ export default function AppleSearchBar({
               {hasActiveFilters && (
                 <button
                   onClick={() => setIsExpanded(true)}
-                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-xs font-medium transition-colors duration-150"
                 >
                   Editar
                 </button>
@@ -327,7 +327,7 @@ export default function AppleSearchBar({
               {(query || hasActiveFilters) && (
                 <button
                   onClick={clearFilters}
-                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 text-xs font-medium transition-colors duration-150"
                 >
                   Limpiar búsqueda
                 </button>
