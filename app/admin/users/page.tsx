@@ -857,6 +857,11 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
         },
         body: JSON.stringify({
           id: formData.id,
+          name: formData.name,
+          email: formData.email,
+          role: formData.role,
+          is_active: formData.is_active,
+          group_ids: formData.group_ids,
           password: passwordData.newPassword.trim()
         }),
       });
