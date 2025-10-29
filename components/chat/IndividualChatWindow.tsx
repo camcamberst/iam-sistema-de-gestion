@@ -48,18 +48,26 @@ export default function IndividualChatWindow({
     const mainChatWidth = 320; // w-80 de la ventana principal
 
     if (isInChatBar) {
-      // En la barra de chat, calcular posición desde la derecha hacia la izquierda
-      // La ventana principal está en: rightOffset desde el borde derecho
-      // Las ventanas individuales van a la izquierda de la ventana principal
+      // En la barra de chat, la primera ventana se abre junto a la ventana principal
+      // Las siguientes ventanas van a la izquierda con cascading
       const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
-      const finalRight = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
       
-      console.log('🪟 [IndividualChatWindow] Posición en barra de chat (derecha a izquierda):', {
+      let finalRight;
+      if (windowIndex === 0) {
+        // Primera ventana: junto a la ventana principal (a la izquierda inmediata)
+        finalRight = mainChatLeftEdge - margin;
+      } else {
+        // Ventanas siguientes: más a la izquierda con cascading
+        finalRight = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
+      }
+      
+      console.log('🪟 [IndividualChatWindow] Posición en barra de chat:', {
         windowIndex,
         windowInnerWidth: window.innerWidth,
         mainChatLeftEdge,
         finalRight,
-        isInChatBar
+        isInChatBar,
+        isFirstWindow: windowIndex === 0
       });
       
       return { right: finalRight, y: 0 }; // Y = 0 porque está en la barra
@@ -74,28 +82,30 @@ export default function IndividualChatWindow({
       // Y: Anclar al bottom exactamente igual que la ventana principal
       const finalY = window.innerHeight - windowHeight - bottomOffsetFloat;
 
-      // X: Posicionar a la izquierda de la ventana principal
-      // La ventana principal está en: window.innerWidth - rightOffsetFloat - mainChatWidthFloat
-      // Las ventanas individuales van a la izquierda con cascading
+      // X: La primera ventana se abre junto a la ventana principal
+      // Las siguientes ventanas van a la izquierda con cascading
       const mainChatLeftEdge = window.innerWidth - rightOffsetFloat - mainChatWidthFloat;
-      const individualWindowRightEdge = mainChatLeftEdge - marginFloat;
-      const finalX = individualWindowRightEdge - windowWidth - (windowIndex * (windowWidth + marginFloat));
+      
+      let finalX;
+      if (windowIndex === 0) {
+        // Primera ventana: junto a la ventana principal (a la izquierda inmediata)
+        finalX = mainChatLeftEdge - marginFloat;
+      } else {
+        // Ventanas siguientes: más a la izquierda con cascading
+        finalX = mainChatLeftEdge - marginFloat - (windowIndex * (windowWidth + marginFloat));
+      }
 
       // Asegurar que no se vaya fuera de la pantalla
       const minX = 20; // Margen mínimo del borde izquierdo
       const adjustedX = Math.max(minX, finalX);
 
-      console.log('🪟 [IndividualChatWindow] Calculando posición flotante:', {
+      console.log('🪟 [IndividualChatWindow] Posición flotante calculada:', {
         windowIndex,
-        windowWidth,
-        windowHeight,
-        windowInnerWidth: window.innerWidth,
-        windowInnerHeight: window.innerHeight,
-        mainChatLeftEdge,
-        individualWindowRightEdge,
         finalX,
         adjustedX,
-        finalY
+        finalY,
+        mainChatLeftEdge,
+        isFirstWindow: windowIndex === 0
       });
 
       return { x: adjustedX, y: finalY };
