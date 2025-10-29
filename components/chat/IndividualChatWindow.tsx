@@ -53,16 +53,16 @@ export default function IndividualChatWindow({
       // Las ventanas individuales van a la izquierda con cascading
       const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
       
-      // Calcular posición de derecha a izquierda usando left (más cerca de la ventana principal = menor windowIndex)
-      const finalLeft = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
+      // Calcular posición de DERECHA A IZQUIERDA (primera ventana más cerca de la principal = MAYOR left)
+      const finalLeft = mainChatLeftEdge - margin + (windowIndex * (windowWidth + margin));
       
-      console.log('🪟 [IndividualChatWindow] Posición en barra de chat:', {
+      console.log('🪟 [IndividualChatWindow] Posición en barra de chat (DERECHA A IZQUIERDA):', {
         windowIndex,
         windowInnerWidth: window.innerWidth,
         mainChatLeftEdge,
         finalLeft,
         isInChatBar,
-        calculation: `${mainChatLeftEdge} - ${margin} - (${windowIndex} * (${windowWidth} + ${margin}))`
+        calculation: `${mainChatLeftEdge} - ${margin} + (${windowIndex} * (${windowWidth} + ${margin}))`
       });
       
       return { x: finalLeft, y: 0 };
@@ -76,21 +76,21 @@ export default function IndividualChatWindow({
       // Y: Anclar al bottom igual que la ventana principal
       const finalY = window.innerHeight - windowHeight - bottomOffsetFloat;
 
-      // X: Ventanas a la izquierda de la ventana principal con cascading
+      // X: Ventanas de DERECHA A IZQUIERDA con cascading
       const mainChatLeftEdge = window.innerWidth - rightOffsetFloat - mainChatWidth;
-      const finalX = mainChatLeftEdge - marginFloat - (windowIndex * (windowWidth + marginFloat));
+      const finalX = mainChatLeftEdge - marginFloat + (windowIndex * (windowWidth + marginFloat));
 
       // Asegurar que no se vaya fuera de la pantalla
       const minX = 20;
       const adjustedX = Math.max(minX, finalX);
 
-      console.log('🪟 [IndividualChatWindow] Posición flotante:', {
+      console.log('🪟 [IndividualChatWindow] Posición flotante (DERECHA A IZQUIERDA):', {
         windowIndex,
         finalX,
         adjustedX,
         finalY,
         mainChatLeftEdge,
-        calculation: `${mainChatLeftEdge} - ${marginFloat} - (${windowIndex} * (${windowWidth} + ${marginFloat}))`
+        calculation: `${mainChatLeftEdge} - ${marginFloat} + (${windowIndex} * (${windowWidth} + ${marginFloat}))`
       });
 
       return { x: adjustedX, y: finalY };
