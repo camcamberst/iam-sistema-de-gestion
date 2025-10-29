@@ -53,15 +53,42 @@ export default function StandardModal({
 
   return (
     <div
-      className={`fixed inset-0 bg-black/40 backdrop-blur-sm z-50 transition-opacity duration-200 ${mounted ? 'opacity-100' : 'opacity-0'}`}
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        backgroundColor: 'rgba(0, 0, 0, 0.4)',
+        backdropFilter: 'blur(4px)',
+        zIndex: 50,
+        opacity: mounted ? 1 : 0,
+        transition: 'opacity 200ms ease-in-out'
+      }}
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
     >
       <div
-        className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl ${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto transition-all duration-200 ease-out ${mounted ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${className}`}
+        style={{
+          position: 'fixed',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          backgroundColor: 'white',
+          border: '1px solid #e5e7eb',
+          borderRadius: '16px',
+          boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)',
+          padding: '28px',
+          width: '100%',
+          maxWidth: '1024px',
+          maxHeight: 'calc(100vh - 2rem)',
+          overflowY: 'auto',
+          opacity: mounted ? 1 : 0,
+          transform: mounted ? 'translate(-50%, -50%) scale(1)' : 'translate(-50%, -50%) scale(0.95)',
+          transition: 'all 200ms ease-out'
+        }}
         onClick={(e) => e.stopPropagation()}
-        style={{ position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }}
       >
         {(title || showCloseButton) && (
           <div className={`flex items-center justify-between ${headerMarginClass}`}>
