@@ -1089,7 +1089,7 @@ export default function ModelCalculatorPage() {
                 color: 'blue'
               },
               {
-                value: `$${platforms.reduce((sum, p) => {
+                value: `$${platforms.filter(p => p.enabled).reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
                   if (p.currency === 'EUR') {
@@ -1135,7 +1135,7 @@ export default function ModelCalculatorPage() {
                 color: 'green'
               },
               {
-                value: `$${(platforms.reduce((sum, p) => {
+                value: `$${(platforms.filter(p => p.enabled).reduce((sum, p) => {
                   // Calcular USD modelo usando fórmulas específicas + porcentaje
                   let usdModelo = 0;
                   if (p.currency === 'EUR') {
