@@ -20,6 +20,10 @@ interface AppleSearchBarProps {
   filters?: SearchFilter[];
   className?: string;
   onDropdownStateChange?: (isOpen: boolean) => void;
+  showResultsInfo?: boolean;
+  totalUsers?: number;
+  filteredUsers?: number;
+  onClearSearch?: () => void;
 }
 
 export default function AppleSearchBar({ 
@@ -27,7 +31,11 @@ export default function AppleSearchBar({
   placeholder = "Buscar...", 
   filters = [],
   className = "",
-  onDropdownStateChange
+  onDropdownStateChange,
+  showResultsInfo = false,
+  totalUsers = 0,
+  filteredUsers = 0,
+  onClearSearch
 }: AppleSearchBarProps) {
   const [query, setQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
@@ -103,7 +111,11 @@ export default function AppleSearchBar({
   const clearFilters = () => {
     setSelectedFilters({});
     setQuery('');
-    onSearch('', {});
+    if (onClearSearch) {
+      onClearSearch();
+    } else {
+      onSearch('', {});
+    }
   };
 
   const hasActiveFilters = Object.values(selectedFilters).some(value => value !== '');
@@ -246,45 +258,81 @@ export default function AppleSearchBar({
       )}
 
       {/* Active Filters Display */}
-      {hasActiveFilters && !isExpanded && (
+      {(hasActiveFilters || query || (showResultsInfo && totalUsers > 0)) && !isExpanded && (
         <div className="mt-3 relative bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/30 p-3">
           <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2 flex-wrap">
-              <div className="flex items-center space-x-1">
-                <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                <span className="text-blue-700 text-xs font-medium">Filtros activos:</span>
-              </div>
-              <div className="flex flex-wrap gap-1">
-                {Object.entries(selectedFilters).map(([key, value]) => {
-                  if (!value) return null;
-                  const filter = filters.find(f => f.id === key);
-                  const option = filter?.options.find(o => o.value === value);
-                  return (
-                    <span
-                      key={key}
-                      className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100/80 text-blue-800 rounded-full text-xs border border-blue-200/50"
-                    >
-                      <span className="font-medium">{filter?.label}:</span>
-                      <span>{option?.label}</span>
-                      <button
-                        onClick={() => handleFilterChange(key, '')}
-                        className="ml-1 hover:text-blue-600 transition-colors duration-150"
-                      >
-                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                      </button>
-                    </span>
-                  );
-                })}
-              </div>
+            <div className="flex items-center space-x-3 flex-wrap">
+              {/* Información de resultados */}
+              {showResultsInfo && totalUsers > 0 && (
+                <div className="flex items-center space-x-2 text-sm text-blue-700">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>
+                    {filteredUsers === 0 
+                      ? 'No se encontraron usuarios con los criterios especificados'
+                      : `Mostrando ${filteredUsers} de ${totalUsers} usuarios`
+                    }
+                  </span>
+                </div>
+              )}
+              
+              {/* Filtros activos */}
+              {hasActiveFilters && (
+                <div className="flex items-center space-x-2 flex-wrap">
+                  <div className="flex items-center space-x-1">
+                    <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                    <span className="text-blue-700 text-xs font-medium">Filtros activos:</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {Object.entries(selectedFilters).map(([key, value]) => {
+                      if (!value) return null;
+                      const filter = filters.find(f => f.id === key);
+                      const option = filter?.options.find(o => o.value === value);
+                      return (
+                        <span
+                          key={key}
+                          className="inline-flex items-center space-x-1 px-2 py-1 bg-blue-100/80 text-blue-800 rounded-full text-xs border border-blue-200/50"
+                        >
+                          <span className="font-medium">{filter?.label}:</span>
+                          <span>{option?.label}</span>
+                          <button
+                            onClick={() => handleFilterChange(key, '')}
+                            className="ml-1 hover:text-blue-600 transition-colors duration-150"
+                          >
+                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-            <button
-              onClick={() => setIsExpanded(true)}
-              className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
-            >
-              Editar
-            </button>
+            
+            <div className="flex items-center space-x-2">
+              {/* Botón Editar */}
+              {hasActiveFilters && (
+                <button
+                  onClick={() => setIsExpanded(true)}
+                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
+                >
+                  Editar
+                </button>
+              )}
+              
+              {/* Botón Limpiar */}
+              {(query || hasActiveFilters) && (
+                <button
+                  onClick={clearFilters}
+                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
+                >
+                  Limpiar búsqueda
+                </button>
+              )}
+            </div>
           </div>
         </div>
       )}

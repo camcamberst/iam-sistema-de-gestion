@@ -510,34 +510,15 @@ export default function UsersListPage() {
             placeholder="Buscar por nombre, email o ID de usuario..."
             filters={searchFiltersConfig}
             onDropdownStateChange={handleDropdownStateChange}
+            showResultsInfo={true}
+            totalUsers={users.length}
+            filteredUsers={filteredUsers.length}
+            onClearSearch={() => {
+              setSearchQuery('');
+              setSearchFilters({});
+              setFilteredUsers([]);
+            }}
           />
-          {(searchQuery || Object.values(searchFilters).some(v => v)) && (
-            <div className="mt-4 p-3 bg-blue-50/80 backdrop-blur-sm rounded-lg border border-blue-200/30">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2 text-sm text-blue-700">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>
-                    {filteredUsers.length === 0 
-                      ? 'No se encontraron usuarios con los criterios especificados'
-                      : `Mostrando ${filteredUsers.length} de ${users.length} usuarios`
-                    }
-                  </span>
-                </div>
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSearchFilters({});
-                    setFilteredUsers([]);
-                  }}
-                  className="text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors duration-150"
-                >
-                  Limpiar búsqueda
-                </button>
-              </div>
-            </div>
-          )}
         </div>
 
         {error && (
