@@ -53,19 +53,19 @@ export default function IndividualChatWindow({
       // Las ventanas individuales van a la izquierda con cascading
       const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
       
-      // Calcular posición desde la izquierda hacia la derecha
-      const finalRight = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
+      // Calcular posición de derecha a izquierda usando left (más cerca de la ventana principal = menor windowIndex)
+      const finalLeft = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
       
       console.log('🪟 [IndividualChatWindow] Posición en barra de chat:', {
         windowIndex,
         windowInnerWidth: window.innerWidth,
         mainChatLeftEdge,
-        finalRight,
+        finalLeft,
         isInChatBar,
         calculation: `${mainChatLeftEdge} - ${margin} - (${windowIndex} * (${windowWidth} + ${margin}))`
       });
       
-      return { right: finalRight, y: 0 };
+      return { x: finalLeft, y: 0 };
     } else {
       // Modo flotante: ventanas a la izquierda de la ventana principal
       const windowHeight = 500; // h-[500px]
@@ -424,7 +424,7 @@ export default function IndividualChatWindow({
       ref={windowRef}
       className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={isInChatBar ? {
-        right: `${position.right}px`,
+        left: `${position.x}px`,
         bottom: '0px',
         cursor: 'default',
         height: isMinimized ? '48px' : '500px'
