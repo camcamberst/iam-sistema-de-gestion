@@ -26,6 +26,16 @@ export default function CreateUserPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [currentUser, setCurrentUser] = useState<{role: string, groups: string[]} | null>(null);
 
+  // Formatear el nombre con mayúscula inicial en cada palabra
+  const titleCaseWords = (input: string) => {
+    return input
+      .trimStart()
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '')
+      .join(' ');
+  };
+
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
     // Solo "Sede MP" requiere rooms obligatorios
@@ -254,9 +264,11 @@ export default function CreateUserPage() {
             <input
               placeholder="Nombre"
               value={form.name}
-              onChange={e=>setForm({...form, name:e.target.value})}
+              onChange={e=>setForm({...form, name: titleCaseWords(e.target.value)})}
               required
               autoComplete="name"
+              autoCapitalize="words"
+              spellCheck={true}
               className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
             />
           </div>

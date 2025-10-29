@@ -805,6 +805,16 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     });
   }, [user]);
 
+  // Formatear el nombre con mayúscula inicial en cada palabra
+  const titleCaseWords = (input: string) => {
+    return input
+      .trimStart()
+      .replace(/\s+/g, ' ')
+      .split(' ')
+      .map(word => word ? word.charAt(0).toUpperCase() + word.slice(1).toLowerCase() : '')
+      .join(' ');
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSubmit(formData);
@@ -961,9 +971,11 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) => setFormData({ ...formData, name: titleCaseWords(e.target.value) })}
                   className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
                   autoComplete="name"
+                  autoCapitalize="words"
+                  spellCheck={true}
                   required
                 />
               </div>
