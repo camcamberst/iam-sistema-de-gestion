@@ -112,7 +112,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         </svg>
       </div>
       {open && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-56 overflow-auto apple-scroll">
+        <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-auto apple-scroll">
           {options.map((opt, index) => (
             <div key={opt.value}>
               {index > 0 && (
