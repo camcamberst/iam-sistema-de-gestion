@@ -256,13 +256,13 @@ export default function ConfigCalculatorPage() {
       
       if (portfolioData && portfolioData.length > 0) {
         const platformStatus = portfolioData[0].status;
-        
-        // Solo permitir activar si está en estado 'entregada' o es configuración inicial
-        if (platformStatus === 'entregada' || portfolioData[0].is_initial_config) {
+
+        // Permitir activar si está en estado 'entregada' o 'confirmada', o es configuración inicial
+        if (platformStatus === 'entregada' || platformStatus === 'confirmada' || portfolioData[0].is_initial_config) {
           setEnabledPlatforms(prev => [...prev, platformId]);
         } else {
           // Mostrar mensaje de error
-          alert(`No se puede activar esta plataforma. Estado actual en Portafolio: ${platformStatus}. Debe estar en estado "Entregada" para poder activarla.`);
+          alert(`No se puede activar esta plataforma. Estado actual en Portafolio: ${platformStatus}. Debe estar en estado "Entregada" o "Confirmada" para poder activarla.`);
         }
       } else {
         // Si no existe en el Portafolio, es una plataforma nueva que no se puede activar
