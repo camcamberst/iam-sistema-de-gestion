@@ -43,23 +43,18 @@ export default function IndividualChatWindow({
   // Calcular posición inicial basada en el índice de la ventana
   const getInitialPosition = () => {
     const windowWidth = 320; // w-80 = 320px
-    const margin = 8; // Margen entre ventanas en la barra
+    const margin = 16; // Margen entre ventanas
     const rightOffset = 24; // right-6 = 24px (igual que la ventana principal)
     const mainChatWidth = 320; // w-80 de la ventana principal
 
     if (isInChatBar) {
-      // En la barra de chat, la primera ventana se abre junto a la ventana principal
-      // Las siguientes ventanas van a la izquierda con cascading
+      // En la barra de chat: ventanas a la izquierda de la ventana principal
+      // La ventana principal está en: window.innerWidth - rightOffset - mainChatWidth
+      // Las ventanas individuales van a la izquierda con cascading
       const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
       
-      let finalRight;
-      if (windowIndex === 0) {
-        // Primera ventana: junto a la ventana principal (a la izquierda inmediata)
-        finalRight = mainChatLeftEdge - margin;
-      } else {
-        // Ventanas siguientes: más a la izquierda con cascading
-        finalRight = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
-      }
+      // Calcular posición desde la izquierda hacia la derecha
+      const finalRight = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
       
       console.log('🪟 [IndividualChatWindow] Posición en barra de chat:', {
         windowIndex,
@@ -67,45 +62,35 @@ export default function IndividualChatWindow({
         mainChatLeftEdge,
         finalRight,
         isInChatBar,
-        isFirstWindow: windowIndex === 0
+        calculation: `${mainChatLeftEdge} - ${margin} - (${windowIndex} * (${windowWidth} + ${margin}))`
       });
       
-      return { right: finalRight, y: 0 }; // Y = 0 porque está en la barra
+      return { right: finalRight, y: 0 };
     } else {
-      // Modo flotante original
+      // Modo flotante: ventanas a la izquierda de la ventana principal
       const windowHeight = 500; // h-[500px]
       const marginFloat = 20; // Margen entre ventanas flotantes
-      const bottomOffsetFloat = 24; // bottom-6 = 24px (igual que la ventana principal)
-      const rightOffsetFloat = 24; // right-6 = 24px (igual que la ventana principal)
-      const mainChatWidthFloat = 320; // w-80 de la ventana principal
+      const bottomOffsetFloat = 24; // bottom-6 = 24px
+      const rightOffsetFloat = 24; // right-6 = 24px
 
-      // Y: Anclar al bottom exactamente igual que la ventana principal
+      // Y: Anclar al bottom igual que la ventana principal
       const finalY = window.innerHeight - windowHeight - bottomOffsetFloat;
 
-      // X: La primera ventana se abre junto a la ventana principal
-      // Las siguientes ventanas van a la izquierda con cascading
-      const mainChatLeftEdge = window.innerWidth - rightOffsetFloat - mainChatWidthFloat;
-      
-      let finalX;
-      if (windowIndex === 0) {
-        // Primera ventana: junto a la ventana principal (a la izquierda inmediata)
-        finalX = mainChatLeftEdge - marginFloat;
-      } else {
-        // Ventanas siguientes: más a la izquierda con cascading
-        finalX = mainChatLeftEdge - marginFloat - (windowIndex * (windowWidth + marginFloat));
-      }
+      // X: Ventanas a la izquierda de la ventana principal con cascading
+      const mainChatLeftEdge = window.innerWidth - rightOffsetFloat - mainChatWidth;
+      const finalX = mainChatLeftEdge - marginFloat - (windowIndex * (windowWidth + marginFloat));
 
       // Asegurar que no se vaya fuera de la pantalla
-      const minX = 20; // Margen mínimo del borde izquierdo
+      const minX = 20;
       const adjustedX = Math.max(minX, finalX);
 
-      console.log('🪟 [IndividualChatWindow] Posición flotante calculada:', {
+      console.log('🪟 [IndividualChatWindow] Posición flotante:', {
         windowIndex,
         finalX,
         adjustedX,
         finalY,
         mainChatLeftEdge,
-        isFirstWindow: windowIndex === 0
+        calculation: `${mainChatLeftEdge} - ${marginFloat} - (${windowIndex} * (${windowWidth} + ${marginFloat}))`
       });
 
       return { x: adjustedX, y: finalY };
