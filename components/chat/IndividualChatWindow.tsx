@@ -34,6 +34,7 @@ export default function IndividualChatWindow({
   const [isLoading, setIsLoading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
+  const [messageReadStatus, setMessageReadStatus] = useState<Record<string, 'sent' | 'delivered' | 'read'>>({});
   const [position, setPosition] = useState<{ x?: number; y?: number; right?: number }>({ x: 0, y: 0 });
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
@@ -102,10 +103,43 @@ export default function IndividualChatWindow({
   };
 
   // Inicializar posición
+  // Efecto para detectar mensajes nuevos y reproducir sonido personalizado
   useEffect(() => {
-    const initialPos = getInitialPosition();
-    setPosition(initialPos);
-  }, [windowIndex]);
+    if (messages.length > 0) {
+      const latestMessage = messages[messages.length - 1];
+      
+      // Solo reproducir sonido si el mensaje es del otro usuario y es reciente (menos de 5 segundos)
+      if (latestMessage.sender_id !== userId) {
+        const messageTime = new Date(latestMessage.created_at);
+        const now = new Date();
+        const timeDiff = now.getTime() - messageTime.getTime();
+        
+        if (timeDiff < 5000) { // 5 segundos
+          console.log('🔔 [IndividualChat] Mensaje nuevo detectado, reproduciendo sonido personalizado');
+          playPersonalizedNotificationSound();
+        }
+      }
+    }
+  }, [messages]);
+
+  // Efecto para simular lectura de mensajes (cuando el usuario está activo en la ventana)
+  useEffect(() => {
+    if (!isMinimized && messages.length > 0) {
+      // Simular que los mensajes del otro usuario se marcan como leídos después de 2 segundos
+      const timer = setTimeout(() => {
+        messages.forEach(message => {
+          if (message.sender_id !== userId) {
+            setMessageReadStatus(prev => ({
+              ...prev,
+              [message.id]: 'read'
+            }));
+          }
+        });
+      }, 2000);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [messages, isMinimized, userId]);
 
   // Función para obtener nombre de usuario
   const getDisplayName = (user: any) => {
@@ -115,6 +149,102 @@ export default function IndividualChatWindow({
     }
     // Para otros roles, mostrar el nombre completo
     return user.name || user.email || 'Usuario';
+  };
+
+  // Función para formatear timestamps de manera inteligente
+  const formatMessageTime = (timestamp: string) => {
+    const now = new Date();
+    const messageTime = new Date(timestamp);
+    const diffInMinutes = Math.floor((now.getTime() - messageTime.getTime()) / (1000 * 60));
+    
+    if (diffInMinutes < 1) {
+      return 'Ahora';
+    } else if (diffInMinutes < 60) {
+      return `hace ${diffInMinutes}m`;
+    } else if (diffInMinutes < 1440) { // 24 horas
+      const hours = Math.floor(diffInMinutes / 60);
+      return `hace ${hours}h`;
+    } else if (diffInMinutes < 10080) { // 7 días
+      const days = Math.floor(diffInMinutes / 1440);
+      return `hace ${days}d`;
+    } else {
+      return messageTime.toLocaleDateString('es-ES', { 
+        day: '2-digit', 
+        month: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+  };
+
+  // Función para reproducir sonido personalizado según el tipo de usuario
+  const playPersonalizedNotificationSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      
+      oscillator.type = 'sine';
+      
+      // Sonidos diferentes según el rol del usuario
+      let frequencies: number[];
+      let duration = 0.3;
+      
+      switch (otherUser.role) {
+        case 'admin':
+          // Sonido más grave y profesional para admins
+          frequencies = [300, 400, 500];
+          break;
+        case 'super_admin':
+          // Sonido distintivo para super admin
+          frequencies = [400, 600, 800, 1000];
+          duration = 0.4;
+          break;
+        case 'modelo':
+          // Sonido más suave para modelos
+          frequencies = [500, 700, 900];
+          break;
+        default:
+          // Sonido por defecto
+          frequencies = [400, 600, 800];
+      }
+      
+      frequencies.forEach((freq, index) => {
+        const time = audioContext.currentTime + (index / frequencies.length) * duration;
+        oscillator.frequency.setValueAtTime(freq, time);
+      });
+      
+      // Envelope suave
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.02);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+      
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + duration);
+      
+      console.log(`🔊 [IndividualChat] Sonido personalizado reproducido para ${otherUser.role}`);
+    } catch (error) {
+      console.error('❌ [IndividualChat] Error reproduciendo sonido personalizado:', error);
+    }
+  };
+
+  // Función para obtener el ícono de estado del mensaje
+  const getMessageStatusIcon = (messageId: string) => {
+    const status = messageReadStatus[messageId] || 'sent';
+    
+    switch (status) {
+      case 'sent':
+        return <span className="text-gray-400">✓</span>;
+      case 'delivered':
+        return <span className="text-gray-400">✓✓</span>;
+      case 'read':
+        return <span className="text-blue-400">✓✓</span>;
+      default:
+        return null;
+    }
   };
 
   // Cargar mensajes
@@ -178,6 +308,23 @@ export default function IndividualChatWindow({
       
       if (data.success) {
         console.log('✅ [IndividualChat] Mensaje enviado exitosamente');
+        
+        // Marcar mensaje como enviado inicialmente
+        if (data.message?.id) {
+          setMessageReadStatus(prev => ({
+            ...prev,
+            [data.message.id]: 'sent'
+          }));
+          
+          // Simular entrega después de un breve delay
+          setTimeout(() => {
+            setMessageReadStatus(prev => ({
+              ...prev,
+              [data.message.id]: 'delivered'
+            }));
+          }, 1000);
+        }
+        
         setNewMessage('');
         await loadMessages(); // Recargar mensajes
       } else {
@@ -381,9 +528,16 @@ export default function IndividualChatWindow({
                 }`}
               >
                 <p className="text-sm">{message.content}</p>
-                <p className="text-xs opacity-70 mt-1">
-                  {new Date(message.created_at).toLocaleTimeString()}
-                </p>
+                <div className="flex items-center justify-between mt-1">
+                  <p className="text-xs opacity-70">
+                    {formatMessageTime(message.created_at)}
+                  </p>
+                  {message.sender_id === userId && (
+                    <div className="ml-2">
+                      {getMessageStatusIcon(message.id)}
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           ))
