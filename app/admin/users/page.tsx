@@ -96,7 +96,7 @@ export default function UsersListPage() {
           return;
         }
 
-        const userGroups = currentUserData.user_groups?.map((ug: any) => ug.groups.id) || [];
+        const userGroups = currentUserData.user_groups?.map((ug: any) => ug.groups) || [];
         console.log('🔍 [USUARIOS] Datos del usuario actual:', {
           id: user.id,
           role: currentUserData.role,

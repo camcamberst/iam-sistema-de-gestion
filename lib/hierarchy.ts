@@ -165,6 +165,15 @@ export function canEditUser(currentUser: CurrentUser, targetUser: User): boolean
     const userGroupIds = currentUser.groups.map(g => g.id);
     const targetUserGroupIds = targetUser.groups.map(g => g.id);
     
+    console.log('🔍 [JERARQUÍA] Verificando permisos de edición:', {
+      currentUserRole: currentUser.role,
+      currentUserGroups: userGroupIds,
+      targetUserRole: targetUser.role,
+      targetUserGroups: targetUserGroupIds,
+      canEdit: targetUser.role === 'modelo' && 
+               targetUserGroupIds.some(groupId => userGroupIds.includes(groupId))
+    });
+    
     return targetUser.role === 'modelo' && 
            targetUserGroupIds.some(groupId => userGroupIds.includes(groupId));
   }
@@ -186,6 +195,15 @@ export function canDeleteUser(currentUser: CurrentUser, targetUser: User): boole
   if (currentUser.role === 'admin') {
     const userGroupIds = currentUser.groups.map(g => g.id);
     const targetUserGroupIds = targetUser.groups.map(g => g.id);
+    
+    console.log('🔍 [JERARQUÍA] Verificando permisos de eliminación:', {
+      currentUserRole: currentUser.role,
+      currentUserGroups: userGroupIds,
+      targetUserRole: targetUser.role,
+      targetUserGroups: targetUserGroupIds,
+      canDelete: targetUser.role === 'modelo' && 
+                 targetUserGroupIds.some(groupId => userGroupIds.includes(groupId))
+    });
     
     return targetUser.role === 'modelo' && 
            targetUserGroupIds.some(groupId => userGroupIds.includes(groupId));
