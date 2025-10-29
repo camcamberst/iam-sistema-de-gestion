@@ -906,7 +906,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   }, []);
 
   return (
-    <StandardModal isOpen={true} onClose={onClose} title="Editar Usuario" maxWidthClass="max-w-md">
+    <StandardModal isOpen={true} onClose={onClose} title="Editar Usuario" maxWidthClass="max-w-4xl">
       {/* Pestañas */}
       <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
         <button
@@ -951,62 +951,72 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
       {/* Contenido de pestañas */}
       {activeTab === 'profile' && (
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-              autoComplete="name"
-              required
-            />
+        <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Diseño horizontal con dos columnas */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Columna izquierda */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
+                <input
+                  type="text"
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                  autoComplete="name"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Email</label>
+                <input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                  autoComplete="email"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Columna derecha */}
+            <div className="space-y-4">
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
+                <AppleDropdown
+                  options={[
+                    { value: 'modelo', label: 'Modelo' },
+                    { value: 'admin', label: 'Admin' },
+                    { value: 'super_admin', label: 'Super Admin' }
+                  ]}
+                  value={formData.role}
+                  onChange={(value) => handleRoleChange(value)}
+                  placeholder="Selecciona un rol"
+                  className="text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
+                <button
+                  type="button"
+                  onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                  className="relative w-10 h-6 rounded-full transition-colors"
+                  style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
+                  aria-pressed={formData.is_active}
+                >
+                  <span
+                    className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow"
+                    style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
+                  />
+                </button>
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Email</label>
-            <input
-              type="email"
-              value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-              autoComplete="email"
-              required
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
-            <AppleDropdown
-              options={[
-                { value: 'modelo', label: 'Modelo' },
-                { value: 'admin', label: 'Admin' },
-                { value: 'super_admin', label: 'Super Admin' }
-              ]}
-              value={formData.role}
-              onChange={(value) => handleRoleChange(value)}
-              placeholder="Selecciona un rol"
-              className="text-sm"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-              className="relative w-10 h-6 rounded-full transition-colors"
-              style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
-              aria-pressed={formData.is_active}
-            >
-              <span
-                className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow"
-                style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
-              />
-            </button>
-          </div>
-
+          {/* Grupos - ancho completo */}
           <div>
             <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
             <AppleDropdown
@@ -1026,17 +1036,18 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             )}
           </div>
 
-          <div className="flex space-x-3 pt-4">
+          {/* Botones - centrados */}
+          <div className="flex justify-center space-x-4 pt-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+              className="px-6 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+              className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
             >
               Actualizar Usuario
             </button>
