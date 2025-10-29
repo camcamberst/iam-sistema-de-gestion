@@ -50,6 +50,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [lastUnreadCount, setLastUnreadCount] = useState(0);
   const [notificationTriggered, setNotificationTriggered] = useState(false);
   const [lastProcessedMessageId, setLastProcessedMessageId] = useState<string | null>(null);
+  const [lastNotificationTime, setLastNotificationTime] = useState<number>(0);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   
@@ -80,6 +81,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
     // Para otros roles, mostrar el nombre completo
     return user.name;
+  };
+
+  // Función helper para verificar si se puede activar notificación
+  const canTriggerNotification = () => {
+    const now = Date.now();
+    const timeSinceLastNotification = now - lastNotificationTime;
+    const minInterval = 10000; // 10 segundos mínimo entre notificaciones
+    
+    return !isOpen && 
+           !notificationTriggered && 
+           timeSinceLastNotification > minInterval;
   };
 
   // Obtener sesión de Supabase
@@ -246,29 +258,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           hasNewMessage: unread > lastUnreadCount 
         });
         
-        // Si hay mensajes no leídos y el chat está cerrado, activar notificación (solo una vez)
-        if (unread > 0 && !isOpen && !notificationTriggered) {
-          console.log('🔔 [ChatWidget] ¡NUEVO MENSAJE DETECTADO! Activando notificación...');
-          setNotificationTriggered(true);
-          triggerNotification();
-        }
-        
         // Detectar si hay un incremento en mensajes no leídos (nuevo mensaje)
-        if (unread > lastUnreadCount && lastUnreadCount >= 0 && !notificationTriggered) {
+        if (unread > lastUnreadCount && lastUnreadCount >= 0) {
           console.log('🔔 [ChatWidget] ¡INCREMENTO DE MENSAJES DETECTADO!', {
             unread,
             lastUnreadCount,
-            isOpen,
-            notificationTriggered
+            canTrigger: canTriggerNotification()
           });
           
-          // Solo activar notificación si el chat está cerrado
-          if (!isOpen) {
-            console.log('🔔 [ChatWidget] Chat cerrado - Activando notificación automática...');
-            setNotificationTriggered(true);
+          // Solo activar notificación si se puede (incluye verificación de tiempo)
+          if (canTriggerNotification()) {
+            console.log('🔔 [ChatWidget] Activando notificación automática...');
             triggerNotification();
           } else {
-            console.log('🔔 [ChatWidget] Chat abierto - No activando notificación');
+            console.log('🔔 [ChatWidget] No se puede activar notificación en este momento');
           }
         }
         
@@ -777,13 +780,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const triggerNotification = () => {
     console.log('🔍 [ChatWidget] triggerNotification llamada - isOpen:', isOpen);
     
-    // Solo activar notificaciones si la ventana del chat está cerrada
-    if (isOpen) {
-      console.log('📂 [ChatWidget] Chat abierto - NO activando notificaciones');
+    // Verificar si se puede activar notificación
+    if (!canTriggerNotification()) {
+      console.log('🚫 [ChatWidget] No se puede activar notificación:', {
+        isOpen,
+        notificationTriggered,
+        timeSinceLastNotification: Date.now() - lastNotificationTime
+      });
       return;
     }
     
-    console.log('🔔 [ChatWidget] TRIGGER NOTIFICATION - Activando notificaciones (chat cerrado)...');
+    console.log('🔔 [ChatWidget] TRIGGER NOTIFICATION - Activando notificaciones...');
+    
+    // Actualizar timestamp
+    setLastNotificationTime(Date.now());
+    setNotificationTriggered(true);
     
     // Reproducir sonido
     console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
