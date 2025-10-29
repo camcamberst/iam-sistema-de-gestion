@@ -52,7 +52,7 @@ export default function IndividualChatWindow({
       // La ventana principal está en: rightOffset desde el borde derecho
       // Las ventanas individuales van a la izquierda de la ventana principal
       const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
-      const finalRight = window.innerWidth - mainChatLeftEdge + margin + (windowIndex * (windowWidth + margin));
+      const finalRight = mainChatLeftEdge - margin - (windowIndex * (windowWidth + margin));
       
       console.log('🪟 [IndividualChatWindow] Posición en barra de chat (derecha a izquierda):', {
         windowIndex,
@@ -103,24 +103,56 @@ export default function IndividualChatWindow({
   };
 
   // Inicializar posición
-  // Efecto para detectar mensajes nuevos y reproducir sonido personalizado
+  // Efecto para detectar mensajes nuevos (sin sonido)
   useEffect(() => {
     if (messages.length > 0) {
       const latestMessage = messages[messages.length - 1];
       
-      // Solo reproducir sonido si el mensaje es del otro usuario y es reciente (menos de 5 segundos)
+      // Solo detectar mensajes nuevos del otro usuario
       if (latestMessage.sender_id !== userId) {
         const messageTime = new Date(latestMessage.created_at);
         const now = new Date();
         const timeDiff = now.getTime() - messageTime.getTime();
         
         if (timeDiff < 5000) { // 5 segundos
-          console.log('🔔 [IndividualChat] Mensaje nuevo detectado, reproduciendo sonido personalizado');
-          playPersonalizedNotificationSound();
+          console.log('🔔 [IndividualChat] Mensaje nuevo detectado');
+          // Sin sonido - solo logging
         }
       }
     }
   }, [messages]);
+
+  // Efecto para polling de mensajes en tiempo real
+  useEffect(() => {
+    if (!conversationId || !session) return;
+
+    const pollMessages = async () => {
+      try {
+        const response = await fetch(`/api/chat/messages?conversation_id=${conversationId}`, {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.messages) {
+            setMessages(data.messages);
+          }
+        }
+      } catch (error) {
+        console.error('❌ [IndividualChat] Error en polling:', error);
+      }
+    };
+
+    // Polling inicial
+    pollMessages();
+
+    // Polling cada 2 segundos para tiempo real
+    const interval = setInterval(pollMessages, 2000);
+
+    return () => clearInterval(interval);
+  }, [conversationId, session]);
 
   // Efecto para simular lectura de mensajes (cuando el usuario está activo en la ventana)
   useEffect(() => {
@@ -177,71 +209,40 @@ export default function IndividualChatWindow({
     }
   };
 
-  // Función para reproducir sonido personalizado según el tipo de usuario
-  const playPersonalizedNotificationSound = () => {
-    try {
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.type = 'sine';
-      
-      // Sonidos diferentes según el rol del usuario
-      let frequencies: number[];
-      let duration = 0.3;
-      
-      switch (otherUser.role) {
-        case 'admin':
-          // Sonido más grave y profesional para admins
-          frequencies = [300, 400, 500];
-          break;
-        case 'super_admin':
-          // Sonido distintivo para super admin
-          frequencies = [400, 600, 800, 1000];
-          duration = 0.4;
-          break;
-        case 'modelo':
-          // Sonido más suave para modelos
-          frequencies = [500, 700, 900];
-          break;
-        default:
-          // Sonido por defecto
-          frequencies = [400, 600, 800];
-      }
-      
-      frequencies.forEach((freq, index) => {
-        const time = audioContext.currentTime + (index / frequencies.length) * duration;
-        oscillator.frequency.setValueAtTime(freq, time);
-      });
-      
-      // Envelope suave
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration);
-      
-      console.log(`🔊 [IndividualChat] Sonido personalizado reproducido para ${otherUser.role}`);
-    } catch (error) {
-      console.error('❌ [IndividualChat] Error reproduciendo sonido personalizado:', error);
-    }
-  };
 
-  // Función para obtener el ícono de estado del mensaje
+  // Función para obtener el ícono de estado del mensaje (estilo Apple)
   const getMessageStatusIcon = (messageId: string) => {
     const status = messageReadStatus[messageId] || 'sent';
     
     switch (status) {
       case 'sent':
-        return <span className="text-gray-400">✓</span>;
+        return (
+          <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+          </svg>
+        );
       case 'delivered':
-        return <span className="text-gray-400">✓✓</span>;
+        return (
+          <div className="flex -space-x-1">
+            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </div>
+        );
       case 'read':
-        return <span className="text-blue-400">✓✓</span>;
+        return (
+          <div className="flex -space-x-1">
+            <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+            <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+            </svg>
+          </div>
+        );
       default:
         return null;
     }
@@ -533,7 +534,7 @@ export default function IndividualChatWindow({
                     {formatMessageTime(message.created_at)}
                   </p>
                   {message.sender_id === userId && (
-                    <div className="ml-2">
+                    <div className="ml-2 flex items-center">
                       {getMessageStatusIcon(message.id)}
                     </div>
                   )}
