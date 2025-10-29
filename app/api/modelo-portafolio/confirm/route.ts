@@ -40,14 +40,17 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Actualizar a estado 'confirmada'
+    // Actualizar a estado 'confirmada' y activar en calculadora
+    const nowIso = new Date().toISOString();
     const { data: updatedPlatform, error: updateError } = await supabase
       .from('modelo_plataformas')
       .update({
         status: 'confirmada',
-        confirmed_at: new Date().toISOString(),
+        confirmed_at: nowIso,
         confirmed_by: modelId,
-        updated_at: new Date().toISOString()
+        calculator_sync: true,
+        calculator_activated_at: nowIso,
+        updated_at: nowIso
       })
       .eq('model_id', modelId)
       .eq('platform_id', platformId)
@@ -60,6 +63,53 @@ export async function POST(request: NextRequest) {
         success: false, 
         error: 'Error al confirmar la plataforma' 
       }, { status: 500 });
+    }
+
+    // Asegurar que la plataforma quede habilitada en calculator_config
+    try {
+      // 1) Intentar obtener configuración activa
+      const { data: existingConfig, error: configError } = await supabase
+        .from('calculator_config')
+        .select('*')
+        .eq('model_id', modelId)
+        .eq('active', true)
+        .single();
+
+      if (configError && configError.code !== 'PGRST116') {
+        console.warn('⚠️ [CONFIRM] Error obteniendo config calculadora:', configError.message);
+      }
+
+      if (existingConfig) {
+        const enabled: string[] = Array.isArray(existingConfig.enabled_platforms)
+          ? existingConfig.enabled_platforms
+          : [];
+        if (!enabled.includes(platformId)) {
+          const newEnabled = [...enabled, platformId];
+          const { error: updateConfigError } = await supabase
+            .from('calculator_config')
+            .update({ enabled_platforms: newEnabled, updated_at: nowIso })
+            .eq('id', existingConfig.id);
+          if (updateConfigError) {
+            console.warn('⚠️ [CONFIRM] No se pudo actualizar enabled_platforms:', updateConfigError.message);
+          }
+        }
+      } else {
+        // 2) Crear config mínima si no existe
+        const { error: insertConfigError } = await supabase
+          .from('calculator_config')
+          .insert({
+            model_id: modelId,
+            active: true,
+            enabled_platforms: [platformId],
+            created_at: nowIso,
+            updated_at: nowIso
+          });
+        if (insertConfigError) {
+          console.warn('⚠️ [CONFIRM] No se pudo crear calculator_config:', insertConfigError.message);
+        }
+      }
+    } catch (syncError: any) {
+      console.warn('⚠️ [CONFIRM] Error sincronizando calculadora:', syncError?.message || syncError);
     }
 
     // Notificar a admins via chatbot (opcional)
