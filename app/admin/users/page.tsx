@@ -815,9 +815,18 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
       .join(' ');
   };
 
+  // Sanear espacios y puntuación para nombres
+  const sanitizeBasic = (input: string) => {
+    return input
+      .trim() // quitar espacios al inicio/fin
+      .replace(/\s{2,}/g, ' ') // colapsar múltiples espacios
+      .replace(/\s+([,.;:])/g, '$1'); // quitar espacio antes de puntuación común
+  };
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSubmit(formData);
+    const sanitizedName = titleCaseWords(sanitizeBasic(formData.name || ''));
+    onSubmit({ ...formData, name: sanitizedName });
   };
 
   // Función para cambiar contraseña (independiente)

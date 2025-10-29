@@ -36,6 +36,14 @@ export default function CreateUserPage() {
       .join(' ');
   };
 
+  // Sanear espacios y puntuación para nombres
+  const sanitizeBasic = (input: string) => {
+    return input
+      .trim() // quitar espacios al inicio/fin
+      .replace(/\s{2,}/g, ' ') // colapsar múltiples espacios
+      .replace(/\s+([,.;:])/g, '$1'); // quitar espacio antes de puntuación común
+  };
+
   // Función para determinar si un grupo requiere rooms obligatorios
   const groupRequiresRooms = (groupName: string): boolean => {
     // Solo "Sede MP" requiere rooms obligatorios
@@ -153,9 +161,12 @@ export default function CreateUserPage() {
     setSuccess(null);
     
     try {
+      // Sanear y normalizar nombre antes de enviar
+      const sanitizedName = titleCaseWords(sanitizeBasic(form.name || ''));
       // Preparar datos para la API - cambiar 'groups' por 'group_ids'
       const apiData = {
         ...form,
+        name: sanitizedName,
         group_ids: form.groups, // Mapear groups a group_ids
         groups: undefined // Eliminar el campo groups
       };
