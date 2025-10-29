@@ -334,8 +334,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             // Verificar si hay mensajes nuevos de otros usuarios
             if (newMessages.length > prev.length) {
               const latestMessage = newMessages[newMessages.length - 1];
-              if (latestMessage && latestMessage.sender_id !== userId) {
+              if (latestMessage && latestMessage.sender_id !== userId && !notificationTriggered && !isOpen) {
                 console.log('🔔 [ChatWidget] Nuevo mensaje detectado via polling, activando notificación...');
+                setNotificationTriggered(true);
                 triggerNotification();
               }
             }
@@ -925,8 +926,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               loadConversations();
               
               // Solo activar notificación si el mensaje no es del usuario actual
-              if (newMessage.sender_id !== userId) {
+              if (newMessage.sender_id !== userId && !notificationTriggered && !isOpen) {
                 console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario');
+                setNotificationTriggered(true);
                 triggerNotification();
               } else {
                 console.log('👤 [ChatWidget] Mensaje del usuario actual, no notificando');
