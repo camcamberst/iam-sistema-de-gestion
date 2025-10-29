@@ -48,21 +48,22 @@ export default function IndividualChatWindow({
     const mainChatWidth = 320; // w-80 de la ventana principal
 
     if (isInChatBar) {
-      // En la barra de chat: ventanas a la izquierda de la ventana principal
+      // En la barra de chat: ventanas A LA IZQUIERDA de la ventana principal
       // La ventana principal está en: window.innerWidth - rightOffset - mainChatWidth
-      // Las ventanas individuales van a la izquierda con cascading
-      const mainChatLeftEdge = window.innerWidth - rightOffset - mainChatWidth;
+      // Las ventanas individuales van A LA IZQUIERDA con cascading de DERECHA A IZQUIERDA
+      const mainChatRightEdge = window.innerWidth - rightOffset;
       
-      // Calcular posición de DERECHA A IZQUIERDA (primera ventana más cerca de la principal = MAYOR left)
-      const finalLeft = mainChatLeftEdge - margin + (windowIndex * (windowWidth + margin));
+      // Calcular posición de DERECHA A IZQUIERDA (primera ventana más cerca de la principal)
+      const finalLeft = mainChatRightEdge - mainChatWidth - margin - (windowIndex * (windowWidth + margin));
       
-      console.log('🪟 [IndividualChatWindow] Posición en barra de chat (DERECHA A IZQUIERDA):', {
+      console.log('🪟 [IndividualChatWindow] Posición en barra de chat (A LA IZQUIERDA):', {
         windowIndex,
         windowInnerWidth: window.innerWidth,
-        mainChatLeftEdge,
+        mainChatRightEdge,
+        mainChatWidth,
         finalLeft,
         isInChatBar,
-        calculation: `${mainChatLeftEdge} - ${margin} + (${windowIndex} * (${windowWidth} + ${margin}))`
+        calculation: `${mainChatRightEdge} - ${mainChatWidth} - ${margin} - (${windowIndex} * (${windowWidth} + ${margin}))`
       });
       
       return { x: finalLeft, y: 0 };
