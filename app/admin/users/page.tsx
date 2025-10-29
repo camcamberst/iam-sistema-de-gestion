@@ -772,7 +772,7 @@ export default function UsersListPage() {
   );
 }
 
-// Componente para crear usuario
+// Componente para editar usuario con pestañas
 function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalError, setModalError }: {
   user: User;
   groups: Group[];
@@ -782,20 +782,29 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
   modalError: string | null;
   setModalError: (error: string | null) => void;
 }) {
+  const [activeTab, setActiveTab] = useState<'profile' | 'password'>('profile');
   const [formData, setFormData] = useState({
-    id: user?.id || '', // ✅ AGREGAR ID DEL USUARIO con validación
+    id: user?.id || '',
     name: user?.name || '',
     email: user?.email || '',
-    password: '', // Nueva contraseña (opcional)
     role: user?.role || 'modelo',
     is_active: user?.is_active ?? true,
     group_ids: user?.groups?.map(g => g.id) || []
   });
 
+  // Estados para la pestaña de contraseña
+  const [passwordData, setPasswordData] = useState({
+    newPassword: '',
+    confirmPassword: ''
+  });
   const [showPassword, setShowPassword] = useState(false);
-  const [restrictionMessage, setRestrictionMessage] = useState('');
-  const [isPasswordChanged, setIsPasswordChanged] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [passwordSuccess, setPasswordSuccess] = useState(false);
+
+  // Estados para el formulario principal
+  const [restrictionMessage, setRestrictionMessage] = useState('');
   const [mounted, setMounted] = useState(false);
 
   // Obtener el nombre del grupo seleccionado
@@ -803,13 +812,12 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   // 🔧 ACTUALIZAR FORMULARIO CUANDO CAMBIE EL USUARIO
   useEffect(() => {
-    if (!user) return; // Validar que user existe
+    if (!user) return;
     
     setFormData({
       id: user.id,
       name: user.name,
       email: user.email,
-      password: '',
       role: user.role,
       is_active: user.is_active,
       group_ids: user.groups?.map(g => g.id) || []
@@ -818,31 +826,28 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    // Excluir la contraseña del formulario principal para evitar conflictos
-    const { password, ...formDataWithoutPassword } = formData;
-    onSubmit(formDataWithoutPassword);
+    onSubmit(formData);
   };
 
-  // Función para manejar cambio de contraseña
-  const handlePasswordChange = (value: string) => {
-    setFormData(prev => ({ ...prev, password: value }));
-    setIsPasswordChanged(value.trim().length > 0);
-  };
-
-  // Función para guardar solo la contraseña
-  const handleSavePassword = async () => {
-    if (!formData.password.trim()) {
-      setModalError('La contraseña no puede estar vacía');
+  // Función para cambiar contraseña (independiente)
+  const handleChangePassword = async () => {
+    if (!passwordData.newPassword.trim()) {
+      setPasswordError('La contraseña no puede estar vacía');
       return;
     }
 
-    if (formData.password.trim().length < 6) {
-      setModalError('La contraseña debe tener al menos 6 caracteres');
+    if (passwordData.newPassword.trim().length < 6) {
+      setPasswordError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      setPasswordError('Las contraseñas no coinciden');
       return;
     }
 
     setSavingPassword(true);
-    setModalError(null);
+    setPasswordError(null);
 
     try {
       const response = await fetch('/api/users', {
@@ -852,35 +857,31 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
         },
         body: JSON.stringify({
           id: formData.id,
-          password: formData.password.trim()
+          password: passwordData.newPassword.trim()
         }),
       });
 
       const result = await response.json();
       
       if (result.success) {
-        setModalError(null);
-        setIsPasswordChanged(false);
-        setFormData(prev => ({ ...prev, password: '' }));
-        // Mostrar mensaje de éxito temporal
-        const successMsg = document.createElement('div');
-        successMsg.textContent = 'Contraseña actualizada exitosamente';
-        successMsg.className = 'fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded shadow-lg z-50';
-        document.body.appendChild(successMsg);
+        setPasswordError(null);
+        setPasswordSuccess(true);
+        setPasswordData({ newPassword: '', confirmPassword: '' });
+        
+        // Resetear mensaje de éxito después de 3 segundos
         setTimeout(() => {
-          document.body.removeChild(successMsg);
+          setPasswordSuccess(false);
         }, 3000);
       } else {
-        setModalError(result.error || 'Error actualizando contraseña');
+        setPasswordError(result.error || 'Error actualizando contraseña');
       }
     } catch (error) {
       console.error('Error actualizando contraseña:', error);
-      setModalError('Error de conexión. Por favor, intenta nuevamente.');
+      setPasswordError('Error de conexión. Por favor, intenta nuevamente.');
     } finally {
       setSavingPassword(false);
     }
   };
-
 
   // Mostrar mensajes de restricción según rol
   const handleRoleChange = (role: string) => {
@@ -912,7 +913,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     return () => window.removeEventListener('keydown', handleKey);
   }, [onClose]);
 
-  // Animación de entrada (opacity/scale)
+  // Animación de entrada
   useEffect(() => {
     const id = requestAnimationFrame(() => setMounted(true));
     return () => cancelAnimationFrame(id);
@@ -920,23 +921,50 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   return (
     <StandardModal isOpen={true} onClose={onClose} title="Editar Usuario" maxWidthClass="max-w-md">
-        {/* Contenido */}
-        {/* Mensaje de error del modal */}
-        {modalError && (
-          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-            <div className="flex">
-              <div className="flex-shrink-0">
-                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                </svg>
-              </div>
-              <div className="ml-3">
-                <p className="text-sm text-red-800 dark:text-red-300">{modalError}</p>
-              </div>
+      {/* Pestañas */}
+      <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+        <button
+          type="button"
+          onClick={() => setActiveTab('profile')}
+          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'profile'
+              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+          }`}
+        >
+          Perfil
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('password')}
+          className={`flex-1 px-3 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+            activeTab === 'password'
+              ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
+              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
+          }`}
+        >
+          Contraseña
+        </button>
+      </div>
+
+      {/* Mensaje de error del modal */}
+      {modalError && (
+        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-red-800 dark:text-red-300">{modalError}</p>
             </div>
           </div>
-        )}
+        </div>
+      )}
 
+      {/* Contenido de pestañas */}
+      {activeTab === 'profile' && (
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
@@ -963,62 +991,6 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           </div>
 
           <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">
-              Nueva Contraseña 
-              <span className="text-gray-500 dark:text-gray-400 text-xs ml-1">(opcional - dejar vacío para mantener actual)</span>
-            </label>
-            <div className="relative">
-              <input
-                type={showPassword ? "text" : "password"}
-                value={formData.password}
-                onChange={(e) => handlePasswordChange(e.target.value)}
-                placeholder="Ingresa nueva contraseña"
-                autoComplete="new-password"
-                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-              />
-              <button
-                type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
-              >
-                {showPassword ? 'Ocultar' : 'Ver'}
-              </button>
-            </div>
-            {formData.password && formData.password.length < 6 && (
-              <p className="text-red-500 dark:text-red-400 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
-            )}
-            
-            {/* Botón para guardar solo la contraseña */}
-            {isPasswordChanged && formData.password.trim().length >= 6 && (
-              <div className="mt-2">
-                <button
-                  type="button"
-                  onClick={handleSavePassword}
-                  disabled={savingPassword}
-                  className="px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:from-green-600 hover:to-emerald-700 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 shadow-md flex items-center gap-2"
-                >
-                  {savingPassword ? (
-                    <>
-                      <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
-                      Guardando...
-                    </>
-                  ) : (
-                    <>
-                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Guardar Contraseña
-                    </>
-                  )}
-                </button>
-              </div>
-            )}
-          </div>
-
-          <div>
             <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
             <AppleDropdown
               options={[
@@ -1027,7 +999,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                 { value: 'super_admin', label: 'Super Admin' }
               ]}
               value={formData.role}
-              onChange={(value) => setFormData({ ...formData, role: value as 'super_admin' | 'admin' | 'modelo' })}
+              onChange={(value) => handleRoleChange(value)}
               placeholder="Selecciona un rol"
               className="text-sm"
             />
@@ -1068,7 +1040,7 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             )}
           </div>
 
-          <div className="flex space-x-3 pt-10">
+          <div className="flex space-x-3 pt-4">
             <button
               type="button"
               onClick={onClose}
@@ -1084,6 +1056,124 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             </button>
           </div>
         </form>
+      )}
+
+      {activeTab === 'password' && (
+        <div className="space-y-4">
+          {/* Mensaje de éxito */}
+          {passwordSuccess && (
+            <div className="p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-green-800 dark:text-green-300">Contraseña actualizada exitosamente</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Mensaje de error de contraseña */}
+          {passwordError && (
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
+              <div className="flex">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <p className="text-sm text-red-800 dark:text-red-300">{passwordError}</p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nueva Contraseña</label>
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={passwordData.newPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
+                placeholder="Ingresa nueva contraseña"
+                autoComplete="new-password"
+                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
+              >
+                {showPassword ? 'Ocultar' : 'Ver'}
+              </button>
+            </div>
+            {passwordData.newPassword && passwordData.newPassword.length < 6 && (
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">La contraseña debe tener al menos 6 caracteres</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Confirmar Contraseña</label>
+            <div className="relative">
+              <input
+                type={showConfirmPassword ? "text" : "password"}
+                value={passwordData.confirmPassword}
+                onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
+                placeholder="Confirma la nueva contraseña"
+                autoComplete="new-password"
+                className="w-full px-3 py-2 pr-12 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              />
+              <button
+                type="button"
+                onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                className="absolute right-2 top-2 px-2 py-1 rounded-md text-xs text-white bg-gray-900 dark:bg-gray-700 hover:bg-gray-800 dark:hover:bg-gray-600"
+              >
+                {showConfirmPassword ? 'Ocultar' : 'Ver'}
+              </button>
+            </div>
+            {passwordData.confirmPassword && passwordData.newPassword !== passwordData.confirmPassword && (
+              <p className="text-red-500 dark:text-red-400 text-xs mt-1">Las contraseñas no coinciden</p>
+            )}
+          </div>
+
+          <div className="flex space-x-3 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              onClick={handleChangePassword}
+              disabled={savingPassword || !passwordData.newPassword || !passwordData.confirmPassword || passwordData.newPassword !== passwordData.confirmPassword || passwordData.newPassword.length < 6}
+              className="flex-1 px-3 py-1.5 text-xs font-medium text-white bg-gradient-to-r from-green-500 to-emerald-600 rounded-lg hover:from-green-600 hover:to-emerald-700 focus:ring-2 focus:ring-green-500/20 transition-all duration-200 shadow-md flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {savingPassword ? (
+                <>
+                  <svg className="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Cambiando...
+                </>
+              ) : (
+                <>
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Cambiar Contraseña
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      )}
     </StandardModal>
   );
 }
