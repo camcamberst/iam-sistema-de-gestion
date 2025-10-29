@@ -313,7 +313,7 @@ export default function IndividualChatWindow({
               </span>
             </div>
             <div className="min-w-0 flex-1">
-              <h3 className="text-white font-semibold truncate">
+              <h3 className="text-white font-semibold text-sm truncate">
                 {getDisplayName(otherUser)}
               </h3>
               <p className="text-gray-400 text-xs truncate">
