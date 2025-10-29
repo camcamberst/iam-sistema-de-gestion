@@ -111,10 +111,42 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Normalizar platform_id contra catálogo para evitar desajustes
+    const normalizePlatformId = async (incomingId: string): Promise<string> => {
+      let { data: byId } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .eq('id', incomingId)
+        .maybeSingle();
+      if (byId) return byId.id;
+      let { data: byIlike } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .ilike('id', incomingId)
+        .maybeSingle();
+      if (byIlike) return byIlike.id;
+      let { data: byName } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .eq('name', incomingId)
+        .maybeSingle();
+      if (byName) return byName.id;
+      const compact = incomingId.replace(/\s+/g, '');
+      let { data: byCompact } = await supabase
+        .from('calculator_platforms')
+        .select('id, name')
+        .ilike('name', `%${compact}%`)
+        .maybeSingle();
+      if (byCompact) return byCompact.id;
+      return incomingId;
+    };
+
+    const normalizedId = await normalizePlatformId(platform_id);
+
     // Usar la función SQL para cambiar el estado
     const { data, error } = await supabase.rpc('change_platform_status', {
       p_model_id: model_id,
-      p_platform_id: platform_id,
+      p_platform_id: normalizedId,
       p_new_status: new_status,
       p_changed_by: changed_by,
       p_reason: reason || notes || null
@@ -125,10 +157,54 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      message: `Estado cambiado a ${new_status}` 
-    });
+    // Sincronización con calculator_config según estado
+    const nowIso = new Date().toISOString();
+    if (new_status === 'disponible') {
+      // Quitar de enabled_platforms y limpiar flags en modelo_plataformas
+      const { data: cfg } = await supabase
+        .from('calculator_config')
+        .select('id, enabled_platforms')
+        .eq('model_id', model_id)
+        .eq('active', true)
+        .maybeSingle();
+      if (cfg && Array.isArray(cfg.enabled_platforms)) {
+        const filtered = cfg.enabled_platforms.filter((p: string) => p !== normalizedId);
+        await supabase
+          .from('calculator_config')
+          .update({ enabled_platforms: filtered, updated_at: nowIso })
+          .eq('id', cfg.id);
+      }
+      // limpiar flags
+      await supabase
+        .from('modelo_plataformas')
+        .update({ calculator_sync: false, calculator_activated_at: null })
+        .eq('model_id', model_id)
+        .eq('platform_id', normalizedId);
+    } else if (new_status === 'confirmada') {
+      // asegurar inclusión en enabled_platforms
+      const { data: existingConfig, error: configError } = await supabase
+        .from('calculator_config')
+        .select('id, enabled_platforms')
+        .eq('model_id', model_id)
+        .eq('active', true)
+        .maybeSingle();
+      if (!configError) {
+        if (existingConfig) {
+          const enabled: string[] = Array.isArray(existingConfig.enabled_platforms)
+            ? existingConfig.enabled_platforms
+            : [];
+          if (!enabled.includes(normalizedId)) {
+            const newEnabled = [...enabled, normalizedId];
+            await supabase
+              .from('calculator_config')
+              .update({ enabled_platforms: newEnabled, updated_at: nowIso })
+              .eq('id', existingConfig.id);
+          }
+        }
+      }
+    }
+
+    return NextResponse.json({ success: true, message: `Estado cambiado a ${new_status}` });
   } catch (error) {
     console.error('Error in POST /api/modelo-plataformas:', error);
     return NextResponse.json({ error: 'Error interno del servidor' }, { status: 500 });
