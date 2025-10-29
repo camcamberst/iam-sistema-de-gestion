@@ -154,14 +154,14 @@ export default function ModelDashboard() {
         yesterdayIdToValue[r.platform_id] = Number(r.value) || 0;
       });
 
-      // 4) Cálculo por plataforma para hoy (mismo criterio que calculadora)
-      let todayUsdBruto = 0;
-      let todayUsdModelo = 0;
+      // 4) Cálculo por plataforma para hoy (unificado con Mi Calculadora)
+      let todayUsdBruto = 0; // sin porcentaje, para barra objetivo
+      let todayUsdModelo = 0; // con porcentaje por plataforma (superfoon 100%)
       for (const p of enabled) {
         const value = todayIdToValue[p.id] || 0;
         if (value <= 0) continue;
 
-        // Calcular USD bruto con fórmulas específicas por plataforma (igual que Mi Calculadora)
+        // USD base por plataforma (igual que Mi Calculadora)
         let usdFromPlatform = 0;
         if (p.currency === 'EUR') {
           if (p.id === 'big7') {
@@ -192,11 +192,11 @@ export default function ModelDashboard() {
             usdFromPlatform = value; // USD directo por defecto
           }
         }
-
         todayUsdBruto += usdFromPlatform;
+        // Participación para modelo (superfoon 100%)
+        const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (p.percentage / 100));
+        todayUsdModelo += share;
       }
-
-      todayUsdModelo = todayUsdBruto * (percentage / 100);
 
       // 5) Cálculo por plataforma para ayer (para calcular ganancias del día)
       let yesterdayUsdBruto = 0;
@@ -205,7 +205,7 @@ export default function ModelDashboard() {
         const value = yesterdayIdToValue[p.id] || 0;
         if (value <= 0) continue;
 
-        // Calcular USD bruto con fórmulas específicas por plataforma (igual que Mi Calculadora)
+        // USD base por plataforma
         let usdFromPlatform = 0;
         if (p.currency === 'EUR') {
           if (p.id === 'big7') {
@@ -236,11 +236,10 @@ export default function ModelDashboard() {
             usdFromPlatform = value; // USD directo por defecto
           }
         }
-
         yesterdayUsdBruto += usdFromPlatform;
+        const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (p.percentage / 100));
+        yesterdayUsdModelo += share;
       }
-
-      yesterdayUsdModelo = yesterdayUsdBruto * (percentage / 100);
 
       // 6) Calcular ganancias del día (diferencia entre hoy y ayer)
       const todayEarnings = todayUsdModelo - yesterdayUsdModelo;
