@@ -127,8 +127,8 @@ export async function PUT(
       );
     }
 
-    const results = [];
-    const errors = [];
+    const results: Array<{ platform_id: string; status: string; success: boolean }> = [];
+    const errors: string[] = [];
 
     // Procesar cada plataforma
     for (const platform of platforms) {
@@ -156,6 +156,56 @@ export async function PUT(
             status: new_status,
             success: true
           });
+
+          // Si se marcó como confirmada, activar automáticamente en calculator_config
+          if (new_status === 'confirmada') {
+            try {
+              const nowIso = new Date().toISOString();
+              // Obtener config activa existente
+              const { data: existingConfig, error: configError } = await supabase
+                .from('calculator_config')
+                .select('id, enabled_platforms')
+                .eq('model_id', modelId)
+                .eq('active', true)
+                .maybeSingle();
+
+              if (configError && configError.code !== 'PGRST116') {
+                console.warn('[modelo-plataformas][PUT] Error leyendo calculator_config:', configError.message);
+              }
+
+              if (existingConfig) {
+                const enabled: string[] = Array.isArray(existingConfig.enabled_platforms)
+                  ? existingConfig.enabled_platforms
+                  : [];
+                if (!enabled.includes(platform_id)) {
+                  const newEnabled = [...enabled, platform_id];
+                  const { error: updateConfigError } = await supabase
+                    .from('calculator_config')
+                    .update({ enabled_platforms: newEnabled, updated_at: nowIso })
+                    .eq('id', existingConfig.id);
+                  if (updateConfigError) {
+                    console.warn('[modelo-plataformas][PUT] No se pudo actualizar enabled_platforms:', updateConfigError.message);
+                  }
+                }
+              } else {
+                // Crear configuración mínima
+                const { error: insertConfigError } = await supabase
+                  .from('calculator_config')
+                  .insert({
+                    model_id: modelId,
+                    active: true,
+                    enabled_platforms: [platform_id],
+                    created_at: nowIso,
+                    updated_at: nowIso
+                  });
+                if (insertConfigError) {
+                  console.warn('[modelo-plataformas][PUT] No se pudo crear calculator_config:', insertConfigError.message);
+                }
+              }
+            } catch (syncErr: any) {
+              console.warn('[modelo-plataformas][PUT] Error sincronizando calculadora:', syncErr?.message || syncErr);
+            }
+          }
         }
       } catch (err) {
         errors.push(`Plataforma ${platform_id}: Error inesperado`);
