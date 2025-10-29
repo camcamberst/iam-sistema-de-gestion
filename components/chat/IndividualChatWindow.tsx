@@ -54,6 +54,9 @@ export default function IndividualChatWindow({
       const mainChatRightEdge = window.innerWidth - rightOffset;
       
       // Calcular posición de DERECHA A IZQUIERDA (primera ventana más cerca de la principal)
+      // windowIndex=0 debe estar JUNTO a la ventana principal
+      // windowIndex=1 debe estar una ventana a la izquierda
+      // windowIndex=2 debe estar dos ventanas a la izquierda
       const finalLeft = mainChatRightEdge - mainChatWidth - margin - (windowIndex * (windowWidth + margin));
       
       console.log('🪟 [IndividualChatWindow] Posición en barra de chat (A LA IZQUIERDA):', {
@@ -99,6 +102,11 @@ export default function IndividualChatWindow({
   };
 
   // Inicializar posición
+  useEffect(() => {
+    const initialPos = getInitialPosition();
+    setPosition(initialPos);
+  }, [windowIndex, isInChatBar]);
+
   // Efecto para detectar mensajes nuevos (sin sonido)
   useEffect(() => {
     if (messages.length > 0) {
