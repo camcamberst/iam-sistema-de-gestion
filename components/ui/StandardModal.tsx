@@ -74,7 +74,6 @@ export default function StandardModal({
           position: 'fixed',
           top: '50%',
           left: '50%',
-          transform: 'translate(-50%, -50%)',
           backgroundColor: 'white',
           border: '1px solid #e5e7eb',
           borderRadius: '16px',
