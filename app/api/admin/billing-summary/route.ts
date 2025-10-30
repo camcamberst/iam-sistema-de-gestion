@@ -258,8 +258,6 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { 
       originalStart: startStr, 
       originalEnd: endStr, 
-      extendedStart: extendedStartStr, 
-      extendedEnd: finalEndStr, 
       periodType, 
       isActivePeriod,
       today: todayStr 
