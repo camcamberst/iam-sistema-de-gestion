@@ -56,6 +56,7 @@ export default function SolicitudesPendientesPage() {
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado'>('todos');
   const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
@@ -217,9 +218,36 @@ export default function SolicitudesPendientesPage() {
     } else {
       return {
         tipo: 'Cuenta Bancaria',
-        info: `${anticipo.banco} - ${anticipo.tipo_cuenta} - ${anticipo.numero_cuenta}`
+        info: `${anticipo.banco || anticipo.banco_otro} - ${anticipo.tipo_cuenta} - ${anticipo.numero_cuenta}`
       };
     }
+  };
+
+  const buildClipboardInfo = (anticipo: Anticipo) => {
+    const medio = getMedioPagoInfo(anticipo).tipo;
+    const monto = `$${(anticipo.monto_solicitado || 0).toLocaleString('es-CO')} COP`;
+    const periodo = `${anticipo.period?.name || ''} (${anticipo.period?.start_date?.slice(0,10) || ''} → ${anticipo.period?.end_date?.slice(0,10) || ''})`;
+    const titular = anticipo.nombre_titular || anticipo.nombre_beneficiario || '-';
+    const documento = anticipo.documento_titular || anticipo.cedula_titular || '-';
+    const banco = anticipo.banco || anticipo.banco_otro || '-';
+    const tipoCuenta = anticipo.tipo_cuenta || '-';
+    const numeroCuenta = anticipo.numero_cuenta || '-';
+    const telefono = anticipo.numero_telefono || '-';
+    const email = anticipo.model?.email || '-';
+
+    return [
+      `Anticipo de: ${anticipo.model?.name || ''}`,
+      `Monto: ${monto}`,
+      `Medio: ${medio}`,
+      `Periodo: ${periodo}`,
+      `Titular: ${titular}`,
+      `Documento: ${documento}`,
+      `Banco: ${banco}`,
+      `Tipo de cuenta: ${tipoCuenta}`,
+      `Número de cuenta: ${numeroCuenta}`,
+      `Teléfono: ${telefono}`,
+      `Email: ${email}`
+    ].join('\n');
   };
 
   if (loading) {
@@ -409,6 +437,65 @@ export default function SolicitudesPendientesPage() {
                         <div className="text-xs text-gray-500 dark:text-gray-400">
                           {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
                         </div>
+                      </div>
+
+                      {/* Tercera línea: Detalles plegables para transferencia */}
+                      <div className="mt-2">
+                        <button
+                          onClick={() => setExpandedId(expandedId === anticipo.id ? null : anticipo.id)}
+                          className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline"
+                        >
+                          {expandedId === anticipo.id ? 'Ocultar detalles' : 'Ver detalles de transferencia'}
+                        </button>
+                        {expandedId === anticipo.id && (
+                          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-gray-700 dark:text-gray-300">
+                            <div>
+                              <span className="font-semibold">Método:</span> {medioPagoInfo.tipo}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Periodo:</span> {anticipo.period?.name}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Titular:</span> {anticipo.nombre_titular || anticipo.nombre_beneficiario || '-'}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Documento:</span> {anticipo.documento_titular || anticipo.cedula_titular || '-'}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Banco:</span> {anticipo.banco || anticipo.banco_otro || '-'}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Tipo de cuenta:</span> {anticipo.tipo_cuenta || '-'}
+                            </div>
+                            <div className="break-all">
+                              <span className="font-semibold">Número de cuenta:</span> {anticipo.numero_cuenta || '-'}
+                            </div>
+                            <div>
+                              <span className="font-semibold">Teléfono:</span> {anticipo.numero_telefono || '-'}
+                            </div>
+                            <div className="sm:col-span-2">
+                              <span className="font-semibold">Email modelo:</span> {anticipo.model?.email}
+                            </div>
+                            <div className="sm:col-span-2 mt-1">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const text = buildClipboardInfo(anticipo);
+                                    await navigator.clipboard.writeText(text);
+                                    setSuccess('Información copiada al portapapeles');
+                                    setTimeout(() => setSuccess(null), 2000);
+                                  } catch (e) {
+                                    setError('No se pudo copiar. Intenta de nuevo.');
+                                    setTimeout(() => setError(null), 2000);
+                                  }
+                                }}
+                                className="px-2 py-1 text-[11px] font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-colors"
+                              >
+                                Copiar información
+                              </button>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
 

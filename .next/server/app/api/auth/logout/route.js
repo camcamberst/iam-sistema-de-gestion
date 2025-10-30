@@ -1,0 +1,33 @@
+"use strict";(()=>{var e={};e.id=7716,e.ids=[7716],e.modules={20399:e=>{e.exports=require("next/dist/compiled/next-server/app-page.runtime.prod.js")},30517:e=>{e.exports=require("next/dist/compiled/next-server/app-route.runtime.prod.js")},66034:(e,r,o)=>{o.r(r),o.d(r,{headerHooks:()=>A,originalPathname:()=>h,patchFetch:()=>v,requestAsyncStorage:()=>p,routeModule:()=>m,serverHooks:()=>f,staticGenerationAsyncStorage:()=>_,staticGenerationBailout:()=>T});var a={};o.r(a),o.d(a,{DELETE:()=>g,GET:()=>l,POST:()=>c,PUT:()=>d});var t=o(95419),i=o(69108),n=o(99678),s=o(78070),u=o(84487);async function c(e){try{return console.log("\uD83D\uDEAA [API] Iniciando logout moderno via API"),await (0,u.P1)(),console.log("✅ [API] Logout exitoso"),s.Z.json({success:!0,message:"Logout exitoso"})}catch(e){return console.error("❌ [API] Error en logout:",e),s.Z.json({success:!1,error:"Error interno del servidor"},{status:500})}}async function l(){return s.Z.json({error:"M\xe9todo no permitido"},{status:405})}async function d(){return s.Z.json({error:"M\xe9todo no permitido"},{status:405})}async function g(){return s.Z.json({error:"M\xe9todo no permitido"},{status:405})}let m=new t.AppRouteRouteModule({definition:{kind:i.x.APP_ROUTE,page:"/api/auth/logout/route",pathname:"/api/auth/logout",filename:"route",bundlePath:"app/api/auth/logout/route"},resolvedPagePath:"C:\\Users\\camca\\OneDrive\\Documentos\\GitHub\\iam-sistema-de-gestion\\app\\api\\auth\\logout\\route.ts",nextConfigOutput:"",userland:a}),{requestAsyncStorage:p,staticGenerationAsyncStorage:_,serverHooks:f,headerHooks:A,staticGenerationBailout:T}=m,h="/api/auth/logout/route";function v(){return(0,n.patchFetch)({serverHooks:f,staticGenerationAsyncStorage:_})}},84487:(e,r,o)=>{o.d(r,{E4:()=>i,P1:()=>n,ts:()=>s});var a=o(8234),t=o(37542);async function i(e){try{console.log("\uD83D\uDD10 [AUTH] Iniciando login moderno:",{email:e.email});let{data:r,error:o}=await a.O.auth.signInWithPassword({email:e.email,password:e.password});if(o)return console.error("❌ [AUTH] Error de autenticaci\xf3n:",o.message),{success:!1,error:"Credenciales inv\xe1lidas"};if(!r.user)return{success:!1,error:"Usuario no encontrado"};console.log("✅ [AUTH] Usuario autenticado en Supabase:",r.user.id);let{data:i,error:n}=await a.O.from("users").select(`
+        id,
+        name,
+        email,
+        role,
+        is_active,
+        last_login,
+        organization_id,
+        user_groups!inner(
+          group_id,
+          is_manager,
+          groups!inner(
+            id,
+            name
+          )
+        )
+      `).eq("id",r.user.id).single();if(n)return console.error("❌ [AUTH] Error obteniendo perfil:",n.message),{success:!1,error:"Error obteniendo perfil de usuario"};if(!i)return{success:!1,error:"Perfil de usuario no encontrado"};if(!i.is_active)return{success:!1,error:"Usuario inactivo"};await a.O.from("users").update({last_login:new Date().toISOString()}).eq("id",r.user.id);let s={id:i.id,email:r.user.email,name:i.name,role:i.role,organization_id:i.organization_id,groups:i.user_groups.map(e=>({id:e.groups.id,name:e.groups.name,is_manager:e.is_manager})),is_active:i.is_active,last_login:i.last_login};console.log("✅ [AUTH] Login exitoso:",{id:s.id,email:s.email,role:s.role,groups:s.groups.length});try{await (0,t.MY)(s.id),console.log("\uD83D\uDCCA [AUTH] Usuario marcado como en l\xednea en el chat")}catch(e){console.error("❌ [AUTH] Error marcando usuario como en l\xednea:",e)}return{success:!0,user:s}}catch(e){return console.error("❌ [AUTH] Error general:",e),{success:!1,error:"Error interno del servidor"}}}async function n(){try{let{data:{user:e}}=await a.O.auth.getUser(),{error:r}=await a.O.auth.signOut();if(r&&console.error("❌ [AUTH] Error en logout:",r.message),e)try{await (0,t.lH)(e.id),console.log("\uD83D\uDCCA [AUTH] Usuario marcado como offline en el chat")}catch(e){console.error("❌ [AUTH] Error marcando usuario como offline:",e)}}catch(e){console.error("❌ [AUTH] Error general en logout:",e)}}async function s(){try{let{data:{user:e},error:r}=await a.O.auth.getUser();if(r||!e)return null;let{data:o,error:t}=await a.O.from("users").select(`
+        id,
+        name,
+        email,
+        role,
+        is_active,
+        last_login,
+        organization_id,
+        user_groups!inner(
+          group_id,
+          is_manager,
+          groups!inner(
+            id,
+            name
+          )
+        )
+      `).eq("id",e.id).single();if(t||!o)return null;return{id:o.id,email:e.email,name:o.name,role:o.role,organization_id:o.organization_id,groups:o.user_groups.map(e=>({id:e.groups.id,name:e.groups.name,is_manager:e.is_manager})),is_active:o.is_active,last_login:o.last_login}}catch(e){return console.error("❌ [AUTH] Error obteniendo usuario actual:",e),null}}},37542:(e,r,o)=>{o.d(r,{GZ:()=>s,MY:()=>i,lH:()=>n});var a=o(8234);async function t(e,r){try{console.log(`📊 [CHAT-STATUS] Actualizando estado de usuario ${e}: ${r?"EN L\xcdNEA":"OFFLINE"}`);let{error:o}=await a.O.from("chat_user_status").upsert({user_id:e,is_online:r,last_seen:new Date().toISOString(),updated_at:new Date().toISOString()});o?console.error("❌ [CHAT-STATUS] Error actualizando estado:",o):console.log(`✅ [CHAT-STATUS] Estado actualizado exitosamente: ${r?"EN L\xcdNEA":"OFFLINE"}`)}catch(e){console.error("❌ [CHAT-STATUS] Error general:",e)}}async function i(e){await t(e,!0)}async function n(e){await t(e,!1)}async function s(){try{let e=new Date(Date.now()-6e4).toISOString(),{count:r}=await a.O.from("chat_user_status").select("*",{count:"exact",head:!0}).lt("updated_at",e).eq("is_online",!0),{error:o}=await a.O.from("chat_user_status").update({is_online:!1}).lt("updated_at",e).eq("is_online",!0);o?console.error("❌ [CHAT-STATUS] Error limpiando usuarios inactivos:",o):r&&r>0&&console.log(`✅ [CHAT-STATUS] ${r} usuarios inactivos marcados como offline`)}catch(e){console.error("❌ [CHAT-STATUS] Error en limpieza:",e)}}},8234:(e,r,o)=>{o.d(r,{O:()=>s});var a=o(86843);let t=(0,a.createProxy)(String.raw`C:\Users\camca\OneDrive\Documentos\GitHub\iam-sistema-de-gestion\lib\supabase.ts`),{__esModule:i,$$typeof:n}=t;t.default;let s=(0,a.createProxy)(String.raw`C:\Users\camca\OneDrive\Documentos\GitHub\iam-sistema-de-gestion\lib\supabase.ts#supabase`)},86843:(e,r,o)=>{Object.defineProperty(r,"__esModule",{value:!0}),Object.defineProperty(r,"createProxy",{enumerable:!0,get:function(){return a}});let a=o(18195).createClientModuleProxy},50482:(e,r,o)=>{e.exports=o(20399)},18195:(e,r,o)=>{e.exports=o(50482).vendored["react-rsc"].ReactServerDOMWebpackServerEdge}};var r=require("../../../../webpack-runtime.js");r.C(e);var o=e=>r(r.s=e),a=r.X(0,[1638,6206],()=>o(66034));module.exports=a})();

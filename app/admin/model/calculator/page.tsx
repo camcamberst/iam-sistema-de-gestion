@@ -681,6 +681,11 @@ export default function ModelCalculatorPage() {
             usdModelo = p.value;
           }
         }
+        // Superfoon: 100% para el modelo (no aplicar porcentaje)
+        const normId = String(p.id || '').toLowerCase();
+        if (normId === 'superfoon') {
+          return sum + usdModelo;
+        }
         return sum + (usdModelo * p.percentage / 100);
       }, 0);
 

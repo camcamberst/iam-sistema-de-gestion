@@ -1,0 +1,1 @@
+{"success":true,"data":{"totalModels":0,"models":[],"totalAssignments":0,"assignments":[],"totalRooms":0,"rooms":[],"errors":{"modelsError":null,"assignmentsError":{"code":"PGRST205","details":null,"hint":"Perhaps you meant the table 'public.room_assignments'","message":"Could not find the table 'public.modelo_assignments' in the schema cache"},"roomsError":null}}}
