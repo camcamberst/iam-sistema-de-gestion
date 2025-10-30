@@ -161,12 +161,33 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     subItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}>;
   }>>([]);
 
+  // Función helper para obtener el rol del usuario (desde userInfo o localStorage)
+  const getUserRole = (): 'super_admin' | 'admin' | 'modelo' => {
+    if (userInfo?.role) {
+      return userInfo.role as 'super_admin' | 'admin' | 'modelo';
+    }
+    
+    if (!isClient) return 'modelo';
+    
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const parsed = JSON.parse(userData);
+        return (parsed.role || 'modelo') as 'super_admin' | 'admin' | 'modelo';
+      }
+    } catch (error) {
+      console.warn('Error parsing user data from localStorage:', error);
+    }
+    
+    return 'modelo';
+  };
+
   // Función para inicializar el menú una sola vez
   const initializeMenu = () => {
     if (!isClient) return;
     
     // Obtener el rol del usuario desde localStorage de forma segura
-    let userRole = 'modelo';
+    let userRole = getUserRole();
     let userData = null;
     
     try {
@@ -423,7 +444,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
             <div className="flex items-center">
-              <Link href="/admin/dashboard" className="flex items-center space-x-3 group">
+              <Link href={getUserRole() === 'modelo' ? '/admin/model/dashboard' : '/admin/dashboard'} className="flex items-center space-x-3 group">
                 <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300">
                   <span className="text-white dark:text-gray-900 font-bold text-sm tracking-wider">AIM</span>
                 </div>
