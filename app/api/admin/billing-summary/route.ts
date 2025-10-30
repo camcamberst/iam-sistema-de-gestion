@@ -121,14 +121,14 @@ export async function GET(request: NextRequest) {
         groupsById = gById || [];
       } catch {}
 
-      // 2) Buscar por nombre (ilike), uno por uno para soportar coincidencia flexible
+      // 2) Buscar por nombre (ilike con comodines), uno por uno para soportar coincidencia flexible
       const groupsByName: any[] = [];
       for (const token of rawTokens) {
         try {
           const { data: gByName } = await supabase
             .from('groups')
             .select('id, name')
-            .ilike('name', token);
+            .ilike('name', `%${token}%`);
           if (gByName && gByName.length > 0) groupsByName.push(...gByName);
         } catch {}
       }
