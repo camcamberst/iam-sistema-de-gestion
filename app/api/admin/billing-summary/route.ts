@@ -317,7 +317,6 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [BILLING-SUMMARY] Datos encontrados:', {
       historyRecords: historyData?.length || 0,
       totalsRecords: uniqueTotalsData?.length || 0,
-      exactTotalsRecords: exactTotalsData?.length || 0,
       historyModels: historyData ? Array.from(new Set(historyData.map(h => h.model_id))) : [],
       totalsModels: uniqueTotalsData ? Array.from(new Set(uniqueTotalsData.map(t => t.model_id))) : [],
       timestamp: new Date().toISOString()
