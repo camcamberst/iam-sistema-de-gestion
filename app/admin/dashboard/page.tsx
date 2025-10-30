@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
@@ -12,11 +13,19 @@ import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const [stats, setStats] = useState({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: Role; groups: string[] } | null>(null);
   // Resumen de productividad (modelo)
   const [summary, setSummary] = useState<{ usdBruto: number; usdModelo: number; copModelo: number; goalUsd: number; pct: number } | null>(null);
+  // Redirección controlada: anular dashboard genérico a favor de /admin/model/dashboard
+  useEffect(() => {
+    try {
+      router.replace('/admin/model/dashboard');
+    } catch {}
+  }, [router]);
+
   
 
   useEffect(() => {
