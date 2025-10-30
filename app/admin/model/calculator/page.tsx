@@ -1125,6 +1125,10 @@ export default function ModelCalculatorPage() {
                       usdModelo = p.value;
                     }
                   }
+                  const norm = String(p.id || '').toLowerCase();
+                  if (norm === 'superfoon') {
+                    return sum + usdModelo; // 100% para Superfoon
+                  }
                   return sum + (usdModelo * p.percentage / 100);
                 }, 0).toFixed(2)}`,
                 label: 'USD Modelo',
@@ -1166,6 +1170,10 @@ export default function ModelCalculatorPage() {
                     } else {
                       usdModelo = p.value;
                     }
+                  }
+                  const norm = String(p.id || '').toLowerCase();
+                  if (norm === 'superfoon') {
+                    return sum + usdModelo; // 100% para Superfoon
                   }
                   return sum + (usdModelo * p.percentage / 100);
                 }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
