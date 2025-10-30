@@ -86,7 +86,7 @@ export default function SolicitudesPendientesPage() {
       }
 
       setUser(userData);
-      await loadAnticipos(userData.id);
+      await loadAnticipos(userData.id, userData.role);
     } catch (error) {
       console.error('Error loading user:', error);
       setError('Error al cargar datos del usuario');
@@ -95,7 +95,7 @@ export default function SolicitudesPendientesPage() {
     }
   };
 
-  const loadAnticipos = async (adminId: string) => {
+  const loadAnticipos = async (adminId: string, role?: string) => {
     try {
       console.log('🔍 [ADMIN] Cargando anticipos para admin:', adminId);
       // Cargar tanto pendientes como aprobadas
@@ -139,7 +139,7 @@ export default function SolicitudesPendientesPage() {
         setAvailableGroups(groupsFromAnticipos);
 
         // Fallback: si es super admin y no se detectaron grupos en anticipos, cargar todas las sedes
-        if ((user?.role === 'super_admin') && groupsFromAnticipos.length === 0) {
+        if ((role === 'super_admin') && groupsFromAnticipos.length === 0) {
           const { data: allGroups, error: groupsError } = await supabase
             .from('groups')
             .select('id, name')
@@ -328,7 +328,7 @@ export default function SolicitudesPendientesPage() {
           <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Filtro por Grupo/Sede (super admin o admin) */}
-            {(user?.role === 'super_admin' || user?.role === 'admin') && availableGroups.length > 0 && (
+            {(user?.role === 'super_admin' || user?.role === 'admin') && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Filtrar por grupo o sede:</label>
                 <AppleDropdown
