@@ -108,12 +108,54 @@ export async function GET(request: NextRequest) {
       modelsQuery = modelsQuery.in('id', modelIds);
     }
 
-    // Si se especifica una sede específica, filtrar por ella (usando grupos)
+    // Si se especifica una sede (o varias separadas por coma), aceptar IDs o nombres
     if (sedeId) {
+      const rawTokens = sedeId.split(',').map(s => s.trim()).filter(Boolean);
+      // 1) Buscar grupos por ID exacto (para tokens con formato UUID o id válido)
+      let groupsById: any[] = [];
+      try {
+        const { data: gById } = await supabase
+          .from('groups')
+          .select('id, name')
+          .in('id', rawTokens);
+        groupsById = gById || [];
+      } catch {}
+
+      // 2) Buscar por nombre (ilike), uno por uno para soportar coincidencia flexible
+      const groupsByName: any[] = [];
+      for (const token of rawTokens) {
+        try {
+          const { data: gByName } = await supabase
+            .from('groups')
+            .select('id, name')
+            .ilike('name', token);
+          if (gByName && gByName.length > 0) groupsByName.push(...gByName);
+        } catch {}
+      }
+
+      const uniqueGroupIds = Array.from(new Set([...groupsById, ...groupsByName].map(g => g.id)));
+      console.log('🔎 [BILLING-SUMMARY] Sedes solicitadas:', rawTokens, '→ groupIds:', uniqueGroupIds);
+
+      if (uniqueGroupIds.length === 0) {
+        return NextResponse.json({ 
+          success: true, 
+          data: [],
+          summary: {
+            totalModels: 0,
+            totalUsdBruto: 0,
+            totalUsdModelo: 0,
+            totalUsdSede: 0,
+            totalCopModelo: 0,
+            totalCopSede: 0
+          },
+          periodDate
+        });
+      }
+
       const { data: sedeGroups, error: sedeGroupsError } = await supabase
         .from('user_groups')
         .select('user_id')
-        .eq('group_id', sedeId);
+        .in('group_id', uniqueGroupIds);
 
       if (sedeGroupsError) {
         console.error('❌ [BILLING-SUMMARY] Error al obtener grupos de sede:', sedeGroupsError);
@@ -121,6 +163,7 @@ export async function GET(request: NextRequest) {
       }
 
       const sedeModelIds = sedeGroups?.map(sg => sg.user_id) || [];
+      console.log('🔎 [BILLING-SUMMARY] Modelos en sedes:', sedeModelIds.length);
       if (sedeModelIds.length === 0) {
         return NextResponse.json({ 
           success: true, 
