@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { getColombiaDate } from '@/utils/calculator-dates';
@@ -84,6 +84,28 @@ export default function ModelCalculatorPage() {
     });
     setInputValues(prev => ({ ...prev, ...newInputValues }));
   };
+
+  // Derivado único: filas computadas exactamente como se muestran en la tabla
+  const computedRows = useMemo(() => {
+    if (!rates) return [] as Array<{ id: string; name: string; usdModelo: number; copModelo: number; percentageLabel: string; currency?: string; value: number }>;
+    const rows = platforms
+      .filter(p => p.enabled)
+      .map(p => {
+        const usdBase = getUsdBaseFromPlatform(p, p.value, rates);
+        const usdModelo = getModeloShare(p, usdBase);
+        const copModelo = usdModelo * (rates?.usd_cop || 3900);
+        const pct = getFinalPercentage(p);
+        const isSuper = String(p.name || '').toLowerCase().replace(/[^a-z0-9]/g,'').trim() === 'superfoon' || String(p.id || '').toLowerCase().replace(/[^a-z0-9]/g,'').trim() === 'superfoon';
+        const percentageLabel = isSuper ? '100%' : `${pct}%`;
+        return { id: p.id, name: p.name, usdModelo, copModelo, percentageLabel, currency: p.currency, value: p.value };
+      });
+    return rows;
+  }, [platforms, rates]);
+
+  // Total exacto mostrado en la tabla
+  const exactUsdFromTable = useMemo(() => {
+    return computedRows.reduce((s, r) => s + r.usdModelo, 0);
+  }, [computedRows]);
 
   const syncInputsToPlatforms = (inputValues: Record<string, string>) => {
     setPlatforms(prev => prev.map(p => {
@@ -307,21 +329,21 @@ export default function ModelCalculatorPage() {
       const timeoutId = setTimeout(async () => {
         console.log('🔍 [CALCULATOR] Recalculating due to input changes...');
         await calculateTodayEarnings(platforms, yesterdayValues, rates);
-        // Recalcular total USD Modelo único (estado fuente de verdad)
-        const t = getTotalsModeloUsd(platforms, rates);
+        // Recalcular total USD Modelo único (tomado de filas computadas)
+        const t = exactUsdFromTable;
         setTotalUsdModeloState(t);
       }, 300);
       
       return () => clearTimeout(timeoutId);
     }
-  }, [platforms.map(p => p.value).join(','), rates, yesterdayValues]);
+  }, [platforms.map(p => p.value).join(','), rates, yesterdayValues, exactUsdFromTable]);
 
   // Fuente de verdad: total USD Modelo derivado
   useEffect(() => {
     if (!rates) return;
-    const t = getTotalsModeloUsd(platforms, rates);
+    const t = exactUsdFromTable;
     setTotalUsdModeloState(t);
-  }, [platforms, rates]);
+  }, [platforms, rates, exactUsdFromTable]);
 
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [CALCULATOR] System configuration:', {
@@ -1008,23 +1030,14 @@ export default function ModelCalculatorPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {platforms.filter(p => p.enabled).map(platform => {
-                    // Usar helpers unificados para evitar discrepancias con "Totales y Alertas"
-                    const usdBase = getUsdBaseFromPlatform(platform, platform.value, rates);
-                    const usdModeloFinal = getModeloShare(platform, usdBase);
-                    const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
+                  {computedRows.map(row => {
                     
                     return (
-                      <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600">
+                      <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{row.name}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Reparto: {(() => {
-                              const pct = getFinalPercentage(platform);
-                              const norm = (s: any) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
-                              const isSuper = norm(platform.id) === 'superfoon' || norm(platform.name) === 'superfoon';
-                              return isSuper ? '100%' : `${pct}%`;
-                            })()}
+                            Reparto: {row.percentageLabel}
                           </div>
                         </td>
                         <td className="py-3 px-3">
@@ -1032,7 +1045,7 @@ export default function ModelCalculatorPage() {
                             <input
                               type="text"
                               inputMode="decimal"
-                              value={inputValues[platform.id] ?? ''}
+                              value={inputValues[row.id] ?? ''}
                               onChange={(e) => {
                                 const rawValue = e.target.value;
                                 
@@ -1040,15 +1053,15 @@ export default function ModelCalculatorPage() {
                                 const unifiedValue = rawValue.replace(',', '.');
                                 
                                 // 🔧 SYNC: Actualizar inputValues con valor unificado
-                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                setInputValues(prev => ({ ...prev, [row.id]: unifiedValue }));
 
                                 // 🔧 SYNC: Convertir a número (ya está normalizado)
                                 const numeric = Number.parseFloat(unifiedValue);
                                 const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
+                                setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: numericValue } : p));
                                 
                                 console.log('🔍 [SYNC] Usuario escribió:', { 
-                                  platform: platform.id, 
+                                  platform: row.id, 
                                   original: rawValue,
                                   unified: unifiedValue,
                                   numeric: numericValue 
@@ -1059,18 +1072,21 @@ export default function ModelCalculatorPage() {
                               title="Ingresa valores con decimales (punto o coma se convierten a punto)"
                             />
                             <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                              {platform.currency || 'USD'}
+                              {(() => {
+                                const p = platforms.find(pp => pp.id === row.id);
+                                return p?.currency || 'USD';
+                              })()}
                             </span>
                           </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                            ${usdModeloFinal.toFixed(2)} USD
+                            ${row.usdModelo.toFixed(2)} USD
                           </div>
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                            ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                            ${row.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                           </div>
                         </td>
                       </tr>
