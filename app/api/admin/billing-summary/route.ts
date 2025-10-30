@@ -54,7 +54,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [BILLING-SUMMARY] Is Super Admin:', isSuperAdmin);
     console.log('🔍 [BILLING-SUMMARY] Is Admin:', isAdmin);
 
-    // 2. Obtener modelos según permisos
+    // 2. Obtener modelos según permisos (sin filtrar por is_active para no excluir datos válidos)
     let modelsQuery = supabase
       .from('users')
       .select(`
@@ -62,8 +62,7 @@ export async function GET(request: NextRequest) {
         email, 
         name
       `)
-      .eq('role', 'modelo')
-      .eq('is_active', true);
+      .eq('role', 'modelo');
 
     // Depuración opcional: limitar por emails especificados
     if (emailsParam) {
@@ -445,7 +444,58 @@ export async function GET(request: NextRequest) {
     const allTotalsMap = new Map();
     historyMap.forEach((value, key) => allTotalsMap.set(key, value));
     totalsMap.forEach((value, key) => allTotalsMap.set(key, value));
-    const totals = Array.from(allTotalsMap.values());
+    let totals = Array.from(allTotalsMap.values());
+
+    // 3.6. Cambiar perspectiva: partir de quienes tienen datos y luego intersectar con sede/permisos
+    let dataModelIds = new Set(Array.from(allTotalsMap.keys()));
+
+    // Intersectar con sede seleccionada (si aplica)
+    if (sedeId) {
+      // ya calculamos sedeModelIds arriba cuando sedeId existe
+      const sedeModelIds = (await supabase.from('user_groups').select('user_id').in('group_id', Array.from(new Set(models.flatMap(m => (modelGroupsMap.get(m.id)?.id ? [modelGroupsMap.get(m.id).id] : [])))))).data || [];
+      const sedeIdSet = new Set(sedeModelIds.map((sg: any) => sg.user_id));
+      dataModelIds = new Set(Array.from(dataModelIds).filter(id => sedeIdSet.has(id)));
+    }
+
+    // Intersectar con permisos de admin (si es admin)
+    if (isAdmin && !isSuperAdmin && adminGroups.length > 0) {
+      const { data: adminModels } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', adminGroups);
+      const allowedIds = new Set((adminModels || []).map((m: any) => m.user_id));
+      dataModelIds = new Set(Array.from(dataModelIds).filter(id => allowedIds.has(id)));
+    }
+
+    // Filtrar totales para mantener solo modelos con datos tras intersecciones
+    totals = totals.filter(t => dataModelIds.has(t.model_id));
+
+    // Si no hay datos, responder vacío temprano
+    if (!totals || totals.length === 0) {
+      return NextResponse.json({ 
+        success: true, 
+        data: [],
+        summary: {
+          totalModels: 0,
+          totalUsdBruto: 0,
+          totalUsdModelo: 0,
+          totalUsdSede: 0,
+          totalCopModelo: 0,
+          totalCopSede: 0
+        },
+        periodDate,
+        sedeId: sedeId || 'all',
+        adminRole: adminUser.role
+      });
+    }
+
+    // 3.7. Traer datos de usuarios solo para los modelos con datos (evita filas en cero)
+    const dataIdsArray = Array.from(dataModelIds);
+    const { data: dataUsers } = await supabase
+      .from('users')
+      .select('id, email, name')
+      .in('id', dataIdsArray);
+    const userById = new Map((dataUsers || []).map((u: any) => [u.id, u]));
 
     console.log('📊 [BILLING-SUMMARY] Datos finales:', {
       totalModels: totals.length,
@@ -470,42 +520,25 @@ export async function GET(request: NextRequest) {
 
     const usdCopRateValue = usdCopRate?.value || 3900;
 
-    // 5. Consolidar datos por modelo
-    const billingData = models.map(model => {
-      const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
-      const modelGroup = modelGroupsMap.get(model.id);
-      
-      if (!totalsForModel || totalsForModel.length === 0) {
-        // Si no hay totales, retornar ceros
-        return {
-          modelId: model.id,
-          email: model.email.split('@')[0], // Solo parte antes del '@'
-          name: model.name,
-          groupId: modelGroup?.id,
-          groupName: modelGroup?.name,
-          usdBruto: 0,
-          usdModelo: 0,
-          usdSede: 0,
-          copModelo: 0,
-          copSede: 0
-        };
-      }
+    // 5. Consolidar datos por modelo a partir de quienes tienen datos (sin filas en cero)
+    const billingData = Array.from(dataModelIds).map((modelId: string) => {
+      const totalsForModel = (totals || []).filter(t => t.model_id === modelId);
+      const modelGroup = modelGroupsMap.get(modelId);
+      const user = userById.get(modelId) || { email: 'desconocido@na', name: 'Modelo' };
 
-      // Para períodos cerrados, ya tenemos los totales calculados
-      // Para períodos activos, sumar múltiples registros si existen
       const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
       const usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
-      const usdSede = usdBruto - usdModelo; // USD Sede = USD Bruto - USD Modelo
+      const usdSede = usdBruto - usdModelo;
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;
 
       const dataSource = totalsForModel[0]?.dataSource || 'unknown';
-      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${dataSource}`);
+      console.log(`📊 [BILLING-SUMMARY] Modelo ${user.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${dataSource}`);
 
       return {
-        modelId: model.id,
-        email: model.email.split('@')[0], // Solo parte antes del '@'
-        name: model.name,
+        modelId,
+        email: (user.email || 'desconocido@na').split('@')[0],
+        name: user.name,
         groupId: modelGroup?.id,
         groupName: modelGroup?.name,
         usdBruto,
