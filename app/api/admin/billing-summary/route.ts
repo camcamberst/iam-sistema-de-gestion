@@ -232,7 +232,7 @@ export async function GET(request: NextRequest) {
     let totalsData = null;
     
     if (isActivePeriod) {
-      // Período activo: usar calculator_totals
+      // Período activo: usar calculator_totals y además consultar history como fallback
       console.log('🔍 [BILLING-SUMMARY] Período activo - consultando calculator_totals');
       const { data: totals, error: totalsError } = await supabase
         .from('calculator_totals')
@@ -246,6 +246,21 @@ export async function GET(request: NextRequest) {
         console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
       } else {
         totalsData = totals;
+      }
+
+      // Fallback: consultar calculator_history en el mismo rango para modelos sin totals
+      console.log('🔍 [BILLING-SUMMARY] Período activo - consultando calculator_history como fallback');
+      const { data: history, error: historyError } = await supabase
+        .from('calculator_history')
+        .select('model_id, platform_id, value, period_date, period_type')
+        .in('model_id', modelIds)
+        .gte('period_date', extendedStartStr)
+        .lte('period_date', finalEndStr);
+
+      if (historyError) {
+        console.error('❌ [BILLING-SUMMARY] Error al verificar historial (fallback):', historyError);
+      } else {
+        historyData = history;
       }
     } else {
       // Período cerrado: usar calculator_history
