@@ -223,10 +223,16 @@ export default function SolicitudesPendientesPage() {
     }
   };
 
+  const formatDateCO = (dateString?: string) => {
+    if (!dateString) return '';
+    const d = new Date(dateString);
+    return d.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
   const buildClipboardInfo = (anticipo: Anticipo) => {
     const medio = getMedioPagoInfo(anticipo).tipo;
     const monto = `$${(anticipo.monto_solicitado || 0).toLocaleString('es-CO')} COP`;
-    const periodo = `${anticipo.period?.name || ''} (${anticipo.period?.start_date?.slice(0,10) || ''} → ${anticipo.period?.end_date?.slice(0,10) || ''})`;
+    const periodo = `${formatDateCO(anticipo.period?.start_date)} → ${formatDateCO(anticipo.period?.end_date)}`;
     const titular = anticipo.nombre_titular || anticipo.nombre_beneficiario || '-';
     const documento = anticipo.documento_titular || anticipo.cedula_titular || '-';
     const banco = anticipo.banco || anticipo.banco_otro || '-';
@@ -453,7 +459,7 @@ export default function SolicitudesPendientesPage() {
                               <span className="font-semibold">Método:</span> {medioPagoInfo.tipo}
                             </div>
                             <div>
-                              <span className="font-semibold">Periodo:</span> {anticipo.period?.name}
+                              <span className="font-semibold">Periodo:</span> {formatDateCO(anticipo.period?.start_date)} → {formatDateCO(anticipo.period?.end_date)}
                             </div>
                             <div>
                               <span className="font-semibold">Titular:</span> {anticipo.nombre_titular || anticipo.nombre_beneficiario || '-'}
