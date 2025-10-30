@@ -233,41 +233,34 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // 3. Usar el mismo sistema de períodos que Mi Calculadora
-    // 3.1. Crear período si no existe (igual que Mi Calculadora)
-    await createPeriodIfNeeded(periodDate);
+    // 3. Calcular rango de quincena basado en periodDate (1-15 ó 16-fin de mes)
+    const baseDate = new Date(periodDate);
+    const year = baseDate.getFullYear();
+    const month = baseDate.getMonth(); // 0-based
+    const day = baseDate.getDate();
+    const lastDayOfMonth = new Date(year, month + 1, 0).getDate();
 
-    // 3.2. Obtener el período actual desde la tabla periods
-    const { data: period, error: periodError } = await supabase
-      .from('periods')
-      .select('id, start_date, end_date, is_active')
-      .eq('start_date', periodDate)
-      .single();
+    const quinStartStr = day <= 15
+      ? `${year}-${String(month + 1).padStart(2, '0')}-01`
+      : `${year}-${String(month + 1).padStart(2, '0')}-16`;
+    const quinEndStr = day <= 15
+      ? `${year}-${String(month + 1).padStart(2, '0')}-15`
+      : `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-    if (periodError) {
-      console.error('❌ [BILLING-SUMMARY] Error al obtener período:', periodError);
-      return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
-    }
-
-    const startStr = period.start_date;
-    const endStr = period.end_date;
-    const periodType = period.is_active ? 'active' : 'closed';
-
-    // 3.3. Determinar si usar calculator_totals (período activo) o calculator_history (período cerrado)
-    const isActivePeriod = period.is_active;
-    
-    // CORRECCIÓN: Incluir la fecha actual en el rango para capturar datos recientes
+    // Determinar si el período está activo según hoy dentro del rango
     const todayStr = new Date().toISOString().split('T')[0];
-    const extendedEndStr = todayStr > endStr ? todayStr : endStr;
-    
-    // AMPLIAR BÚSQUEDA: Incluir rango más amplio para capturar datos con fechas diferentes
+    const isActivePeriod = todayStr >= quinStartStr && todayStr <= quinEndStr;
+    const startStr = quinStartStr;
+    const endStr = quinEndStr;
+
+    // AMPLIAR BÚSQUEDA: 2 días de margen por desfases
     const extendedStartDate = new Date(startStr);
-    extendedStartDate.setDate(extendedStartDate.getDate() - 2); // 2 días antes
+    extendedStartDate.setDate(extendedStartDate.getDate() - 2);
     const extendedStartStr = extendedStartDate.toISOString().split('T')[0];
-    
-    const extendedEndDate = new Date(extendedEndStr);
-    extendedEndDate.setDate(extendedEndDate.getDate() + 2); // 2 días después
+    const extendedEndDate = new Date(endStr);
+    extendedEndDate.setDate(extendedEndDate.getDate() + 2);
     const finalEndStr = extendedEndDate.toISOString().split('T')[0];
+    const periodType = isActivePeriod ? 'active' : 'closed';
 
     console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { 
       originalStart: startStr, 
@@ -446,56 +439,8 @@ export async function GET(request: NextRequest) {
     totalsMap.forEach((value, key) => allTotalsMap.set(key, value));
     let totals = Array.from(allTotalsMap.values());
 
-    // 3.6. Cambiar perspectiva: partir de quienes tienen datos y luego intersectar con sede/permisos
-    let dataModelIds = new Set(Array.from(allTotalsMap.keys()));
-
-    // Intersectar con sede seleccionada (si aplica)
-    if (sedeId) {
-      // ya calculamos sedeModelIds arriba cuando sedeId existe
-      const sedeModelIds = (await supabase.from('user_groups').select('user_id').in('group_id', Array.from(new Set(models.flatMap(m => (modelGroupsMap.get(m.id)?.id ? [modelGroupsMap.get(m.id).id] : [])))))).data || [];
-      const sedeIdSet = new Set(sedeModelIds.map((sg: any) => sg.user_id));
-      dataModelIds = new Set(Array.from(dataModelIds).filter(id => sedeIdSet.has(id)));
-    }
-
-    // Intersectar con permisos de admin (si es admin)
-    if (isAdmin && !isSuperAdmin && adminGroups.length > 0) {
-      const { data: adminModels } = await supabase
-        .from('user_groups')
-        .select('user_id')
-        .in('group_id', adminGroups);
-      const allowedIds = new Set((adminModels || []).map((m: any) => m.user_id));
-      dataModelIds = new Set(Array.from(dataModelIds).filter(id => allowedIds.has(id)));
-    }
-
-    // Filtrar totales para mantener solo modelos con datos tras intersecciones
-    totals = totals.filter(t => dataModelIds.has(t.model_id));
-
-    // Si no hay datos, responder vacío temprano
-    if (!totals || totals.length === 0) {
-      return NextResponse.json({ 
-        success: true, 
-        data: [],
-        summary: {
-          totalModels: 0,
-          totalUsdBruto: 0,
-          totalUsdModelo: 0,
-          totalUsdSede: 0,
-          totalCopModelo: 0,
-          totalCopSede: 0
-        },
-        periodDate,
-        sedeId: sedeId || 'all',
-        adminRole: adminUser.role
-      });
-    }
-
-    // 3.7. Traer datos de usuarios solo para los modelos con datos (evita filas en cero)
-    const dataIdsArray = Array.from(dataModelIds);
-    const { data: dataUsers } = await supabase
-      .from('users')
-      .select('id, email, name')
-      .in('id', dataIdsArray);
-    const userById = new Map((dataUsers || []).map((u: any) => [u.id, u]));
+    // 3.6. Construir mapa de usuarios (todas las modelos filtradas arriba), para incluir también quienes tengan 0 en rango
+    const userById = new Map(models.map((u: any) => [u.id, u]));
 
     console.log('📊 [BILLING-SUMMARY] Datos finales:', {
       totalModels: totals.length,
@@ -520,11 +465,10 @@ export async function GET(request: NextRequest) {
 
     const usdCopRateValue = usdCopRate?.value || 3900;
 
-    // 5. Consolidar datos por modelo a partir de quienes tienen datos (sin filas en cero)
-    const billingData = Array.from(dataModelIds).map((modelId: string) => {
-      const totalsForModel = (totals || []).filter(t => t.model_id === modelId);
-      const modelGroup = modelGroupsMap.get(modelId);
-      const user = userById.get(modelId) || { email: 'desconocido@na', name: 'Modelo' };
+    // 5. Consolidar datos por modelo: incluir todas las modelos del set (cero si no hay datos en rango)
+    const billingData = models.map(model => {
+      const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
+      const modelGroup = modelGroupsMap.get(model.id);
 
       const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
       const usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
@@ -532,13 +476,13 @@ export async function GET(request: NextRequest) {
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;
 
-      const dataSource = totalsForModel[0]?.dataSource || 'unknown';
-      console.log(`📊 [BILLING-SUMMARY] Modelo ${user.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${dataSource}`);
+      const dataSource = totalsForModel[0]?.dataSource || 'none';
+      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${dataSource}`);
 
       return {
-        modelId,
-        email: (user.email || 'desconocido@na').split('@')[0],
-        name: user.name,
+        modelId: model.id,
+        email: model.email.split('@')[0],
+        name: model.name,
         groupId: modelGroup?.id,
         groupName: modelGroup?.name,
         usdBruto,
