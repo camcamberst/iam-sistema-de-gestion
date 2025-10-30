@@ -11,13 +11,14 @@ export async function GET(request: NextRequest) {
   const sedeId = searchParams.get('sedeId');
   const periodDate = searchParams.get('periodDate') || getColombiaDate();
   const adminId = searchParams.get('adminId');
+  const emailsParam = searchParams.get('emails'); // opcional: depurar modelos por email
 
   if (!adminId) {
     return NextResponse.json({ success: false, error: 'adminId es requerido' }, { status: 400 });
   }
 
   try {
-    console.log('🔍 [BILLING-SUMMARY] Obteniendo resumen:', { sedeId, periodDate, adminId });
+    console.log('🔍 [BILLING-SUMMARY] Obteniendo resumen:', { sedeId, periodDate, adminId, emailsParam });
 
     // 1. Verificar permisos del admin y obtener sus grupos
     const { data: adminUser, error: adminError } = await supabase
@@ -63,6 +64,15 @@ export async function GET(request: NextRequest) {
       `)
       .eq('role', 'modelo')
       .eq('is_active', true);
+
+    // Depuración opcional: limitar por emails especificados
+    if (emailsParam) {
+      const emailList = emailsParam.split(',').map(e => e.trim().toLowerCase());
+      if (emailList.length > 0) {
+        modelsQuery = modelsQuery.in('email', emailList);
+        console.log('🔎 [BILLING-SUMMARY] Filtrando por emails:', emailList);
+      }
+    }
 
     // Si es admin (no super_admin), filtrar por sus grupos asignados
     if (isAdmin && !isSuperAdmin && adminGroups.length > 0) {
@@ -310,6 +320,26 @@ export async function GET(request: NextRequest) {
       totalsModels: uniqueTotalsData ? Array.from(new Set(uniqueTotalsData.map(t => t.model_id))) : [],
       timestamp: new Date().toISOString()
     });
+
+    // Log dirigido por emails (si aplica)
+    if (emailsParam) {
+      try {
+        const emailList = emailsParam.split(',').map(e => e.trim().toLowerCase());
+        // Mapear email -> id
+        const emailToId = new Map(models.map(m => [m.email.toLowerCase(), m.id]));
+        const ids = emailList.map(e => emailToId.get(e)).filter(Boolean);
+        const historyIds = new Set((historyData || []).map((h: any) => h.model_id));
+        const totalsIds = new Set((uniqueTotalsData || []).map((t: any) => t.model_id));
+        console.log('🔎 [BILLING-SUMMARY] Debug por emails:', {
+          emails: emailList,
+          ids,
+          inHistory: ids.map(id => ({ id, has: historyIds.has(id) })),
+          inTotals: ids.map(id => ({ id, has: totalsIds.has(id) })),
+        });
+      } catch (e) {
+        console.log('⚠️ [BILLING-SUMMARY] Error en debug por emails:', e);
+      }
+    }
 
     // 3.3. Procesar datos del historial (período cerrado)
     const historyMap = new Map();
