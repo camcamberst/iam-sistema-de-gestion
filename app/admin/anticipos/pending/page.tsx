@@ -139,7 +139,7 @@ export default function SolicitudesPendientesPage() {
         setAvailableGroups(groupsFromAnticipos);
 
         // Fallback: si es super admin y no se detectaron grupos en anticipos, cargar todas las sedes
-        if ((userData?.role === 'super_admin') && groupsFromAnticipos.length === 0) {
+        if ((user?.role === 'super_admin') && groupsFromAnticipos.length === 0) {
           const { data: allGroups, error: groupsError } = await supabase
             .from('groups')
             .select('id, name')
