@@ -253,13 +253,6 @@ export async function GET(request: NextRequest) {
     const startStr = quinStartStr;
     const endStr = quinEndStr;
 
-    // AMPLIAR BÚSQUEDA: 2 días de margen por desfases
-    const extendedStartDate = new Date(startStr);
-    extendedStartDate.setDate(extendedStartDate.getDate() - 2);
-    const extendedStartStr = extendedStartDate.toISOString().split('T')[0];
-    const extendedEndDate = new Date(endStr);
-    extendedEndDate.setDate(extendedEndDate.getDate() + 2);
-    const finalEndStr = extendedEndDate.toISOString().split('T')[0];
     const periodType = isActivePeriod ? 'active' : 'closed';
 
     console.log('🔍 [BILLING-SUMMARY] Rango de búsqueda:', { 
@@ -277,14 +270,14 @@ export async function GET(request: NextRequest) {
     let totalsData = null;
     
     if (isActivePeriod) {
-      // Período activo: usar calculator_totals y además consultar history como fallback
-      console.log('🔍 [BILLING-SUMMARY] Período activo - consultando calculator_totals');
+      // Período activo: usar EXCLUSIVAMENTE calculator_totals dentro del rango exacto de quincena
+      console.log('🔍 [BILLING-SUMMARY] Período activo - consultando calculator_totals (rango exacto quincena)');
       const { data: totals, error: totalsError } = await supabase
         .from('calculator_totals')
         .select('*')
         .in('model_id', modelIds)
-        .gte('period_date', extendedStartStr)
-        .lte('period_date', finalEndStr)
+        .gte('period_date', startStr)
+        .lte('period_date', endStr)
         .order('period_date', { ascending: false });
 
       if (totalsError) {
@@ -292,31 +285,19 @@ export async function GET(request: NextRequest) {
       } else {
         totalsData = totals;
       }
-
-      // Fallback: consultar calculator_history en el mismo rango para modelos sin totals
-      console.log('🔍 [BILLING-SUMMARY] Período activo - consultando calculator_history como fallback');
-      const { data: history, error: historyError } = await supabase
-        .from('calculator_history')
-        .select('model_id, platform_id, value, period_date, period_type')
-        .in('model_id', modelIds)
-        .gte('period_date', extendedStartStr)
-        .lte('period_date', finalEndStr);
-
-      if (historyError) {
-        console.error('❌ [BILLING-SUMMARY] Error al verificar historial (fallback):', historyError);
-      } else {
-        historyData = history;
-      }
+      historyData = [];
     } else {
       // Período cerrado: usar calculator_history
-      console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history');
+      console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history (rango exacto quincena)');
+      // Determinar period_type esperado según quincena
+      const expectedType = endStr.endsWith('-15') ? 'period-1' : 'period-2';
       const { data: history, error: historyError } = await supabase
         .from('calculator_history')
         .select('model_id, platform_id, value, period_date, period_type')
         .in('model_id', modelIds)
-        .gte('period_date', extendedStartStr)
-        .lte('period_date', finalEndStr)
-        .eq('period_type', periodType);
+        .gte('period_date', startStr)
+        .lte('period_date', endStr)
+        .eq('period_type', expectedType);
 
       if (historyError) {
         console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
@@ -325,20 +306,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3.2.1. Búsqueda adicional por fecha exacta para capturar datos recientes
-    const { data: exactTotalsData, error: exactTotalsError } = await supabase
-      .from('calculator_totals')
-      .select('*')
-      .in('model_id', modelIds)
-      .eq('period_date', todayStr)
-      .order('updated_at', { ascending: false });
-
-    if (exactTotalsError) {
-      console.error('❌ [BILLING-SUMMARY] Error al obtener totales exactos:', exactTotalsError);
-    }
-
-    // Combinar datos de ambas consultas, priorizando los más recientes
-    const allTotalsData = [...(totalsData || []), ...(exactTotalsData || [])];
+    // Combinar datos (en activo: solo totals; en cerrado: solo history)
+    const allTotalsData = [...(totalsData || [])];
     const uniqueTotalsData = allTotalsData.reduce((acc: any[], current: any) => {
       const existing = acc.find((item: any) => item.model_id === current.model_id);
       if (!existing || new Date(current.updated_at) > new Date(existing.updated_at)) {
