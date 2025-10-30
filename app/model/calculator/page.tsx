@@ -95,26 +95,30 @@ export default function ModelCalculatorPage() {
 
   // Helpers unificados de cálculo
   const getUsdBaseFromPlatform = (p: any, value: number, rates: any): number => {
-    if (p.currency === 'EUR') {
-      if (p.id === 'big7') return (value * (rates?.eur_usd || 1.01)) * 0.84;
-      if (p.id === 'mondo') return (value * (rates?.eur_usd || 1.01)) * 0.78;
+    const id = String(p.id || '').toLowerCase();
+    const currency = p.currency || 'USD';
+    if (currency === 'EUR') {
+      if (id === 'big7') return (value * (rates?.eur_usd || 1.01)) * 0.84;
+      if (id === 'mondo') return (value * (rates?.eur_usd || 1.01)) * 0.78;
       return value * (rates?.eur_usd || 1.01);
     }
-    if (p.currency === 'GBP') {
-      if (p.id === 'aw') return (value * (rates?.gbp_usd || 1.20)) * 0.677;
+    if (currency === 'GBP') {
+      if (id === 'aw') return (value * (rates?.gbp_usd || 1.20)) * 0.677;
       return value * (rates?.gbp_usd || 1.20);
     }
     // USD
-    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') return value * 0.75;
-    if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') return value * 0.05;
-    if (p.id === 'dxlive') return value * 0.60;
-    if (p.id === 'secretfriends') return value * 0.5;
+    if (id === 'cmd' || id === 'camlust' || id === 'skypvt') return value * 0.75;
+    if (id === 'chaturbate' || id === 'myfreecams' || id === 'stripchat') return value * 0.05;
+    if (id === 'dxlive') return value * 0.60;
+    if (id === 'secretfriends') return value * 0.5;
     return value;
   };
 
   const getModeloShare = (p: any, usdBase: number): number => {
-    if (p.id === 'superfoon') return usdBase; // 100% excepción
-    return usdBase * (p.percentage / 100);
+    const id = String(p.id || '').toLowerCase();
+    if (id === 'superfoon') return usdBase; // 100% excepción
+    const finalPct = (p.percentage ?? p.percentage_override ?? p.group_percentage ?? 80);
+    return usdBase * (finalPct / 100);
   };
 
   // 🔧 NUEVO: Función para calcular ganancias del día

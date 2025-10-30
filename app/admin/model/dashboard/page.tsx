@@ -161,9 +161,13 @@ export default function ModelDashboard() {
         const value = todayIdToValue[p.id] || 0;
         if (value <= 0) continue;
 
+        // Normalizaciones y fallbacks
+        const currency = p.currency || 'USD';
+        const finalPct = (p.percentage_override ?? p.group_percentage ?? p.percentage ?? 80) as number;
+
         // USD base por plataforma (igual que Mi Calculadora)
         let usdFromPlatform = 0;
-        if (p.currency === 'EUR') {
+        if (currency === 'EUR') {
           if (p.id === 'big7') {
             usdFromPlatform = (value * rates.eur_usd) * 0.84; // 16% impuesto
           } else if (p.id === 'mondo') {
@@ -171,13 +175,13 @@ export default function ModelDashboard() {
           } else {
             usdFromPlatform = value * rates.eur_usd; // EUR directo
           }
-        } else if (p.currency === 'GBP') {
+        } else if (currency === 'GBP') {
           if (p.id === 'aw') {
             usdFromPlatform = (value * rates.gbp_usd) * 0.677; // 32.3% descuento
           } else {
             usdFromPlatform = value * rates.gbp_usd; // GBP directo
           }
-        } else if (p.currency === 'USD') {
+        } else if (currency === 'USD') {
           if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
             usdFromPlatform = value * 0.75; // 25% descuento
           } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
@@ -194,7 +198,7 @@ export default function ModelDashboard() {
         }
         todayUsdBruto += usdFromPlatform;
         // Participación para modelo (superfoon 100%)
-        const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (p.percentage / 100));
+        const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (finalPct / 100));
         todayUsdModelo += share;
       }
 
@@ -205,9 +209,13 @@ export default function ModelDashboard() {
         const value = yesterdayIdToValue[p.id] || 0;
         if (value <= 0) continue;
 
+        // Normalizaciones y fallbacks
+        const currency = p.currency || 'USD';
+        const finalPct = (p.percentage_override ?? p.group_percentage ?? p.percentage ?? 80) as number;
+
         // USD base por plataforma
         let usdFromPlatform = 0;
-        if (p.currency === 'EUR') {
+        if (currency === 'EUR') {
           if (p.id === 'big7') {
             usdFromPlatform = (value * rates.eur_usd) * 0.84; // 16% impuesto
           } else if (p.id === 'mondo') {
@@ -215,13 +223,13 @@ export default function ModelDashboard() {
           } else {
             usdFromPlatform = value * rates.eur_usd; // EUR directo
           }
-        } else if (p.currency === 'GBP') {
+        } else if (currency === 'GBP') {
           if (p.id === 'aw') {
             usdFromPlatform = (value * rates.gbp_usd) * 0.677; // 32.3% descuento
           } else {
             usdFromPlatform = value * rates.gbp_usd; // GBP directo
           }
-        } else if (p.currency === 'USD') {
+        } else if (currency === 'USD') {
           if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
             usdFromPlatform = value * 0.75; // 25% descuento
           } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
@@ -237,7 +245,7 @@ export default function ModelDashboard() {
           }
         }
         yesterdayUsdBruto += usdFromPlatform;
-        const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (p.percentage / 100));
+        const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (finalPct / 100));
         yesterdayUsdModelo += share;
       }
 
