@@ -35,15 +35,15 @@ export const canRequestAnticipo = (): AnticipoRestriction => {
     year
   });
   
-  // Restricción 1: Del día de fin del mes anterior al 5 del mes siguiente
-  const lastDayOfPrevMonth = new Date(year, month, 0).getDate();
-  const isInFirstRestriction = day >= lastDayOfPrevMonth || day <= 5;
+  // Restricción 1 corregida: Último día del mes actual o del 1 al 5 del mes
+  const lastDayOfCurrentMonth = new Date(year, month + 1, 0).getDate();
+  const isInFirstRestriction = day === lastDayOfCurrentMonth || day <= 5;
   
   // Restricción 2: Del 15 al 20 de cada mes
   const isInSecondRestriction = day >= 15 && day <= 20;
   
   console.log('🔍 [ANTICIPO-RESTRICTIONS] Validaciones:', {
-    lastDayOfPrevMonth,
+    lastDayOfCurrentMonth,
     isInFirstRestriction,
     isInSecondRestriction
   });
@@ -61,7 +61,7 @@ export const canRequestAnticipo = (): AnticipoRestriction => {
     }
     
     const reason = isInFirstRestriction 
-      ? `No se pueden solicitar anticipos del ${lastDayOfPrevMonth} al 5 de cada mes`
+      ? `No se pueden solicitar anticipos del ${lastDayOfCurrentMonth} al 5 de cada mes`
       : 'No se pueden solicitar anticipos del 15 al 20 de cada mes';
     
     console.log('🚫 [ANTICIPO-RESTRICTIONS] Solicitud bloqueada:', {
