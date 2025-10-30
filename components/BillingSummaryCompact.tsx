@@ -277,11 +277,11 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
             </div>
             <div className="text-center p-2 rounded-lg bg-green-50/80">
               <div className="text-sm font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
-              <div className="text-xs text-gray-900 dark:text-gray-900">USD Modelo</div>
+              <div className="text-xs text-gray-900 dark:text-gray-900">USD Modelos</div>
             </div>
             <div className="text-center p-2 rounded-lg bg-orange-50/80">
               <div className="text-sm font-bold text-orange-600">${formatCurrency(summary.totalUsdSede)}</div>
-              <div className="text-xs text-gray-900 dark:text-gray-900">USD Sede</div>
+              <div className="text-xs text-gray-900 dark:text-gray-900">USD Agencia</div>
             </div>
           </div>
 
