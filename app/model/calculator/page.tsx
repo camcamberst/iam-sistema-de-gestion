@@ -114,6 +114,21 @@ export default function ModelCalculatorPage() {
     return value;
   };
 
+  const getFinalPercentage = (p: any): number => {
+    const parsePct = (val: any) => {
+      if (val === null || val === undefined) return NaN;
+      if (typeof val === 'number') return val;
+      const num = Number(String(val).replace(/[^0-9.\-]/g, ''));
+      return Number.isFinite(num) ? num : NaN;
+    };
+    const candidates = [p.percentage, p.percentage_override, p.group_percentage];
+    for (const c of candidates) {
+      const n = parsePct(c);
+      if (Number.isFinite(n)) return n;
+    }
+    return 80; // fallback sensato
+  };
+
   const getModeloShare = (p: any, usdBase: number): number => {
     const norm = (s: any) => String(s || '')
       .toLowerCase()
@@ -123,7 +138,7 @@ export default function ModelCalculatorPage() {
     const name = norm(p.name);
     const isSuperfoon = (id === 'superfoon') || (name === 'superfoon');
     if (isSuperfoon) return usdBase; // 100% excepción
-    const finalPct = (p.percentage ?? p.percentage_override ?? p.group_percentage ?? 80);
+    const finalPct = getFinalPercentage(p);
     return usdBase * (finalPct / 100);
   };
 
@@ -993,7 +1008,12 @@ export default function ModelCalculatorPage() {
                         <td className="py-3 px-3">
                           <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                            Reparto: {(() => {
+                              const pct = getFinalPercentage(platform);
+                              const norm = (s: any) => String(s || '').toLowerCase().replace(/[^a-z0-9]/g, '').trim();
+                              const isSuper = norm(platform.id) === 'superfoon' || norm(platform.name) === 'superfoon';
+                              return isSuper ? '100%' : `${pct}%`;
+                            })()}
                           </div>
                         </td>
                         <td className="py-3 px-3">
