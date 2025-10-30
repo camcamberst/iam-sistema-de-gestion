@@ -212,10 +212,6 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       .select('is_manager, groups(id, name)')
       .eq('user_id', user.id);
 
-    if (profileError || !profileData) {
-      return null;
-    }
-
     return {
       id: baseProfile.id,
       email: user.email!,
@@ -255,7 +251,6 @@ export function hasPermission(user: AuthUser, permission: string): boolean {
   if (user.role === 'modelo' && permission.startsWith('modelo.')) {
     return true;
   }
-
 
   return false;
 }
