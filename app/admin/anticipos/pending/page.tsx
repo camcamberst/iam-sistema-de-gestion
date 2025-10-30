@@ -155,8 +155,8 @@ export default function SolicitudesPendientesPage() {
       filtered = filtered.filter(anticipo => anticipo.estado === estadoFiltro);
     }
     
-    // Filtrar por grupo (super admin o admin con más de un grupo/sede)
-    if ((user?.role === 'super_admin' || (user?.role === 'admin' && availableGroups.length > 1)) && grupoFiltro !== 'todos') {
+    // Filtrar por grupo (super admin o admin)
+    if ((user?.role === 'super_admin' || user?.role === 'admin') && grupoFiltro !== 'todos') {
       filtered = filtered.filter(anticipo => 
         anticipo.model.groups?.some(group => group.id === grupoFiltro)
       );
@@ -315,8 +315,8 @@ export default function SolicitudesPendientesPage() {
         <div className="mb-6">
           <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Filtro por Grupo/Sede (super admin o admin con >1 grupo) */}
-            {(user?.role === 'super_admin' || (user?.role === 'admin' && availableGroups.length > 1)) && availableGroups.length > 0 && (
+            {/* Filtro por Grupo/Sede (super admin o admin) */}
+            {(user?.role === 'super_admin' || user?.role === 'admin') && availableGroups.length > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Filtrar por grupo o sede:</label>
                 <AppleDropdown
