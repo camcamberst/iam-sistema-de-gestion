@@ -233,27 +233,28 @@ export default function SolicitudesPendientesPage() {
     const medio = getMedioPagoInfo(anticipo).tipo;
     const monto = `$${(anticipo.monto_solicitado || 0).toLocaleString('es-CO')} COP`;
     const periodo = `${formatDateCO(anticipo.period?.start_date)} → ${formatDateCO(anticipo.period?.end_date)}`;
-    const titular = anticipo.nombre_titular || anticipo.nombre_beneficiario || '-';
-    const documento = anticipo.documento_titular || anticipo.cedula_titular || '-';
-    const banco = anticipo.banco || anticipo.banco_otro || '-';
-    const tipoCuenta = anticipo.tipo_cuenta || '-';
-    const numeroCuenta = anticipo.numero_cuenta || '-';
-    const telefono = anticipo.numero_telefono || '-';
-    const email = anticipo.model?.email || '-';
+    const titular = anticipo.nombre_titular || anticipo.nombre_beneficiario || '';
+    const documento = anticipo.documento_titular || anticipo.cedula_titular || '';
+    const banco = anticipo.banco || anticipo.banco_otro || '';
+    const tipoCuenta = anticipo.tipo_cuenta || '';
+    const numeroCuenta = anticipo.numero_cuenta || '';
+    const telefono = anticipo.numero_telefono || '';
+    const email = anticipo.model?.email || '';
 
-    return [
+    const lines: string[] = [
       `Anticipo de: ${anticipo.model?.name || ''}`,
       `Monto: ${monto}`,
       `Medio: ${medio}`,
       `Periodo: ${periodo}`,
-      `Titular: ${titular}`,
-      `Documento: ${documento}`,
-      `Banco: ${banco}`,
-      `Tipo de cuenta: ${tipoCuenta}`,
-      `Número de cuenta: ${numeroCuenta}`,
-      `Teléfono: ${telefono}`,
-      `Email: ${email}`
-    ].join('\n');
+    ];
+    if (titular) lines.push(`Titular: ${titular}`);
+    if (documento) lines.push(`Documento: ${documento}`);
+    if (banco) lines.push(`Banco: ${banco}`);
+    if (tipoCuenta) lines.push(`Tipo de cuenta: ${tipoCuenta}`);
+    if (numeroCuenta) lines.push(`Número de cuenta: ${numeroCuenta}`);
+    if (telefono) lines.push(`Teléfono: ${telefono}`);
+    if (email) lines.push(`Email: ${email}`);
+    return lines.join('\n');
   };
 
   if (loading) {
@@ -461,27 +462,41 @@ export default function SolicitudesPendientesPage() {
                             <div>
                               <span className="font-semibold">Periodo:</span> {formatDateCO(anticipo.period?.start_date)} → {formatDateCO(anticipo.period?.end_date)}
                             </div>
-                            <div>
-                              <span className="font-semibold">Titular:</span> {anticipo.nombre_titular || anticipo.nombre_beneficiario || '-'}
-                            </div>
-                            <div>
-                              <span className="font-semibold">Documento:</span> {anticipo.documento_titular || anticipo.cedula_titular || '-'}
-                            </div>
-                            <div>
-                              <span className="font-semibold">Banco:</span> {anticipo.banco || anticipo.banco_otro || '-'}
-                            </div>
-                            <div>
-                              <span className="font-semibold">Tipo de cuenta:</span> {anticipo.tipo_cuenta || '-'}
-                            </div>
-                            <div className="break-all">
-                              <span className="font-semibold">Número de cuenta:</span> {anticipo.numero_cuenta || '-'}
-                            </div>
-                            <div>
-                              <span className="font-semibold">Teléfono:</span> {anticipo.numero_telefono || '-'}
-                            </div>
-                            <div className="sm:col-span-2">
-                              <span className="font-semibold">Email modelo:</span> {anticipo.model?.email}
-                            </div>
+                            {(anticipo.nombre_titular || anticipo.nombre_beneficiario) && (
+                              <div>
+                                <span className="font-semibold">Titular:</span> {anticipo.nombre_titular || anticipo.nombre_beneficiario}
+                              </div>
+                            )}
+                            {(anticipo.documento_titular || anticipo.cedula_titular) && (
+                              <div>
+                                <span className="font-semibold">Documento:</span> {anticipo.documento_titular || anticipo.cedula_titular}
+                              </div>
+                            )}
+                            {(anticipo.banco || anticipo.banco_otro) && (
+                              <div>
+                                <span className="font-semibold">Banco:</span> {anticipo.banco || anticipo.banco_otro}
+                              </div>
+                            )}
+                            {anticipo.tipo_cuenta && (
+                              <div>
+                                <span className="font-semibold">Tipo de cuenta:</span> {anticipo.tipo_cuenta}
+                              </div>
+                            )}
+                            {anticipo.numero_cuenta && (
+                              <div className="break-all">
+                                <span className="font-semibold">Número de cuenta:</span> {anticipo.numero_cuenta}
+                              </div>
+                            )}
+                            {anticipo.numero_telefono && (
+                              <div>
+                                <span className="font-semibold">Teléfono:</span> {anticipo.numero_telefono}
+                              </div>
+                            )}
+                            {anticipo.model?.email && (
+                              <div className="sm:col-span-2">
+                                <span className="font-semibold">Email modelo:</span> {anticipo.model.email}
+                              </div>
+                            )}
                             <div className="sm:col-span-2 mt-1">
                               <button
                                 onClick={async () => {
