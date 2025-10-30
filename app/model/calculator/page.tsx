@@ -1121,7 +1121,7 @@ export default function ModelCalculatorPage() {
           {/* Totales principales - ESTILO UNIFICADO */}
           <InfoCardGrid
             cards={(() => {
-              const totalUsdModelo = totalUsdModeloState;
+              const totalUsdModelo = exactUsdFromTable;
               const totalCopModelo = totalUsdModelo * (rates?.usd_cop || 3900);
               return [
                 {
@@ -1148,7 +1148,7 @@ export default function ModelCalculatorPage() {
           {/* 90% de anticipo - estilo sutil */}
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              <strong>90% de anticipo disponible:</strong> ${(totalUsdModeloState * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+              <strong>90% de anticipo disponible:</strong> ${(exactUsdFromTable * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
             </div>
           </div>
           
