@@ -59,6 +59,7 @@ export default function ModelCalculatorPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculatorResult | null>(null);
+  const [totalUsdModeloState, setTotalUsdModeloState] = useState<number>(0);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
   const [valuesLoaded, setValuesLoaded] = useState(false);
@@ -306,11 +307,21 @@ export default function ModelCalculatorPage() {
       const timeoutId = setTimeout(async () => {
         console.log('🔍 [CALCULATOR] Recalculating due to input changes...');
         await calculateTodayEarnings(platforms, yesterdayValues, rates);
+        // Recalcular total USD Modelo único (estado fuente de verdad)
+        const t = getTotalsModeloUsd(platforms, rates);
+        setTotalUsdModeloState(t);
       }, 300);
       
       return () => clearTimeout(timeoutId);
     }
   }, [platforms.map(p => p.value).join(','), rates, yesterdayValues]);
+
+  // Fuente de verdad: total USD Modelo derivado
+  useEffect(() => {
+    if (!rates) return;
+    const t = getTotalsModeloUsd(platforms, rates);
+    setTotalUsdModeloState(t);
+  }, [platforms, rates]);
 
   // 🔍 DEBUG: Verificar configuración
   console.log('🔍 [CALCULATOR] System configuration:', {
@@ -1094,7 +1105,7 @@ export default function ModelCalculatorPage() {
           {/* Totales principales - ESTILO UNIFICADO */}
           <InfoCardGrid
             cards={(() => {
-              const totalUsdModelo = getTotalsModeloUsd(platforms, rates);
+              const totalUsdModelo = totalUsdModeloState;
               const totalCopModelo = totalUsdModelo * (rates?.usd_cop || 3900);
               return [
                 {
@@ -1121,7 +1132,7 @@ export default function ModelCalculatorPage() {
           {/* 90% de anticipo - estilo sutil */}
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              <strong>90% de anticipo disponible:</strong> ${(getTotalsModeloUsd(platforms, rates) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+              <strong>90% de anticipo disponible:</strong> ${(totalUsdModeloState * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
             </div>
           </div>
           
