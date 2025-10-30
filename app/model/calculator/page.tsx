@@ -115,8 +115,14 @@ export default function ModelCalculatorPage() {
   };
 
   const getModeloShare = (p: any, usdBase: number): number => {
-    const id = String(p.id || '').toLowerCase();
-    if (id === 'superfoon') return usdBase; // 100% excepción
+    const norm = (s: any) => String(s || '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, '')
+      .trim();
+    const id = norm(p.id);
+    const name = norm(p.name);
+    const isSuperfoon = (id === 'superfoon') || (name === 'superfoon');
+    if (isSuperfoon) return usdBase; // 100% excepción
     const finalPct = (p.percentage ?? p.percentage_override ?? p.group_percentage ?? 80);
     return usdBase * (finalPct / 100);
   };
