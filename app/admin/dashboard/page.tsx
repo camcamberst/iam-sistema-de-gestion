@@ -19,12 +19,6 @@ export default function AdminDashboard() {
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: Role; groups: string[] } | null>(null);
   // Resumen de productividad (modelo)
   const [summary, setSummary] = useState<{ usdBruto: number; usdModelo: number; copModelo: number; goalUsd: number; pct: number } | null>(null);
-  // Redirección controlada: anular dashboard genérico a favor de /admin/model/dashboard
-  useEffect(() => {
-    try {
-      router.replace('/admin/model/dashboard');
-    } catch {}
-  }, [router]);
 
   
 
