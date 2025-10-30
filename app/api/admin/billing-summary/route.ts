@@ -264,8 +264,8 @@ export async function GET(request: NextRequest) {
     });
 
     // 3.4. Obtener datos según el estado del período (igual que Mi Calculadora)
-    let historyData = null;
-    let totalsData = null;
+    let historyData: any[] = [];
+    let totalsData: any[] = [];
     
     if (isActivePeriod) {
       // Período activo: usar EXCLUSIVAMENTE calculator_totals dentro del rango exacto de quincena
