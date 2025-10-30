@@ -109,13 +109,33 @@ export default function ModelDashboard() {
     }
   }, [loading, productivityLoading, user]);
 
+  // Refrescar datos al volver a la pestaña/ventana o al volver desde otra ruta
+  useEffect(() => {
+    const handleFocus = () => {
+      if (user?.role === 'modelo') {
+        loadProductivityData(user.id);
+      }
+    };
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible' && user?.role === 'modelo') {
+        loadProductivityData(user.id);
+      }
+    };
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleVisibility);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
+  }, [user]);
+
   const loadProductivityData = async (userId: string) => {
     try {
       setProductivityLoading(true);
       console.log('🔍 [DASHBOARD] Loading productivity data for user:', userId);
 
       // 1) Tasas activas
-      const ratesRes = await fetch('/api/rates-v2?activeOnly=true');
+      const ratesRes = await fetch('/api/rates-v2?activeOnly=true', { cache: 'no-store' });
       const ratesJson = await ratesRes.json();
       const rates = {
         usd_cop: ratesJson?.data?.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
@@ -124,7 +144,7 @@ export default function ModelDashboard() {
       };
 
       // 2) Configuración de plataformas habilitadas
-      const cfgRes = await fetch(`/api/calculator/config-v2?userId=${userId}`);
+      const cfgRes = await fetch(`/api/calculator/config-v2?userId=${userId}`, { cache: 'no-store' });
       const cfg = await cfgRes.json();
       const enabled = (cfg?.config?.platforms || []).filter((p: any) => p.enabled);
 
@@ -137,7 +157,7 @@ export default function ModelDashboard() {
       const yesterdayDate = new Date(new Date(todayDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
       
       // Obtener valores de hoy
-      const todayValuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${todayDate}`);
+      const todayValuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${todayDate}`, { cache: 'no-store' });
       const todayValuesJson = await todayValuesRes.json();
       const todayRows: Array<{ platform_id: string; value: number }> = todayValuesJson?.data || [];
       const todayIdToValue: Record<string, number> = {};
@@ -146,7 +166,7 @@ export default function ModelDashboard() {
       });
 
       // Obtener valores de ayer
-      const yesterdayValuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${yesterdayDate}`);
+      const yesterdayValuesRes = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${yesterdayDate}`, { cache: 'no-store' });
       const yesterdayValuesJson = await yesterdayValuesRes.json();
       const yesterdayRows: Array<{ platform_id: string; value: number }> = yesterdayValuesJson?.data || [];
       const yesterdayIdToValue: Record<string, number> = {};
@@ -324,7 +344,8 @@ export default function ModelDashboard() {
           </div>
         </div>
 
-        {/* Resumen de productividad y progreso de meta */}
+        {/* Resumen de productividad y progreso de meta (solo para modelos) */}
+        {user.role === 'modelo' && (
         <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -489,6 +510,7 @@ export default function ModelDashboard() {
             </>
           )}
         </div>
+        )}
 
         {/* AI Dashboard */}
         <div className="mt-6">
