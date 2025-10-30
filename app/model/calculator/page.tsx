@@ -972,64 +972,10 @@ export default function ModelCalculatorPage() {
                 </thead>
                 <tbody>
                   {platforms.filter(p => p.enabled).map(platform => {
-                    // Calcular dólares y COP para esta plataforma usando fórmulas específicas
-                    const usdBruto = platform.value;
-                    
-                    // Aplicar fórmula específica según la plataforma
-                    console.log('🔍 [CALCULATOR] Calculating for platform:', {
-                      id: platform.id,
-                      name: platform.name,
-                      currency: platform.currency,
-                      value: platform.value,
-                      percentage: platform.percentage
-                    });
-                    
-                    let usdModelo = 0;
-                    if (platform.currency === 'EUR') {
-                      // EUR→USD→COP
-                      if (platform.id === 'big7') {
-                        usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.84; // 16% impuesto
-                      } else if (platform.id === 'mondo') {
-                        usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.78; // 22% descuento
-                      } else if (platform.id === 'superfoon') {
-                        usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR a USD directo
-                      } else if (platform.id === 'modelka' || platform.id === 'xmodels' || platform.id === '777' || platform.id === 'vx' || platform.id === 'livecreator' || platform.id === 'mow') {
-                        usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR directo
-                      } else {
-                        usdModelo = platform.value * (rates?.eur_usd || 1.01); // EUR directo por defecto
-                      }
-                    } else if (platform.currency === 'GBP') {
-                      // GBP→USD→COP
-                      if (platform.id === 'aw') {
-                        usdModelo = (platform.value * (rates?.gbp_usd || 1.20)) * 0.677; // 32.3% descuento
-                      } else {
-                        usdModelo = platform.value * (rates?.gbp_usd || 1.20); // GBP directo
-                      }
-                    } else if (platform.currency === 'USD') {
-                      // USD→USD→COP
-                      if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
-                        usdModelo = platform.value * 0.75; // 25% descuento
-                      } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
-                        usdModelo = platform.value * 0.05; // 100 tokens = 5 USD
-                      } else if (platform.id === 'dxlive') {
-                        usdModelo = platform.value * 0.60; // 100 pts = 60 USD
-                      } else if (platform.id === 'secretfriends') {
-                        usdModelo = platform.value * 0.5; // 50% descuento
-                      } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
-                        usdModelo = platform.value; // USD directo
-                      } else {
-                        usdModelo = platform.value; // USD directo por defecto
-                      }
-                    }
-                    
-                    // SUPERFOON: Aplicar 100% para la modelo (especial)
-                    let usdModeloFinal;
-                    if (platform.id === 'superfoon') {
-                      usdModeloFinal = usdModelo; // 100% directo, sin porcentaje
-                    } else {
-                      usdModeloFinal = (usdModelo * platform.percentage) / 100;
-                    }
-                    const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
+                    // Usar helpers unificados para evitar discrepancias con "Totales y Alertas"
+                    const usdBase = getUsdBaseFromPlatform(platform, platform.value, rates);
+                    const usdModeloFinal = getModeloShare(platform, usdBase);
+                    const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
                     
                     return (
                       <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600">
@@ -1077,7 +1023,7 @@ export default function ModelCalculatorPage() {
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                            ${usdModelo.toFixed(2)} USD
+                            ${usdModeloFinal.toFixed(2)} USD
                           </div>
                         </td>
                         <td className="py-3 px-3">
@@ -1149,44 +1095,9 @@ export default function ModelCalculatorPage() {
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
             <div className="text-sm text-gray-600 dark:text-gray-300">
               <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
-                // Calcular USD modelo usando fórmulas específicas + porcentaje
-                let usdModelo = 0;
-                if (p.currency === 'EUR') {
-                  if (p.id === 'big7') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                  } else if (p.id === 'mondo') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
-                  } else if (p.id === 'superfoon') {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01); // EUR a USD directo
-                  } else {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01);
-                  }
-                } else if (p.currency === 'GBP') {
-                  if (p.id === 'aw') {
-                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                  } else {
-                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
-                  }
-                } else if (p.currency === 'USD') {
-                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                    usdModelo = p.value * 0.75;
-                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                    usdModelo = p.value * 0.05;
-                  } else if (p.id === 'dxlive') {
-                    usdModelo = p.value * 0.60;
-                  } else if (p.id === 'secretfriends') {
-                    usdModelo = p.value * 0.5;
-                  } else {
-                    usdModelo = p.value;
-                  }
-                }
-                
-                // SUPERFOON: Aplicar 100% para la modelo (especial)
-                if (p.id === 'superfoon') {
-                  return sum + usdModelo; // 100% directo, sin porcentaje
-                }
-                
-                return sum + (usdModelo * p.percentage / 100);
+                const usdBase = getUsdBaseFromPlatform(p, p.value, rates);
+                const share = getModeloShare(p, usdBase);
+                return sum + share;
               }, 0) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
             </div>
           </div>
