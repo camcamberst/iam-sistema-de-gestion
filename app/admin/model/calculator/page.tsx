@@ -1043,7 +1043,7 @@ export default function ModelCalculatorPage() {
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                            ${usdModelo.toFixed(2)} USD
+                            ${usdModeloFinal.toFixed(2)} USD
                           </div>
                         </td>
                         <td className="py-3 px-3">
