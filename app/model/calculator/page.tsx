@@ -127,6 +127,17 @@ export default function ModelCalculatorPage() {
     return usdBase * (finalPct / 100);
   };
 
+  // Totalizador único para evitar discrepancias visuales
+  const getTotalsModeloUsd = (platformList: Platform[], currentRates: any): number => {
+    return platformList
+      .filter(p => p.enabled)
+      .reduce((sum, p) => {
+        const usdBase = getUsdBaseFromPlatform(p, p.value, currentRates);
+        const share = getModeloShare(p, usdBase);
+        return sum + share;
+      }, 0);
+  };
+
   // 🔧 NUEVO: Función para calcular ganancias del día
   const calculateTodayEarnings = async (platforms: Platform[], yesterdayValues: Record<string, number>, rates: any) => {
     // Calcular USD modelo de hoy
@@ -1062,31 +1073,27 @@ export default function ModelCalculatorPage() {
           
           {/* Totales principales - ESTILO UNIFICADO */}
           <InfoCardGrid
-            cards={[
-              {
-                value: `$${todayEarnings.toFixed(2)}`,
-                label: 'Ganancias Hoy',
-                color: 'blue'
-              },
-              {
-                value: `$${platforms.filter(p => p.enabled).reduce((sum, p) => {
-                  const usdBase = getUsdBaseFromPlatform(p, p.value, rates);
-                  const share = getModeloShare(p, usdBase);
-                  return sum + share;
-                }, 0).toFixed(2)}`,
-                label: 'USD Modelo',
-                color: 'green'
-              },
-              {
-                value: `$${(platforms.filter(p => p.enabled).reduce((sum, p) => {
-                  const usdBase = getUsdBaseFromPlatform(p, p.value, rates);
-                  const share = getModeloShare(p, usdBase);
-                  return sum + share;
-                }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                label: 'COP Modelo',
-                color: 'purple'
-              }
-            ]}
+            cards={(() => {
+              const totalUsdModelo = getTotalsModeloUsd(platforms, rates);
+              const totalCopModelo = totalUsdModelo * (rates?.usd_cop || 3900);
+              return [
+                {
+                  value: `$${todayEarnings.toFixed(2)}`,
+                  label: 'Ganancias Hoy',
+                  color: 'blue'
+                },
+                {
+                  value: `$${totalUsdModelo.toFixed(2)}`,
+                  label: 'USD Modelo',
+                  color: 'green'
+                },
+                {
+                  value: `$${totalCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                  label: 'COP Modelo',
+                  color: 'purple'
+                }
+              ];
+            })()}
             columns={3}
             className="mb-4"
           />
@@ -1094,11 +1101,7 @@ export default function ModelCalculatorPage() {
           {/* 90% de anticipo - estilo sutil */}
           <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
             <div className="text-sm text-gray-600 dark:text-gray-300">
-              <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
-                const usdBase = getUsdBaseFromPlatform(p, p.value, rates);
-                const share = getModeloShare(p, usdBase);
-                return sum + share;
-              }, 0) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+              <strong>90% de anticipo disponible:</strong> ${(getTotalsModeloUsd(platforms, rates) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
             </div>
           </div>
           
