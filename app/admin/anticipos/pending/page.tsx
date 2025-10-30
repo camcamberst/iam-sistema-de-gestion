@@ -135,7 +135,19 @@ export default function SolicitudesPendientesPage() {
         }));
         
         setAnticipos(processedAnticipos);
-        setAvailableGroups(Array.from(groupsSet.values()));
+        const groupsFromAnticipos = Array.from(groupsSet.values());
+        setAvailableGroups(groupsFromAnticipos);
+
+        // Fallback: si es super admin y no se detectaron grupos en anticipos, cargar todas las sedes
+        if ((userData?.role === 'super_admin') && groupsFromAnticipos.length === 0) {
+          const { data: allGroups, error: groupsError } = await supabase
+            .from('groups')
+            .select('id, name')
+            .order('name');
+          if (!groupsError && Array.isArray(allGroups) && allGroups.length > 0) {
+            setAvailableGroups(allGroups as Array<{id: string, name: string}>);
+          }
+        }
       } else {
         console.error('❌ [ADMIN] Error en respuesta:', data.error);
         setError(data.error || 'Error al cargar solicitudes');
