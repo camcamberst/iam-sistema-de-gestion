@@ -470,7 +470,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    // Actualizar datos vitales
+    // Actualizar datos vitales en tabla users
     console.log('🔍 [DEBUG] Actualizando usuario con:', { id, name, email, role, is_active });
     const { error: updateError } = await supabase
       .from('users')
@@ -491,7 +491,31 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    console.log('✅ [API] Usuario actualizado exitosamente:', id);
+    console.log('✅ [API] Usuario actualizado exitosamente (tabla users):', id);
+
+    // Sincronizar cambios sensibles con Supabase Auth (email/contraseña)
+    try {
+      // Solo si hay cambios proporcionados
+      if (email || password) {
+        const updates: { email?: string; password?: string } = {};
+        if (email) updates.email = email;
+        if (password && typeof password === 'string' && password.trim().length >= 6) {
+          updates.password = password.trim();
+        }
+        if (updates.email || updates.password) {
+          console.log('🔐 [API] Sincronizando con Supabase Auth:', { hasEmail: !!updates.email, hasPassword: !!updates.password });
+          const { error: authUpdateError } = await supabaseAuth.auth.admin.updateUserById(id, updates);
+          if (authUpdateError) {
+            console.error('❌ [API] Error sincronizando con Auth:', authUpdateError);
+            // No abortar: devolveremos success con warning
+          } else {
+            console.log('✅ [API] Auth actualizado para usuario:', id);
+          }
+        }
+      }
+    } catch (e) {
+      console.error('⚠️ [API] Excepción sincronizando con Auth (continuando):', e);
+    }
 
     // Actualizar contraseña si se proporcionó
     if (password && password.trim().length >= 6) {
