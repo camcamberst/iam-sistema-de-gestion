@@ -70,45 +70,35 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
 
     console.log('✅ [AUTH] Usuario autenticado en Supabase:', authData.user.id);
 
-    // 2. Obtener perfil completo del usuario
-    const { data: profileData, error: profileError } = await supabase
+    // 2. Obtener perfil del usuario (sin join para evitar 406 con .single())
+    const { data: baseProfile, error: baseError } = await supabase
       .from('users')
-      .select(`
-        id,
-        name,
-        email,
-        role,
-        is_active,
-        last_login,
-        organization_id,
-        user_groups!inner(
-          group_id,
-          is_manager,
-          groups!inner(
-            id,
-            name
-          )
-        )
-      `)
+      .select('id, name, email, role, is_active, last_login, organization_id')
       .eq('id', authData.user.id)
       .single();
 
-    if (profileError) {
-      console.error('❌ [AUTH] Error obteniendo perfil:', profileError.message);
+    if (baseError) {
+      console.error('❌ [AUTH] Error obteniendo perfil base:', baseError.message);
       return {
         success: false,
         error: 'Error obteniendo perfil de usuario'
       };
     }
 
-    if (!profileData) {
+    // 2.1. Obtener grupos del usuario por separado
+    const { data: groupsData, error: groupsError } = await supabase
+      .from('user_groups')
+      .select('is_manager, groups(id, name)')
+      .eq('user_id', authData.user.id);
+
+    if (!baseProfile) {
       return {
         success: false,
         error: 'Perfil de usuario no encontrado'
       };
     }
 
-    if (!profileData.is_active) {
+    if (!baseProfile.is_active) {
       return {
         success: false,
         error: 'Usuario inactivo'
@@ -123,18 +113,18 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
 
     // 4. Formatear respuesta
     const user: AuthUser = {
-      id: profileData.id,
+      id: baseProfile.id,
       email: authData.user.email!,
-      name: profileData.name,
-      role: profileData.role,
-      organization_id: profileData.organization_id,
-      groups: profileData.user_groups.map((ug: any) => ({
-        id: ug.groups.id,
-        name: ug.groups.name,
+      name: baseProfile.name,
+      role: baseProfile.role,
+      organization_id: baseProfile.organization_id,
+      groups: (groupsData || []).map((ug: any) => ({
+        id: ug.groups?.id,
+        name: ug.groups?.name,
         is_manager: ug.is_manager
       })),
-      is_active: profileData.is_active,
-      last_login: profileData.last_login
+      is_active: baseProfile.is_active,
+      last_login: baseProfile.last_login
     };
 
     console.log('✅ [AUTH] Login exitoso:', {
@@ -207,45 +197,38 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       return null;
     }
 
-    const { data: profileData, error: profileError } = await supabase
+    const { data: baseProfile, error: baseError } = await supabase
       .from('users')
-      .select(`
-        id,
-        name,
-        email,
-        role,
-        is_active,
-        last_login,
-        organization_id,
-        user_groups!inner(
-          group_id,
-          is_manager,
-          groups!inner(
-            id,
-            name
-          )
-        )
-      `)
+      .select('id, name, email, role, is_active, last_login, organization_id')
       .eq('id', user.id)
       .single();
+
+    if (baseError || !baseProfile) {
+      return null;
+    }
+
+    const { data: groupsData } = await supabase
+      .from('user_groups')
+      .select('is_manager, groups(id, name)')
+      .eq('user_id', user.id);
 
     if (profileError || !profileData) {
       return null;
     }
 
     return {
-      id: profileData.id,
+      id: baseProfile.id,
       email: user.email!,
-      name: profileData.name,
-      role: profileData.role,
-      organization_id: profileData.organization_id,
-      groups: profileData.user_groups.map((ug: any) => ({
-        id: ug.groups.id,
-        name: ug.groups.name,
+      name: baseProfile.name,
+      role: baseProfile.role,
+      organization_id: baseProfile.organization_id,
+      groups: (groupsData || []).map((ug: any) => ({
+        id: ug.groups?.id,
+        name: ug.groups?.name,
         is_manager: ug.is_manager
       })),
-      is_active: profileData.is_active,
-      last_login: profileData.last_login
+      is_active: baseProfile.is_active,
+      last_login: baseProfile.last_login
     };
 
   } catch (error) {
