@@ -188,13 +188,15 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   // Auto-scroll al final para continuidad de conversación
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+  const userScrollingRef = useRef<boolean>(false);
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Verificar si el usuario está cerca del final del scroll (dentro de 100px del final)
+  // Verificar si el usuario está cerca del final del scroll (dentro de 50px del final)
   const isNearBottom = (): boolean => {
     try {
       if (!messagesContainerRef.current) return true;
       const container = messagesContainerRef.current;
-      const threshold = 100; // px desde el final
+      const threshold = 50; // px desde el final (más estricto)
       const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
       return distanceFromBottom <= threshold;
     } catch {
@@ -204,6 +206,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   const scrollToBottom = (smooth = true, force = false) => {
     try {
+      // Si el usuario está scrolleando manualmente, no hacer auto-scroll
+      if (userScrollingRef.current && !force) {
+        return;
+      }
+      
       // Solo hacer scroll si el usuario ya está cerca del final o si se fuerza
       if (!force && !isNearBottom()) {
         return; // Usuario está leyendo arriba, no hacer scroll
@@ -217,9 +224,35 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     } catch {}
   };
 
+  // Detectar scroll manual del usuario
+  const handleScroll = () => {
+    if (!messagesContainerRef.current) return;
+    
+    // Limpiar timeout anterior
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    // Si el usuario está cerca del final, permitir auto-scroll inmediatamente
+    if (isNearBottom()) {
+      userScrollingRef.current = false;
+    } else {
+      // Si está scrolleando hacia arriba, marcar como scroll manual
+      userScrollingRef.current = true;
+      
+      // Después de 1.5 segundos sin scroll, verificar si volvió al final
+      scrollTimeoutRef.current = setTimeout(() => {
+        if (isNearBottom()) {
+          userScrollingRef.current = false;
+        }
+      }, 1500);
+    }
+  };
+
   useEffect(() => {
     if (view === 'chat') {
-      // Forzar scroll al cambiar de conversación
+      // Forzar scroll al cambiar de conversación - resetear estado de scroll manual
+      userScrollingRef.current = false;
       scrollToBottom(false, true);
     }
   }, [view, selectedConversation]);
@@ -229,10 +262,22 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     if (view === 'chat' && messages.length > 0) {
       // Pequeño delay para que el DOM se actualice
       setTimeout(() => {
-        scrollToBottom(true, false);
+        // Si es un mensaje nuevo y el usuario no está scrolleando manualmente, hacer scroll
+        if (!userScrollingRef.current || isNearBottom()) {
+          scrollToBottom(true, false);
+        }
       }, 100);
     }
   }, [messages.length]);
+
+  // Limpiar timeout al desmontar
+  useEffect(() => {
+    return () => {
+      if (scrollTimeoutRef.current) {
+        clearTimeout(scrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Cerrar búsqueda cuando cambia la conversación
   useEffect(() => {
@@ -580,7 +625,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         {view === 'chat' && selectedConversation && (
           <>
             {/* Mensajes */}
-            <div ref={messagesContainerRef} className="flex-1 px-1 py-4 overflow-y-auto custom-scrollbar min-h-0">
+            <div 
+              ref={messagesContainerRef} 
+              className="flex-1 px-1 py-4 overflow-y-auto custom-scrollbar min-h-0"
+              onScroll={handleScroll}
+            >
               {/* Mostrar contador de resultados si hay búsqueda activa */}
               {searchTerm && (
                 <div className="mb-2 text-center">
