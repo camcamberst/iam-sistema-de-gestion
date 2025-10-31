@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 
 export const dynamic = 'force-dynamic';
 
@@ -203,6 +204,11 @@ async function validateConversationPermission(
 
   if (!sender || !receiver) {
     return { allowed: false, reason: 'Usuario no encontrado' };
+  }
+
+  // ⛳ Override: Siempre permitir conversaciones con AIM Botty
+  if (receiver.id === AIM_BOTTY_ID) {
+    return { allowed: true };
   }
 
   // Super admin puede iniciar conversación con cualquiera
