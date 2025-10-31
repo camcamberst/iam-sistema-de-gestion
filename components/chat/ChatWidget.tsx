@@ -417,6 +417,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           return hasChanges ? newMessages : prev;
         });
         setSelectedConversation(conversationId);
+
+        // Marcar vistos en servidor (double check persistente)
+        try {
+          if (session) {
+            await fetch('/api/chat/messages/read', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${session.access_token}`
+              },
+              body: JSON.stringify({ conversation_id: conversationId })
+            });
+          }
+        } catch (e) {
+          console.error('❌ [ChatWidget] Error marcando vistos en servidor:', e);
+        }
       } else {
         console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
         
