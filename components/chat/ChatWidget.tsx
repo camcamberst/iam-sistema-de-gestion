@@ -60,6 +60,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [session, setSession] = useState<any>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const autoOpenedBottyRef = useRef<string | null>(null);
+  // Parpadeo del título del navegador
+  const originalTitleRef = useRef<string>(typeof document !== 'undefined' ? document.title : 'AIM');
+  const titleBlinkIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // 🔧 NUEVO: Estado para visibilidad del botón (sin cambiar posición)
   const [isScrolling, setIsScrolling] = useState(false);
@@ -133,6 +136,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     return () => {
       window.removeEventListener('scroll', handleScroll);
       clearTimeout(scrollTimeout);
+    };
+  }, []);
+
+  // Detener parpadeo cuando la pestaña recupera el foco
+  useEffect(() => {
+    const onVisibility = () => {
+      if (!document.hidden) {
+        // Restaurar título si volvemos a la pestaña
+        try {
+          if (titleBlinkIntervalRef.current) {
+            clearInterval(titleBlinkIntervalRef.current);
+            titleBlinkIntervalRef.current = null;
+          }
+          if (originalTitleRef.current) {
+            document.title = originalTitleRef.current;
+          }
+        } catch (e) {
+          console.error('❌ [ChatWidget] Error restaurando título al volver al foco:', e);
+        }
+      }
+    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', onVisibility);
+    }
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', onVisibility);
+      }
     };
   }, []);
 
@@ -809,6 +840,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Actualizar timestamp
     setLastNotificationTime(Date.now());
     setNotificationTriggered(true);
+    // Iniciar parpadeo de título del navegador si la ventana está en background
+    try {
+      if (typeof document !== 'undefined' && document.hidden) {
+        if (!titleBlinkIntervalRef.current) {
+          // Etiqueta breve
+          let toggle = false;
+          originalTitleRef.current = document.title;
+          titleBlinkIntervalRef.current = setInterval(() => {
+            document.title = toggle ? originalTitleRef.current : '🔔 Nuevo mensaje - AIM';
+            toggle = !toggle;
+          }, 800);
+        }
+      }
+    } catch (e) {
+      console.error('❌ [ChatWidget] Error iniciando parpadeo de título:', e);
+    }
     
     // Sonido desactivado temporalmente
     // console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
@@ -1103,6 +1150,18 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       setIsBlinking(false);
       setNotificationTriggered(false);
       console.log('🔔 [ChatWidget] Chat abierto - Desactivando todas las notificaciones');
+      // Detener parpadeo de título
+      try {
+        if (titleBlinkIntervalRef.current) {
+          clearInterval(titleBlinkIntervalRef.current);
+          titleBlinkIntervalRef.current = null;
+        }
+        if (originalTitleRef.current && typeof document !== 'undefined') {
+          document.title = originalTitleRef.current;
+        }
+      } catch (e) {
+        console.error('❌ [ChatWidget] Error deteniendo parpadeo de título:', e);
+      }
     } else {
       // Limpiar usuario temporal al cerrar
       setTempChatUser(null);
