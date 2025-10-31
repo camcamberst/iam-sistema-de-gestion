@@ -216,12 +216,28 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         return; // Usuario está leyendo arriba, no hacer scroll
       }
       
+      const container = messagesContainerRef.current;
+      if (!container) return;
+      
+      // Método 1: Intentar con scrollIntoView del elemento final
       if (messagesEndRef.current) {
-        messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
-      } else if (messagesContainerRef.current) {
+        messagesEndRef.current.scrollIntoView({ 
+          behavior: smooth ? 'smooth' : 'auto', 
+          block: 'end',
+          inline: 'nearest'
+        });
+      } 
+      
+      // Método 2: Fallback - scroll directo del contenedor (más confiable)
+      // Usar esto también para asegurar que funcione
+      container.scrollTop = container.scrollHeight;
+    } catch (error) {
+      console.error('Error en scrollToBottom:', error);
+      // Último recurso: intentar scroll directo
+      if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
       }
-    } catch {}
+    }
   };
 
   // Detectar scroll manual del usuario
@@ -249,24 +265,60 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     }
   };
 
+  // Scroll al cambiar de conversación - esperar a que los mensajes estén cargados
   useEffect(() => {
-    if (view === 'chat') {
-      // Forzar scroll al cambiar de conversación - resetear estado de scroll manual
+    if (view === 'chat' && selectedConversation) {
+      // Resetear estado de scroll manual y contador de mensajes
       userScrollingRef.current = false;
-      scrollToBottom(false, true);
+      previousMessagesLengthRef.current = 0;
+      
+      // Si ya hay mensajes, hacer scroll inmediatamente
+      if (messages.length > 0) {
+        // Usar requestAnimationFrame + timeout para asegurar renderizado completo
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            scrollToBottom(false, true);
+          }, 100);
+        });
+      }
     }
   }, [view, selectedConversation]);
+
+  // Track del último número de mensajes para detectar nuevos vs carga inicial
+  const previousMessagesLengthRef = useRef<number>(0);
+
+  // Scroll cuando se cargan mensajes iniciales (después de cambiar conversación)
+  useEffect(() => {
+    if (view === 'chat' && selectedConversation && messages.length > 0) {
+      const isInitialLoad = previousMessagesLengthRef.current === 0;
+      previousMessagesLengthRef.current = messages.length;
+      
+      // Usar requestAnimationFrame para asegurar que el DOM esté listo
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          // Forzar scroll al cargar mensajes iniciales
+          scrollToBottom(false, true);
+        }, 150);
+      });
+    }
+  }, [messages.length, selectedConversation]);
 
   // Scroll inteligente cuando llegan nuevos mensajes (solo si el usuario está cerca del final)
   useEffect(() => {
     if (view === 'chat' && messages.length > 0) {
-      // Pequeño delay para que el DOM se actualice
-      setTimeout(() => {
-        // Si es un mensaje nuevo y el usuario no está scrolleando manualmente, hacer scroll
-        if (!userScrollingRef.current || isNearBottom()) {
-          scrollToBottom(true, false);
-        }
-      }, 100);
+      const previousLength = previousMessagesLengthRef.current;
+      
+      // Solo hacer scroll si hay nuevos mensajes (no en carga inicial)
+      if (messages.length > previousLength && previousLength > 0) {
+        setTimeout(() => {
+          // Si es un mensaje nuevo y el usuario no está scrolleando manualmente, hacer scroll
+          if (!userScrollingRef.current || isNearBottom()) {
+            scrollToBottom(true, false);
+          }
+        }, 100);
+      }
+      
+      previousMessagesLengthRef.current = messages.length;
     }
   }, [messages.length]);
 
