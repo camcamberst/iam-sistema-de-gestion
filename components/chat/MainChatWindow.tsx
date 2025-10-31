@@ -30,6 +30,8 @@ interface MainChatWindowProps {
   deleteConversation?: (id: string) => void;
   tempChatUser?: any;
   getDisplayName?: (user: any) => string;
+  conversationsTabBlinking?: boolean;
+  onViewConversations?: () => void;
 }
 
 const MainChatWindow: React.FC<MainChatWindowProps> = ({
