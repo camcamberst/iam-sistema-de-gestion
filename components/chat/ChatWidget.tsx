@@ -5,6 +5,7 @@ import { supabase } from '@/lib/supabase';
 import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 import IndividualChatWindow from './IndividualChatWindow';
 import ChatBar from './ChatBar';
+import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
 
 interface ChatWidgetProps {
   userId?: string;
@@ -75,6 +76,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Función helper para obtener el nombre de visualización
   const getDisplayName = (user: User) => {
+    // Verificar si es AIM Botty
+    if (user.id === AIM_BOTTY_ID || user.email === AIM_BOTTY_EMAIL) {
+      return AIM_BOTTY_NAME;
+    }
     if (user.role === 'modelo') {
       // Para modelos, mostrar solo la parte antes del @ del email
       return user.email.split('@')[0];

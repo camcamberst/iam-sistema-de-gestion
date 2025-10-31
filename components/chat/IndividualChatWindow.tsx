@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
+import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
 
 interface IndividualChatWindowProps {
   conversationId: string;
@@ -179,6 +180,10 @@ export default function IndividualChatWindow({
 
   // Función para obtener nombre de usuario
   const getDisplayName = (user: any) => {
+    // Verificar si es AIM Botty
+    if (user.id === AIM_BOTTY_ID || user.email === AIM_BOTTY_EMAIL) {
+      return AIM_BOTTY_NAME;
+    }
     if (user.role === 'modelo') {
       // Para modelos, mostrar solo la parte antes del @ del email
       return user.email.split('@')[0];
@@ -468,9 +473,12 @@ export default function IndividualChatWindow({
               <h3 className="text-white font-semibold text-sm truncate">
                 {getDisplayName(otherUser)}
               </h3>
-              <p className="text-gray-400 text-xs truncate">
-                {otherUser.role}
-              </p>
+              {/* No mostrar rol si es el bot */}
+              {otherUser.id !== AIM_BOTTY_ID && otherUser.email !== AIM_BOTTY_EMAIL && (
+                <p className="text-gray-400 text-xs truncate">
+                  {otherUser.role}
+                </p>
+              )}
             </div>
           </div>
         )}
