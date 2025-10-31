@@ -71,6 +71,19 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   // Estado para búsqueda en conversación
   const [searchTerm, setSearchTerm] = useState('');
   const [showSearchInput, setShowSearchInput] = useState(false);
+  
+  // Estado para emoji picker
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Emojis más comunes organizados por categorías
+  const emojiCategories = {
+    smileys: ['😀', '😃', '😄', '😁', '😆', '😅', '🤣', '😂', '🙂', '🙃', '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙'],
+    gestures: ['👋', '🤚', '🖐', '✋', '🖖', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙', '👈', '👉', '👆', '🖕', '👇', '☝️', '👍'],
+    hearts: ['❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔', '❤️‍🔥', '❤️‍🩹', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟'],
+    objects: ['🎉', '🎊', '✨', '⭐', '🌟', '💫', '🔥', '💯', '✅', '❌', '⚠️', '💡', '🎯', '🚀', '💎', '🏆', '🥇', '🎖️', '🏅', '🎗️'],
+    symbols: ['👍', '👎', '👏', '🙌', '👐', '🤲', '🤝', '🙏', '✍️', '💪', '🦾', '🦿', '🦵', '🦶', '👂', '🦻', '👃', '🧠', '🫀', '🫁']
+  };
 
   // Posición calculada respecto al botón (a la izquierda del botón)
   // Solo mostrar conversaciones con actividad (mensajes entrantes o iniciadas)
@@ -226,6 +239,58 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     setSearchTerm('');
     setShowSearchInput(false);
   }, [selectedConversation]);
+  
+  // Auto-resize textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`; // Max 120px
+    }
+  }, [newMessage]);
+  
+  // Cerrar emoji picker al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showEmojiPicker && !target.closest('.emoji-picker-container') && !target.closest('.emoji-button')) {
+        setShowEmojiPicker(false);
+      }
+    };
+    
+    if (showEmojiPicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [showEmojiPicker]);
+  
+  // Función para manejar teclas en textarea (Shift+Enter para nueva línea, Enter para enviar)
+  const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (newMessage?.trim() && sendMessage) {
+        sendMessage();
+      }
+    }
+    // Shift+Enter permite nueva línea (comportamiento por defecto del textarea)
+  };
+  
+  // Función para insertar emoji
+  const insertEmoji = (emoji: string) => {
+    if (setNewMessage && textareaRef.current) {
+      const textarea = textareaRef.current;
+      const start = textarea.selectionStart;
+      const end = textarea.selectionEnd;
+      const text = newMessage || '';
+      const newText = text.substring(0, start) + emoji + text.substring(end);
+      setNewMessage(newText);
+      
+      // Restaurar cursor después del emoji
+      setTimeout(() => {
+        textarea.focus();
+        textarea.setSelectionRange(start + emoji.length, start + emoji.length);
+      }, 0);
+    }
+  };
 
   return (
     <div
@@ -720,30 +785,103 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input de mensaje */}
-            <div className="p-4 border-t border-gray-700 flex-shrink-0">
-              <div className="flex space-x-2">
-                <input
-                  type="text"
+            {/* Input de mensaje con textarea y emoji picker */}
+            <div className="p-4 border-t border-gray-700 flex-shrink-0 bg-gray-800">
+              {/* Emoji picker (se muestra arriba del input) */}
+              {showEmojiPicker && (
+                <div className="emoji-picker-container mb-3 bg-gray-900/95 backdrop-blur-sm border border-gray-600/50 rounded-xl shadow-2xl p-3">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="text-xs font-semibold text-gray-300">Emojis</h4>
+                    <button
+                      onClick={() => setShowEmojiPicker(false)}
+                      className="text-gray-400 hover:text-white transition-colors"
+                      aria-label="Cerrar emojis"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="space-y-3 max-h-[200px] overflow-y-auto custom-scrollbar">
+                    {Object.entries(emojiCategories).map(([category, emojis]) => (
+                      <div key={category} className="space-y-1">
+                        <p className="text-[10px] text-gray-500 uppercase tracking-wider px-1">
+                          {category === 'smileys' ? 'Caras' : 
+                           category === 'gestures' ? 'Gestos' :
+                           category === 'hearts' ? 'Corazones' :
+                           category === 'objects' ? 'Objetos' : 'Símbolos'}
+                        </p>
+                        <div className="grid grid-cols-10 gap-1">
+                          {emojis.map((emoji, index) => (
+                            <button
+                              key={`${category}-${index}`}
+                              onClick={() => {
+                                insertEmoji(emoji);
+                                setShowEmojiPicker(false);
+                              }}
+                              className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-700/50 transition-colors duration-200 text-lg hover:scale-110"
+                              title={emoji}
+                              aria-label={`Insertar emoji ${emoji}`}
+                            >
+                              {emoji}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              <div className="flex space-x-2 items-end">
+                {/* Botón emoji */}
+                <button
+                  type="button"
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  className="emoji-button flex-shrink-0 p-2.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600/50 hover:border-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  title="Emojis"
+                  aria-label="Abrir selector de emojis"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                </button>
+                
+                {/* Textarea con auto-resize */}
+                <textarea
+                  ref={textareaRef}
                   value={newMessage}
                   onChange={(e) => setNewMessage?.(e.target.value)}
-                  onKeyPress={handleKeyPress}
+                  onKeyDown={handleTextareaKeyDown}
                   placeholder={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}...` : 'Escribe tu mensaje...'}
-                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none min-h-[42px] max-h-[120px] text-sm leading-relaxed"
                   aria-label={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}` : 'Escribe tu mensaje'}
                   aria-required="false"
+                  rows={1}
+                  style={{ 
+                    overflowY: 'auto',
+                    scrollbarWidth: 'thin',
+                    scrollbarColor: '#4B5563 #374151'
+                  }}
                 />
+                
+                {/* Botón enviar */}
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
-                  title="Enviar mensaje"
+                  className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-md hover:shadow-lg"
+                  title="Enviar mensaje (Enter)"
+                  aria-label="Enviar mensaje"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                   </svg>
                 </button>
               </div>
+              {/* Hint para Shift+Enter */}
+              <p className="text-[10px] text-gray-500 mt-1.5 px-1">
+                <span className="text-gray-400">Enter</span> para enviar · <span className="text-gray-400">Shift + Enter</span> para nueva línea
+              </p>
             </div>
           </>
         )}
