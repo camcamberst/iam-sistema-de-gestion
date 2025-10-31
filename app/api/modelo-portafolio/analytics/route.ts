@@ -202,7 +202,7 @@ export async function POST(request: NextRequest) {
 // Función para generar análisis con Google Gemini
 async function generateAIAnalysis(data: any) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     const prompt = `
 Eres un asistente especializado en análisis de rendimiento para modelos de webcam. 

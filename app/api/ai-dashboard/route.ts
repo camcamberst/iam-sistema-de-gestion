@@ -151,7 +151,7 @@ async function getUserProductivityData(userId: string) {
 
 async function generateAIInsights(userData: any) {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     
     // Procesar datos para el análisis
     const todayEarnings = userData.todayEarnings; // Ya es la diferencia calculada

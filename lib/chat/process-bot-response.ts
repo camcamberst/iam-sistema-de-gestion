@@ -154,7 +154,7 @@ async function generateBotResponse(
     }
 
     console.log('🤖 [BOTTY-GEN] Obteniendo modelo...');
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
     
     console.log('🤖 [BOTTY-GEN] Obteniendo personalidad...');
     const personality = getBotPersonalityForRole(userContext.role);
