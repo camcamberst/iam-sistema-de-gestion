@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 
@@ -67,6 +67,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   const buttonSize = 40; // h-10 del botón flotante
   const buttonMargin = 24; // bottom-6 / right-6
   const gap = 28; // separación visual entre botón y ventana (más a la izquierda)
+  
+  // Estado para búsqueda en conversación
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchInput, setShowSearchInput] = useState(false);
 
   // Posición calculada respecto al botón (a la izquierda del botón)
   // Solo mostrar conversaciones con actividad (mensajes entrantes o iniciadas)
@@ -217,6 +221,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     }
   }, [messages.length]);
 
+  // Cerrar búsqueda cuando cambia la conversación
+  useEffect(() => {
+    setSearchTerm('');
+    setShowSearchInput(false);
+  }, [selectedConversation]);
+
   return (
     <div
       className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
@@ -232,15 +242,15 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg cursor-default">
-        <div className="flex items-center space-x-3 min-w-0">
+        <div className="flex items-center space-x-3 min-w-0 flex-1">
           {activeUser ? (
             <>
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                 <span className="text-white font-bold text-xs tracking-wider">
                   {getDisplayName?.(activeUser)?.charAt(0).toUpperCase()}
                 </span>
               </div>
-              <div className="min-w-0">
+              <div className="min-w-0 flex-1">
                 <p className="text-white text-sm font-semibold truncate" title={getDisplayName?.(activeUser)}>
                   {getDisplayName?.(activeUser)}
                 </p>
@@ -251,17 +261,57 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
             </>
           ) : (
             <>
-              <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30">
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 flex-shrink-0">
                 <span className="text-white dark:text-gray-900 font-bold text-xs tracking-wider">AIM</span>
               </div>
-              <div>
+              <div className="flex-1">
                 <p className="text-white text-sm font-semibold">AIM Assistant</p>
                 <p className="text-gray-400 text-xs">Soporte y tips</p>
               </div>
             </>
           )}
         </div>
-        <button onClick={onClose} className="text-gray-400 hover:text-white">
+        {view === 'chat' && (
+          <>
+            {showSearchInput ? (
+              <div className="flex items-center space-x-2 flex-1 ml-4">
+                <input
+                  type="text"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder="Buscar en conversación..."
+                  className="flex-1 px-2 py-1.5 text-sm rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  autoFocus
+                  aria-label="Buscar mensajes"
+                />
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setShowSearchInput(false);
+                  }}
+                  className="text-gray-400 hover:text-white transition-colors"
+                  aria-label="Cerrar búsqueda"
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowSearchInput(true)}
+                className="text-gray-400 hover:text-white transition-colors ml-2"
+                aria-label="Buscar en conversación"
+                title="Buscar en conversación"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
+            )}
+          </>
+        )}
+        <button onClick={onClose} className="text-gray-400 hover:text-white ml-2">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
@@ -455,9 +505,26 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           <>
             {/* Mensajes */}
             <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0">
-              {messages.map((message, index) => {
-                const prevMessage = index > 0 ? messages[index - 1] : null;
-                const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+              {/* Mostrar contador de resultados si hay búsqueda activa */}
+              {searchTerm && (
+                <div className="mb-2 text-center">
+                  <p className="text-xs text-gray-400">
+                    {messages.filter((m: any) => 
+                      m.content?.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).length} resultado{messages.filter((m: any) => 
+                      m.content?.toLowerCase().includes(searchTerm.toLowerCase())
+                    ).length !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              )}
+              {(searchTerm 
+                ? messages.filter((m: any) => 
+                    m.content?.toLowerCase().includes(searchTerm.toLowerCase())
+                  )
+                : messages
+              ).map((message, index, filteredMessages) => {
+                const prevMessage = index > 0 ? filteredMessages[index - 1] : null;
+                const nextMessage = index < filteredMessages.length - 1 ? filteredMessages[index + 1] : null;
                 const showDateSeparator = !prevMessage || isDifferentDay(prevMessage.created_at, message.created_at);
                 const isGrouped = prevMessage && shouldGroupMessages(prevMessage, message);
                 const isLastInGroup = !nextMessage || !shouldGroupMessages(message, nextMessage) || isDifferentDay(message.created_at, nextMessage.created_at);
@@ -503,21 +570,50 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         role="article"
                         aria-label={`Mensaje de ${message.sender_id === userId ? 'ti' : getDisplayName(senderInfo || {})} enviado ${formatMessageTime(message.created_at)}`}
                       >
-                        {/* Botón copiar (solo visible al hover) */}
-                        <button
-                          onClick={() => {
-                            navigator.clipboard.writeText(message.content);
-                            // Feedback visual opcional (podríamos agregar un toast)
-                          }}
-                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-black/20 text-gray-300 hover:text-white"
-                          title="Copiar mensaje"
-                          aria-label="Copiar mensaje"
-                        >
-                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                          </svg>
-                        </button>
-                        <p className="text-sm pr-6">{message.content}</p>
+                        {/* Menú contextual (solo visible al hover) */}
+                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                          <button
+                            onClick={() => {
+                              navigator.clipboard.writeText(message.content);
+                              // Feedback visual opcional (podríamos agregar un toast)
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
+                            title="Copiar mensaje"
+                            aria-label="Copiar mensaje"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                            </svg>
+                          </button>
+                          <button
+                            onClick={() => {
+                              // TODO: Implementar funcionalidad de responder
+                              // Por ahora solo placeholder visual
+                            }}
+                            className="p-1.5 rounded-lg hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
+                            title="Responder mensaje"
+                            aria-label="Responder mensaje"
+                          >
+                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                            </svg>
+                          </button>
+                        </div>
+                        <p className="text-sm pr-12">
+                          {searchTerm ? (
+                            message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
+                              part.toLowerCase() === searchTerm.toLowerCase() ? (
+                                <mark key={i} className="bg-yellow-500/30 text-yellow-200 rounded px-0.5">
+                                  {part}
+                                </mark>
+                              ) : (
+                                part
+                              )
+                            )
+                          ) : (
+                            message.content
+                          )}
+                        </p>
                         {/* Solo mostrar timestamp y estado en el último mensaje del grupo */}
                         {isLastInGroup && (
                           <div className="flex items-center justify-end gap-1 mt-1">
