@@ -66,6 +66,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   
   // 🔧 NUEVO: Estado para visibilidad del botón (sin cambiar posición)
   const [isScrolling, setIsScrolling] = useState(false);
+  // 🔧 NUEVO: Posición vertical dinámica del botón según la scrollbar
+  const [assistantButtonTop, setAssistantButtonTop] = useState<number>(() => {
+    if (typeof window === 'undefined') return 96; // valor por defecto SSR
+    const buttonHeight = 40; // h-10
+    const margin = 24; // 1.5rem (bottom-6/right-6 equivalentes)
+    return window.innerHeight - buttonHeight - margin; // posición inicial similar a bottom-6
+  });
   
   // 🪟 Estado para ventanas individuales de chat
   const [openChatWindows, setOpenChatWindows] = useState<Array<{
@@ -113,12 +120,27 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     getSession();
   }, []);
 
-  // 🔧 NUEVO: Mantener botón visible durante scroll (POSICIÓN FIJA)
+  // 🔧 NUEVO: Mantener botón visible durante scroll (POSICIÓN FIJA) y seguir la scrollbar
   useEffect(() => {
     let scrollTimeout: NodeJS.Timeout;
     
+    const recomputeTop = () => {
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+      const docEl = document.documentElement;
+      const scrollTop = docEl.scrollTop || document.body.scrollTop || 0;
+      const scrollRange = Math.max((docEl.scrollHeight - docEl.clientHeight), 0);
+      const ratio = scrollRange > 0 ? (scrollTop / scrollRange) : 0;
+      const buttonHeight = 40; // h-10
+      const margin = 24; // 1.5rem
+      const minTop = margin; // mínimo desde arriba
+      const maxTop = window.innerHeight - buttonHeight - margin; // máximo visible
+      const computedTop = Math.round(minTop + ratio * (maxTop - minTop));
+      setAssistantButtonTop(computedTop);
+    };
+
     const handleScroll = () => {
       setIsScrolling(true);
+      recomputeTop();
       
       // Limpiar timeout anterior
       clearTimeout(scrollTimeout);
@@ -131,10 +153,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     // Agregar listener de scroll
     window.addEventListener('scroll', handleScroll, { passive: true });
+    // Recalcular en resize para mantener la posición
+    window.addEventListener('resize', recomputeTop);
+    // Calcular posición inicial
+    recomputeTop();
     
     // Cleanup
     return () => {
       window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', recomputeTop);
       clearTimeout(scrollTimeout);
     };
   }, []);
@@ -1177,7 +1204,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   return (
     <>
-      {/* Botón flotante para abrir el chat - POSICIÓN FIJA SIEMPRE VISIBLE */}
+      {/* Botón flotante para abrir el chat - POSICIÓN FIJA, SIGUE LA SCROLLBAR */}
       <button
         onClick={toggleChat}
         onContextMenu={(e) => {
@@ -1185,7 +1212,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           console.log('🧪 [ChatWidget] Prueba manual de notificación');
           triggerNotification();
         }}
-        className={`fixed bottom-6 right-6 w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
+        style={{ top: assistantButtonTop, right: 24 }}
+        className={`fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
           isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
         }`}
         aria-label="Abrir chat de soporte (clic derecho para probar notificación)"

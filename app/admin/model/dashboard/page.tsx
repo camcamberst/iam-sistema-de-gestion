@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ModelCalculatorNew from '../../../../components/ModelCalculatorNew';
 import { createClient } from "@supabase/supabase-js";
@@ -36,7 +36,6 @@ export default function ModelDashboard() {
   const [productivityLoading, setProductivityLoading] = useState(false);
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
-  const isRefreshingRef = useRef(false);
 
   useEffect(() => {
     const load = async () => {
@@ -111,38 +110,24 @@ export default function ModelDashboard() {
   }, [loading, productivityLoading, user]);
 
   // Refrescar datos al volver a la pestaña/ventana o al volver desde otra ruta
-  // Solo si es modelo, no está cargando, y tiene datos previos cargados
   useEffect(() => {
-    // No agregar listeners si no es modelo o si aún está cargando
-    if (!user || user.role !== 'modelo' || loading || productivityLoading) {
-      return;
-    }
-
     const handleFocus = () => {
-      if (!isRefreshingRef.current && user?.role === 'modelo' && !loading && !productivityLoading && productivityData) {
-        isRefreshingRef.current = true;
-        loadProductivityData(user.id).finally(() => {
-          isRefreshingRef.current = false;
-        });
+      if (user?.role === 'modelo') {
+        loadProductivityData(user.id);
       }
     };
-
     const handleVisibility = () => {
-      if (document.visibilityState === 'visible' && !isRefreshingRef.current && user?.role === 'modelo' && !loading && !productivityLoading && productivityData) {
-        isRefreshingRef.current = true;
-        loadProductivityData(user.id).finally(() => {
-          isRefreshingRef.current = false;
-        });
+      if (document.visibilityState === 'visible' && user?.role === 'modelo') {
+        loadProductivityData(user.id);
       }
     };
-
     window.addEventListener('focus', handleFocus);
     document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       window.removeEventListener('focus', handleFocus);
       document.removeEventListener('visibilitychange', handleVisibility);
     };
-  }, [user, loading, productivityLoading, productivityData]);
+  }, [user]);
 
   const loadProductivityData = async (userId: string) => {
     try {

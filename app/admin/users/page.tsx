@@ -514,10 +514,10 @@ export default function UsersListPage() {
             totalUsers={users.length}
             filteredUsers={filteredUsers.length}
             onClearSearch={() => {
-              setSearchQuery('');
-              setSearchFilters({});
-              setFilteredUsers([]);
-            }}
+                    setSearchQuery('');
+                    setSearchFilters({});
+                    setFilteredUsers([]);
+                  }}
           />
         </div>
 
@@ -952,21 +952,21 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
         </button>
       </div>
 
-      {/* Mensaje de error del modal */}
-      {modalError && (
-        <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
-          <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-              </svg>
-            </div>
-            <div className="ml-3">
-              <p className="text-sm text-red-800 dark:text-red-300">{modalError}</p>
+        {/* Mensaje de error del modal */}
+        {modalError && (
+          <div className="mb-4 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
+            <div className="flex">
+              <div className="flex-shrink-0">
+                <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-red-800 dark:text-red-300">{modalError}</p>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
       {/* Contenido de pestañas */}
       {activeTab === 'profile' && (
@@ -975,64 +975,64 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Columna izquierda */}
             <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
-                <input
-                  type="text"
-                  value={formData.name}
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Nombre</label>
+            <input
+              type="text"
+              value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: titleCaseWords(e.target.value) })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                  autoComplete="name"
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              autoComplete="name"
                   autoCapitalize="words"
                   spellCheck={true}
-                  required
-                />
-              </div>
+              required
+            />
+          </div>
 
-              <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Email</label>
-                <input
-                  type="email"
-                  value={formData.email}
-                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                  autoComplete="email"
-                  required
-                />
-              </div>
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Email</label>
+            <input
+              type="email"
+              value={formData.email}
+              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 backdrop-blur-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+              autoComplete="email"
+              required
+            />
+          </div>
             </div>
 
             {/* Columna derecha */}
             <div className="space-y-4">
-              <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
-                <AppleDropdown
-                  options={[
-                    { value: 'modelo', label: 'Modelo' },
-                    { value: 'admin', label: 'Admin' },
-                    { value: 'super_admin', label: 'Super Admin' }
-                  ]}
-                  value={formData.role}
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Rol</label>
+            <AppleDropdown
+              options={[
+                { value: 'modelo', label: 'Modelo' },
+                { value: 'admin', label: 'Admin' },
+                { value: 'super_admin', label: 'Super Admin' }
+              ]}
+              value={formData.role}
                   onChange={(value) => handleRoleChange(value)}
-                  placeholder="Selecciona un rol"
-                  className="text-sm"
-                />
-              </div>
+              placeholder="Selecciona un rol"
+              className="text-sm"
+            />
+          </div>
 
-              <div>
-                <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
-                <button
-                  type="button"
-                  onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-                  className="relative w-10 h-6 rounded-full transition-colors"
-                  style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
-                  aria-pressed={formData.is_active}
-                >
-                  <span
-                    className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow"
-                    style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
-                  />
-                </button>
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
+            <button
+              type="button"
+              onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+              className="relative w-10 h-6 rounded-full transition-colors"
+              style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
+              aria-pressed={formData.is_active}
+            >
+              <span
+                className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow"
+                style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
+              />
+            </button>
               </div>
             </div>
           </div>
@@ -1086,10 +1086,10 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
                   <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                   </svg>
-                </div>
+      </div>
                 <div className="ml-3">
                   <p className="text-sm text-green-800 dark:text-green-300">Contraseña actualizada exitosamente</p>
-                </div>
+    </div>
               </div>
             </div>
           )}

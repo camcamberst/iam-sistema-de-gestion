@@ -162,3 +162,5 @@ Configurado en `getBotPersonalityForRole()` en `lib/chat/aim-botty.ts`
 - Verificar logs en consola
 - Verificar que existe conversación con el bot
 
+
+
