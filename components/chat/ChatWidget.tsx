@@ -1191,26 +1191,27 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
       {isMounted && createPortal(
         (
-      <div className="relative" style={{
-        right: 24,
-        bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
-      }}>
+      <div className="relative">
         <button
           onClick={toggleChat}
-          className="fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-visible"
+          style={{
+            right: 24,
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
+          }}
+          className="fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden"
           aria-label={`Abrir chat de soporte${totalUnreadCount > 0 ? ` (${totalUnreadCount} mensajes no leídos)` : ''}`}
         >
-          <div className="flex items-center justify-center relative w-full h-full">
+          <div className="flex items-center justify-center relative">
             <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
             <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
+            {/* Badge de contador - posicionado en esquina superior derecha */}
+            {totalUnreadCount > 0 && (
+              <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-10">
+                <Badge count={totalUnreadCount} variant="blue" size="small" />
+              </div>
+            )}
           </div>
         </button>
-        {/* Badge de contador fuera del botón */}
-        {totalUnreadCount > 0 && (
-          <div className="absolute -top-1 -right-1 z-[9996]">
-            <Badge count={totalUnreadCount} variant="blue" size="small" />
-          </div>
-        )}
       </div>
         ),
         document.body
