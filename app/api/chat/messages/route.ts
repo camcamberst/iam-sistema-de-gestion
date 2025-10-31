@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { AIM_BOTTY_ID, isBottyId } from '@/lib/chat/aim-botty';
 
 export const dynamic = 'force-dynamic';
 
@@ -185,6 +186,35 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [API] Mensaje creado exitosamente:', newMessage);
+
+    // Verificar si el mensaje es para AIM Botty y generar respuesta automática
+    const isToBotty = isBottyId(conversation.participant_1_id) || isBottyId(conversation.participant_2_id);
+    
+    if (isToBotty) {
+      // Obtener historial de conversación (últimos 10 mensajes)
+      const { data: conversationHistory } = await supabase
+        .from('chat_messages')
+        .select('id, sender_id, content, created_at')
+        .eq('conversation_id', conversation_id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      // Generar respuesta del bot en segundo plano (no bloquea la respuesta)
+      fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/chat/aim-botty`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          conversation_id,
+          message_content: content.trim(),
+          conversation_history: (conversationHistory || []).reverse()
+        })
+      }).catch(error => {
+        console.error('Error generando respuesta del bot:', error);
+      });
+    }
 
     // Actualizar estado de usuario en línea
     await supabase
