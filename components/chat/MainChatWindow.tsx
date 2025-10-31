@@ -624,18 +624,18 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 
                 // Renderizado especial para mensajes de sistema/broadcast
                 if (isSpecialMessage) {
-                  return (
-                    <React.Fragment key={message.id}>
-                      {showDateSeparator && (
-                        <div className="flex justify-center my-4">
-                          <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
-                            {formatDateSeparator(new Date(message.created_at))}
-                          </span>
-                        </div>
-                      )}
-                      <div className="flex justify-center my-4">
+                return (
+                  <React.Fragment key={message.id}>
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-2.5">
+                        <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
+                          {formatDateSeparator(new Date(message.created_at))}
+                        </span>
+                      </div>
+                    )}
+                      <div className="flex justify-center my-3">
                         <div
-                          className={`inline-flex items-center max-w-[85%] px-4 py-2.5 rounded-xl shadow-sm animate-fadeIn ${
+                          className={`inline-flex items-center max-w-[85%] px-3 py-2 rounded-xl shadow-sm animate-fadeIn ${
                             isBroadcastMessage
                               ? 'bg-purple-500/10 border border-purple-500/30 text-purple-200'
                               : 'bg-gray-800/60 border border-gray-600/50 text-gray-300'
@@ -685,29 +685,29 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 return (
                   <React.Fragment key={message.id}>
                     {showDateSeparator && (
-                      <div className="flex justify-center my-4">
+                      <div className="flex justify-center my-2.5">
                         <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
                           {formatDateSeparator(new Date(message.created_at))}
                         </span>
                       </div>
                     )}
                     <div
-                      className={`group flex items-end ${isGrouped ? 'mb-1' : 'mb-4'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-2`}
+                      className={`group flex items-end ${isGrouped ? 'mb-0.5' : 'mb-2.5'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-1.5`}
                     >
                       {/* Avatar solo en mensajes recibidos, primer mensaje del grupo */}
                       {isReceivedMessage && (
                         showAvatar ? (
-                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mb-1">
+                          <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mb-0.5">
                             <span className="text-white text-xs font-bold">
                               {getUserInitial(senderInfo)}
                             </span>
                           </div>
                         ) : (
-                          <div className="w-8 flex-shrink-0" />
+                          <div className="w-7 flex-shrink-0" />
                         )
                       )}
                       <div
-                        className={`relative max-w-[70%] p-3.5 shadow-sm animate-fadeIn ${
+                        className={`relative max-w-[70%] px-3 py-2 shadow-sm animate-fadeIn ${
                           message.sender_id === userId
                             ? 'bg-blue-600 text-white rounded-2xl'
                             : 'bg-gray-700 text-gray-100 rounded-2xl'
@@ -744,7 +744,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                             </svg>
                           </button>
                         </div>
-                        <p className="text-sm pr-12">
+                        <p className="text-sm pr-10 leading-relaxed">
                           {searchTerm ? (
                             message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
                               part.toLowerCase() === searchTerm.toLowerCase() ? (
@@ -761,7 +761,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         </p>
                         {/* Solo mostrar timestamp y estado en el último mensaje del grupo */}
                         {isLastInGroup && (
-                          <div className="flex items-center justify-end gap-1 mt-1">
+                          <div className="flex items-center justify-end gap-1 mt-0.5">
                             <span className="text-xs text-gray-300" title={new Date(message.created_at).toLocaleString('es-ES')}>
                               {formatMessageTime(message.created_at)}
                             </span>
