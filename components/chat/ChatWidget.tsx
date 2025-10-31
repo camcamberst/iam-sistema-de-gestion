@@ -54,10 +54,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [lastNotificationTime, setLastNotificationTime] = useState<number>(0);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [conversationsTabBlinking, setConversationsTabBlinking] = useState(false);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const autoOpenedBottyRef = useRef<string | null>(null);
   
   // 🔧 NUEVO: Estado para visibilidad del botón (sin cambiar posición)
   const [isScrolling, setIsScrolling] = useState(false);
@@ -256,6 +258,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           }
           return count;
         }, 0);
+        
+        // Activar parpadeo de pestaña "Conversaciones" si hay mensajes no leídos
+        if (unread > 0) {
+          setConversationsTabBlinking(true);
+        } else {
+          setConversationsTabBlinking(false);
+        }
         
         console.log('📊 [ChatWidget] Mensajes no leídos detectados:', { 
           unread, 
@@ -950,6 +959,37 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
               loadConversations();
               
+              // Activar parpadeo de pestaña "Conversaciones" si el mensaje no es del usuario actual
+              if (newMessage.sender_id !== userId) {
+                setConversationsTabBlinking(true);
+              }
+              
+              // Detectar si el mensaje es de AIM Botty y abrir ventana automáticamente (solo una vez)
+              if (newMessage.sender_id === AIM_BOTTY_ID && 
+                  newMessage.id !== autoOpenedBottyRef.current &&
+                  newMessage.sender_id !== userId) {
+                console.log('🤖 [ChatWidget] Mensaje nuevo de AIM Botty detectado, abriendo ventana automáticamente...');
+                autoOpenedBottyRef.current = newMessage.id;
+                
+                // Verificar si ya hay una ventana abierta para AIM Botty
+                const bottyWindowExists = openChatWindows.some(
+                  window => window.otherUser.id === AIM_BOTTY_ID || window.otherUser.email === AIM_BOTTY_EMAIL
+                );
+                
+                // Solo abrir automáticamente si el chat principal está abierto y no existe ventana
+                if (!bottyWindowExists && isOpen) {
+                  console.log('🪟 [ChatWidget] Abriendo ventana de AIM Botty automáticamente...');
+                  // Abrir ventana de AIM Botty automáticamente (solo una vez por mensaje)
+                  setTimeout(() => {
+                    openChatWithUser(AIM_BOTTY_ID);
+                  }, 500); // Pequeño delay para mejor UX, no invasivo
+                } else if (bottyWindowExists) {
+                  console.log('🪟 [ChatWidget] Ventana de AIM Botty ya está abierta');
+                } else if (!isOpen) {
+                  console.log('🪟 [ChatWidget] Chat principal cerrado, no abriendo ventana automáticamente');
+                }
+              }
+              
               // Solo activar notificación si el mensaje no es del usuario actual
               if (newMessage.sender_id !== userId && 
                   newMessage.id !== lastProcessedMessageId &&
@@ -1122,6 +1162,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         deleteConversation={deleteConversation}
         tempChatUser={tempChatUser}
         getDisplayName={getDisplayName}
+        conversationsTabBlinking={conversationsTabBlinking}
+        onViewConversations={() => setConversationsTabBlinking(false)}
       />
     </>
   );

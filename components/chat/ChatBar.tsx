@@ -43,6 +43,8 @@ interface ChatBarProps {
   deleteConversation?: (id: string) => void;
   tempChatUser?: any;
   getDisplayName?: (user: any) => string;
+  conversationsTabBlinking?: boolean;
+  onViewConversations?: () => void;
 }
 
 const ChatBar: React.FC<ChatBarProps> = ({
@@ -71,7 +73,9 @@ const ChatBar: React.FC<ChatBarProps> = ({
   setShowDeleteConfirm,
   deleteConversation,
   tempChatUser,
-  getDisplayName
+  getDisplayName,
+  conversationsTabBlinking = false,
+  onViewConversations
 }) => {
   // Solo mostrar la barra si hay ventanas abiertas o la ventana principal está abierta
   if (openChatWindows.length === 0 && !isMainChatOpen) {
@@ -107,6 +111,8 @@ const ChatBar: React.FC<ChatBarProps> = ({
           deleteConversation={deleteConversation}
           tempChatUser={tempChatUser}
           getDisplayName={getDisplayName}
+          conversationsTabBlinking={conversationsTabBlinking}
+          onViewConversations={onViewConversations}
         />
       )}
       

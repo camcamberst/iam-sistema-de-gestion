@@ -56,7 +56,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   setShowDeleteConfirm,
   deleteConversation,
   tempChatUser,
-  getDisplayName = (user) => user.name || user.email
+  getDisplayName = (user) => user.name || user.email,
+  conversationsTabBlinking = false,
+  onViewConversations
 }) => {
   const windowWidth = 320; // w-80 = 320px
   const margin = 8; // Margen entre ventanas en la barra
@@ -114,11 +116,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           Usuarios disponibles
         </button>
         <button
-          onClick={() => setView?.('conversations')}
+          onClick={() => {
+            setView?.('conversations');
+            if (onViewConversations) {
+              onViewConversations(); // Desactivar parpadeo al ver conversaciones
+            }
+          }}
           className={`flex-1 px-3 py-2 text-xs font-medium rounded-t-md transition-colors ${
             view === 'conversations'
               ? 'text-white bg-gray-700/60 ring-1 ring-inset ring-gray-600'
               : 'text-gray-300 hover:text-white hover:bg-gray-700/40'
+          } ${
+            conversationsTabBlinking && view !== 'conversations'
+              ? 'animate-pulse bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20'
+              : ''
           }`}
         >
           Conversaciones ({conversationsWithMessages.length})
