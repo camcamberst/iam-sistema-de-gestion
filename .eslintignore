@@ -6,4 +6,5 @@ app/admin/audit/page.tsx
 app/admin/broadcast/page.tsx
 app/admin/calculadora/page.tsx
 app/admin/calculator/config/page.tsx
+app/admin/calculator/config/test/page.tsx
 
