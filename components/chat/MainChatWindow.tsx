@@ -843,72 +843,100 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                               ? 'border-blue-400/20' 
                               : 'border-gray-700/50'
                           }`}>
-                            {/* Botones de acción (solo visibles al hover del grupo) - ahora a la izquierda */}
-                            <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
-                              <button
-                                onClick={() => {
-                                  navigator.clipboard.writeText(message.content);
-                                }}
-                                className={`p-1 rounded-md transition-colors ${
-                                  message.sender_id === userId
-                                    ? 'hover:bg-blue-500/30 text-blue-100/70 hover:text-white'
-                                    : 'hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200'
-                                }`}
-                                title="Copiar mensaje"
-                                aria-label="Copiar mensaje"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                </svg>
-                              </button>
-                              <button
-                                onClick={() => {
-                                  // TODO: Implementar funcionalidad de responder
-                                }}
-                                className={`p-1 rounded-md transition-colors ${
-                                  message.sender_id === userId
-                                    ? 'hover:bg-blue-500/30 text-blue-100/70 hover:text-white'
-                                    : 'hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200'
-                                }`}
-                                title="Responder mensaje"
-                                aria-label="Responder mensaje"
-                              >
-                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                </svg>
-                              </button>
-                            </div>
-                            {/* Timestamp y estado - ahora a la derecha */}
-                            <div className="flex items-center gap-1.5 ml-auto">
-                              <span className={`text-[10px] leading-none ${
-                                message.sender_id === userId 
-                                  ? 'text-blue-100/70' 
-                                  : 'text-gray-400/70'
-                              }`} title={new Date(message.created_at).toLocaleString('es-ES')}>
-                                {formatMessageTime(message.created_at)}
-                              </span>
-                              {/* Estados de lectura: solo mostrar en mensajes propios */}
-                              {message.sender_id === userId && (
-                                <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
-                                  {message.is_read_by_other ? (
-                                    // Visto (doble check azul claro)
-                                    <span className="inline-flex items-center" style={{ width: '13px' }}>
-                                      <svg className="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                      <svg className="w-3 h-3 text-blue-100 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                    </span>
-                                  ) : (
-                                    // Entregado (un solo check gris claro)
-                                    <svg className="w-3 h-3 text-blue-100/60" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            {/* Para mensajes enviados: botones izquierda, timestamp derecha */}
+                            {/* Para mensajes recibidos: timestamp izquierda, botones derecha */}
+                            {message.sender_id === userId ? (
+                              <>
+                                {/* Botones de acción a la izquierda (mensajes enviados) */}
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(message.content);
+                                    }}
+                                    className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
+                                    title="Copiar mensaje"
+                                    aria-label="Copiar mensaje"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                     </svg>
-                                  )}
-                                </span>
-                              )}
-                            </div>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      // TODO: Implementar funcionalidad de responder
+                                    }}
+                                    className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
+                                    title="Responder mensaje"
+                                    aria-label="Responder mensaje"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                  </button>
+                                </div>
+                                {/* Timestamp y estado a la derecha (mensajes enviados) */}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] leading-none text-blue-100/70" title={new Date(message.created_at).toLocaleString('es-ES')}>
+                                    {formatMessageTime(message.created_at)}
+                                  </span>
+                                  {/* Estados de lectura: solo mostrar en mensajes propios */}
+                                  <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
+                                    {message.is_read_by_other ? (
+                                      // Visto (doble check azul claro)
+                                      <span className="inline-flex items-center" style={{ width: '13px' }}>
+                                        <svg className="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        <svg className="w-3 h-3 text-blue-100 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                      </span>
+                                    ) : (
+                                      // Entregado (un solo check gris claro)
+                                      <svg className="w-3 h-3 text-blue-100/60" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    )}
+                                  </span>
+                                </div>
+                              </>
+                            ) : (
+                              <>
+                                {/* Timestamp a la izquierda (mensajes recibidos) */}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] leading-none text-gray-400/70" title={new Date(message.created_at).toLocaleString('es-ES')}>
+                                    {formatMessageTime(message.created_at)}
+                                  </span>
+                                </div>
+                                {/* Botones de acción a la derecha (mensajes recibidos) */}
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(message.content);
+                                    }}
+                                    className="p-1 rounded-md transition-colors hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200"
+                                    title="Copiar mensaje"
+                                    aria-label="Copiar mensaje"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      // TODO: Implementar funcionalidad de responder
+                                    }}
+                                    className="p-1 rounded-md transition-colors hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200"
+                                    title="Responder mensaje"
+                                    aria-label="Responder mensaje"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                  </button>
+                                </div>
+                              </>
+                            )}
                           </div>
                         )}
                       </div>
