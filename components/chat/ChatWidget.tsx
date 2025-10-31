@@ -267,7 +267,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         // 🔔 LÓGICA RESTAURADA: Detectar mensajes no leídos (como funcionaba el círculo rojo)
         const unread = data.conversations.reduce((count: number, conv: any) => {
-          if (conv.last_message && conv.last_message.sender_id !== userId) {
+          // Considerar como no leído solo si:
+          // - el último mensaje es de otra persona
+          // - y no es la conversación actualmente abierta en vista de chat
+          if (
+            conv.last_message &&
+            conv.last_message.sender_id !== userId &&
+            conv.id !== selectedConversation
+          ) {
             return count + 1;
           }
           return count;
@@ -1047,7 +1054,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               loadConversations();
               
               // Activar parpadeo de pestaña "Conversaciones" si el mensaje no es del usuario actual
-              if (newMessage.sender_id !== userId) {
+              // y no estamos viendo esa conversación actualmente
+              if (
+                newMessage.sender_id !== userId &&
+                !(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)
+              ) {
                 setConversationsTabBlinking(true);
               }
               
