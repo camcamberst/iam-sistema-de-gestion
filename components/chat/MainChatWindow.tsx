@@ -75,6 +75,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     return typeof content === 'string' && content.trim().length > 0;
   });
 
+  // Usuario activo cuando se está en chat
+  const activeUser = view === 'chat' && selectedConversation
+    ? (conversations || []).find((c: any) => c.id === selectedConversation)?.other_participant
+    : null;
+
   return (
     <div
       className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
@@ -90,16 +95,34 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     >
       {/* Header */}
       <div className="flex items-center justify-between p-4 border-b border-gray-700 bg-gray-900 rounded-t-lg cursor-default">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30">
-            <span className="text-white dark:text-gray-900 font-bold text-xs tracking-wider">
-              AIM
-            </span>
-          </div>
-          <div>
-            <p className="text-white text-sm font-semibold">AIM Assistant</p>
-            <p className="text-gray-400 text-xs">Soporte y tips</p>
-          </div>
+        <div className="flex items-center space-x-3 min-w-0">
+          {activeUser ? (
+            <>
+              <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                <span className="text-white font-bold text-xs tracking-wider">
+                  {getDisplayName?.(activeUser)?.charAt(0).toUpperCase()}
+                </span>
+              </div>
+              <div className="min-w-0">
+                <p className="text-white text-sm font-semibold truncate" title={getDisplayName?.(activeUser)}>
+                  {getDisplayName?.(activeUser)}
+                </p>
+                {(activeUser.id !== AIM_BOTTY_ID && activeUser.email !== AIM_BOTTY_EMAIL) && (
+                  <p className="text-gray-400 text-xs truncate">{activeUser.role}</p>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30">
+                <span className="text-white dark:text-gray-900 font-bold text-xs tracking-wider">AIM</span>
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold">AIM Assistant</p>
+                <p className="text-gray-400 text-xs">Soporte y tips</p>
+              </div>
+            </>
+          )}
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-white">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
