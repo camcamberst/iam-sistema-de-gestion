@@ -49,27 +49,8 @@ export default function IndividualChatWindow({
     const mainChatWidth = 320; // w-80 de la ventana principal
 
     if (isInChatBar) {
-      // En la barra de chat: ventanas A LA IZQUIERDA de la ventana principal
-      // La ventana principal está en: window.innerWidth - rightOffset - mainChatWidth
-      // Las ventanas individuales van A LA IZQUIERDA con cascading de DERECHA A IZQUIERDA
-      const mainChatRightEdge = window.innerWidth - rightOffset;
-      
-      // Calcular posición de DERECHA A IZQUIERDA (primera ventana más cerca de la principal)
-      // windowIndex=0 debe estar JUNTO a la ventana principal
-      // windowIndex=1 debe estar una ventana a la izquierda
-      // windowIndex=2 debe estar dos ventanas a la izquierda
-      const finalLeft = mainChatRightEdge - mainChatWidth - margin - (windowIndex * (windowWidth + margin));
-      
-      console.log('🪟 [IndividualChatWindow] Posición en barra de chat (A LA IZQUIERDA):', {
-        windowIndex,
-        windowInnerWidth: window.innerWidth,
-        mainChatRightEdge,
-        mainChatWidth,
-        finalLeft,
-        isInChatBar,
-        calculation: `${mainChatRightEdge} - ${mainChatWidth} - ${margin} - (${windowIndex} * (${windowWidth} + ${margin}))`
-      });
-      
+      // Embebido dentro del contenedor del AIM Assistant: distribuir de izquierda a derecha
+      const finalLeft = 8 + (windowIndex * (windowWidth + margin));
       return { x: finalLeft, y: 0 };
     } else {
       // Modo flotante: ventanas a la izquierda de la ventana principal
@@ -436,7 +417,7 @@ export default function IndividualChatWindow({
   return (
     <div
       ref={windowRef}
-      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
+      className={`w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] ${isInChatBar ? 'absolute' : 'fixed'}`}
       style={isInChatBar ? {
         left: `${position.x}px`,
         bottom: '0px',

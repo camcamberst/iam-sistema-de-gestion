@@ -122,20 +122,37 @@ const ChatBar: React.FC<ChatBarProps> = ({
         document.body
       )}
       
-      {/* Ventanas individuales de chat posicionadas absolutamente */}
-      {openChatWindows.map((window, index) => (
-        <IndividualChatWindow
-          key={window.id}
-          conversationId={window.conversationId}
-          otherUser={window.otherUser}
-          onClose={() => onCloseWindow(window.id)}
-          userId={userId}
-          userRole={userRole}
-          session={session}
-          windowIndex={index}
-          isInChatBar={true}
-        />
-      ))}
+      {/* Ventanas individuales: si la ventana principal está abierta, renderizar DENTRO de ella */}
+      {isMainChatOpen && isMounted && document.getElementById('aim-embedded-windows')
+        ? openChatWindows.map((window, index) => (
+            createPortal(
+              <IndividualChatWindow
+                key={window.id}
+                conversationId={window.conversationId}
+                otherUser={window.otherUser}
+                onClose={() => onCloseWindow(window.id)}
+                userId={userId}
+                userRole={userRole}
+                session={session}
+                windowIndex={index}
+                isInChatBar={true}
+              />,
+              document.getElementById('aim-embedded-windows') as HTMLElement
+            )
+          ))
+        : openChatWindows.map((window, index) => (
+            <IndividualChatWindow
+              key={window.id}
+              conversationId={window.conversationId}
+              otherUser={window.otherUser}
+              onClose={() => onCloseWindow(window.id)}
+              userId={userId}
+              userRole={userRole}
+              session={session}
+              windowIndex={index}
+              isInChatBar={true}
+            />
+          ))}
     </>
   );
 };
