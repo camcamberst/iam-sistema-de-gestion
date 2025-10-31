@@ -54,7 +54,7 @@ export async function POST(req: NextRequest) {
 
     // 1) userIds directos
     if (Array.isArray(body.userIds) && body.userIds.length > 0) {
-      targetUserIds = [...new Set(body.userIds)];
+      targetUserIds = Array.from(new Set(body.userIds));
     }
 
     // 2) por roles
