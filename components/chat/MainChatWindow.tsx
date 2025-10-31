@@ -172,8 +172,26 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
 
-  const scrollToBottom = (smooth = true) => {
+  // Verificar si el usuario está cerca del final del scroll (dentro de 100px del final)
+  const isNearBottom = (): boolean => {
     try {
+      if (!messagesContainerRef.current) return true;
+      const container = messagesContainerRef.current;
+      const threshold = 100; // px desde el final
+      const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+      return distanceFromBottom <= threshold;
+    } catch {
+      return true; // Por defecto, asumir que está cerca del final
+    }
+  };
+
+  const scrollToBottom = (smooth = true, force = false) => {
+    try {
+      // Solo hacer scroll si el usuario ya está cerca del final o si se fuerza
+      if (!force && !isNearBottom()) {
+        return; // Usuario está leyendo arriba, no hacer scroll
+      }
+      
       if (messagesEndRef.current) {
         messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
       } else if (messagesContainerRef.current) {
@@ -184,15 +202,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   useEffect(() => {
     if (view === 'chat') {
-      scrollToBottom(false);
+      // Forzar scroll al cambiar de conversación
+      scrollToBottom(false, true);
     }
   }, [view, selectedConversation]);
 
+  // Scroll inteligente cuando llegan nuevos mensajes (solo si el usuario está cerca del final)
   useEffect(() => {
-    if (view === 'chat') {
-      scrollToBottom(true);
+    if (view === 'chat' && messages.length > 0) {
+      // Pequeño delay para que el DOM se actualice
+      setTimeout(() => {
+        scrollToBottom(true, false);
+      }, 100);
     }
-  }, [messages]);
+  }, [messages.length]);
 
   return (
     <div
@@ -472,7 +495,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         )
                       )}
                       <div
-                        className={`max-w-[70%] p-3 rounded-lg ${
+                        className={`max-w-[70%] p-3 rounded-lg shadow-sm animate-fadeIn ${
                           message.sender_id === userId
                             ? 'bg-blue-600 text-white'
                             : 'bg-gray-700 text-white'
@@ -524,13 +547,14 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   value={newMessage}
                   onChange={(e) => setNewMessage?.(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  placeholder="Escribe tu mensaje..."
-                  className="flex-1 p-2 rounded-lg bg-gray-700 text-white border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}...` : 'Escribe tu mensaje...'}
+                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
                 />
                 <button
                   onClick={sendMessage}
                   disabled={!newMessage.trim()}
-                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-200"
+                  title="Enviar mensaje"
                 >
                   <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />

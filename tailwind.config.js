@@ -10,6 +10,7 @@ module.exports = {
     extend: {
       animation: {
         'heartbeat': 'heartbeat 1.5s ease-in-out infinite',
+        'fadeIn': 'fadeIn 0.2s ease-out',
       },
       keyframes: {
         heartbeat: {
@@ -36,6 +37,16 @@ module.exports = {
           '100%': { 
             transform: 'scale(1)',
             boxShadow: '0 0 0 0 rgba(239, 68, 68, 0)'
+          }
+        },
+        fadeIn: {
+          '0%': { 
+            opacity: '0',
+            transform: 'translateY(4px)'
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'translateY(0)'
           }
         }
       }
