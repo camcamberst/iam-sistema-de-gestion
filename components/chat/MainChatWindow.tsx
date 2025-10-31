@@ -190,8 +190,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         </button>
       </div>
 
-      {/* Contenido principal */}
-      <div className="flex-1 flex flex-col min-h-0 overflow-hidden">
+      {/* Contenido principal (envoltorio relativo para overlays internos) */}
+      <div className="flex-1 flex flex-col min-h-0 overflow-hidden relative">
         {view === 'users' && (
           <>
             <div className="p-4 flex-1 flex flex-col min-h-0">
@@ -391,27 +391,34 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           </>
         )}
 
-        {/* Modal de confirmación estándar */}
+        {/* Confirmación embebida dentro del área de contenido sin alterar layout externo */}
         {showDeleteConfirm && (
-          <StandardModal isOpen={true} onClose={() => setShowDeleteConfirm?.(null)} title="Eliminar conversación" maxWidthClass="max-w-md">
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
-              ¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.
-            </p>
-            <div className="flex space-x-3">
-              <button
-                onClick={() => setShowDeleteConfirm?.(null)}
-                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={() => deleteConversation?.(showDeleteConfirm)}
-                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
-              >
-                Eliminar
-              </button>
+          <div className="absolute inset-0 z-[5]">
+            <div className="absolute inset-0 bg-black/40" onClick={() => setShowDeleteConfirm?.(null)} />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90%] max-w-[300px] bg-gray-900 border border-gray-700 rounded-xl shadow-2xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-white">Eliminar conversación</h3>
+                <button onClick={() => setShowDeleteConfirm?.(null)} className="text-gray-400 hover:text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <p className="text-xs text-gray-300 mb-4">¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.</p>
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setShowDeleteConfirm?.(null)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-gray-800 text-gray-200 hover:bg-gray-700 text-xs"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => deleteConversation?.(showDeleteConfirm)}
+                  className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"
+                >
+                  Eliminar
+                </button>
+              </div>
             </div>
-          </StandardModal>
+          </div>
         )}
       </div>
 
