@@ -845,15 +845,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [session]);
 
-  // Actualizar lista de usuarios cada 30 segundos como respaldo (tiempo real es principal)
+  // Actualizar lista de usuarios cada 15 segundos como respaldo (tiempo real es principal)
+  // Esto ayuda a detectar usuarios que cerraron sesión más rápidamente
   useEffect(() => {
     if (!session) return;
 
-    // Actualizar lista de usuarios cada 30 segundos como respaldo
+    // Actualizar lista de usuarios cada 15 segundos como respaldo
     const usersUpdateInterval = setInterval(() => {
       console.log('🔄 [ChatWidget] Polling de respaldo: actualizando lista de usuarios...');
       loadAvailableUsers();
-    }, 30000);
+    }, 15000);
 
     // Cleanup
     return () => {
