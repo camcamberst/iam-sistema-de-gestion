@@ -20,3 +20,4 @@ create index if not exists idx_chat_message_reads_message on public.chat_message
 -- create policy chat_message_reads_user_can_insert on public.chat_message_reads
 --   for insert with check (auth.uid() = user_id);
 
+

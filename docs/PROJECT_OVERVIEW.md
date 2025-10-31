@@ -67,3 +67,4 @@ Plataforma interna de gestión para modelos, admins y super_admins con módulos 
 
 - `docs/AIM_BOTTY_IMPLEMENTATION.md` – Implementación detallada de Botty y chat.
 - `CHANGELOG.md` – Cambios por versión (ver 1.4.0 para mejoras recientes).
+

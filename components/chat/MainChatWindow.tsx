@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
+import Badge from './Badge';
 
 interface MainChatWindowProps {
   onClose: () => void;
@@ -30,8 +31,6 @@ interface MainChatWindowProps {
   deleteConversation?: (id: string) => void;
   tempChatUser?: any;
   getDisplayName?: (user: any) => string;
-  conversationsTabBlinking?: boolean;
-  onViewConversations?: () => void;
 }
 
 const MainChatWindow: React.FC<MainChatWindowProps> = ({
@@ -59,8 +58,6 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   deleteConversation,
   tempChatUser,
   getDisplayName = (user) => user.name || user.email,
-  conversationsTabBlinking = false,
-  onViewConversations
 }) => {
   // Helper para renderizar avatar (diferenciado para Botty)
   const renderAvatar = (user: any, size: 'small' | 'medium' = 'medium', isOffline: boolean = false) => {
@@ -527,16 +524,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         <button
           onClick={() => {
             setView?.('conversations');
-            if (onViewConversations) {
-              onViewConversations(); // Desactivar parpadeo al ver conversaciones
-            }
           }}
           className={`flex-1 px-3 py-2 text-xs font-medium rounded-t-md transition-colors ${
             view === 'conversations'
               ? 'text-white bg-gray-700/60 ring-1 ring-inset ring-gray-600'
               : 'text-gray-300 hover:text-white hover:bg-gray-700/40'
           } ${
-            conversationsTabBlinking && view !== 'conversations'
+            false
               ? 'animate-pulse bg-gradient-to-r from-blue-500/20 via-purple-500/20 to-blue-500/20'
               : ''
           }`}
@@ -667,8 +661,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         </div>
                       </button>
                       {conversation.unread_count > 0 && (
-                        <div className="bg-red-500 text-white text-[10px] rounded-full px-2 py-1 min-w-[20px] text-center ml-2">
-                          {conversation.unread_count}
+                        <div className="ml-2">
+                          {conversation.unread_count <= 3 ? (
+                            <span className="w-2 h-2 bg-blue-500 rounded-full inline-block" aria-label={`${conversation.unread_count} mensajes no leídos`} />
+                          ) : (
+                            <Badge count={conversation.unread_count} variant="blue" size="small" />
+                          )}
                         </div>
                       )}
                       <button

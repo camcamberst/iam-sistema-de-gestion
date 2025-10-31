@@ -49,3 +49,4 @@ components/chat/ChatWidget.tsx
 components/chat/MainChatWindow.tsx
 scripts/create_chat_broadcasts.sql
 ```
+

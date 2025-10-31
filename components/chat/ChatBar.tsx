@@ -75,8 +75,6 @@ const ChatBar: React.FC<ChatBarProps> = ({
   deleteConversation,
   tempChatUser,
   getDisplayName,
-  conversationsTabBlinking = false,
-  onViewConversations
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => { setIsMounted(true); }, []);
@@ -115,8 +113,6 @@ const ChatBar: React.FC<ChatBarProps> = ({
             deleteConversation={deleteConversation}
             tempChatUser={tempChatUser}
             getDisplayName={getDisplayName}
-            conversationsTabBlinking={conversationsTabBlinking}
-            onViewConversations={onViewConversations}
           />
         ),
         document.body

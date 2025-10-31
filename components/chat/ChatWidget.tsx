@@ -7,6 +7,9 @@ import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 import IndividualChatWindow from './IndividualChatWindow';
 import ChatBar from './ChatBar';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
+import { playNotificationSound } from '@/lib/chat/notification-sound';
+import ToastNotification from './ToastNotification';
+import Badge from './Badge';
 
 interface ChatWidgetProps {
   userId?: string;
@@ -47,15 +50,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     online: true,
     offline: false
   });
-  const [isBlinking, setIsBlinking] = useState(false);
-  const [hasNewMessage, setHasNewMessage] = useState(false);
-  const [lastUnreadCount, setLastUnreadCount] = useState(0);
-  const [notificationTriggered, setNotificationTriggered] = useState(false);
-  const [lastProcessedMessageId, setLastProcessedMessageId] = useState<string | null>(null);
-  const [lastNotificationTime, setLastNotificationTime] = useState<number>(0);
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
-  const [conversationsTabBlinking, setConversationsTabBlinking] = useState(false);
+  // Nuevo sistema de notificaciones
+  const [toasts, setToasts] = useState<Array<{
+    id: string;
+    conversationId: string;
+    senderName: string;
+    senderAvatar?: string | null;
+    messagePreview: string;
+  }>>([]);
+  const lastUnreadCountRef = useRef<number>(0);
+  const lastSoundTimeRef = useRef<number>(0);
+  const lastProcessedMessageIdRef = useRef<string | null>(null);
   // Registro local de último mensaje visto por conversación (usando ref para acceso inmediato)
   const [lastSeenMessageByConv, setLastSeenMessageByConv] = useState<Record<string, string>>({});
   const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
@@ -89,9 +96,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const autoOpenedBottyRef = useRef<string | null>(null);
   const [isMounted, setIsMounted] = useState(false); // Para portal en document.body
-  // Parpadeo del título del navegador
-  const originalTitleRef = useRef<string>(typeof document !== 'undefined' ? document.title : 'AIM');
-  const titleBlinkIntervalRef = useRef<NodeJS.Timeout | null>(null);
   
   // 🔧 NUEVO: Estado para visibilidad del botón (sin cambiar posición)
   const [isScrolling, setIsScrolling] = useState(false);
@@ -124,15 +128,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   };
 
   // Función helper para verificar si se puede activar notificación
-  const canTriggerNotification = () => {
-    const now = Date.now();
-    const timeSinceLastNotification = now - lastNotificationTime;
-    const minInterval = 10000; // 10 segundos mínimo entre notificaciones
-    
-    return !isOpen && 
-           !notificationTriggered && 
-           timeSinceLastNotification > minInterval;
-  };
+  // Calcular total de mensajes no leídos
+  const totalUnreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
 
   // Obtener sesión de Supabase
   useEffect(() => {
@@ -149,33 +146,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     return () => {};
   }, []);
 
-  // Detener parpadeo cuando la pestaña recupera el foco
-  useEffect(() => {
-    const onVisibility = () => {
-      if (!document.hidden) {
-        // Restaurar título si volvemos a la pestaña
-        try {
-          if (titleBlinkIntervalRef.current) {
-            clearInterval(titleBlinkIntervalRef.current);
-            titleBlinkIntervalRef.current = null;
-          }
-          if (originalTitleRef.current) {
-            document.title = originalTitleRef.current;
-          }
-        } catch (e) {
-          console.error('❌ [ChatWidget] Error restaurando título al volver al foco:', e);
-        }
-      }
-    };
-    if (typeof document !== 'undefined') {
-      document.addEventListener('visibilitychange', onVisibility);
-    }
-    return () => {
-      if (typeof document !== 'undefined') {
-        document.removeEventListener('visibilitychange', onVisibility);
-      }
-    };
-  }, []);
 
   // Sistema de heartbeat y detección de cierre de navegador
   useEffect(() => {
@@ -300,27 +270,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         setConversations(normalized);
 
         // Calcular total de no leídos basado en unread_count del backend
-        // Si estamos en chat, suprimir parpadeo para evitar rebotes mientras se sincroniza el backend
         const unread = normalized.reduce((acc: number, conv: any) => acc + (conv.unread_count || 0), 0);
 
-        // Activar parpadeo si hay no leídos
-        setConversationsTabBlinking(unread > 0);
-
-        console.log('📊 [ChatWidget] No leídos (backend):', { unread, lastUnreadCount });
-
-        // Notificación solo si aumentó el conteo y NO estamos en chat (evitar rebote mientras se está leyendo)
-        if (unread > lastUnreadCount && lastUnreadCount >= 0 && canTriggerNotification() && !(isOpen && mainView === 'chat')) {
-          triggerNotification();
+        // Detectar mensajes nuevos para mostrar toast (solo si el chat está cerrado)
+        if (!isOpen && unread > lastUnreadCountRef.current && lastUnreadCountRef.current >= 0) {
+          // Encontrar conversaciones con nuevos mensajes
+          normalized.forEach((conv: any) => {
+            if (conv.unread_count > 0 && conv.last_message) {
+              // Verificar si esta conversación tenía menos mensajes antes
+              const prevConv = conversations.find((c: any) => c.id === conv.id);
+              const prevUnread = prevConv?.unread_count || 0;
+              
+              if (conv.unread_count > prevUnread && conv.last_message.sender_id !== userId) {
+                showToast(conv, conv.last_message);
+              }
+            }
+          });
         }
 
-        // Limpiar notificaciones si está abierto
-        if (isOpen && notificationTriggered) {
-          setNotificationTriggered(false);
-          setIsBlinking(false);
-          setHasNewMessage(false);
-        }
-
-        setLastUnreadCount(unread);
+        lastUnreadCountRef.current = unread;
       }
     } catch (error) {
       console.error('Error cargando conversaciones:', error);
@@ -377,16 +345,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               const latestMessage = newMessages[newMessages.length - 1];
               if (latestMessage && 
                   latestMessage.sender_id !== userId && 
-                  latestMessage.id !== lastProcessedMessageId &&
-                  !notificationTriggered && 
+                  latestMessage.id !== lastProcessedMessageIdRef.current &&
                   !isOpen) {
-                console.log('🔔 [ChatWidget] Nuevo mensaje detectado via polling, activando notificación...', {
-                  messageId: latestMessage.id,
-                  lastProcessedId: lastProcessedMessageId
-                });
-                setLastProcessedMessageId(latestMessage.id);
-                setNotificationTriggered(true);
-                triggerNotification();
+                // El toast se mostrará automáticamente en la próxima carga de conversaciones
+                lastProcessedMessageIdRef.current = latestMessage.id;
               }
             }
           }
@@ -832,102 +794,41 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   };
 
   // Función para reproducir sonido de notificación "N Dinámico"
-  const playNotificationSound = () => {
-    try {
-      console.log('🎵 [ChatWidget] Iniciando reproducción de sonido...');
-      const audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-      
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-      
-      oscillator.type = 'sine';
-      
-      // Patrón "N Dinámico": [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200]
-      const frequencies = [400, 600, 800, 1000, 1200, 1000, 800, 600, 400, 600, 800, 1000, 1200];
-      const duration = 0.5; // Duración original
-      
-      console.log('🎼 [ChatWidget] Configurando frecuencias:', frequencies);
-      
-      frequencies.forEach((freq, index) => {
-        const time = audioContext.currentTime + (index / frequencies.length) * duration;
-        oscillator.frequency.setValueAtTime(freq, time);
-      });
-      
-      // Envelope dinámico original
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.4, audioContext.currentTime + 0.02);
-      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-      
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + duration);
-      
-      console.log('✅ [ChatWidget] Sonido de notificación reproducido exitosamente');
-    } catch (error) {
-      console.error('❌ [ChatWidget] Error reproduciendo sonido de notificación:', error);
+  // Función para mostrar toast notification
+  const showToast = (conversation: any, message: any) => {
+    // Solo mostrar toast si el chat está cerrado
+    if (isOpen) return;
+    
+    const toastId = `${conversation.id}-${message.id}-${Date.now()}`;
+    const sender = conversation.other_participant;
+    
+    setToasts(prev => [...prev, {
+      id: toastId,
+      conversationId: conversation.id,
+      senderName: getDisplayName(sender),
+      senderAvatar: null,
+      messagePreview: message.content || ''
+    }]);
+    
+    // Reproducir sonido (con throttling mínimo de 2 segundos)
+    const now = Date.now();
+    if (now - lastSoundTimeRef.current > 2000) {
+      playNotificationSound(0.3);
+      lastSoundTimeRef.current = now;
     }
   };
 
-  // Función para activar notificaciones (sonido + parpadeo + apertura automática)
-  const triggerNotification = () => {
-    console.log('🔍 [ChatWidget] triggerNotification llamada - isOpen:', isOpen);
-    
-    // Verificar si se puede activar notificación
-    if (!canTriggerNotification()) {
-      console.log('🚫 [ChatWidget] No se puede activar notificación:', {
-        isOpen,
-        notificationTriggered,
-        timeSinceLastNotification: Date.now() - lastNotificationTime
-      });
-      return;
-    }
-    
-    console.log('🔔 [ChatWidget] TRIGGER NOTIFICATION - Activando notificaciones...');
-    
-    // Actualizar timestamp
-    setLastNotificationTime(Date.now());
-    setNotificationTriggered(true);
-    // Iniciar parpadeo de título del navegador si la ventana está en background
-    try {
-      if (typeof document !== 'undefined' && document.hidden) {
-        if (!titleBlinkIntervalRef.current) {
-          // Etiqueta breve
-          let toggle = false;
-          originalTitleRef.current = document.title;
-          titleBlinkIntervalRef.current = setInterval(() => {
-            document.title = toggle ? originalTitleRef.current : '🔔 Nuevo mensaje - AIM';
-            toggle = !toggle;
-          }, 800);
-        }
-      }
-    } catch (e) {
-      console.error('❌ [ChatWidget] Error iniciando parpadeo de título:', e);
-    }
-    
-    // Sonido desactivado temporalmente
-    // console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
-    // try {
-    //   playNotificationSound();
-    //   console.log('✅ [ChatWidget] Sonido iniciado correctamente');
-    // } catch (error) {
-    //   console.error('❌ [ChatWidget] Error reproduciendo sonido:', error);
-    // }
-    
-    // Activar parpadeo
-    console.log('💫 [ChatWidget] Activando parpadeo del botón...');
-    setIsBlinking(true);
-    setHasNewMessage(true);
-    
-    // Abrir chat automáticamente
-    console.log('📂 [ChatWidget] Abriendo chat automáticamente...');
+  // Función para cerrar toast
+  const closeToast = (toastId: string) => {
+    setToasts(prev => prev.filter(t => t.id !== toastId));
+  };
+
+  // Función para abrir conversación desde toast
+  const openConversationFromToast = (conversationId: string) => {
     setIsOpen(true);
-    
-    // Detener latido de corazón después de 6 segundos (4 ciclos de 1.5s)
-    setTimeout(() => {
-      console.log('⏹️ [ChatWidget] Deteniendo latido de corazón...');
-      setIsBlinking(false);
-    }, 6000);
+    setMainView('chat');
+    setSelectedConversation(conversationId);
+    closeToast(toasts.find(t => t.conversationId === conversationId)?.id || '');
   };
 
   // Cargar datos iniciales
@@ -1006,36 +907,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Detener parpadeo de pestaña "Conversaciones" y del título cuando el usuario ve las conversaciones o el chat
+  // Marcar mensajes como vistos cuando el usuario está viendo el chat
   useEffect(() => {
     if (!isOpen) return;
-    if (mainView === 'conversations' || mainView === 'chat') {
-      // Consideramos como "leído" al estar visualizando estas vistas
-      if (conversationsTabBlinking) {
-        console.log('🛑 [ChatWidget] Deteniendo parpadeo porque usuario está viendo conversaciones/chat');
-        setConversationsTabBlinking(false);
-      }
-      // Si estamos en chat con una conversación, marcar el último mensaje como visto
-      if (mainView === 'chat' && selectedConversation && messages.length > 0) {
-        const last = messages[messages.length - 1];
-        markMessageAsSeen(selectedConversation, last.id);
-        // Recargar conversaciones para actualizar cálculo de no leídos inmediatamente
-        setTimeout(() => loadConversations(), 50);
-        zeroUnreadForConversation(selectedConversation);
-      }
-      try {
-        if (titleBlinkIntervalRef.current) {
-          clearInterval(titleBlinkIntervalRef.current);
-          titleBlinkIntervalRef.current = null;
-        }
-        if (originalTitleRef.current && typeof document !== 'undefined') {
-          document.title = originalTitleRef.current;
-        }
-      } catch (e) {
-        console.error('❌ [ChatWidget] Error deteniendo parpadeo al ver chats:', e);
-      }
+    if (mainView === 'chat' && selectedConversation && messages.length > 0) {
+      const last = messages[messages.length - 1];
+      markMessageAsSeen(selectedConversation, last.id);
+      // Recargar conversaciones para actualizar cálculo de no leídos
+      setTimeout(() => loadConversations(), 50);
+      zeroUnreadForConversation(selectedConversation);
     }
-  }, [isOpen, mainView, conversationsTabBlinking, selectedConversation, messages.length]);
+  }, [isOpen, mainView, selectedConversation, messages.length]);
 
   // Efecto específico: cuando cambias de conversación seleccionada o se cargan mensajes, marcarla como vista inmediatamente
   useEffect(() => {
@@ -1054,11 +936,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         console.log('ℹ️ [ChatWidget] Ya estaba marcado como visto');
       }
       
-      // Desactivar parpadeo inmediatamente
-      if (conversationsTabBlinking) {
-        console.log('🛑 [ChatWidget] Desactivando parpadeo al marcar conversación como vista');
-        setConversationsTabBlinking(false);
-      }
       
       // Recargar conversaciones después de un breve delay para recalcular no leídos con el nuevo estado
       setTimeout(() => {
@@ -1191,20 +1068,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 }
               }
               
-              // Solo activar notificación si el mensaje no es del usuario actual
+              // Detectar mensaje nuevo para toast (solo si el chat está cerrado)
               if (newMessage.sender_id !== userId && 
-                  newMessage.id !== lastProcessedMessageId &&
-                  !notificationTriggered && 
+                  newMessage.id !== lastProcessedMessageIdRef.current &&
                   !isOpen) {
-                console.log('🔔 [ChatWidget] Activando notificación para mensaje de otro usuario', {
-                  messageId: newMessage.id,
-                  lastProcessedId: lastProcessedMessageId
-                });
-                setLastProcessedMessageId(newMessage.id);
-                setNotificationTriggered(true);
-                triggerNotification();
-              } else {
-                console.log('👤 [ChatWidget] Mensaje del usuario actual o ya procesado, no notificando');
+                lastProcessedMessageIdRef.current = newMessage.id;
+                // El toast se mostrará automáticamente en la próxima carga de conversaciones
+                // Recargar conversaciones para obtener datos completos de la conversación
+                setTimeout(() => loadConversations(), 100);
               }
             } else {
               console.log('❌ [ChatWidget] Usuario no es participante de la conversación');
@@ -1297,24 +1168,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       loadConversations();
     }
     
-    // Limpiar estado de notificación cuando se abre el chat
+    // Cerrar todos los toasts cuando se abre el chat
     if (newIsOpen) {
-      setHasNewMessage(false);
-      setIsBlinking(false);
-      setNotificationTriggered(false);
-      console.log('🔔 [ChatWidget] Chat abierto - Desactivando todas las notificaciones');
-      // Detener parpadeo de título
-      try {
-        if (titleBlinkIntervalRef.current) {
-          clearInterval(titleBlinkIntervalRef.current);
-          titleBlinkIntervalRef.current = null;
-        }
-        if (originalTitleRef.current && typeof document !== 'undefined') {
-          document.title = originalTitleRef.current;
-        }
-      } catch (e) {
-        console.error('❌ [ChatWidget] Error deteniendo parpadeo de título:', e);
-      }
+      setToasts([]);
     } else {
       // Limpiar usuario temporal al cerrar
       setTempChatUser(null);
@@ -1333,27 +1189,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
       {isMounted && createPortal(
         (
-      <button
-        onClick={toggleChat}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          console.log('🧪 [ChatWidget] Prueba manual de notificación');
-          triggerNotification();
-        }}
-            style={{
-              right: 24,
-              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
-            }}
-            className={`fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
-          isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
-        }`}
-        aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
-      >
-        <div className="flex items-center justify-center">
-          <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
-          <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
-        </div>
-      </button>
+      <div className="relative">
+        <button
+          onClick={toggleChat}
+          style={{
+            right: 24,
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
+          }}
+          className="fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden"
+          aria-label={`Abrir chat de soporte${totalUnreadCount > 0 ? ` (${totalUnreadCount} mensajes no leídos)` : ''}`}
+        >
+          <div className="flex items-center justify-center relative">
+            <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
+            <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
+            {/* Badge de contador */}
+            {totalUnreadCount > 0 && (
+              <div className="absolute -top-1 -right-1">
+                <Badge count={totalUnreadCount} variant="blue" size="small" />
+              </div>
+            )}
+          </div>
+        </button>
+      </div>
         ),
         document.body
       )}
@@ -1387,9 +1244,21 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         deleteConversation={deleteConversation}
         tempChatUser={tempChatUser}
         getDisplayName={getDisplayName}
-        conversationsTabBlinking={conversationsTabBlinking}
-        onViewConversations={() => setConversationsTabBlinking(false)}
       />
+      
+      {/* Renderizar toasts */}
+      {toasts.map((toast) => (
+        <ToastNotification
+          key={toast.id}
+          id={toast.id}
+          senderName={toast.senderName}
+          senderAvatar={toast.senderAvatar}
+          messagePreview={toast.messagePreview}
+          conversationId={toast.conversationId}
+          onOpenConversation={openConversationFromToast}
+          onClose={closeToast}
+        />
+      ))}
     </>
   );
 }
