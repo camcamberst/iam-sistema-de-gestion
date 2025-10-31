@@ -145,10 +145,21 @@ async function generateBotResponse(
   conversationHistory: any[]
 ): Promise<string> {
   try {
+    console.log('🤖 [BOTTY-GEN] Iniciando generación de respuesta...');
+    
+    // Verificar que la API key esté configurada
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      console.error('❌ [BOTTY-GEN] GOOGLE_GEMINI_API_KEY no está configurada');
+      return 'Lo siento, el servicio de IA no está configurado. Por favor, contacta a tu administrador.';
+    }
+
+    console.log('🤖 [BOTTY-GEN] Obteniendo modelo...');
     const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
     
+    console.log('🤖 [BOTTY-GEN] Obteniendo personalidad...');
     const personality = getBotPersonalityForRole(userContext.role);
     
+    console.log('🤖 [BOTTY-GEN] Construyendo historial...');
     const historyText = conversationHistory
       .slice(-10)
       .map((msg: any) => {
@@ -157,6 +168,7 @@ async function generateBotResponse(
       })
       .join('\n');
 
+    console.log('🤖 [BOTTY-GEN] Construyendo contexto...');
     let contextInfo = '';
     if (userContext.role === 'modelo') {
       contextInfo = `
@@ -212,16 +224,32 @@ INSTRUCCIONES:
 RESPUESTA:
 `;
 
+    console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
     const result = await model.generateContent(prompt);
+    
+    console.log('🤖 [BOTTY-GEN] Obteniendo respuesta...');
     const response = await result.response;
     let text = response.text().trim();
 
+    console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
     text = text.replace(/```[\s\S]*?```/g, '').trim();
     
+    console.log('✅ [BOTTY-GEN] Respuesta generada exitosamente, longitud:', text.length);
     return text;
 
-  } catch (error) {
-    console.error('Error generando respuesta del bot:', error);
+  } catch (error: any) {
+    console.error('❌ [BOTTY-GEN] Error generando respuesta del bot:', error);
+    console.error('❌ [BOTTY-GEN] Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name
+    });
+    
+    // Mensaje más específico según el error
+    if (error?.message?.includes('API key') || error?.message?.includes('authentication')) {
+      return 'Lo siento, hay un problema con la configuración del servicio de IA. Por favor, contacta a tu administrador.';
+    }
+    
     return 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta a tu administrador.';
   }
 }
