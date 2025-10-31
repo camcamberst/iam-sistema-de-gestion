@@ -1,6 +1,7 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import IndividualChatWindow from './IndividualChatWindow';
 import MainChatWindow from './MainChatWindow';
 
@@ -77,6 +78,8 @@ const ChatBar: React.FC<ChatBarProps> = ({
   conversationsTabBlinking = false,
   onViewConversations
 }) => {
+  const [isMounted, setIsMounted] = useState(false);
+  useEffect(() => { setIsMounted(true); }, []);
   // Solo mostrar la barra si hay ventanas abiertas o la ventana principal está abierta
   if (openChatWindows.length === 0 && !isMainChatOpen) {
     return null;
@@ -85,35 +88,38 @@ const ChatBar: React.FC<ChatBarProps> = ({
   return (
     <>
       {/* Ventana principal del AIM Assistant */}
-      {isMainChatOpen && (
-        <MainChatWindow
-          onClose={onCloseMainChat!}
-          userId={userId}
-          userRole={userRole}
-          session={session}
-          windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
-          view={view}
-          setView={setView}
-          availableUsers={availableUsers}
-          expandedSections={expandedSections}
-          setExpandedSections={setExpandedSections}
-          openChatWithUser={openChatWithUser}
-          conversations={conversations}
-          selectedConversation={selectedConversation}
-          setSelectedConversation={setSelectedConversation}
-          messages={messages}
-          newMessage={newMessage}
-          setNewMessage={setNewMessage}
-          sendMessage={sendMessage}
-          handleKeyPress={handleKeyPress}
-          showDeleteConfirm={showDeleteConfirm}
-          setShowDeleteConfirm={setShowDeleteConfirm}
-          deleteConversation={deleteConversation}
-          tempChatUser={tempChatUser}
-          getDisplayName={getDisplayName}
-          conversationsTabBlinking={conversationsTabBlinking}
-          onViewConversations={onViewConversations}
-        />
+      {isMainChatOpen && isMounted && createPortal(
+        (
+          <MainChatWindow
+            onClose={onCloseMainChat!}
+            userId={userId}
+            userRole={userRole}
+            session={session}
+            windowIndex={-1} // Ventana principal siempre en la posición más a la derecha
+            view={view}
+            setView={setView}
+            availableUsers={availableUsers}
+            expandedSections={expandedSections}
+            setExpandedSections={setExpandedSections}
+            openChatWithUser={openChatWithUser}
+            conversations={conversations}
+            selectedConversation={selectedConversation}
+            setSelectedConversation={setSelectedConversation}
+            messages={messages}
+            newMessage={newMessage}
+            setNewMessage={setNewMessage}
+            sendMessage={sendMessage}
+            handleKeyPress={handleKeyPress}
+            showDeleteConfirm={showDeleteConfirm}
+            setShowDeleteConfirm={setShowDeleteConfirm}
+            deleteConversation={deleteConversation}
+            tempChatUser={tempChatUser}
+            getDisplayName={getDisplayName}
+            conversationsTabBlinking={conversationsTabBlinking}
+            onViewConversations={onViewConversations}
+          />
+        ),
+        document.body
       )}
       
       {/* Ventanas individuales de chat posicionadas absolutamente */}
