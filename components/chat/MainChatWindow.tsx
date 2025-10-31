@@ -240,11 +240,18 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     setShowSearchInput(false);
   }, [selectedConversation]);
   
-  // Auto-resize textarea
+  // Auto-resize textarea solo si hay saltos de línea (Shift+Enter)
   useEffect(() => {
     if (textareaRef.current) {
-      textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`; // Max 120px
+      const hasLineBreaks = (newMessage || '').includes('\n');
+      if (hasLineBreaks) {
+        // Solo expandir si hay saltos de línea
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`; // Max 120px
+      } else {
+        // Mantener altura de una sola línea
+        textareaRef.current.style.height = '42px';
+      }
     }
   }, [newMessage]);
   
@@ -847,19 +854,18 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   </svg>
                 </button>
                 
-                {/* Textarea con auto-resize */}
+                {/* Textarea que mantiene una sola línea hasta Shift+Enter */}
                 <textarea
                   ref={textareaRef}
                   value={newMessage}
                   onChange={(e) => setNewMessage?.(e.target.value)}
                   onKeyDown={handleTextareaKeyDown}
                   placeholder={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}...` : 'Escribe tu mensaje...'}
-                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none min-h-[42px] max-h-[120px] text-sm leading-relaxed"
+                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none h-[42px] max-h-[120px] text-sm leading-relaxed overflow-y-auto"
                   aria-label={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}` : 'Escribe tu mensaje'}
                   aria-required="false"
                   rows={1}
                   style={{ 
-                    overflowY: 'auto',
                     scrollbarWidth: 'thin',
                     scrollbarColor: '#4B5563 #374151'
                   }}
@@ -878,9 +884,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   </svg>
                 </button>
               </div>
-              {/* Hint para Shift+Enter */}
-              <p className="text-[10px] text-gray-500 mt-1.5 px-1">
-                <span className="text-gray-400">Enter</span> para enviar · <span className="text-gray-400">Shift + Enter</span> para nueva línea
+              {/* Hint corto para Shift+Enter */}
+              <p className="text-[10px] text-gray-600 mt-1 px-1">
+                Shift+Enter para nueva línea
               </p>
             </div>
           </>
