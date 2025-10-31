@@ -128,13 +128,27 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (typeof window === 'undefined' || typeof document === 'undefined') return;
       const docEl = document.documentElement;
       const scrollTop = docEl.scrollTop || document.body.scrollTop || 0;
-      const scrollRange = Math.max((docEl.scrollHeight - docEl.clientHeight), 0);
+      const scrollHeight = docEl.scrollHeight;
+      const clientHeight = docEl.clientHeight;
+      const scrollRange = Math.max((scrollHeight - clientHeight), 0);
       const ratio = scrollRange > 0 ? (scrollTop / scrollRange) : 0;
       const buttonHeight = 40; // h-10
       const margin = 24; // 1.5rem
       const minTop = margin; // mínimo desde arriba
       const maxTop = window.innerHeight - buttonHeight - margin; // máximo visible
-      const computedTop = Math.round(minTop + ratio * (maxTop - minTop));
+
+      // Altura aproximada del thumb de la scrollbar (estándar): (clientHeight^2) / scrollHeight
+      const thumbHeight = scrollHeight > 0 ? Math.max((clientHeight * clientHeight) / scrollHeight, 20) : 20;
+
+      // Posición del top del thumb dentro de la pista
+      const thumbTop = ratio * Math.max((clientHeight - thumbHeight), 0);
+
+      // Queremos alinear el BOTÓN al borde inferior del thumb
+      // top del botón = margen superior + top del thumb + (alto del thumb - alto del botón)
+      let computedTop = Math.round(minTop + thumbTop + Math.max(thumbHeight - buttonHeight, 0));
+      // Limitar a los límites visibles
+      if (computedTop < minTop) computedTop = minTop;
+      if (computedTop > maxTop) computedTop = maxTop;
       setAssistantButtonTop(computedTop);
     };
 
