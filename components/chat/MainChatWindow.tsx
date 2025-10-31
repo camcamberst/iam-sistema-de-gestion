@@ -117,6 +117,19 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     return timeDiff < fiveMinutes;
   };
 
+  // Helper para obtener inicial del nombre de usuario
+  const getUserInitial = (user: any): string => {
+    if (!user) return '?';
+    const displayName = getDisplayName(user);
+    if (displayName && displayName.length > 0) {
+      return displayName.charAt(0).toUpperCase();
+    }
+    if (user.email) {
+      return user.email.charAt(0).toUpperCase();
+    }
+    return '?';
+  };
+
   // Helper para formatear timestamp relativo o absoluto
   const formatMessageTime = (dateString: string): string => {
     const messageDate = new Date(dateString);
@@ -425,6 +438,14 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 const showDateSeparator = !prevMessage || isDifferentDay(prevMessage.created_at, message.created_at);
                 const isGrouped = prevMessage && shouldGroupMessages(prevMessage, message);
                 const isLastInGroup = !nextMessage || !shouldGroupMessages(message, nextMessage) || isDifferentDay(message.created_at, nextMessage.created_at);
+                const isFirstInGroup = !prevMessage || !shouldGroupMessages(prevMessage, message) || isDifferentDay(prevMessage.created_at, message.created_at);
+                const isReceivedMessage = message.sender_id !== userId;
+                
+                // Obtener información del remitente para avatar (priorizar activeUser, luego sender del mensaje)
+                const senderInfo = isReceivedMessage 
+                  ? (activeUser || (message as any).sender || null)
+                  : null;
+                const showAvatar = isReceivedMessage && isFirstInGroup && senderInfo;
                 
                 return (
                   <React.Fragment key={message.id}>
@@ -436,8 +457,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                       </div>
                     )}
                     <div
-                      className={`flex ${isGrouped ? 'mb-1' : 'mb-4'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
+                      className={`flex items-end ${isGrouped ? 'mb-1' : 'mb-4'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-2`}
                     >
+                      {/* Avatar solo en mensajes recibidos, primer mensaje del grupo */}
+                      {isReceivedMessage && (
+                        showAvatar ? (
+                          <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mb-1">
+                            <span className="text-white text-xs font-bold">
+                              {getUserInitial(senderInfo)}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="w-8 flex-shrink-0" />
+                        )
+                      )}
                       <div
                         className={`max-w-[70%] p-3 rounded-lg ${
                           message.sender_id === userId
