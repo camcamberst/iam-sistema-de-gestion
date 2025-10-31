@@ -580,7 +580,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         {view === 'chat' && selectedConversation && (
           <>
             {/* Mensajes */}
-            <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0">
+            <div ref={messagesContainerRef} className="flex-1 px-1.5 py-4 overflow-y-auto custom-scrollbar min-h-0">
               {/* Mostrar contador de resultados si hay búsqueda activa */}
               {searchTerm && (
                 <div className="mb-2 text-center">
