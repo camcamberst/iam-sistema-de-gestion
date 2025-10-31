@@ -843,39 +843,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                               ? 'border-blue-400/20' 
                               : 'border-gray-700/50'
                           }`}>
-                            {/* Timestamp y estado - izquierda para recibidos, derecha para enviados */}
-                            <div className={`flex items-center gap-1.5 ${message.sender_id === userId ? 'ml-auto' : ''}`}>
-                              <span className={`text-[10px] leading-none ${
-                                message.sender_id === userId 
-                                  ? 'text-blue-100/70' 
-                                  : 'text-gray-400/70'
-                              }`} title={new Date(message.created_at).toLocaleString('es-ES')}>
-                                {formatMessageTime(message.created_at)}
-                              </span>
-                              {/* Estados de lectura: solo mostrar en mensajes propios */}
-                              {message.sender_id === userId && (
-                                <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
-                                  {message.is_read_by_other ? (
-                                    // Visto (doble check azul claro)
-                                    <span className="inline-flex items-center" style={{ width: '13px' }}>
-                                      <svg className="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                      <svg className="w-3 h-3 text-blue-100 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                    </span>
-                                  ) : (
-                                    // Entregado (un solo check gris claro)
-                                    <svg className="w-3 h-3 text-blue-100/60" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  )}
-                                </span>
-                              )}
-                            </div>
-                            {/* Botones de acción (solo visibles al hover del grupo) */}
-                            <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${message.sender_id === userId ? '' : 'ml-auto'}`}>
+                            {/* Botones de acción (solo visibles al hover del grupo) - ahora a la izquierda */}
+                            <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1`}>
                               <button
                                 onClick={() => {
                                   navigator.clipboard.writeText(message.content);
@@ -908,6 +877,37 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                 </svg>
                               </button>
+                            </div>
+                            {/* Timestamp y estado - ahora a la derecha */}
+                            <div className="flex items-center gap-1.5 ml-auto">
+                              <span className={`text-[10px] leading-none ${
+                                message.sender_id === userId 
+                                  ? 'text-blue-100/70' 
+                                  : 'text-gray-400/70'
+                              }`} title={new Date(message.created_at).toLocaleString('es-ES')}>
+                                {formatMessageTime(message.created_at)}
+                              </span>
+                              {/* Estados de lectura: solo mostrar en mensajes propios */}
+                              {message.sender_id === userId && (
+                                <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
+                                  {message.is_read_by_other ? (
+                                    // Visto (doble check azul claro)
+                                    <span className="inline-flex items-center" style={{ width: '13px' }}>
+                                      <svg className="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                      <svg className="w-3 h-3 text-blue-100 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </span>
+                                  ) : (
+                                    // Entregado (un solo check gris claro)
+                                    <svg className="w-3 h-3 text-blue-100/60" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </span>
+                              )}
                             </div>
                           </div>
                         )}
