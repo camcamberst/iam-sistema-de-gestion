@@ -154,30 +154,19 @@ async function generateBotResponse(
     }
 
     console.log('🤖 [BOTTY-GEN] Obteniendo modelo...');
-    // Intentar con modelos más recientes primero, luego fallbacks
-    let model;
+    // Lista de modelos ordenados de más reciente a más antiguo
+    // Intentaremos cada uno hasta que uno funcione
     const modelNames = [
-      'gemini-2.0-flash-exp', // Modelo experimental más reciente
-      'gemini-1.5-flash-latest', // Última versión de flash
-      'gemini-1.5-pro-latest', // Última versión de pro
-      'gemini-1.5-pro', // Versión estable
-      'gemini-pro' // Fallback legacy
+      'gemini-2.0-flash-exp',      // Modelo experimental más reciente (2025)
+      'gemini-1.5-flash-latest',   // Última versión de flash
+      'gemini-1.5-pro-latest',     // Última versión de pro
+      'gemini-1.5-flash',           // Versión estable flash
+      'gemini-1.5-pro',             // Versión estable pro
+      'gemini-pro'                  // Fallback legacy
     ];
     
-    for (const modelName of modelNames) {
-      try {
-        model = genAI.getGenerativeModel({ model: modelName });
-        console.log(`✅ [BOTTY-GEN] Usando modelo ${modelName}`);
-        break;
-      } catch (error: any) {
-        console.log(`⚠️ [BOTTY-GEN] ${modelName} no disponible, intentando siguiente...`);
-        continue;
-      }
-    }
-    
-    if (!model) {
-      throw new Error('No hay modelos disponibles');
-    }
+    let model = genAI.getGenerativeModel({ model: modelNames[0] }); // Intentar el más reciente primero
+    console.log(`🤖 [BOTTY-GEN] Intentando con modelo ${modelNames[0]}`);
     
     console.log('🤖 [BOTTY-GEN] Obteniendo personalidad...');
     const personality = getBotPersonalityForRole(userContext.role);
@@ -248,37 +237,53 @@ RESPUESTA:
 `;
 
     console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
-    const result = await model.generateContent(prompt);
+    console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
     
-    console.log('🤖 [BOTTY-GEN] Obteniendo respuesta...');
-    const response = await result.response;
-    let text = response.text().trim();
-
-      console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
-      text = text.replace(/```[\s\S]*?```/g, '').trim();
-      
-      console.log('✅ [BOTTY-GEN] Respuesta generada exitosamente, longitud:', text.length);
-      return text;
-    } catch (genError: any) {
-      console.error('❌ [BOTTY-GEN] Error en generateContent:', genError);
-      // Si gemini-1.5-pro falla, intentar con gemini-pro como fallback
-      if (model && genError?.message?.includes('404')) {
-        console.log('🔄 [BOTTY-GEN] Intentando con gemini-pro como fallback...');
-        try {
-          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
-          const fallbackResult = await fallbackModel.generateContent(prompt);
-          const fallbackResponse = await fallbackResult.response;
-          let fallbackText = fallbackResponse.text().trim();
-          fallbackText = fallbackText.replace(/```[\s\S]*?```/g, '').trim();
-          console.log('✅ [BOTTY-GEN] Fallback exitoso con gemini-pro');
-          return fallbackText;
-        } catch (fallbackError) {
-          console.error('❌ [BOTTY-GEN] Error en fallback:', fallbackError);
-          throw genError; // Lanzar error original
+    // Lista de modelos para probar (más recientes primero)
+    const modelNames = [
+      'gemini-2.0-flash-exp',
+      'gemini-1.5-flash-latest',
+      'gemini-1.5-pro-latest',
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-pro'
+    ];
+    
+    let lastError: any = null;
+    
+    // Intentar con cada modelo hasta que uno funcione
+    for (const modelName of modelNames) {
+      try {
+        console.log(`🤖 [BOTTY-GEN] Intentando generar con ${modelName}...`);
+        const currentModel = genAI.getGenerativeModel({ model: modelName });
+        const result = await currentModel.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().trim();
+        
+        console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
+        text = text.replace(/```[\s\S]*?```/g, '').trim();
+        
+        console.log(`✅ [BOTTY-GEN] Respuesta generada exitosamente con ${modelName}, longitud:`, text.length);
+        return text;
+      } catch (modelError: any) {
+        console.log(`⚠️ [BOTTY-GEN] ${modelName} falló:`, modelError?.message?.substring(0, 100));
+        lastError = modelError;
+        
+        // Si es error 404, intentar siguiente modelo
+        if (modelError?.message?.includes('404') || modelError?.message?.includes('not found')) {
+          continue; // Intentar siguiente modelo
+        }
+        
+        // Si es otro tipo de error (no 404), puede ser problema de API key o configuración
+        // Solo lanzar si no es un problema de modelo no encontrado
+        if (!modelError?.message?.includes('model') && !modelError?.message?.includes('404')) {
+          throw modelError;
         }
       }
-      throw genError;
     }
+    
+    // Si llegamos aquí, todos los modelos fallaron
+    throw lastError || new Error('Todos los modelos fallaron');
 
   } catch (error: any) {
     console.error('❌ [BOTTY-GEN] Error generando respuesta del bot:', error);
