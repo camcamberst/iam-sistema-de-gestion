@@ -200,44 +200,6 @@ export default function IndividualChatWindow({
   };
 
 
-  // Función para obtener el ícono de estado del mensaje (estilo Apple)
-  const getMessageStatusIcon = (messageId: string) => {
-    const status = messageReadStatus[messageId] || 'sent';
-    
-    switch (status) {
-      case 'sent':
-        return (
-          <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-          </svg>
-        );
-      case 'delivered':
-        return (
-          <div className="flex -space-x-1">
-            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            <svg className="w-3 h-3 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </div>
-        );
-      case 'read':
-        return (
-          <div className="flex -space-x-1">
-            <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-            <svg className="w-3 h-3 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-            </svg>
-          </div>
-        );
-      default:
-        return null;
-    }
-  };
-
   // Cargar mensajes
   const loadMessages = async () => {
     if (!conversationId || !session) return;
@@ -533,9 +495,24 @@ export default function IndividualChatWindow({
                     {formatMessageTime(message.created_at)}
                   </p>
                   {message.sender_id === userId && (
-                    <div className="ml-2 flex items-center">
-                      {getMessageStatusIcon(message.id)}
-                    </div>
+                    <span className="ml-2 flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
+                      {message.is_read_by_other ? (
+                        // Visto (doble check azul)
+                        <span className="inline-flex items-center" style={{ width: '16px' }}>
+                          <svg className="w-3.5 h-3.5 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                          <svg className="w-3.5 h-3.5 text-blue-300 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        </span>
+                      ) : (
+                        // Entregado (un solo check gris)
+                        <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </span>
                   )}
                 </div>
               </div>

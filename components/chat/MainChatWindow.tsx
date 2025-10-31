@@ -80,6 +80,81 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     ? (conversations || []).find((c: any) => c.id === selectedConversation)?.other_participant
     : null;
 
+  // Helper para formatear fecha del separador
+  const formatDateSeparator = (date: Date): string => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const messageDate = new Date(date);
+    messageDate.setHours(0, 0, 0, 0);
+
+    if (messageDate.getTime() === today.getTime()) {
+      return 'Hoy';
+    } else if (messageDate.getTime() === yesterday.getTime()) {
+      return 'Ayer';
+    } else {
+      return messageDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'long', year: 'numeric' });
+    }
+  };
+
+  // Helper para verificar si dos fechas son de días diferentes
+  const isDifferentDay = (date1: string, date2: string): boolean => {
+    const d1 = new Date(date1);
+    const d2 = new Date(date2);
+    d1.setHours(0, 0, 0, 0);
+    d2.setHours(0, 0, 0, 0);
+    return d1.getTime() !== d2.getTime();
+  };
+
+  // Helper para verificar si dos mensajes deben agruparse (mismo remitente y < 5 min de diferencia)
+  const shouldGroupMessages = (msg1: any, msg2: any): boolean => {
+    if (!msg1 || !msg2) return false;
+    if (msg1.sender_id !== msg2.sender_id) return false;
+    
+    const timeDiff = Math.abs(new Date(msg2.created_at).getTime() - new Date(msg1.created_at).getTime());
+    const fiveMinutes = 5 * 60 * 1000; // 5 minutos en ms
+    return timeDiff < fiveMinutes;
+  };
+
+  // Helper para formatear timestamp relativo o absoluto
+  const formatMessageTime = (dateString: string): string => {
+    const messageDate = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - messageDate.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    // Si es del mismo día y menos de 1 hora: mostrar relativo
+    if (diffMins < 60 && messageDate.toDateString() === now.toDateString()) {
+      if (diffMins < 1) return 'hace un momento';
+      if (diffMins === 1) return 'hace 1 min';
+      return `hace ${diffMins} min`;
+    }
+
+    // Si es de hoy pero > 1 hora: mostrar hora
+    if (messageDate.toDateString() === now.toDateString()) {
+      return messageDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+    }
+
+    // Si es de ayer
+    const yesterday = new Date(now);
+    yesterday.setDate(yesterday.getDate() - 1);
+    if (messageDate.toDateString() === yesterday.toDateString()) {
+      return `Ayer, ${messageDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    // Si es de la última semana: día de la semana + hora
+    if (diffDays < 7) {
+      const dayName = messageDate.toLocaleDateString('es-ES', { weekday: 'short' });
+      return `${dayName}, ${messageDate.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' })}`;
+    }
+
+    // Más de una semana: fecha completa
+    return messageDate.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+  };
+
   // Auto-scroll al final para continuidad de conversación
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
@@ -344,39 +419,67 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           <>
             {/* Mensajes */}
             <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0">
-              {messages.map((message) => (
-                <div
-                  key={message.id}
-                  className={`flex mb-4 ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
-                >
-                  <div
-                    className={`max-w-[70%] p-3 rounded-lg ${
-                      message.sender_id === userId
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-700 text-white'
-                    }`}
-                  >
-                    <p className="text-sm">{message.content}</p>
-                    <div className="flex items-center justify-end gap-1 mt-1">
-                      <span className="text-xs text-gray-300">
-                        {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                      {/* Doble check: solo mostrar en mensajes propios */}
-                      {message.sender_id === userId && (
-                        <span className={`text-xs ${message.is_read_by_other ? 'text-blue-300' : 'text-gray-400'}`}>
-                          {message.is_read_by_other ? (
-                            // Visto (doble check azul)
-                            <span title="Visto">✓✓</span>
-                          ) : (
-                            // Entregado (doble check gris)
-                            <span title="Entregado">✓✓</span>
-                          )}
+              {messages.map((message, index) => {
+                const prevMessage = index > 0 ? messages[index - 1] : null;
+                const nextMessage = index < messages.length - 1 ? messages[index + 1] : null;
+                const showDateSeparator = !prevMessage || isDifferentDay(prevMessage.created_at, message.created_at);
+                const isGrouped = prevMessage && shouldGroupMessages(prevMessage, message);
+                const isLastInGroup = !nextMessage || !shouldGroupMessages(message, nextMessage) || isDifferentDay(message.created_at, nextMessage.created_at);
+                
+                return (
+                  <React.Fragment key={message.id}>
+                    {showDateSeparator && (
+                      <div className="flex justify-center my-4">
+                        <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
+                          {formatDateSeparator(new Date(message.created_at))}
                         </span>
-                      )}
+                      </div>
+                    )}
+                    <div
+                      className={`flex ${isGrouped ? 'mb-1' : 'mb-4'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
+                    >
+                      <div
+                        className={`max-w-[70%] p-3 rounded-lg ${
+                          message.sender_id === userId
+                            ? 'bg-blue-600 text-white'
+                            : 'bg-gray-700 text-white'
+                        }`}
+                      >
+                        <p className="text-sm">{message.content}</p>
+                        {/* Solo mostrar timestamp y estado en el último mensaje del grupo */}
+                        {isLastInGroup && (
+                          <div className="flex items-center justify-end gap-1 mt-1">
+                            <span className="text-xs text-gray-300" title={new Date(message.created_at).toLocaleString('es-ES')}>
+                              {formatMessageTime(message.created_at)}
+                            </span>
+                            {/* Estados de lectura: solo mostrar en mensajes propios */}
+                            {message.sender_id === userId && (
+                              <span className="ml-1 flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
+                                {message.is_read_by_other ? (
+                                  // Visto (doble check azul)
+                                  <span className="inline-flex items-center" style={{ width: '16px' }}>
+                                    <svg className="w-3.5 h-3.5 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                    <svg className="w-3.5 h-3.5 text-blue-300 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  </span>
+                                ) : (
+                                  // Entregado (un solo check gris)
+                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </div>
-              ))}
+                  </React.Fragment>
+                );
+              })}
               <div ref={messagesEndRef} />
             </div>
 
