@@ -56,8 +56,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [conversationsTabBlinking, setConversationsTabBlinking] = useState(false);
-  // Registro local de último mensaje visto por conversación
+  // Registro local de último mensaje visto por conversación (usando ref para acceso inmediato)
   const [lastSeenMessageByConv, setLastSeenMessageByConv] = useState<Record<string, string>>({});
+  const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
+  
+  // Helper para marcar mensaje como visto (actualiza tanto estado como ref)
+  const markMessageAsSeen = (conversationId: string, messageId: string) => {
+    console.log('👁️ [ChatWidget] Marcando mensaje como visto:', conversationId, messageId);
+    setLastSeenMessageByConv(prevSeen => {
+      const newSeen = {
+        ...prevSeen,
+        [conversationId]: messageId
+      };
+      // Actualizar ref inmediatamente para acceso síncrono
+      lastSeenMessageByConvRef.current = newSeen;
+      return newSeen;
+    });
+  };
+  
+  // Mantener ref sincronizado con el estado
+  useEffect(() => {
+    lastSeenMessageByConvRef.current = lastSeenMessageByConv;
+  }, [lastSeenMessageByConv]);
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [session, setSession] = useState<any>(null);
@@ -267,11 +287,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (data.success) {
         setConversations(data.conversations);
         
-        // 🔔 LÓGICA RESTAURADA: Detectar mensajes no leídos (como funcionaba el círculo rojo)
+        // 🔔 LÓGICA RESTAURADA: Detectar mensajes no leídos usando ref para estado siempre actualizado
         const unread = data.conversations.reduce((count: number, conv: any) => {
           if (!conv.last_message) return count;
           const lastMsgId = conv.last_message.id;
-          const seenId = lastSeenMessageByConv[conv.id];
+          const seenId = lastSeenMessageByConvRef.current[conv.id];
           const isFromOther = conv.last_message.sender_id !== userId;
           const isSelectedOpen = isOpen && mainView === 'chat' && conv.id === selectedConversation;
           const consideredUnread = isFromOther && !isSelectedOpen && lastMsgId !== seenId;
@@ -385,18 +405,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 triggerNotification();
               }
             }
-            
-            // Marcar como visto el último mensaje cuando estamos en esta conversación
-            if (newMessages.length > 0) {
-              const last = newMessages[newMessages.length - 1];
-              setLastSeenMessageByConv(prevSeen => ({
-                ...prevSeen,
-                [conversationId]: last.id
-              }));
-            }
-            return newMessages;
           }
-          return prev;
+          
+          // SIEMPRE marcar como visto el último mensaje cuando cargamos esta conversación
+          // (tanto si hay cambios como si no, porque el usuario está leyendo)
+          if (newMessages.length > 0) {
+            const last = newMessages[newMessages.length - 1];
+            markMessageAsSeen(conversationId, last.id);
+          }
+          
+          return hasChanges ? newMessages : prev;
         });
         setSelectedConversation(conversationId);
       } else {
@@ -952,10 +970,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       setMessages(curr => {
         if (curr.length > 0) {
           const last = curr[curr.length - 1];
-          setLastSeenMessageByConv(prevSeen => ({
-            ...prevSeen,
-            [selectedConversation]: last.id
-          }));
+          markMessageAsSeen(selectedConversation, last.id);
         }
         return curr;
       });
@@ -997,15 +1012,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (mainView === 'conversations' || mainView === 'chat') {
       // Consideramos como "leído" al estar visualizando estas vistas
       if (conversationsTabBlinking) {
+        console.log('🛑 [ChatWidget] Deteniendo parpadeo porque usuario está viendo conversaciones/chat');
         setConversationsTabBlinking(false);
       }
       // Si estamos en chat con una conversación, marcar el último mensaje como visto
       if (mainView === 'chat' && selectedConversation && messages.length > 0) {
         const last = messages[messages.length - 1];
-        setLastSeenMessageByConv(prevSeen => ({
-          ...prevSeen,
-          [selectedConversation]: last.id
-        }));
+        markMessageAsSeen(selectedConversation, last.id);
+        // Recargar conversaciones para actualizar cálculo de no leídos inmediatamente
+        setTimeout(() => loadConversations(), 50);
       }
       try {
         if (titleBlinkIntervalRef.current) {
@@ -1020,6 +1035,37 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       }
     }
   }, [isOpen, mainView, conversationsTabBlinking, selectedConversation, messages.length]);
+
+  // Efecto específico: cuando cambias de conversación seleccionada o se cargan mensajes, marcarla como vista inmediatamente
+  useEffect(() => {
+    if (!selectedConversation || !isOpen || mainView !== 'chat') return;
+    
+    // Si hay mensajes, marcar el último como visto inmediatamente
+    if (messages.length > 0) {
+      const last = messages[messages.length - 1];
+      console.log('👁️ [ChatWidget] Conversación seleccionada/mensajes cargados, marcando como vista:', selectedConversation, 'último mensaje:', last.id);
+      
+      // Verificar si ya está marcado como visto antes de actualizar
+      const alreadySeen = lastSeenMessageByConvRef.current[selectedConversation] === last.id;
+      if (!alreadySeen) {
+        markMessageAsSeen(selectedConversation, last.id);
+      } else {
+        console.log('ℹ️ [ChatWidget] Ya estaba marcado como visto');
+      }
+      
+      // Desactivar parpadeo inmediatamente
+      if (conversationsTabBlinking) {
+        console.log('🛑 [ChatWidget] Desactivando parpadeo al marcar conversación como vista');
+        setConversationsTabBlinking(false);
+      }
+      
+      // Recargar conversaciones después de un breve delay para recalcular no leídos con el nuevo estado
+      setTimeout(() => {
+        console.log('🔄 [ChatWidget] Recargando conversaciones después de marcar como visto');
+        loadConversations();
+      }, 100);
+    }
+  }, [selectedConversation, messages.length]);
 
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
@@ -1073,10 +1119,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   return [...prev, newMessage];
                 });
                 // Marcar como visto inmediatamente al estar visualizándolo
-                setLastSeenMessageByConv(prevSeen => ({
-                  ...prevSeen,
-                  [newMessage.conversation_id]: newMessage.id
-                }));
+                markMessageAsSeen(newMessage.conversation_id, newMessage.id);
               }
               
               // Actualizar conversaciones para mostrar último mensaje
