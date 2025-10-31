@@ -580,7 +580,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         {view === 'chat' && selectedConversation && (
           <>
             {/* Mensajes */}
-            <div ref={messagesContainerRef} className="flex-1 px-1.5 py-4 overflow-y-auto custom-scrollbar min-h-0">
+            <div ref={messagesContainerRef} className="flex-1 px-1 py-4 overflow-y-auto custom-scrollbar min-h-0">
               {/* Mostrar contador de resultados si hay búsqueda activa */}
               {searchTerm && (
                 <div className="mb-2 text-center">
@@ -620,7 +620,6 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 const senderInfo = isReceivedMessage 
                   ? (activeUser || (message as any).sender || null)
                   : null;
-                const showAvatar = isReceivedMessage && isFirstInGroup && senderInfo;
                 
                 // Renderizado especial para mensajes de sistema/broadcast
                 if (isSpecialMessage) {
@@ -692,22 +691,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                       </div>
                     )}
                     <div
-                      className={`group flex items-start ${isGrouped ? 'mb-1' : 'mb-3'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-2`}
+                      className={`group flex items-start ${isGrouped ? 'mb-1' : 'mb-3'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
                     >
-                      {/* Avatar solo en mensajes recibidos, primer mensaje del grupo */}
-                      {isReceivedMessage && (
-                        showAvatar ? (
-                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500/90 to-blue-600/90 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <span className="text-white text-[10px] font-semibold">
-                              {getUserInitial(senderInfo)}
-                            </span>
-                          </div>
-                        ) : (
-                          <div className="w-6 flex-shrink-0" />
-                        )
-                      )}
                       <div
-                        className={`relative max-w-[75%] rounded-2xl animate-fadeIn ${
+                        className={`relative max-w-[85%] rounded-2xl animate-fadeIn ${
                           message.sender_id === userId
                             ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-[0_2px_8px_rgba(59,130,246,0.25)]'
                             : 'bg-gray-800/95 backdrop-blur-sm text-gray-50 shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
@@ -809,10 +796,6 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                           </div>
                         )}
                       </div>
-                      {/* Espacio simétrico en el lado opuesto */}
-                      {message.sender_id === userId && (
-                        <div className="w-6 flex-shrink-0" />
-                      )}
                     </div>
                   </React.Fragment>
                 );
