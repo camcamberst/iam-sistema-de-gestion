@@ -707,10 +707,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         )
                       )}
                       <div
-                        className={`relative max-w-[70%] px-3 py-2 shadow-sm animate-fadeIn ${
+                        className={`relative max-w-[70%] px-2.5 py-1.5 rounded-2xl shadow-sm animate-fadeIn ${
                           message.sender_id === userId
-                            ? 'bg-blue-600 text-white rounded-2xl'
-                            : 'bg-gray-700 text-gray-100 rounded-2xl'
+                            ? 'bg-gradient-to-br from-blue-500/90 to-blue-600/90 backdrop-blur-sm text-white'
+                            : 'bg-gray-700/80 backdrop-blur-sm text-gray-100'
                         }`}
                         role="article"
                         aria-label={`Mensaje de ${message.sender_id === userId ? 'ti' : getDisplayName(senderInfo || {})} enviado ${formatMessageTime(message.created_at)}`}
@@ -732,19 +732,19 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         </p>
                         {/* Solo mostrar timestamp, estado y acciones en el último mensaje del grupo */}
                         {isLastInGroup && (
-                          <div className="flex items-center justify-end gap-2 mt-0.5">
+                          <div className="flex items-center justify-end gap-1.5 mt-0.5">
                             {/* Botones de acción (solo visibles al hover del grupo) */}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
                               <button
                                 onClick={() => {
                                   navigator.clipboard.writeText(message.content);
                                   // Feedback visual opcional (podríamos agregar un toast)
                                 }}
-                                className="p-1 rounded-md hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
+                                className="p-0.5 rounded hover:bg-black/20 text-gray-300/80 hover:text-white transition-colors"
                                 title="Copiar mensaje"
                                 aria-label="Copiar mensaje"
                               >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                                 </svg>
                               </button>
@@ -753,36 +753,36 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                   // TODO: Implementar funcionalidad de responder
                                   // Por ahora solo placeholder visual
                                 }}
-                                className="p-1 rounded-md hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
+                                className="p-0.5 rounded hover:bg-black/20 text-gray-300/80 hover:text-white transition-colors"
                                 title="Responder mensaje"
                                 aria-label="Responder mensaje"
                               >
-                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                 </svg>
                               </button>
                             </div>
-                            {/* Timestamp y estado de lectura */}
-                            <div className="flex items-center gap-1">
-                              <span className="text-xs text-gray-300" title={new Date(message.created_at).toLocaleString('es-ES')}>
+                            {/* Timestamp y estado de lectura - más compactos y sutiles */}
+                            <div className="flex items-center gap-0.5">
+                              <span className="text-[10px] text-gray-300/70 leading-none" title={new Date(message.created_at).toLocaleString('es-ES')}>
                                 {formatMessageTime(message.created_at)}
                               </span>
                               {/* Estados de lectura: solo mostrar en mensajes propios */}
                               {message.sender_id === userId && (
                                 <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
                                   {message.is_read_by_other ? (
-                                    // Visto (doble check azul)
-                                    <span className="inline-flex items-center" style={{ width: '16px' }}>
-                                      <svg className="w-3.5 h-3.5 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                                    // Visto (doble check azul más sutil)
+                                    <span className="inline-flex items-center" style={{ width: '14px' }}>
+                                      <svg className="w-3 h-3 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                       </svg>
-                                      <svg className="w-3.5 h-3.5 text-blue-300 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                      <svg className="w-3 h-3 text-blue-200 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
                                         <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                       </svg>
                                     </span>
                                   ) : (
-                                    // Entregado (un solo check gris)
-                                    <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                    // Entregado (un solo check gris más sutil)
+                                    <svg className="w-3 h-3 text-gray-300/60" fill="currentColor" viewBox="0 0 20 20">
                                       <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                     </svg>
                                   )}
