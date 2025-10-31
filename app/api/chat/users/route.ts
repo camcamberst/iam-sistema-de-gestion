@@ -134,16 +134,46 @@ export async function GET(request: NextRequest) {
     const userIds = availableUsers.map((u: any) => u.id);
     const { data: userStatuses } = await supabase
       .from('chat_user_status')
-      .select('user_id, is_online, last_seen, status_message')
+      .select('user_id, is_online, last_seen, status_message, updated_at')
       .in('user_id', userIds);
+
+    // Verificar usuarios inactivos: si no han enviado heartbeat en más de 2 minutos, están offline
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
 
     // Combinar información de usuarios con estados
     const usersWithStatus = availableUsers.map((user: any) => {
       const status = userStatuses?.find((s: any) => s.user_id === user.id);
+      
+      // Determinar si está realmente online
+      let isOnline = status?.is_online || false;
+      const lastSeen = status?.last_seen || status?.updated_at || user.last_login;
+      
+      // Si está marcado como online pero no ha enviado heartbeat recientemente, considerarlo offline
+      if (isOnline && lastSeen) {
+        const lastSeenDate = new Date(lastSeen);
+        const twoMinutesAgoDate = new Date(twoMinutesAgo);
+        if (lastSeenDate < twoMinutesAgoDate) {
+          console.log(`🔴 [CHAT-USERS] Usuario ${user.id} marcado como offline por inactividad (>2 min)`);
+          isOnline = false;
+          
+          // Actualizar en la base de datos (en segundo plano, no bloquear la respuesta)
+          supabase
+            .from('chat_user_status')
+            .update({ is_online: false })
+            .eq('user_id', user.id)
+            .then(() => {
+              console.log(`✅ [CHAT-USERS] Usuario ${user.id} actualizado a offline por inactividad`);
+            })
+            .catch((error) => {
+              console.error(`❌ [CHAT-USERS] Error actualizando usuario ${user.id} a offline:`, error);
+            });
+        }
+      }
+      
       return {
         ...user,
-        is_online: status?.is_online || false,
-        last_seen: status?.last_seen || user.last_login,
+        is_online: isOnline,
+        last_seen: lastSeen,
         status_message: status?.status_message || null
       };
     });

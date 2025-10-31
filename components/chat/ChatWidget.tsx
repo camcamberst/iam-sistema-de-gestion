@@ -1061,8 +1061,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         async (payload) => {
           console.log('👥 [ChatWidget] Estado de usuario actualizado:', payload);
           
-          // Recargar lista de usuarios para reflejar cambios
+          // Recargar lista de usuarios para reflejar cambios inmediatamente
+          // Esto detecta cuando un usuario se marca como offline
           await loadAvailableUsers();
+          
+          // Log adicional para debugging
+          if (payload.new) {
+            const newStatus = payload.new as any;
+            console.log(`📊 [ChatWidget] Usuario ${newStatus.user_id} ahora está ${newStatus.is_online ? 'EN LÍNEA' : 'OFFLINE'}`);
+          }
         }
       )
       .subscribe((status) => {

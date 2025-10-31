@@ -56,27 +56,29 @@ export async function setUserOffline(userId: string): Promise<void> {
  */
 export async function cleanupInactiveUsers(): Promise<void> {
   try {
-    const oneMinuteAgo = new Date(Date.now() - 1 * 60 * 1000).toISOString();
+    // Verificar usuarios que no han enviado heartbeat en más de 2 minutos
+    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     
     // Primero obtener el conteo de usuarios que serán actualizados
+    // Verificamos tanto updated_at como last_seen para mayor precisión
     const { count } = await supabase
       .from('chat_user_status')
       .select('*', { count: 'exact', head: true })
-      .lt('updated_at', oneMinuteAgo)
-      .eq('is_online', true);
+      .eq('is_online', true)
+      .or(`updated_at.lt.${twoMinutesAgo},last_seen.lt.${twoMinutesAgo}`);
 
-    // Luego actualizar los usuarios
+    // Luego actualizar los usuarios que no han enviado heartbeat recientemente
     const { error } = await supabase
       .from('chat_user_status')
       .update({ is_online: false })
-      .lt('updated_at', oneMinuteAgo)
-      .eq('is_online', true);
+      .eq('is_online', true)
+      .or(`updated_at.lt.${twoMinutesAgo},last_seen.lt.${twoMinutesAgo}`);
 
     if (error) {
       console.error('❌ [CHAT-STATUS] Error limpiando usuarios inactivos:', error);
     } else {
       if (count && count > 0) {
-        console.log(`✅ [CHAT-STATUS] ${count} usuarios inactivos marcados como offline`);
+        console.log(`✅ [CHAT-STATUS] ${count} usuarios inactivos (>2 min) marcados como offline`);
       }
     }
   } catch (error) {
