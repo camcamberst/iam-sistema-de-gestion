@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       conversations.map(async (conv) => {
         const { data: lastMessage } = await supabase
           .from('chat_messages')
-          .select('content, created_at, sender_id')
+          .select('content, created_at, sender_id, is_broadcast, no_reply, metadata')
           .eq('conversation_id', conv.id)
           .order('created_at', { ascending: false })
           .limit(1)
@@ -69,17 +69,32 @@ export async function GET(request: NextRequest) {
           ? conv.participant_2 
           : conv.participant_1;
 
-        return {
+        const convWith = {
           ...conv,
           other_participant: otherParticipant,
           last_message: lastMessage
-        };
+        } as any;
+
+        // Excluir conversaciones de solo difusión (no_reply) generadas por Botty para receptores
+        if (
+          convWith.last_message &&
+          (convWith.last_message as any).is_broadcast &&
+          (convWith.last_message as any).no_reply &&
+          (convWith.last_message as any).sender_id === AIM_BOTTY_ID &&
+          !((convWith.last_message as any).metadata && (convWith.last_message as any).metadata.summary === true)
+        ) {
+          return null;
+        }
+
+        return convWith;
       })
     );
 
+    const filtered = conversationsWithLastMessage.filter(Boolean);
+
     return NextResponse.json({ 
       success: true, 
-      conversations: conversationsWithLastMessage 
+      conversations: filtered 
     });
 
   } catch (error) {

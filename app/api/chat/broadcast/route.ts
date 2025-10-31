@@ -145,7 +145,7 @@ export async function POST(req: NextRequest) {
           is_broadcast: true,
           no_reply: true,
           broadcast_id: broadcastId,
-          metadata: { label: 'Difusión' }
+          metadata: { label: 'Difusión', summary: false }
         });
 
       // Auditar destino
@@ -154,6 +154,40 @@ export async function POST(req: NextRequest) {
           .from('chat_broadcast_targets')
           .insert({ broadcast_id: broadcastId, user_id: targetId, delivered_at: new Date().toISOString() });
       }
+    }
+
+    // Crear o reutilizar conversación RESUMEN para el emisor con Botty
+    const { data: senderConv } = await supabase
+      .from('chat_conversations')
+      .select('id')
+      .or(`and(participant_1_id.eq.${user.id},participant_2_id.eq.${AIM_BOTTY_ID}),and(participant_1_id.eq.${AIM_BOTTY_ID},participant_2_id.eq.${user.id})`)
+      .maybeSingle();
+
+    let senderConversationId = senderConv?.id;
+    if (!senderConversationId) {
+      const { data: created } = await supabase
+        .from('chat_conversations')
+        .insert({ participant_1_id: user.id, participant_2_id: AIM_BOTTY_ID })
+        .select('id')
+        .single();
+      senderConversationId = created?.id || undefined;
+    }
+
+    if (senderConversationId) {
+      const scopeInfo = body.userIds?.length ? `Usuarios: ${body.userIds.length}`
+        : body.roles?.length ? `Roles: ${body.roles.join(', ')}`
+        : body.groupIds?.length ? `Grupos: ${body.groupIds.length}`
+        : 'Destinatarios definidos';
+
+      await supabase.from('chat_messages').insert({
+        conversation_id: senderConversationId,
+        sender_id: AIM_BOTTY_ID,
+        content: `Difusión enviada (${targetUserIds.length} destinatarios). ${scopeInfo}.`,
+        is_broadcast: true,
+        no_reply: true,
+        broadcast_id: broadcastId,
+        metadata: { label: 'Difusión', summary: true, scope: { roles: body.roles || [], groupIds: body.groupIds || [], userIds: body.userIds || [] } }
+      });
     }
 
     return NextResponse.json({ success: true, recipients: targetUserIds.length, broadcast_id: broadcastId });
