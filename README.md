@@ -1,33 +1,37 @@
-# n8n Playground
+# IAM Sistema de Gestión
 
-Un espacio de aprendizaje y experimentación con n8n para crear agentes de automatización.
+Plataforma interna de gestión con chat integrado, AIM Botty (asistente IA con Google Gemini), flujos de anticipos, y paneles por rol (modelo, admin, super_admin).
 
-## ¿Qué es n8n?
+## Documentación principal
 
-n8n es una herramienta de automatización de flujos de trabajo que permite crear "nodos" conectados para automatizar tareas sin código.
+- `docs/AIM_BOTTY_IMPLEMENTATION.md` – Implementación y uso de AIM Botty, difusiones y UX del chat.
+- `CHANGELOG.md` – Cambios por versión.
+- `ARQUITECTURA_SISTEMA_GESTION.md` – Arquitectura general del sistema.
 
-## Objetivos de este proyecto
+## Requisitos
 
-- Aprender los conceptos básicos de n8n
-- Crear agentes de automatización simples
-- Experimentar con diferentes tipos de nodos
-- Desarrollar flujos de trabajo útiles
+- Node.js 18+
+- Variables de entorno mínimas:
+  - `GOOGLE_GEMINI_API_KEY`
+  - `NEXT_PUBLIC_APP_URL`
+  - Credenciales Supabase
 
-## Estructura del proyecto
+## Scripts comunes
 
-- `workflows/` - Flujos de trabajo exportados
-- `docs/` - Documentación y notas de aprendizaje
-- `examples/` - Ejemplos y plantillas
+```bash
+npm install
+npm run dev
+npm run build && npm start
+```
 
-## Primeros pasos
+## Componentes clave
 
-1. Instalar n8n
-2. Crear tu primer workflow
-3. Experimentar con diferentes nodos
-4. Documentar lo aprendido
+- Chat y AIM Assistant: `components/chat/*`
+- APIs de chat: `app/api/chat/*`
+- Bot IA (Gemini): `lib/chat/aim-botty.ts`, `lib/chat/process-bot-response.ts`
+- Difusiones: `app/api/chat/broadcast/route.ts`, `scripts/create_chat_broadcasts.sql`
 
-## Recursos útiles
+## Notas
 
-- [Documentación oficial de n8n](https://docs.n8n.io/)
-- [Comunidad n8n](https://community.n8n.io/)
-- [Tutoriales en YouTube](https://www.youtube.com/c/n8nio)
+- Botty se identifica por `AIM_BOTTY_ID` y está excluido de resúmenes de facturación.
+- Sonidos de chat deshabilitados; parpadeo de pestaña y apertura automática no intrusiva activados.
