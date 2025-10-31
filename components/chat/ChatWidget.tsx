@@ -1125,9 +1125,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 markMessageAsSeen(newMessage.conversation_id, newMessage.id);
               }
               
-              // Actualizar conversaciones para mostrar último mensaje
-              console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
-              loadConversations();
+              // Actualizar conversaciones para mostrar último mensaje solo si NO estamos viendo esta conversación
+              if (!(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)) {
+                console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
+                loadConversations();
+              } else {
+                // Si estamos viéndola, asegurar contador en 0 localmente
+                zeroUnreadForConversation(newMessage.conversation_id);
+              }
               
               // Activar parpadeo de pestaña "Conversaciones" si el mensaje no es del usuario actual
               // y no estamos viendo esa conversación actualmente
