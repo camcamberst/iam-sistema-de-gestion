@@ -1013,13 +1013,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 zeroUnreadForConversation(newMessage.conversation_id);
               }
               
-              // Activar parpadeo de pestaña "Conversaciones" si el mensaje no es del usuario actual
-              // y no estamos viendo esa conversación actualmente
+              // Si el mensaje es de otro usuario y no estamos viendo esa conversación, mostrar toast
               if (
                 newMessage.sender_id !== userId &&
                 !(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)
               ) {
-                setConversationsTabBlinking(true);
+                // El toast se mostrará automáticamente en la próxima carga de conversaciones
+                // Recargar conversaciones para obtener datos completos
+                setTimeout(() => loadConversations(), 100);
               } else if (isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id) {
                 // Si estamos en la conversación, marcar visto en servidor y resetear contador de esa conversación
                 (async () => {
