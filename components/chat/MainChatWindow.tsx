@@ -248,9 +248,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         // Solo expandir si hay saltos de línea
         textareaRef.current.style.height = 'auto';
         textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`; // Max 120px
+        // Mostrar scrollbar solo cuando hay múltiples líneas
+        textareaRef.current.style.overflowY = 'auto';
       } else {
         // Mantener altura de una sola línea
         textareaRef.current.style.height = '42px';
+        // Ocultar scrollbar cuando es una sola línea
+        textareaRef.current.style.overflowY = 'hidden';
       }
     }
   }, [newMessage]);
@@ -860,12 +864,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   value={newMessage}
                   onChange={(e) => setNewMessage?.(e.target.value)}
                   onKeyDown={handleTextareaKeyDown}
-                  placeholder={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}...` : 'Escribe tu mensaje...'}
-                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none h-[42px] max-h-[120px] text-sm leading-relaxed overflow-y-auto"
-                  aria-label={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}` : 'Escribe tu mensaje'}
+                  placeholder="Escribe tu mensaje..."
+                  className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all resize-none h-[42px] max-h-[120px] text-sm leading-relaxed"
+                  aria-label="Escribe tu mensaje"
                   aria-required="false"
                   rows={1}
                   style={{ 
+                    overflowY: 'hidden',
                     scrollbarWidth: 'thin',
                     scrollbarColor: '#4B5563 #374151'
                   }}
