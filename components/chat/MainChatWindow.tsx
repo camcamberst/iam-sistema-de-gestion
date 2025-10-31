@@ -480,7 +480,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                       </div>
                     )}
                     <div
-                      className={`flex items-end ${isGrouped ? 'mb-1' : 'mb-4'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-2`}
+                      className={`group flex items-end ${isGrouped ? 'mb-1' : 'mb-4'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-2`}
                     >
                       {/* Avatar solo en mensajes recibidos, primer mensaje del grupo */}
                       {isReceivedMessage && (
@@ -495,13 +495,29 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         )
                       )}
                       <div
-                        className={`max-w-[70%] p-3 rounded-lg shadow-sm animate-fadeIn ${
+                        className={`relative max-w-[70%] p-3.5 shadow-sm animate-fadeIn ${
                           message.sender_id === userId
-                            ? 'bg-blue-600 text-white'
-                            : 'bg-gray-700 text-white'
+                            ? 'bg-blue-600 text-white rounded-2xl'
+                            : 'bg-gray-700 text-gray-100 rounded-2xl'
                         }`}
+                        role="article"
+                        aria-label={`Mensaje de ${message.sender_id === userId ? 'ti' : getDisplayName(senderInfo || {})} enviado ${formatMessageTime(message.created_at)}`}
                       >
-                        <p className="text-sm">{message.content}</p>
+                        {/* Botón copiar (solo visible al hover) */}
+                        <button
+                          onClick={() => {
+                            navigator.clipboard.writeText(message.content);
+                            // Feedback visual opcional (podríamos agregar un toast)
+                          }}
+                          className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity p-1.5 rounded-lg hover:bg-black/20 text-gray-300 hover:text-white"
+                          title="Copiar mensaje"
+                          aria-label="Copiar mensaje"
+                        >
+                          <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                          </svg>
+                        </button>
+                        <p className="text-sm pr-6">{message.content}</p>
                         {/* Solo mostrar timestamp y estado en el último mensaje del grupo */}
                         {isLastInGroup && (
                           <div className="flex items-center justify-end gap-1 mt-1">
@@ -549,6 +565,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   onKeyPress={handleKeyPress}
                   placeholder={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}...` : 'Escribe tu mensaje...'}
                   className="flex-1 p-2.5 rounded-lg bg-gray-700 text-white placeholder-gray-400 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all"
+                  aria-label={activeUser ? `Escribe un mensaje a ${getDisplayName(activeUser)}` : 'Escribe tu mensaje'}
+                  aria-required="false"
                 />
                 <button
                   onClick={sendMessage}
