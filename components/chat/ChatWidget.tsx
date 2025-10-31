@@ -611,7 +611,41 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       return;
     }
     
-    // Verificar si ya hay una ventana abierta para este usuario
+    // Si la ventana principal (AIM Assistant) está abierta, integrar la conversación allí
+    if (isOpen) {
+      if (existingConversation) {
+        console.log('🪟 [ChatWidget] Integrando conversación existente dentro del AIM Assistant:', existingConversation.id);
+        setSelectedConversation(existingConversation.id);
+        setMainView('chat');
+        await loadMessages(existingConversation.id);
+      } else {
+        console.log('🆕 [ChatWidget] Creando conversación integrada en AIM Assistant con:', user.name || user.email);
+        try {
+          const response = await fetch('/api/chat/conversations', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${session.access_token}`
+            },
+            body: JSON.stringify({ participant_2_id: userId })
+          });
+          const data = await response.json();
+          if (data.success) {
+            setSelectedConversation(data.conversation.id);
+            setMainView('chat');
+            await loadMessages(data.conversation.id);
+            await loadConversations();
+          } else {
+            console.error('❌ [ChatWidget] Error creando conversación:', data.error);
+          }
+        } catch (error) {
+          console.error('❌ [ChatWidget] Error creando conversación:', error);
+        }
+      }
+      return; // No abrir ventana individual
+    }
+
+    // Verificar si ya hay una ventana abierta para este usuario (modo flotante)
     const existingWindow = openChatWindows.find(window => window.otherUser.id === userId);
     if (existingWindow) {
       console.log('🪟 [ChatWidget] Ventana ya abierta para este usuario');
@@ -1163,27 +1197,27 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
       {isMounted && createPortal(
         (
-          <button
-            onClick={toggleChat}
-            onContextMenu={(e) => {
-              e.preventDefault();
-              console.log('🧪 [ChatWidget] Prueba manual de notificación');
-              triggerNotification();
-            }}
+      <button
+        onClick={toggleChat}
+        onContextMenu={(e) => {
+          e.preventDefault();
+          console.log('🧪 [ChatWidget] Prueba manual de notificación');
+          triggerNotification();
+        }}
             style={{
               right: 24,
               bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
             }}
             className={`fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
-              isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
-            }`}
-            aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
-          >
-            <div className="flex items-center justify-center">
-              <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
-              <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
-            </div>
-          </button>
+          isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
+        }`}
+        aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
+      >
+        <div className="flex items-center justify-center">
+          <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
+          <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
+        </div>
+      </button>
         ),
         document.body
       )}
