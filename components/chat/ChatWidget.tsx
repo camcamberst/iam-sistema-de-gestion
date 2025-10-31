@@ -285,57 +285,35 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        setConversations(data.conversations);
-        
-        // 🔔 LÓGICA RESTAURADA: Detectar mensajes no leídos usando ref para estado siempre actualizado
-        const unread = data.conversations.reduce((count: number, conv: any) => {
-          if (!conv.last_message) return count;
-          const lastMsgId = conv.last_message.id;
-          const seenId = lastSeenMessageByConvRef.current[conv.id];
-          const isFromOther = conv.last_message.sender_id !== userId;
-          const isSelectedOpen = isOpen && mainView === 'chat' && conv.id === selectedConversation;
-          const consideredUnread = isFromOther && !isSelectedOpen && lastMsgId !== seenId;
-          return consideredUnread ? count + 1 : count;
-        }, 0);
-        
-        // Activar parpadeo de pestaña "Conversaciones" si hay mensajes no leídos
-        if (unread > 0) {
-          setConversationsTabBlinking(true);
-        } else {
-          setConversationsTabBlinking(false);
-        }
-        
-        console.log('📊 [ChatWidget] Mensajes no leídos detectados:', { 
-          unread, 
-          lastUnreadCount, 
-          hasNewMessage: unread > lastUnreadCount 
-        });
-        
-        // Detectar si hay un incremento en mensajes no leídos (nuevo mensaje)
-        if (unread > lastUnreadCount && lastUnreadCount >= 0) {
-          console.log('🔔 [ChatWidget] ¡INCREMENTO DE MENSAJES DETECTADO!', {
-            unread,
-            lastUnreadCount,
-            canTrigger: canTriggerNotification()
-          });
-          
-          // Solo activar notificación si se puede (incluye verificación de tiempo)
-          if (canTriggerNotification()) {
-            console.log('🔔 [ChatWidget] Activando notificación automática...');
-            triggerNotification();
-          } else {
-            console.log('🔔 [ChatWidget] No se puede activar notificación en este momento');
+        // Si estamos viendo una conversación, forzar su unread_count a 0 localmente
+        const normalized = (data.conversations || []).map((conv: any) => {
+          if (isOpen && mainView === 'chat' && selectedConversation === conv.id) {
+            return { ...conv, unread_count: 0 };
           }
+          return conv;
+        });
+        setConversations(normalized);
+
+        // Calcular total de no leídos basado en unread_count del backend
+        const unread = normalized.reduce((acc: number, conv: any) => acc + (conv.unread_count || 0), 0);
+
+        // Activar parpadeo si hay no leídos
+        setConversationsTabBlinking(unread > 0);
+
+        console.log('📊 [ChatWidget] No leídos (backend):', { unread, lastUnreadCount });
+
+        // Notificación solo si aumentó el conteo
+        if (unread > lastUnreadCount && lastUnreadCount >= 0 && canTriggerNotification()) {
+          triggerNotification();
         }
-        
-        // Si el chat se abre, desactivar notificaciones
+
+        // Limpiar notificaciones si está abierto
         if (isOpen && notificationTriggered) {
-          console.log('🔔 [ChatWidget] Chat abierto - Desactivando notificaciones...');
           setNotificationTriggered(false);
           setIsBlinking(false);
           setHasNewMessage(false);
         }
-        
+
         setLastUnreadCount(unread);
       }
     } catch (error) {
@@ -1149,6 +1127,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 !(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)
               ) {
                 setConversationsTabBlinking(true);
+              } else if (isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id) {
+                // Si estamos en la conversación, marcar visto en servidor y resetear contador de esa conversación
+                try {
+                  if (session) {
+                    fetch('/api/chat/messages/read', {
+                      method: 'POST',
+                      headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${session.access_token}`
+                      },
+                      body: JSON.stringify({ conversation_id: newMessage.conversation_id })
+                    }).finally(() => loadConversations());
+                  }
+                } catch {}
               }
               
               // Detectar si el mensaje es de AIM Botty y abrir ventana automáticamente (solo una vez)
