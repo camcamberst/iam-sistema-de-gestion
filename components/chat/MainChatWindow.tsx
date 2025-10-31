@@ -843,38 +843,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                               ? 'border-blue-400/20' 
                               : 'border-gray-700/50'
                           }`}>
-                            {/* Para mensajes enviados: botones izquierda, timestamp derecha */}
-                            {/* Para mensajes recibidos: timestamp izquierda, botones derecha */}
+                            {/* Para mensajes enviados: timestamp izquierda, botones derecha */}
+                            {/* Para mensajes recibidos: botones izquierda, timestamp derecha */}
                             {message.sender_id === userId ? (
                               <>
-                                {/* Botones de acción a la izquierda (mensajes enviados) */}
-                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                                  <button
-                                    onClick={() => {
-                                      navigator.clipboard.writeText(message.content);
-                                    }}
-                                    className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
-                                    title="Copiar mensaje"
-                                    aria-label="Copiar mensaje"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                                    </svg>
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      // TODO: Implementar funcionalidad de responder
-                                    }}
-                                    className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
-                                    title="Responder mensaje"
-                                    aria-label="Responder mensaje"
-                                  >
-                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                                    </svg>
-                                  </button>
-                                </div>
-                                {/* Timestamp y estado a la derecha (mensajes enviados) */}
+                                {/* Timestamp y estado a la izquierda (mensajes enviados) */}
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-[10px] leading-none text-blue-100/70" title={new Date(message.created_at).toLocaleString('es-ES')}>
                                     {formatMessageTime(message.created_at)}
@@ -899,16 +872,37 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                     )}
                                   </span>
                                 </div>
+                                {/* Botones de acción a la derecha (mensajes enviados) */}
+                                <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                                  <button
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(message.content);
+                                    }}
+                                    className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
+                                    title="Copiar mensaje"
+                                    aria-label="Copiar mensaje"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                    </svg>
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      // TODO: Implementar funcionalidad de responder
+                                    }}
+                                    className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
+                                    title="Responder mensaje"
+                                    aria-label="Responder mensaje"
+                                  >
+                                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                    </svg>
+                                  </button>
+                                </div>
                               </>
                             ) : (
                               <>
-                                {/* Timestamp a la izquierda (mensajes recibidos) */}
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] leading-none text-gray-400/70" title={new Date(message.created_at).toLocaleString('es-ES')}>
-                                    {formatMessageTime(message.created_at)}
-                                  </span>
-                                </div>
-                                {/* Botones de acción a la derecha (mensajes recibidos) */}
+                                {/* Botones de acción a la izquierda (mensajes recibidos) */}
                                 <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
                                   <button
                                     onClick={() => {
@@ -934,6 +928,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
                                     </svg>
                                   </button>
+                                </div>
+                                {/* Timestamp a la derecha (mensajes recibidos) */}
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] leading-none text-gray-400/70" title={new Date(message.created_at).toLocaleString('es-ES')}>
+                                    {formatMessageTime(message.created_at)}
+                                  </span>
                                 </div>
                               </>
                             )}
