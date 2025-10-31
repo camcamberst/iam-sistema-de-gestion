@@ -66,7 +66,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   
   // 🔧 NUEVO: Estado para visibilidad del botón (sin cambiar posición)
   const [isScrolling, setIsScrolling] = useState(false);
-  // Posición fija del botón en parte inferior derecha
+  // Posición del botón (permanece abajo, pero se mueve con la scrollbar en una banda inferior)
+  const [assistantButtonTop, setAssistantButtonTop] = useState<number>(() => {
+    if (typeof window === 'undefined') return 0;
+    const buttonHeight = 40; // h-10
+    const margin = 24; // bottom-6/right-6
+    return window.innerHeight - buttonHeight - margin;
+  });
   
   // 🪟 Estado para ventanas individuales de chat
   const [openChatWindows, setOpenChatWindows] = useState<Array<{
@@ -114,10 +120,45 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     getSession();
   }, []);
 
-  // Mantener botón visible durante scroll (no necesita lógica; queda fijo abajo)
+  // Mantener botón en banda inferior y moverlo con la scrollbar (sin salir de la zona baja)
   useEffect(() => {
-    // No se requiere lógica adicional
-    return () => {};
+    let scrollTimeout: NodeJS.Timeout | undefined;
+    
+    const recomputeTop = () => {
+      if (typeof window === 'undefined' || typeof document === 'undefined') return;
+      const docEl = document.documentElement;
+      const scrollTop = docEl.scrollTop || document.body.scrollTop || 0;
+      const scrollHeight = docEl.scrollHeight;
+      const clientHeight = docEl.clientHeight;
+      const scrollRange = Math.max((scrollHeight - clientHeight), 0);
+      const ratio = scrollRange > 0 ? (scrollTop / scrollRange) : 0; // 0..1
+      
+      const buttonHeight = 40; // h-10
+      const margin = 24; // bottom-6
+      const maxTop = window.innerHeight - buttonHeight - margin; // límite inferior visible
+      const bandHeight = 120; // banda de 120px cerca del borde inferior
+      const minTop = Math.max(maxTop - bandHeight, margin); // límite superior de la banda
+      
+      const computedTop = Math.round(minTop + ratio * (maxTop - minTop));
+      setAssistantButtonTop(computedTop);
+    };
+    
+    const handleScroll = () => {
+      setIsScrolling(true);
+      recomputeTop();
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+      scrollTimeout = setTimeout(() => setIsScrolling(false), 120);
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    window.addEventListener('resize', recomputeTop);
+    recomputeTop();
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', recomputeTop);
+      if (scrollTimeout) clearTimeout(scrollTimeout);
+    };
   }, []);
 
   // Detener parpadeo cuando la pestaña recupera el foco
@@ -1158,7 +1199,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   return (
     <>
-      {/* Botón flotante para abrir el chat - FIJO ABAJO DERECHA */}
+      {/* Botón flotante: abajo a la derecha, moviéndose en una banda inferior con el scroll */}
       <button
         onClick={toggleChat}
         onContextMenu={(e) => {
@@ -1166,7 +1207,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           console.log('🧪 [ChatWidget] Prueba manual de notificación');
           triggerNotification();
         }}
-        className={`fixed bottom-6 right-6 w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
+        style={{ top: assistantButtonTop, right: 24 }}
+        className={`fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
           isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
         }`}
         aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
