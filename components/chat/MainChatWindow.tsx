@@ -77,7 +77,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   return (
     <div
-      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed relative"
+      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={{
         // Posicionar la ventana inmediatamente a la izquierda del botón,
         // dejando un pequeño espacio (gap) y alineando el borde inferior
@@ -366,7 +366,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       </div>
 
       {/* Contenedor para ventanas de chat embebidas dentro del AIM Assistant */}
-      <div id="aim-embedded-windows" className="absolute bottom-0 left-0 right-0" />
+      <div className="relative">
+        <div id="aim-embedded-windows" className="absolute bottom-0 left-0 right-0" />
+      </div>
     </div>
   );
 };
