@@ -7,6 +7,48 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/spec/v2.0.0.h
 
 ---
 
+## [1.4.0] - 2025-10-31
+
+### 🤖 AIM Botty y Chat – Mejoras y Difusión
+
+#### Nuevas funcionalidades
+- Endpoint `POST /api/chat/broadcast` para envíos masivos por `admin/super_admin` con límites jerárquicos.
+- Sistema de difusión sin hilos individuales a receptores; resumen único para el emisor con chip "Difusión" y `no_reply`.
+- Procesador directo `lib/chat/process-bot-response.ts` con fallback robusto de modelos Gemini y logging detallado.
+
+#### UX y comportamiento
+- Respuestas del bot más breves, tono cercano, saludo solo en el primer mensaje.
+- Pestaña "Conversaciones" parpadea ante mensajes sin leer; apertura automática de la ventana AIM una vez por mensaje.
+- Título del navegador parpadea con nuevos mensajes.
+- Scroll del chat anclado al fondo por defecto.
+- Confirmación de borrado embebida como overlay interno dentro de `MainChatWindow` sin alterar posicionamiento externo.
+- Botty siempre primero en la lista de usuarios online y mostrado como online.
+- Sonidos de notificación desactivados completamente.
+- Botty excluido del resumen de facturación (filtrado por ID/email).
+
+#### Backend y DB
+- `scripts/create_chat_broadcasts.sql`: Tablas `chat_broadcasts`, `chat_broadcast_targets` y columnas `is_broadcast`, `broadcast_id`, `no_reply`, `metadata` en `chat_messages`.
+- `app/api/chat/users/route.ts`: Heartbeat para marcar offline >2 minutos; inclusión y orden prioritario de Botty.
+- `app/api/chat/aim-botty/route.ts`: Uso de `gemini-pro` con diagnósticos; fallback gestionado por `process-bot-response`.
+
+#### Archivos relevantes
+```
+lib/chat/aim-botty.ts
+lib/chat/process-bot-response.ts
+lib/chat/bot-notifications.ts
+app/api/chat/aim-botty/route.ts
+app/api/chat/messages/route.ts
+app/api/chat/users/route.ts
+app/api/chat/broadcast/route.ts
+components/chat/ChatWidget.tsx
+components/chat/MainChatWindow.tsx
+app/admin/broadcast/page.tsx
+scripts/create_chat_broadcasts.sql
+docs/AIM_BOTTY_IMPLEMENTATION.md
+```
+
+---
+
 ## [1.3.0] - 2025-01-19
 
 ### 🔔 **Corrección Completa - Sistema de Notificaciones**
