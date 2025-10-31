@@ -66,7 +66,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   const margin = 8; // Margen entre ventanas en la barra
   const buttonSize = 40; // h-10 del botón flotante
   const buttonMargin = 24; // bottom-6 / right-6
-  const gap = 12; // separación visual entre botón y ventana
+  const gap = 20; // separación visual entre botón y ventana (más a la izquierda)
 
   // Posición calculada respecto al botón (a la izquierda del botón)
   // Solo mostrar conversaciones con actividad (mensajes entrantes o iniciadas)
