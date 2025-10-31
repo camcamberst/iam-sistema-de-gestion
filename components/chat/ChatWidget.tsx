@@ -801,14 +801,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     setLastNotificationTime(Date.now());
     setNotificationTriggered(true);
     
-    // Reproducir sonido
-    console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
-    try {
-      playNotificationSound();
-      console.log('✅ [ChatWidget] Sonido iniciado correctamente');
-    } catch (error) {
-      console.error('❌ [ChatWidget] Error reproduciendo sonido:', error);
-    }
+    // Sonido desactivado temporalmente
+    // console.log('🔊 [ChatWidget] Reproduciendo sonido de notificación...');
+    // try {
+    //   playNotificationSound();
+    //   console.log('✅ [ChatWidget] Sonido iniciado correctamente');
+    // } catch (error) {
+    //   console.error('❌ [ChatWidget] Error reproduciendo sonido:', error);
+    // }
     
     // Activar parpadeo
     console.log('💫 [ChatWidget] Activando parpadeo del botón...');
