@@ -154,7 +154,15 @@ async function generateBotResponse(
     }
 
     console.log('🤖 [BOTTY-GEN] Obteniendo modelo...');
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    // Intentar con gemini-1.5-pro primero, si falla usar gemini-pro
+    let model;
+    try {
+      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
+      console.log('✅ [BOTTY-GEN] Usando modelo gemini-1.5-pro');
+    } catch (error) {
+      console.log('⚠️ [BOTTY-GEN] gemini-1.5-pro no disponible, usando gemini-pro');
+      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    }
     
     console.log('🤖 [BOTTY-GEN] Obteniendo personalidad...');
     const personality = getBotPersonalityForRole(userContext.role);
@@ -231,23 +239,48 @@ RESPUESTA:
     const response = await result.response;
     let text = response.text().trim();
 
-    console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
-    text = text.replace(/```[\s\S]*?```/g, '').trim();
-    
-    console.log('✅ [BOTTY-GEN] Respuesta generada exitosamente, longitud:', text.length);
-    return text;
+      console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
+      text = text.replace(/```[\s\S]*?```/g, '').trim();
+      
+      console.log('✅ [BOTTY-GEN] Respuesta generada exitosamente, longitud:', text.length);
+      return text;
+    } catch (genError: any) {
+      console.error('❌ [BOTTY-GEN] Error en generateContent:', genError);
+      // Si gemini-1.5-pro falla, intentar con gemini-pro como fallback
+      if (model && genError?.message?.includes('404')) {
+        console.log('🔄 [BOTTY-GEN] Intentando con gemini-pro como fallback...');
+        try {
+          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-pro' });
+          const fallbackResult = await fallbackModel.generateContent(prompt);
+          const fallbackResponse = await fallbackResult.response;
+          let fallbackText = fallbackResponse.text().trim();
+          fallbackText = fallbackText.replace(/```[\s\S]*?```/g, '').trim();
+          console.log('✅ [BOTTY-GEN] Fallback exitoso con gemini-pro');
+          return fallbackText;
+        } catch (fallbackError) {
+          console.error('❌ [BOTTY-GEN] Error en fallback:', fallbackError);
+          throw genError; // Lanzar error original
+        }
+      }
+      throw genError;
+    }
 
   } catch (error: any) {
     console.error('❌ [BOTTY-GEN] Error generando respuesta del bot:', error);
     console.error('❌ [BOTTY-GEN] Error details:', {
       message: error?.message,
       stack: error?.stack,
-      name: error?.name
+      name: error?.name,
+      status: error?.status
     });
     
     // Mensaje más específico según el error
     if (error?.message?.includes('API key') || error?.message?.includes('authentication')) {
       return 'Lo siento, hay un problema con la configuración del servicio de IA. Por favor, contacta a tu administrador.';
+    }
+    
+    if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+      return 'Lo siento, el modelo de IA no está disponible en este momento. Por favor, intenta más tarde o contacta a tu administrador.';
     }
     
     return 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta a tu administrador.';
