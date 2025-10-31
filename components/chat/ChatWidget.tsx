@@ -1206,7 +1206,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
             {/* Badge de contador - posicionado en esquina superior derecha */}
             {totalUnreadCount > 0 && (
-              <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-10">
+              <div className="absolute -top-1 -right-1 z-10 pointer-events-none">
                 <Badge count={totalUnreadCount} variant="blue" size="small" />
               </div>
             )}
