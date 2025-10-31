@@ -196,9 +196,14 @@ export async function GET(request: NextRequest) {
       status_message: '¡Hola! Soy tu asistente virtual 🤖'
     };
 
+    // Asegurar que AIM Botty sea siempre el primer contacto
+    // También evitamos duplicados por si viene en usersWithStatus (no debería)
+    const filteredUsers = usersWithStatus.filter((u: any) => u.id !== AIM_BOTTY_ID && u.email !== AIM_BOTTY_EMAIL);
+    const orderedUsers = [aimBotty, ...filteredUsers];
+
     return NextResponse.json({ 
       success: true, 
-      users: [...usersWithStatus, aimBotty] 
+      users: orderedUsers
     });
 
   } catch (error) {
