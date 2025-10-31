@@ -300,6 +300,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         setConversations(normalized);
 
         // Calcular total de no leídos basado en unread_count del backend
+        // Si estamos en chat, suprimir parpadeo para evitar rebotes mientras se sincroniza el backend
         const unread = normalized.reduce((acc: number, conv: any) => acc + (conv.unread_count || 0), 0);
 
         // Activar parpadeo si hay no leídos
@@ -307,8 +308,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
         console.log('📊 [ChatWidget] No leídos (backend):', { unread, lastUnreadCount });
 
-        // Notificación solo si aumentó el conteo
-        if (unread > lastUnreadCount && lastUnreadCount >= 0 && canTriggerNotification()) {
+        // Notificación solo si aumentó el conteo y NO estamos en chat (evitar rebote mientras se está leyendo)
+        if (unread > lastUnreadCount && lastUnreadCount >= 0 && canTriggerNotification() && !(isOpen && mainView === 'chat')) {
           triggerNotification();
         }
 
@@ -1143,21 +1144,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 setConversationsTabBlinking(true);
               } else if (isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id) {
                 // Si estamos en la conversación, marcar visto en servidor y resetear contador de esa conversación
-                try {
-                  if (session) {
-                    fetch('/api/chat/messages/read', {
-                      method: 'POST',
-                      headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${session.access_token}`
-                      },
-                      body: JSON.stringify({ conversation_id: newMessage.conversation_id })
-                    }).finally(() => {
+                (async () => {
+                  try {
+                    if (session) {
+                      await fetch('/api/chat/messages/read', {
+                        method: 'POST',
+                        headers: {
+                          'Content-Type': 'application/json',
+                          'Authorization': `Bearer ${session.access_token}`
+                        },
+                        body: JSON.stringify({ conversation_id: newMessage.conversation_id })
+                      });
                       zeroUnreadForConversation(newMessage.conversation_id);
-                      loadConversations();
-                    });
+                      // Pequeño delay para asegurar consistencia del backend antes de recargar
+                      setTimeout(() => loadConversations(), 150);
+                    }
+                  } catch (e) {
+                    console.error('❌ [ChatWidget] Error marcando vistos RT:', e);
                   }
-                } catch {}
+                })();
               }
               
               // Detectar si el mensaje es de AIM Botty y abrir ventana automáticamente (solo una vez)
