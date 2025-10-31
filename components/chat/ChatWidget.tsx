@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 import IndividualChatWindow from './IndividualChatWindow';
@@ -60,6 +61,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [session, setSession] = useState<any>(null);
   const heartbeatIntervalRef = useRef<NodeJS.Timeout | null>(null);
   const autoOpenedBottyRef = useRef<string | null>(null);
+  const [isMounted, setIsMounted] = useState(false); // Para portal en document.body
   // Parpadeo del título del navegador
   const originalTitleRef = useRef<string>(typeof document !== 'undefined' ? document.title : 'AIM');
   const titleBlinkIntervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -107,6 +109,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Obtener sesión de Supabase
   useEffect(() => {
+    setIsMounted(true);
     const getSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
@@ -1157,32 +1160,33 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   return (
     <>
-      {/* Botón flotante: anclado al límite inferior del navegador (viewport) */}
-      <button
-        onClick={toggleChat}
-        onContextMenu={(e) => {
-          e.preventDefault();
-          console.log('🧪 [ChatWidget] Prueba manual de notificación');
-          triggerNotification();
-        }}
-        style={{
-          right: 24,
-          bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
-        }}
-        className={`fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
-          isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
-        }`}
-        aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
-      >
-        <div className="flex items-center justify-center">
-          {/* Versión miniatura - solo "A" */}
-          <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
-          
-          {/* Versión expandida - "AIM" */}
-          <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
-        </div>
-        
-      </button>
+      {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
+      {isMounted && createPortal(
+        (
+          <button
+            onClick={toggleChat}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              console.log('🧪 [ChatWidget] Prueba manual de notificación');
+              triggerNotification();
+            }}
+            style={{
+              right: 24,
+              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
+            }}
+            className={`fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden ${
+              isBlinking ? 'animate-heartbeat bg-gradient-to-r from-red-500 via-pink-500 to-red-600 text-white' : ''
+            }`}
+            aria-label="Abrir chat de soporte (clic derecho para probar notificación)"
+          >
+            <div className="flex items-center justify-center">
+              <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
+              <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
+            </div>
+          </button>
+        ),
+        document.body
+      )}
 
 
       {/* Barra de chat con ventana principal y ventanas individuales */}
