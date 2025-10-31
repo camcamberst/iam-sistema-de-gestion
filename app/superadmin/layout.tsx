@@ -420,8 +420,8 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
         </div>
       </main>
 
-      {/* ChatWidget para super_admin */}
-      {userInfo && userInfo.role === 'super_admin' && (
+      {/* ChatWidget para super_admin/admin/modelo */}
+      {userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin' || userInfo.role === 'modelo') && (
         <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
       )}
     </div>
