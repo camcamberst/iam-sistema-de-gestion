@@ -540,6 +540,12 @@ export default function IndividualChatWindow({
                     : 'bg-gray-700 text-gray-100'
                 }`}
               >
+                {/* Chip de Difusión */}
+                {message.is_broadcast && (
+                  <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/20 text-purple-200 border border-purple-400/30 mr-2">
+                    Difusión
+                  </span>
+                )}
                 <p className="text-sm">{message.content}</p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs opacity-70">
