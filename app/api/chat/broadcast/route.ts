@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
         .select('user_id, group_id')
         .in('group_id', body.groupIds);
       if (usersByGroup) {
-        targetUserIds = [...new Set(usersByGroup.map(u => u.user_id))];
+        targetUserIds = Array.from(new Set(usersByGroup.map(u => u.user_id)));
       }
     }
 

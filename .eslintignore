@@ -4,4 +4,5 @@ app/admin/anticipos/page.tsx
 app/admin/anticipos/pending/page.tsx
 app/admin/audit/page.tsx
 app/admin/broadcast/page.tsx
+app/admin/calculadora/page.tsx
 
