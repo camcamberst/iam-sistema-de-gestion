@@ -967,6 +967,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  // Detener parpadeo de pestaña "Conversaciones" y del título cuando el usuario ve las conversaciones o el chat
+  useEffect(() => {
+    if (!isOpen) return;
+    if (mainView === 'conversations' || mainView === 'chat') {
+      // Consideramos como "leído" al estar visualizando estas vistas
+      if (conversationsTabBlinking) {
+        setConversationsTabBlinking(false);
+      }
+      try {
+        if (titleBlinkIntervalRef.current) {
+          clearInterval(titleBlinkIntervalRef.current);
+          titleBlinkIntervalRef.current = null;
+        }
+        if (originalTitleRef.current && typeof document !== 'undefined') {
+          document.title = originalTitleRef.current;
+        }
+      } catch (e) {
+        console.error('❌ [ChatWidget] Error deteniendo parpadeo al ver chats:', e);
+      }
+    }
+  }, [isOpen, mainView, conversationsTabBlinking, selectedConversation, messages.length]);
+
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
     if (!session || !userId) return;
