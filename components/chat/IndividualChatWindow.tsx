@@ -407,11 +407,20 @@ export default function IndividualChatWindow({
           </div>
         ) : (
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
-              <span className="text-white font-bold text-xs tracking-wider">
-                {getDisplayName(otherUser).charAt(0).toUpperCase()}
-              </span>
-            </div>
+            {(() => {
+              const isBotty = otherUser.id === AIM_BOTTY_ID || otherUser.email === AIM_BOTTY_EMAIL;
+              return isBotty ? (
+                <div className="w-8 h-8 bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md border border-purple-400/20">
+                  <span className="text-white font-bold text-base leading-none">🤖</span>
+                </div>
+              ) : (
+                <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-md">
+                  <span className="text-white font-bold text-xs tracking-wider">
+                    {getDisplayName(otherUser).charAt(0).toUpperCase()}
+                  </span>
+                </div>
+              );
+            })()}
             <div className="min-w-0 flex-1">
               <h3 className="text-white font-semibold text-sm truncate">
                 {getDisplayName(otherUser)}
