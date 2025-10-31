@@ -154,14 +154,29 @@ async function generateBotResponse(
     }
 
     console.log('🤖 [BOTTY-GEN] Obteniendo modelo...');
-    // Intentar con gemini-1.5-pro primero, si falla usar gemini-pro
+    // Intentar con modelos más recientes primero, luego fallbacks
     let model;
-    try {
-      model = genAI.getGenerativeModel({ model: 'gemini-1.5-pro' });
-      console.log('✅ [BOTTY-GEN] Usando modelo gemini-1.5-pro');
-    } catch (error) {
-      console.log('⚠️ [BOTTY-GEN] gemini-1.5-pro no disponible, usando gemini-pro');
-      model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+    const modelNames = [
+      'gemini-2.0-flash-exp', // Modelo experimental más reciente
+      'gemini-1.5-flash-latest', // Última versión de flash
+      'gemini-1.5-pro-latest', // Última versión de pro
+      'gemini-1.5-pro', // Versión estable
+      'gemini-pro' // Fallback legacy
+    ];
+    
+    for (const modelName of modelNames) {
+      try {
+        model = genAI.getGenerativeModel({ model: modelName });
+        console.log(`✅ [BOTTY-GEN] Usando modelo ${modelName}`);
+        break;
+      } catch (error: any) {
+        console.log(`⚠️ [BOTTY-GEN] ${modelName} no disponible, intentando siguiente...`);
+        continue;
+      }
+    }
+    
+    if (!model) {
+      throw new Error('No hay modelos disponibles');
     }
     
     console.log('🤖 [BOTTY-GEN] Obteniendo personalidad...');
