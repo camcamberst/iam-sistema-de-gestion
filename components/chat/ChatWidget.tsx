@@ -34,6 +34,7 @@ interface Conversation {
     sender_id: string;
   };
   last_message_at: string;
+  unread_count?: number;
 }
 
 export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
