@@ -156,17 +156,22 @@ export async function GET(request: NextRequest) {
           console.log(`🔴 [CHAT-USERS] Usuario ${user.id} marcado como offline por inactividad (>2 min)`);
           isOnline = false;
           
-          // Actualizar en la base de datos (en segundo plano, no bloquear la respuesta)
-          supabase
-            .from('chat_user_status')
-            .update({ is_online: false })
-            .eq('user_id', user.id)
-            .then(() => {
-              console.log(`✅ [CHAT-USERS] Usuario ${user.id} actualizado a offline por inactividad`);
-            })
-            .catch((error) => {
-              console.error(`❌ [CHAT-USERS] Error actualizando usuario ${user.id} a offline:`, error);
-            });
+          // Actualizar en la base de datos (intento no bloqueante)
+          (async () => {
+            try {
+              const { error: updateError } = await supabase
+                .from('chat_user_status')
+                .update({ is_online: false })
+                .eq('user_id', user.id);
+              if (updateError) {
+                console.error(`❌ [CHAT-USERS] Error actualizando usuario ${user.id} a offline:`, updateError);
+              } else {
+                console.log(`✅ [CHAT-USERS] Usuario ${user.id} actualizado a offline por inactividad`);
+              }
+            } catch (error) {
+              console.error(`❌ [CHAT-USERS] Error inesperado al actualizar usuario ${user.id} a offline:`, error);
+            }
+          })();
         }
       }
       
