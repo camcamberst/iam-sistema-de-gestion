@@ -1,9 +1,10 @@
 'use server';
 
 import { NextRequest, NextResponse } from 'next/server';
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
-import { cookies } from 'next/headers';
+import { createClient } from '@supabase/supabase-js';
 import { AIM_BOTTY_ID } from '@/lib/chat/aim-botty';
+
+export const dynamic = 'force-dynamic';
 
 // Tipos de entrada
 interface BroadcastBody {
@@ -15,11 +16,22 @@ interface BroadcastBody {
   userIds?: string[]; // IDs directos
 }
 
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
 export async function POST(req: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies });
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
 
   try {
-    const { data: { user } } = await supabase.auth.getUser();
+    // Auth por token Bearer, igual a otros endpoints
+    const authHeader = req.headers.get('authorization');
+    if (!authHeader?.startsWith('Bearer ')) {
+      return NextResponse.json({ error: 'Token de autorización requerido' }, { status: 401 });
+    }
+    const token = authHeader.split(' ')[1];
+    const { data: { user } } = await supabase.auth.getUser(token);
     if (!user) return NextResponse.json({ error: 'No autenticado' }, { status: 401 });
 
     // Datos del usuario para verificar rol
