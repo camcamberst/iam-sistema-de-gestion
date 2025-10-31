@@ -190,6 +190,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   const messagesContainerRef = useRef<HTMLDivElement | null>(null);
   const userScrollingRef = useRef<boolean>(false);
   const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const previousMessagesLengthRef = useRef<number>(0);
 
   // Verificar si el usuario está cerca del final del scroll (dentro de 50px del final)
   const isNearBottom = (): boolean => {
@@ -283,9 +284,6 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       }
     }
   }, [view, selectedConversation]);
-
-  // Track del último número de mensajes para detectar nuevos vs carga inicial
-  const previousMessagesLengthRef = useRef<number>(0);
 
   // Scroll cuando se cargan mensajes iniciales (después de cambiar conversación)
   useEffect(() => {
