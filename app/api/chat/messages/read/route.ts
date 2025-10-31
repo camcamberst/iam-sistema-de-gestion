@@ -44,20 +44,33 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, updated: 0 });
     }
 
-    // Insertar lecturas faltantes (ignorar duplicados por unique)
-    const rows = messages.map(m => ({ message_id: m.id, user_id: user.id }));
-    const { error: insertError } = await supabase
+    // Obtener mensajes ya leídos para evitar duplicados
+    const messageIds = messages.map(m => m.id);
+    const { data: existingReads } = await supabase
       .from('chat_message_reads')
-      .insert(rows, { upsert: true });
+      .select('message_id')
+      .eq('user_id', user.id)
+      .in('message_id', messageIds);
 
-    if (insertError) {
-      // Si el cliente no admite upsert, realizar inserciones ignorando duplicados
-      // Intentar inserciones por lotes en fallback
-      // Para simplicidad, devolver éxito parcial
-      console.error('Insert error chat_message_reads:', insertError);
+    const existingMessageIds = new Set(existingReads?.map(r => r.message_id) || []);
+    
+    // Insertar solo lecturas faltantes
+    const rowsToInsert = messages
+      .filter(m => !existingMessageIds.has(m.id))
+      .map(m => ({ message_id: m.id, user_id: user.id }));
+
+    if (rowsToInsert.length > 0) {
+      const { error: insertError } = await supabase
+        .from('chat_message_reads')
+        .insert(rowsToInsert);
+
+      if (insertError) {
+        console.error('Insert error chat_message_reads:', insertError);
+        return NextResponse.json({ success: false, error: 'Error insertando lecturas' }, { status: 500 });
+      }
     }
 
-    return NextResponse.json({ success: true, updated: rows.length });
+    return NextResponse.json({ success: true, updated: rowsToInsert.length });
   } catch (error) {
     console.error('Error en marcar vistos:', error);
     return NextResponse.json({ success: false, error: 'Error interno' }, { status: 500 });
