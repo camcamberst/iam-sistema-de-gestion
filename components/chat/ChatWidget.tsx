@@ -1204,9 +1204,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           <div className="flex items-center justify-center relative">
             <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
             <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
-            {/* Badge de contador - posicionado en esquina superior derecha */}
+            {/* Badge de contador - posicionado en esquina superior derecha, sutil */}
             {totalUnreadCount > 0 && (
-              <div className="absolute -top-1 -right-1 z-10 pointer-events-none">
+              <div className="absolute -top-0.5 -right-0.5 z-10 pointer-events-none opacity-90">
                 <Badge count={totalUnreadCount} variant="blue" size="small" />
               </div>
             )}
