@@ -23,14 +23,14 @@ INSERT INTO public.users (
   'f91c0968-b587-46cf-9036-05a4ec795c7f'::uuid,
   'aim-botty@agencia-innova.com',
   'AIM Botty',
-  'bot',
+  'modelo',
   true,
   (SELECT id FROM organizations LIMIT 1),
   NOW(),
   NOW()
 ) ON CONFLICT (id) DO UPDATE SET
   name = 'AIM Botty',
-  role = 'bot',
+  role = 'modelo',
   is_active = true;
 
 -- Paso 3: Marcar como siempre en línea

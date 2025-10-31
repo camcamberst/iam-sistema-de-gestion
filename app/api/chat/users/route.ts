@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { AIM_BOTTY_ID, AIM_BOTTY_NAME, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -147,9 +148,22 @@ export async function GET(request: NextRequest) {
       };
     });
 
+    // Agregar AIM Botty siempre como usuario disponible y siempre en línea
+    // Nota: El bot usa role='modelo' en la DB pero lo identificamos como bot por su ID/email
+    const aimBotty = {
+      id: AIM_BOTTY_ID,
+      name: AIM_BOTTY_NAME,
+      email: AIM_BOTTY_EMAIL,
+      role: 'modelo', // Usa 'modelo' en DB por restricción CHECK, pero es identificado como bot por ID
+      is_active: true,
+      is_online: true, // Siempre en línea
+      last_seen: new Date().toISOString(),
+      status_message: '¡Hola! Soy tu asistente virtual 🤖'
+    };
+
     return NextResponse.json({ 
       success: true, 
-      users: usersWithStatus 
+      users: [...usersWithStatus, aimBotty] 
     });
 
   } catch (error) {
