@@ -153,21 +153,6 @@ async function generateBotResponse(
       return 'Lo siento, el servicio de IA no está configurado. Por favor, contacta a tu administrador.';
     }
 
-    console.log('🤖 [BOTTY-GEN] Obteniendo modelo...');
-    // Lista de modelos ordenados de más reciente a más antiguo
-    // Intentaremos cada uno hasta que uno funcione
-    const modelNames = [
-      'gemini-2.0-flash-exp',      // Modelo experimental más reciente (2025)
-      'gemini-1.5-flash-latest',   // Última versión de flash
-      'gemini-1.5-pro-latest',     // Última versión de pro
-      'gemini-1.5-flash',           // Versión estable flash
-      'gemini-1.5-pro',             // Versión estable pro
-      'gemini-pro'                  // Fallback legacy
-    ];
-    
-    let model = genAI.getGenerativeModel({ model: modelNames[0] }); // Intentar el más reciente primero
-    console.log(`🤖 [BOTTY-GEN] Intentando con modelo ${modelNames[0]}`);
-    
     console.log('🤖 [BOTTY-GEN] Obteniendo personalidad...');
     const personality = getBotPersonalityForRole(userContext.role);
     
