@@ -1191,34 +1191,28 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
       {isMounted && createPortal(
         (
-      <>
-        {/* Badge de contador - a la izquierda del botón */}
-        {totalUnreadCount > 0 && (
-          <div 
-            className="fixed z-[9996] pointer-events-none opacity-90"
-            style={{
-              right: 60,
-              bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
-            }}
-          >
-            <Badge count={totalUnreadCount} variant="blue" size="small" />
-          </div>
-        )}
+      <div className="relative">
         <button
           onClick={toggleChat}
           style={{
             right: 24,
             bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
           }}
-          className="fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-hidden"
+          className="fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-visible"
           aria-label={`Abrir chat de soporte${totalUnreadCount > 0 ? ` (${totalUnreadCount} mensajes no leídos)` : ''}`}
         >
-          <div className="flex items-center justify-center relative">
+          <div className="flex items-center justify-center relative w-full h-full">
             <span className="text-white dark:text-gray-900 font-bold text-sm group-hover:hidden drop-shadow-sm">A</span>
             <span className="text-white dark:text-gray-900 font-bold text-xs hidden group-hover:block whitespace-nowrap drop-shadow-sm">AIM</span>
+            {/* Badge de contador - esquina superior derecha */}
+            {totalUnreadCount > 0 && (
+              <div className="absolute top-0 right-0 translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none opacity-90">
+                <Badge count={totalUnreadCount} variant="blue" size="small" />
+              </div>
+            )}
           </div>
         </button>
-      </>
+      </div>
         ),
         document.body
       )}
