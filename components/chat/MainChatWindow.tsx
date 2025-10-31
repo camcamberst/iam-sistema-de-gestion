@@ -64,9 +64,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 }) => {
   const windowWidth = 320; // w-80 = 320px
   const margin = 8; // Margen entre ventanas en la barra
-  const rightOffset = 24; // right-6 = 24px (igual que el botón)
-  const buttonHeight = 40; // h-10 del botón flotante
-  const buttonMargin = 24; // bottom-6
+  const buttonSize = 40; // h-10 del botón flotante
+  const buttonMargin = 24; // bottom-6 / right-6
   const gap = 12; // separación visual entre botón y ventana
 
   // Calcular posición desde la derecha (ventana principal siempre en la posición más a la derecha)
@@ -81,8 +80,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     <div
       className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
       style={{
-        right: `${finalRight}px`,
-        bottom: `calc(env(safe-area-inset-bottom, 0px) + ${buttonMargin + buttonHeight + gap}px)`,
+        // Posicionar la ventana inmediatamente a la izquierda del botón,
+        // dejando un pequeño espacio (gap) y alineando el borde inferior
+        right: `calc(${buttonMargin}px + ${buttonSize}px + ${gap}px)`,
+        bottom: `calc(env(safe-area-inset-bottom, 0px) + ${buttonMargin}px)`,
         cursor: 'default',
         maxHeight: 'calc(100vh - 20px)', // Altura máxima respetando márgenes
         height: '500px' // Altura fija
@@ -177,7 +178,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                             <p className="text-sm font-medium">{getDisplayName(user)}</p>
                             {/* No mostrar rol si es el bot */}
                             {user.id !== AIM_BOTTY_ID && user.email !== AIM_BOTTY_EMAIL && (
-                              <p className="text-xs text-gray-400">{user.role}</p>
+                            <p className="text-xs text-gray-400">{user.role}</p>
                             )}
                           </div>
                         </button>
@@ -216,7 +217,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                             <p className="text-sm font-medium">{getDisplayName(user)}</p>
                             {/* No mostrar rol si es el bot */}
                             {user.id !== AIM_BOTTY_ID && user.email !== AIM_BOTTY_EMAIL && (
-                              <p className="text-xs text-gray-400">{user.role}</p>
+                            <p className="text-xs text-gray-400">{user.role}</p>
                             )}
                           </div>
                         </button>
