@@ -155,6 +155,21 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No tienes acceso a esta conversación' }, { status: 403 });
     }
 
+    // Bloqueo: si el último mensaje fue una difusión no respondible enviada por Botty,
+    // no permitir que el receptor responda directamente.
+    try {
+      const { data: lastMsg } = await supabase
+        .from('chat_messages')
+        .select('id, sender_id, is_broadcast, no_reply, created_at')
+        .eq('conversation_id', conversation_id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (lastMsg && (lastMsg as any).is_broadcast && (lastMsg as any).no_reply && lastMsg.sender_id === AIM_BOTTY_ID) {
+        return NextResponse.json({ error: 'Este mensaje es informativo y no admite respuestas.' }, { status: 400 });
+      }
+    } catch {}
+
     // Crear mensaje
     console.log('📤 [API] Creando mensaje:', {
       conversation_id,
