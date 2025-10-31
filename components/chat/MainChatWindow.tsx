@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 
@@ -79,6 +79,32 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   const activeUser = view === 'chat' && selectedConversation
     ? (conversations || []).find((c: any) => c.id === selectedConversation)?.other_participant
     : null;
+
+  // Auto-scroll al final para continuidad de conversación
+  const messagesEndRef = useRef<HTMLDivElement | null>(null);
+  const messagesContainerRef = useRef<HTMLDivElement | null>(null);
+
+  const scrollToBottom = (smooth = true) => {
+    try {
+      if (messagesEndRef.current) {
+        messagesEndRef.current.scrollIntoView({ behavior: smooth ? 'smooth' : 'auto' });
+      } else if (messagesContainerRef.current) {
+        messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
+      }
+    } catch {}
+  };
+
+  useEffect(() => {
+    if (view === 'chat') {
+      scrollToBottom(false);
+    }
+  }, [view, selectedConversation]);
+
+  useEffect(() => {
+    if (view === 'chat') {
+      scrollToBottom(true);
+    }
+  }, [messages]);
 
   return (
     <div
@@ -317,7 +343,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         {view === 'chat' && selectedConversation && (
           <>
             {/* Mensajes */}
-            <div className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0">
+            <div ref={messagesContainerRef} className="flex-1 p-4 overflow-y-auto custom-scrollbar min-h-0">
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -337,6 +363,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   </div>
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Input de mensaje */}
