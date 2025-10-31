@@ -271,17 +271,17 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         <div className="space-y-3">
           {/* Resumen compacto */}
           <div className="grid grid-cols-3 gap-2">
-            <div className="text-center p-2 rounded-lg bg-gray-50/80">
-              <div className="text-sm font-bold text-gray-900 dark:text-gray-900">${formatCurrency(summary.totalUsdBruto)}</div>
-              <div className="text-xs text-gray-900 dark:text-gray-900">USD Bruto</div>
+            <div className="text-center p-2 rounded-lg bg-blue-50/80">
+              <div className="text-sm font-bold text-blue-600">${formatCurrency(summary.totalUsdBruto)}</div>
+              <div className="text-xs text-blue-700">USD Bruto</div>
             </div>
             <div className="text-center p-2 rounded-lg bg-green-50/80">
               <div className="text-sm font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
               <div className="text-xs text-gray-900 dark:text-gray-900">USD Modelos</div>
             </div>
-            <div className="text-center p-2 rounded-lg bg-orange-50/80">
-              <div className="text-sm font-bold text-orange-600">${formatCurrency(summary.totalUsdSede)}</div>
-              <div className="text-xs text-gray-900 dark:text-gray-900">USD Agencia</div>
+            <div className="text-center p-2 rounded-lg bg-purple-50/80">
+              <div className="text-sm font-bold text-purple-600">${formatCurrency(summary.totalUsdSede)}</div>
+              <div className="text-xs text-purple-700">USD Agencia</div>
             </div>
           </div>
 
