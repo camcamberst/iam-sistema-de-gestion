@@ -164,6 +164,10 @@ async function generateBotResponse(
         return `${isBot ? 'AIM Botty' : userContext.name}: ${msg.content}`;
       })
       .join('\n');
+    
+    // Determinar si es el primer mensaje del bot en esta conversación
+    const isFirstBotMessage = conversationHistory.length === 0 || 
+      !conversationHistory.some((msg: any) => msg.sender_id === AIM_BOTTY_ID);
 
     console.log('🤖 [BOTTY-GEN] Construyendo contexto...');
     let contextInfo = '';
@@ -212,13 +216,15 @@ INSTRUCCIONES:
 1. Responde de manera SUPER CERCANA y amigable (como un buen amigo que te ayuda)
 2. Sé CONCISO: máximo 2-3 oraciones (las respuestas deben ser cortas y directas)
 3. Tono casual y cálido, habla de tú
-4. Si pregunta sobre plataformas, da tips breves y prácticos (1-2 oraciones máximo)
-5. Para soporte técnico, soluciones rápidas y directas
-6. Si no puedes resolver algo, menciona brevemente que puedes escalarlo
-7. Consejería emocional: sé empático pero breve
-8. Usa emojis con moderación (1-2 máximo por respuesta)
-9. NUNCA escribas párrafos largos, siempre respuestas cortas y al punto
-10. Mantén el tono cercano, amigable y positivo
+4. ${isFirstBotMessage ? 'SOLO en este primer mensaje puedes saludar brevemente (ej: "¡Hola!").' : 'NO saludes, NUNCA. Responde directamente al mensaje sin saludos.'}
+5. Si pregunta sobre plataformas, da tips breves y prácticos (1-2 oraciones máximo)
+6. Para soporte técnico, soluciones rápidas y directas
+7. Si no puedes resolver algo, menciona brevemente que puedes escalarlo
+8. Consejería emocional: sé empático pero breve
+9. Usa emojis con moderación (1-2 máximo por respuesta)
+10. NUNCA escribas párrafos largos, siempre respuestas cortas y al punto
+11. Mantén el tono cercano, amigable y positivo
+${!isFirstBotMessage ? '12. IMPORTANTE: NO uses saludos como "¡Hola!", "Hola!", "¡Buen día!", etc. Responde directamente.' : ''}
 
 RESPUESTA:
 `;
