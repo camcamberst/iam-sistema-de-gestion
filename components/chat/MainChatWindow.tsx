@@ -627,7 +627,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 return (
                   <React.Fragment key={message.id}>
                     {showDateSeparator && (
-                      <div className="flex justify-center my-2.5">
+                      <div className="flex justify-center mt-1 mb-2">
                         <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
                           {formatDateSeparator(new Date(message.created_at))}
                         </span>
@@ -685,7 +685,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 return (
                   <React.Fragment key={message.id}>
                     {showDateSeparator && (
-                      <div className="flex justify-center my-2.5">
+                      <div className="flex justify-center mt-1 mb-2">
                         <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
                           {formatDateSeparator(new Date(message.created_at))}
                         </span>
