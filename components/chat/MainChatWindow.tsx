@@ -526,10 +526,19 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 const prevMessage = index > 0 ? filteredMessages[index - 1] : null;
                 const nextMessage = index < filteredMessages.length - 1 ? filteredMessages[index + 1] : null;
                 const showDateSeparator = !prevMessage || isDifferentDay(prevMessage.created_at, message.created_at);
-                const isGrouped = prevMessage && shouldGroupMessages(prevMessage, message);
+                
+                // Detectar mensajes de sistema o broadcast
+                const isSystemMessage = (message as any).is_system_message || 
+                                       (message as any).message_type === 'system' || 
+                                       message.sender_id === 'system';
+                const isBroadcastMessage = (message as any).is_broadcast;
+                const isSpecialMessage = isSystemMessage || isBroadcastMessage;
+                
+                // Solo aplicar agrupación si NO es mensaje especial
+                const isGrouped = !isSpecialMessage && prevMessage && shouldGroupMessages(prevMessage, message);
                 const isLastInGroup = !nextMessage || !shouldGroupMessages(message, nextMessage) || isDifferentDay(message.created_at, nextMessage.created_at);
                 const isFirstInGroup = !prevMessage || !shouldGroupMessages(prevMessage, message) || isDifferentDay(prevMessage.created_at, message.created_at);
-                const isReceivedMessage = message.sender_id !== userId;
+                const isReceivedMessage = message.sender_id !== userId && !isSpecialMessage;
                 
                 // Obtener información del remitente para avatar (priorizar activeUser, luego sender del mensaje)
                 const senderInfo = isReceivedMessage 
@@ -537,6 +546,66 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   : null;
                 const showAvatar = isReceivedMessage && isFirstInGroup && senderInfo;
                 
+                // Renderizado especial para mensajes de sistema/broadcast
+                if (isSpecialMessage) {
+                  return (
+                    <React.Fragment key={message.id}>
+                      {showDateSeparator && (
+                        <div className="flex justify-center my-4">
+                          <span className="px-3 py-1 text-xs text-gray-400 bg-gray-800/50 rounded-full">
+                            {formatDateSeparator(new Date(message.created_at))}
+                          </span>
+                        </div>
+                      )}
+                      <div className="flex justify-center my-4">
+                        <div
+                          className={`inline-flex items-center max-w-[85%] px-4 py-2.5 rounded-xl shadow-sm animate-fadeIn ${
+                            isBroadcastMessage
+                              ? 'bg-purple-500/10 border border-purple-500/30 text-purple-200'
+                              : 'bg-gray-800/60 border border-gray-600/50 text-gray-300'
+                          }`}
+                          role="article"
+                          aria-label={isBroadcastMessage ? 'Mensaje de difusión' : 'Mensaje del sistema'}
+                        >
+                          {/* Badge de difusión o sistema */}
+                          <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium mr-2 ${
+                            isBroadcastMessage
+                              ? 'bg-purple-500/20 text-purple-200 border border-purple-400/30'
+                              : 'bg-gray-700/50 text-gray-400 border border-gray-600/50'
+                          }`}>
+                            {isBroadcastMessage ? (
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3.14a.5.5 0 01.656.736A3.973 3.973 0 0115 8c0 1.477-.998 2.764-2.5 3.5M12 20a3 3 0 100-6 3 3 0 000 6z" />
+                              </svg>
+                            ) : (
+                              <svg className="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            )}
+                            {isBroadcastMessage ? 'Difusión' : 'Sistema'}
+                          </span>
+                          <p className="text-xs leading-relaxed">
+                            {searchTerm ? (
+                              message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
+                                part.toLowerCase() === searchTerm.toLowerCase() ? (
+                                  <mark key={i} className="bg-yellow-500/40 text-yellow-200 rounded px-0.5">
+                                    {part}
+                                  </mark>
+                                ) : (
+                                  part
+                                )
+                              )
+                            ) : (
+                              message.content
+                            )}
+                          </p>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  );
+                }
+                
+                // Renderizado normal para mensajes regulares
                 return (
                   <React.Fragment key={message.id}>
                     {showDateSeparator && (
