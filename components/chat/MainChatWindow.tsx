@@ -692,55 +692,96 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                       </div>
                     )}
                     <div
-                      className={`group flex items-end ${isGrouped ? 'mb-0.5' : 'mb-2.5'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-1.5`}
+                      className={`group flex items-start ${isGrouped ? 'mb-1' : 'mb-3'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'} gap-2`}
                     >
                       {/* Avatar solo en mensajes recibidos, primer mensaje del grupo */}
                       {isReceivedMessage && (
                         showAvatar ? (
-                          <div className="w-7 h-7 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mb-0.5">
-                            <span className="text-white text-xs font-bold">
+                          <div className="w-6 h-6 bg-gradient-to-br from-blue-500/90 to-blue-600/90 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                            <span className="text-white text-[10px] font-semibold">
                               {getUserInitial(senderInfo)}
                             </span>
                           </div>
                         ) : (
-                          <div className="w-7 flex-shrink-0" />
+                          <div className="w-6 flex-shrink-0" />
                         )
                       )}
                       <div
-                        className={`relative max-w-[70%] px-2.5 py-1.5 rounded-2xl shadow-sm animate-fadeIn ${
+                        className={`relative max-w-[75%] rounded-2xl animate-fadeIn ${
                           message.sender_id === userId
-                            ? 'bg-gradient-to-br from-blue-500/90 to-blue-600/90 backdrop-blur-sm text-white'
-                            : 'bg-gray-700/80 backdrop-blur-sm text-gray-100'
+                            ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-[0_2px_8px_rgba(59,130,246,0.25)]'
+                            : 'bg-gray-800/95 backdrop-blur-sm text-gray-50 shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
                         }`}
                         role="article"
                         aria-label={`Mensaje de ${message.sender_id === userId ? 'ti' : getDisplayName(senderInfo || {})} enviado ${formatMessageTime(message.created_at)}`}
                       >
-                        <p className="text-sm leading-relaxed">
-                          {searchTerm ? (
-                            message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
-                              part.toLowerCase() === searchTerm.toLowerCase() ? (
-                                <mark key={i} className="bg-yellow-500/30 text-yellow-200 rounded px-0.5">
-                                  {part}
-                                </mark>
-                              ) : (
-                                part
+                        {/* Contenedor interno con padding balanceado */}
+                        <div className="px-3.5 py-2.5">
+                          <p className={`text-sm leading-[1.4] ${message.sender_id === userId ? 'text-white' : 'text-gray-50'}`}>
+                            {searchTerm ? (
+                              message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
+                                part.toLowerCase() === searchTerm.toLowerCase() ? (
+                                  <mark key={i} className={`${message.sender_id === userId ? 'bg-blue-400/30 text-blue-100' : 'bg-yellow-500/30 text-yellow-200'} rounded px-0.5`}>
+                                    {part}
+                                  </mark>
+                                ) : (
+                                  part
+                                )
                               )
-                            )
-                          ) : (
-                            message.content
-                          )}
-                        </p>
-                        {/* Solo mostrar timestamp, estado y acciones en el último mensaje del grupo */}
+                            ) : (
+                              message.content
+                            )}
+                          </p>
+                        </div>
+                        {/* Footer compacto integrado: timestamp, estado y acciones */}
                         {isLastInGroup && (
-                          <div className="flex items-center justify-end gap-1.5 mt-0.5">
+                          <div className={`flex items-center justify-between px-3.5 py-1.5 border-t ${
+                            message.sender_id === userId 
+                              ? 'border-blue-400/20' 
+                              : 'border-gray-700/50'
+                          }`}>
+                            {/* Timestamp y estado - izquierda para recibidos, derecha para enviados */}
+                            <div className={`flex items-center gap-1.5 ${message.sender_id === userId ? 'ml-auto' : ''}`}>
+                              <span className={`text-[10px] leading-none ${
+                                message.sender_id === userId 
+                                  ? 'text-blue-100/70' 
+                                  : 'text-gray-400/70'
+                              }`} title={new Date(message.created_at).toLocaleString('es-ES')}>
+                                {formatMessageTime(message.created_at)}
+                              </span>
+                              {/* Estados de lectura: solo mostrar en mensajes propios */}
+                              {message.sender_id === userId && (
+                                <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
+                                  {message.is_read_by_other ? (
+                                    // Visto (doble check azul claro)
+                                    <span className="inline-flex items-center" style={{ width: '13px' }}>
+                                      <svg className="w-3 h-3 text-blue-100" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                      <svg className="w-3 h-3 text-blue-100 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </span>
+                                  ) : (
+                                    // Entregado (un solo check gris claro)
+                                    <svg className="w-3 h-3 text-blue-100/60" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </span>
+                              )}
+                            </div>
                             {/* Botones de acción (solo visibles al hover del grupo) */}
-                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-0.5">
+                            <div className={`opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 ${message.sender_id === userId ? '' : 'ml-auto'}`}>
                               <button
                                 onClick={() => {
                                   navigator.clipboard.writeText(message.content);
-                                  // Feedback visual opcional (podríamos agregar un toast)
                                 }}
-                                className="p-0.5 rounded hover:bg-black/20 text-gray-300/80 hover:text-white transition-colors"
+                                className={`p-1 rounded-md transition-colors ${
+                                  message.sender_id === userId
+                                    ? 'hover:bg-blue-500/30 text-blue-100/70 hover:text-white'
+                                    : 'hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200'
+                                }`}
                                 title="Copiar mensaje"
                                 aria-label="Copiar mensaje"
                               >
@@ -751,9 +792,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                               <button
                                 onClick={() => {
                                   // TODO: Implementar funcionalidad de responder
-                                  // Por ahora solo placeholder visual
                                 }}
-                                className="p-0.5 rounded hover:bg-black/20 text-gray-300/80 hover:text-white transition-colors"
+                                className={`p-1 rounded-md transition-colors ${
+                                  message.sender_id === userId
+                                    ? 'hover:bg-blue-500/30 text-blue-100/70 hover:text-white'
+                                    : 'hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200'
+                                }`}
                                 title="Responder mensaje"
                                 aria-label="Responder mensaje"
                               >
@@ -762,36 +806,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                 </svg>
                               </button>
                             </div>
-                            {/* Timestamp y estado de lectura - más compactos y sutiles */}
-                            <div className="flex items-center gap-0.5">
-                              <span className="text-[10px] text-gray-300/70 leading-none" title={new Date(message.created_at).toLocaleString('es-ES')}>
-                                {formatMessageTime(message.created_at)}
-                              </span>
-                              {/* Estados de lectura: solo mostrar en mensajes propios */}
-                              {message.sender_id === userId && (
-                                <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
-                                  {message.is_read_by_other ? (
-                                    // Visto (doble check azul más sutil)
-                                    <span className="inline-flex items-center" style={{ width: '14px' }}>
-                                      <svg className="w-3 h-3 text-blue-200" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                      <svg className="w-3 h-3 text-blue-200 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                      </svg>
-                                    </span>
-                                  ) : (
-                                    // Entregado (un solo check gris más sutil)
-                                    <svg className="w-3 h-3 text-gray-300/60" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  )}
-                                </span>
-                              )}
-                            </div>
                           </div>
                         )}
                       </div>
+                      {/* Espacio simétrico en el lado opuesto */}
+                      {message.sender_id === userId && (
+                        <div className="w-6 flex-shrink-0" />
+                      )}
                     </div>
                   </React.Fragment>
                 );
