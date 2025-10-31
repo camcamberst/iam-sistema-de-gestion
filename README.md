@@ -5,6 +5,7 @@ Plataforma interna de gestión con chat integrado, AIM Botty (asistente IA con G
 ## Documentación principal
 
 - `docs/AIM_BOTTY_IMPLEMENTATION.md` – Implementación y uso de AIM Botty, difusiones y UX del chat.
+- `docs/PROJECT_OVERVIEW.md` – Visión general técnica y funcional del sistema.
 - `CHANGELOG.md` – Cambios por versión.
 - `ARQUITECTURA_SISTEMA_GESTION.md` – Arquitectura general del sistema.
 
