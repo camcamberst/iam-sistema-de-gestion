@@ -2,4 +2,5 @@ app/(auth)/login/page.tsx
 app/admin/anticipos/history/page.tsx
 app/admin/anticipos/page.tsx
 app/admin/anticipos/pending/page.tsx
+app/admin/audit/page.tsx
 

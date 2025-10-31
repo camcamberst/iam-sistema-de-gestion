@@ -68,8 +68,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   const buttonMargin = 24; // bottom-6 / right-6
   const gap = 12; // separación visual entre botón y ventana
 
-  // Calcular posición desde la derecha (ventana principal siempre en la posición más a la derecha)
-  const finalRight = rightOffset;
+  // Posición calculada respecto al botón (a la izquierda del botón)
   // Solo mostrar conversaciones con actividad (mensajes entrantes o iniciadas)
   const conversationsWithMessages = (conversations || []).filter((c: any) => {
     const content = c?.last_message?.content;
