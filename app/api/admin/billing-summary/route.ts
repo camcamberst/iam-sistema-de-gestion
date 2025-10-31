@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
@@ -63,6 +64,9 @@ export async function GET(request: NextRequest) {
         name
       `)
       .eq('role', 'modelo');
+
+    // Excluir AIM Botty explícitamente
+    modelsQuery = modelsQuery.neq('id', AIM_BOTTY_ID).neq('email', AIM_BOTTY_EMAIL);
 
     // Depuración opcional: limitar por emails especificados
     if (emailsParam) {
