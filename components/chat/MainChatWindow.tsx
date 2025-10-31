@@ -845,19 +845,6 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
               )}
               
               <div className="flex space-x-2 items-end">
-                {/* Botón emoji */}
-                <button
-                  type="button"
-                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                  className="emoji-button flex-shrink-0 p-2.5 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600/50 hover:border-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  title="Emojis"
-                  aria-label="Abrir selector de emojis"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </button>
-                
                 {/* Textarea que mantiene una sola línea hasta Shift+Enter */}
                 <textarea
                   ref={textareaRef}
@@ -876,23 +863,35 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   }}
                 />
                 
-                {/* Botón enviar */}
-                <button
-                  onClick={sendMessage}
-                  disabled={!newMessage.trim()}
-                  className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white p-2.5 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-md hover:shadow-lg"
-                  title="Enviar mensaje (Enter)"
-                  aria-label="Enviar mensaje"
-                >
-                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                  </svg>
-                </button>
+                {/* Botones emoji y enviar juntos */}
+                <div className="flex space-x-1.5 items-center">
+                  {/* Botón emoji */}
+                  <button
+                    type="button"
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    className="emoji-button flex-shrink-0 p-2 rounded-lg bg-gray-700/50 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600/50 hover:border-gray-500 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    title="Emojis"
+                    aria-label="Abrir selector de emojis"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </button>
+                  
+                  {/* Botón enviar */}
+                  <button
+                    onClick={sendMessage}
+                    disabled={!newMessage.trim()}
+                    className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-md hover:shadow-lg"
+                    title="Enviar mensaje (Enter)"
+                    aria-label="Enviar mensaje"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                    </svg>
+                  </button>
+                </div>
               </div>
-              {/* Hint corto para Shift+Enter */}
-              <p className="text-[10px] text-gray-600 mt-1 px-1">
-                Shift+Enter para nueva línea
-              </p>
             </div>
           </>
         )}
