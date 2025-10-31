@@ -53,16 +53,46 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Error obteniendo conversaciones' }, { status: 500 });
     }
 
-    // Obtener último mensaje de cada conversación
+    // Obtener último mensaje de cada conversación y calcular unread_count usando chat_message_reads
     const conversationsWithLastMessage = await Promise.all(
       conversations.map(async (conv) => {
         const { data: lastMessage } = await supabase
           .from('chat_messages')
-          .select('content, created_at, sender_id, is_broadcast, no_reply, metadata')
+          .select('id, content, created_at, sender_id, is_broadcast, no_reply, metadata')
           .eq('conversation_id', conv.id)
           .order('created_at', { ascending: false })
           .limit(1)
           .single();
+
+        // Calcular mensajes no leídos usando chat_message_reads
+        // Contar mensajes del otro participante que NO están en chat_message_reads para este usuario
+        const otherParticipantId = conv.participant_1_id === user.id 
+          ? conv.participant_2_id 
+          : conv.participant_1_id;
+
+        // Obtener todos los mensajes del otro participante en esta conversación
+        const { data: messagesFromOther } = await supabase
+          .from('chat_messages')
+          .select('id')
+          .eq('conversation_id', conv.id)
+          .eq('sender_id', otherParticipantId);
+
+        let unread_count = 0;
+        if (messagesFromOther && messagesFromOther.length > 0) {
+          const messageIds = messagesFromOther.map(m => m.id);
+          
+          // Obtener mensajes que SÍ fueron leídos por este usuario
+          const { data: readMessages } = await supabase
+            .from('chat_message_reads')
+            .select('message_id')
+            .eq('user_id', user.id)
+            .in('message_id', messageIds);
+
+          const readMessageIds = new Set(readMessages?.map(r => r.message_id) || []);
+          
+          // Contar mensajes que NO fueron leídos
+          unread_count = messageIds.filter(id => !readMessageIds.has(id)).length;
+        }
 
         // Determinar el otro participante
         const otherParticipant = conv.participant_1_id === user.id 
@@ -72,7 +102,8 @@ export async function GET(request: NextRequest) {
         const convWith = {
           ...conv,
           other_participant: otherParticipant,
-          last_message: lastMessage
+          last_message: lastMessage,
+          unread_count
         } as any;
 
         // Excluir conversaciones de solo difusión (no_reply) generadas por Botty para receptores

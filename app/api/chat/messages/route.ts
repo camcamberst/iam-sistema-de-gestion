@@ -63,8 +63,6 @@ export async function GET(request: NextRequest) {
         content,
         message_type,
         created_at,
-        is_read,
-        read_at,
         sender_id,
         sender:sender_id(id, name, email, role)
       `)
@@ -77,24 +75,65 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Error obteniendo mensajes' }, { status: 500 });
     }
 
-    // Marcar mensajes como leídos
-    const unreadMessageIds = messages
-      .filter((msg: any) => !msg.is_read && msg.sender_id !== user.id)
-      .map((msg: any) => msg.id);
+    // Determinar el otro participante
+    const otherParticipantId = conversation.participant_1_id === user.id 
+      ? conversation.participant_2_id 
+      : conversation.participant_1_id;
 
-    if (unreadMessageIds.length > 0) {
+    // Obtener qué mensajes fueron leídos por ambos participantes
+    const messageIds = messages.map((m: any) => m.id);
+    
+    // Lecturas del otro participante (para mostrar "visto" en mensajes que yo envié)
+    const { data: readByOther } = await supabase
+      .from('chat_message_reads')
+      .select('message_id')
+      .eq('user_id', otherParticipantId)
+      .in('message_id', messageIds);
+
+    // Lecturas del usuario actual (para mensajes que recibí)
+    const { data: readByMe } = await supabase
+      .from('chat_message_reads')
+      .select('message_id')
+      .eq('user_id', user.id)
+      .in('message_id', messageIds);
+
+    const readByOtherSet = new Set(readByOther?.map((r: any) => r.message_id) || []);
+    const readByMeSet = new Set(readByMe?.map((r: any) => r.message_id) || []);
+
+    // Enriquecer mensajes con flags de lectura
+    const messagesWithReadStatus = messages.map((msg: any) => {
+      const isMyMessage = msg.sender_id === user.id;
+      
+      return {
+        ...msg,
+        // Si es mi mensaje: mostrar si fue leído por el otro
+        is_read_by_other: isMyMessage ? readByOtherSet.has(msg.id) : false,
+        // Si es mensaje recibido: mostrar si lo leí yo
+        is_read_by_me: !isMyMessage ? readByMeSet.has(msg.id) : false
+      };
+    });
+
+    // Marcar mensajes recibidos como leídos en chat_message_reads (double check persistente)
+    const unreadReceivedMessages = messages
+      .filter((msg: any) => msg.sender_id !== user.id && !readByMeSet.has(msg.id))
+      .map((msg: any) => msg.id);
+    
+    if (unreadReceivedMessages.length > 0) {
+      const readsToInsert = unreadReceivedMessages.map(msgId => ({ 
+        message_id: msgId, 
+        user_id: user.id 
+      }));
+      
+      // Intentar insertar, ignorando duplicados por unique constraint
       await supabase
-        .from('chat_messages')
-        .update({ 
-          is_read: true, 
-          read_at: new Date().toISOString() 
-        })
-        .in('id', unreadMessageIds);
+        .from('chat_message_reads')
+        .insert(readsToInsert)
+        .select();
     }
 
     return NextResponse.json({ 
       success: true, 
-      messages: messages.reverse(), // Ordenar cronológicamente
+      messages: messagesWithReadStatus.reverse(), // Ordenar cronológicamente
       has_more: messages.length === limit
     });
 

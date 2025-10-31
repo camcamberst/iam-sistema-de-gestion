@@ -357,9 +357,23 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                     }`}
                   >
                     <p className="text-sm">{message.content}</p>
-                    <span className="text-xs text-gray-300 block text-right mt-1">
-                      {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                    <div className="flex items-center justify-end gap-1 mt-1">
+                      <span className="text-xs text-gray-300">
+                        {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </span>
+                      {/* Doble check: solo mostrar en mensajes propios */}
+                      {message.sender_id === userId && (
+                        <span className={`text-xs ${message.is_read_by_other ? 'text-blue-300' : 'text-gray-400'}`}>
+                          {message.is_read_by_other ? (
+                            // Visto (doble check azul)
+                            <span title="Visto">✓✓</span>
+                          ) : (
+                            // Entregado (doble check gris)
+                            <span title="Entregado">✓✓</span>
+                          )}
+                        </span>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
