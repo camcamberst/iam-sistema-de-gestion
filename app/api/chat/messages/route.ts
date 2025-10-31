@@ -190,17 +190,39 @@ export async function POST(request: NextRequest) {
     // Verificar si el mensaje es para AIM Botty y generar respuesta automática
     const isToBotty = isBottyId(conversation.participant_1_id) || isBottyId(conversation.participant_2_id);
     
+    console.log('🤖 [BOTTY] Verificando si mensaje es para el bot:', {
+      isToBotty,
+      participant_1: conversation.participant_1_id,
+      participant_2: conversation.participant_2_id,
+      botId: AIM_BOTTY_ID
+    });
+    
     if (isToBotty) {
+      console.log('🤖 [BOTTY] Mensaje detectado para el bot, generando respuesta...');
+      
       // Obtener historial de conversación (últimos 10 mensajes)
-      const { data: conversationHistory } = await supabase
+      const { data: conversationHistory, error: historyError } = await supabase
         .from('chat_messages')
         .select('id, sender_id, content, created_at')
         .eq('conversation_id', conversation_id)
         .order('created_at', { ascending: false })
         .limit(10);
 
+      if (historyError) {
+        console.error('❌ [BOTTY] Error obteniendo historial:', historyError);
+      }
+
+      // Determinar URL base
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
+                     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
+                     'http://localhost:3000';
+      
+      const bottyUrl = `${baseUrl}/api/chat/aim-botty`;
+      
+      console.log('🤖 [BOTTY] Llamando a:', bottyUrl);
+
       // Generar respuesta del bot en segundo plano (no bloquea la respuesta)
-      fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/chat/aim-botty`, {
+      fetch(bottyUrl, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -211,8 +233,18 @@ export async function POST(request: NextRequest) {
           message_content: content.trim(),
           conversation_history: (conversationHistory || []).reverse()
         })
-      }).catch(error => {
-        console.error('Error generando respuesta del bot:', error);
+      })
+      .then(async (response) => {
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('❌ [BOTTY] Error en respuesta del servidor:', response.status, errorText);
+        } else {
+          const data = await response.json();
+          console.log('✅ [BOTTY] Respuesta del bot generada exitosamente:', data);
+        }
+      })
+      .catch(error => {
+        console.error('❌ [BOTTY] Error generando respuesta del bot:', error);
       });
     }
 

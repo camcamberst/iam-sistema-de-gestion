@@ -16,6 +16,8 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY as string
 // POST: Procesar mensaje del usuario y generar respuesta del bot
 export async function POST(request: NextRequest) {
   try {
+    console.log('🤖 [BOTTY-API] Recibida solicitud para generar respuesta');
+    
     const supabase = createClient(supabaseUrl, supabaseKey, {
       auth: {
         autoRefreshToken: false,
@@ -26,6 +28,7 @@ export async function POST(request: NextRequest) {
     // Obtener token de autorización
     const authHeader = request.headers.get('authorization');
     if (!authHeader?.startsWith('Bearer ')) {
+      console.error('❌ [BOTTY-API] Token de autorización no encontrado');
       return NextResponse.json({ error: 'Token de autorización requerido' }, { status: 401 });
     }
 
@@ -33,13 +36,23 @@ export async function POST(request: NextRequest) {
     const { data: { user }, error: authError } = await supabase.auth.getUser(token);
     
     if (authError || !user) {
+      console.error('❌ [BOTTY-API] Error de autenticación:', authError);
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
+
+    console.log('✅ [BOTTY-API] Usuario autenticado:', user.id);
 
     const body = await request.json();
     const { conversation_id, message_content, conversation_history = [] } = body;
 
+    console.log('🤖 [BOTTY-API] Datos recibidos:', {
+      conversation_id,
+      message_length: message_content?.length,
+      history_count: conversation_history?.length
+    });
+
     if (!conversation_id || !message_content?.trim()) {
+      console.error('❌ [BOTTY-API] Datos faltantes');
       return NextResponse.json({ 
         error: 'conversation_id y message_content son requeridos' 
       }, { status: 400 });
@@ -53,8 +66,15 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (convError || !conversation) {
+      console.error('❌ [BOTTY-API] Error obteniendo conversación:', convError);
       return NextResponse.json({ error: 'Conversación no encontrada' }, { status: 404 });
     }
+
+    console.log('🤖 [BOTTY-API] Conversación encontrada:', {
+      participant_1: conversation.participant_1_id,
+      participant_2: conversation.participant_2_id,
+      botId: AIM_BOTTY_ID
+    });
 
     // Verificar que el usuario es participante y el otro es el bot
     const isParticipant1 = conversation.participant_1_id === user.id;
@@ -62,21 +82,33 @@ export async function POST(request: NextRequest) {
     const botIsParticipant1 = conversation.participant_1_id === AIM_BOTTY_ID;
     const botIsParticipant2 = conversation.participant_2_id === AIM_BOTTY_ID;
 
+    console.log('🤖 [BOTTY-API] Verificación de participantes:', {
+      isParticipant1,
+      isParticipant2,
+      botIsParticipant1,
+      botIsParticipant2
+    });
+
     if ((!isParticipant1 && !isParticipant2) || (!botIsParticipant1 && !botIsParticipant2)) {
+      console.error('❌ [BOTTY-API] Esta conversación no es con AIM Botty');
       return NextResponse.json({ 
         error: 'Esta conversación no es con AIM Botty' 
       }, { status: 403 });
     }
 
     // Obtener contexto del usuario
+    console.log('🤖 [BOTTY-API] Obteniendo contexto del usuario...');
     const userContext = await getUserContext(user.id, supabase);
 
     // Generar respuesta con IA
+    console.log('🤖 [BOTTY-API] Generando respuesta con IA...');
     const botResponse = await generateBotResponse(
       message_content,
       userContext,
       conversation_history
     );
+
+    console.log('✅ [BOTTY-API] Respuesta generada, longitud:', botResponse.length);
 
     // Crear mensaje del bot en la conversación
     const { data: botMessage, error: messageError } = await supabase
@@ -91,9 +123,11 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (messageError) {
-      console.error('Error creando mensaje del bot:', messageError);
+      console.error('❌ [BOTTY-API] Error creando mensaje del bot:', messageError);
       return NextResponse.json({ error: 'Error generando respuesta del bot' }, { status: 500 });
     }
+
+    console.log('✅ [BOTTY-API] Mensaje del bot creado exitosamente:', botMessage.id);
 
     return NextResponse.json({ 
       success: true, 
