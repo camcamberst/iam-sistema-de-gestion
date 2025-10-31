@@ -715,36 +715,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         role="article"
                         aria-label={`Mensaje de ${message.sender_id === userId ? 'ti' : getDisplayName(senderInfo || {})} enviado ${formatMessageTime(message.created_at)}`}
                       >
-                        {/* Menú contextual (solo visible al hover) */}
-                        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                          <button
-                            onClick={() => {
-                              navigator.clipboard.writeText(message.content);
-                              // Feedback visual opcional (podríamos agregar un toast)
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
-                            title="Copiar mensaje"
-                            aria-label="Copiar mensaje"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                            </svg>
-                          </button>
-                          <button
-                            onClick={() => {
-                              // TODO: Implementar funcionalidad de responder
-                              // Por ahora solo placeholder visual
-                            }}
-                            className="p-1.5 rounded-lg hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
-                            title="Responder mensaje"
-                            aria-label="Responder mensaje"
-                          >
-                            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
-                            </svg>
-                          </button>
-                        </div>
-                        <p className="text-sm pr-10 leading-relaxed">
+                        <p className="text-sm leading-relaxed">
                           {searchTerm ? (
                             message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
                               part.toLowerCase() === searchTerm.toLowerCase() ? (
@@ -759,33 +730,65 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                             message.content
                           )}
                         </p>
-                        {/* Solo mostrar timestamp y estado en el último mensaje del grupo */}
+                        {/* Solo mostrar timestamp, estado y acciones en el último mensaje del grupo */}
                         {isLastInGroup && (
-                          <div className="flex items-center justify-end gap-1 mt-0.5">
-                            <span className="text-xs text-gray-300" title={new Date(message.created_at).toLocaleString('es-ES')}>
-                              {formatMessageTime(message.created_at)}
-                            </span>
-                            {/* Estados de lectura: solo mostrar en mensajes propios */}
-                            {message.sender_id === userId && (
-                              <span className="ml-1 flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
-                                {message.is_read_by_other ? (
-                                  // Visto (doble check azul)
-                                  <span className="inline-flex items-center" style={{ width: '16px' }}>
-                                    <svg className="w-3.5 h-3.5 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                    <svg className="w-3.5 h-3.5 text-blue-300 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
-                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                    </svg>
-                                  </span>
-                                ) : (
-                                  // Entregado (un solo check gris)
-                                  <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
+                          <div className="flex items-center justify-end gap-2 mt-0.5">
+                            {/* Botones de acción (solo visibles al hover del grupo) */}
+                            <div className="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
+                              <button
+                                onClick={() => {
+                                  navigator.clipboard.writeText(message.content);
+                                  // Feedback visual opcional (podríamos agregar un toast)
+                                }}
+                                className="p-1 rounded-md hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
+                                title="Copiar mensaje"
+                                aria-label="Copiar mensaje"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                                </svg>
+                              </button>
+                              <button
+                                onClick={() => {
+                                  // TODO: Implementar funcionalidad de responder
+                                  // Por ahora solo placeholder visual
+                                }}
+                                className="p-1 rounded-md hover:bg-black/20 text-gray-300 hover:text-white transition-colors"
+                                title="Responder mensaje"
+                                aria-label="Responder mensaje"
+                              >
+                                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                                </svg>
+                              </button>
+                            </div>
+                            {/* Timestamp y estado de lectura */}
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-gray-300" title={new Date(message.created_at).toLocaleString('es-ES')}>
+                                {formatMessageTime(message.created_at)}
                               </span>
-                            )}
+                              {/* Estados de lectura: solo mostrar en mensajes propios */}
+                              {message.sender_id === userId && (
+                                <span className="flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
+                                  {message.is_read_by_other ? (
+                                    // Visto (doble check azul)
+                                    <span className="inline-flex items-center" style={{ width: '16px' }}>
+                                      <svg className="w-3.5 h-3.5 text-blue-300" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                      <svg className="w-3.5 h-3.5 text-blue-300 -ml-1.5" fill="currentColor" viewBox="0 0 20 20">
+                                        <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                      </svg>
+                                    </span>
+                                  ) : (
+                                    // Entregado (un solo check gris)
+                                    <svg className="w-3.5 h-3.5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                    </svg>
+                                  )}
+                                </span>
+                              )}
+                            </div>
                           </div>
                         )}
                       </div>
