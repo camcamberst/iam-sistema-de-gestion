@@ -73,6 +73,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       return newSeen;
     });
   };
+
+  // Helper para poner en 0 el contador local de una conversación
+  const zeroUnreadForConversation = (conversationId: string) => {
+    setConversations(prev => prev.map((c: any) => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+  };
   
   // Mantener ref sincronizado con el estado
   useEffect(() => {
@@ -1015,6 +1020,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         markMessageAsSeen(selectedConversation, last.id);
         // Recargar conversaciones para actualizar cálculo de no leídos inmediatamente
         setTimeout(() => loadConversations(), 50);
+        zeroUnreadForConversation(selectedConversation);
       }
       try {
         if (titleBlinkIntervalRef.current) {
@@ -1058,6 +1064,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         console.log('🔄 [ChatWidget] Recargando conversaciones después de marcar como visto');
         loadConversations();
       }, 100);
+
+      // Poner a 0 el contador local de esta conversación inmediatamente
+      zeroUnreadForConversation(selectedConversation);
     }
   }, [selectedConversation, messages.length]);
 
@@ -1138,7 +1147,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         'Authorization': `Bearer ${session.access_token}`
                       },
                       body: JSON.stringify({ conversation_id: newMessage.conversation_id })
-                    }).finally(() => loadConversations());
+                    }).finally(() => {
+                      zeroUnreadForConversation(newMessage.conversation_id);
+                      loadConversations();
+                    });
                   }
                 } catch {}
               }
