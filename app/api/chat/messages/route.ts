@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { AIM_BOTTY_ID, isBottyId } from '@/lib/chat/aim-botty';
+import { processBotResponse } from '@/lib/chat/process-bot-response';
 
 export const dynamic = 'force-dynamic';
 
@@ -212,39 +213,21 @@ export async function POST(request: NextRequest) {
         console.error('❌ [BOTTY] Error obteniendo historial:', historyError);
       }
 
-      // Determinar URL base
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 
-                     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 
-                     'http://localhost:3000';
-      
-      const bottyUrl = `${baseUrl}/api/chat/aim-botty`;
-      
-      console.log('🤖 [BOTTY] Llamando a:', bottyUrl);
-
-      // Generar respuesta del bot en segundo plano (no bloquea la respuesta)
-      fetch(bottyUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          conversation_id,
-          message_content: content.trim(),
-          conversation_history: (conversationHistory || []).reverse()
-        })
-      })
-      .then(async (response) => {
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('❌ [BOTTY] Error en respuesta del servidor:', response.status, errorText);
+      // Procesar respuesta del bot directamente (sin fetch interno)
+      // Esto evita problemas en Vercel/producción con fetch interno
+      processBotResponse(
+        user.id,
+        conversation_id,
+        content.trim(),
+        (conversationHistory || []).reverse()
+      ).then(success => {
+        if (success) {
+          console.log('✅ [BOTTY] Respuesta del bot generada exitosamente');
         } else {
-          const data = await response.json();
-          console.log('✅ [BOTTY] Respuesta del bot generada exitosamente:', data);
+          console.error('❌ [BOTTY] Error generando respuesta del bot');
         }
-      })
-      .catch(error => {
-        console.error('❌ [BOTTY] Error generando respuesta del bot:', error);
+      }).catch(error => {
+        console.error('❌ [BOTTY] Error en processBotResponse:', error);
       });
     }
 
