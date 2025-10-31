@@ -63,7 +63,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   onViewConversations
 }) => {
   // Helper para renderizar avatar (diferenciado para Botty)
-  const renderAvatar = (user: any, size: 'small' | 'medium' = 'medium') => {
+  const renderAvatar = (user: any, size: 'small' | 'medium' = 'medium', isOffline: boolean = false) => {
     const isBotty = user?.id === AIM_BOTTY_ID || user?.email === AIM_BOTTY_EMAIL;
     const sizeClass = size === 'small' ? 'w-6 h-6' : 'w-8 h-8';
     
@@ -75,9 +75,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         </div>
       );
     } else {
-      // Avatar normal para usuarios: gradiente azul con inicial
+      // Avatar normal para usuarios: gradiente azul (online) o gris (offline) con inicial
+      const gradientClass = isOffline 
+        ? 'bg-gradient-to-br from-gray-500 to-gray-600' 
+        : 'bg-gradient-to-br from-blue-500 to-blue-600';
       return (
-        <div className={`${sizeClass} bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center ${size === 'medium' ? 'shadow-md' : ''} flex-shrink-0`}>
+        <div className={`${sizeClass} ${gradientClass} rounded-full flex items-center justify-center ${size === 'medium' ? 'shadow-md' : ''} flex-shrink-0`}>
           <span className={`text-white font-bold text-xs ${size === 'medium' ? 'tracking-wider' : ''}`}>
             {getDisplayName(user)?.charAt(0).toUpperCase()}
           </span>
