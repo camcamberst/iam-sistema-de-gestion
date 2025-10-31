@@ -108,7 +108,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   return (
     <div
-      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
+      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed relative"
       style={{
         // Posicionar la ventana inmediatamente a la izquierda del botón,
         // dejando un pequeño espacio (gap) y alineando el borde inferior
@@ -391,27 +391,34 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           </>
         )}
 
-        {/* Modal de confirmación para eliminar conversación */}
+        {/* Confirmación embebida dentro de la ventana */}
         {showDeleteConfirm && (
-          <StandardModal isOpen={true} onClose={() => setShowDeleteConfirm?.(null)} title="Eliminar conversación" maxWidthClass="max-w-md">
-            <p className="text-gray-700 dark:text-gray-300 mb-6">
-                ¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.
-              </p>
-              <div className="flex space-x-3">
+          <div className="absolute inset-0 z-[10000]">
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-[2px]" onClick={() => setShowDeleteConfirm?.(null)} />
+            <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[88%] max-w-[280px] bg-gray-900 border border-gray-700 rounded-xl shadow-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-sm font-semibold text-white">Eliminar conversación</h3>
+                <button onClick={() => setShowDeleteConfirm?.(null)} className="text-gray-400 hover:text-white">
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+              </div>
+              <p className="text-xs text-gray-300 mb-4">¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.</p>
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setShowDeleteConfirm?.(null)}
-                className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-100 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+                  className="flex-1 px-3 py-2 rounded-lg bg-gray-800 text-gray-200 hover:bg-gray-700 text-xs"
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={() => deleteConversation?.(showDeleteConfirm)}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+                  className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"
                 >
                   Eliminar
                 </button>
               </div>
-          </StandardModal>
+            </div>
+          </div>
         )}
       </div>
 
