@@ -45,6 +45,7 @@ interface User {
 export default function CalculatorHistorialPage() {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string>('modelo'); // Rol del usuario para verificar permisos de edición
+  const [targetModelId, setTargetModelId] = useState<string | null>(null); // ID del modelo cuyo historial se está viendo
   const [periods, setPeriods] = useState<Period[]>([]);
   const [allPeriods, setAllPeriods] = useState<Period[]>([]); // Todos los períodos sin filtrar
   const [loading, setLoading] = useState(true);
@@ -137,6 +138,9 @@ export default function CalculatorHistorialPage() {
           setLoading(false);
           return;
         }
+        
+        // Guardar el targetModelId para usarlo en las funciones de edición
+        setTargetModelId(targetModelId);
         
         const response = await fetch(`/api/model/calculator/historial?modelId=${targetModelId}`, {
           headers
@@ -305,7 +309,7 @@ export default function CalculatorHistorialPage() {
         body: JSON.stringify({
           period_date: period.period_date,
           period_type: period.period_type,
-          model_id: user?.id,
+          model_id: targetModelId || user?.id, // Usar targetModelId si está disponible (admin viendo otro modelo)
           platform_id: platformId,
           value: Number(editValue)
         })
