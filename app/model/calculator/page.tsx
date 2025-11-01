@@ -1146,6 +1146,16 @@ export default function ModelCalculatorPage() {
                           <div className="flex items-center space-x-2">
                             {(() => {
                               const isFrozen = frozenPlatforms.includes(row.id.toLowerCase());
+                              // Log de depuración para las primeras plataformas especiales
+                              if (['777', 'babestation', 'livecreator', 'mdh', 'big7', 'mondo', 'vx', 'xmodels', 'dirtyfans'].includes(row.id.toLowerCase())) {
+                                console.log(`🔍 [RENDER] Plataforma ${row.id}:`, {
+                                  isFrozen,
+                                  frozenPlatforms,
+                                  rowId: row.id,
+                                  rowIdLower: row.id.toLowerCase(),
+                                  inFrozenList: frozenPlatforms.includes(row.id.toLowerCase())
+                                });
+                              }
                               return (
                                 <>
                                   <input
