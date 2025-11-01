@@ -48,7 +48,7 @@ export async function GET(request: NextRequest) {
     }
 
     // PASO 2: Obtener información de plataformas por separado (consulta opcional, con fallback)
-    const platformIds = [...new Set((history || []).map((h: any) => h.platform_id).filter(Boolean))];
+    const platformIds = Array.from(new Set((history || []).map((h: any) => h.platform_id).filter(Boolean)));
     let platformsMap: Map<string, { name: string; currency: string }> = new Map();
     
     if (platformIds.length > 0) {
