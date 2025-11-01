@@ -41,22 +41,28 @@ export async function GET(request: NextRequest) {
     const allFrozenPlatforms = new Set(frozenPlatformsFromDB.map(p => p.toLowerCase()));
 
     // 🔒 VERIFICACIÓN AUTOMÁTICA ESCALABLE:
-    // Si es día de cierre (1 o 16) Y ya pasó medianoche Europa Central,
-    // aplicar early freeze automáticamente para TODOS los modelos (existentes Y futuros)
+    // El early freeze debe activarse cuando:
+    // 1. Es día de cierre (1 o 16) Y ya pasó medianoche Europa Central, O
+    // 2. Es día previo al cierre (31 o 15) Y ya pasó medianoche Europa Central
     // Esto NO depende de que el cron se haya ejecutado - es automático basado en hora/fecha
     const isClosure = isClosureDay();
     const colombiaDate = getColombiaDate();
     const day = parseInt(colombiaDate.split('-')[2]);
+    
+    // Verificar si es día previo al cierre (31 o 15)
+    const isDayBeforeClosure = day === 31 || day === 15;
     
     console.log(`🔍 [PLATFORM-FREEZE-STATUS] Verificando early freeze:`, {
       modelId: modelId.substring(0, 8),
       periodDate,
       colombiaDate,
       day,
-      isClosureDay: isClosure
+      isClosureDay: isClosure,
+      isDayBeforeClosure
     });
     
-    if (isClosure) {
+    // Verificar early freeze si es día de cierre O día previo al cierre
+    if (isClosure || isDayBeforeClosure) {
       const now = new Date();
       const europeMidnight = getEuropeanCentralMidnightInColombia(now);
       const colombiaTimeStr = getColombiaDateTime();
