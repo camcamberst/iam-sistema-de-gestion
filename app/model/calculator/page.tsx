@@ -425,7 +425,12 @@ export default function ModelCalculatorPage() {
   
   // 🔒 Cargar estado de congelación cuando el usuario esté disponible
   useEffect(() => {
-    if (!user?.id || !periodDate) return;
+    console.log('🔍 [CALCULATOR] useEffect frozenPlatforms ejecutándose:', { hasUser: !!user, userId: user?.id, periodDate });
+    
+    if (!user?.id || !periodDate) {
+      console.log('⚠️ [CALCULATOR] useEffect frozenPlatforms bloqueado:', { reason: !user?.id ? 'sin usuario' : 'sin periodDate' });
+      return;
+    }
     
     const loadFreezeStatus = async () => {
       try {
