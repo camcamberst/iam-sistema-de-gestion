@@ -357,14 +357,18 @@ export default function ModelCalculatorPage() {
     const load = async () => {
       try {
         setLoading(true);
+        console.log('🔍 [CALCULATOR] useEffect load() ejecutándose...', { periodDate });
+        
         // Load current auth user
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth?.user?.id;
         if (!uid) {
+          console.log('⚠️ [CALCULATOR] No hay usuario autenticado');
           setUser(null);
           setLoading(false);
           return;
         }
+        console.log('✅ [CALCULATOR] Usuario autenticado encontrado:', uid);
         const { data: userRow } = await supabase
           .from('users')
           .select('id,name,email,role')
@@ -510,7 +514,7 @@ export default function ModelCalculatorPage() {
       clearInterval(interval);
       console.log('🔒 [CALCULATOR] Actualización periódica de congelación desactivada');
     };
-  }, [user?.id, periodDate]);
+  }, [user?.id, periodDate, configLoaded]);
 
   const loadCalculatorConfig = async (userId: string) => {
     // 🔧 FIX: Prevenir doble carga usando estado
