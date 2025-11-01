@@ -251,8 +251,8 @@ export async function GET(request: NextRequest) {
       ? `${year}-${String(month + 1).padStart(2, '0')}-15`
       : `${year}-${String(month + 1).padStart(2, '0')}-${String(lastDayOfMonth).padStart(2, '0')}`;
 
-    // Determinar si el período está activo según hoy dentro del rango
-    const todayStr = new Date().toISOString().split('T')[0];
+    // Determinar si el período está activo según hoy dentro del rango (usar hora Colombia)
+    const todayStr = getColombiaDate();
     const isActivePeriod = todayStr >= quinStartStr && todayStr <= quinEndStr;
     const startStr = quinStartStr;
     const endStr = quinEndStr;
