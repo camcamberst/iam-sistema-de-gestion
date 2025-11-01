@@ -300,7 +300,7 @@ export const archiveModelValues = async (
     // 7. Preparar datos históricos con todos los cálculos
     const historicalData: any[] = [];
 
-    for (const [platformId, value] of valuesByPlatform.entries()) {
+    for (const [platformId, value] of Array.from(valuesByPlatform.entries())) {
       const platform = platformMap.get(platformId);
       const currency = platform?.currency || 'USD';
       // Usar el porcentaje general del modelo (aplicado a todas las plataformas)
