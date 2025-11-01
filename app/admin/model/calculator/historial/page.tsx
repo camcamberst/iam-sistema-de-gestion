@@ -353,7 +353,7 @@ export default function CalculatorHistorialPage() {
         body: JSON.stringify({
           period_date: period.period_date,
           period_type: period.period_type,
-          model_id: user?.id,
+          model_id: targetModelId || user?.id, // Usar targetModelId si está disponible (admin viendo otro modelo)
           rates: {
             eur_usd: editRates.eur_usd ? Number(editRates.eur_usd) : undefined,
             gbp_usd: editRates.gbp_usd ? Number(editRates.gbp_usd) : undefined,
