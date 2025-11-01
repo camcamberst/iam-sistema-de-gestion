@@ -568,14 +568,12 @@ export default function DashboardSedesPage() {
           </div>
         </div>
 
-        {/* Resumen de Facturación */}
+        {/* Resumen de Facturación - SOLO para período actual */}
         {userId && (userRole === 'super_admin' || userRole === 'admin') && (
           <BillingSummary 
             userRole={userRole as 'admin' | 'super_admin'} 
             userId={userId}
             userGroups={userGroups}
-            selectedDate={targetDate || getColombiaDate()}
-            selectedPeriod={selectedPeriod === 'P1' ? 'period-1' : selectedPeriod === 'P2' ? 'period-2' : 'current'}
           />
         )}
 
@@ -802,8 +800,8 @@ export default function DashboardSedesPage() {
                 {/* Información del período seleccionado */}
                 <div className="flex items-end">
                   {selectedMonth && selectedYear && selectedPeriod && (
-                    <div className="w-full p-3 bg-blue-50 rounded-lg border border-blue-200">
-                      <div className="text-sm font-medium text-blue-800">
+                    <div className="w-full p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50">
+                      <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
                         {getMonthName(selectedMonth)} {selectedYear} - {selectedPeriod}
                       </div>
                       <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
@@ -812,6 +810,19 @@ export default function DashboardSedesPage() {
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+            
+            {/* Resumen Histórico - Se muestra cuando hay un período seleccionado */}
+            {showHistoricalQuery && selectedMonth && selectedYear && selectedPeriod && targetDate && (
+              <div className="mt-6">
+                <BillingSummary 
+                  userRole={userRole as 'admin' | 'super_admin'} 
+                  userId={userId}
+                  userGroups={userGroups}
+                  selectedDate={targetDate}
+                  selectedPeriod={selectedPeriod === 'P1' ? 'period-1' : 'period-2'}
+                />
               </div>
             )}
           </div>
