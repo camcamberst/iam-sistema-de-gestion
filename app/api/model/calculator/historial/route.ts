@@ -134,6 +134,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // PASO 2.5: Obtener configuración del modelo (una sola vez) para porcentaje por defecto
+    let defaultModelPercentage = 80;
+    const { data: modelConfig } = await supabase
+      .from('calculator_config')
+      .select('percentage_override, group_percentage')
+      .eq('model_id', modelId)
+      .eq('active', true)
+      .single();
+    
+    if (modelConfig) {
+      defaultModelPercentage = modelConfig.percentage_override || modelConfig.group_percentage || 80;
+    }
+
     // Agrupar por período (period_date + period_type)
     const periodsMap = new Map<string, {
       period_date: string;
@@ -184,34 +197,94 @@ export async function GET(request: NextRequest) {
 
       const period = periodsMap.get(periodKey)! as any; // Type assertion needed for new fields
       
-      const usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : 0;
-      const usdModelo = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : 0;
-      const copModelo = item.value_cop_modelo != null ? Number(item.value_cop_modelo) : 0;
+      // Obtener tasas del período (usar las guardadas o valores por defecto)
+      const rates = {
+        eur_usd: item.rate_eur_usd || period.rates?.eur_usd || 1.01,
+        gbp_usd: item.rate_gbp_usd || period.rates?.gbp_usd || 1.20,
+        usd_cop: item.rate_usd_cop || period.rates?.usd_cop || 3900
+      };
+      
+      // Función para calcular USD bruto (misma lógica que en period-closure-helpers)
+      const calculateUsdBruto = (value: number, platformId: string, currency: string, rates: any): number => {
+        if (currency === 'EUR') {
+          if (platformId === 'big7') {
+            return (value * rates.eur_usd) * 0.84;
+          } else if (platformId === 'mondo') {
+            return (value * rates.eur_usd) * 0.78;
+          } else {
+            return value * rates.eur_usd;
+          }
+        } else if (currency === 'GBP') {
+          if (platformId === 'aw') {
+            return (value * rates.gbp_usd) * 0.677;
+          } else {
+            return value * rates.gbp_usd;
+          }
+        } else if (currency === 'USD') {
+          if (platformId === 'cmd' || platformId === 'camlust' || platformId === 'skypvt') {
+            return value * 0.75;
+          } else if (platformId === 'chaturbate' || platformId === 'myfreecams' || platformId === 'stripchat') {
+            return value * 0.05;
+          } else if (platformId === 'dxlive') {
+            return value * 0.60;
+          } else if (platformId === 'secretfriends') {
+            return value * 0.5;
+          } else if (platformId === 'superfoon') {
+            return value;
+          } else {
+            return value;
+          }
+        }
+        return 0;
+      };
+      
+      // Si los valores calculados no existen, calcularlos ahora
+      let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
+      let usdModelo = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : null;
+      let copModelo = item.value_cop_modelo != null ? Number(item.value_cop_modelo) : null;
       const percentage = item.platform_percentage != null ? Number(item.platform_percentage) : null;
+      
+      // Si faltan cálculos, calcularlos ahora
+      if (usdBruto === null || usdModelo === null || copModelo === null) {
+        const currency = platformInfo?.currency || 'USD';
+        const calculatedUsdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
+        usdBruto = calculatedUsdBruto;
+        
+        // Usar porcentaje guardado o el de la configuración del modelo
+        const modelPercentage = percentage || defaultModelPercentage;
+        
+        usdModelo = calculatedUsdBruto * (modelPercentage / 100);
+        copModelo = usdModelo * rates.usd_cop;
+      }
+      
+      // Asegurar que todos los valores sean números
+      const finalUsdBruto = usdBruto ?? 0;
+      const finalUsdModelo = usdModelo ?? 0;
+      const finalCopModelo = copModelo ?? 0;
       
       period.platforms.push({
         platform_id: item.platform_id,
         platform_name: platformInfo?.name || item.platform_id,
         platform_currency: platformInfo?.currency || 'USD',
         value: safeValue,
-        // Nuevos campos de cálculos
-        value_usd_bruto: usdBruto,
-        value_usd_modelo: usdModelo,
-        value_cop_modelo: copModelo,
-        platform_percentage: percentage,
-        // Tasas aplicadas (guardadas en el historial)
+        // Nuevos campos de cálculos (calculados si no existen en BD)
+        value_usd_bruto: finalUsdBruto,
+        value_usd_modelo: finalUsdModelo,
+        value_cop_modelo: finalCopModelo,
+        platform_percentage: percentage || defaultModelPercentage,
+        // Tasas aplicadas (guardadas en el historial o calculadas)
         rates: {
-          eur_usd: item.rate_eur_usd || null,
-          gbp_usd: item.rate_gbp_usd || null,
-          usd_cop: item.rate_usd_cop || null
+          eur_usd: rates.eur_usd,
+          gbp_usd: rates.gbp_usd,
+          usd_cop: rates.usd_cop
         }
       } as any); // Type assertion needed because TypeScript infers the type from the first push()
       
       // Actualizar totales del período
       period.total_value += safeValue;
-      period.total_usd_bruto += usdBruto;
-      period.total_usd_modelo += usdModelo;
-      period.total_cop_modelo += copModelo;
+      period.total_usd_bruto += finalUsdBruto;
+      period.total_usd_modelo += finalUsdModelo;
+      period.total_cop_modelo += finalCopModelo;
     });
 
     // Convertir a array y ordenar por fecha descendente
