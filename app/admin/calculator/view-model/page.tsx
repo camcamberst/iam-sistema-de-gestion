@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import AppleDropdown from '@/components/ui/AppleDropdown';
@@ -290,14 +290,7 @@ export default function AdminViewModelPage() {
     console.log('🧹 [UX-FIX] Selección limpiada');
   };
 
-  // Cargar historial cuando se seleccione la pestaña de historial
-  useEffect(() => {
-    if (activeTab === 'history' && selectedModel && user) {
-      loadHistory();
-    }
-  }, [activeTab, selectedModel?.id, user?.id]);
-
-  const loadHistory = async () => {
+  const loadHistory = useCallback(async () => {
     if (!selectedModel || !user) return;
 
     try {
@@ -366,7 +359,14 @@ export default function AdminViewModelPage() {
     } finally {
       setHistoryLoading(false);
     }
-  };
+  }, [selectedModel, user]);
+
+  // Cargar historial cuando se seleccione la pestaña de historial
+  useEffect(() => {
+    if (activeTab === 'history' && selectedModel && user) {
+      loadHistory();
+    }
+  }, [activeTab, selectedModel?.id, user?.id, loadHistory]);
 
   // Filtrar períodos según año, mes y período seleccionados
   const filteredHistoryPeriods = useMemo(() => {
