@@ -291,8 +291,9 @@ export async function GET(request: NextRequest) {
     } else {
       // Período cerrado: usar calculator_history
       console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history (rango exacto quincena)');
-      // Determinar period_type esperado según quincena
-      const expectedType = endStr.endsWith('-15') ? 'period-1' : 'period-2';
+      // Determinar period_type esperado según quincena (usar formato '1-15' o '16-31' como se guarda en BD)
+      const expectedType = endStr.endsWith('-15') ? '1-15' : '16-31';
+      console.log('🔍 [BILLING-SUMMARY] Buscando period_type:', expectedType, 'para rango:', { startStr, endStr });
       const { data: history, error: historyError } = await supabase
         .from('calculator_history')
         .select('model_id, platform_id, value, period_date, period_type')
