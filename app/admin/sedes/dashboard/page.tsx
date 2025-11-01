@@ -76,6 +76,21 @@ export default function DashboardSedesPage() {
   const [availableSedes, setAvailableSedes] = useState<Group[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
 
+  // Estados para editar RATES de cierre
+  const [showEditRatesModal, setShowEditRatesModal] = useState(false);
+  const [loadingPeriodInfo, setLoadingPeriodInfo] = useState(false);
+  const [periodInfo, setPeriodInfo] = useState<{
+    records_count: number;
+    current_rates: { eur_usd: number | null; gbp_usd: number | null; usd_cop: number | null };
+  } | null>(null);
+  const [editRates, setEditRates] = useState<{ eur_usd: string; gbp_usd: string; usd_cop: string }>({
+    eur_usd: '',
+    gbp_usd: '',
+    usd_cop: ''
+  });
+  const [savingRates, setSavingRates] = useState(false);
+  const [ratesError, setRatesError] = useState<string | null>(null);
+
   // Funciones para consulta histórica
   const getMonthName = (month: string) => {
     const months = [
@@ -173,6 +188,141 @@ export default function DashboardSedesPage() {
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);
+    }
+  };
+
+  // Función para cargar información del período
+  const loadPeriodInfo = async (periodDate: string, periodType: string) => {
+    try {
+      setLoadingPeriodInfo(true);
+      setRatesError(null);
+
+      // Obtener token de autenticación
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = (await import('@/lib/supabase')).supabase;
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        setRatesError('Sesión no válida');
+        return;
+      }
+
+      const response = await fetch(`/api/admin/calculator-history/update-period-rates?period_date=${periodDate}&period_type=${periodType}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setRatesError(data.error || 'Error al cargar información del período');
+        return;
+      }
+
+      setPeriodInfo(data);
+      
+      // Prellenar formulario con tasas actuales
+      setEditRates({
+        eur_usd: data.current_rates?.eur_usd?.toString() || '',
+        gbp_usd: data.current_rates?.gbp_usd?.toString() || '',
+        usd_cop: data.current_rates?.usd_cop?.toString() || ''
+      });
+
+    } catch (err: any) {
+      console.error('Error cargando información del período:', err);
+      setRatesError(err.message || 'Error al cargar información del período');
+    } finally {
+      setLoadingPeriodInfo(false);
+    }
+  };
+
+  // Función para guardar las tasas
+  const savePeriodRates = async () => {
+    if (!selectedMonth || !selectedYear || !selectedPeriod) return;
+
+    try {
+      setSavingRates(true);
+      setRatesError(null);
+
+      // Calcular period_date y period_type
+      const year = parseInt(selectedYear);
+      const month = parseInt(selectedMonth);
+      const periodType = selectedPeriod === 'P1' ? '1-15' : '16-31';
+      
+      let day: number;
+      if (selectedPeriod === 'P1') {
+        day = 15;
+      } else {
+        day = new Date(year, month, 0).getDate();
+      }
+      const periodDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+
+      // Obtener token de autenticación
+      const { createClient } = await import('@supabase/supabase-js');
+      const supabase = (await import('@/lib/supabase')).supabase;
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        setRatesError('Sesión no válida');
+        return;
+      }
+
+      // Obtener información del usuario
+      const userData = localStorage.getItem('user');
+      let adminName = 'Desconocido';
+      if (userData) {
+        try {
+          const parsed = JSON.parse(userData);
+          adminName = parsed.name || parsed.email || 'Desconocido';
+        } catch (e) {
+          // Ignorar error de parsing
+        }
+      }
+
+      const response = await fetch('/api/admin/calculator-history/update-period-rates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          period_date: periodDate,
+          period_type: periodType,
+          rates: {
+            eur_usd: editRates.eur_usd ? Number(editRates.eur_usd) : undefined,
+            gbp_usd: editRates.gbp_usd ? Number(editRates.gbp_usd) : undefined,
+            usd_cop: editRates.usd_cop ? Number(editRates.usd_cop) : undefined
+          },
+          admin_id: userId,
+          admin_name: adminName
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        setRatesError(data.error || 'Error al actualizar tasas');
+        return;
+      }
+
+      // Éxito: cerrar modal y recargar datos
+      setShowEditRatesModal(false);
+      setRatesError(null);
+      
+      // Mostrar notificación de éxito
+      alert(`✅ Tasas actualizadas exitosamente para ${data.updated_count} registros del período ${periodDate} (${periodType})`);
+      
+      // Recargar la página para actualizar los datos mostrados
+      window.location.reload();
+
+    } catch (err: any) {
+      console.error('Error guardando tasas:', err);
+      setRatesError(err.message || 'Error al guardar tasas');
+    } finally {
+      setSavingRates(false);
     }
   };
 
@@ -443,12 +593,44 @@ export default function DashboardSedesPage() {
                   <p className="text-sm text-gray-600 dark:text-gray-300">Consulta períodos históricos de facturación</p>
                 </div>
               </div>
-              <button
-                onClick={() => setShowHistoricalQuery(!showHistoricalQuery)}
-                className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
-              >
-                {showHistoricalQuery ? 'Ocultar' : 'Consultar Períodos'}
-              </button>
+              <div className="flex gap-2">
+                {(userRole === 'admin' || userRole === 'super_admin') && selectedMonth && selectedYear && selectedPeriod && (
+                  <button
+                    onClick={async () => {
+                      // Calcular period_date y period_type
+                      const year = parseInt(selectedYear);
+                      const month = parseInt(selectedMonth);
+                      const periodType = selectedPeriod === 'P1' ? '1-15' : '16-31';
+                      
+                      // Calcular period_date (día 15 para P1, último día del mes para P2)
+                      let day: number;
+                      if (selectedPeriod === 'P1') {
+                        day = 15;
+                      } else {
+                        day = new Date(year, month, 0).getDate();
+                      }
+                      const periodDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                      
+                      // Cargar información del período
+                      await loadPeriodInfo(periodDate, periodType);
+                      setShowEditRatesModal(true);
+                    }}
+                    disabled={!selectedMonth || !selectedYear || !selectedPeriod}
+                    className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:ring-2 focus:ring-purple-500/20 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                  >
+                    <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    Editar RATES de cierre
+                  </button>
+                )}
+                <button
+                  onClick={() => setShowHistoricalQuery(!showHistoricalQuery)}
+                  className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-md"
+                >
+                  {showHistoricalQuery ? 'Ocultar' : 'Consultar Períodos'}
+                </button>
+              </div>
             </div>
             
             {showHistoricalQuery && (
@@ -645,6 +827,227 @@ export default function DashboardSedesPage() {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para Editar RATES de cierre */}
+        {showEditRatesModal && (
+          <div className="fixed inset-0 z-[999999] flex items-center justify-center p-4">
+            {/* Overlay */}
+            <div 
+              className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+              onClick={() => {
+                if (!savingRates) {
+                  setShowEditRatesModal(false);
+                  setRatesError(null);
+                }
+              }}
+            />
+            
+            {/* Modal Content */}
+            <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700">
+              {/* Header */}
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Editar RATES de cierre</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {selectedMonth && selectedYear && selectedPeriod ? 
+                        `${getMonthName(selectedMonth)} ${selectedYear} - ${selectedPeriod} (${selectedPeriod === 'P1' ? 'Días 1-15' : 'Días 16-31'})` : 
+                        'Selecciona un período'}
+                    </p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => {
+                    if (!savingRates) {
+                      setShowEditRatesModal(false);
+                      setRatesError(null);
+                    }
+                  }}
+                  disabled={savingRates}
+                  className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Content */}
+              <div className="p-6 space-y-6">
+                {/* Resumen de registros afectados */}
+                {loadingPeriodInfo ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+                  </div>
+                ) : periodInfo ? (
+                  <>
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <svg className="w-5 h-5 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <h3 className="font-semibold text-blue-900 dark:text-blue-300">Resumen del período</h3>
+                      </div>
+                      <p className="text-sm text-blue-800 dark:text-blue-400">
+                        Esta acción afectará <strong className="font-semibold">{periodInfo.records_count}</strong> registros históricos de <strong className="font-semibold">todas las modelos</strong> del período seleccionado.
+                      </p>
+                      <p className="text-xs text-blue-700 dark:text-blue-500 mt-2">
+                        ⚠️ Todos los valores derivados (USD bruto, USD modelo, COP modelo) serán recalculados automáticamente con las nuevas tasas.
+                      </p>
+                    </div>
+
+                    {/* Tasas actuales (si existen) */}
+                    {periodInfo.current_rates && (
+                      (periodInfo.current_rates.eur_usd !== null || periodInfo.current_rates.gbp_usd !== null || periodInfo.current_rates.usd_cop !== null) && (
+                        <div className="bg-gray-50 dark:bg-gray-700/50 border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                          <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">Tasas actuales del período:</h4>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <label className="text-xs text-gray-600 dark:text-gray-400">EUR → USD</label>
+                              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {periodInfo.current_rates.eur_usd !== null ? periodInfo.current_rates.eur_usd.toFixed(4) : 'N/A'}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-600 dark:text-gray-400">GBP → USD</label>
+                              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {periodInfo.current_rates.gbp_usd !== null ? periodInfo.current_rates.gbp_usd.toFixed(4) : 'N/A'}
+                              </div>
+                            </div>
+                            <div>
+                              <label className="text-xs text-gray-600 dark:text-gray-400">USD → COP</label>
+                              <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                {periodInfo.current_rates.usd_cop !== null ? periodInfo.current_rates.usd_cop.toFixed(2) : 'N/A'}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      )
+                    )}
+
+                    {/* Formulario de edición */}
+                    <div className="space-y-4">
+                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Nuevas tasas:</h4>
+                      
+                      <div className="grid grid-cols-3 gap-4">
+                        {/* EUR → USD */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            EUR → USD
+                          </label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            value={editRates.eur_usd}
+                            onChange={(e) => setEditRates({ ...editRates, eur_usd: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="1.0100"
+                            disabled={savingRates}
+                          />
+                        </div>
+
+                        {/* GBP → USD */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            GBP → USD
+                          </label>
+                          <input
+                            type="number"
+                            step="0.0001"
+                            value={editRates.gbp_usd}
+                            onChange={(e) => setEditRates({ ...editRates, gbp_usd: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="1.2000"
+                            disabled={savingRates}
+                          />
+                        </div>
+
+                        {/* USD → COP */}
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            USD → COP
+                          </label>
+                          <input
+                            type="number"
+                            step="0.01"
+                            value={editRates.usd_cop}
+                            onChange={(e) => setEditRates({ ...editRates, usd_cop: e.target.value })}
+                            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                            placeholder="3900.00"
+                            disabled={savingRates}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Error message */}
+                    {ratesError && (
+                      <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg p-4">
+                        <div className="flex items-center gap-2">
+                          <svg className="w-5 h-5 text-red-600 dark:text-red-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          <p className="text-sm text-red-800 dark:text-red-400">{ratesError}</p>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400">
+                    No se pudo cargar la información del período
+                  </div>
+                )}
+              </div>
+
+              {/* Footer */}
+              <div className="flex items-center justify-end gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 rounded-b-xl">
+                <button
+                  onClick={() => {
+                    if (!savingRates) {
+                      setShowEditRatesModal(false);
+                      setRatesError(null);
+                    }
+                  }}
+                  disabled={savingRates}
+                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 focus:ring-2 focus:ring-gray-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={async () => {
+                    // Confirmación antes de guardar
+                    const confirmMessage = `¿Estás seguro de actualizar las tasas para ${periodInfo?.records_count || 0} registros del período ${selectedMonth && selectedYear && selectedPeriod ? `${getMonthName(selectedMonth)} ${selectedYear} - ${selectedPeriod}` : ''}?\n\nEsta acción afectará a TODAS las modelos del período y recalculará todos los valores derivados.`;
+                    
+                    if (window.confirm(confirmMessage)) {
+                      await savePeriodRates();
+                    }
+                  }}
+                  disabled={savingRates || !periodInfo || !editRates.eur_usd || !editRates.gbp_usd || !editRates.usd_cop}
+                  className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-500 to-purple-600 rounded-lg hover:from-purple-600 hover:to-purple-700 focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center gap-2"
+                >
+                  {savingRates ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      <span>Guardando...</span>
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                      <span>Guardar Tasas</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           </div>
