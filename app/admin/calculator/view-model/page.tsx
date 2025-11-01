@@ -1231,6 +1231,7 @@ export default function AdminViewModelPage() {
           )}
         </div>
       </div>
+      </>
     );
   }
 
