@@ -66,6 +66,7 @@ export default function ModelCalculatorPage() {
   const [configLoaded, setConfigLoaded] = useState(false);
   const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
+  const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]); // 🔒 Plataformas congeladas
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -409,12 +410,24 @@ export default function ModelCalculatorPage() {
           await loadCalculatorConfig(current.id);
           setConfigLoaded(true);
         }
+
+        // 🔒 Cargar estado de congelación de plataformas
+        try {
+          const freezeStatusResponse = await fetch(`/api/calculator/period-closure/platform-freeze-status?modelId=${current.id}&periodDate=${periodDate}`);
+          const freezeStatusData = await freezeStatusResponse.json();
+          if (freezeStatusData.success && freezeStatusData.frozen_platforms) {
+            setFrozenPlatforms(freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase()));
+            console.log('🔒 [CALCULATOR] Plataformas congeladas:', freezeStatusData.frozen_platforms);
+          }
+        } catch (error) {
+          console.error('❌ [CALCULATOR] Error cargando estado de congelación:', error);
+        }
       } finally {
         setLoading(false);
       }
     };
     load();
-  }, []);
+  }, [periodDate]);
 
 
   const loadCalculatorConfig = async (userId: string) => {
@@ -675,8 +688,10 @@ export default function ModelCalculatorPage() {
       console.log('🔒 [CALCULATOR] Disabling autosave during manual save');
 
       const values = platforms.reduce((acc, platform) => {
-        // 🔧 FIX: Permitir guardar valor 0 - solo excluir si es undefined/null
-        if (platform.enabled && platform.value !== undefined && platform.value !== null) {
+        // 🔒 Excluir plataformas congeladas del guardado
+        const isFrozen = frozenPlatforms.includes(platform.id.toLowerCase());
+        // 🔧 FIX: Permitir guardar valor 0 - solo excluir si es undefined/null o está congelada
+        if (platform.enabled && platform.value !== undefined && platform.value !== null && !isFrozen) {
           acc[platform.id] = platform.value;
         }
         return acc;
@@ -711,6 +726,7 @@ export default function ModelCalculatorPage() {
       console.log('🔍 [CALCULATOR] Calculating totals for billing summary...');
       
       // Calcular totales usando la misma lógica que se muestra en "Totales y Alertas"
+      // (incluir plataformas congeladas en cálculo de totales - solo no se pueden editar)
       const totalUsdBruto = platforms.reduce((sum, p) => {
         if (!p.enabled) return sum;
         let usdBruto = 0;
@@ -744,6 +760,7 @@ export default function ModelCalculatorPage() {
         return sum + usdBruto;
       }, 0);
 
+      // (incluir plataformas congeladas en cálculo de totales - solo no se pueden editar)
       const totalUsdModelo = platforms.reduce((sum, p) => {
         if (!p.enabled) return sum;
         let usdModelo = 0;
@@ -832,8 +849,11 @@ export default function ModelCalculatorPage() {
     if (!user) return;
     if (saving) return; // CRÍTICO: No ejecutar autosave durante guardado manual
     
-    // Preparar mapa de valores a guardar
-    const enabled = platforms.filter(p => p.enabled && p.value > 0);
+    // 🔒 Preparar mapa de valores a guardar (excluir plataformas congeladas del autosave)
+    const enabled = platforms.filter(p => {
+      const isFrozen = frozenPlatforms.includes(p.id.toLowerCase());
+      return p.enabled && p.value > 0 && !isFrozen;
+    });
     const values: Record<string, number> = enabled.reduce((acc, p) => {
       acc[p.id] = p.value;
       return acc;
@@ -1042,35 +1062,55 @@ export default function ModelCalculatorPage() {
                         </td>
                         <td className="py-3 px-3">
                           <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={inputValues[row.id] ?? ''}
-                              onChange={(e) => {
-                                const rawValue = e.target.value;
-                                
-                                // 🔧 UNIFICAR SEPARADORES: Tanto punto como coma se muestran como punto
-                                const unifiedValue = rawValue.replace(',', '.');
-                                
-                                // 🔧 SYNC: Actualizar inputValues con valor unificado
-                                setInputValues(prev => ({ ...prev, [row.id]: unifiedValue }));
+                            {(() => {
+                              const isFrozen = frozenPlatforms.includes(row.id.toLowerCase());
+                              return (
+                                <>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={inputValues[row.id] ?? ''}
+                                    onChange={(e) => {
+                                      // 🔒 Prevenir edición si está congelada
+                                      if (isFrozen) return;
+                                      
+                                      const rawValue = e.target.value;
+                                      
+                                      // 🔧 UNIFICAR SEPARADORES: Tanto punto como coma se muestran como punto
+                                      const unifiedValue = rawValue.replace(',', '.');
+                                      
+                                      // 🔧 SYNC: Actualizar inputValues con valor unificado
+                                      setInputValues(prev => ({ ...prev, [row.id]: unifiedValue }));
 
-                                // 🔧 SYNC: Convertir a número (ya está normalizado)
-                                const numeric = Number.parseFloat(unifiedValue);
-                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                                setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: numericValue } : p));
-                                
-                                console.log('🔍 [SYNC] Usuario escribió:', { 
-                                  platform: row.id, 
-                                  original: rawValue,
-                                  unified: unifiedValue,
-                                  numeric: numericValue 
-                                });
-                              }}
-                              className="w-20 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                              placeholder="0.00"
-                              title="Ingresa valores con decimales (punto o coma se convierten a punto)"
-                            />
+                                      // 🔧 SYNC: Convertir a número (ya está normalizado)
+                                      const numeric = Number.parseFloat(unifiedValue);
+                                      const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                      setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: numericValue } : p));
+                                      
+                                      console.log('🔍 [SYNC] Usuario escribió:', { 
+                                        platform: row.id, 
+                                        original: rawValue,
+                                        unified: unifiedValue,
+                                        numeric: numericValue 
+                                      });
+                                    }}
+                                    disabled={isFrozen}
+                                    className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
+                                      isFrozen
+                                        ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                        : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
+                                    }`}
+                                    placeholder="0.00"
+                                    title={isFrozen ? "Período cerrado - Esta plataforma no puede ser editada" : "Ingresa valores con decimales (punto o coma se convierten a punto)"}
+                                  />
+                                  {isFrozen && (
+                                    <span className="text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-700">
+                                      Cerrado
+                                    </span>
+                                  )}
+                                </>
+                              );
+                            })()}
                             <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
                               {(() => {
                                 const p = platforms.find(pp => pp.id === row.id);
