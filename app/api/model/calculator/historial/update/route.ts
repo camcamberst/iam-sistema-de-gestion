@@ -228,47 +228,147 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Actualizar tasas en todos los registros del período
-    const updateData: any = {
-      updated_at: new Date().toISOString()
-    };
-
-    if (rates.eur_usd !== undefined) {
-      updateData.rate_eur_usd = Number(rates.eur_usd);
-    }
-    if (rates.gbp_usd !== undefined) {
-      updateData.rate_gbp_usd = Number(rates.gbp_usd);
-    }
-    if (rates.usd_cop !== undefined) {
-      updateData.rate_usd_cop = Number(rates.usd_cop);
-    }
-
-    // Recalcular valores si se actualizan las tasas
-    // NOTA: Esto requiere recalcular todos los valores del período
-    // Por ahora, solo actualizamos las tasas. Los cálculos se pueden hacer manualmente o en una segunda llamada
-
-    const { data: updatedRecords, error: updateError } = await supabase
+    // Primero, obtener todos los registros del período para recalcular
+    const { data: periodRecords, error: fetchError } = await supabase
       .from('calculator_history')
-      .update(updateData)
+      .select('*')
       .eq('model_id', model_id)
       .eq('period_date', period_date)
-      .eq('period_type', period_type)
-      .select();
+      .eq('period_type', period_type);
 
-    if (updateError) {
-      console.error('❌ [CALCULATOR-HISTORIAL-UPDATE] Error actualizando tasas:', updateError);
+    if (fetchError) {
+      console.error('❌ [CALCULATOR-HISTORIAL-UPDATE] Error obteniendo registros:', fetchError);
       return NextResponse.json({
         success: false,
-        error: 'Error al actualizar tasas'
+        error: 'Error al obtener registros del período'
       }, { status: 500 });
     }
 
-    console.log(`✅ [CALCULATOR-HISTORIAL-UPDATE] ${updatedRecords?.length || 0} registros actualizados con nuevas tasas`);
+    if (!periodRecords || periodRecords.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No se encontraron registros para este período'
+      }, { status: 404 });
+    }
+
+    // Obtener información de plataformas (currency)
+    const platformIds = Array.from(new Set(periodRecords.map((r: any) => r.platform_id).filter(Boolean)));
+    const { data: platforms, error: platformsError } = await supabase
+      .from('calculator_platforms')
+      .select('id, currency')
+      .eq('active', true)
+      .in('id', platformIds);
+
+    if (platformsError) {
+      console.error('❌ [CALCULATOR-HISTORIAL-UPDATE] Error obteniendo plataformas:', platformsError);
+      return NextResponse.json({
+        success: false,
+        error: 'Error al obtener información de plataformas'
+      }, { status: 500 });
+    }
+
+    const platformMap = new Map((platforms || []).map((p: any) => [p.id, p]));
+
+    // Preparar las nuevas tasas (usar las nuevas o mantener las existentes si no se proporcionaron)
+    const newRates = {
+      eur_usd: rates.eur_usd !== undefined ? Number(rates.eur_usd) : (periodRecords[0] as any).rate_eur_usd || 1.01,
+      gbp_usd: rates.gbp_usd !== undefined ? Number(rates.gbp_usd) : (periodRecords[0] as any).rate_gbp_usd || 1.20,
+      usd_cop: rates.usd_cop !== undefined ? Number(rates.usd_cop) : (periodRecords[0] as any).rate_usd_cop || 3900
+    };
+
+    // Función helper para calcular USD bruto (misma lógica que en period-closure-helpers)
+    const calculateUsdBruto = (value: number, platformId: string, currency: string, rates: any): number => {
+      if (currency === 'EUR') {
+        if (platformId === 'big7') {
+          return (value * rates.eur_usd) * 0.84; // 16% impuesto
+        } else if (platformId === 'mondo') {
+          return (value * rates.eur_usd) * 0.78; // 22% descuento
+        } else {
+          return value * rates.eur_usd;
+        }
+      } else if (currency === 'GBP') {
+        if (platformId === 'aw') {
+          return (value * rates.gbp_usd) * 0.677; // 32.3% descuento
+        } else {
+          return value * rates.gbp_usd;
+        }
+      } else if (currency === 'USD') {
+        if (platformId === 'cmd' || platformId === 'camlust' || platformId === 'skypvt') {
+          return value * 0.75; // 25% descuento
+        } else if (platformId === 'chaturbate' || platformId === 'myfreecams' || platformId === 'stripchat') {
+          return value * 0.05; // 100 tokens = 5 USD
+        } else if (platformId === 'dxlive') {
+          return value * 0.60; // 100 pts = 60 USD
+        } else if (platformId === 'secretfriends') {
+          return value * 0.5; // 50% descuento
+        } else if (platformId === 'superfoon') {
+          return value; // 100% directo
+        } else {
+          return value;
+        }
+      }
+      return 0;
+    };
+
+    // Recalcular todos los valores derivados para cada registro
+    const updates = periodRecords.map((record: any) => {
+      const platform = platformMap.get(record.platform_id);
+      const currency = platform?.currency || 'USD';
+      const originalValue = Number(record.value) || 0;
+      
+      // Obtener porcentaje (usar el guardado o un valor por defecto)
+      const platformPercentage = record.platform_percentage || 80;
+      
+      // Recalcular USD bruto con las nuevas tasas
+      const valueUsdBruto = calculateUsdBruto(originalValue, record.platform_id, currency, newRates);
+      
+      // Recalcular USD modelo
+      const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
+      
+      // Recalcular COP modelo
+      const valueCopModelo = valueUsdModelo * newRates.usd_cop;
+
+      return {
+        id: record.id,
+        rate_eur_usd: newRates.eur_usd,
+        rate_gbp_usd: newRates.gbp_usd,
+        rate_usd_cop: newRates.usd_cop,
+        value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
+        value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
+        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2)),
+        updated_at: new Date().toISOString()
+      };
+    });
+
+    // Actualizar todos los registros
+    let updatedCount = 0;
+    for (const update of updates) {
+      const { error: updateError } = await supabase
+        .from('calculator_history')
+        .update({
+          rate_eur_usd: update.rate_eur_usd,
+          rate_gbp_usd: update.rate_gbp_usd,
+          rate_usd_cop: update.rate_usd_cop,
+          value_usd_bruto: update.value_usd_bruto,
+          value_usd_modelo: update.value_usd_modelo,
+          value_cop_modelo: update.value_cop_modelo,
+          updated_at: update.updated_at
+        })
+        .eq('id', update.id);
+
+      if (updateError) {
+        console.error(`❌ [CALCULATOR-HISTORIAL-UPDATE] Error actualizando registro ${update.id}:`, updateError);
+        continue;
+      }
+      updatedCount++;
+    }
+
+    console.log(`✅ [CALCULATOR-HISTORIAL-UPDATE] ${updatedCount} de ${updates.length} registros actualizados con nuevas tasas y valores recalculados`);
 
     return NextResponse.json({
       success: true,
-      updated_count: updatedRecords?.length || 0,
-      message: 'Tasas actualizadas exitosamente. Nota: Los valores calculados (USD bruto, USD modelo, COP) no se recalcularon automáticamente.'
+      updated_count: updatedCount,
+      message: `Tasas y valores recalculados exitosamente para ${updatedCount} registros del período.`
     });
 
   } catch (error: any) {
