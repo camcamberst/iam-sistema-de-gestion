@@ -61,7 +61,7 @@ interface BillingSummaryProps {
 }
 
 export default function BillingSummary({ userRole, userId, userGroups = [], selectedDate: propSelectedDate, selectedPeriod: propSelectedPeriod }: BillingSummaryProps) {
-  console.log('🔍 [BILLING-SUMMARY] Componente renderizado:', { userRole, userId });
+  console.log('🔍 [BILLING-SUMMARY] Componente renderizado:', { userRole, userId, propSelectedDate, propSelectedPeriod });
   
   const [billingData, setBillingData] = useState<BillingData[]>([]);
   const [groupedData, setGroupedData] = useState<SedeData[]>([]);
@@ -75,6 +75,19 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   const [expandedSedes, setExpandedSedes] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showAllModels, setShowAllModels] = useState<boolean>(false);
+
+  // Actualizar estado cuando cambien las props
+  useEffect(() => {
+    if (propSelectedDate) {
+      setSelectedDate(propSelectedDate);
+    }
+  }, [propSelectedDate]);
+
+  useEffect(() => {
+    if (propSelectedPeriod) {
+      setSelectedPeriod(propSelectedPeriod);
+    }
+  }, [propSelectedPeriod]);
 
   // Cargar sedes disponibles (solo para super_admin)
   useEffect(() => {

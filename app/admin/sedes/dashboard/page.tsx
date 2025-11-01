@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import BillingSummary from '../../../../components/BillingSummary';
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface DashboardStats {
   totalSedes: number;
@@ -573,8 +574,8 @@ export default function DashboardSedesPage() {
             userRole={userRole as 'admin' | 'super_admin'} 
             userId={userId}
             userGroups={userGroups}
-            selectedDate={targetDate}
-            selectedPeriod={selectedPeriod}
+            selectedDate={targetDate || getColombiaDate()}
+            selectedPeriod={selectedPeriod === 'P1' ? 'period-1' : selectedPeriod === 'P2' ? 'period-2' : 'current'}
           />
         )}
 
