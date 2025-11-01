@@ -552,94 +552,150 @@ export default function CalculatorHistorialPage() {
                 </div>
               </div>
 
-              {/* Platforms List */}
+              {/* Platforms Table - Estilo similar a Mi Calculadora pero compacto */}
               <div className="space-y-2">
-                <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-                  Plataformas ({period.platforms.length})
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {period.platforms.map((platform) => {
-                    const periodKey = `${period.period_date}-${period.period_type}`;
-                    const isEditing = editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === platform.platform_id;
+                <div className="flex items-center justify-between mb-3">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    Plataformas ({period.platforms.length})
+                  </h4>
+                  {isAdmin && period.rates && (
+                    <button
+                      onClick={() => startEditRates(period)}
+                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
+                      title="Editar tasas del período"
+                    >
+                      <Edit2 className="w-3 h-3" />
+                      <span>Editar tasas</span>
+                    </button>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-600/50 backdrop-blur-sm">
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">PLATAFORMAS</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">VALORES</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">DÓLARES</th>
+                        <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">COP MODELO</th>
+                        {isAdmin && (
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide w-12"></th>
+                        )}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {period.platforms
+                        .filter(p => p.value > 0) // Solo mostrar plataformas con valores
+                        .map((platform) => {
+                          const periodKey = `${period.period_date}-${period.period_type}`;
+                          const isEditing = editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === platform.platform_id;
+                          const percentage = platform.platform_percentage || null;
 
-                    return (
-                      <div
-                        key={platform.platform_id}
-                        className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-                      >
-                        <div className="space-y-1">
-                          <div className="flex items-center justify-between">
-                            <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                                {platform.platform_name}
-                              </p>
-                              {isEditing ? (
-                                <input
-                                  type="number"
-                                  step="0.01"
-                                  value={editValue}
-                                  onChange={(e) => setEditValue(e.target.value)}
-                                  className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-full mt-1"
-                                />
-                              ) : (
-                                <p className="text-xs text-gray-500 dark:text-gray-400">
-                                  {formatCurrency(platform.value, platform.platform_currency)}
-                                </p>
+                          return (
+                            <tr key={platform.platform_id} className="border-b border-gray-100 dark:border-gray-600">
+                              <td className="py-2 px-3">
+                                <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.platform_name}</div>
+                                {percentage && (
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Reparto: {percentage}%
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="flex items-center space-x-2">
+                                  {isEditing ? (
+                                    <input
+                                      type="number"
+                                      step="0.01"
+                                      value={editValue}
+                                      onChange={(e) => setEditValue(e.target.value)}
+                                      className="w-20 h-7 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50"
+                                    />
+                                  ) : (
+                                    <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
+                                      {formatCurrency(platform.value, platform.platform_currency)}
+                                    </span>
+                                  )}
+                                  <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">
+                                    {platform.platform_currency}
+                                  </span>
+                                </div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                                  {platform.value_usd_modelo !== undefined && platform.value_usd_modelo > 0
+                                    ? formatCurrency(platform.value_usd_modelo, 'USD')
+                                    : '$0.00 USD'}
+                                </div>
+                              </td>
+                              <td className="py-2 px-3">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                                  {platform.value_cop_modelo !== undefined && platform.value_cop_modelo > 0
+                                    ? formatCurrency(platform.value_cop_modelo, 'COP')
+                                    : '$0 COP'}
+                                </div>
+                              </td>
+                              {isAdmin && (
+                                <td className="py-2 px-3">
+                                  <div className="flex items-center gap-1">
+                                    {isEditing ? (
+                                      <>
+                                        <button
+                                          onClick={() => savePlatformValue(periodKey, platform.platform_id)}
+                                          disabled={saving}
+                                          className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                          title="Guardar"
+                                        >
+                                          <Save className="w-3 h-3" />
+                                        </button>
+                                        <button
+                                          onClick={cancelEdit}
+                                          className="p-1 text-red-600 hover:text-red-700"
+                                          title="Cancelar"
+                                        >
+                                          <X className="w-3 h-3" />
+                                        </button>
+                                      </>
+                                    ) : (
+                                      <button
+                                        onClick={() => startEditPlatform(periodKey, platform.platform_id, platform.value)}
+                                        className="p-1 text-blue-600 hover:text-blue-700"
+                                        title="Editar valor"
+                                      >
+                                        <Edit2 className="w-3 h-3" />
+                                      </button>
+                                    )}
+                                  </div>
+                                </td>
                               )}
-                            </div>
-                            {platform.value_usd_modelo !== undefined && (
-                              <div className="ml-3 text-right">
-                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                  {formatCurrency(platform.value_usd_modelo, 'USD')}
-                                </p>
-                                {platform.platform_percentage && (
-                                  <p className="text-xs text-gray-400 dark:text-gray-500">
-                                    {platform.platform_percentage}%
-                                  </p>
-                                )}
-                              </div>
-                            )}
-                            {isAdmin && (
-                              <div className="ml-2 flex items-center gap-1">
-                                {isEditing ? (
-                                  <>
-                                    <button
-                                      onClick={() => savePlatformValue(periodKey, platform.platform_id)}
-                                      disabled={saving}
-                                      className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
-                                      title="Guardar"
-                                    >
-                                      <Save className="w-3 h-3" />
-                                    </button>
-                                    <button
-                                      onClick={cancelEdit}
-                                      className="p-1 text-red-600 hover:text-red-700"
-                                      title="Cancelar"
-                                    >
-                                      <X className="w-3 h-3" />
-                                    </button>
-                                  </>
-                                ) : (
-                                  <button
-                                    onClick={() => startEditPlatform(periodKey, platform.platform_id, platform.value)}
-                                    className="p-1 text-blue-600 hover:text-blue-700"
-                                    title="Editar valor"
-                                  >
-                                    <Edit2 className="w-3 h-3" />
-                                  </button>
-                                )}
-                              </div>
-                            )}
-                          </div>
-                          {platform.value_cop_modelo !== undefined && platform.value_cop_modelo > 0 && (
-                            <div className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-1">
-                              COP: {formatCurrency(platform.value_cop_modelo, 'COP')}
-                            </div>
-                          )}
-                        </div>
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+                
+                {/* Totales compactos - Estilo similar a Mi Calculadora */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Bruto</div>
+                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                        {formatCurrency(period.total_usd_bruto || 0, 'USD')}
                       </div>
-                    );
-                  })}
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
+                      <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+                        {formatCurrency(period.total_usd_modelo || 0, 'USD')}
+                      </div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">COP Modelo</div>
+                      <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                        {formatCurrency(period.total_cop_modelo || 0, 'COP')}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
