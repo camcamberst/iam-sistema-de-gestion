@@ -24,25 +24,12 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Obtener todos los períodos archivados para este modelo
+    // PASO 1: Obtener datos básicos de calculator_history (sin join para mayor seguridad)
     const { data: history, error: historyError } = await supabase
       .from('calculator_history')
-      .select(`
-        id,
-        platform_id,
-        value,
-        period_date,
-        period_type,
-        archived_at,
-        calculator_platforms (
-          id,
-          name,
-          currency
-        )
-      `)
+      .select('id, platform_id, value, period_date, period_type, archived_at')
       .eq('model_id', modelId)
-      .order('period_date', { ascending: false })
-      .order('archived_at', { ascending: false });
+      .order('period_date', { ascending: false });
 
     if (historyError) {
       console.error('❌ [CALCULATOR-HISTORIAL] Error obteniendo historial:', historyError);
@@ -50,6 +37,35 @@ export async function GET(request: NextRequest) {
         success: false,
         error: 'Error al obtener historial'
       }, { status: 500 });
+    }
+
+    if (!history || history.length === 0) {
+      return NextResponse.json({
+        success: true,
+        periods: [],
+        total_periods: 0
+      });
+    }
+
+    // PASO 2: Obtener información de plataformas por separado (consulta opcional, con fallback)
+    const platformIds = [...new Set((history || []).map((h: any) => h.platform_id).filter(Boolean))];
+    let platformsMap: Map<string, { name: string; currency: string }> = new Map();
+    
+    if (platformIds.length > 0) {
+      const { data: platformsData } = await supabase
+        .from('calculator_platforms')
+        .select('id, name, currency')
+        .in('id', platformIds);
+      
+      // Crear mapa de plataformas para acceso rápido (fallback si falla la consulta)
+      if (platformsData) {
+        platformsData.forEach((p: any) => {
+          platformsMap.set(p.id, {
+            name: p.name || p.id,
+            currency: p.currency || 'USD'
+          });
+        });
+      }
     }
 
     // Agrupar por período (period_date + period_type)
@@ -66,14 +82,26 @@ export async function GET(request: NextRequest) {
       total_value: number;
     }>();
 
-    (history || []).forEach((item: any) => {
+    // PASO 3: Procesar y agrupar datos con validaciones
+    history.forEach((item: any) => {
+      // Validar datos antes de procesar
+      if (!item.period_date || !item.period_type || !item.platform_id) {
+        console.warn('⚠️ [CALCULATOR-HISTORIAL] Registro con datos incompletos:', item);
+        return; // Saltar este registro
+      }
+
       const periodKey = `${item.period_date}-${item.period_type}`;
+      const platformInfo = platformsMap.get(item.platform_id);
+      
+      // Convertir value de forma segura (manejar DECIMAL y null)
+      const numValue = item.value != null ? Number(item.value) : 0;
+      const safeValue = isNaN(numValue) ? 0 : numValue;
       
       if (!periodsMap.has(periodKey)) {
         periodsMap.set(periodKey, {
           period_date: item.period_date,
           period_type: item.period_type,
-          archived_at: item.archived_at,
+          archived_at: item.archived_at || new Date().toISOString(),
           platforms: [],
           total_value: 0
         });
@@ -82,11 +110,11 @@ export async function GET(request: NextRequest) {
       const period = periodsMap.get(periodKey)!;
       period.platforms.push({
         platform_id: item.platform_id,
-        platform_name: item.calculator_platforms?.name || item.platform_id,
-        platform_currency: item.calculator_platforms?.currency || 'USD',
-        value: parseFloat(item.value) || 0
+        platform_name: platformInfo?.name || item.platform_id,
+        platform_currency: platformInfo?.currency || 'USD',
+        value: safeValue
       });
-      period.total_value += parseFloat(item.value) || 0;
+      period.total_value += safeValue;
     });
 
     // Convertir a array y ordenar por fecha descendente
