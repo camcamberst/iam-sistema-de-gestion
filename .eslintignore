@@ -9,4 +9,5 @@ app/admin/calculator/config/page.tsx
 app/admin/calculator/config/test/page.tsx
 app/admin/calculator/page.tsx
 app/admin/calculator/view-model/page.tsx
+app/admin/chat-tickets/page.tsx
 
