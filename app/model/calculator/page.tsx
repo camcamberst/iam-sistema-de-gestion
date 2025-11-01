@@ -412,43 +412,59 @@ export default function ModelCalculatorPage() {
 
         // 🔧 FIX: Solo cargar configuración del usuario actual (modelo) si no se ha cargado antes
         if (!configLoaded) {
-          await loadCalculatorConfig(current.id);
-          setConfigLoaded(true);
+          try {
+            await loadCalculatorConfig(current.id);
+            setConfigLoaded(true);
+          } catch (error) {
+            console.error('❌ [CALCULATOR] Error cargando configuración:', error);
+          }
         }
 
         // 🔒 Cargar estado de congelación de plataformas (después de que el usuario esté disponible)
-        // FORZAR EJECUCIÓN: Ejecutar siempre, sin condiciones
-        const loadFrozenPlatforms = async () => {
-          try {
-            console.log('🔍 [CALCULATOR] INICIANDO carga de frozenPlatforms:', { modelId: current.id, periodDate });
-            const freezeStatusResponse = await fetch(`/api/calculator/period-closure/platform-freeze-status?modelId=${current.id}&periodDate=${periodDate}`);
-            const freezeStatusData = await freezeStatusResponse.json();
-            
-            console.log('🔍 [CALCULATOR] Respuesta freeze-status recibida:', {
-              success: freezeStatusData.success,
-              hasFrozenPlatforms: !!freezeStatusData.frozen_platforms,
-              frozenPlatformsCount: freezeStatusData.frozen_platforms?.length || 0,
-              frozenPlatforms: freezeStatusData.frozen_platforms,
-              debug: freezeStatusData.debug
+        // FORZAR EJECUCIÓN: Ejecutar siempre, sin condiciones, incluso si falla la configuración
+        try {
+          console.log('🔍 [CALCULATOR] === INICIANDO carga de frozenPlatforms ===', { 
+            modelId: current.id, 
+            periodDate,
+            timestamp: new Date().toISOString()
+          });
+          
+          const freezeStatusResponse = await fetch(
+            `/api/calculator/period-closure/platform-freeze-status?modelId=${current.id}&periodDate=${periodDate}`
+          );
+          
+          if (!freezeStatusResponse.ok) {
+            throw new Error(`HTTP ${freezeStatusResponse.status}: ${freezeStatusResponse.statusText}`);
+          }
+          
+          const freezeStatusData = await freezeStatusResponse.json();
+          
+          console.log('🔍 [CALCULATOR] === Respuesta freeze-status recibida ===', {
+            success: freezeStatusData.success,
+            hasFrozenPlatforms: !!freezeStatusData.frozen_platforms,
+            frozenPlatformsCount: freezeStatusData.frozen_platforms?.length || 0,
+            frozenPlatforms: freezeStatusData.frozen_platforms,
+            debug: freezeStatusData.debug,
+            timestamp: new Date().toISOString()
+          });
+          
+          if (freezeStatusData.success && freezeStatusData.frozen_platforms && freezeStatusData.frozen_platforms.length > 0) {
+            const frozenLowercase = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
+            console.log('🔒 [CALCULATOR] === Aplicando frozenPlatforms al estado ===', {
+              frozenLowercase,
+              count: frozenLowercase.length,
+              timestamp: new Date().toISOString()
             });
-            
-            if (freezeStatusData.success && freezeStatusData.frozen_platforms && freezeStatusData.frozen_platforms.length > 0) {
-              const frozenLowercase = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
-              console.log('🔒 [CALCULATOR] Aplicando frozenPlatforms al estado:', frozenLowercase);
-              setFrozenPlatforms(frozenLowercase);
-              console.log('✅ [CALCULATOR] frozenPlatforms aplicado exitosamente');
-            } else {
-              console.log('⚠️ [CALCULATOR] No hay plataformas congeladas en la respuesta');
-              setFrozenPlatforms([]);
-            }
-          } catch (error) {
-            console.error('❌ [CALCULATOR] ERROR cargando frozenPlatforms:', error);
+            setFrozenPlatforms(frozenLowercase);
+            console.log('✅ [CALCULATOR] === frozenPlatforms aplicado exitosamente ===');
+          } else {
+            console.log('⚠️ [CALCULATOR] No hay plataformas congeladas en la respuesta');
             setFrozenPlatforms([]);
           }
-        };
-        
-        // Ejecutar inmediatamente
-        await loadFrozenPlatforms();
+        } catch (error) {
+          console.error('❌ [CALCULATOR] === ERROR cargando frozenPlatforms ===', error);
+          setFrozenPlatforms([]);
+        }
       } finally {
         setLoading(false);
       }
