@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { getColombiaDate } from '@/utils/calculator-dates';
-import { isClosureDay } from '@/utils/period-closure-dates';
+import { isClosureDay, isEarlyFreezeRelevantDay } from '@/utils/period-closure-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
@@ -430,14 +430,15 @@ export default function ModelCalculatorPage() {
     load();
   }, [periodDate]);
 
-  // 🔒 ACTUALIZACIÓN PERIÓDICA: Actualizar estado de congelación durante días de cierre
+  // 🔒 ACTUALIZACIÓN PERIÓDICA: Actualizar estado de congelación durante días relevantes para early freeze
   // Esto asegura que si el usuario tiene la página abierta cuando pasa la medianoche Europa Central,
   // el estado se actualice automáticamente sin necesidad de recargar la página
   useEffect(() => {
-    // Solo actualizar durante días de cierre (1 y 16)
-    if (!isClosureDay() || !user?.id) return;
+    // Actualizar durante días relevantes para early freeze (1, 16, 31, 15)
+    // El día 31/15 es cuando puede pasar medianoche Europa Central y activarse el early freeze
+    if (!isEarlyFreezeRelevantDay() || !user?.id) return;
     
-    console.log('🔒 [CALCULATOR] Día de cierre detectado - activando actualización periódica de congelación');
+    console.log('🔒 [CALCULATOR] Día relevante para early freeze detectado - activando actualización periódica de congelación');
     
     const updateFrozenStatus = async () => {
       try {

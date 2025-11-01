@@ -253,3 +253,15 @@ export const isClosureDay = (): boolean => {
   return day === 1 || day === 16;
 };
 
+/**
+ * Verifica si es día relevante para early freeze (día 1, 16, 31, o 15)
+ * Esto incluye tanto los días de cierre como los días previos cuando puede activarse el early freeze
+ * @returns true si es día relevante para early freeze
+ */
+export const isEarlyFreezeRelevantDay = (): boolean => {
+  const colombiaDate = getColombiaDate();
+  const day = parseInt(colombiaDate.split('-')[2]);
+  
+  return day === 1 || day === 16 || day === 31 || day === 15;
+};
+
