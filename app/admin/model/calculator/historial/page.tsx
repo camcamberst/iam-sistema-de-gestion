@@ -702,9 +702,26 @@ export default function CalculatorHistorialPage() {
                 <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                   <div className="grid grid-cols-3 gap-4">
                     <div className="text-center">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Bruto</div>
-                      <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                        {formatCurrency(period.total_usd_bruto || 0, 'USD')}
+                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Tasas de Cambio</div>
+                      <div className="space-y-1">
+                        {period.rates?.eur_usd && (
+                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            EUR→USD: <span className="text-blue-600 dark:text-blue-400">{period.rates.eur_usd.toFixed(4)}</span>
+                          </div>
+                        )}
+                        {period.rates?.gbp_usd && (
+                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            GBP→USD: <span className="text-blue-600 dark:text-blue-400">{period.rates.gbp_usd.toFixed(4)}</span>
+                          </div>
+                        )}
+                        {period.rates?.usd_cop && (
+                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
+                            USD→COP: <span className="text-blue-600 dark:text-blue-400">{period.rates.usd_cop.toFixed(0)}</span>
+                          </div>
+                        )}
+                        {!period.rates?.eur_usd && !period.rates?.gbp_usd && !period.rates?.usd_cop && (
+                          <div className="text-xs text-gray-400 dark:text-gray-500">No disponibles</div>
+                        )}
                       </div>
                     </div>
                     <div className="text-center">
