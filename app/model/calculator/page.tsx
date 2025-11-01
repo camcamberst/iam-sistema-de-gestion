@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { getColombiaDate } from '@/utils/calculator-dates';
+import { isClosureDay } from '@/utils/period-closure-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
@@ -429,6 +430,52 @@ export default function ModelCalculatorPage() {
     load();
   }, [periodDate]);
 
+  // 🔒 ACTUALIZACIÓN PERIÓDICA: Actualizar estado de congelación durante días de cierre
+  // Esto asegura que si el usuario tiene la página abierta cuando pasa la medianoche Europa Central,
+  // el estado se actualice automáticamente sin necesidad de recargar la página
+  useEffect(() => {
+    // Solo actualizar durante días de cierre (1 y 16)
+    if (!isClosureDay() || !user?.id) return;
+    
+    console.log('🔒 [CALCULATOR] Día de cierre detectado - activando actualización periódica de congelación');
+    
+    const updateFrozenStatus = async () => {
+      try {
+        const response = await fetch(
+          `/api/calculator/period-closure/platform-freeze-status?modelId=${user.id}&periodDate=${periodDate}`
+        );
+        const data = await response.json();
+        
+        if (data.success && data.frozen_platforms) {
+          const newFrozenPlatforms = data.frozen_platforms.map((p: string) => p.toLowerCase());
+          setFrozenPlatforms(prev => {
+            // Solo actualizar si hay cambios para evitar renders innecesarios
+            const prevSet = new Set(prev);
+            const newSet = new Set(newFrozenPlatforms);
+            if (prevSet.size !== newSet.size || 
+                !Array.from(prevSet).every(p => newSet.has(p))) {
+              console.log('🔒 [CALCULATOR] Estado de congelación actualizado:', newFrozenPlatforms);
+              return newFrozenPlatforms;
+            }
+            return prev;
+          });
+        }
+      } catch (error) {
+        console.error('❌ [CALCULATOR] Error actualizando estado de congelación:', error);
+      }
+    };
+    
+    // Actualizar inmediatamente
+    updateFrozenStatus();
+    
+    // Actualizar cada minuto durante días de cierre
+    const interval = setInterval(updateFrozenStatus, 60000); // 60 segundos
+    
+    return () => {
+      clearInterval(interval);
+      console.log('🔒 [CALCULATOR] Actualización periódica de congelación desactivada');
+    };
+  }, [user?.id, periodDate]);
 
   const loadCalculatorConfig = async (userId: string) => {
     // 🔧 FIX: Prevenir doble carga usando estado
