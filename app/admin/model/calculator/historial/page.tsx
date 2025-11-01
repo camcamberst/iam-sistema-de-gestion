@@ -139,7 +139,7 @@ export default function CalculatorHistorialPage() {
         const uniqueYears = new Set<number>();
         const uniqueMonths = new Set<number>();
         
-        loadedPeriods.forEach(period => {
+        loadedPeriods.forEach((period: Period) => {
           const date = new Date(period.period_date);
           uniqueYears.add(date.getFullYear());
           uniqueMonths.add(date.getMonth() + 1); // Mes 1-12
