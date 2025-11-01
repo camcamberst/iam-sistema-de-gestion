@@ -12,4 +12,5 @@ app/admin/calculator/view-model/page.tsx
 app/admin/chat-tickets/page.tsx
 app/admin/cleanup-all-data/page.tsx
 app/admin/cleanup-portfolios/page.tsx
+app/admin/dashboard/page.tsx
 

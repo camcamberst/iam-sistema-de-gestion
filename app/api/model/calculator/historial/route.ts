@@ -205,7 +205,7 @@ export async function GET(request: NextRequest) {
           gbp_usd: item.rate_gbp_usd || null,
           usd_cop: item.rate_usd_cop || null
         }
-      });
+      } as any); // Type assertion needed because TypeScript infers the type from the first push()
       
       // Actualizar totales del período
       period.total_value += safeValue;
