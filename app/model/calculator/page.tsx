@@ -417,31 +417,38 @@ export default function ModelCalculatorPage() {
         }
 
         // 🔒 Cargar estado de congelación de plataformas (después de que el usuario esté disponible)
-        try {
-          console.log('🔍 [CALCULATOR] Cargando estado de congelación para:', { modelId: current.id, periodDate });
-          const freezeStatusResponse = await fetch(`/api/calculator/period-closure/platform-freeze-status?modelId=${current.id}&periodDate=${periodDate}`);
-          const freezeStatusData = await freezeStatusResponse.json();
-          
-          console.log('🔍 [CALCULATOR] Respuesta de freeze-status:', {
-            success: freezeStatusData.success,
-            hasFrozenPlatforms: !!freezeStatusData.frozen_platforms,
-            frozenPlatformsCount: freezeStatusData.frozen_platforms?.length || 0,
-            frozenPlatforms: freezeStatusData.frozen_platforms,
-            debug: freezeStatusData.debug
-          });
-          
-          if (freezeStatusData.success && freezeStatusData.frozen_platforms) {
-            const frozenLowercase = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
-            setFrozenPlatforms(frozenLowercase);
-            console.log('🔒 [CALCULATOR] Plataformas congeladas aplicadas al estado:', frozenLowercase);
-          } else {
-            console.log('⚠️ [CALCULATOR] No se encontraron plataformas congeladas o respuesta inválida');
+        // FORZAR EJECUCIÓN: Ejecutar siempre, sin condiciones
+        const loadFrozenPlatforms = async () => {
+          try {
+            console.log('🔍 [CALCULATOR] INICIANDO carga de frozenPlatforms:', { modelId: current.id, periodDate });
+            const freezeStatusResponse = await fetch(`/api/calculator/period-closure/platform-freeze-status?modelId=${current.id}&periodDate=${periodDate}`);
+            const freezeStatusData = await freezeStatusResponse.json();
+            
+            console.log('🔍 [CALCULATOR] Respuesta freeze-status recibida:', {
+              success: freezeStatusData.success,
+              hasFrozenPlatforms: !!freezeStatusData.frozen_platforms,
+              frozenPlatformsCount: freezeStatusData.frozen_platforms?.length || 0,
+              frozenPlatforms: freezeStatusData.frozen_platforms,
+              debug: freezeStatusData.debug
+            });
+            
+            if (freezeStatusData.success && freezeStatusData.frozen_platforms && freezeStatusData.frozen_platforms.length > 0) {
+              const frozenLowercase = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
+              console.log('🔒 [CALCULATOR] Aplicando frozenPlatforms al estado:', frozenLowercase);
+              setFrozenPlatforms(frozenLowercase);
+              console.log('✅ [CALCULATOR] frozenPlatforms aplicado exitosamente');
+            } else {
+              console.log('⚠️ [CALCULATOR] No hay plataformas congeladas en la respuesta');
+              setFrozenPlatforms([]);
+            }
+          } catch (error) {
+            console.error('❌ [CALCULATOR] ERROR cargando frozenPlatforms:', error);
             setFrozenPlatforms([]);
           }
-        } catch (error) {
-          console.error('❌ [CALCULATOR] Error cargando estado de congelación:', error);
-          setFrozenPlatforms([]);
-        }
+        };
+        
+        // Ejecutar inmediatamente
+        await loadFrozenPlatforms();
       } finally {
         setLoading(false);
       }
