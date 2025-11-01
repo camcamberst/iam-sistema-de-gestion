@@ -247,6 +247,76 @@ export const getCurrentPeriodType = (): '1-15' | '16-31' => {
 };
 
 /**
+ * Obtiene el período que se debe CERRAR cuando es día de cierre
+ * IMPORTANTE: Al cerrar día 1, cerramos el período 16-31 del mes anterior
+ *             Al cerrar día 16, cerramos el período 1-15 del mes actual
+ * @returns { periodDate: string, periodType: '1-15' | '16-31' } - Fecha y tipo del período a cerrar
+ */
+export const getPeriodToClose = (): { periodDate: string; periodType: '1-15' | '16-31' } => {
+  const colombiaDate = getColombiaDate();
+  const [year, month, day] = colombiaDate.split('-').map(Number);
+  
+  if (day === 1) {
+    // Día 1: cerrar período 16-31 del mes anterior
+    const prevMonth = month === 1 ? 12 : month - 1;
+    const prevYear = month === 1 ? year - 1 : year;
+    const lastDayOfPrevMonth = new Date(prevYear, prevMonth, 0).getDate(); // Último día del mes anterior
+    
+    // Usar el último día del mes anterior como referencia para el período 16-31
+    // Pero el period_date será el día 16 del mes anterior
+    const periodDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-16`;
+    
+    return {
+      periodDate,
+      periodType: '16-31'
+    };
+  } else if (day === 16) {
+    // Día 16: cerrar período 1-15 del mes actual
+    const periodDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    
+    return {
+      periodDate,
+      periodType: '1-15'
+    };
+  }
+  
+  // Fallback (no debería llegar aquí si se llama solo en días de cierre)
+  return {
+    periodDate: colombiaDate,
+    periodType: day <= 15 ? '1-15' : '16-31'
+  };
+};
+
+/**
+ * Obtiene el período que INICIA después del cierre
+ * @returns { periodDate: string, periodType: '1-15' | '16-31' } - Fecha y tipo del nuevo período
+ */
+export const getNewPeriodAfterClosure = (): { periodDate: string; periodType: '1-15' | '16-31' } => {
+  const colombiaDate = getColombiaDate();
+  const [year, month, day] = colombiaDate.split('-').map(Number);
+  
+  if (day === 1) {
+    // Al cerrar día 1, inicia período 1-15 del mes actual
+    return {
+      periodDate: colombiaDate, // 2025-11-01
+      periodType: '1-15'
+    };
+  } else if (day === 16) {
+    // Al cerrar día 16, inicia período 16-31 del mes actual
+    return {
+      periodDate: colombiaDate, // 2025-11-16
+      periodType: '16-31'
+    };
+  }
+  
+  // Fallback
+  return {
+    periodDate: colombiaDate,
+    periodType: day <= 15 ? '1-15' : '16-31'
+  };
+};
+
+/**
  * Verifica si es día de cierre (día 1 o 16)
  * @returns true si es día de cierre
  */

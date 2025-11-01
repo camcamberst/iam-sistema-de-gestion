@@ -3,6 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 import { 
   getColombiaDate, 
   getCurrentPeriodType,
+  getPeriodToClose,
+  getNewPeriodAfterClosure,
   isFullClosureTime,
   isClosureDay
 } from '@/utils/period-closure-dates';
@@ -31,8 +33,19 @@ export async function POST(request: NextRequest) {
   try {
     console.log('🔒 [CLOSE-PERIOD] Iniciando cierre completo de período...');
 
-    const currentDate = getColombiaDate();
-    const periodType = getCurrentPeriodType();
+    const todayDate = getColombiaDate();
+    
+    // 🔧 CORRECCIÓN: Obtener el período que se debe CERRAR (no el actual)
+    // Día 1: cierra período 16-31 del mes anterior
+    // Día 16: cierra período 1-15 del mes actual
+    const { periodDate: periodToCloseDate, periodType: periodToCloseType } = getPeriodToClose();
+    
+    // Obtener el período que inicia después del cierre
+    const { periodDate: newPeriodDate, periodType: newPeriodType } = getNewPeriodAfterClosure();
+    
+    console.log(`📅 [CLOSE-PERIOD] Fecha de hoy: ${todayDate}`);
+    console.log(`📦 [CLOSE-PERIOD] Período a cerrar: ${periodToCloseDate} (${periodToCloseType})`);
+    console.log(`🆕 [CLOSE-PERIOD] Nuevo período que inicia: ${newPeriodDate} (${newPeriodType})`);
 
     // Verificar modo testing desde header
     const testingMode = request.headers.get('x-testing-mode') === 'true';
@@ -56,11 +69,12 @@ export async function POST(request: NextRequest) {
       console.log('🧪 [CLOSE-PERIOD] MODO TESTING ACTIVADO');
     }
 
-    // Verificar estado actual
+    // Verificar estado actual (usar la fecha del período a cerrar)
     const { data: currentStatus } = await supabase
       .from('calculator_period_closure_status')
       .select('status')
-      .eq('period_date', currentDate)
+      .eq('period_date', periodToCloseDate)
+      .eq('period_type', periodToCloseType)
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
@@ -73,8 +87,8 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Actualizar estado a closing_calculators
-    await updateClosureStatus(currentDate, periodType, 'closing_calculators');
+    // Actualizar estado a closing_calculators (usar período a cerrar)
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'closing_calculators');
 
     // Obtener todos los modelos activos
     const { data: models, error: modelsError } = await supabase
@@ -85,7 +99,7 @@ export async function POST(request: NextRequest) {
 
     if (modelsError) {
       console.error('❌ [CLOSE-PERIOD] Error obteniendo modelos:', modelsError);
-      await updateClosureStatus(currentDate, periodType, 'failed', {
+      await updateClosureStatus(periodToCloseDate, periodToCloseType, 'failed', {
         error: 'Error obteniendo modelos'
       });
       return NextResponse.json({
@@ -103,7 +117,8 @@ export async function POST(request: NextRequest) {
 
     for (const model of models || []) {
       try {
-        const archiveResult = await archiveModelValues(model.id, currentDate, periodType);
+        // Archivar valores del período que se está cerrando
+        const archiveResult = await archiveModelValues(model.id, periodToCloseDate, periodToCloseType);
         
         if (archiveResult.success) {
           archiveSuccessCount++;
@@ -138,7 +153,7 @@ export async function POST(request: NextRequest) {
 
     // FASE 2: Esperar 2.5 minutos (150 segundos) para que Resumen de Facturación reciba última actualización
     console.log('⏳ [CLOSE-PERIOD] Esperando para última actualización del resumen...');
-    await updateClosureStatus(currentDate, periodType, 'waiting_summary');
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'waiting_summary');
     
     // TEMPORAL PARA TESTING: 5 segundos en lugar de 150 segundos
     const waitTime = testingMode ? 5000 : 150000;
@@ -152,10 +167,10 @@ export async function POST(request: NextRequest) {
     // FASE 3: El resumen de facturación se actualiza automáticamente leyendo de calculator_history
     // No necesitamos endpoint especial - solo esperamos y luego continuamos
     
-    await updateClosureStatus(currentDate, periodType, 'closing_summary');
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'closing_summary');
 
-    // FASE 4: Resetear todas las calculadoras
-    await updateClosureStatus(currentDate, periodType, 'archiving');
+    // FASE 4: Resetear todas las calculadoras (eliminar valores del período cerrado)
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'archiving');
 
     const resetResults = [];
     let resetSuccessCount = 0;
@@ -163,7 +178,8 @@ export async function POST(request: NextRequest) {
 
     for (const model of models || []) {
       try {
-        const resetResult = await resetModelValues(model.id, currentDate);
+        // Resetear valores del período cerrado (eliminar de model_values)
+        const resetResult = await resetModelValues(model.id, periodToCloseDate, periodToCloseType);
         
         if (resetResult.success) {
           resetSuccessCount++;
@@ -219,7 +235,7 @@ export async function POST(request: NextRequest) {
         await sendBotNotification(
           admin.id,
           'periodo_cerrado',
-          `Período ${periodType} cerrado exitosamente. El resumen está disponible en "Consulta Histórica" del Dashboard de Sedes. Nuevo período iniciado.`
+          `Período ${periodToCloseType} (${periodToCloseDate}) cerrado exitosamente. El resumen está disponible en "Consulta Histórica" del Dashboard de Sedes. Nuevo período ${newPeriodType} (${newPeriodDate}) iniciado.`
         );
       } catch (error) {
         console.error(`❌ [CLOSE-PERIOD] Error notificando admin ${admin.email}:`, error);
@@ -227,7 +243,7 @@ export async function POST(request: NextRequest) {
     }
 
     // FASE 7: Marcar como completado
-    await updateClosureStatus(currentDate, periodType, 'completed', {
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'completed', {
       archive_results: {
         total: models?.length || 0,
         successful: archiveSuccessCount,
@@ -246,8 +262,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       message: 'Cierre de período completado exitosamente',
-      period_date: currentDate,
-      period_type: periodType,
+      period_date: periodToCloseDate,
+      period_type: periodToCloseType,
+      new_period_date: newPeriodDate,
+      new_period_type: newPeriodType,
       archive_summary: {
         total: models?.length || 0,
         successful: archiveSuccessCount,
@@ -266,10 +284,9 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('❌ [CLOSE-PERIOD] Error:', error);
-    const currentDate = getColombiaDate();
-    const periodType = getCurrentPeriodType();
-    
-    await updateClosureStatus(currentDate, periodType, 'failed', {
+    const { periodDate: periodToCloseDate, periodType: periodToCloseType } = getPeriodToClose();
+
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'failed', {
       error: error instanceof Error ? error.message : 'Error desconocido',
       failed_at: new Date().toISOString()
     });
