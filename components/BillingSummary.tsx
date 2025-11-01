@@ -464,7 +464,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
                                   <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
                                 </div>
                               </div>
@@ -555,7 +555,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(sede.totalUsdSede)}</div>
+                              <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(sede.totalUsdBruto - sede.totalUsdModelo)}</div>
                               <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
                             </div>
                           </div>
