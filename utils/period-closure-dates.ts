@@ -193,17 +193,21 @@ export const isEarlyFreezeTime = (): boolean => {
 
 /**
  * Verifica si es momento de cierre completo (00:00 Colombia)
- * @returns true si es medianoche en Colombia
+ * @returns true si es medianoche en Colombia (con ventana amplia para cron jobs)
  */
 export const isFullClosureTime = (): boolean => {
   const now = new Date();
   const colombiaTime = getColombiaDateTime();
-  const [hour, minute, second] = colombiaTime.split(' ')[1]?.split(':') || ['00', '00', '00'];
+  const [hour, minute] = colombiaTime.split(' ')[1]?.split(':') || ['00', '00'];
   
-  // Verificar si es medianoche (00:00:00) con tolerancia de ±1 minuto
-  const isMidnight = parseInt(hour) === 0 && parseInt(minute) <= 1;
+  const currentHour = parseInt(hour);
+  const currentMinute = parseInt(minute);
   
-  return isMidnight;
+  // Ventana amplia: desde 00:00 hasta 00:15 (15 minutos) para manejar retrasos del cron
+  // Esto permite que el cron se ejecute aunque haya un pequeño retraso en Vercel
+  const isWithinWindow = currentHour === 0 && currentMinute >= 0 && currentMinute <= 15;
+  
+  return isWithinWindow;
 };
 
 /**
