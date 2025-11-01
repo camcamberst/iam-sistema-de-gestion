@@ -289,23 +289,27 @@ export async function GET(request: NextRequest) {
       }
       historyData = [];
     } else {
-      // Período cerrado: usar calculator_history
-      console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history (rango exacto quincena)');
+      // Período cerrado: obtener datos desde "Mi Historial" de cada modelo
+      console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando historial individual de cada modelo desde calculator_history');
       // Determinar period_type esperado según quincena (usar formato '1-15' o '16-31' como se guarda en BD)
       const expectedType = endStr.endsWith('-15') ? '1-15' : '16-31';
       console.log('🔍 [BILLING-SUMMARY] Buscando period_type:', expectedType, 'para rango:', { startStr, endStr });
+      
+      // NUEVO ENFOQUE: Consultar el historial de cada modelo individualmente
+      // Esto replica el comportamiento de "Mi Historial" de "Mi Calculadora"
+      // Para cada modelo, obtener sus registros históricos del período específico
       const { data: history, error: historyError } = await supabase
         .from('calculator_history')
         .select('model_id, platform_id, value, value_usd_bruto, value_usd_modelo, value_cop_modelo, period_date, period_type')
-        .in('model_id', modelIds)
-        .gte('period_date', startStr)
-        .lte('period_date', endStr)
-        .eq('period_type', expectedType);
+        .in('model_id', modelIds) // Filtrar por modelos del grupo/sede
+        .eq('period_date', startStr) // Fecha exacta del período (día 15 o último día del mes)
+        .eq('period_type', expectedType); // Tipo de período ('1-15' o '16-31')
 
       if (historyError) {
-        console.error('❌ [BILLING-SUMMARY] Error al verificar historial:', historyError);
+        console.error('❌ [BILLING-SUMMARY] Error al consultar historial individual de modelos:', historyError);
       } else {
         historyData = history;
+        console.log(`📚 [BILLING-SUMMARY] Historial individual obtenido: ${history?.length || 0} registros de ${new Set(history?.map(h => h.model_id) || []).size} modelos`);
       }
     }
 
@@ -347,12 +351,15 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // 3.3. Procesar datos del historial (período cerrado)
+    // 3.3. Procesar datos del historial individual de cada modelo (período cerrado)
+    // ENFOQUE: Consolidar datos desde "Mi Historial" de "Mi Calculadora" de cada modelo
     const historyMap = new Map();
     if (historyData && historyData.length > 0) {
-      console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history');
+      console.log('📚 [BILLING-SUMMARY] Consolidando datos desde historial individual de cada modelo');
       
+      // Agrupar por modelo para sumar valores de todas sus plataformas
       historyData.forEach(item => {
+        // Inicializar mapa para este modelo si no existe
         if (!historyMap.has(item.model_id)) {
           historyMap.set(item.model_id, {
             model_id: item.model_id,
@@ -360,18 +367,19 @@ export async function GET(request: NextRequest) {
             total_usd_modelo: 0,
             total_cop_modelo: 0,
             period_date: item.period_date,
-            dataSource: 'calculator_history'
+            dataSource: 'calculator_history' // Fuente: Historial individual del modelo
           });
         }
         
         const modelData = historyMap.get(item.model_id);
         
-        // Sumar los valores calculados que ya están guardados en calculator_history
-        // value_usd_bruto: ya calculado y guardado
-        // value_usd_modelo: ya calculado y guardado
-        // value_cop_modelo: ya calculado y guardado
+        // Sumar los valores calculados que ya están guardados en "Mi Historial" del modelo
+        // Estos valores fueron calculados y guardados cuando el modelo cerró su período
+        // value_usd_bruto: ya calculado y guardado desde "Mi Calculadora"
+        // value_usd_modelo: ya calculado y guardado desde "Mi Calculadora"
+        // value_cop_modelo: ya calculado y guardado desde "Mi Calculadora"
         
-        // Si los valores calculados están disponibles, usarlos directamente
+        // Usar valores calculados directamente (preferencia principal)
         if (item.value_usd_bruto !== null && item.value_usd_bruto !== undefined) {
           modelData.total_usd_bruto += Number(item.value_usd_bruto) || 0;
         }
@@ -385,20 +393,20 @@ export async function GET(request: NextRequest) {
         }
         
         // Fallback: Si los valores calculados no están disponibles (datos antiguos),
-        // usar el valor original y recalcular (lógica antigua para compatibilidad)
+        // usar el valor original (compatibilidad con períodos cerrados antes de implementar cálculos)
         if ((item.value_usd_bruto === null || item.value_usd_bruto === undefined) && 
             (item.value_usd_modelo === null || item.value_usd_modelo === undefined)) {
-          // Si es el total USD modelo, usar ese valor (compatibilidad con formato antiguo)
+          // Si es el total USD modelo (formato antiguo), usar ese valor
           if (item.platform_id === '_total_usd_modelo') {
             modelData.total_usd_modelo = item.value || 0;
           } else {
-            // Sumar valores de plataformas individuales para USD bruto
+            // Sumar valores de plataformas individuales para USD bruto (fallback)
             modelData.total_usd_bruto += item.value || 0;
           }
         }
       });
 
-      // Si hay valores calculados, ya están correctos. Si no, usar lógica de fallback
+      // Validación y corrección de datos consolidados
       historyMap.forEach((modelData, modelId) => {
         // Solo aplicar estimaciones si no hay valores calculados guardados
         if (modelData.total_usd_bruto === 0 && modelData.total_usd_modelo > 0) {
@@ -410,6 +418,8 @@ export async function GET(request: NextRequest) {
           modelData.total_cop_modelo = modelData.total_usd_modelo * 3900; // Tasa estimada
         }
       });
+      
+      console.log(`✅ [BILLING-SUMMARY] Consolidación completada: ${historyMap.size} modelos con datos desde su historial individual`);
     }
 
     // 3.4. Procesar datos de calculator_totals (período activo) para modelos sin datos en historial
@@ -637,18 +647,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    console.log('✅ [BILLING-SUMMARY] Resumen generado:', { 
+    console.log('✅ [BILLING-SUMMARY] Resumen generado desde historial individual de modelos:', { 
       models: billingData.length, 
       summary,
       groupedData: groupedData?.length || 0,
       isSuperAdmin,
       isAdmin,
       adminGroups,
-      dataSource: 'mixed (calculator_history + calculator_totals)',
+      dataSource: periodType === 'closed' ? 'calculator_history (Mi Historial consolidado)' : 'calculator_totals (período activo)',
       periodType,
       periodRange: `${startStr} - ${endStr}`,
       historyModels: Array.from(historyMap.keys()).length,
-      totalsModels: Array.from(totalsMap.keys()).length
+      totalsModels: Array.from(totalsMap.keys()).length,
+      approach: periodType === 'closed' ? 'Consolidación desde historial individual de cada modelo' : 'Totales en tiempo real del período activo'
     });
 
     return NextResponse.json({
