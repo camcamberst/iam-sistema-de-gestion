@@ -88,3 +88,4 @@ if (isClosureDay()) {
 
 **El sistema ahora funciona automáticamente sin depender de la ejecución de cron jobs.**
 
+

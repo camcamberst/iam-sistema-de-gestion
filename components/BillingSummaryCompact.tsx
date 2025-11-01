@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useBillingPolling } from '@/hooks/useBillingPolling';
+import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface BillingSummaryCompactProps {
   userRole: 'admin' | 'super_admin';
@@ -80,18 +81,19 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
       }
       setError(null);
 
-      // Calcular fecha basada en período seleccionado
-      const today = new Date().toISOString().split('T')[0];
+      // Calcular fecha basada en período seleccionado (usar hora Colombia)
+      const today = getColombiaDate();
       let targetDate = today;
       if (selectedPeriod === 'period-1') {
-        // Período 1: día 15 del mes actual
-        const date = new Date();
-        targetDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-15`;
+        // Período 1: día 15 del mes actual (usar fecha Colombia)
+        const [year, month] = today.split('-');
+        targetDate = `${year}-${month}-15`;
       } else if (selectedPeriod === 'period-2') {
-        // Período 2: último día del mes actual
-        const date = new Date();
-        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-        targetDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+        // Período 2: último día del mes actual (usar fecha Colombia)
+        const [year, month] = today.split('-');
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1, 1); // Mes es 0-based
+        const lastDay = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0).getDate();
+        targetDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
       }
 
       const params = new URLSearchParams({

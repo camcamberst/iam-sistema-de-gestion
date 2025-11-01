@@ -158,8 +158,50 @@ export const getFrozenPlatformsForModel = async (
 };
 
 /**
+ * Calcula USD bruto desde un valor de plataforma según su moneda y reglas específicas
+ */
+const calculateUsdBruto = (
+  value: number,
+  platformId: string,
+  currency: string,
+  rates: { eur_usd: number; gbp_usd: number; usd_cop: number }
+): number => {
+  if (currency === 'EUR') {
+    if (platformId === 'big7') {
+      return (value * rates.eur_usd) * 0.84; // 16% impuesto
+    } else if (platformId === 'mondo') {
+      return (value * rates.eur_usd) * 0.78; // 22% descuento
+    } else {
+      return value * rates.eur_usd;
+    }
+  } else if (currency === 'GBP') {
+    if (platformId === 'aw') {
+      return (value * rates.gbp_usd) * 0.677; // 32.3% descuento
+    } else {
+      return value * rates.gbp_usd;
+    }
+  } else if (currency === 'USD') {
+    if (platformId === 'cmd' || platformId === 'camlust' || platformId === 'skypvt') {
+      return value * 0.75; // 25% descuento
+    } else if (platformId === 'chaturbate' || platformId === 'myfreecams' || platformId === 'stripchat') {
+      return value * 0.05; // 100 tokens = 5 USD
+    } else if (platformId === 'dxlive') {
+      return value * 0.60; // 100 pts = 60 USD
+    } else if (platformId === 'secretfriends') {
+      return value * 0.5; // 50% descuento
+    } else if (platformId === 'superfoon') {
+      return value; // 100% directo
+    } else {
+      // MDH, livejasmin, imlive, hegre, dirtyfans, camcontacts, etc.
+      return value;
+    }
+  }
+  return 0;
+};
+
+/**
  * Archiva valores de un modelo para el período
- * IMPORTANTE: Busca valores en el RANGO del período, no solo una fecha específica
+ * IMPORTANTE: Busca valores en el RANGO del período y calcula todas las métricas necesarias
  */
 export const archiveModelValues = async (
   modelId: string,
@@ -185,7 +227,51 @@ export const archiveModelValues = async (
     
     console.log(`📦 [ARCHIVE] Buscando valores para período ${periodType}: ${startDate} a ${endDate}`);
 
-    // Obtener valores en el rango del período
+    // 1. Obtener tasas activas al momento del archivo
+    const { data: ratesData, error: ratesError } = await supabase
+      .from('rates')
+      .select('kind, value')
+      .eq('active', true)
+      .is('valid_to', null)
+      .order('valid_from', { ascending: false });
+
+    if (ratesError) throw ratesError;
+
+    const rates = {
+      eur_usd: ratesData?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+      gbp_usd: ratesData?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20,
+      usd_cop: ratesData?.find((r: any) => r.kind === 'USD→COP')?.value || 3900
+    };
+
+    console.log(`📊 [ARCHIVE] Tasas aplicadas:`, rates);
+
+    // 2. Obtener configuración del modelo (porcentajes por plataforma)
+    const { data: config, error: configError } = await supabase
+      .from('calculator_config')
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('active', true)
+      .single();
+
+    if (configError && configError.code !== 'PGRST116') throw configError;
+
+    // Porcentaje base del modelo
+    const modelPercentage = config?.percentage_override || config?.group_percentage || 80;
+
+    // 3. Obtener información de plataformas
+    const { data: platforms, error: platformsError } = await supabase
+      .from('calculator_platforms')
+      .select('id, currency')
+      .eq('active', true);
+
+    if (platformsError) throw platformsError;
+
+    const platformMap = new Map((platforms || []).map((p: any) => [p.id, p]));
+
+    // 4. El porcentaje es general para todas las plataformas del modelo
+    // (no hay porcentajes específicos por plataforma en la configuración actual)
+
+    // 5. Obtener valores en el rango del período
     const { data: values, error: valuesError } = await supabase
       .from('model_values')
       .select('*')
@@ -202,28 +288,61 @@ export const archiveModelValues = async (
 
     console.log(`📦 [ARCHIVE] Encontrados ${values.length} valores para archivar`);
 
-    // Preparar datos históricos
-    // IMPORTANTE: period_date en calculator_history debe ser la fecha del período (startDate o periodDate según lógica)
-    // pero mantenemos la fecha original del valor para referencia
-    const historicalData = values.map(value => ({
-      model_id: value.model_id,
-      platform_id: value.platform_id,
-      value: value.value,
-      period_date: startDate, // Usar fecha de inicio del período para agrupación
-      period_type: periodType,
-      archived_at: new Date().toISOString(),
-      original_updated_at: value.updated_at
-    }));
+    // 6. Agrupar valores por plataforma (tomar el último valor por plataforma)
+    const valuesByPlatform = new Map<string, any>();
+    for (const value of values) {
+      const existing = valuesByPlatform.get(value.platform_id);
+      if (!existing || new Date(value.updated_at) > new Date(existing.updated_at)) {
+        valuesByPlatform.set(value.platform_id, value);
+      }
+    }
 
-    // Insertar en historial
+    // 7. Preparar datos históricos con todos los cálculos
+    const historicalData: any[] = [];
+
+    for (const [platformId, value] of valuesByPlatform.entries()) {
+      const platform = platformMap.get(platformId);
+      const currency = platform?.currency || 'USD';
+      // Usar el porcentaje general del modelo (aplicado a todas las plataformas)
+      const platformPercentage = modelPercentage;
+      
+      // Calcular USD bruto
+      const valueUsdBruto = calculateUsdBruto(Number(value.value), platformId, currency, rates);
+      
+      // Calcular USD modelo (después del porcentaje)
+      const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
+      
+      // Calcular COP modelo
+      const valueCopModelo = valueUsdModelo * rates.usd_cop;
+
+      historicalData.push({
+        model_id: value.model_id,
+        platform_id: platformId,
+        value: Number(value.value),
+        period_date: startDate, // Usar fecha de inicio del período para agrupación
+        period_type: periodType,
+        archived_at: new Date().toISOString(),
+        original_updated_at: value.updated_at,
+        // Nuevos campos
+        rate_eur_usd: rates.eur_usd,
+        rate_gbp_usd: rates.gbp_usd,
+        rate_usd_cop: rates.usd_cop,
+        platform_percentage: platformPercentage,
+        value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
+        value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
+        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2))
+      });
+    }
+
+    // 8. Insertar en historial
     const { error: archiveError } = await supabase
       .from('calculator_history')
       .insert(historicalData);
 
     if (archiveError) throw archiveError;
 
-    console.log(`✅ [ARCHIVE] ${values.length} valores archivados exitosamente`);
-    return { success: true, archived: values.length };
+    console.log(`✅ [ARCHIVE] ${historicalData.length} valores archivados exitosamente con cálculos completos`);
+    return { success: true, archived: historicalData.length };
   } catch (error) {
     console.error('❌ [CLOSURE-HELPERS] Error archivando valores:', error);
     return {

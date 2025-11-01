@@ -90,10 +90,10 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // PASO 1: Obtener datos básicos de calculator_history (sin join para mayor seguridad)
+    // PASO 1: Obtener datos completos de calculator_history (incluyendo cálculos y tasas)
     const { data: history, error: historyError } = await supabase
       .from('calculator_history')
-      .select('id, platform_id, value, period_date, period_type, archived_at')
+      .select('id, platform_id, value, period_date, period_type, archived_at, rate_eur_usd, rate_gbp_usd, rate_usd_cop, platform_percentage, value_usd_bruto, value_usd_modelo, value_cop_modelo')
       .eq('model_id', modelId)
       .order('period_date', { ascending: false });
 
@@ -169,18 +169,49 @@ export async function GET(request: NextRequest) {
           period_type: item.period_type,
           archived_at: item.archived_at || new Date().toISOString(),
           platforms: [],
-          total_value: 0
+          total_value: 0,
+          total_usd_bruto: 0,
+          total_usd_modelo: 0,
+          total_cop_modelo: 0,
+          // Tasas aplicadas al período (todos los items del período tienen las mismas tasas)
+          rates: {
+            eur_usd: item.rate_eur_usd || null,
+            gbp_usd: item.rate_gbp_usd || null,
+            usd_cop: item.rate_usd_cop || null
+          }
         });
       }
 
       const period = periodsMap.get(periodKey)!;
+      
+      const usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : 0;
+      const usdModelo = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : 0;
+      const copModelo = item.value_cop_modelo != null ? Number(item.value_cop_modelo) : 0;
+      const percentage = item.platform_percentage != null ? Number(item.platform_percentage) : null;
+      
       period.platforms.push({
         platform_id: item.platform_id,
         platform_name: platformInfo?.name || item.platform_id,
         platform_currency: platformInfo?.currency || 'USD',
-        value: safeValue
+        value: safeValue,
+        // Nuevos campos de cálculos
+        value_usd_bruto: usdBruto,
+        value_usd_modelo: usdModelo,
+        value_cop_modelo: copModelo,
+        platform_percentage: percentage,
+        // Tasas aplicadas (guardadas en el historial)
+        rates: {
+          eur_usd: item.rate_eur_usd || null,
+          gbp_usd: item.rate_gbp_usd || null,
+          usd_cop: item.rate_usd_cop || null
+        }
       });
+      
+      // Actualizar totales del período
       period.total_value += safeValue;
+      period.total_usd_bruto += usdBruto;
+      period.total_usd_modelo += usdModelo;
+      period.total_cop_modelo += copModelo;
     });
 
     // Convertir a array y ordenar por fecha descendente

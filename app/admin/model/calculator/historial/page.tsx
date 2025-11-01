@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
-import { History, ArrowLeft, Calendar, DollarSign } from 'lucide-react';
+import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X } from 'lucide-react';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface Period {
@@ -14,8 +14,25 @@ interface Period {
     platform_name: string;
     platform_currency: string;
     value: number;
+    value_usd_bruto?: number;
+    value_usd_modelo?: number;
+    value_cop_modelo?: number;
+    platform_percentage?: number | null;
+    rates?: {
+      eur_usd?: number | null;
+      gbp_usd?: number | null;
+      usd_cop?: number | null;
+    };
   }>;
   total_value: number;
+  total_usd_bruto?: number;
+  total_usd_modelo?: number;
+  total_cop_modelo?: number;
+  rates?: {
+    eur_usd?: number | null;
+    gbp_usd?: number | null;
+    usd_cop?: number | null;
+  };
 }
 
 interface User {
@@ -26,12 +43,18 @@ interface User {
 
 export default function CalculatorHistorialPage() {
   const [user, setUser] = useState<User | null>(null);
+  const [userRole, setUserRole] = useState<string>('modelo'); // Rol del usuario para verificar permisos de edición
   const [periods, setPeriods] = useState<Period[]>([]);
   const [allPeriods, setAllPeriods] = useState<Period[]>([]); // Todos los períodos sin filtrar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
   const [availablePeriods, setAvailablePeriods] = useState<Array<{key: string, label: string}>>([]);
+  const [editingPlatform, setEditingPlatform] = useState<{periodKey: string, platformId: string} | null>(null);
+  const [editingRates, setEditingRates] = useState<string | null>(null); // periodKey
+  const [editValue, setEditValue] = useState<string>('');
+  const [editRates, setEditRates] = useState<{eur_usd: string, gbp_usd: string, usd_cop: string}>({eur_usd: '', gbp_usd: '', usd_cop: ''});
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     const loadData = async () => {
@@ -51,7 +74,7 @@ export default function CalculatorHistorialPage() {
 
         const { data: userRow } = await supabase
           .from('users')
-          .select('id, name, email')
+          .select('id, name, email, role')
           .eq('id', uid)
           .single();
 
@@ -60,6 +83,9 @@ export default function CalculatorHistorialPage() {
           setLoading(false);
           return;
         }
+
+        // Guardar rol del usuario para verificar permisos de edición
+        setUserRole(userRow.role || 'modelo');
 
         // 🔒 VERIFICACIÓN DE SEGURIDAD: Solo permitir que el usuario vea sus propios datos
         // Verificar que el usuario autenticado coincide con el usuario de la base de datos
@@ -203,6 +229,143 @@ export default function CalculatorHistorialPage() {
     setSelectedPeriod(periodKey);
   };
 
+  const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+
+  const startEditPlatform = (periodKey: string, platformId: string, currentValue: number) => {
+    setEditingPlatform({ periodKey, platformId });
+    setEditValue(currentValue.toString());
+  };
+
+  const startEditRates = (period: Period) => {
+    const periodKey = `${period.period_date}-${period.period_type}`;
+    setEditingRates(periodKey);
+    setEditRates({
+      eur_usd: period.rates?.eur_usd?.toString() || '',
+      gbp_usd: period.rates?.gbp_usd?.toString() || '',
+      usd_cop: period.rates?.usd_cop?.toString() || ''
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingPlatform(null);
+    setEditingRates(null);
+    setEditValue('');
+    setEditRates({ eur_usd: '', gbp_usd: '', usd_cop: '' });
+  };
+
+  const savePlatformValue = async (periodKey: string, platformId: string) => {
+    if (!isAdmin) return;
+
+    try {
+      setSaving(true);
+      
+      // Encontrar el registro en el historial
+      const period = allPeriods.find(p => `${p.period_date}-${p.period_type}` === periodKey);
+      if (!period) {
+        throw new Error('Período no encontrado');
+      }
+
+      const platform = period.platforms.find(p => p.platform_id === platformId);
+      if (!platform) {
+        throw new Error('Plataforma no encontrada');
+      }
+
+      // Obtener el ID del registro desde la base de datos
+      // Necesitamos hacer una consulta para obtener el historyId
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        throw new Error('Sesión no válida');
+      }
+
+      // Primero obtener el historyId desde el API de historial o hacer una consulta directa
+      // Por ahora, vamos a asumir que necesitamos obtenerlo del backend
+      // En una implementación real, necesitaríamos almacenar el historyId en el frontend
+      
+      // Por simplicidad, vamos a crear un endpoint que busque por period_date, period_type, model_id y platform_id
+      // O podemos modificar el API para aceptar estos parámetros en lugar de historyId
+
+      // Actualizar usando period_date, period_type, model_id, platform_id
+      const response = await fetch('/api/model/calculator/historial/update', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          period_date: period.period_date,
+          period_type: period.period_type,
+          model_id: user?.id,
+          platform_id: platformId,
+          value: Number(editValue)
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al actualizar valor');
+      }
+
+      // Recargar datos
+      window.location.reload(); // Por ahora recargar, después podemos actualizar el estado local
+    } catch (error: any) {
+      console.error('Error guardando valor:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveRates = async (period: Period) => {
+    if (!isAdmin) return;
+
+    try {
+      setSaving(true);
+
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        throw new Error('Sesión no válida');
+      }
+
+      const response = await fetch('/api/model/calculator/historial/update', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          period_date: period.period_date,
+          period_type: period.period_type,
+          model_id: user?.id,
+          rates: {
+            eur_usd: editRates.eur_usd ? Number(editRates.eur_usd) : undefined,
+            gbp_usd: editRates.gbp_usd ? Number(editRates.gbp_usd) : undefined,
+            usd_cop: editRates.usd_cop ? Number(editRates.usd_cop) : undefined
+          }
+        })
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al actualizar tasas');
+      }
+
+      // Recargar datos
+      window.location.reload(); // Por ahora recargar, después podemos actualizar el estado local
+
+    } catch (error: any) {
+      console.error('Error guardando tasas:', error);
+      alert(`Error: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
@@ -308,13 +471,84 @@ export default function CalculatorHistorialPage() {
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Archivado: {formatDate(period.archived_at)}
                     </p>
+                    {period.rates && (period.rates.eur_usd || period.rates.gbp_usd || period.rates.usd_cop) ? (
+                      editingRates === `${period.period_date}-${period.period_type}` ? (
+                        <div className="mt-2 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="number"
+                              step="0.0001"
+                              value={editRates.eur_usd}
+                              onChange={(e) => setEditRates({...editRates, eur_usd: e.target.value})}
+                              placeholder="EUR→USD"
+                              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-24"
+                            />
+                            <input
+                              type="number"
+                              step="0.0001"
+                              value={editRates.gbp_usd}
+                              onChange={(e) => setEditRates({...editRates, gbp_usd: e.target.value})}
+                              placeholder="GBP→USD"
+                              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-24"
+                            />
+                            <input
+                              type="number"
+                              step="1"
+                              value={editRates.usd_cop}
+                              onChange={(e) => setEditRates({...editRates, usd_cop: e.target.value})}
+                              placeholder="USD→COP"
+                              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-24"
+                            />
+                            <button
+                              onClick={() => saveRates(period)}
+                              disabled={saving}
+                              className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
+                              title="Guardar"
+                            >
+                              <Save className="w-3 h-3" />
+                            </button>
+                            <button
+                              onClick={cancelEdit}
+                              className="p-1 text-red-600 hover:text-red-700"
+                              title="Cancelar"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-xs text-gray-400 dark:text-gray-500">
+                            Tasas: {period.rates.eur_usd && `EUR→USD: ${period.rates.eur_usd.toFixed(4)}`}
+                            {period.rates.gbp_usd && ` | GBP→USD: ${period.rates.gbp_usd.toFixed(4)}`}
+                            {period.rates.usd_cop && ` | USD→COP: ${period.rates.usd_cop.toFixed(0)}`}
+                          </p>
+                          {isAdmin && (
+                            <button
+                              onClick={() => startEditRates(period)}
+                              className="p-1 text-blue-600 hover:text-blue-700"
+                              title="Editar tasas"
+                            >
+                              <Edit2 className="w-3 h-3" />
+                            </button>
+                          )}
+                        </div>
+                      )
+                    ) : null}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {formatCurrency(period.total_value)}
+                    {formatCurrency(period.total_usd_modelo || period.total_value, 'USD')}
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">Total del período</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                    {period.total_usd_modelo ? 'USD Modelo' : 'Total del período'}
+                  </div>
+                  {period.total_cop_modelo && (
+                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                      {formatCurrency(period.total_cop_modelo, 'COP')}
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -324,28 +558,88 @@ export default function CalculatorHistorialPage() {
                   Plataformas ({period.platforms.length})
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {period.platforms.map((platform) => (
-                    <div
-                      key={platform.platform_id}
-                      className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
-                            {platform.platform_name}
-                          </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">
-                            {platform.platform_currency}
-                          </p>
-                        </div>
-                        <div className="ml-3 text-right">
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {formatCurrency(platform.value, platform.platform_currency)}
-                          </p>
+                  {period.platforms.map((platform) => {
+                    const periodKey = `${period.period_date}-${period.period_type}`;
+                    const isEditing = editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === platform.platform_id;
+
+                    return (
+                      <div
+                        key={platform.platform_id}
+                        className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+                      >
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                                {platform.platform_name}
+                              </p>
+                              {isEditing ? (
+                                <input
+                                  type="number"
+                                  step="0.01"
+                                  value={editValue}
+                                  onChange={(e) => setEditValue(e.target.value)}
+                                  className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-full mt-1"
+                                />
+                              ) : (
+                                <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  {formatCurrency(platform.value, platform.platform_currency)}
+                                </p>
+                              )}
+                            </div>
+                            {platform.value_usd_modelo !== undefined && (
+                              <div className="ml-3 text-right">
+                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  {formatCurrency(platform.value_usd_modelo, 'USD')}
+                                </p>
+                                {platform.platform_percentage && (
+                                  <p className="text-xs text-gray-400 dark:text-gray-500">
+                                    {platform.platform_percentage}%
+                                  </p>
+                                )}
+                              </div>
+                            )}
+                            {isAdmin && (
+                              <div className="ml-2 flex items-center gap-1">
+                                {isEditing ? (
+                                  <>
+                                    <button
+                                      onClick={() => savePlatformValue(periodKey, platform.platform_id)}
+                                      disabled={saving}
+                                      className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
+                                      title="Guardar"
+                                    >
+                                      <Save className="w-3 h-3" />
+                                    </button>
+                                    <button
+                                      onClick={cancelEdit}
+                                      className="p-1 text-red-600 hover:text-red-700"
+                                      title="Cancelar"
+                                    >
+                                      <X className="w-3 h-3" />
+                                    </button>
+                                  </>
+                                ) : (
+                                  <button
+                                    onClick={() => startEditPlatform(periodKey, platform.platform_id, platform.value)}
+                                    className="p-1 text-blue-600 hover:text-blue-700"
+                                    title="Editar valor"
+                                  >
+                                    <Edit2 className="w-3 h-3" />
+                                  </button>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                          {platform.value_cop_modelo !== undefined && platform.value_cop_modelo > 0 && (
+                            <div className="text-xs text-gray-400 dark:text-gray-500 border-t border-gray-200 dark:border-gray-700 pt-1">
+                              COP: {formatCurrency(platform.value_cop_modelo, 'COP')}
+                            </div>
+                          )}
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             </div>

@@ -300,3 +300,4 @@ En Vercel o en logs locales, buscar:
 
 **El sistema está implementado y desplegado. El siguiente paso es diagnosticar por qué el bloqueo no se está aplicando en la UI, aunque la lógica está implementada.**
 
+
