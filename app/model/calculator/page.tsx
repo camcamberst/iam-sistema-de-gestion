@@ -414,14 +414,29 @@ export default function ModelCalculatorPage() {
 
         // 🔒 Cargar estado de congelación de plataformas
         try {
+          console.log('🔍 [CALCULATOR] Cargando estado de congelación para:', { modelId: current.id, periodDate });
           const freezeStatusResponse = await fetch(`/api/calculator/period-closure/platform-freeze-status?modelId=${current.id}&periodDate=${periodDate}`);
           const freezeStatusData = await freezeStatusResponse.json();
+          
+          console.log('🔍 [CALCULATOR] Respuesta de freeze-status:', {
+            success: freezeStatusData.success,
+            hasFrozenPlatforms: !!freezeStatusData.frozen_platforms,
+            frozenPlatformsCount: freezeStatusData.frozen_platforms?.length || 0,
+            frozenPlatforms: freezeStatusData.frozen_platforms,
+            debug: freezeStatusData.debug
+          });
+          
           if (freezeStatusData.success && freezeStatusData.frozen_platforms) {
-            setFrozenPlatforms(freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase()));
-            console.log('🔒 [CALCULATOR] Plataformas congeladas:', freezeStatusData.frozen_platforms);
+            const frozenLowercase = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
+            setFrozenPlatforms(frozenLowercase);
+            console.log('🔒 [CALCULATOR] Plataformas congeladas aplicadas al estado:', frozenLowercase);
+          } else {
+            console.log('⚠️ [CALCULATOR] No se encontraron plataformas congeladas o respuesta inválida');
+            setFrozenPlatforms([]);
           }
         } catch (error) {
           console.error('❌ [CALCULATOR] Error cargando estado de congelación:', error);
+          setFrozenPlatforms([]);
         }
       } finally {
         setLoading(false);
