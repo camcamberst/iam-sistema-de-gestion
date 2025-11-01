@@ -471,7 +471,7 @@ export default function ModelCalculatorPage() {
               console.log('🔒 [CALCULATOR] Estado de congelación actualizado:', {
                 antes: Array.from(prevSet),
                 ahora: newFrozenPlatforms,
-                cambios: newFrozenPlatforms.filter(p => !prevSet.has(p))
+                cambios: newFrozenPlatforms.filter((p: string) => !prevSet.has(p))
               });
               return newFrozenPlatforms;
             }
