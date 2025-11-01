@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabase';
 import { History, ArrowLeft, Calendar, DollarSign } from 'lucide-react';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface Period {
   period_date: string;
@@ -26,8 +27,11 @@ interface User {
 export default function CalculatorHistorialPage() {
   const [user, setUser] = useState<User | null>(null);
   const [periods, setPeriods] = useState<Period[]>([]);
+  const [allPeriods, setAllPeriods] = useState<Period[]>([]); // Todos los períodos sin filtrar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
+  const [availablePeriods, setAvailablePeriods] = useState<Array<{key: string, label: string}>>([]);
 
   useEffect(() => {
     const loadData = async () => {
@@ -98,7 +102,18 @@ export default function CalculatorHistorialPage() {
           return;
         }
 
-        setPeriods(data.periods || []);
+        const loadedPeriods = data.periods || [];
+        setAllPeriods(loadedPeriods);
+        setPeriods(loadedPeriods);
+
+        // Generar períodos disponibles para el dropdown
+        const periodOptions = generateAvailablePeriods(loadedPeriods);
+        setAvailablePeriods(periodOptions);
+        
+        // Seleccionar el primer período si hay opciones
+        if (periodOptions.length > 0 && selectedPeriod === 'all') {
+          // Mantener 'all' como opción por defecto para ver todo
+        }
 
       } catch (err: any) {
         console.error('Error cargando historial:', err);
@@ -131,6 +146,61 @@ export default function CalculatorHistorialPage() {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2
     }).format(value);
+  };
+
+  // Generar opciones de períodos para el dropdown
+  const generateAvailablePeriods = (periodsData: Period[]): Array<{key: string, label: string}> => {
+    const periodMap = new Map<string, { label: string, count: number }>();
+    
+    periodsData.forEach(period => {
+      const date = new Date(period.period_date);
+      const year = date.getFullYear();
+      const month = date.getMonth();
+      const monthAbbr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+      const periodNumber = period.period_type === '1-15' ? '1' : '2';
+      
+      const periodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
+      const periodLabel = `${monthAbbr[month]} ${year} - P${periodNumber}`;
+      
+      if (periodMap.has(periodKey)) {
+        periodMap.get(periodKey)!.count++;
+      } else {
+        periodMap.set(periodKey, { label: periodLabel, count: 1 });
+      }
+    });
+    
+    const periods = Array.from(periodMap.entries())
+      .map(([key, data]) => ({
+        key,
+        label: `${data.label} (${data.count} registro${data.count !== 1 ? 's' : ''})`
+      }))
+      .sort((a, b) => b.key.localeCompare(a.key)); // Más reciente primero
+    
+    return [
+      { key: 'all', label: 'Todos los períodos' },
+      ...periods
+    ];
+  };
+
+  // Filtrar períodos según la selección
+  const filteredPeriods = useMemo(() => {
+    if (selectedPeriod === 'all') {
+      return allPeriods;
+    }
+    
+    return allPeriods.filter(period => {
+      const date = new Date(period.period_date);
+      const year = date.getFullYear();
+      const month = date.getMonth() + 1;
+      const periodNumber = period.period_type === '1-15' ? '1' : '2';
+      const periodKey = `${year}-${month.toString().padStart(2, '0')}-${periodNumber}`;
+      
+      return periodKey === selectedPeriod;
+    });
+  }, [allPeriods, selectedPeriod]);
+
+  const handlePeriodChange = (periodKey: string) => {
+    setSelectedPeriod(periodKey);
   };
 
   if (loading) {
@@ -167,6 +237,23 @@ export default function CalculatorHistorialPage() {
               Historial de períodos archivados de Mi Calculadora
             </p>
           </div>
+          
+          {/* Dropdown para filtrar por período */}
+          {availablePeriods.length > 0 && (
+            <div className="flex-shrink-0">
+              <AppleDropdown
+                options={availablePeriods.map(period => ({
+                  value: period.key,
+                  label: period.label
+                }))}
+                value={selectedPeriod}
+                onChange={handlePeriodChange}
+                placeholder="Selecciona período"
+                className="min-w-[200px] text-sm"
+                maxHeight="max-h-48"
+              />
+            </div>
+          )}
         </div>
       </div>
 
@@ -186,7 +273,7 @@ export default function CalculatorHistorialPage() {
       )}
 
       {/* Empty State */}
-      {!error && periods.length === 0 && (
+      {!error && filteredPeriods.length === 0 && (
         <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-12 mb-4">
           <div className="text-center">
             <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
@@ -201,9 +288,9 @@ export default function CalculatorHistorialPage() {
       )}
 
       {/* Periods List */}
-      {!error && periods.length > 0 && (
+      {!error && filteredPeriods.length > 0 && (
         <div className="space-y-4">
-          {periods.map((period, index) => (
+          {filteredPeriods.map((period, index) => (
             <div
               key={`${period.period_date}-${period.period_type}`}
               className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 hover:shadow-md transition-all duration-300"
