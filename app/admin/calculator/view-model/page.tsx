@@ -730,7 +730,7 @@ export default function AdminViewModelPage() {
           </div>
 
           {/* Contenido de pestañas */}
-          {activeTab === 'calculator' ? (
+          {activeTab === 'calculator' && (
             selectedModel.calculatorData ? (
             <div className="space-y-4">
               {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
@@ -1004,7 +1004,8 @@ export default function AdminViewModelPage() {
                 <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               </div>
             </div>
-          ) : null}
+          ) : null
+          )}
           {/* Contenido del historial */}
           {activeTab === 'history' && (
             <div className="space-y-4">
