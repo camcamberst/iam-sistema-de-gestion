@@ -566,6 +566,12 @@ export default function AdminViewModelPage() {
             {/* Footer actions */}
               <div className="flex justify-end gap-2 flex-shrink-0">
                 <button
+                  onClick={() => router.push(`/admin/model/calculator/historial?modelId=${selectedModel.id}`)}
+                  className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg"
+                >
+                  Ver Historial
+                </button>
+                <button
                   onClick={syncTotals}
                   disabled={syncingTotals || !selectedModel?.calculatorData}
                   className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${

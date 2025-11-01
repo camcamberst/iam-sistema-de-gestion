@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X } from 'lucide-react';
 import AppleDropdown from '@/components/ui/AppleDropdown';
@@ -120,8 +121,24 @@ export default function CalculatorHistorialPage() {
           'Authorization': `Bearer ${token}`
         };
         
-        // 🔒 FORZAR: Usar siempre el ID del usuario autenticado
-        const response = await fetch(`/api/model/calculator/historial?modelId=${userRow.id}`, {
+        // 🔒 DETERMINAR modelId: 
+        // - Si es admin/super_admin y hay modelId en URL, usar ese (para ver historial de otros)
+        // - Si no, usar el ID del usuario autenticado (para que modelos vean solo su historial)
+        const searchParams = new URLSearchParams(window.location.search);
+        const modelIdFromUrl = searchParams.get('modelId');
+        let targetModelId = userRow.id;
+        
+        // Solo admins pueden ver historial de otros modelos
+        if (modelIdFromUrl && (userRow.role === 'admin' || userRow.role === 'super_admin')) {
+          targetModelId = modelIdFromUrl;
+        } else if (modelIdFromUrl && userRow.role !== 'admin' && userRow.role !== 'super_admin') {
+          // Modelos no pueden ver historial de otros
+          setError('No autorizado: Solo puedes consultar tu propio historial');
+          setLoading(false);
+          return;
+        }
+        
+        const response = await fetch(`/api/model/calculator/historial?modelId=${targetModelId}`, {
           headers
         });
         const data = await response.json();
