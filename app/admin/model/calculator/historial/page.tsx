@@ -48,8 +48,11 @@ export default function CalculatorHistorialPage() {
   const [allPeriods, setAllPeriods] = useState<Period[]>([]); // Todos los períodos sin filtrar
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
-  const [availablePeriods, setAvailablePeriods] = useState<Array<{key: string, label: string}>>([]);
+  const [selectedYear, setSelectedYear] = useState<string>('');
+  const [selectedMonth, setSelectedMonth] = useState<string>('');
+  const [selectedPeriodType, setSelectedPeriodType] = useState<string>(''); // '1-15' o '16-31'
+  const [availableYears, setAvailableYears] = useState<Array<{value: string, label: string}>>([]);
+  const [availableMonths, setAvailableMonths] = useState<Array<{value: string, label: string}>>([]);
   const [editingPlatform, setEditingPlatform] = useState<{periodKey: string, platformId: string} | null>(null);
   const [editingRates, setEditingRates] = useState<string | null>(null); // periodKey
   const [editValue, setEditValue] = useState<string>('');
@@ -132,14 +135,37 @@ export default function CalculatorHistorialPage() {
         setAllPeriods(loadedPeriods);
         setPeriods(loadedPeriods);
 
-        // Generar períodos disponibles para el dropdown
-        const periodOptions = generateAvailablePeriods(loadedPeriods);
-        setAvailablePeriods(periodOptions);
+        // Generar años y meses disponibles basados en los períodos
+        const uniqueYears = new Set<number>();
+        const uniqueMonths = new Set<number>();
         
-        // Seleccionar el primer período si hay opciones
-        if (periodOptions.length > 0 && selectedPeriod === 'all') {
-          // Mantener 'all' como opción por defecto para ver todo
-        }
+        loadedPeriods.forEach(period => {
+          const date = new Date(period.period_date);
+          uniqueYears.add(date.getFullYear());
+          uniqueMonths.add(date.getMonth() + 1); // Mes 1-12
+        });
+        
+        const yearsOptions = Array.from(uniqueYears)
+          .sort((a, b) => b - a) // Más reciente primero
+          .map(year => ({ value: year.toString(), label: year.toString() }));
+        
+        const monthsOptions = [
+          { value: '1', label: 'Enero' },
+          { value: '2', label: 'Febrero' },
+          { value: '3', label: 'Marzo' },
+          { value: '4', label: 'Abril' },
+          { value: '5', label: 'Mayo' },
+          { value: '6', label: 'Junio' },
+          { value: '7', label: 'Julio' },
+          { value: '8', label: 'Agosto' },
+          { value: '9', label: 'Septiembre' },
+          { value: '10', label: 'Octubre' },
+          { value: '11', label: 'Noviembre' },
+          { value: '12', label: 'Diciembre' }
+        ];
+        
+        setAvailableYears(yearsOptions);
+        setAvailableMonths(monthsOptions);
 
       } catch (err: any) {
         console.error('Error cargando historial:', err);
@@ -174,60 +200,26 @@ export default function CalculatorHistorialPage() {
     }).format(value);
   };
 
-  // Generar opciones de períodos para el dropdown
-  const generateAvailablePeriods = (periodsData: Period[]): Array<{key: string, label: string}> => {
-    const periodMap = new Map<string, { label: string, count: number }>();
-    
-    periodsData.forEach(period => {
-      const date = new Date(period.period_date);
-      const year = date.getFullYear();
-      const month = date.getMonth();
-      const monthAbbr = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
-      const periodNumber = period.period_type === '1-15' ? '1' : '2';
-      
-      const periodKey = `${year}-${(month + 1).toString().padStart(2, '0')}-${periodNumber}`;
-      const periodLabel = `${monthAbbr[month]} ${year} - P${periodNumber}`;
-      
-      if (periodMap.has(periodKey)) {
-        periodMap.get(periodKey)!.count++;
-      } else {
-        periodMap.set(periodKey, { label: periodLabel, count: 1 });
-      }
-    });
-    
-    const periods = Array.from(periodMap.entries())
-      .map(([key, data]) => ({
-        key,
-        label: `${data.label} (${data.count} registro${data.count !== 1 ? 's' : ''})`
-      }))
-      .sort((a, b) => b.key.localeCompare(a.key)); // Más reciente primero
-    
-    return [
-      { key: 'all', label: 'Todos los períodos' },
-      ...periods
-    ];
-  };
-
-  // Filtrar períodos según la selección
+  // Filtrar períodos según año, mes y período seleccionados
   const filteredPeriods = useMemo(() => {
-    if (selectedPeriod === 'all') {
-      return allPeriods;
+    // No mostrar nada hasta que se seleccione un período completo (año, mes y período)
+    if (!selectedYear || !selectedMonth || !selectedPeriodType) {
+      return [];
     }
+    
+    const year = parseInt(selectedYear);
+    const month = parseInt(selectedMonth);
     
     return allPeriods.filter(period => {
       const date = new Date(period.period_date);
-      const year = date.getFullYear();
-      const month = date.getMonth() + 1;
-      const periodNumber = period.period_type === '1-15' ? '1' : '2';
-      const periodKey = `${year}-${month.toString().padStart(2, '0')}-${periodNumber}`;
+      const periodYear = date.getFullYear();
+      const periodMonth = date.getMonth() + 1; // Mes 1-12
       
-      return periodKey === selectedPeriod;
+      return periodYear === year && 
+             periodMonth === month && 
+             period.period_type === selectedPeriodType;
     });
-  }, [allPeriods, selectedPeriod]);
-
-  const handlePeriodChange = (periodKey: string) => {
-    setSelectedPeriod(periodKey);
-  };
+  }, [allPeriods, selectedYear, selectedMonth, selectedPeriodType]);
 
   const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
@@ -401,22 +393,50 @@ export default function CalculatorHistorialPage() {
             </p>
           </div>
           
-          {/* Dropdown para filtrar por período */}
-          {availablePeriods.length > 0 && (
+          {/* Dropdowns para filtrar por Año, Mes y Período */}
+          <div className="flex items-center gap-3 flex-wrap">
+            {/* Dropdown Año */}
             <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Año</label>
               <AppleDropdown
-                options={availablePeriods.map(period => ({
-                  value: period.key,
-                  label: period.label
-                }))}
-                value={selectedPeriod}
-                onChange={handlePeriodChange}
-                placeholder="Selecciona período"
-                className="min-w-[200px] text-sm"
+                options={availableYears}
+                value={selectedYear}
+                onChange={(value) => setSelectedYear(value)}
+                placeholder="Seleccionar año"
+                className="min-w-[120px] text-sm"
                 maxHeight="max-h-48"
               />
             </div>
-          )}
+            
+            {/* Dropdown Mes */}
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Mes</label>
+              <AppleDropdown
+                options={availableMonths}
+                value={selectedMonth}
+                onChange={(value) => setSelectedMonth(value)}
+                placeholder="Seleccionar mes"
+                className="min-w-[140px] text-sm"
+                maxHeight="max-h-48"
+              />
+            </div>
+            
+            {/* Dropdown Período */}
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
+              <AppleDropdown
+                options={[
+                  { value: '1-15', label: 'P1 (1-15)' },
+                  { value: '16-31', label: 'P2 (16-31)' }
+                ]}
+                value={selectedPeriodType}
+                onChange={(value) => setSelectedPeriodType(value)}
+                placeholder="Seleccionar período"
+                className="min-w-[140px] text-sm"
+                maxHeight="max-h-48"
+              />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -441,10 +461,14 @@ export default function CalculatorHistorialPage() {
           <div className="text-center">
             <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-              No hay períodos archivados
+              {!selectedYear || !selectedMonth || !selectedPeriodType
+                ? 'Selecciona un período para consultar'
+                : 'No hay datos para el período seleccionado'}
             </h3>
             <p className="text-gray-500 dark:text-gray-400 text-sm">
-              Aún no tienes períodos cerrados en tu historial de calculadora.
+              {!selectedYear || !selectedMonth || !selectedPeriodType
+                ? 'Usa los filtros de arriba para seleccionar Año, Mes y Período (P1 o P2)'
+                : `No se encontraron datos para ${selectedMonth && availableMonths.find(m => m.value === selectedMonth)?.label} ${selectedYear} - ${selectedPeriodType === '1-15' ? 'P1' : 'P2'}`}
             </p>
           </div>
         </div>
