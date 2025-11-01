@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Cliente con service role para consultas a BD
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
@@ -11,6 +12,7 @@ export const dynamic = 'force-dynamic';
 /**
  * GET: Obtener historial de calculadora de un modelo
  * Consulta los períodos archivados desde calculator_history
+ * VERIFICA AUTORIZACIÓN: Solo permite consultar datos propios
  */
 export async function GET(request: NextRequest) {
   try {
@@ -22,6 +24,70 @@ export async function GET(request: NextRequest) {
         success: false,
         error: 'modelId es requerido'
       }, { status: 400 });
+    }
+
+    // 🔒 SEGURIDAD: Verificar que el usuario autenticado coincida con el modelId solicitado
+    const authHeader = request.headers.get('authorization');
+    let authenticatedUserId: string | null = null;
+    let token: string | null = null;
+
+    // Intentar obtener token del header Authorization
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      token = authHeader.substring(7);
+    }
+
+    // Verificar usuario autenticado si tenemos token
+    if (token) {
+      try {
+        const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+        if (!authError && user) {
+          authenticatedUserId = user.id;
+        }
+      } catch (error) {
+        console.warn('⚠️ [CALCULATOR-HISTORIAL] Error verificando autenticación:', error);
+      }
+    }
+
+    // 🔒 VERIFICACIÓN DE AUTORIZACIÓN ESTRICTA:
+    // Las modelos SOLO pueden consultar sus propios datos
+    // NO pueden ver datos de otras cuentas, incluso si modifican el modelId en la URL
+    
+    if (!authenticatedUserId) {
+      // REQUERIR autenticación - sin token, denegar acceso
+      return NextResponse.json({
+        success: false,
+        error: 'Autenticación requerida'
+      }, { status: 401 });
+    }
+
+    // Verificar el rol del usuario para aplicar reglas específicas
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', authenticatedUserId)
+      .single();
+
+    const userRole = userData?.role || 'modelo';
+    const isModel = userRole === 'modelo';
+    const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+
+    // 🔒 REGLA ESTRICTA: Si es modelo, DEBE coincidir con el modelId solicitado
+    if (isModel && authenticatedUserId !== modelId) {
+      console.warn(`🚫 [CALCULATOR-HISTORIAL] Intento de acceso no autorizado: Usuario ${authenticatedUserId} intentó acceder a datos de ${modelId}`);
+      return NextResponse.json({
+        success: false,
+        error: 'No autorizado: Solo puedes consultar tu propio historial'
+      }, { status: 403 });
+    }
+
+    // Admins y super_admins pueden ver cualquier historial (para soporte administrativo)
+    // Pero si el usuario autenticado no es admin y no coincide con modelId, denegar
+    if (!isAdmin && authenticatedUserId !== modelId) {
+      console.warn(`🚫 [CALCULATOR-HISTORIAL] Intento de acceso no autorizado: Usuario ${authenticatedUserId} intentó acceder a datos de ${modelId}`);
+      return NextResponse.json({
+        success: false,
+        error: 'No autorizado para consultar este historial'
+      }, { status: 403 });
     }
 
     // PASO 1: Obtener datos básicos de calculator_history (sin join para mayor seguridad)

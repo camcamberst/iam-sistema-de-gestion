@@ -57,14 +57,40 @@ export default function CalculatorHistorialPage() {
           return;
         }
 
+        // 🔒 VERIFICACIÓN DE SEGURIDAD: Solo permitir que el usuario vea sus propios datos
+        // Verificar que el usuario autenticado coincide con el usuario de la base de datos
+        if (uid !== userRow.id) {
+          console.error('🚫 [CALCULATOR-HISTORIAL] Intento de acceso no autorizado detectado en frontend');
+          setError('No autorizado: Solo puedes consultar tu propio historial');
+          setLoading(false);
+          return;
+        }
+
         setUser({
           id: userRow.id,
           name: userRow.name || userRow.email?.split('@')[0] || 'Usuario',
           email: userRow.email || ''
         });
 
-        // Obtener historial de calculadora
-        const response = await fetch(`/api/model/calculator/historial?modelId=${userRow.id}`);
+        // Obtener historial de calculadora con token de autorización
+        // 🔒 GARANTIZAR: Siempre usar el ID del usuario autenticado, nunca uno diferente
+        const { data: { session } } = await supabase.auth.getSession();
+        const token = session?.access_token;
+        
+        if (!token) {
+          setError('Sesión no válida. Por favor, inicia sesión nuevamente.');
+          setLoading(false);
+          return;
+        }
+        
+        const headers: HeadersInit = {
+          'Authorization': `Bearer ${token}`
+        };
+        
+        // 🔒 FORZAR: Usar siempre el ID del usuario autenticado
+        const response = await fetch(`/api/model/calculator/historial?modelId=${userRow.id}`, {
+          headers
+        });
         const data = await response.json();
 
         if (!data.success) {
