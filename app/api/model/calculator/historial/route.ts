@@ -134,17 +134,19 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // PASO 2.5: Obtener configuración del modelo (una sola vez) para porcentaje por defecto
+    // PASO 2.5: Obtener configuración del modelo (una sola vez) para porcentaje por defecto y cuota mínima
     let defaultModelPercentage = 80;
+    let cuotaMinima = 470; // Valor por defecto
     const { data: modelConfig } = await supabase
       .from('calculator_config')
-      .select('percentage_override, group_percentage')
+      .select('percentage_override, group_percentage, min_quota_override, group_min_quota')
       .eq('model_id', modelId)
       .eq('active', true)
       .single();
     
     if (modelConfig) {
       defaultModelPercentage = modelConfig.percentage_override || modelConfig.group_percentage || 80;
+      cuotaMinima = modelConfig.min_quota_override || modelConfig.group_min_quota || 470;
     }
 
     // Agrupar por período (period_date + period_type)
@@ -287,8 +289,64 @@ export async function GET(request: NextRequest) {
       period.total_cop_modelo += finalCopModelo;
     });
 
+    // PASO 4: Obtener alertas/notificaciones del período cerrado para cada período
+    const periodsArray = Array.from(periodsMap.values());
+    const periodDates = periodsArray.map(p => p.period_date);
+    
+    if (periodDates.length > 0) {
+      const { data: notifications, error: notificationsError } = await supabase
+        .from('calculator_notifications')
+        .select('id, notification_type, notification_data, period_date, created_at, read_at')
+        .eq('model_id', modelId)
+        .in('period_date', periodDates);
+      
+      if (!notificationsError && notifications) {
+        // Agrupar notificaciones por período
+        const notificationsByPeriod = new Map<string, any[]>();
+        notifications.forEach((notif: any) => {
+          const periodKey = notif.period_date;
+          if (!notificationsByPeriod.has(periodKey)) {
+            notificationsByPeriod.set(periodKey, []);
+          }
+          notificationsByPeriod.get(periodKey)!.push(notif);
+        });
+        
+        // Agregar notificaciones a cada período y calcular porcentaje alcanzado
+        periodsArray.forEach(period => {
+          const periodKey = period.period_date;
+          const periodNotifications = notificationsByPeriod.get(periodKey) || [];
+          (period as any).alerts = periodNotifications
+            .filter((n: any) => {
+              // Filtrar por tipo de notificación relevante al período
+              const type = n.notification_type;
+              return type === 'periodo_cerrado' || 
+                     type === 'calculator_cleared' || 
+                     type === 'period_closed' ||
+                     type === 'value_correction' ||
+                     type === 'quota_alert';
+            })
+            .map((n: any) => ({
+              id: n.id,
+              type: n.notification_type,
+              message: n.notification_data?.message || n.notification_data?.body || 'Notificación del período',
+              created_at: n.created_at,
+              read_at: n.read_at,
+              data: n.notification_data
+            }))
+            .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+          
+          // Calcular porcentaje alcanzado basado en USD Bruto y cuota mínima
+          const totalUsdBruto = (period as any).total_usd_bruto || 0;
+          const porcentajeAlcanzado = cuotaMinima > 0 ? (totalUsdBruto / cuotaMinima) * 100 : 0;
+          (period as any).cuota_minima = cuotaMinima;
+          (period as any).porcentaje_alcanzado = Math.round(porcentajeAlcanzado * 100) / 100;
+          (period as any).esta_por_debajo = totalUsdBruto < cuotaMinima;
+        });
+      }
+    }
+
     // Convertir a array y ordenar por fecha descendente
-    const periods = Array.from(periodsMap.values()).sort((a, b) => {
+    const periods = periodsArray.sort((a, b) => {
       const dateA = new Date(a.period_date);
       const dateB = new Date(b.period_date);
       if (dateA.getTime() !== dateB.getTime()) {

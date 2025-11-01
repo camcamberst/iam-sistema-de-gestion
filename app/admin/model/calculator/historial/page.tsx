@@ -3,8 +3,17 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X } from 'lucide-react';
+import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X, AlertTriangle, CheckCircle, Info } from 'lucide-react';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+
+interface Alert {
+  id: string;
+  type: string;
+  message: string;
+  created_at: string;
+  read_at: string | null;
+  data?: any;
+}
 
 interface Period {
   period_date: string;
@@ -34,6 +43,10 @@ interface Period {
     gbp_usd?: number | null;
     usd_cop?: number | null;
   };
+  alerts?: Alert[];
+  cuota_minima?: number;
+  porcentaje_alcanzado?: number;
+  esta_por_debajo?: boolean;
 }
 
 interface User {
@@ -505,95 +518,47 @@ export default function CalculatorHistorialPage() {
             >
               {/* Period Header */}
               <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-600">
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-1">
                   <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
                     <Calendar className="w-5 h-5 text-white" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
                       {formatDate(period.period_date)} - {formatPeriodType(period.period_type)}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
                       Archivado: {formatDate(period.archived_at)}
                     </p>
-                    {period.rates && (period.rates.eur_usd || period.rates.gbp_usd || period.rates.usd_cop) ? (
-                      editingRates === `${period.period_date}-${period.period_type}` ? (
-                        <div className="mt-2 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <input
-                              type="number"
-                              step="0.0001"
-                              value={editRates.eur_usd}
-                              onChange={(e) => setEditRates({...editRates, eur_usd: e.target.value})}
-                              placeholder="EUR→USD"
-                              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-24"
-                            />
-                            <input
-                              type="number"
-                              step="0.0001"
-                              value={editRates.gbp_usd}
-                              onChange={(e) => setEditRates({...editRates, gbp_usd: e.target.value})}
-                              placeholder="GBP→USD"
-                              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-24"
-                            />
-                            <input
-                              type="number"
-                              step="1"
-                              value={editRates.usd_cop}
-                              onChange={(e) => setEditRates({...editRates, usd_cop: e.target.value})}
-                              placeholder="USD→COP"
-                              className="text-xs px-2 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 w-24"
-                            />
-                            <button
-                              onClick={() => saveRates(period)}
-                              disabled={saving}
-                              className="p-1 text-green-600 hover:text-green-700 disabled:opacity-50"
-                              title="Guardar"
-                            >
-                              <Save className="w-3 h-3" />
-                            </button>
-                            <button
-                              onClick={cancelEdit}
-                              className="p-1 text-red-600 hover:text-red-700"
-                              title="Cancelar"
-                            >
-                              <X className="w-3 h-3" />
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <div className="flex items-center gap-2 mt-1">
-                          <p className="text-xs text-gray-400 dark:text-gray-500">
-                            Tasas: {period.rates.eur_usd && `EUR→USD: ${period.rates.eur_usd.toFixed(4)}`}
-                            {period.rates.gbp_usd && ` | GBP→USD: ${period.rates.gbp_usd.toFixed(4)}`}
-                            {period.rates.usd_cop && ` | USD→COP: ${period.rates.usd_cop.toFixed(0)}`}
-                          </p>
-                          {isAdmin && (
-                            <button
-                              onClick={() => startEditRates(period)}
-                              className="p-1 text-blue-600 hover:text-blue-700"
-                              title="Editar tasas"
-                            >
-                              <Edit2 className="w-3 h-3" />
-                            </button>
-                          )}
-                        </div>
-                      )
-                    ) : null}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                    {formatCurrency(period.total_usd_modelo || period.total_value, 'USD')}
-                  </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
-                    {period.total_usd_modelo ? 'USD Modelo' : 'Total del período'}
-                  </div>
-                  {period.total_cop_modelo && (
-                    <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                      {formatCurrency(period.total_cop_modelo, 'COP')}
+                  {/* Totales destacados */}
+                  <div className="space-y-2">
+                    {period.total_usd_bruto !== undefined && period.total_usd_bruto > 0 && (
+                      <div>
+                        <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                          {formatCurrency(period.total_usd_bruto, 'USD')}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">USD Bruto</div>
+                      </div>
+                    )}
+                    <div>
+                      <div className="text-lg font-bold text-green-600 dark:text-green-400">
+                        {formatCurrency(period.total_usd_modelo || period.total_value, 'USD')}
+                      </div>
+                      <div className="text-xs text-gray-500 dark:text-gray-400">
+                        {period.total_usd_modelo ? 'USD Modelo' : 'Total del período'}
+                      </div>
                     </div>
-                  )}
+                    {period.total_cop_modelo && period.total_cop_modelo > 0 && (
+                      <div>
+                        <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                          {formatCurrency(period.total_cop_modelo, 'COP')}
+                        </div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400">COP Modelo</div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -601,9 +566,9 @@ export default function CalculatorHistorialPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    Plataformas ({period.platforms.length})
+                    Plataformas ({period.platforms.filter(p => p.value > 0).length})
                   </h4>
-                  {isAdmin && period.rates && (
+                  {isAdmin && period.rates && editingRates !== `${period.period_date}-${period.period_type}` && (
                     <button
                       onClick={() => startEditRates(period)}
                       className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
@@ -719,45 +684,200 @@ export default function CalculatorHistorialPage() {
                   </table>
                 </div>
                 
-                {/* Totales compactos - Estilo similar a Mi Calculadora */}
-                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  <div className="grid grid-cols-3 gap-4">
-                    <div className="text-center">
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Tasas de Cambio</div>
-                      <div className="space-y-1">
-                        {period.rates?.eur_usd && (
-                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                            EUR→USD: <span className="text-blue-600 dark:text-blue-400">{period.rates.eur_usd.toFixed(4)}</span>
+                {/* Totales, RATES de cierre y alertas del período cerrado - Debajo de la tabla */}
+                <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  {/* RATES de cierre - Destacadas */}
+                  <div className="mb-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                        RATES de cierre
+                      </div>
+                      {isAdmin && period.rates && editingRates !== `${period.period_date}-${period.period_type}` && (
+                        <button
+                          onClick={() => startEditRates(period)}
+                          className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
+                          title="Editar tasas del período (configuradas desde Consulta Histórica)"
+                        >
+                          <Edit2 className="w-3 h-3" />
+                          <span>Editar</span>
+                        </button>
+                      )}
+                    </div>
+                    {editingRates === `${period.period_date}-${period.period_type}` ? (
+                      <div className="flex items-center gap-2 flex-wrap p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={editRates.eur_usd}
+                          onChange={(e) => setEditRates({...editRates, eur_usd: e.target.value})}
+                          placeholder="EUR→USD"
+                          className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-28"
+                        />
+                        <input
+                          type="number"
+                          step="0.0001"
+                          value={editRates.gbp_usd}
+                          onChange={(e) => setEditRates({...editRates, gbp_usd: e.target.value})}
+                          placeholder="GBP→USD"
+                          className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-28"
+                        />
+                        <input
+                          type="number"
+                          step="1"
+                          value={editRates.usd_cop}
+                          onChange={(e) => setEditRates({...editRates, usd_cop: e.target.value})}
+                          placeholder="USD→COP"
+                          className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-28"
+                        />
+                        <button
+                          onClick={() => saveRates(period)}
+                          disabled={saving}
+                          className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded transition-colors flex items-center gap-1"
+                          title="Guardar"
+                        >
+                          <Save className="w-3 h-3" />
+                          <span>Guardar</span>
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors flex items-center gap-1"
+                          title="Cancelar"
+                        >
+                          <X className="w-3 h-3" />
+                          <span>Cancelar</span>
+                        </button>
+                      </div>
+                    ) : period.rates && (period.rates.eur_usd || period.rates.gbp_usd || period.rates.usd_cop) ? (
+                      <div className="flex items-center gap-3 flex-wrap">
+                        {period.rates.eur_usd && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">EUR → USD</div>
+                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                              {period.rates.eur_usd.toFixed(4)}
+                            </div>
                           </div>
                         )}
-                        {period.rates?.gbp_usd && (
-                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                            GBP→USD: <span className="text-blue-600 dark:text-blue-400">{period.rates.gbp_usd.toFixed(4)}</span>
+                        {period.rates.gbp_usd && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">GBP → USD</div>
+                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                              {period.rates.gbp_usd.toFixed(4)}
+                            </div>
                           </div>
                         )}
-                        {period.rates?.usd_cop && (
-                          <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                            USD→COP: <span className="text-blue-600 dark:text-blue-400">{period.rates.usd_cop.toFixed(0)}</span>
+                        {period.rates.usd_cop && (
+                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2">
+                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">USD → COP</div>
+                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
+                              {period.rates.usd_cop.toFixed(0)}
+                            </div>
                           </div>
-                        )}
-                        {!period.rates?.eur_usd && !period.rates?.gbp_usd && !period.rates?.usd_cop && (
-                          <div className="text-xs text-gray-400 dark:text-gray-500">No disponibles</div>
                         )}
                       </div>
-                    </div>
-                    <div className="text-center">
+                    ) : (
+                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">No disponibles</div>
+                    )}
+                  </div>
+
+                  {/* Totales computados */}
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
-                      <div className="text-sm font-semibold text-green-600 dark:text-green-400">
+                      <div className="text-lg font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(period.total_usd_modelo || 0, 'USD')}
                       </div>
                     </div>
-                    <div className="text-center">
+                    <div>
                       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">COP Modelo</div>
-                      <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
                         {formatCurrency(period.total_cop_modelo || 0, 'COP')}
                       </div>
                     </div>
                   </div>
+
+                  {/* Barra de objetivo - Porcentaje alcanzado */}
+                  {period.cuota_minima !== undefined && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">
+                          Objetivo del período
+                        </div>
+                        <div className={`text-xs font-semibold ${
+                          period.esta_por_debajo 
+                            ? 'text-red-600 dark:text-red-400' 
+                            : 'text-green-600 dark:text-green-400'
+                        }`}>
+                          {period.porcentaje_alcanzado?.toFixed(1) || 0}%
+                        </div>
+                      </div>
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all duration-300 ${
+                            period.esta_por_debajo
+                              ? 'bg-gradient-to-r from-red-500 to-red-600'
+                              : 'bg-gradient-to-r from-green-500 to-green-600'
+                          }`}
+                          style={{
+                            width: `${Math.min(period.porcentaje_alcanzado || 0, 100)}%`
+                          }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        <span>USD Bruto: {formatCurrency(period.total_usd_bruto || 0, 'USD')}</span>
+                        <span>Meta: {formatCurrency(period.cuota_minima || 0, 'USD')}</span>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Alertas del período cerrado */}
+                  {period.alerts && period.alerts.length > 0 && (
+                    <div>
+                      <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 mb-2 uppercase tracking-wide">
+                        Alertas del período
+                      </div>
+                      <div className="space-y-2">
+                        {period.alerts.map((alert) => (
+                          <div
+                            key={alert.id}
+                            className={`flex items-start gap-2 text-xs p-3 rounded-lg ${
+                              alert.type === 'periodo_cerrado' || alert.type === 'period_closed'
+                                ? 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700'
+                                : alert.type === 'calculator_cleared'
+                                ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700'
+                                : 'bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700'
+                            }`}
+                          >
+                            {alert.type === 'periodo_cerrado' || alert.type === 'period_closed' ? (
+                              <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400 mt-0.5 flex-shrink-0" />
+                            ) : alert.type === 'calculator_cleared' ? (
+                              <AlertTriangle className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                            ) : (
+                              <Info className="w-4 h-4 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className={`font-medium ${
+                                alert.type === 'periodo_cerrado' || alert.type === 'period_closed'
+                                  ? 'text-green-800 dark:text-green-300'
+                                  : alert.type === 'calculator_cleared'
+                                  ? 'text-yellow-800 dark:text-yellow-300'
+                                  : 'text-blue-800 dark:text-blue-300'
+                              }`}>
+                                {alert.message}
+                              </p>
+                              {alert.created_at && (
+                                <p className="text-gray-500 dark:text-gray-400 mt-1">
+                                  {new Date(alert.created_at).toLocaleString('es-CO', {
+                                    dateStyle: 'short',
+                                    timeStyle: 'short'
+                                  })}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
