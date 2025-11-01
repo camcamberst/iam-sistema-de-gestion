@@ -730,7 +730,6 @@ export default function AdminViewModelPage() {
 
           {/* Contenido de pestañas */}
           {activeTab === 'calculator' ? (
-            /* Datos de la calculadora */
             selectedModel.calculatorData ? (
             <div className="space-y-4">
               {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
