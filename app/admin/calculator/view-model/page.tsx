@@ -1,10 +1,9 @@
 'use client';
 
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import AppleDropdown from '@/components/ui/AppleDropdown';
-import { History, Calendar } from 'lucide-react';
 
 interface User {
   id: string;
@@ -56,20 +55,6 @@ export default function AdminViewModelPage() {
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [nameFilter, setNameFilter] = useState<string>('');
   const [selectedModelId, setSelectedModelId] = useState<string>('');
-  
-  // Estado para pestañas
-  const [activeTab, setActiveTab] = useState<'calculator' | 'history'>('calculator');
-  
-  // Estados para el historial (solo se cargan cuando se selecciona la pestaña de historial)
-  const [historyLoading, setHistoryLoading] = useState(false);
-  const [historyError, setHistoryError] = useState<string | null>(null);
-  const [historyPeriods, setHistoryPeriods] = useState<any[]>([]);
-  const [allHistoryPeriods, setAllHistoryPeriods] = useState<any[]>([]);
-  const [selectedYear, setSelectedYear] = useState<string>('');
-  const [selectedMonth, setSelectedMonth] = useState<string>('');
-  const [selectedPeriodType, setSelectedPeriodType] = useState<string>('');
-  const [availableYears, setAvailableYears] = useState<Array<{value: string, label: string}>>([]);
-  const [availableMonths, setAvailableMonths] = useState<Array<{value: string, label: string}>>([]);
   
   const router = useRouter();
   
@@ -280,7 +265,6 @@ export default function AdminViewModelPage() {
     setSelectedModelId('');
     setEditValues({});
     setHasChanges(false);
-    setActiveTab('calculator'); // Resetear a la pestaña de calculadora
     
     // 🔧 UX FIX: Limpiar URL y localStorage al volver a la lista
     localStorage.removeItem('admin-selected-model-id');
@@ -289,104 +273,6 @@ export default function AdminViewModelPage() {
     window.history.replaceState({}, '', url.pathname + url.search);
     console.log('🧹 [UX-FIX] Selección limpiada');
   };
-
-  const loadHistory = useCallback(async () => {
-    if (!selectedModel || !user) return;
-
-    try {
-      setHistoryLoading(true);
-      setHistoryError(null);
-
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-      
-      if (!token) {
-        setHistoryError('Sesión no válida');
-        return;
-      }
-
-      const response = await fetch(`/api/model/calculator/historial?modelId=${selectedModel.id}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const data = await response.json();
-
-      if (!data.success) {
-        setHistoryError(data.error || 'Error al cargar historial');
-        return;
-      }
-
-      const loadedPeriods = data.periods || [];
-      setAllHistoryPeriods(loadedPeriods);
-
-      // Generar años y meses disponibles
-      const uniqueYears = new Set<number>();
-      const uniqueMonths = new Set<number>();
-      
-      loadedPeriods.forEach((period: any) => {
-        const date = new Date(period.period_date);
-        uniqueYears.add(date.getFullYear());
-        uniqueMonths.add(date.getMonth() + 1);
-      });
-      
-      const yearsOptions = Array.from(uniqueYears)
-        .sort((a, b) => b - a)
-        .map(year => ({ value: year.toString(), label: year.toString() }));
-      
-      const monthsOptions = [
-        { value: '1', label: 'Enero' },
-        { value: '2', label: 'Febrero' },
-        { value: '3', label: 'Marzo' },
-        { value: '4', label: 'Abril' },
-        { value: '5', label: 'Mayo' },
-        { value: '6', label: 'Junio' },
-        { value: '7', label: 'Julio' },
-        { value: '8', label: 'Agosto' },
-        { value: '9', label: 'Septiembre' },
-        { value: '10', label: 'Octubre' },
-        { value: '11', label: 'Noviembre' },
-        { value: '12', label: 'Diciembre' }
-      ];
-      
-      setAvailableYears(yearsOptions);
-      setAvailableMonths(monthsOptions);
-
-    } catch (err: any) {
-      console.error('Error cargando historial:', err);
-      setHistoryError(err.message || 'Error al cargar historial');
-    } finally {
-      setHistoryLoading(false);
-    }
-  }, [selectedModel, user]);
-
-  // Cargar historial cuando se seleccione la pestaña de historial
-  useEffect(() => {
-    if (activeTab === 'history' && selectedModel && user) {
-      loadHistory();
-    }
-  }, [activeTab, selectedModel?.id, user?.id, loadHistory]);
-
-  // Filtrar períodos según año, mes y período seleccionados
-  const filteredHistoryPeriods = useMemo(() => {
-    if (!selectedYear || !selectedMonth || !selectedPeriodType) {
-      return [];
-    }
-    
-    const year = parseInt(selectedYear);
-    const month = parseInt(selectedMonth);
-    
-    return allHistoryPeriods.filter((period: any) => {
-      const date = new Date(period.period_date);
-      const periodYear = date.getFullYear();
-      const periodMonth = date.getMonth() + 1;
-      
-      return periodYear === year && 
-             periodMonth === month && 
-             period.period_type === selectedPeriodType;
-    });
-  }, [allHistoryPeriods, selectedYear, selectedMonth, selectedPeriodType]);
 
   // Función para filtrar por grupo
   const handleGroupFilter = (groupId: string) => {
@@ -703,35 +589,10 @@ export default function AdminViewModelPage() {
               </button>
             </div>
             </div>
-            
-            {/* Pestañas */}
-            <div className="flex space-x-1 mb-6 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
-              <button
-                onClick={() => setActiveTab('calculator')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === 'calculator'
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                }`}
-              >
-                Calculadora Actual
-              </button>
-              <button
-                onClick={() => setActiveTab('history')}
-                className={`flex-1 px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
-                  activeTab === 'history'
-                    ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 shadow-sm'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100'
-                }`}
-              >
-                Historial
-              </button>
-            </div>
           </div>
 
-          {/* Contenido de pestañas */}
-          {activeTab === 'calculator' && (
-            selectedModel.calculatorData ? (
+          {/* Datos de la calculadora */}
+          {selectedModel.calculatorData ? (
             <div className="space-y-4">
               {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
               <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
@@ -939,7 +800,7 @@ export default function AdminViewModelPage() {
                             {calculatedTotals.estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                           </h4>
                           <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                            ${calculatedTotals.usdBruto.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD Bruto
+                            ${calculatedTotals.usdModelo.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD
                           </div>
                         </div>
                         
@@ -948,8 +809,8 @@ export default function AdminViewModelPage() {
                           <div 
                             className={`h-3 transition-all duration-500 ${
                               calculatedTotals.estaPorDebajo 
-                                ? 'bg-gradient-to-r from-blue-400 to-blue-600' 
-                                : 'bg-gradient-to-r from-indigo-500 to-blue-600'
+                                ? 'bg-gradient-to-r from-orange-400 to-red-500' 
+                                : 'bg-gradient-to-r from-green-500 to-emerald-500'
                             }`}
                             style={{ 
                               width: `${Math.min(100, Math.max(0, calculatedTotals.porcentajeAlcanzado))}%` 
@@ -961,11 +822,11 @@ export default function AdminViewModelPage() {
                         <div className="flex items-center justify-between text-xs">
                           <div className={`font-medium ${
                             calculatedTotals.estaPorDebajo 
-                              ? 'text-blue-600 dark:text-blue-400' 
-                              : 'text-indigo-600 dark:text-indigo-400'
+                              ? 'text-orange-600 dark:text-orange-400' 
+                              : 'text-green-600 dark:text-green-400'
                           }`}>
                             {calculatedTotals.estaPorDebajo 
-                              ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdBruto)} USD Bruto`
+                              ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdModelo)} USD`
                               : `Excelente +${Math.max(0, calculatedTotals.porcentajeAlcanzado - 100).toFixed(0)}%`
                             }
                           </div>
@@ -1001,231 +862,8 @@ export default function AdminViewModelPage() {
                 <p className="text-gray-600 dark:text-gray-400 mb-4">
                   Cargando datos de la calculadora...
                 </p>
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                </div>
+                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
               </div>
-            )}
-          )}
-          {/* Contenido del historial */}
-          {activeTab === 'history' && (
-            <div className="space-y-4">
-              {/* Filtros del historial */}
-              <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4">
-                <div className="flex items-center gap-3 flex-wrap">
-                  <div className="flex-shrink-0">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Año</label>
-                    <AppleDropdown
-                      options={availableYears}
-                      value={selectedYear}
-                      onChange={(value) => setSelectedYear(value)}
-                      placeholder="Seleccionar año"
-                      className="min-w-[120px] text-sm"
-                      maxHeight="max-h-48"
-                    />
-                  </div>
-                  
-                  <div className="flex-shrink-0">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Mes</label>
-                    <AppleDropdown
-                      options={availableMonths}
-                      value={selectedMonth}
-                      onChange={(value) => setSelectedMonth(value)}
-                      placeholder="Seleccionar mes"
-                      className="min-w-[140px] text-sm"
-                      maxHeight="max-h-48"
-                    />
-                  </div>
-                  
-                  <div className="flex-shrink-0">
-                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Período</label>
-                    <AppleDropdown
-                      options={[
-                        { value: '1-15', label: 'P1 (1-15)' },
-                        { value: '16-31', label: 'P2 (16-31)' }
-                      ]}
-                      value={selectedPeriodType}
-                      onChange={(value) => setSelectedPeriodType(value)}
-                      placeholder="Seleccionar período"
-                      className="min-w-[140px] text-sm"
-                      maxHeight="max-h-48"
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Estado de carga del historial */}
-              {historyLoading && (
-                <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-12">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                    <p className="text-gray-600 dark:text-gray-300">Cargando historial...</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Error del historial */}
-              {historyError && !historyLoading && (
-                <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-red-200 dark:border-red-600/20 p-6">
-                  <div className="text-center">
-                    <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
-                      <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                    </div>
-                    <h4 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-2">Error</h4>
-                    <p className="text-gray-500 dark:text-gray-300 text-sm">{historyError}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Estado vacío del historial */}
-              {!historyLoading && !historyError && filteredHistoryPeriods.length === 0 && (
-                <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-12">
-                  <div className="text-center">
-                    <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                      {!selectedYear || !selectedMonth || !selectedPeriodType
-                        ? 'Selecciona un período para consultar'
-                        : 'No hay datos para el período seleccionado'}
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400 text-sm">
-                      {!selectedYear || !selectedMonth || !selectedPeriodType
-                        ? 'Usa los filtros de arriba para seleccionar Año, Mes y Período (P1 o P2)'
-                        : `No se encontraron datos para ${selectedMonth && availableMonths.find(m => m.value === selectedMonth)?.label} ${selectedYear} - ${selectedPeriodType === '1-15' ? 'P1' : 'P2'}`}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* Períodos del historial */}
-              {!historyLoading && !historyError && filteredHistoryPeriods.length > 0 && (
-                <div className="space-y-4">
-                  {filteredHistoryPeriods.map((period: any) => (
-                    <div key={`${period.period_date}-${period.period_type}`} className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6">
-                      {/* Header del período */}
-                      <div className="flex items-center justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-600">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
-                            <Calendar className="w-5 h-5 text-white" />
-                          </div>
-                          <div>
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                              {new Date(period.period_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })} - {period.period_type === '1-15' ? '1ra Quincena' : '2da Quincena'}
-                            </h3>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">
-                              Archivado: {new Date(period.archived_at).toLocaleDateString('es-CO')}
-                            </p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-gray-900 dark:text-gray-100">
-                            {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'USD' }).format(period.total_usd_modelo || 0)}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">USD Modelo</div>
-                          {period.total_cop_modelo && (
-                            <div className="text-xs text-gray-400 dark:text-gray-500 mt-1">
-                              {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(period.total_cop_modelo)}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-
-                      {/* Tabla de plataformas */}
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-600/50">
-                              <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">PLATAFORMAS</th>
-                              <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">VALORES</th>
-                              <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">DÓLARES</th>
-                              <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">COP MODELO</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {period.platforms.filter((p: any) => p.value > 0).map((platform: any) => (
-                              <tr key={platform.platform_id} className="border-b border-gray-100 dark:border-gray-600">
-                                <td className="py-2 px-3">
-                                  <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.platform_name}</div>
-                                  {platform.platform_percentage && (
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">
-                                      Reparto: {platform.platform_percentage}%
-                                    </div>
-                                  )}
-                                </td>
-                                <td className="py-2 px-3">
-                                  <div className="flex items-center space-x-2">
-                                    <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                                      {new Intl.NumberFormat('es-CO', { style: 'currency', currency: platform.platform_currency }).format(platform.value)}
-                                    </span>
-                                    <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">
-                                      {platform.platform_currency}
-                                    </span>
-                                  </div>
-                                </td>
-                                <td className="py-2 px-3">
-                                  <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                                    {platform.value_usd_modelo !== undefined && platform.value_usd_modelo > 0
-                                      ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'USD' }).format(platform.value_usd_modelo)
-                                      : '$0.00 USD'}
-                                  </div>
-                                </td>
-                                <td className="py-2 px-3">
-                                  <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                                    {platform.value_cop_modelo !== undefined && platform.value_cop_modelo > 0
-                                      ? new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(platform.value_cop_modelo)
-                                      : '$0 COP'}
-                                  </div>
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-
-                      {/* Totales del período */}
-                      <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                        <div className="grid grid-cols-3 gap-4">
-                          <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-2">Tasas de Cambio</div>
-                            <div className="space-y-1">
-                              {period.rates?.eur_usd && (
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                                  EUR→USD: <span className="text-blue-600 dark:text-blue-400">{period.rates.eur_usd.toFixed(4)}</span>
-                                </div>
-                              )}
-                              {period.rates?.gbp_usd && (
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                                  GBP→USD: <span className="text-blue-600 dark:text-blue-400">{period.rates.gbp_usd.toFixed(4)}</span>
-                                </div>
-                              )}
-                              {period.rates?.usd_cop && (
-                                <div className="text-xs font-medium text-gray-700 dark:text-gray-300">
-                                  USD→COP: <span className="text-blue-600 dark:text-blue-400">{period.rates.usd_cop.toFixed(0)}</span>
-                                </div>
-                              )}
-                              {!period.rates?.eur_usd && !period.rates?.gbp_usd && !period.rates?.usd_cop && (
-                                <div className="text-xs text-gray-400 dark:text-gray-500">No disponibles</div>
-                              )}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
-                            <div className="text-sm font-semibold text-green-600 dark:text-green-400">
-                              {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'USD' }).format(period.total_usd_modelo || 0)}
-                            </div>
-                          </div>
-                          <div className="text-center">
-                            <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">COP Modelo</div>
-                            <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                              {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP' }).format(period.total_cop_modelo || 0)}
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           )}
         </div>
