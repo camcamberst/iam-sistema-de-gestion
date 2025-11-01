@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from "@supabase/supabase-js";
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import { History, Calendar } from 'lucide-react';
 
 interface User {
   id: string;
