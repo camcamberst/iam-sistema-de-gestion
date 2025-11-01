@@ -3,6 +3,14 @@
     {
       "path": "/api/cron/cleanup-chat",
       "schedule": "* * * * *"
+    },
+    {
+      "path": "/api/cron/period-closure-early-freeze",
+      "schedule": "0 17,18,19,20,21,22,23,0,1,2,3,4,5,6,7 1,16 * *"
+    },
+    {
+      "path": "/api/cron/period-closure-full-close",
+      "schedule": "0 5 1,16 * *"
     }
   ]
 }
