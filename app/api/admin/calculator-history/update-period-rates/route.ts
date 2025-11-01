@@ -197,6 +197,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // TypeScript: después de la validación, sabemos que no son null
+    const validatedRates = {
+      eur_usd: newRates.eur_usd as number,
+      gbp_usd: newRates.gbp_usd as number,
+      usd_cop: newRates.usd_cop as number
+    };
+
     // Obtener TODOS los registros del período (para TODAS las modelos)
     const { data: periodRecords, error: fetchError } = await supabase
       .from('calculator_history')
@@ -240,7 +247,7 @@ export async function POST(request: NextRequest) {
     const platformMap = new Map((platforms || []).map((p: any) => [p.id, p]));
 
     // Función helper para calcular USD bruto (misma lógica que en period-closure-helpers)
-    const calculateUsdBruto = (value: number, platformId: string, currency: string, rates: any): number => {
+    const calculateUsdBruto = (value: number, platformId: string, currency: string, rates: { eur_usd: number; gbp_usd: number; usd_cop: number }): number => {
       if (currency === 'EUR') {
         if (platformId === 'big7') {
           return (value * rates.eur_usd) * 0.84; // 16% impuesto
@@ -283,19 +290,19 @@ export async function POST(request: NextRequest) {
       const platformPercentage = record.platform_percentage || 80;
       
       // Recalcular USD bruto con las nuevas tasas
-      const valueUsdBruto = calculateUsdBruto(originalValue, record.platform_id, currency, newRates);
+      const valueUsdBruto = calculateUsdBruto(originalValue, record.platform_id, currency, validatedRates);
       
       // Recalcular USD modelo
       const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
       
       // Recalcular COP modelo
-      const valueCopModelo = valueUsdModelo * newRates.usd_cop;
+      const valueCopModelo = valueUsdModelo * validatedRates.usd_cop;
 
       return {
         id: record.id,
-        rate_eur_usd: newRates.eur_usd,
-        rate_gbp_usd: newRates.gbp_usd,
-        rate_usd_cop: newRates.usd_cop,
+        rate_eur_usd: validatedRates.eur_usd,
+        rate_gbp_usd: validatedRates.gbp_usd,
+        rate_usd_cop: validatedRates.usd_cop,
         value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
         value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
         value_cop_modelo: parseFloat(valueCopModelo.toFixed(2)),
@@ -341,7 +348,7 @@ export async function POST(request: NextRequest) {
         gbp_usd: periodRecords[0]?.rate_gbp_usd || null,
         usd_cop: periodRecords[0]?.rate_usd_cop || null
       },
-      rates_after: newRates,
+      rates_after: validatedRates,
       records_affected: updatedCount,
       updated_at: new Date().toISOString()
     };

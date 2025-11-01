@@ -16,4 +16,5 @@ app/admin/dashboard/page.tsx
 app/admin/layout.tsx
 app/admin/model/anticipos/historial/page.tsx
 app/admin/model/anticipos/solicitar/page.tsx
+app/admin/model/anticipos/solicitudes/page.tsx
 
