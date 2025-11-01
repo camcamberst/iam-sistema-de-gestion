@@ -45,9 +45,9 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
     },
     {
       label: 'Mi Historial',
-      href: '/admin/model/anticipos/historial',
+      href: '/admin/model/calculator/historial',
       icon: <History className="w-4 h-4" />,
-      description: 'Ve tu historial de ingresos'
+      description: 'Historial de períodos archivados de la calculadora'
     }
   ];
 
