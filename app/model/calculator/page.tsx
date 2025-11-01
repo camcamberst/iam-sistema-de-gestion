@@ -446,19 +446,38 @@ export default function ModelCalculatorPage() {
         );
         const data = await response.json();
         
-        if (data.success && data.frozen_platforms) {
-          const newFrozenPlatforms = data.frozen_platforms.map((p: string) => p.toLowerCase());
+        if (data.success) {
+          const newFrozenPlatforms = (data.frozen_platforms || []).map((p: string) => p.toLowerCase());
+          
+          // Log de depuración
+          if (data.debug) {
+            console.log('🔍 [CALCULATOR] Debug congelación:', {
+              isClosureDay: data.debug.isClosureDay,
+              colombiaDate: data.debug.colombiaDate,
+              colombiaDay: data.debug.colombiaDay,
+              frozenFromDB: data.debug.frozenFromDB,
+              frozenAuto: data.debug.frozenAuto,
+              frozenPlatforms: newFrozenPlatforms
+            });
+          }
+          
           setFrozenPlatforms(prev => {
             // Solo actualizar si hay cambios para evitar renders innecesarios
             const prevSet = new Set(prev);
             const newSet = new Set(newFrozenPlatforms);
             if (prevSet.size !== newSet.size || 
                 !Array.from(prevSet).every(p => newSet.has(p))) {
-              console.log('🔒 [CALCULATOR] Estado de congelación actualizado:', newFrozenPlatforms);
+              console.log('🔒 [CALCULATOR] Estado de congelación actualizado:', {
+                antes: Array.from(prevSet),
+                ahora: newFrozenPlatforms,
+                cambios: newFrozenPlatforms.filter(p => !prevSet.has(p))
+              });
               return newFrozenPlatforms;
             }
             return prev;
           });
+        } else {
+          console.error('❌ [CALCULATOR] Error en respuesta de freeze-status:', data.error);
         }
       } catch (error) {
         console.error('❌ [CALCULATOR] Error actualizando estado de congelación:', error);
@@ -468,8 +487,8 @@ export default function ModelCalculatorPage() {
     // Actualizar inmediatamente
     updateFrozenStatus();
     
-    // Actualizar cada minuto durante días de cierre
-    const interval = setInterval(updateFrozenStatus, 60000); // 60 segundos
+    // Actualizar cada 30 segundos durante días de cierre (más frecuente para detectar cambios rápidamente)
+    const interval = setInterval(updateFrozenStatus, 30000); // 30 segundos
     
     return () => {
       clearInterval(interval);

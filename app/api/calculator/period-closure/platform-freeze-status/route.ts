@@ -45,6 +45,16 @@ export async function GET(request: NextRequest) {
     // aplicar early freeze automáticamente para TODOS los modelos (existentes Y futuros)
     // Esto NO depende de que el cron se haya ejecutado - es automático basado en hora/fecha
     const isClosure = isClosureDay();
+    const colombiaDate = getColombiaDate();
+    const day = parseInt(colombiaDate.split('-')[2]);
+    
+    console.log(`🔍 [PLATFORM-FREEZE-STATUS] Verificando early freeze:`, {
+      modelId: modelId.substring(0, 8),
+      periodDate,
+      colombiaDate,
+      day,
+      isClosureDay: isClosure
+    });
     
     if (isClosure) {
       const now = new Date();
@@ -63,17 +73,42 @@ export async function GET(request: NextRequest) {
       // Esto asegura que funciona incluso si el cron no se ejecutó
       const hasPassedEarlyFreeze = currentTimeMinutes >= (targetTimeMinutes + 15);
       
+      console.log(`🔍 [PLATFORM-FREEZE-STATUS] Cálculo de hora:`, {
+        currentTimeColombia: `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`,
+        currentTimeMinutes,
+        targetTimeColombia: `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`,
+        targetTimeMinutes,
+        margin: 15,
+        hasPassedEarlyFreeze,
+        europeMidnightDate: europeMidnight.europeDate,
+        europeMidnightColombiaTime: europeMidnight.colombiaTime
+      });
+      
       if (hasPassedEarlyFreeze) {
         console.log(`🔒 [PLATFORM-FREEZE-STATUS] Early freeze automático activo para modelo ${modelId.substring(0, 8)}...`);
         console.log(`   Hora Colombia: ${currentHour}:${String(currentMinute).padStart(2, '0')}`);
         console.log(`   Medianoche Europa Central (Colombia): ${targetHour}:${String(targetMinute).padStart(2, '0')}`);
+        console.log(`   Agregando ${EARLY_FREEZE_PLATFORMS.length} plataformas:`, EARLY_FREEZE_PLATFORMS);
         EARLY_FREEZE_PLATFORMS.forEach(platform => {
           allFrozenPlatforms.add(platform.toLowerCase());
         });
+      } else {
+        console.log(`⏳ [PLATFORM-FREEZE-STATUS] Aún no es hora de early freeze`);
+        console.log(`   Falta ${(targetTimeMinutes + 15) - currentTimeMinutes} minutos`);
       }
+    } else {
+      console.log(`📅 [PLATFORM-FREEZE-STATUS] No es día de cierre (días 1 y 16)`);
     }
 
     const frozenPlatforms = Array.from(allFrozenPlatforms);
+
+    console.log(`✅ [PLATFORM-FREEZE-STATUS] Respuesta final:`, {
+      modelId: modelId.substring(0, 8),
+      frozenPlatformsCount: frozenPlatforms.length,
+      frozenPlatforms,
+      fromDB: frozenPlatformsFromDB.length,
+      autoDetected: frozenPlatforms.length > frozenPlatformsFromDB.length
+    });
 
     return NextResponse.json({
       success: true,
@@ -81,7 +116,15 @@ export async function GET(request: NextRequest) {
       period_date: periodDate,
       frozen_platforms: frozenPlatforms,
       is_frozen: frozenPlatforms.length > 0,
-      auto_detected: frozenPlatforms.length > frozenPlatformsFromDB.length
+      auto_detected: frozenPlatforms.length > frozenPlatformsFromDB.length,
+      // 🔍 DEBUG: Información adicional para diagnóstico
+      debug: {
+        isClosureDay: isClosure,
+        colombiaDate,
+        colombiaDay: day,
+        frozenFromDB: frozenPlatformsFromDB.length,
+        frozenAuto: frozenPlatforms.length - frozenPlatformsFromDB.length
+      }
     });
 
   } catch (error) {
