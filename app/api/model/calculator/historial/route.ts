@@ -182,7 +182,7 @@ export async function GET(request: NextRequest) {
         } as any); // Type assertion needed because TypeScript infers the type from the first set()
       }
 
-      const period = periodsMap.get(periodKey)!;
+      const period = periodsMap.get(periodKey)! as any; // Type assertion needed for new fields
       
       const usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : 0;
       const usdModelo = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : 0;
