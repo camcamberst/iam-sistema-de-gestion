@@ -83,14 +83,14 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        // Menos estridente, tono violeta motivador
-        return 'border-l-purple-400 bg-purple-50/50 dark:bg-purple-900/15';
+        // Tono sólido dentro de contenedor oscuro
+        return 'border-l-purple-500 bg-purple-100/70 dark:bg-purple-900/25';
       case 'medium':
-        return 'border-l-blue-400 bg-blue-50/50 dark:bg-blue-900/15';
+        return 'border-l-blue-500 bg-blue-100/70 dark:bg-blue-900/20';
       case 'low':
-        return 'border-l-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/15';
+        return 'border-l-emerald-500 bg-emerald-100/70 dark:bg-emerald-900/20';
       default:
-        return 'border-l-slate-300 bg-slate-50/50 dark:bg-slate-800/30';
+        return 'border-l-slate-400 bg-slate-100/70 dark:bg-slate-800/25';
     }
   };
 
@@ -238,7 +238,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
 
               {activeTab === 'tips' && (
                 <div className="space-y-3">
-                  <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-md border border-amber-200 dark:border-amber-700/50">
+                  <div className="p-3 bg-amber-100/70 dark:bg-amber-900/25 rounded-md border border-amber-300 dark:border-amber-700/50 shadow-sm">
                     <div className="flex items-start space-x-2">
                       <Lightbulb className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                       <div>
@@ -254,7 +254,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
                       <span>Recomendaciones</span>
                     </h4>
                     {data.recommendations.map((rec, index) => (
-                      <div key={index} className="flex items-start space-x-2 p-2.5 bg-green-50 dark:bg-green-900/20 rounded-md border border-green-200 dark:border-green-700/50">
+                      <div key={index} className="flex items-start space-x-2 p-2.5 bg-green-100/70 dark:bg-green-900/25 rounded-md border border-green-300 dark:border-green-700/50 shadow-sm">
                         <div className="flex-shrink-0 w-5 h-5 bg-green-100 dark:bg-green-800/50 rounded-full flex items-center justify-center">
                           <span className="text-green-600 dark:text-green-400 text-xs font-bold">{index + 1}</span>
                         </div>
@@ -268,13 +268,13 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
               {activeTab === 'analysis' && (
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
-                    <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md text-center">
+                    <div className="p-3 bg-blue-100/70 dark:bg-blue-900/25 rounded-md text-center shadow-sm">
                       <div className="text-lg font-bold text-blue-600 dark:text-blue-300">
                         ${data.performanceSummary.todayEarnings.toFixed(2)}
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-300">Ganancias Hoy</div>
                     </div>
-                    <div className="p-3 bg-green-50 dark:bg-green-900/20 rounded-md text-center">
+                    <div className="p-3 bg-green-100/70 dark:bg-green-900/25 rounded-md text-center shadow-sm">
                       <div className="text-lg font-bold text-green-600 dark:text-green-400">
                         +{data.performanceSummary.weeklyTrend.toFixed(1)}%
                       </div>
@@ -282,7 +282,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
                     </div>
                   </div>
 
-                    <div className="p-3 bg-purple-50/80 dark:bg-purple-900/20 rounded-md">
+                  <div className="p-3 bg-purple-100/70 dark:bg-purple-900/25 rounded-md shadow-sm">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center space-x-1.5 text-sm">
                       <TrendingUp className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                       <span>Resumen de Rendimiento</span>
