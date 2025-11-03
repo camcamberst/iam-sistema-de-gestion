@@ -248,15 +248,17 @@ export default function DashboardSedesPage() {
       setRatesError(null);
 
       // Calcular period_date y period_type
+      // IMPORTANTE: El period_date debe ser la fecha de INICIO del período
+      // (día 1 para P1, día 16 para P2), igual que cuando se archivan los registros
       const year = parseInt(selectedYear);
       const month = parseInt(selectedMonth);
       const periodType = selectedPeriod === 'P1' ? '1-15' : '16-31';
       
       let day: number;
       if (selectedPeriod === 'P1') {
-        day = 15;
+        day = 1; // Fecha de inicio del período P1 (1-15)
       } else {
-        day = new Date(year, month, 0).getDate();
+        day = 16; // Fecha de inicio del período P2 (16-31)
       }
       const periodDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 
@@ -601,12 +603,14 @@ export default function DashboardSedesPage() {
                       const month = parseInt(selectedMonth);
                       const periodType = selectedPeriod === 'P1' ? '1-15' : '16-31';
                       
-                      // Calcular period_date (día 15 para P1, último día del mes para P2)
+                      // Calcular period_date (fecha de INICIO del período)
+                      // IMPORTANTE: Debe coincidir con cómo se guarda en calculator_history
+                      // P1: día 1, P2: día 16
                       let day: number;
                       if (selectedPeriod === 'P1') {
-                        day = 15;
+                        day = 1; // Fecha de inicio del período P1 (1-15)
                       } else {
-                        day = new Date(year, month, 0).getDate();
+                        day = 16; // Fecha de inicio del período P2 (16-31)
                       }
                       const periodDate = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
                       
