@@ -18,6 +18,12 @@ import {
   getPermissionDeniedMessage
 } from '@/lib/chat/bot-permissions';
 import type { BotCapability } from '@/lib/chat/bot-permissions';
+import { executeWithRateLimit } from '@/lib/chat/rate-limiter';
+import { 
+  extractAndSaveMemory, 
+  getMemoryContext 
+} from '@/lib/chat/bot-memory';
+import { withCache, generateCacheKey } from '@/lib/cache/query-cache';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -108,9 +114,14 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Obtener contexto del usuario
+    // Obtener contexto del usuario (con cache)
     console.log('🤖 [BOTTY-API] Obteniendo contexto del usuario...');
-    const userContext = await getUserContext(user.id, supabase);
+    const cacheKey = generateCacheKey('user_context', { userId: user.id });
+    const userContext = await withCache(
+      cacheKey,
+      () => getUserContext(user.id, supabase),
+      300000 // Cache por 5 minutos
+    );
 
     // Detectar y ejecutar consultas analíticas si es necesario
     let analyticsData: any = null;
@@ -147,13 +158,19 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Generar respuesta con IA
+    // Extraer y guardar información relevante del mensaje
+    await extractAndSaveMemory(user.id, conversation_id, message_content, userContext);
+
+    // Generar respuesta con IA (con rate limiting)
     console.log('🤖 [BOTTY-API] Generando respuesta con IA...');
-    const botResponse = await generateBotResponse(
-      message_content,
-      userContext,
-      conversation_history,
-      analyticsData
+    const botResponse = await executeWithRateLimit(
+      () => generateBotResponse(
+        message_content,
+        userContext,
+        conversation_history,
+        analyticsData,
+        conversation_id
+      )
     );
 
     console.log('✅ [BOTTY-API] Respuesta generada, longitud:', botResponse.length);
@@ -375,7 +392,8 @@ async function generateBotResponse(
   userMessage: string,
   userContext: UserContext,
   conversationHistory: any[],
-  analyticsData?: any
+  analyticsData?: any,
+  conversationId?: string
 ): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
@@ -391,6 +409,9 @@ async function generateBotResponse(
       })
       .join('\n');
 
+    // Obtener contexto de memoria del usuario
+    const memoryContext = await getMemoryContext(userContext.userId);
+    
     // Construir información de contexto
     let contextInfo = '';
     let analyticsContext = '';
@@ -471,9 +492,11 @@ ${personality}
 
 ${contextInfo}
 
+${memoryContext ? `\n${memoryContext}\n` : ''}
+
 ${analyticsContext}
 
-${historyText ? `\nHISTORIAL DE CONVERSACIÓN:\n${historyText}\n` : ''}
+${historyText ? `\nHISTORIAL DE CONVERSACIÓN (últimos 10 mensajes):\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
 
@@ -509,8 +532,15 @@ ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma
 RESPUESTA:
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
+    // Ejecutar con rate limiting
+    const result = await executeWithRateLimit(
+      async () => {
+        const result = await model.generateContent(prompt);
+        return result.response;
+      }
+    );
+    
+    const response = result;
     let text = response.text().trim();
 
     // Limpiar markdown si existe

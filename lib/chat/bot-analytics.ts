@@ -3,6 +3,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from './aim-botty';
+import { withCache, generateCacheKey } from '@/lib/cache/query-cache';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -149,107 +150,120 @@ async function getProductivityBySede(
     const startDate = params?.startDate || new Date(Date.now() - months * 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     const endDate = params?.endDate || new Date().toISOString().split('T')[0];
 
-    console.log('📊 [BOT-ANALYTICS] Productividad por sede:', { startDate, endDate });
+    // Usar cache para consultas repetidas (cache por 10 minutos para datos históricos)
+    const cacheKey = generateCacheKey('productivity_by_sede', { startDate, endDate });
+    
+    return await withCache(
+      cacheKey,
+      async () => {
+        try {
+          console.log('📊 [BOT-ANALYTICS] Productividad por sede:', { startDate, endDate });
 
-    // Obtener datos históricos por periodo
-    const { data: historyData, error: historyError } = await supabase
-      .from('calculator_history')
-      .select(`
-        period_date,
-        period_type,
-        model_id,
-        value_usd_bruto,
-        value_usd_modelo,
-        value_cop_modelo,
-        users!inner(
-          id,
-          email,
-          name,
-          organization_id,
-          user_groups(
-            groups!inner(
-              id,
-              name,
-              organization_id
-            )
-          )
-        )
-      `)
-      .gte('period_date', startDate)
-      .lte('period_date', endDate)
-      .neq('model_id', AIM_BOTTY_ID);
+          // Obtener datos históricos por periodo
+          const { data: historyData, error: historyError } = await supabase
+            .from('calculator_history')
+            .select(`
+              period_date,
+              period_type,
+              model_id,
+              value_usd_bruto,
+              value_usd_modelo,
+              value_cop_modelo,
+              users!inner(
+                id,
+                email,
+                name,
+                organization_id,
+                user_groups(
+                  groups!inner(
+                    id,
+                    name,
+                    organization_id
+                  )
+                )
+              )
+            `)
+            .gte('period_date', startDate)
+            .lte('period_date', endDate)
+            .neq('model_id', AIM_BOTTY_ID);
 
-    if (historyError) {
-      console.error('❌ [BOT-ANALYTICS] Error obteniendo historial:', historyError);
-      return { success: false, error: 'Error obteniendo datos históricos' };
-    }
+          if (historyError) {
+            console.error('❌ [BOT-ANALYTICS] Error obteniendo historial:', historyError);
+            return { success: false, error: 'Error obteniendo datos históricos' };
+          }
 
-    // Agrupar por organización (sede)
-    const sedeMap = new Map<string, {
-      sedeId: string;
-      sedeName: string;
-      totalUsdBruto: number;
-      totalUsdModelo: number;
-      totalCopModelo: number;
-      totalModels: Set<string>;
-      periods: Set<string>;
-    }>();
+          // Agrupar por organización (sede)
+          const sedeMap = new Map<string, {
+            sedeId: string;
+            sedeName: string;
+            totalUsdBruto: number;
+            totalUsdModelo: number;
+            totalCopModelo: number;
+            totalModels: Set<string>;
+            periods: Set<string>;
+          }>();
 
-    // Obtener nombres de organizaciones
-    const orgIds = Array.from(new Set(historyData?.map((item: any) => item.users?.organization_id).filter(Boolean) || []));
-    const { data: organizations } = await supabase
-      .from('organizations')
-      .select('id, name')
-      .in('id', orgIds.length > 0 ? orgIds : ['00000000-0000-0000-0000-000000000000']);
+          // Obtener nombres de organizaciones
+          const orgIds = Array.from(new Set(historyData?.map((item: any) => item.users?.organization_id).filter(Boolean) || []));
+          const { data: organizations } = await supabase
+            .from('organizations')
+            .select('id, name')
+            .in('id', orgIds.length > 0 ? orgIds : ['00000000-0000-0000-0000-000000000000']);
 
-    const orgMap = new Map<string, string>();
-    organizations?.forEach((org: any) => {
-      orgMap.set(org.id, org.name);
-    });
+          const orgMap = new Map<string, string>();
+          organizations?.forEach((org: any) => {
+            orgMap.set(org.id, org.name);
+          });
 
-    historyData?.forEach((item: any) => {
-      const orgId = item.users?.organization_id || 'unknown';
-      const orgName = orgMap.get(orgId) || 'Sede Desconocida';
-      const periodKey = `${item.period_date}-${item.period_type}`;
+          historyData?.forEach((item: any) => {
+            const orgId = item.users?.organization_id || 'unknown';
+            const orgName = orgMap.get(orgId) || 'Sede Desconocida';
+            const periodKey = `${item.period_date}-${item.period_type}`;
 
-      if (!sedeMap.has(orgId)) {
-        sedeMap.set(orgId, {
-          sedeId: orgId,
-          sedeName: orgName,
-          totalUsdBruto: 0,
-          totalUsdModelo: 0,
-          totalCopModelo: 0,
-          totalModels: new Set(),
-          periods: new Set()
-        });
-      }
+            if (!sedeMap.has(orgId)) {
+              sedeMap.set(orgId, {
+                sedeId: orgId,
+                sedeName: orgName,
+                totalUsdBruto: 0,
+                totalUsdModelo: 0,
+                totalCopModelo: 0,
+                totalModels: new Set(),
+                periods: new Set()
+              });
+            }
 
-      const sede = sedeMap.get(orgId)!;
-      sede.totalUsdBruto += Number(item.value_usd_bruto || 0);
-      sede.totalUsdModelo += Number(item.value_usd_modelo || 0);
-      sede.totalCopModelo += Number(item.value_cop_modelo || 0);
-      sede.totalModels.add(item.model_id);
-      sede.periods.add(periodKey);
-    });
+            const sede = sedeMap.get(orgId)!;
+            sede.totalUsdBruto += Number(item.value_usd_bruto || 0);
+            sede.totalUsdModelo += Number(item.value_usd_modelo || 0);
+            sede.totalCopModelo += Number(item.value_cop_modelo || 0);
+            sede.totalModels.add(item.model_id);
+            sede.periods.add(periodKey);
+          });
 
-    // Convertir a array y ordenar por USD Bruto
-    const results = Array.from(sedeMap.values()).map(sede => ({
-      sedeId: sede.sedeId,
-      sedeName: sede.sedeName,
-      totalUsdBruto: sede.totalUsdBruto,
-      totalUsdModelo: sede.totalUsdModelo,
-      totalCopModelo: sede.totalCopModelo,
-      totalUsdSede: sede.totalUsdBruto - sede.totalUsdModelo,
-      totalModels: sede.totalModels.size,
-      totalPeriods: sede.periods.size,
-      averageUsdBrutoPerPeriod: sede.totalUsdBruto / (sede.periods.size || 1)
-    })).sort((a, b) => b.totalUsdBruto - a.totalUsdBruto);
+          // Convertir a array y ordenar por USD Bruto
+          const results = Array.from(sedeMap.values()).map(sede => ({
+            sedeId: sede.sedeId,
+            sedeName: sede.sedeName,
+            totalUsdBruto: sede.totalUsdBruto,
+            totalUsdModelo: sede.totalUsdModelo,
+            totalCopModelo: sede.totalCopModelo,
+            totalUsdSede: sede.totalUsdBruto - sede.totalUsdModelo,
+            totalModels: sede.totalModels.size,
+            totalPeriods: sede.periods.size,
+            averageUsdBrutoPerPeriod: sede.totalUsdBruto / (sede.periods.size || 1)
+          })).sort((a, b) => b.totalUsdBruto - a.totalUsdBruto);
 
-    return {
-      success: true,
-      data: results,
-      message: `Análisis de productividad por sede para los últimos ${months} meses`
-    };
+          return {
+            success: true,
+            data: results,
+            message: `Análisis de productividad por sede para los últimos ${months} meses`
+          };
+        } catch (error: any) {
+          return { success: false, error: error.message };
+        }
+      },
+      600000 // Cache por 10 minutos para datos históricos
+    );
   } catch (error: any) {
     return { success: false, error: error.message };
   }

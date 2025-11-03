@@ -8,6 +8,8 @@ import {
   getBotPersonalityForRole,
   type UserContext 
 } from './aim-botty';
+import { executeWithRateLimit } from './rate-limiter';
+import { extractAndSaveMemory, getMemoryContext } from './bot-memory';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -56,11 +58,17 @@ export async function processBotResponse(
     // Obtener contexto del usuario
     const userContext = await getUserContext(userId, supabase);
 
-    // Generar respuesta con IA
-    const botResponse = await generateBotResponse(
-      messageContent,
-      userContext,
-      conversationHistory
+    // Extraer y guardar información relevante del mensaje
+    await extractAndSaveMemory(userId, conversationId, messageContent, userContext);
+
+    // Generar respuesta con IA (con rate limiting)
+    const botResponse = await executeWithRateLimit(
+      () => generateBotResponse(
+        messageContent,
+        userContext,
+        conversationHistory,
+        conversationId
+      )
     );
 
     // Crear mensaje del bot
@@ -142,7 +150,8 @@ async function getUserContext(userId: string, supabase: any): Promise<UserContex
 async function generateBotResponse(
   userMessage: string,
   userContext: UserContext,
-  conversationHistory: any[]
+  conversationHistory: any[],
+  conversationId?: string
 ): Promise<string> {
   try {
     console.log('🤖 [BOTTY-GEN] Iniciando generación de respuesta...');
@@ -169,6 +178,9 @@ async function generateBotResponse(
     const isFirstBotMessage = conversationHistory.length === 0 || 
       !conversationHistory.some((msg: any) => msg.sender_id === AIM_BOTTY_ID);
 
+    // Obtener contexto de memoria del usuario
+    const memoryContext = await getMemoryContext(userContext.userId);
+    
     console.log('🤖 [BOTTY-GEN] Construyendo contexto...');
     let contextInfo = '';
     if (userContext.role === 'modelo') {
@@ -208,7 +220,9 @@ ${personality}
 
 ${contextInfo}
 
-${historyText ? `\nHISTORIAL DE CONVERSACIÓN:\n${historyText}\n` : ''}
+${memoryContext ? `\n${memoryContext}\n` : ''}
+
+${historyText ? `\nHISTORIAL DE CONVERSACIÓN (últimos 10 mensajes):\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
 
@@ -232,51 +246,42 @@ RESPUESTA:
     console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
     console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
     
-    // Lista de modelos para probar (más recientes primero)
-    const modelNames = [
-      'gemini-2.0-flash-exp',
-      'gemini-1.5-flash-latest',
-      'gemini-1.5-pro-latest',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-pro'
-    ];
+    // Usar solo gemini-pro (más estable, evita consumir cuota con múltiples intentos)
+    // Si necesitas cambiar el modelo, configúralo aquí:
+    const modelName = 'gemini-pro';
     
-    let lastError: any = null;
-    
-    // Intentar con cada modelo hasta que uno funcione
-    for (const modelName of modelNames) {
-      try {
-        console.log(`🤖 [BOTTY-GEN] Intentando generar con ${modelName}...`);
-        const currentModel = genAI.getGenerativeModel({ model: modelName });
-        const result = await currentModel.generateContent(prompt);
-        const response = await result.response;
-        let text = response.text().trim();
-        
-        console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
-        text = text.replace(/```[\s\S]*?```/g, '').trim();
-        
-        console.log(`✅ [BOTTY-GEN] Respuesta generada exitosamente con ${modelName}, longitud:`, text.length);
-        return text;
-      } catch (modelError: any) {
-        console.log(`⚠️ [BOTTY-GEN] ${modelName} falló:`, modelError?.message?.substring(0, 100));
-        lastError = modelError;
-        
-        // Si es error 404, intentar siguiente modelo
-        if (modelError?.message?.includes('404') || modelError?.message?.includes('not found')) {
-          continue; // Intentar siguiente modelo
-        }
-        
-        // Si es otro tipo de error (no 404), puede ser problema de API key o configuración
-        // Solo lanzar si no es un problema de modelo no encontrado
-        if (!modelError?.message?.includes('model') && !modelError?.message?.includes('404')) {
-          throw modelError;
+    try {
+      console.log(`🤖 [BOTTY-GEN] Generando con ${modelName}...`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text().trim();
+      
+      console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
+      text = text.replace(/```[\s\S]*?```/g, '').trim();
+      
+      console.log(`✅ [BOTTY-GEN] Respuesta generada exitosamente, longitud:`, text.length);
+      return text;
+    } catch (modelError: any) {
+      console.error(`❌ [BOTTY-GEN] Error con ${modelName}:`, modelError?.message);
+      
+      // Si es error 404, intentar con gemini-1.5-flash como fallback (solo una vez)
+      if (modelError?.message?.includes('404') || modelError?.message?.includes('not found')) {
+        try {
+          console.log('🔄 [BOTTY-GEN] Intentando fallback con gemini-1.5-flash...');
+          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+          const result = await fallbackModel.generateContent(prompt);
+          const response = await result.response;
+          let text = response.text().trim();
+          text = text.replace(/```[\s\S]*?```/g, '').trim();
+          return text;
+        } catch (fallbackError) {
+          throw modelError; // Lanzar error original
         }
       }
+      
+      throw modelError;
     }
-    
-    // Si llegamos aquí, todos los modelos fallaron
-    throw lastError || new Error('Todos los modelos fallaron');
 
   } catch (error: any) {
     console.error('❌ [BOTTY-GEN] Error generando respuesta del bot:', error);
