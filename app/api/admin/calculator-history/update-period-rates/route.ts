@@ -488,7 +488,7 @@ export async function POST(request: NextRequest) {
             updated_at: update.updated_at
           })
           .eq('id', update.id)
-          .select('id', { count: 'exact', head: true });
+          .select('id', { count: 'exact', head: true } as any);
 
         if (updateError) {
           console.error(`❌ [PERIOD-RATES-UPDATE] Error actualizando registro ${update.id}:`, {
