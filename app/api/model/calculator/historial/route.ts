@@ -253,7 +253,11 @@ export async function GET(request: NextRequest) {
       // IMPORTANTE: SIEMPRE usar el porcentaje actual del modelo/grupo desde calculator_config
       // NO usar el porcentaje guardado en calculator_history porque puede estar desactualizado
       // El porcentaje correcto siempre viene de calculator_config (percentage_override o group_percentage)
-      const modelPercentage = defaultModelPercentage;
+      // Regla especial: SUPERFOON paga directo 100% a la modelo
+      const isSuperfoon = String(item.platform_id || '')
+        .toLowerCase()
+        .replace(/[^a-z0-9]/g, '') === 'superfoon';
+      const modelPercentage = isSuperfoon ? 100 : defaultModelPercentage;
       
       // Calcular valores usando el porcentaje correcto del modelo
       let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
@@ -285,6 +289,7 @@ export async function GET(request: NextRequest) {
         value_usd_bruto: finalUsdBruto,
         value_usd_modelo: finalUsdModelo,
         value_cop_modelo: finalCopModelo,
+        // Guardar el porcentaje aplicado (100% para superfoon)
         platform_percentage: modelPercentage,
         // Tasas aplicadas (guardadas en el historial o calculadas)
         rates: {
