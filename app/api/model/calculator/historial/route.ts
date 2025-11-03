@@ -199,11 +199,21 @@ export async function GET(request: NextRequest) {
 
       const period = periodsMap.get(periodKey)! as any; // Type assertion needed for new fields
       
-      // Obtener tasas del período (usar las guardadas o valores por defecto)
+      // IMPORTANTE: Actualizar las tasas del período si el item actual tiene tasas no-null
+      // Esto asegura que si algún registro del período fue actualizado, las tasas del período se actualicen
+      if (item.rate_eur_usd != null || item.rate_gbp_usd != null || item.rate_usd_cop != null) {
+        period.rates = {
+          eur_usd: item.rate_eur_usd ?? period.rates?.eur_usd ?? null,
+          gbp_usd: item.rate_gbp_usd ?? period.rates?.gbp_usd ?? null,
+          usd_cop: item.rate_usd_cop ?? period.rates?.usd_cop ?? null
+        };
+      }
+      
+      // Obtener tasas del período (priorizar las del item actual, luego las del período, luego valores por defecto)
       const rates = {
-        eur_usd: item.rate_eur_usd || period.rates?.eur_usd || 1.01,
-        gbp_usd: item.rate_gbp_usd || period.rates?.gbp_usd || 1.20,
-        usd_cop: item.rate_usd_cop || period.rates?.usd_cop || 3900
+        eur_usd: item.rate_eur_usd ?? period.rates?.eur_usd ?? 1.01,
+        gbp_usd: item.rate_gbp_usd ?? period.rates?.gbp_usd ?? 1.20,
+        usd_cop: item.rate_usd_cop ?? period.rates?.usd_cop ?? 3900
       };
       
       // Función para calcular USD bruto (misma lógica que en period-closure-helpers)
