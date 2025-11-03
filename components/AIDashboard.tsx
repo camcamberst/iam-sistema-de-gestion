@@ -49,7 +49,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
   const [expanded, setExpanded] = useState(false);
   const [activeTab, setActiveTab] = useState<'insights' | 'tips' | 'analysis'>('insights');
 
-  const loadAIData = async () => {
+  const loadAIData = async (forceRefresh: boolean = false) => {
     try {
       setLoading(true);
       setError('');
@@ -57,7 +57,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
       const response = await fetch('/api/ai-dashboard', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, userRole })
+        body: JSON.stringify({ userId, userRole, forceRefresh })
       });
 
       const result = await response.json();
@@ -83,13 +83,14 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
   const getPriorityColor = (priority: string) => {
     switch (priority) {
       case 'high':
-        return 'border-l-red-400 bg-red-50/50';
+        // Menos estridente, tono violeta motivador
+        return 'border-l-purple-400 bg-purple-50/50 dark:bg-purple-900/15';
       case 'medium':
-        return 'border-l-amber-400 bg-amber-50/50';
+        return 'border-l-blue-400 bg-blue-50/50 dark:bg-blue-900/15';
       case 'low':
-        return 'border-l-emerald-400 bg-emerald-50/50';
+        return 'border-l-emerald-400 bg-emerald-50/50 dark:bg-emerald-900/15';
       default:
-        return 'border-l-blue-400 bg-blue-50/50';
+        return 'border-l-slate-300 bg-slate-50/50 dark:bg-slate-800/30';
     }
   };
 
@@ -133,7 +134,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                loadAIData();
+                loadAIData(true);
               }}
               className="p-1.5 text-gray-500 hover:text-gray-700 hover:bg-gray-100 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:bg-gray-600 rounded-md transition-all duration-200"
               title="Actualizar datos"
@@ -170,6 +171,22 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
             </div>
           ) : data ? (
             <div className="space-y-3">
+              {/* Prompt chips amigables */}
+              <div className="flex flex-wrap gap-1.5">
+                {[
+                  { label: 'Plan de 3 pasos', action: () => setActiveTab('tips') },
+                  { label: 'En qué enfocarme hoy', action: () => setActiveTab('insights') },
+                  { label: 'Ver progreso', action: () => setActiveTab('analysis') }
+                ].map((chip, i) => (
+                  <button
+                    key={i}
+                    onClick={chip.action}
+                    className="px-2.5 py-1 text-[11px] font-medium rounded-full bg-gradient-to-r from-slate-100 to-white dark:from-gray-700 dark:to-gray-600 text-gray-700 dark:text-gray-100 border border-gray-200/60 dark:border-gray-600/40 hover:shadow-sm transition-all"
+                  >
+                    {chip.label}
+                  </button>
+                ))}
+              </div>
               {/* Tabs */}
               <div className="flex space-x-0.5 bg-gray-100 dark:bg-gray-600 rounded-md p-0.5">
                 {[
@@ -198,7 +215,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
                   {data.insights.map((insight, index) => (
                     <div
                       key={index}
-                      className={`p-3 rounded-md border-l-3 ${getPriorityColor(insight.priority)} transition-all duration-200 hover:shadow-sm`}
+                      className={`p-3 rounded-md border-l-3 ${getPriorityColor(insight.priority)} transition-all duration-200 hover:shadow-sm hover:-translate-y-0.5`}
                     >
                       <div className="flex items-start space-x-2">
                         {getTypeIcon(insight.type)}
@@ -207,8 +224,8 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
                           <p className="text-xs text-gray-700 dark:text-gray-300 leading-relaxed">{insight.content}</p>
                           {insight.actionable && (
                             <div className="mt-1.5">
-                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-purple-100 dark:bg-purple-900/30 text-purple-800 dark:text-purple-300">
-                                Accionable
+                              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-gradient-to-r from-purple-100 to-blue-100 dark:from-purple-900/30 dark:to-blue-900/30 text-purple-800 dark:text-purple-300 border border-purple-200/50 dark:border-purple-700/40">
+                                Ver cómo aplicarlo
                               </span>
                             </div>
                           )}
@@ -221,7 +238,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
 
               {activeTab === 'tips' && (
                 <div className="space-y-3">
-                  <div className="p-3 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-md border border-yellow-200 dark:border-yellow-700/50">
+                  <div className="p-3 bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-900/20 dark:to-yellow-900/20 rounded-md border border-amber-200 dark:border-amber-700/50">
                     <div className="flex items-start space-x-2">
                       <Lightbulb className="w-4 h-4 text-yellow-600 dark:text-yellow-400 mt-0.5" />
                       <div>
@@ -252,7 +269,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
                 <div className="space-y-3">
                   <div className="grid grid-cols-2 gap-2">
                     <div className="p-3 bg-blue-50 dark:bg-blue-900/20 rounded-md text-center">
-                      <div className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                      <div className="text-lg font-bold text-blue-600 dark:text-blue-300">
                         ${data.performanceSummary.todayEarnings.toFixed(2)}
                       </div>
                       <div className="text-xs text-gray-600 dark:text-gray-300">Ganancias Hoy</div>
@@ -265,7 +282,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
                     </div>
                   </div>
 
-                  <div className="p-3 bg-purple-50 dark:bg-purple-900/20 rounded-md">
+                    <div className="p-3 bg-purple-50/80 dark:bg-purple-900/20 rounded-md">
                     <h4 className="font-medium text-gray-900 dark:text-white mb-2 flex items-center space-x-1.5 text-sm">
                       <TrendingUp className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
                       <span>Resumen de Rendimiento</span>
