@@ -63,6 +63,7 @@ export async function GET(request: NextRequest) {
 
     const userRole = userData?.role || 'modelo';
     const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+    const isSuperAdmin = userRole === 'super_admin';
 
     if (!isAdmin) {
       return NextResponse.json({
@@ -70,17 +71,6 @@ export async function GET(request: NextRequest) {
         error: 'No autorizado: Solo admins pueden consultar información de períodos'
       }, { status: 403 });
     }
-
-    // Verificar rol del usuario
-    const { data: userData } = await supabase
-      .from('users')
-      .select('role')
-      .eq('id', authenticatedUserId)
-      .single();
-
-    const userRole = userData?.role || 'modelo';
-    const isAdmin = userRole === 'admin' || userRole === 'super_admin';
-    const isSuperAdmin = userRole === 'super_admin';
 
     if (!isAdmin) {
       return NextResponse.json({
