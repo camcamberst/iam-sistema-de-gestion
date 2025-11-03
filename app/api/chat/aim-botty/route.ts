@@ -556,13 +556,14 @@ RESPUESTA:
     console.log('🤖 [BOTTY-GEN] Generando respuesta con IA...');
     console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
 
-    // Lista de modelos para intentar (más recientes primero - 2025)
+    // Lista de modelos para intentar (más recientes primero - Gemini 2.5 2025)
     // Modelos actualizados a las versiones más recientes disponibles
     const modelNames = [
-      'gemini-1.5-flash-latest',      // Versión más reciente de Flash (2025)
-      'gemini-1.5-pro-latest',        // Versión más reciente de Pro (2025)
-      'gemini-1.5-flash',              // Versión estable de Flash
-      'gemini-1.5-pro',                // Versión estable de Pro
+      'gemini-2.5-flash',              // Gemini 2.5 Flash - Más rápido (2025)
+      'gemini-2.5-pro',                // Gemini 2.5 Pro - Más avanzado (2025)
+      'gemini-2.5-flash-lite',         // Gemini 2.5 Flash-Lite - Optimizado (2025)
+      'gemini-1.5-flash',              // Fallback: versión estable anterior
+      'gemini-1.5-pro',                // Fallback: versión estable anterior
       'gemini-pro'                     // Legacy fallback
     ];
     
