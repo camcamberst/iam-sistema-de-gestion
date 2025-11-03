@@ -19,4 +19,5 @@ app/admin/model/anticipos/solicitar/page.tsx
 app/admin/model/anticipos/solicitudes/page.tsx
 app/admin/model/calculator/historial/page.tsx
 app/admin/model/calculator/page.tsx
+app/admin/model/dashboard/page.tsx
 

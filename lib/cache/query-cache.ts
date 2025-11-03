@@ -54,7 +54,8 @@ class QueryCache {
    * Invalidar cache por patrón
    */
   invalidatePattern(pattern: RegExp): void {
-    for (const key of this.cache.keys()) {
+    const keys = Array.from(this.cache.keys());
+    for (const key of keys) {
       if (pattern.test(key)) {
         this.cache.delete(key);
       }
@@ -66,7 +67,8 @@ class QueryCache {
    */
   cleanup(): void {
     const now = Date.now();
-    for (const [key, entry] of this.cache.entries()) {
+    const entries = Array.from(this.cache.entries());
+    for (const [key, entry] of entries) {
       if (now > entry.expiresAt) {
         this.cache.delete(key);
       }
