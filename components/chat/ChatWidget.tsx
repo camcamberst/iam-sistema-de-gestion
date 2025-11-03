@@ -851,9 +851,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Función para reproducir sonido de notificación "N Dinámico"
   // Función para mostrar toast notification
   const showToast = (conversation: any, message: any) => {
-    // Solo mostrar toast si el chat está cerrado
-    if (isOpen) return;
+    // No mostrar toast si:
+    // 1. El chat está abierto Y
+    // 2. La conversación está activa (siendo vista)
+    if (isOpen && mainView === 'chat' && selectedConversation === conversation.id) {
+      return;
+    }
     
+    // No mostrar toast si el chat está completamente cerrado (ya está verificado arriba)
+    // pero mejor verificar explícitamente
     const toastId = `${conversation.id}-${message.id}-${Date.now()}`;
     const sender = conversation.other_participant;
     
@@ -964,6 +970,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Cuando el usuario está viendo una conversación, marcarla como leída
     // Usar función centralizada con debouncing para evitar múltiples llamadas
     markConversationAsRead(selectedConversation);
+    
+    // Cerrar toasts relacionados con esta conversación cuando se activa
+    setToasts(prev => prev.filter(toast => toast.conversationId !== selectedConversation));
   }, [isOpen, mainView, selectedConversation]);
 
   // Suscripción a tiempo real para mensajes nuevos
@@ -1243,19 +1252,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         getDisplayName={getDisplayName}
       />
       
-      {/* Renderizar toasts */}
-      {toasts.map((toast) => (
-        <ToastNotification
-          key={toast.id}
-          id={toast.id}
-          senderName={toast.senderName}
-          senderAvatar={toast.senderAvatar}
-          messagePreview={toast.messagePreview}
-          conversationId={toast.conversationId}
-          onOpenConversation={openConversationFromToast}
-          onClose={closeToast}
-        />
-      ))}
+      {/* Renderizar toasts - solo si la conversación NO está activa */}
+      {toasts
+        .filter(toast => !(isOpen && mainView === 'chat' && selectedConversation === toast.conversationId))
+        .map((toast) => (
+          <ToastNotification
+            key={toast.id}
+            id={toast.id}
+            senderName={toast.senderName}
+            senderAvatar={toast.senderAvatar}
+            messagePreview={toast.messagePreview}
+            conversationId={toast.conversationId}
+            onOpenConversation={openConversationFromToast}
+            onClose={closeToast}
+            duration={4000}  // 4 segundos, se desvanecen automáticamente
+          />
+        ))}
     </>
   );
 }

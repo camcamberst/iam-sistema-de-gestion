@@ -26,7 +26,7 @@ export default function ToastNotification({
   conversationId,
   onOpenConversation,
   onClose,
-  duration = 5000
+  duration = 4000  // Reducido a 4 segundos para que desaparezcan más rápido
 }: ToastNotificationProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
