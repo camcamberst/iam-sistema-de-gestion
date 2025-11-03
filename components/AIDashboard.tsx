@@ -163,7 +163,7 @@ export default function AIDashboard({ userId, userRole }: AIDashboardProps) {
               <div className="text-red-500 dark:text-red-400 mb-2 text-sm">Error al cargar datos</div>
               <p className="text-xs text-gray-600 dark:text-gray-300 mb-3">{error}</p>
               <button
-                onClick={loadAIData}
+                onClick={() => loadAIData(true)}
                 className="px-3 py-1.5 bg-purple-600 text-white rounded-md hover:bg-purple-700 transition-colors duration-200 text-sm"
               >
                 Reintentar
