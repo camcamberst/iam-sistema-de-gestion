@@ -265,11 +265,14 @@ RESPUESTA:
     console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
     console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
 
-    // Lista de modelos para intentar (más recientes primero)
+    // Lista de modelos para intentar (más recientes primero - 2025)
+    // Modelos actualizados a las versiones más recientes disponibles
     const modelNames = [
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-pro'
+      'gemini-1.5-flash-latest',      // Versión más reciente de Flash (2025)
+      'gemini-1.5-pro-latest',        // Versión más reciente de Pro (2025)
+      'gemini-1.5-flash',              // Versión estable de Flash
+      'gemini-1.5-pro',                // Versión estable de Pro
+      'gemini-pro'                     // Legacy fallback
     ];
     
     let lastError: any = null;
