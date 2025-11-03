@@ -794,16 +794,21 @@ export default function AdminViewModelPage() {
                       <div className="mb-6">
                         {(() => {
                           const pct = Math.max(0, Math.min(100, calculatedTotals.porcentajeAlcanzado || 0));
-                          const RED = { r: 229, g: 57, b: 53 };
-                          const PURPLE = { r: 142, g: 36, b: 170 };
-                          const EMERALD = { r: 46, g: 125, b: 50 };
+                          // Paleta de marca (más viva y consistente)
+                          const ROSE = { r: 244, g: 63, b: 94 };      // #f43f5e
+                          const VIOLET = { r: 139, g: 92, b: 246 };   // #8b5cf6
+                          const EMERALD = { r: 16, g: 185, b: 129 };  // #10b981
                           const mix = (a: any, b: any, t: number) => ({ r: Math.round(a.r + (b.r - a.r) * t), g: Math.round(a.g + (b.g - a.g) * t), b: Math.round(a.b + (b.b - a.b) * t) });
                           const rgbToHex = (c: any) => `#${[c.r,c.g,c.b].map((x)=>x.toString(16).padStart(2,'0')).join('')}`;
                           const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
                           const t = pct / 100;
-                          const base = t <= 0.6 ? mix(RED, PURPLE, t / 0.6) : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
-                          const progressStart = rgbToHex(shade(base, 0.05));
-                          const progressEnd = rgbToHex(shade(base, 0.15));
+                          // 0–50% rosa→violeta, 50–100% violeta→esmeralda
+                          const base = t <= 0.5
+                            ? mix(ROSE, VIOLET, t / 0.5)
+                            : mix(VIOLET, EMERALD, (t - 0.5) / 0.5);
+                          // Un poco más de contraste para mejorar legibilidad
+                          const progressStart = rgbToHex(shade(base, 0.10));
+                          const progressEnd = rgbToHex(shade(base, 0.22));
                           return (
                             <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
                               <div className="flex items-center justify-between mb-3">
