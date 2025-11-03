@@ -7,6 +7,16 @@ import {
   type UserContext 
 } from '@/lib/chat/aim-botty';
 import { executeAnalyticsQuery, type AnalyticsQuery } from '@/lib/chat/bot-analytics';
+import { 
+  hasPermission, 
+  requirePermission,
+  getAllowedPlatforms,
+  canRecommendPlatform,
+  filterRecommendationsByRole,
+  validatePlatformAccess,
+  validateUserDataAccess,
+  getPermissionDeniedMessage
+} from '@/lib/chat/bot-permissions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -107,6 +117,15 @@ export async function POST(request: NextRequest) {
     if (analyticsQuery) {
       console.log('📊 [BOTTY-API] Consulta analítica detectada:', analyticsQuery);
       try {
+        // Validar permisos antes de ejecutar
+        const requiredCapability = getRequiredCapabilityForQuery(analyticsQuery.type);
+        if (requiredCapability && !hasPermission(userContext.role, requiredCapability)) {
+          const deniedMessage = getPermissionDeniedMessage(requiredCapability, userContext.role);
+          return NextResponse.json({ 
+            error: deniedMessage 
+          }, { status: 403 });
+        }
+        
         const analyticsResult = await executeAnalyticsQuery(
           analyticsQuery,
           user.id,
@@ -116,8 +135,14 @@ export async function POST(request: NextRequest) {
           analyticsData = analyticsResult.data;
           console.log('✅ [BOTTY-API] Consulta analítica ejecutada exitosamente');
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('❌ [BOTTY-API] Error ejecutando consulta analítica:', error);
+        // Si es error de permisos, retornar mensaje amigable
+        if (error.message?.includes('permisos') || error.message?.includes('permisos')) {
+          return NextResponse.json({ 
+            error: error.message || 'No tienes permisos para esta consulta'
+          }, { status: 403 });
+        }
       }
     }
 
@@ -305,6 +330,24 @@ function detectAnalyticsQuery(
   return null;
 }
 
+// Obtener capacidad requerida para un tipo de consulta analítica
+function getRequiredCapabilityForQuery(
+  queryType: AnalyticsQuery['type']
+): BotCapability | null {
+  const mapping: Record<AnalyticsQuery['type'], BotCapability> = {
+    'productivity_by_sede': 'analytics_sede_stats',
+    'productivity_by_group': 'analytics_group_stats',
+    'top_models': 'analytics_rankings',
+    'productivity_trend': 'analytics_trends',
+    'period_comparison': 'analytics_comparison',
+    'group_ranking': 'analytics_rankings',
+    'sede_ranking': 'analytics_sede_stats',
+    'model_statistics': 'analytics_own_stats'
+  };
+  
+  return mapping[queryType] || null;
+}
+
 // Extraer número de meses del mensaje
 function extractMonths(message: string): number | undefined {
   // Buscar patrones como "último semestre", "6 meses", "últimos 3 meses", etc.
@@ -361,23 +404,35 @@ IMPORTANTE: Usa estos datos analíticos para responder la pregunta del usuario. 
     }
 
     if (userContext.role === 'modelo') {
+      const allowedPlatforms = getAllowedPlatforms(userContext);
       contextInfo = `
 INFORMACIÓN DEL MODELO:
 - Nombre: ${userContext.name}
 - Plataformas activas: ${userContext.portfolio?.length || 0}
 - Último anticipo: ${userContext.recentActivity?.lastAnticipo ? new Date(userContext.recentActivity.lastAnticipo).toLocaleDateString() : 'N/A'}
 
-PLATAFORMAS EN PORTAFOLIO:
+PLATAFORMAS EN PORTAFOLIO (SOLO ESTAS):
 ${userContext.portfolio?.map((p: any) => `- ${p.platform_name || p.platform_id}`).join('\n') || 'Ninguna configurada'}
 
+⚠️ LÍMITES Y RESTRICCIONES IMPORTANTES:
+- SOLO puedes consultar tus PROPIOS datos y estadísticas
+- SOLO puedes recibir información y tips sobre TUS plataformas del portafolio
+- NO puedes acceder a datos de otros modelos
+- NO puedes modificar configuraciones (porcentajes, objetivos, etc.)
+- NO puedes recibir recomendaciones de plataformas que NO están en tu portafolio
+- Para cambios de configuración, debes contactar a tu administrador
+
 CAPACIDADES DISPONIBLES:
-- Información sobre plataformas del portafolio
-- Tips de transmisión (make up, ángulos, iluminación)
+- Información sobre TUS plataformas del portafolio únicamente
+- Tips de transmisión (make up, ángulos, iluminación) para TUS plataformas
 - Consejería emocional y apoyo
-- Tips para potenciar transmisiones
-- Soporte técnico con búsqueda web
-- Consultas sobre mis propias estadísticas y productividad
+- Tips para potenciar transmisiones en TUS plataformas
+- Consultas sobre MIS propias estadísticas y productividad
+- Solicitud de anticipos
 - Escalamiento a admin cuando sea necesario
+
+PLATAFORMAS PERMITIDAS PARA RECOMENDACIONES:
+${allowedPlatforms.length > 0 ? allowedPlatforms.map(p => `- ${p}`).join('\n') : 'Ninguna - Solo puedes recibir tips sobre tus plataformas configuradas'}
 `;
     } else if (userContext.role === 'admin') {
       contextInfo = `
@@ -421,10 +476,25 @@ ${historyText ? `\nHISTORIAL DE CONVERSACIÓN:\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
 
-INSTRUCCIONES:
+INSTRUCCIONES CRÍTICAS DE SEGURIDAD Y LÍMITES:
+${userContext.role === 'modelo' ? `
+⚠️ RESTRICCIONES ABSOLUTAS PARA MODELOS:
+1. SI el usuario pregunta sobre plataformas que NO están en su portafolio, debes decirle claramente: 
+   "Lo siento, solo puedo ayudarte con información sobre tus plataformas configuradas: [lista plataformas]. Si tienes preguntas sobre otras plataformas, contacta a tu administrador."
+
+2. SI el usuario intenta consultar datos de otros usuarios, di: 
+   "Solo puedo ayudarte con tus propios datos. No tengo acceso a información de otros usuarios."
+
+3. SI el usuario intenta modificar configuraciones (porcentajes, objetivos, etc.), di: 
+   "No puedo modificar configuraciones. Solo los administradores pueden hacer cambios. Si necesitas modificar algo, contacta a tu administrador."
+
+4. SI el usuario pregunta sobre plataformas, SOLO proporciona información de SUS plataformas del portafolio.
+` : ''}
+
+INSTRUCCIONES GENERALES:
 1. Responde de manera natural y conversacional
 2. ${analyticsData ? 'USA los datos analíticos proporcionados para responder con información precisa y específica. Presenta los datos de forma estructurada y legible.' : ''}
-3. Si el usuario pregunta sobre plataformas, proporciona tips específicos
+3. ${userContext.role === 'modelo' ? 'Si el usuario pregunta sobre plataformas, VERIFICA primero que estén en su portafolio. SOLO proporciona tips de SUS plataformas.' : 'Si el usuario pregunta sobre plataformas, proporciona tips específicos'}
 4. Si necesita soporte técnico, ofrece soluciones prácticas primero
 5. Si no puedes resolver algo técnico, menciona que puedes escalarlo al admin
 6. Si pregunta sobre consejería emocional, sé empático y comprensivo
@@ -433,6 +503,7 @@ INSTRUCCIONES:
 9. Usa emojis apropiados pero con moderación
 10. Si es una consulta que requiere escalamiento, indica claramente "Puedo escalar esto a tu administrador"
 ${analyticsData ? '11. Formatea números grandes de manera legible (ej: $1,234.56 USD, $2.5M USD)' : ''}
+${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma mencionada esté en el portafolio del usuario antes de dar información sobre ella.' : ''}
 
 RESPUESTA:
 `;
