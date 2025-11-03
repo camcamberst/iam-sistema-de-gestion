@@ -234,6 +234,14 @@ export default function CalculatorHistorialPage() {
     }).format(value);
   };
 
+  // Formatear solo el número sin símbolo de divisa
+  const formatNumberOnly = (value: number) => {
+    return new Intl.NumberFormat('es-CO', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2
+    }).format(value);
+  };
+
   // Filtrar períodos según año, mes y período seleccionados
   const filteredPeriods = useMemo(() => {
     // No mostrar nada hasta que se seleccione un período completo (año, mes y período)
@@ -669,21 +677,23 @@ export default function CalculatorHistorialPage() {
                                 )}
                               </td>
                               <td className="py-2 px-3">
-                                <div className="flex items-center space-x-2">
-                                  {isEditing ? (
-                                    <input
-                                      type="number"
-                                      step="0.01"
-                                      value={editValue}
-                                      onChange={(e) => setEditValue(e.target.value)}
-                                      className="w-20 h-7 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50"
-                                    />
-                                  ) : (
-                                    <span className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                                      {formatCurrency(platform.value, platform.platform_currency)}
-                                    </span>
-                                  )}
-                                  <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded border border-gray-200 dark:border-gray-600">
+                                <div className="flex items-center justify-between gap-2">
+                                  <div className="flex-1">
+                                    {isEditing ? (
+                                      <input
+                                        type="number"
+                                        step="0.01"
+                                        value={editValue}
+                                        onChange={(e) => setEditValue(e.target.value)}
+                                        className="w-full max-w-24 h-7 px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50"
+                                      />
+                                    ) : (
+                                      <span className="text-sm text-gray-900 dark:text-gray-100 font-medium">
+                                        {formatNumberOnly(platform.value)}
+                                      </span>
+                                    )}
+                                  </div>
+                                  <span className="text-gray-700 dark:text-gray-200 text-xs font-semibold bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-600 dark:to-gray-700 px-3 py-1 rounded-lg border border-gray-300 dark:border-gray-500 shadow-sm min-w-[50px] text-center">
                                     {platform.platform_currency}
                                   </span>
                                 </div>
