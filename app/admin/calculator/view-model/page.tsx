@@ -835,7 +835,13 @@ export default function AdminViewModelPage() {
                               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/50 dark:border-gray-600/30">
                                 <div>
                                   <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Alcanzado</div>
-                                  <div className="text-sm font-semibold" style={{ color: rgbToHex(shade(base, 0.5)) }}>
+                                  <div
+                                    className="inline-block px-2.5 py-1 rounded-md text-xs sm:text-sm font-bold text-white shadow-sm"
+                                    style={{
+                                      background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.15))}, ${rgbToHex(shade(base, 0.30))})`,
+                                      border: `1px solid ${rgbToHex(shade(base, 0.45))}`
+                                    }}
+                                  >
                                     ${Math.max(0, calculatedTotals.usdModelo).toFixed(2)} USD
                                   </div>
                                 </div>
