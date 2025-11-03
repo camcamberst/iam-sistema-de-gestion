@@ -910,10 +910,13 @@ export default function DashboardSedesPage() {
                         <h3 className="font-semibold text-blue-900 dark:text-blue-300">Resumen del período</h3>
                       </div>
                       <p className="text-sm text-blue-800 dark:text-blue-400">
-                        Esta acción afectará <strong className="font-semibold">{periodInfo.records_count}</strong> registros históricos de <strong className="font-semibold">todas las modelos</strong> del período seleccionado.
+                        Esta acción <strong className="font-semibold">reemplazará</strong> las tasas históricas guardadas y <strong className="font-semibold">recalculará</strong> todos los valores derivados en <strong className="font-semibold">{periodInfo.records_count}</strong> registros históricos del período seleccionado.
                       </p>
                       <p className="text-xs text-blue-700 dark:text-blue-500 mt-2">
-                        ⚠️ Todos los valores derivados (USD bruto, USD modelo, COP modelo) serán recalculados automáticamente con las nuevas tasas.
+                        ⚠️ <strong>Importante:</strong> Las tasas guardadas en "Mi Historial" de todas las modelos para este período serán reemplazadas por las nuevas tasas. Todos los valores (USD bruto, USD modelo, COP modelo) serán recalculados automáticamente.
+                      </p>
+                      <p className="text-xs text-green-700 dark:text-green-500 mt-2">
+                        ✅ Solo afecta períodos <strong>cerrados</strong> (archivados). No afecta las RATES actuales ni los cálculos del período en curso.
                       </p>
                     </div>
 
@@ -1037,7 +1040,10 @@ export default function DashboardSedesPage() {
                 <button
                   onClick={async () => {
                     // Confirmación antes de guardar
-                    const confirmMessage = `¿Estás seguro de actualizar las tasas para ${periodInfo?.records_count || 0} registros del período ${selectedMonth && selectedYear && selectedPeriod ? `${getMonthName(selectedMonth)} ${selectedYear} - ${selectedPeriod}` : ''}?\n\nEsta acción afectará a TODAS las modelos del período y recalculará todos los valores derivados.`;
+                    const scopeText = userRole === 'super_admin' 
+                      ? 'todas las modelos globalmente' 
+                      : 'las modelos de tus grupos';
+                    const confirmMessage = `¿Estás seguro de actualizar las tasas históricas para ${periodInfo?.records_count || 0} registros del período ${selectedMonth && selectedYear && selectedPeriod ? `${getMonthName(selectedMonth)} ${selectedYear} - ${selectedPeriod}` : ''}?\n\n⚠️ Esta acción:\n- Reemplazará las tasas guardadas en "Mi Historial" de ${scopeText}\n- Recalculará todos los valores derivados (USD bruto, USD modelo, COP modelo)\n- Solo afecta períodos CERRADOS (archivados), NO afecta el período en curso\n\n¿Continuar?`;
                     
                     if (window.confirm(confirmMessage)) {
                       await savePeriodRates();

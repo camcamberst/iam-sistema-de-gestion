@@ -71,12 +71,65 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Contar registros del período
-    const { count, error: countError } = await supabase
+    // Verificar rol del usuario
+    const { data: userData } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', authenticatedUserId)
+      .single();
+
+    const userRole = userData?.role || 'modelo';
+    const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+    const isSuperAdmin = userRole === 'super_admin';
+
+    if (!isAdmin) {
+      return NextResponse.json({
+        success: false,
+        error: 'No autorizado: Solo admins pueden consultar información de períodos'
+      }, { status: 403 });
+    }
+
+    // Obtener grupos del admin si no es super_admin
+    let allowedGroupIds: string[] = [];
+    if (!isSuperAdmin) {
+      const { data: adminGroups } = await supabase
+        .from('user_groups')
+        .select('group_id')
+        .eq('user_id', authenticatedUserId);
+      allowedGroupIds = (adminGroups || []).map((ag: any) => ag.group_id);
+    }
+
+    // Contar registros del período CERRADO (archivado)
+    let countQuery = supabase
       .from('calculator_history')
       .select('*', { count: 'exact', head: true })
       .eq('period_date', period_date)
-      .eq('period_type', period_type);
+      .eq('period_type', period_type)
+      .not('archived_at', 'is', null); // Solo períodos archivados
+
+    // Si es admin (no super_admin), filtrar por grupos
+    if (!isSuperAdmin && allowedGroupIds.length > 0) {
+      const { data: modelGroups } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', allowedGroupIds);
+      
+      const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
+      if (allowedModelIds.length > 0) {
+        countQuery = countQuery.in('model_id', allowedModelIds);
+      } else {
+        // No hay modelos en los grupos del admin
+        return NextResponse.json({
+          success: true,
+          period_date,
+          period_type,
+          records_count: 0,
+          current_rates: { eur_usd: null, gbp_usd: null, usd_cop: null }
+        });
+      }
+    }
+
+    const { count, error: countError } = await countQuery;
 
     if (countError) {
       console.error('❌ [PERIOD-RATES-UPDATE] Error contando registros:', countError);
@@ -86,14 +139,29 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Obtener una muestra de registros para obtener las tasas actuales
-    const { data: sampleRecords, error: sampleError } = await supabase
+    // Obtener una muestra de registros para obtener las tasas actuales (solo archivados)
+    let sampleQuery = supabase
       .from('calculator_history')
       .select('rate_eur_usd, rate_gbp_usd, rate_usd_cop')
       .eq('period_date', period_date)
       .eq('period_type', period_type)
-      .limit(1)
-      .single();
+      .not('archived_at', 'is', null)
+      .limit(1);
+
+    // Si es admin (no super_admin), filtrar por grupos
+    if (!isSuperAdmin && allowedGroupIds.length > 0) {
+      const { data: modelGroups } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', allowedGroupIds);
+      
+      const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
+      if (allowedModelIds.length > 0) {
+        sampleQuery = sampleQuery.in('model_id', allowedModelIds);
+      }
+    }
+
+    const { data: sampleRecords, error: sampleError } = await sampleQuery.single();
 
     if (sampleError && sampleError.code !== 'PGRST116') {
       console.error('❌ [PERIOD-RATES-UPDATE] Error obteniendo muestra:', sampleError);
@@ -173,6 +241,7 @@ export async function POST(request: NextRequest) {
 
     const userRole = userData?.role || 'modelo';
     const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+    const isSuperAdmin = userRole === 'super_admin';
 
     if (!isAdmin) {
       console.warn(`🚫 [PERIOD-RATES-UPDATE] Usuario ${authenticatedUserId} sin permisos de edición`);
@@ -180,6 +249,23 @@ export async function POST(request: NextRequest) {
         success: false,
         error: 'No autorizado: Solo admins pueden editar tasas globales'
       }, { status: 403 });
+    }
+
+    // Obtener grupos del admin si no es super_admin
+    let allowedGroupIds: string[] = [];
+    if (!isSuperAdmin) {
+      const { data: adminGroups } = await supabase
+        .from('user_groups')
+        .select('group_id')
+        .eq('user_id', authenticatedUserId);
+      allowedGroupIds = (adminGroups || []).map((ag: any) => ag.group_id);
+      
+      if (allowedGroupIds.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'No tienes grupos asignados. Contacta al administrador.'
+        }, { status: 403 });
+      }
     }
 
     // Preparar las nuevas tasas
@@ -204,12 +290,36 @@ export async function POST(request: NextRequest) {
       usd_cop: newRates.usd_cop as number
     };
 
-    // Obtener TODOS los registros del período (para TODAS las modelos)
-    const { data: periodRecords, error: fetchError } = await supabase
+    // 🔒 IMPORTANTE: Solo afectar períodos CERRADOS (archivados)
+    // Verificar que el período esté archivado (tiene archived_at)
+    let periodRecordsQuery = supabase
       .from('calculator_history')
-      .select('*')
+      .select('*, model_id, archived_at')
       .eq('period_date', period_date)
-      .eq('period_type', period_type);
+      .eq('period_type', period_type)
+      .not('archived_at', 'is', null); // Solo períodos archivados (cerrados)
+
+    // Si es admin (no super_admin), filtrar por grupos del admin
+    if (!isSuperAdmin && allowedGroupIds.length > 0) {
+      // Obtener IDs de modelos que pertenecen a los grupos del admin
+      const { data: modelGroups } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', allowedGroupIds);
+      
+      const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
+      
+      if (allowedModelIds.length === 0) {
+        return NextResponse.json({
+          success: false,
+          error: 'No hay modelos en tus grupos asignados'
+        }, { status: 404 });
+      }
+      
+      periodRecordsQuery = periodRecordsQuery.in('model_id', allowedModelIds);
+    }
+
+    const { data: periodRecords, error: fetchError } = await periodRecordsQuery;
 
     if (fetchError) {
       console.error('❌ [PERIOD-RATES-UPDATE] Error obteniendo registros:', fetchError);
@@ -222,8 +332,17 @@ export async function POST(request: NextRequest) {
     if (!periodRecords || periodRecords.length === 0) {
       return NextResponse.json({
         success: false,
-        error: 'No se encontraron registros para este período'
+        error: 'No se encontraron registros CERRADOS (archivados) para este período. Solo se pueden editar tasas de períodos que ya fueron cerrados.'
       }, { status: 404 });
+    }
+
+    // Verificar que al menos un registro tenga archived_at (período cerrado)
+    const hasArchivedRecords = periodRecords.some((r: any) => r.archived_at);
+    if (!hasArchivedRecords) {
+      return NextResponse.json({
+        success: false,
+        error: 'Este período no está cerrado. Solo se pueden editar tasas de períodos archivados.'
+      }, { status: 400 });
     }
 
     console.log(`📊 [PERIOD-RATES-UPDATE] Actualizando ${periodRecords.length} registros del período ${period_date} (${period_type})`);
