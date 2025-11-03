@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
-import { getSymbolicAvatar, getAvatarGradient } from '@/lib/chat/user-avatar';
+import { renderElegantAvatar } from '@/lib/chat/user-avatar';
 import Badge from './Badge';
 
 interface MainChatWindowProps {
@@ -60,20 +60,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   tempChatUser,
   getDisplayName = (user) => user.name || user.email,
 }) => {
-  // Helper para renderizar avatar simbólico (diferenciado para Botty)
+  // Helper para renderizar avatar elegante (diferenciado por rol)
   const renderAvatar = (user: any, size: 'small' | 'medium' = 'medium', isOffline: boolean = false) => {
-    const isBotty = user?.id === AIM_BOTTY_ID || user?.email === AIM_BOTTY_EMAIL;
-    const sizeClass = size === 'small' ? 'w-6 h-6' : 'w-8 h-8';
-    const emojiSize = size === 'small' ? 'text-xs' : 'text-sm';
-    
-    const avatarEmoji = getSymbolicAvatar(user);
-    const gradientClass = getAvatarGradient(user?.role, isOffline, isBotty);
-    
-    return (
-      <div className={`${sizeClass} ${gradientClass} rounded-full flex items-center justify-center ${size === 'medium' ? 'shadow-md' : 'shadow-sm'} flex-shrink-0 ${isBotty ? 'rounded-xl border border-purple-400/20' : ''}`}>
-        <span className={`${emojiSize} leading-none`}>{avatarEmoji}</span>
-      </div>
-    );
+    return renderElegantAvatar(user, size, isOffline);
   };
 
   const windowWidth = 320; // w-80 = 320px

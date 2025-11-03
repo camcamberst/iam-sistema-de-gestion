@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
-import { getSymbolicAvatar, getAvatarGradient } from '@/lib/chat/user-avatar';
+import { renderElegantAvatar } from '@/lib/chat/user-avatar';
 
 interface IndividualChatWindowProps {
   conversationId: string;
@@ -408,17 +408,7 @@ export default function IndividualChatWindow({
           </div>
         ) : (
           <div className="flex items-center space-x-3">
-            {(() => {
-              const isBotty = otherUser.id === AIM_BOTTY_ID || otherUser.email === AIM_BOTTY_EMAIL;
-              const avatarEmoji = getSymbolicAvatar(otherUser);
-              const gradientClass = getAvatarGradient(otherUser.role, false, isBotty);
-              
-              return (
-                <div className={`w-8 h-8 ${gradientClass} ${isBotty ? 'rounded-xl border border-purple-400/20' : 'rounded-full'} flex items-center justify-center shadow-md`}>
-                  <span className="text-sm leading-none">{avatarEmoji}</span>
-                </div>
-              );
-            })()}
+            {renderElegantAvatar(otherUser, 'medium', false)}
             <div className="min-w-0 flex-1">
               <h3 className="text-white font-semibold text-sm truncate">
                 {getDisplayName(otherUser)}

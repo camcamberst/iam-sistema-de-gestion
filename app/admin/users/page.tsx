@@ -611,37 +611,44 @@ export default function UsersListPage() {
                         <td className="px-4 py-2">
                           <div className="flex items-center space-x-2">
                             {(() => {
-                              // Importar funciones de avatar (importación dinámica para evitar errores en SSR)
-                              const getSymbolicAvatar = (user: any) => {
-                                const role = user.role || 'modelo';
-                                const identifier = user.email || user.name || user.id || '';
-                                let hash = 0;
-                                for (let i = 0; i < identifier.length; i++) {
-                                  hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
-                                }
-                                const index = Math.abs(hash);
-                                
-                                if (role === 'super_admin') {
-                                  const avatars = ['👑', '⭐', '🌟', '🎯', '💎', '🏆', '⚡', '🔥'];
-                                  return avatars[index % avatars.length];
-                                } else if (role === 'admin') {
-                                  const avatars = ['👔', '📊', '🔧', '⚙️', '📋', '📝', '🎖️', '💼'];
-                                  return avatars[index % avatars.length];
-                                } else {
-                                  const avatars = ['✨', '💫', '🌺', '🌸', '🌷', '🌹', '🌻', '🌼', '⭐', '🌟', '💖', '💝'];
-                                  return avatars[index % avatars.length];
-                                }
-                              };
+                              // Avatar elegante con inicial estilizada
+                              const initial = (user.name || user.email || '?').charAt(0).toUpperCase();
+                              const role = user.role || 'modelo';
                               
-                              const getGradient = (role: string) => {
-                                if (role === 'super_admin') return 'bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500';
-                                if (role === 'admin') return 'bg-gradient-to-br from-blue-500 to-indigo-600';
-                                return 'bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500';
+                              let gradient = 'bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500';
+                              if (role === 'super_admin') {
+                                gradient = 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600';
+                              } else if (role === 'admin') {
+                                gradient = 'bg-gradient-to-br from-blue-500 to-indigo-600';
+                              }
+                              
+                              // Hash para patrón visual consistente
+                              const identifier = user.email || user.name || user.id || '';
+                              let hash = 0;
+                              for (let i = 0; i < identifier.length; i++) {
+                                hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
+                              }
+                              const pattern = Math.abs(hash) % 4;
+                              
+                              const getPatternStyle = () => {
+                                if (pattern === 1) {
+                                  return { background: 'radial-gradient(circle, transparent 30%, rgba(255,255,255,0.15) 30%)' };
+                                } else if (pattern === 2) {
+                                  return { background: 'linear-gradient(135deg, transparent 45%, rgba(255,255,255,0.1) 45%, rgba(255,255,255,0.1) 55%, transparent 55%)' };
+                                } else if (pattern === 3) {
+                                  return { background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)' };
+                                }
+                                return {};
                               };
                               
                               return (
-                                <div className={`w-6 h-6 ${getGradient(user.role)} rounded-full flex items-center justify-center text-xs shadow-sm border border-white/20`}>
-                                  <span className="text-xs leading-none">{getSymbolicAvatar(user)}</span>
+                                <div 
+                                  className={`w-6 h-6 ${gradient} rounded-full flex items-center justify-center text-xs shadow-sm border border-white/20 flex-shrink-0 relative overflow-hidden`}
+                                  style={getPatternStyle()}
+                                >
+                                  <span className="text-white font-bold tracking-wider relative z-10 drop-shadow-sm text-[10px]">
+                                    {initial}
+                                  </span>
                                 </div>
                               );
                             })()}
