@@ -610,9 +610,41 @@ export default function UsersListPage() {
                       <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-12 group">
                         <td className="px-4 py-2">
                           <div className="flex items-center space-x-2">
-                            <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xs font-semibold shadow-sm border border-white/20">
-                              {user.name.charAt(0).toUpperCase()}
-                            </div>
+                            {(() => {
+                              // Importar funciones de avatar (importación dinámica para evitar errores en SSR)
+                              const getSymbolicAvatar = (user: any) => {
+                                const role = user.role || 'modelo';
+                                const identifier = user.email || user.name || user.id || '';
+                                let hash = 0;
+                                for (let i = 0; i < identifier.length; i++) {
+                                  hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
+                                }
+                                const index = Math.abs(hash);
+                                
+                                if (role === 'super_admin') {
+                                  const avatars = ['👑', '⭐', '🌟', '🎯', '💎', '🏆', '⚡', '🔥'];
+                                  return avatars[index % avatars.length];
+                                } else if (role === 'admin') {
+                                  const avatars = ['👔', '📊', '🔧', '⚙️', '📋', '📝', '🎖️', '💼'];
+                                  return avatars[index % avatars.length];
+                                } else {
+                                  const avatars = ['✨', '💫', '🌺', '🌸', '🌷', '🌹', '🌻', '🌼', '⭐', '🌟', '💖', '💝'];
+                                  return avatars[index % avatars.length];
+                                }
+                              };
+                              
+                              const getGradient = (role: string) => {
+                                if (role === 'super_admin') return 'bg-gradient-to-br from-yellow-500 via-amber-500 to-orange-500';
+                                if (role === 'admin') return 'bg-gradient-to-br from-blue-500 to-indigo-600';
+                                return 'bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500';
+                              };
+                              
+                              return (
+                                <div className={`w-6 h-6 ${getGradient(user.role)} rounded-full flex items-center justify-center text-xs shadow-sm border border-white/20`}>
+                                  <span className="text-xs leading-none">{getSymbolicAvatar(user)}</span>
+                                </div>
+                              );
+                            })()}
                             <div className="min-w-0">
                               <div className="text-gray-900 dark:text-gray-100 font-medium text-xs truncate" title={user.name}>{user.name}</div>
                               <div className="text-gray-400 dark:text-gray-500 text-xs truncate" title={`ID: ${user.id}`}>ID: {user.id.slice(0, 8)}...</div>

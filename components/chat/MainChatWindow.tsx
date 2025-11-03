@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
+import { getSymbolicAvatar, getAvatarGradient } from '@/lib/chat/user-avatar';
 import Badge from './Badge';
 
 interface MainChatWindowProps {
@@ -59,31 +60,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   tempChatUser,
   getDisplayName = (user) => user.name || user.email,
 }) => {
-  // Helper para renderizar avatar (diferenciado para Botty)
+  // Helper para renderizar avatar simbólico (diferenciado para Botty)
   const renderAvatar = (user: any, size: 'small' | 'medium' = 'medium', isOffline: boolean = false) => {
     const isBotty = user?.id === AIM_BOTTY_ID || user?.email === AIM_BOTTY_EMAIL;
     const sizeClass = size === 'small' ? 'w-6 h-6' : 'w-8 h-8';
+    const emojiSize = size === 'small' ? 'text-xs' : 'text-sm';
     
-    if (isBotty) {
-      // Avatar especial para Botty: gradiente púrpura/índigo con emoji de robot
-      return (
-        <div className={`${sizeClass} bg-gradient-to-br from-purple-500 via-indigo-500 to-purple-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0 border border-purple-400/20`}>
-          <span className="text-white font-bold text-base leading-none">🤖</span>
-        </div>
-      );
-    } else {
-      // Avatar normal para usuarios: gradiente azul (online) o gris (offline) con inicial
-      const gradientClass = isOffline 
-        ? 'bg-gradient-to-br from-gray-500 to-gray-600' 
-        : 'bg-gradient-to-br from-blue-500 to-blue-600';
-      return (
-        <div className={`${sizeClass} ${gradientClass} rounded-full flex items-center justify-center ${size === 'medium' ? 'shadow-md' : ''} flex-shrink-0`}>
-          <span className={`text-white font-bold text-xs ${size === 'medium' ? 'tracking-wider' : ''}`}>
-            {getDisplayName(user)?.charAt(0).toUpperCase()}
-          </span>
-        </div>
-      );
-    }
+    const avatarEmoji = getSymbolicAvatar(user);
+    const gradientClass = getAvatarGradient(user?.role, isOffline, isBotty);
+    
+    return (
+      <div className={`${sizeClass} ${gradientClass} rounded-full flex items-center justify-center ${size === 'medium' ? 'shadow-md' : 'shadow-sm'} flex-shrink-0 ${isBotty ? 'rounded-xl border border-purple-400/20' : ''}`}>
+        <span className={`${emojiSize} leading-none`}>{avatarEmoji}</span>
+      </div>
+    );
   };
 
   const windowWidth = 320; // w-80 = 320px
