@@ -250,24 +250,26 @@ export async function GET(request: NextRequest) {
         return 0;
       };
       
-      // Si los valores calculados no existen, calcularlos ahora
-      let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
-      let usdModelo = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : null;
-      let copModelo = item.value_cop_modelo != null ? Number(item.value_cop_modelo) : null;
-      const percentage = item.platform_percentage != null ? Number(item.platform_percentage) : null;
+      // IMPORTANTE: SIEMPRE usar el porcentaje actual del modelo/grupo desde calculator_config
+      // NO usar el porcentaje guardado en calculator_history porque puede estar desactualizado
+      // El porcentaje correcto siempre viene de calculator_config (percentage_override o group_percentage)
+      const modelPercentage = defaultModelPercentage;
       
-      // Si faltan cálculos, calcularlos ahora
-      if (usdBruto === null || usdModelo === null || copModelo === null) {
+      // Calcular valores usando el porcentaje correcto del modelo
+      let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
+      let usdModelo: number | null = null;
+      let copModelo: number | null = null;
+      
+      // Si falta USD Bruto, calcularlo ahora
+      if (usdBruto === null) {
         const currency = platformInfo?.currency || 'USD';
-        const calculatedUsdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
-        usdBruto = calculatedUsdBruto;
-        
-        // Usar porcentaje guardado o el de la configuración del modelo
-        const modelPercentage = percentage || defaultModelPercentage;
-        
-        usdModelo = calculatedUsdBruto * (modelPercentage / 100);
-        copModelo = usdModelo * rates.usd_cop;
+        usdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
       }
+      
+      // SIEMPRE recalcular USD Modelo y COP Modelo con el porcentaje actual del modelo
+      // Esto asegura que se use el porcentaje correcto aunque los valores ya estén guardados
+      usdModelo = usdBruto * (modelPercentage / 100);
+      copModelo = usdModelo * rates.usd_cop;
       
       // Asegurar que todos los valores sean números
       const finalUsdBruto = usdBruto ?? 0;
@@ -279,11 +281,11 @@ export async function GET(request: NextRequest) {
         platform_name: platformInfo?.name || item.platform_id,
         platform_currency: platformInfo?.currency || 'USD',
         value: safeValue,
-        // Nuevos campos de cálculos (calculados si no existen en BD)
+        // Nuevos campos de cálculos (SIEMPRE recalculados con porcentaje actual)
         value_usd_bruto: finalUsdBruto,
         value_usd_modelo: finalUsdModelo,
         value_cop_modelo: finalCopModelo,
-        platform_percentage: percentage || defaultModelPercentage,
+        platform_percentage: modelPercentage,
         // Tasas aplicadas (guardadas en el historial o calculadas)
         rates: {
           eur_usd: rates.eur_usd,
