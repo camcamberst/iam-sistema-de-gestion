@@ -245,43 +245,76 @@ RESPUESTA:
 
     console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
     console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
+
+    // Lista de modelos para intentar (más recientes primero)
+    const modelNames = [
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-pro'
+    ];
     
-    // Usar solo gemini-pro (más estable, evita consumir cuota con múltiples intentos)
-    // Si necesitas cambiar el modelo, configúralo aquí:
-    const modelName = 'gemini-pro';
+    let lastError: any = null;
     
-    try {
-      console.log(`🤖 [BOTTY-GEN] Generando con ${modelName}...`);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      let text = response.text().trim();
-      
-      console.log('🤖 [BOTTY-GEN] Limpiando respuesta...');
-      text = text.replace(/```[\s\S]*?```/g, '').trim();
-      
-      console.log(`✅ [BOTTY-GEN] Respuesta generada exitosamente, longitud:`, text.length);
-      return text;
-    } catch (modelError: any) {
-      console.error(`❌ [BOTTY-GEN] Error con ${modelName}:`, modelError?.message);
-      
-      // Si es error 404, intentar con gemini-1.5-flash como fallback (solo una vez)
-      if (modelError?.message?.includes('404') || modelError?.message?.includes('not found')) {
-        try {
-          console.log('🔄 [BOTTY-GEN] Intentando fallback con gemini-1.5-flash...');
-          const fallbackModel = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-          const result = await fallbackModel.generateContent(prompt);
-          const response = await result.response;
-          let text = response.text().trim();
-          text = text.replace(/```[\s\S]*?```/g, '').trim();
-          return text;
-        } catch (fallbackError) {
-          throw modelError; // Lanzar error original
+    // Intentar con cada modelo hasta que uno funcione
+    for (const modelName of modelNames) {
+      try {
+        console.log(`🤖 [BOTTY-GEN] Intentando con modelo: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        
+        // Ejecutar generación de contenido
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let text = response.text().trim();
+
+        // Limpiar markdown si existe
+        text = text.replace(/```[\s\S]*?```/g, '').trim();
+        
+        console.log(`✅ [BOTTY-GEN] Respuesta generada exitosamente con ${modelName}, longitud:`, text.length);
+        return text;
+        
+      } catch (modelError: any) {
+        console.error(`❌ [BOTTY-GEN] Error con ${modelName}:`, {
+          message: modelError?.message,
+          status: modelError?.status,
+          statusText: modelError?.statusText
+        });
+        lastError = modelError;
+        
+        // Si es error 404 o "not found", intentar siguiente modelo
+        if (modelError?.message?.includes('404') || 
+            modelError?.message?.includes('not found') ||
+            modelError?.status === 404) {
+          console.log(`⚠️ [BOTTY-GEN] ${modelName} no disponible, intentando siguiente modelo...`);
+          continue; // Intentar siguiente modelo
         }
+        
+        // Si es error de API key o autenticación, no intentar otros modelos
+        if (modelError?.message?.includes('API key') || 
+            modelError?.message?.includes('authentication') ||
+            modelError?.message?.includes('PERMISSION_DENIED')) {
+          console.error('❌ [BOTTY-GEN] Error de autenticación, no intentando más modelos');
+          throw modelError;
+        }
+        
+        // Si es otro tipo de error (rate limit, etc), intentar siguiente modelo
+        if (modelError?.status === 429 || modelError?.message?.includes('rate limit')) {
+          console.log(`⚠️ [BOTTY-GEN] Rate limit en ${modelName}, intentando siguiente modelo...`);
+          continue;
+        }
+        
+        // Para otros errores, solo continuar si es un error de modelo
+        if (modelError?.message?.includes('model') || modelError?.message?.includes('Model')) {
+          continue;
+        }
+        
+        // Si no es error de modelo, lanzar el error
+        throw modelError;
       }
-      
-      throw modelError;
     }
+    
+    // Si llegamos aquí, todos los modelos fallaron
+    console.error('❌ [BOTTY-GEN] Todos los modelos fallaron. Último error:', lastError);
+    throw lastError || new Error('Todos los modelos fallaron');
 
   } catch (error: any) {
     console.error('❌ [BOTTY-GEN] Error generando respuesta del bot:', error);
