@@ -645,7 +645,12 @@ async function getModelStatistics(
       return { success: false, error: 'Error obteniendo datos históricos' };
     }
 
-    const totals = historyData?.reduce((acc, item) => ({
+    const totals = historyData?.reduce((acc: {
+      totalUsdBruto: number;
+      totalUsdModelo: number;
+      totalCopModelo: number;
+      periods: number;
+    }, item: any) => ({
       totalUsdBruto: acc.totalUsdBruto + Number(item.value_usd_bruto || 0),
       totalUsdModelo: acc.totalUsdModelo + Number(item.value_usd_modelo || 0),
       totalCopModelo: acc.totalCopModelo + Number(item.value_cop_modelo || 0),
