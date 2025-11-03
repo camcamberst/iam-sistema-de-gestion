@@ -470,6 +470,12 @@ export async function POST(request: NextRequest) {
       
       // Actualizar en paralelo dentro del lote
       const batchPromises = batch.map(async (update) => {
+        // IMPORTANTE: El supabase client ya está configurado con SERVICE_ROLE_KEY
+        // que debería bypass RLS automáticamente. Si aún falla, puede ser por:
+        // 1. Políticas RLS con USING (false) que bloquean incluso a service_role
+        // 2. La clave de servicio no está correctamente configurada
+        // 3. Problemas de permisos a nivel de base de datos
+        
         const { data, error: updateError, count } = await supabase
           .from('calculator_history')
           .update({
@@ -485,15 +491,21 @@ export async function POST(request: NextRequest) {
           .select('id', { count: 'exact', head: true });
 
         if (updateError) {
-          console.error(`❌ [PERIOD-RATES-UPDATE] Error actualizando registro ${update.id}:`, updateError);
-          errors.push(`Registro ${update.id}: ${updateError.message}`);
+          console.error(`❌ [PERIOD-RATES-UPDATE] Error actualizando registro ${update.id}:`, {
+            error: updateError,
+            message: updateError.message,
+            code: updateError.code,
+            details: updateError.details,
+            hint: updateError.hint
+          });
+          errors.push(`Registro ${update.id}: ${updateError.message || 'Error desconocido'}`);
           return false;
         }
         
         // Verificar que realmente se actualizó
         if (count !== null && count === 0) {
-          console.warn(`⚠️ [PERIOD-RATES-UPDATE] Registro ${update.id} no se actualizó (count: ${count})`);
-          errors.push(`Registro ${update.id}: No se encontró para actualizar`);
+          console.warn(`⚠️ [PERIOD-RATES-UPDATE] Registro ${update.id} no se actualizó (count: ${count}). Posible problema de RLS.`);
+          errors.push(`Registro ${update.id}: No se encontró para actualizar o bloqueado por RLS`);
           return false;
         }
         
