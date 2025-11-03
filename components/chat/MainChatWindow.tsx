@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
-import { renderElegantAvatar } from '@/lib/chat/user-avatar.tsx';
+import { renderElegantAvatar } from '@/lib/chat/user-avatar';
 import Badge from './Badge';
 
 interface MainChatWindowProps {
