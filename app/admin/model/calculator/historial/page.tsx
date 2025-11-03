@@ -357,7 +357,11 @@ export default function CalculatorHistorialPage() {
         throw new Error('Sesión no válida');
       }
 
-      const response = await fetch('/api/model/calculator/historial/update', {
+      // Obtener nombre del admin que está editando
+      const adminName = user?.name || 'Administrador';
+
+      // Usar el endpoint global de "Editar RATES de cierre" que afecta a todas las modelos del período
+      const response = await fetch('/api/admin/calculator-history/update-period-rates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -366,12 +370,13 @@ export default function CalculatorHistorialPage() {
         body: JSON.stringify({
           period_date: period.period_date,
           period_type: period.period_type,
-          model_id: targetModelId || user?.id, // Usar targetModelId si está disponible (admin viendo otro modelo)
           rates: {
-            eur_usd: editRates.eur_usd ? Number(editRates.eur_usd) : undefined,
-            gbp_usd: editRates.gbp_usd ? Number(editRates.gbp_usd) : undefined,
-            usd_cop: editRates.usd_cop ? Number(editRates.usd_cop) : undefined
-          }
+            eur_usd: editRates.eur_usd ? Number(editRates.eur_usd) : null,
+            gbp_usd: editRates.gbp_usd ? Number(editRates.gbp_usd) : null,
+            usd_cop: editRates.usd_cop ? Number(editRates.usd_cop) : null
+          },
+          admin_id: user?.id,
+          admin_name: adminName
         })
       });
 
@@ -531,34 +536,97 @@ export default function CalculatorHistorialPage() {
                     </p>
                   </div>
                 </div>
-                <div className="text-right">
-                  {/* Totales destacados */}
-                  <div className="space-y-2">
-                    {period.total_usd_bruto !== undefined && period.total_usd_bruto > 0 && (
-                      <div>
-                        <div className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                          {formatCurrency(period.total_usd_bruto, 'USD')}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">USD Bruto</div>
-                      </div>
-                    )}
-                    <div>
-                      <div className="text-lg font-bold text-green-600 dark:text-green-400">
-                        {formatCurrency(period.total_usd_modelo || period.total_value, 'USD')}
-                      </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {period.total_usd_modelo ? 'USD Modelo' : 'Total del período'}
-                      </div>
+                
+                {/* RATES de cierre - En la parte superior del período */}
+                <div className="ml-4">
+                  <div className="flex items-center justify-end gap-2 mb-2">
+                    <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
+                      RATES de cierre
                     </div>
-                    {period.total_cop_modelo && period.total_cop_modelo > 0 && (
-                      <div>
-                        <div className="text-sm font-semibold text-purple-600 dark:text-purple-400">
-                          {formatCurrency(period.total_cop_modelo, 'COP')}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">COP Modelo</div>
-                      </div>
+                    {isAdmin && period.rates && editingRates !== `${period.period_date}-${period.period_type}` && (
+                      <button
+                        onClick={() => startEditRates(period)}
+                        className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
+                        title="Editar tasas del período (editable desde Consulta Histórica)"
+                      >
+                        <Edit2 className="w-3 h-3" />
+                        <span>Editar</span>
+                      </button>
                     )}
                   </div>
+                  
+                  {editingRates === `${period.period_date}-${period.period_type}` ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={editRates.eur_usd}
+                        onChange={(e) => setEditRates({...editRates, eur_usd: e.target.value})}
+                        placeholder="EUR→USD"
+                        className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-24 text-gray-900 dark:text-gray-100"
+                      />
+                      <input
+                        type="number"
+                        step="0.0001"
+                        value={editRates.gbp_usd}
+                        onChange={(e) => setEditRates({...editRates, gbp_usd: e.target.value})}
+                        placeholder="GBP→USD"
+                        className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-24 text-gray-900 dark:text-gray-100"
+                      />
+                      <input
+                        type="number"
+                        step="1"
+                        value={editRates.usd_cop}
+                        onChange={(e) => setEditRates({...editRates, usd_cop: e.target.value})}
+                        placeholder="USD→COP"
+                        className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-24 text-gray-900 dark:text-gray-100"
+                      />
+                      <button
+                        onClick={() => saveRates(period)}
+                        disabled={saving}
+                        className="px-2 py-1.5 text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded transition-colors flex items-center gap-1"
+                        title="Guardar"
+                      >
+                        <Save className="w-3 h-3" />
+                      </button>
+                      <button
+                        onClick={cancelEdit}
+                        className="px-2 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors flex items-center gap-1"
+                        title="Cancelar"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ) : period.rates && (period.rates.eur_usd || period.rates.gbp_usd || period.rates.usd_cop) ? (
+                    <div className="flex items-center gap-2 flex-wrap">
+                      {period.rates.eur_usd && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-2 py-1.5">
+                          <div className="text-[10px] text-gray-600 dark:text-gray-400 mb-0.5">EUR→USD</div>
+                          <div className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                            {period.rates.eur_usd.toFixed(4)}
+                          </div>
+                        </div>
+                      )}
+                      {period.rates.gbp_usd && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-2 py-1.5">
+                          <div className="text-[10px] text-gray-600 dark:text-gray-400 mb-0.5">GBP→USD</div>
+                          <div className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                            {period.rates.gbp_usd.toFixed(4)}
+                          </div>
+                        </div>
+                      )}
+                      {period.rates.usd_cop && (
+                        <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-2 py-1.5">
+                          <div className="text-[10px] text-gray-600 dark:text-gray-400 mb-0.5">USD→COP</div>
+                          <div className="text-xs font-semibold text-blue-700 dark:text-blue-300">
+                            {period.rates.usd_cop.toFixed(0)}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="text-xs text-gray-400 dark:text-gray-500 italic">No disponibles</div>
+                  )}
                 </div>
               </div>
 
@@ -568,16 +636,6 @@ export default function CalculatorHistorialPage() {
                   <h4 className="text-sm font-medium text-gray-700 dark:text-gray-300">
                     Plataformas ({period.platforms.filter(p => p.value > 0).length})
                   </h4>
-                  {isAdmin && period.rates && editingRates !== `${period.period_date}-${period.period_type}` && (
-                    <button
-                      onClick={() => startEditRates(period)}
-                      className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
-                      title="Editar tasas del período"
-                    >
-                      <Edit2 className="w-3 h-3" />
-                      <span>Editar tasas</span>
-                    </button>
-                  )}
                 </div>
                 <div className="overflow-x-auto">
                   <table className="w-full">
@@ -684,101 +742,8 @@ export default function CalculatorHistorialPage() {
                   </table>
                 </div>
                 
-                {/* Totales, RATES de cierre y alertas del período cerrado - Debajo de la tabla */}
+                {/* Totales y alertas del período cerrado - Debajo de la tabla */}
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  {/* RATES de cierre - Destacadas */}
-                  <div className="mb-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="text-xs font-semibold text-gray-700 dark:text-gray-300 uppercase tracking-wide">
-                        RATES de cierre
-                      </div>
-                      {isAdmin && period.rates && editingRates !== `${period.period_date}-${period.period_type}` && (
-                        <button
-                          onClick={() => startEditRates(period)}
-                          className="text-xs text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 flex items-center gap-1"
-                          title="Editar tasas del período (configuradas desde Consulta Histórica)"
-                        >
-                          <Edit2 className="w-3 h-3" />
-                          <span>Editar</span>
-                        </button>
-                      )}
-                    </div>
-                    {editingRates === `${period.period_date}-${period.period_type}` ? (
-                      <div className="flex items-center gap-2 flex-wrap p-3 bg-gray-50 dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                        <input
-                          type="number"
-                          step="0.0001"
-                          value={editRates.eur_usd}
-                          onChange={(e) => setEditRates({...editRates, eur_usd: e.target.value})}
-                          placeholder="EUR→USD"
-                          className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-28"
-                        />
-                        <input
-                          type="number"
-                          step="0.0001"
-                          value={editRates.gbp_usd}
-                          onChange={(e) => setEditRates({...editRates, gbp_usd: e.target.value})}
-                          placeholder="GBP→USD"
-                          className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-28"
-                        />
-                        <input
-                          type="number"
-                          step="1"
-                          value={editRates.usd_cop}
-                          onChange={(e) => setEditRates({...editRates, usd_cop: e.target.value})}
-                          placeholder="USD→COP"
-                          className="text-xs px-2 py-1.5 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 w-28"
-                        />
-                        <button
-                          onClick={() => saveRates(period)}
-                          disabled={saving}
-                          className="px-3 py-1.5 text-xs bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded transition-colors flex items-center gap-1"
-                          title="Guardar"
-                        >
-                          <Save className="w-3 h-3" />
-                          <span>Guardar</span>
-                        </button>
-                        <button
-                          onClick={cancelEdit}
-                          className="px-3 py-1.5 text-xs bg-gray-600 hover:bg-gray-700 text-white rounded transition-colors flex items-center gap-1"
-                          title="Cancelar"
-                        >
-                          <X className="w-3 h-3" />
-                          <span>Cancelar</span>
-                        </button>
-                      </div>
-                    ) : period.rates && (period.rates.eur_usd || period.rates.gbp_usd || period.rates.usd_cop) ? (
-                      <div className="flex items-center gap-3 flex-wrap">
-                        {period.rates.eur_usd && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">EUR → USD</div>
-                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                              {period.rates.eur_usd.toFixed(4)}
-                            </div>
-                          </div>
-                        )}
-                        {period.rates.gbp_usd && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">GBP → USD</div>
-                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                              {period.rates.gbp_usd.toFixed(4)}
-                            </div>
-                          </div>
-                        )}
-                        {period.rates.usd_cop && (
-                          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg px-3 py-2">
-                            <div className="text-xs text-gray-600 dark:text-gray-400 mb-0.5">USD → COP</div>
-                            <div className="text-sm font-semibold text-blue-700 dark:text-blue-300">
-                              {period.rates.usd_cop.toFixed(0)}
-                            </div>
-                          </div>
-                        )}
-                      </div>
-                    ) : (
-                      <div className="text-xs text-gray-400 dark:text-gray-500 italic">No disponibles</div>
-                    )}
-                  </div>
-
                   {/* Totales computados */}
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div>
