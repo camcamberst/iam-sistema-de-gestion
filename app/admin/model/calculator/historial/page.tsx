@@ -831,11 +831,11 @@ export default function CalculatorHistorialPage() {
                                 </div>
                               </div>
                               <div 
-                                className="text-lg font-bold px-3 py-1 rounded-lg shadow-sm"
+                                className="text-lg font-bold px-3 py-1 rounded-lg shadow-sm text-white"
                                 style={{
-                                  color: rgbToHex(shade(base, 0.5)),
-                                  background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.88))}, ${rgbToHex(shade(base, 0.92))})`,
-                                  border: `1px solid ${rgbToHex(shade(base, 0.7))}`
+                                  background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.1))})`,
+                                  border: `1px solid ${rgbToHex(shade(base, 0.3))}`,
+                                  boxShadow: `0 2px 8px ${rgbToHex(shade(base, 0.2))}40`
                                 }}
                               >
                                 {porcentajeAlcanzado.toFixed(1)}%
@@ -865,8 +865,11 @@ export default function CalculatorHistorialPage() {
                                   Alcanzado
                                 </div>
                                 <div 
-                                  className="text-sm font-semibold"
-                                  style={{ color: rgbToHex(shade(base, 0.5)) }}
+                                  className="text-sm font-bold"
+                                  style={{ 
+                                    color: rgbToHex(shade(base, 0.2)),
+                                    textShadow: `0 1px 2px ${rgbToHex(shade(base, 0.4))}30`
+                                  }}
                                 >
                                   {formatCurrency(period.total_usd_bruto || 0, 'USD')}
                                 </div>
