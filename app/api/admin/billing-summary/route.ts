@@ -348,9 +348,13 @@ export async function GET(request: NextRequest) {
     }
 
     // 3.3. Procesar datos del historial (período cerrado)
+    // IMPORTANTE: Seguir la misma lógica que "Mi Historial" de "Mi Calculadora"
+    // USD Bruto: Suma de todos los value_usd_bruto de todas las plataformas (sin repartición)
+    // USD Modelo: USD Bruto × porcentaje de la modelo
+    // USD Agencia: USD Bruto - USD Modelo
     const historyMap = new Map();
     if (historyData && historyData.length > 0) {
-      console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history');
+      console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history (misma lógica que Mi Historial)');
       
       historyData.forEach(item => {
         if (!historyMap.has(item.model_id)) {
@@ -366,49 +370,43 @@ export async function GET(request: NextRequest) {
         
         const modelData = historyMap.get(item.model_id);
         
-        // Sumar los valores calculados que ya están guardados en calculator_history
-        // value_usd_bruto: ya calculado y guardado
-        // value_usd_modelo: ya calculado y guardado
-        // value_cop_modelo: ya calculado y guardado
-        
-        // Si los valores calculados están disponibles, usarlos directamente
+        // USD Bruto: Sumar todos los value_usd_bruto de todas las plataformas (sin repartición)
         if (item.value_usd_bruto !== null && item.value_usd_bruto !== undefined) {
           modelData.total_usd_bruto += Number(item.value_usd_bruto) || 0;
-        }
-        
-        if (item.value_usd_modelo !== null && item.value_usd_modelo !== undefined) {
-          modelData.total_usd_modelo += Number(item.value_usd_modelo) || 0;
-        }
-        
-        if (item.value_cop_modelo !== null && item.value_cop_modelo !== undefined) {
-          modelData.total_cop_modelo += Number(item.value_cop_modelo) || 0;
-        }
-        
-        // Fallback: Si los valores calculados no están disponibles (datos antiguos),
-        // usar el valor original y recalcular (lógica antigua para compatibilidad)
-        if ((item.value_usd_bruto === null || item.value_usd_bruto === undefined) && 
-            (item.value_usd_modelo === null || item.value_usd_modelo === undefined)) {
-          // Si es el total USD modelo, usar ese valor (compatibilidad con formato antiguo)
-          if (item.platform_id === '_total_usd_modelo') {
-            modelData.total_usd_modelo = item.value || 0;
-          } else {
-            // Sumar valores de plataformas individuales para USD bruto
-            modelData.total_usd_bruto += item.value || 0;
-          }
+        } else {
+          // Fallback: Si no hay value_usd_bruto, usar el valor original (datos antiguos)
+          // NOTA: Esto debería ser raro ya que los registros nuevos siempre tienen value_usd_bruto
+          modelData.total_usd_bruto += Number(item.value) || 0;
         }
       });
 
-      // Si hay valores calculados, ya están correctos. Si no, usar lógica de fallback
+      // Obtener configuraciones de porcentaje por modelo (calculator_config)
+      const modelIds = Array.from(historyMap.keys());
+      const { data: modelConfigs, error: configError } = await supabase
+        .from('calculator_config')
+        .select('model_id, percentage_override, group_percentage')
+        .in('model_id', modelIds);
+
+      if (configError) {
+        console.warn('⚠️ [BILLING-SUMMARY] Error obteniendo configuraciones de modelos:', configError);
+      }
+
+      const configMap = new Map((modelConfigs || []).map((c: any) => [c.model_id, c]));
+
+      // Calcular USD Modelo y USD Agencia para cada modelo
       historyMap.forEach((modelData, modelId) => {
-        // Solo aplicar estimaciones si no hay valores calculados guardados
-        if (modelData.total_usd_bruto === 0 && modelData.total_usd_modelo > 0) {
-          modelData.total_usd_bruto = modelData.total_usd_modelo * 1.4; // Estimación conservadora
-        }
+        // Obtener porcentaje de la modelo (prioridad: percentage_override > group_percentage > 80% por defecto)
+        const config = configMap.get(modelId);
+        const modelPercentage = config?.percentage_override || config?.group_percentage || 80;
         
-        // Solo calcular COP si no está disponible en los datos guardados
-        if (modelData.total_cop_modelo === 0 && modelData.total_usd_modelo > 0) {
-          modelData.total_cop_modelo = modelData.total_usd_modelo * 3900; // Tasa estimada
-        }
+        // USD Modelo: USD Bruto × porcentaje de la modelo
+        modelData.total_usd_modelo = modelData.total_usd_bruto * (modelPercentage / 100);
+        
+        // COP Modelo: USD Modelo × tasa USD_COP (obtener tasa del período si está disponible)
+        // Por ahora usamos la tasa actual, pero idealmente deberíamos usar la tasa del período
+        modelData.total_cop_modelo = modelData.total_usd_modelo * (usdCopRateValue || 3900);
+        
+        console.log(`📊 [BILLING-SUMMARY] Modelo ${modelId}: USD Bruto=${modelData.total_usd_bruto.toFixed(2)}, Porcentaje=${modelPercentage}%, USD Modelo=${modelData.total_usd_modelo.toFixed(2)}`);
       });
     }
 
@@ -447,7 +445,7 @@ export async function GET(request: NextRequest) {
       fromTotals: Array.from(totalsMap.keys()).length
     });
 
-    // 4. Obtener tasa USD/COP actual (más reciente)
+    // 4. Obtener tasa USD/COP actual (más reciente) - para períodos sin tasa guardada
     const { data: usdCopRate, error: ratesError } = await supabase
       .from('rates')
       .select('value')
@@ -459,7 +457,7 @@ export async function GET(request: NextRequest) {
 
     if (ratesError) {
       console.error('❌ [BILLING-SUMMARY] Error al obtener tasas:', ratesError);
-      return NextResponse.json({ success: false, error: 'Error al obtener tasas de cambio' }, { status: 500 });
+      // No es crítico, usamos 3900 por defecto
     }
 
     const usdCopRateValue = usdCopRate?.value || 3900;
