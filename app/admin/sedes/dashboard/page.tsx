@@ -800,20 +800,6 @@ export default function DashboardSedesPage() {
                     )}
                   </div>
                 </div>
-
-                {/* Información del período seleccionado */}
-                <div className="flex items-end">
-                  {selectedMonth && selectedYear && selectedPeriod && (
-                    <div className="w-full p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50">
-                      <div className="text-sm font-medium text-blue-800 dark:text-blue-300">
-                        {getMonthName(selectedMonth)} {selectedYear} - {selectedPeriod}
-                      </div>
-                      <div className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                        {selectedPeriod === 'P1' ? 'Días 1-15' : 'Días 16-31'}
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             )}
             
