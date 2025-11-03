@@ -113,23 +113,9 @@ export async function GET(request: NextRequest) {
       };
     });
 
-    // Marcar mensajes recibidos como leídos en chat_message_reads (double check persistente)
-    const unreadReceivedMessages = messages
-      .filter((msg: any) => msg.sender_id !== user.id && !readByMeSet.has(msg.id))
-      .map((msg: any) => msg.id);
-    
-    if (unreadReceivedMessages.length > 0) {
-      const readsToInsert = unreadReceivedMessages.map(msgId => ({ 
-        message_id: msgId, 
-        user_id: user.id 
-      }));
-      
-      // Intentar insertar, ignorando duplicados por unique constraint
-      await supabase
-        .from('chat_message_reads')
-        .insert(readsToInsert)
-        .select();
-    }
+    // ELIMINADO: Marcar automáticamente como leído aquí causa problemas de sincronización
+    // El marcado debe hacerse explícitamente cuando el usuario abre la conversación
+    // vía /api/chat/messages/read para evitar race conditions y duplicados
 
     return NextResponse.json({ 
       success: true, 

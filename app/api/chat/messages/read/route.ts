@@ -29,14 +29,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: false, error: 'No se pudo autenticar usuario' }, { status: 401 });
     }
 
-    // Obtener mensajes de la conversación que no son del usuario
+    // Obtener TODOS los mensajes de la conversación que no son del usuario
+    // Usar select simple para mejor performance
     const { data: messages, error: msgError } = await supabase
       .from('chat_messages')
-      .select('id, sender_id')
+      .select('id')
       .eq('conversation_id', conversation_id)
       .neq('sender_id', user.id);
 
     if (msgError) {
+      console.error('❌ [API-READ] Error obteniendo mensajes:', msgError);
       return NextResponse.json({ success: false, error: 'Error obteniendo mensajes' }, { status: 500 });
     }
 
@@ -44,8 +46,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, updated: 0 });
     }
 
-    // Obtener mensajes ya leídos para evitar duplicados
     const messageIds = messages.map(m => m.id);
+
+    // Obtener mensajes ya leídos para evitar duplicados (una sola query)
     const { data: existingReads } = await supabase
       .from('chat_message_reads')
       .select('message_id')
@@ -54,23 +57,33 @@ export async function POST(req: NextRequest) {
 
     const existingMessageIds = new Set(existingReads?.map(r => r.message_id) || []);
     
-    // Insertar solo lecturas faltantes
-    const rowsToInsert = messages
-      .filter(m => !existingMessageIds.has(m.id))
-      .map(m => ({ message_id: m.id, user_id: user.id }));
+    // Insertar solo lecturas faltantes (optimizado: insertar todos de una vez)
+    const rowsToInsert = messageIds
+      .filter(id => !existingMessageIds.has(id))
+      .map(message_id => ({ message_id, user_id: user.id }));
 
     if (rowsToInsert.length > 0) {
-      const { error: insertError } = await supabase
+      // Usar .insert().select() para obtener confirmación
+      const { data: inserted, error: insertError } = await supabase
         .from('chat_message_reads')
-        .insert(rowsToInsert);
+        .insert(rowsToInsert)
+        .select('message_id');
 
       if (insertError) {
-        console.error('Insert error chat_message_reads:', insertError);
+        // Si es error de duplicado (unique constraint), ignorar - puede ser race condition
+        if (insertError.code === '23505') {
+          console.log('⚠️ [API-READ] Algunos mensajes ya estaban marcados como leídos (race condition normal)');
+          return NextResponse.json({ success: true, updated: rowsToInsert.length });
+        }
+        console.error('❌ [API-READ] Error insertando lecturas:', insertError);
         return NextResponse.json({ success: false, error: 'Error insertando lecturas' }, { status: 500 });
       }
+
+      console.log(`✅ [API-READ] ${inserted?.length || 0} mensajes marcados como leídos`);
+      return NextResponse.json({ success: true, updated: inserted?.length || 0 });
     }
 
-    return NextResponse.json({ success: true, updated: rowsToInsert.length });
+    return NextResponse.json({ success: true, updated: 0 });
   } catch (error) {
     console.error('Error en marcar vistos:', error);
     return NextResponse.json({ success: false, error: 'Error interno' }, { status: 500 });

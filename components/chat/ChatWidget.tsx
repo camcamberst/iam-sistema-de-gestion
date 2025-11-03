@@ -68,23 +68,90 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const [lastSeenMessageByConv, setLastSeenMessageByConv] = useState<Record<string, string>>({});
   const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
   
-  // Helper para marcar mensaje como visto (actualiza tanto estado como ref)
+  // 🔧 NUEVO: Ref para debouncing de marcado de lectura
+  const markAsReadTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const markingAsReadRef = useRef<Set<string>>(new Set());
+
+  // Helper para marcar mensaje como visto (solo estado local, no servidor)
   const markMessageAsSeen = (conversationId: string, messageId: string) => {
-    console.log('👁️ [ChatWidget] Marcando mensaje como visto:', conversationId, messageId);
     setLastSeenMessageByConv(prevSeen => {
       const newSeen = {
         ...prevSeen,
         [conversationId]: messageId
       };
-      // Actualizar ref inmediatamente para acceso síncrono
       lastSeenMessageByConvRef.current = newSeen;
       return newSeen;
     });
   };
 
+  // 🔧 FUNCIÓN CENTRALIZADA: Marcar TODOS los mensajes de una conversación como leídos
+  // Con debouncing para evitar múltiples llamadas simultáneas
+  const markConversationAsRead = async (conversationId: string, immediate = false) => {
+    if (!session || !conversationId || conversationId.startsWith('temp_')) return;
+
+    // Si ya se está marcando esta conversación, evitar duplicados
+    if (markingAsReadRef.current.has(conversationId)) {
+      console.log('⏭️ [ChatWidget] Ya se está marcando esta conversación como leída');
+      return;
+    }
+
+    // Si hay un timeout pendiente, cancelarlo
+    const existingTimeout = markAsReadTimeoutRef.current.get(conversationId);
+    if (existingTimeout) {
+      clearTimeout(existingTimeout);
+      markAsReadTimeoutRef.current.delete(conversationId);
+    }
+
+    const executeMark = async () => {
+      markingAsReadRef.current.add(conversationId);
+      console.log('👁️ [ChatWidget] Marcando conversación como leída:', conversationId);
+
+      try {
+        const response = await fetch('/api/chat/messages/read', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${session.access_token}`
+          },
+          body: JSON.stringify({ conversation_id: conversationId })
+        });
+
+        const data = await response.json();
+        if (data.success) {
+          console.log(`✅ [ChatWidget] ${data.updated || 0} mensajes marcados como leídos`);
+          
+          // Actualizar estado local inmediatamente
+          zeroUnreadForConversation(conversationId);
+          
+          // Recargar conversaciones después de un breve delay para reflejar cambios del backend
+          setTimeout(() => {
+            loadConversations();
+          }, 200);
+        } else {
+          console.error('❌ [ChatWidget] Error marcando como leído:', data.error);
+        }
+      } catch (error) {
+        console.error('❌ [ChatWidget] Error en fetch de marcar como leído:', error);
+      } finally {
+        markingAsReadRef.current.delete(conversationId);
+      }
+    };
+
+    if (immediate) {
+      // Ejecutar inmediatamente (sin debounce)
+      await executeMark();
+    } else {
+      // Debounce: esperar 300ms antes de ejecutar
+      const timeout = setTimeout(executeMark, 300);
+      markAsReadTimeoutRef.current.set(conversationId, timeout);
+    }
+  };
+
   // Helper para poner en 0 el contador local de una conversación
   const zeroUnreadForConversation = (conversationId: string) => {
-    setConversations(prev => prev.map((c: any) => c.id === conversationId ? { ...c, unread_count: 0 } : c));
+    setConversations(prev => prev.map((c: any) => 
+      c.id === conversationId ? { ...c, unread_count: 0 } : c
+    ));
   };
   
   // Mantener ref sincronizado con el estado
@@ -348,14 +415,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   latestMessage.sender_id !== userId && 
                   latestMessage.id !== lastProcessedMessageIdRef.current &&
                   !isOpen) {
-                // El toast se mostrará automáticamente en la próxima carga de conversaciones
                 lastProcessedMessageIdRef.current = latestMessage.id;
               }
             }
           }
           
-          // SIEMPRE marcar como visto el último mensaje cuando cargamos esta conversación
-          // (tanto si hay cambios como si no, porque el usuario está leyendo)
+          // Marcar último mensaje como visto localmente (solo estado local)
           if (newMessages.length > 0) {
             const last = newMessages[newMessages.length - 1];
             markMessageAsSeen(conversationId, last.id);
@@ -363,23 +428,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           
           return hasChanges ? newMessages : prev;
         });
+        
         setSelectedConversation(conversationId);
 
-        // Marcar vistos en servidor (double check persistente)
-        try {
-          if (session) {
-            await fetch('/api/chat/messages/read', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${session.access_token}`
-              },
-              body: JSON.stringify({ conversation_id: conversationId })
-            });
-          }
-        } catch (e) {
-          console.error('❌ [ChatWidget] Error marcando vistos en servidor:', e);
-        }
+        // 🔧 MARCADO CENTRALIZADO: Marcar TODOS los mensajes como leídos en el servidor
+        // Usar función centralizada con debouncing
+        await markConversationAsRead(conversationId, true); // true = inmediato (sin debounce)
       } else {
         console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
         
@@ -868,14 +922,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     const messagesPollingInterval = setInterval(async () => {
       console.log('🔄 [ChatWidget] Polling: verificando mensajes nuevos...');
       await loadMessages(selectedConversation);
-      // Al estar viendo la conversación, registrar como visto el último mensaje mostrado
-      setMessages(curr => {
-        if (curr.length > 0) {
-          const last = curr[curr.length - 1];
-          markMessageAsSeen(selectedConversation, last.id);
-        }
-        return curr;
-      });
+      // El marcado como leído se maneja automáticamente en loadMessages
+      // No necesitamos marcado adicional aquí para evitar duplicados
     }, 3000); // Cada 3 segundos
 
     // Cleanup
@@ -908,46 +956,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // Marcar mensajes como vistos cuando el usuario está viendo el chat
+  // 🔧 OPTIMIZADO: Marcar conversación como leída cuando se abre/visualiza
   useEffect(() => {
-    if (!isOpen) return;
-    if (mainView === 'chat' && selectedConversation && messages.length > 0) {
-      const last = messages[messages.length - 1];
-      markMessageAsSeen(selectedConversation, last.id);
-      // Recargar conversaciones para actualizar cálculo de no leídos
-      setTimeout(() => loadConversations(), 50);
-      zeroUnreadForConversation(selectedConversation);
-    }
-  }, [isOpen, mainView, selectedConversation, messages.length]);
-
-  // Efecto específico: cuando cambias de conversación seleccionada o se cargan mensajes, marcarla como vista inmediatamente
-  useEffect(() => {
-    if (!selectedConversation || !isOpen || mainView !== 'chat') return;
+    if (!isOpen || mainView !== 'chat' || !selectedConversation) return;
+    if (selectedConversation.startsWith('temp_')) return; // No marcar conversaciones temporales
     
-    // Si hay mensajes, marcar el último como visto inmediatamente
-    if (messages.length > 0) {
-      const last = messages[messages.length - 1];
-      console.log('👁️ [ChatWidget] Conversación seleccionada/mensajes cargados, marcando como vista:', selectedConversation, 'último mensaje:', last.id);
-      
-      // Verificar si ya está marcado como visto antes de actualizar
-      const alreadySeen = lastSeenMessageByConvRef.current[selectedConversation] === last.id;
-      if (!alreadySeen) {
-        markMessageAsSeen(selectedConversation, last.id);
-      } else {
-        console.log('ℹ️ [ChatWidget] Ya estaba marcado como visto');
-      }
-      
-      
-      // Recargar conversaciones después de un breve delay para recalcular no leídos con el nuevo estado
-      setTimeout(() => {
-        console.log('🔄 [ChatWidget] Recargando conversaciones después de marcar como visto');
-        loadConversations();
-      }, 100);
-
-      // Poner a 0 el contador local de esta conversación inmediatamente
-      zeroUnreadForConversation(selectedConversation);
-    }
-  }, [selectedConversation, messages.length]);
+    // Cuando el usuario está viendo una conversación, marcarla como leída
+    // Usar función centralizada con debouncing para evitar múltiples llamadas
+    markConversationAsRead(selectedConversation);
+  }, [isOpen, mainView, selectedConversation]);
 
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
@@ -1000,17 +1017,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   console.log('➕ [ChatWidget] Agregando nuevo mensaje a la lista');
                   return [...prev, newMessage];
                 });
-                // Marcar como visto inmediatamente al estar visualizándolo
-                markMessageAsSeen(newMessage.conversation_id, newMessage.id);
-              }
-              
-              // Actualizar conversaciones para mostrar último mensaje solo si NO estamos viendo esta conversación
-              if (!(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)) {
-                console.log('🔄 [ChatWidget] Actualizando lista de conversaciones...');
-                loadConversations();
+                // Si estamos viendo esta conversación, marcar como leído inmediatamente
+                markConversationAsRead(newMessage.conversation_id, true);
               } else {
-                // Si estamos viéndola, asegurar contador en 0 localmente
-                zeroUnreadForConversation(newMessage.conversation_id);
+                // Si NO estamos viendo esta conversación, solo actualizar lista (el mensaje seguirá como no leído hasta que se abra)
+                console.log('🔄 [ChatWidget] Nuevo mensaje en conversación no activa, actualizando lista...');
+                loadConversations();
               }
               
               // Si el mensaje es de otro usuario y no estamos viendo esa conversación, mostrar toast
@@ -1018,30 +1030,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 newMessage.sender_id !== userId &&
                 !(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)
               ) {
-                // El toast se mostrará automáticamente en la próxima carga de conversaciones
-                // Recargar conversaciones para obtener datos completos
+                // Recargar conversaciones para obtener datos completos y mostrar toast
                 setTimeout(() => loadConversations(), 100);
-              } else if (isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id) {
-                // Si estamos en la conversación, marcar visto en servidor y resetear contador de esa conversación
-                (async () => {
-                  try {
-                    if (session) {
-                      await fetch('/api/chat/messages/read', {
-                        method: 'POST',
-                        headers: {
-                          'Content-Type': 'application/json',
-                          'Authorization': `Bearer ${session.access_token}`
-                        },
-                        body: JSON.stringify({ conversation_id: newMessage.conversation_id })
-                      });
-                      zeroUnreadForConversation(newMessage.conversation_id);
-                      // Pequeño delay para asegurar consistencia del backend antes de recargar
-                      setTimeout(() => loadConversations(), 150);
-                    }
-                  } catch (e) {
-                    console.error('❌ [ChatWidget] Error marcando vistos RT:', e);
-                  }
-                })();
               }
               
               // Detectar si el mensaje es de AIM Botty y abrir ventana automáticamente (solo una vez)
@@ -1114,6 +1104,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     return () => {
       console.log('🧹 [ChatWidget] Limpiando suscripción en tiempo real');
       supabase.removeChannel(channel);
+      
+      // Limpiar todos los timeouts de marcado como leído
+      markAsReadTimeoutRef.current.forEach(timeout => clearTimeout(timeout));
+      markAsReadTimeoutRef.current.clear();
+      markingAsReadRef.current.clear();
     };
   }, [session, userId]); // Solo dependencias esenciales
 
