@@ -6,6 +6,7 @@ import {
   getBotPersonalityForRole,
   type UserContext 
 } from '@/lib/chat/aim-botty';
+import { executeAnalyticsQuery, type AnalyticsQuery } from '@/lib/chat/bot-analytics';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -100,12 +101,33 @@ export async function POST(request: NextRequest) {
     console.log('🤖 [BOTTY-API] Obteniendo contexto del usuario...');
     const userContext = await getUserContext(user.id, supabase);
 
+    // Detectar y ejecutar consultas analíticas si es necesario
+    let analyticsData: any = null;
+    const analyticsQuery = detectAnalyticsQuery(message_content, userContext.role);
+    if (analyticsQuery) {
+      console.log('📊 [BOTTY-API] Consulta analítica detectada:', analyticsQuery);
+      try {
+        const analyticsResult = await executeAnalyticsQuery(
+          analyticsQuery,
+          user.id,
+          userContext.role
+        );
+        if (analyticsResult.success) {
+          analyticsData = analyticsResult.data;
+          console.log('✅ [BOTTY-API] Consulta analítica ejecutada exitosamente');
+        }
+      } catch (error) {
+        console.error('❌ [BOTTY-API] Error ejecutando consulta analítica:', error);
+      }
+    }
+
     // Generar respuesta con IA
     console.log('🤖 [BOTTY-API] Generando respuesta con IA...');
     const botResponse = await generateBotResponse(
       message_content,
       userContext,
-      conversation_history
+      conversation_history,
+      analyticsData
     );
 
     console.log('✅ [BOTTY-API] Respuesta generada, longitud:', botResponse.length);
@@ -193,11 +215,123 @@ async function getUserContext(userId: string, supabase: any): Promise<UserContex
   };
 }
 
+// Detectar consultas analíticas en el mensaje del usuario
+function detectAnalyticsQuery(
+  message: string,
+  role: 'super_admin' | 'admin' | 'modelo'
+): AnalyticsQuery | null {
+  const lowerMessage = message.toLowerCase();
+
+  // Patrones para detectar consultas analíticas
+  // Super Admin puede hacer todas las consultas
+  if (role === 'super_admin') {
+    // Productividad por sede
+    if (lowerMessage.match(/sede.*productiv|productiv.*sede|sede.*más.*productiv|más.*productiv.*sede/)) {
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'productivity_by_sede',
+        params: { months }
+      };
+    }
+
+    // Productividad por grupo
+    if (lowerMessage.match(/grupo.*productiv|productiv.*grupo|grupo.*más.*productiv/)) {
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'productivity_by_group',
+        params: { months }
+      };
+    }
+
+    // Ranking de sedes
+    if (lowerMessage.match(/ranking.*sede|sede.*ranking|ordenar.*sede|sede.*orden|top.*sede/)) {
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'sede_ranking',
+        params: { months }
+      };
+    }
+  }
+
+  // Admin y Super Admin pueden consultar grupos
+  if (role === 'admin' || role === 'super_admin') {
+    // Productividad por grupo
+    if (lowerMessage.match(/grupo.*productiv|productiv.*grupo|grupo.*más.*productiv/)) {
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'productivity_by_group',
+        params: { months }
+      };
+    }
+
+    // Top modelos
+    if (lowerMessage.match(/top.*modelo|mejor.*modelo|modelo.*más.*productiv|ranking.*modelo/)) {
+      const limit = extractNumber(lowerMessage, /top\s*(\d+)/) || 10;
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'top_models',
+        params: { limit, months }
+      };
+    }
+
+    // Tendencia de productividad
+    if (lowerMessage.match(/tendencia|evoluci|crecimiento|dismin|aumento.*productiv/)) {
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'productivity_trend',
+        params: { months }
+      };
+    }
+
+    // Ranking de grupos
+    if (lowerMessage.match(/ranking.*grupo|grupo.*ranking|ordenar.*grupo/)) {
+      const months = extractMonths(lowerMessage) || 6;
+      return {
+        type: 'group_ranking',
+        params: { months }
+      };
+    }
+  }
+
+  // Todos los roles pueden consultar sus propias estadísticas
+  if (lowerMessage.match(/mi.*estadística|mi.*productividad|mi.*rendimiento|cuánto.*gan|mis.*datos/)) {
+    const months = extractMonths(lowerMessage) || 6;
+    return {
+      type: 'model_statistics',
+      params: { months }
+    };
+  }
+
+  return null;
+}
+
+// Extraer número de meses del mensaje
+function extractMonths(message: string): number | undefined {
+  // Buscar patrones como "último semestre", "6 meses", "últimos 3 meses", etc.
+  if (message.match(/último\s*semestre|semestre/)) return 6;
+  if (message.match(/último\s*trimestre|trimestre/)) return 3;
+  if (message.match(/último\s*mes/)) return 1;
+  if (message.match(/último\s*año|año/)) return 12;
+  
+  const match = message.match(/(\d+)\s*mes/);
+  if (match) return parseInt(match[1]);
+  
+  return undefined;
+}
+
+// Extraer número de un patrón específico
+function extractNumber(message: string, pattern: RegExp): number | undefined {
+  const match = message.match(pattern);
+  if (match && match[1]) return parseInt(match[1]);
+  return undefined;
+}
+
 // Generar respuesta del bot usando IA
 async function generateBotResponse(
   userMessage: string,
   userContext: UserContext,
-  conversationHistory: any[]
+  conversationHistory: any[],
+  analyticsData?: any
 ): Promise<string> {
   try {
     const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
@@ -215,6 +349,17 @@ async function generateBotResponse(
 
     // Construir información de contexto
     let contextInfo = '';
+    let analyticsContext = '';
+    
+    if (analyticsData) {
+      analyticsContext = `
+DATOS ANALÍTICOS DISPONIBLES:
+${JSON.stringify(analyticsData, null, 2)}
+
+IMPORTANTE: Usa estos datos analíticos para responder la pregunta del usuario. Presenta la información de manera clara y estructurada, destacando los resultados más importantes. Si hay rankings, menciona los top 3-5. Si hay totales, inclúyelos en tu respuesta. Formatea los números de manera legible (ej: $1,234.56 USD).
+`;
+    }
+
     if (userContext.role === 'modelo') {
       contextInfo = `
 INFORMACIÓN DEL MODELO:
@@ -231,6 +376,7 @@ CAPACIDADES DISPONIBLES:
 - Consejería emocional y apoyo
 - Tips para potenciar transmisiones
 - Soporte técnico con búsqueda web
+- Consultas sobre mis propias estadísticas y productividad
 - Escalamiento a admin cuando sea necesario
 `;
     } else if (userContext.role === 'admin') {
@@ -238,12 +384,29 @@ CAPACIDADES DISPONIBLES:
 INFORMACIÓN DEL ADMIN:
 - Nombre: ${userContext.name}
 - Grupos gestionados: ${userContext.groups?.length || 0}
+- Grupos: ${userContext.groups?.join(', ') || 'Ninguno'}
+
+CAPACIDADES ANALÍTICAS DISPONIBLES:
+- Análisis de productividad por grupo (grupos que gestionas)
+- Top modelos por productividad
+- Tendencia de productividad
+- Ranking de grupos
+- Estadísticas individuales de modelos
 `;
     } else {
       contextInfo = `
 INFORMACIÓN DEL SUPER ADMIN:
 - Nombre: ${userContext.name}
 - Acceso completo al sistema
+
+CAPACIDADES ANALÍTICAS DISPONIBLES:
+- Análisis de productividad por sede (organización)
+- Análisis de productividad por grupo
+- Top modelos por productividad
+- Tendencia de productividad
+- Ranking de sedes y grupos
+- Comparación entre períodos
+- Estadísticas completas del sistema
 `;
     }
 
@@ -252,19 +415,24 @@ ${personality}
 
 ${contextInfo}
 
+${analyticsContext}
+
 ${historyText ? `\nHISTORIAL DE CONVERSACIÓN:\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
 
 INSTRUCCIONES:
 1. Responde de manera natural y conversacional
-2. Si el usuario pregunta sobre plataformas, proporciona tips específicos
-3. Si necesita soporte técnico, ofrece soluciones prácticas primero
-4. Si no puedes resolver algo técnico, menciona que puedes escalarlo al admin
-5. Si pregunta sobre consejería emocional, sé empático y comprensivo
-6. Mantén las respuestas concisas pero útiles (máximo 3-4 párrafos)
-7. Usa emojis apropiados pero con moderación
-8. Si es una consulta que requiere escalamiento, indica claramente "Puedo escalar esto a tu administrador"
+2. ${analyticsData ? 'USA los datos analíticos proporcionados para responder con información precisa y específica. Presenta los datos de forma estructurada y legible.' : ''}
+3. Si el usuario pregunta sobre plataformas, proporciona tips específicos
+4. Si necesita soporte técnico, ofrece soluciones prácticas primero
+5. Si no puedes resolver algo técnico, menciona que puedes escalarlo al admin
+6. Si pregunta sobre consejería emocional, sé empático y comprensivo
+7. ${userContext.role === 'super_admin' || userContext.role === 'admin' ? 'Si el usuario pregunta sobre productividad, sedes, grupos, rankings o análisis de datos, puedes proporcionar información analítica detallada usando los datos del sistema.' : ''}
+8. Mantén las respuestas concisas pero útiles. ${analyticsData ? 'Para consultas analíticas, puedes extender la respuesta para incluir toda la información relevante.' : 'Máximo 3-4 párrafos.'}
+9. Usa emojis apropiados pero con moderación
+10. Si es una consulta que requiere escalamiento, indica claramente "Puedo escalar esto a tu administrador"
+${analyticsData ? '11. Formatea números grandes de manera legible (ej: $1,234.56 USD, $2.5M USD)' : ''}
 
 RESPUESTA:
 `;
