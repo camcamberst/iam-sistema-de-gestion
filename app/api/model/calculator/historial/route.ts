@@ -216,34 +216,42 @@ export async function GET(request: NextRequest) {
         usd_cop: item.rate_usd_cop ?? period.rates?.usd_cop ?? 3900
       };
       
-      // Función para calcular USD bruto (misma lógica que en period-closure-helpers)
+      // Función para calcular USD bruto (misma lógica que en period-closure-helpers y Mi Calculadora)
+      // IMPORTANTE: Todas las reglas especiales deben coincidir exactamente con "Mi Calculadora"
       const calculateUsdBruto = (value: number, platformId: string, currency: string, rates: any): number => {
+        // Normalizar platformId para comparación (case-insensitive, sin caracteres especiales)
+        const normalizedId = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+        
         if (currency === 'EUR') {
-          if (platformId === 'big7') {
-            return (value * rates.eur_usd) * 0.84;
-          } else if (platformId === 'mondo') {
-            return (value * rates.eur_usd) * 0.78;
+          if (normalizedId === 'big7') {
+            return (value * rates.eur_usd) * 0.84; // 16% impuesto
+          } else if (normalizedId === 'mondo') {
+            return (value * rates.eur_usd) * 0.78; // 22% descuento
+          } else if (normalizedId === 'superfoon') {
+            // CORRECCIÓN: SUPERFOON es EUR, no USD. Convertir EUR a USD directo
+            return value * rates.eur_usd;
           } else {
+            // Otras plataformas EUR (modelka, xmodels, 777, vx, livecreator, mow, etc.)
             return value * rates.eur_usd;
           }
         } else if (currency === 'GBP') {
-          if (platformId === 'aw') {
-            return (value * rates.gbp_usd) * 0.677;
+          if (normalizedId === 'aw') {
+            return (value * rates.gbp_usd) * 0.677; // 32.3% descuento
           } else {
+            // Otras plataformas GBP (babestation, etc.)
             return value * rates.gbp_usd;
           }
         } else if (currency === 'USD') {
-          if (platformId === 'cmd' || platformId === 'camlust' || platformId === 'skypvt') {
-            return value * 0.75;
-          } else if (platformId === 'chaturbate' || platformId === 'myfreecams' || platformId === 'stripchat') {
-            return value * 0.05;
-          } else if (platformId === 'dxlive') {
-            return value * 0.60;
-          } else if (platformId === 'secretfriends') {
-            return value * 0.5;
-          } else if (platformId === 'superfoon') {
-            return value;
+          if (normalizedId === 'cmd' || normalizedId === 'camlust' || normalizedId === 'skypvt') {
+            return value * 0.75; // 25% descuento
+          } else if (normalizedId === 'chaturbate' || normalizedId === 'myfreecams' || normalizedId === 'stripchat') {
+            return value * 0.05; // 100 tokens = 5 USD
+          } else if (normalizedId === 'dxlive') {
+            return value * 0.60; // 100 pts = 60 USD
+          } else if (normalizedId === 'secretfriends') {
+            return value * 0.5; // 50% descuento
           } else {
+            // Otras plataformas USD (mdh, livejasmin, imlive, hegre, dirtyfans, camcontacts, etc.)
             return value;
           }
         }
