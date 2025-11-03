@@ -17,6 +17,7 @@ import {
   validateUserDataAccess,
   getPermissionDeniedMessage
 } from '@/lib/chat/bot-permissions';
+import type { BotCapability } from '@/lib/chat/bot-permissions';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
