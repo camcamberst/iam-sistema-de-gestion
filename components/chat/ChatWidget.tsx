@@ -858,12 +858,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       return;
     }
     
-    // No mostrar toast si el chat está completamente cerrado (ya está verificado arriba)
-    // pero mejor verificar explícitamente
     const toastId = `${conversation.id}-${message.id}-${Date.now()}`;
     const sender = conversation.other_participant;
     
-    setToasts(prev => [...prev, {
+    // Cerrar todos los toasts anteriores antes de mostrar uno nuevo
+    // Esto evita que se sobrepongan
+    setToasts([]);
+    
+    // Agregar solo el nuevo toast
+    setToasts([{
       id: toastId,
       conversationId: conversation.id,
       senderName: getDisplayName(sender),
