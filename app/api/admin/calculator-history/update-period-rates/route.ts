@@ -275,6 +275,9 @@ export async function POST(request: NextRequest) {
 
     // 🔒 IMPORTANTE: Solo afectar períodos CERRADOS (archivados)
     // Verificar que el período esté archivado (tiene archived_at)
+    console.log(`🔍 [PERIOD-RATES-UPDATE] Buscando registros para período: ${period_date} (${period_type})`);
+    console.log(`🔍 [PERIOD-RATES-UPDATE] Usuario: ${authenticatedUserId}, Rol: ${userRole}, SuperAdmin: ${isSuperAdmin}`);
+    
     let periodRecordsQuery = supabase
       .from('calculator_history')
       .select('*, model_id, archived_at')
@@ -284,15 +287,23 @@ export async function POST(request: NextRequest) {
 
     // Si es admin (no super_admin), filtrar por grupos del admin
     if (!isSuperAdmin && allowedGroupIds.length > 0) {
+      console.log(`🔍 [PERIOD-RATES-UPDATE] Admin con grupos asignados: ${allowedGroupIds.length} grupos`);
+      
       // Obtener IDs de modelos que pertenecen a los grupos del admin
-      const { data: modelGroups } = await supabase
+      const { data: modelGroups, error: modelGroupsError } = await supabase
         .from('user_groups')
         .select('user_id')
         .in('group_id', allowedGroupIds);
       
+      if (modelGroupsError) {
+        console.error('❌ [PERIOD-RATES-UPDATE] Error obteniendo modelos de grupos:', modelGroupsError);
+      }
+      
       const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
+      console.log(`🔍 [PERIOD-RATES-UPDATE] Modelos en grupos del admin: ${allowedModelIds.length}`);
       
       if (allowedModelIds.length === 0) {
+        console.warn('⚠️ [PERIOD-RATES-UPDATE] No hay modelos en los grupos del admin');
         return NextResponse.json({
           success: false,
           error: 'No hay modelos en tus grupos asignados'
@@ -300,9 +311,18 @@ export async function POST(request: NextRequest) {
       }
       
       periodRecordsQuery = periodRecordsQuery.in('model_id', allowedModelIds);
+    } else if (!isSuperAdmin) {
+      console.warn('⚠️ [PERIOD-RATES-UPDATE] Admin sin grupos asignados');
+    } else {
+      console.log('🔍 [PERIOD-RATES-UPDATE] SuperAdmin: buscando todos los registros sin filtrar por grupos');
     }
 
     const { data: periodRecords, error: fetchError } = await periodRecordsQuery;
+    
+    console.log(`🔍 [PERIOD-RATES-UPDATE] Query ejecutada. Registros encontrados: ${periodRecords?.length || 0}`);
+    if (fetchError) {
+      console.error('❌ [PERIOD-RATES-UPDATE] Error en la consulta:', fetchError);
+    }
 
     if (fetchError) {
       console.error('❌ [PERIOD-RATES-UPDATE] Error obteniendo registros:', fetchError);
@@ -313,9 +333,33 @@ export async function POST(request: NextRequest) {
     }
 
     if (!periodRecords || periodRecords.length === 0) {
+      // Debug: Intentar buscar sin el filtro de archived_at para diagnosticar
+      const { data: debugRecords, error: debugError } = await supabase
+        .from('calculator_history')
+        .select('id, period_date, period_type, archived_at')
+        .eq('period_date', period_date)
+        .eq('period_type', period_type)
+        .limit(5);
+      
+      console.log(`🔍 [PERIOD-RATES-UPDATE] DEBUG - Registros sin filtro archived_at:`, {
+        total: debugRecords?.length || 0,
+        sample: debugRecords?.slice(0, 3),
+        error: debugError
+      });
+      
+      // También verificar si hay registros con period_date similar (por si hay diferencia en formato)
+      const { data: similarRecords } = await supabase
+        .from('calculator_history')
+        .select('period_date, period_type, archived_at')
+        .ilike('period_date', `${period_date.split('-')[0]}-${period_date.split('-')[1]}%`)
+        .eq('period_type', period_type)
+        .limit(5);
+      
+      console.log(`🔍 [PERIOD-RATES-UPDATE] DEBUG - Registros con fecha similar:`, similarRecords);
+      
       return NextResponse.json({
         success: false,
-        error: 'No se encontraron registros CERRADOS (archivados) para este período. Solo se pueden editar tasas de períodos que ya fueron cerrados.'
+        error: `No se encontraron registros CERRADOS (archivados) para el período ${period_date} (${period_type}). Solo se pueden editar tasas de períodos que ya fueron cerrados. Total sin filtro: ${debugRecords?.length || 0}`
       }, { status: 404 });
     }
 
