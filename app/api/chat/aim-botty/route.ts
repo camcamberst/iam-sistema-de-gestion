@@ -395,10 +395,18 @@ async function generateBotResponse(
 ): Promise<string> {
   try {
     // Verificar que la API key esté configurada
-    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+    if (!apiKey) {
       console.error('❌ [BOTTY-GEN] GOOGLE_GEMINI_API_KEY no está configurada');
+      console.error('❌ [BOTTY-GEN] Variables de entorno disponibles:', {
+        hasSupabaseUrl: !!process.env.NEXT_PUBLIC_SUPABASE_URL,
+        hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+        hasGeminiKey: false
+      });
       return 'Lo siento, el servicio de IA no está configurado. Por favor, contacta a tu administrador.';
     }
+    
+    console.log('✅ [BOTTY-GEN] API Key encontrada, longitud:', apiKey.length);
 
     const personality = getBotPersonalityForRole(userContext.role);
     
@@ -546,11 +554,14 @@ RESPUESTA:
     
     let lastError: any = null;
     
+    // Obtener instancia de Gemini
+    const geminiInstance = getGenAI();
+    
     // Intentar con cada modelo hasta que uno funcione
     for (const modelName of modelNames) {
       try {
         console.log(`🤖 [BOTTY-GEN] Intentando con modelo: ${modelName}`);
-        const model = genAI.getGenerativeModel({ model: modelName });
+        const model = geminiInstance.getGenerativeModel({ model: modelName });
         
         // Ejecutar con rate limiting
         const result = await executeWithRateLimit(
