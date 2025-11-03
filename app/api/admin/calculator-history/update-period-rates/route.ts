@@ -476,7 +476,8 @@ export async function POST(request: NextRequest) {
         // 2. La clave de servicio no está correctamente configurada
         // 3. Problemas de permisos a nivel de base de datos
         
-        const { data, error: updateError, count } = await supabase
+        // Actualizar registro y verificar que se actualizó correctamente
+        const { data: updatedData, error: updateError } = await supabase
           .from('calculator_history')
           .update({
             rate_eur_usd: update.rate_eur_usd,
@@ -488,7 +489,8 @@ export async function POST(request: NextRequest) {
             updated_at: update.updated_at
           })
           .eq('id', update.id)
-          .select('id', { count: 'exact', head: true } as any);
+          .select('id')
+          .single();
 
         if (updateError) {
           console.error(`❌ [PERIOD-RATES-UPDATE] Error actualizando registro ${update.id}:`, {
@@ -502,9 +504,9 @@ export async function POST(request: NextRequest) {
           return false;
         }
         
-        // Verificar que realmente se actualizó
-        if (count !== null && count === 0) {
-          console.warn(`⚠️ [PERIOD-RATES-UPDATE] Registro ${update.id} no se actualizó (count: ${count}). Posible problema de RLS.`);
+        // Verificar que realmente se actualizó (si no hay data, el registro no existe o no se pudo actualizar)
+        if (!updatedData || !updatedData.id) {
+          console.warn(`⚠️ [PERIOD-RATES-UPDATE] Registro ${update.id} no se actualizó. Posible problema de RLS o registro no encontrado.`);
           errors.push(`Registro ${update.id}: No se encontró para actualizar o bloqueado por RLS`);
           return false;
         }
