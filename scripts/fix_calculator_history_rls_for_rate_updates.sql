@@ -17,11 +17,14 @@ FROM pg_policies
 WHERE tablename = 'calculator_history'
 ORDER BY policyname;
 
--- 2. Eliminar política restrictiva de UPDATE (si existe)
+-- 2. Eliminar políticas existentes de UPDATE (si existen)
 DROP POLICY IF EXISTS "No updates to history" ON calculator_history;
+DROP POLICY IF EXISTS "Admins can update history for corrections" ON calculator_history;
 
 -- 3. Crear política que permite a admins actualizar valores y tasas para correcciones
--- Esta política permite actualizaciones si el usuario es admin/super_admin O si es service_role
+-- Esta política permite actualizaciones si el usuario es admin/super_admin
+-- NOTA: El service_role puede bypass RLS automáticamente, pero esta política asegura
+-- que los admins autenticados también puedan actualizar.
 CREATE POLICY "Admins can update history for corrections" ON calculator_history
   FOR UPDATE 
   USING (
