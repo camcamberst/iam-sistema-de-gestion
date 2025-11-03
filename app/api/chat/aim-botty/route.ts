@@ -161,16 +161,14 @@ export async function POST(request: NextRequest) {
     // Extraer y guardar información relevante del mensaje
     await extractAndSaveMemory(user.id, conversation_id, message_content, userContext);
 
-    // Generar respuesta con IA (con rate limiting)
+    // Generar respuesta con IA (rate limiting se maneja dentro de generateBotResponse)
     console.log('🤖 [BOTTY-API] Generando respuesta con IA...');
-    const botResponse = await executeWithRateLimit(
-      () => generateBotResponse(
-        message_content,
-        userContext,
-        conversation_history,
-        analyticsData,
-        conversation_id
-      )
+    const botResponse = await generateBotResponse(
+      message_content,
+      userContext,
+      conversation_history,
+      analyticsData,
+      conversation_id
     );
 
     console.log('✅ [BOTTY-API] Respuesta generada, longitud:', botResponse.length);
@@ -396,8 +394,12 @@ async function generateBotResponse(
   conversationId?: string
 ): Promise<string> {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-pro' });
-    
+    // Verificar que la API key esté configurada
+    if (!process.env.GOOGLE_GEMINI_API_KEY) {
+      console.error('❌ [BOTTY-GEN] GOOGLE_GEMINI_API_KEY no está configurada');
+      return 'Lo siento, el servicio de IA no está configurado. Por favor, contacta a tu administrador.';
+    }
+
     const personality = getBotPersonalityForRole(userContext.role);
     
     // Construir historial de conversación
@@ -532,24 +534,118 @@ ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma
 RESPUESTA:
 `;
 
-    // Ejecutar con rate limiting
-    const result = await executeWithRateLimit(
-      async () => {
-        const result = await model.generateContent(prompt);
-        return result.response;
+    console.log('🤖 [BOTTY-GEN] Generando respuesta con IA...');
+    console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
+
+    // Lista de modelos para intentar (más recientes primero)
+    const modelNames = [
+      'gemini-1.5-flash',
+      'gemini-1.5-pro',
+      'gemini-pro'
+    ];
+    
+    let lastError: any = null;
+    
+    // Intentar con cada modelo hasta que uno funcione
+    for (const modelName of modelNames) {
+      try {
+        console.log(`🤖 [BOTTY-GEN] Intentando con modelo: ${modelName}`);
+        const model = genAI.getGenerativeModel({ model: modelName });
+        
+        // Ejecutar con rate limiting
+        const result = await executeWithRateLimit(
+          async () => {
+            const result = await model.generateContent(prompt);
+            return result.response;
+          }
+        );
+        
+        const response = result;
+        let text = response.text().trim();
+
+        // Limpiar markdown si existe
+        text = text.replace(/```[\s\S]*?```/g, '').trim();
+        
+        console.log(`✅ [BOTTY-GEN] Respuesta generada exitosamente con ${modelName}, longitud:`, text.length);
+        return text;
+        
+      } catch (modelError: any) {
+        console.error(`❌ [BOTTY-GEN] Error con ${modelName}:`, {
+          message: modelError?.message,
+          status: modelError?.status,
+          statusText: modelError?.statusText
+        });
+        lastError = modelError;
+        
+        // Si es error 404 o "not found", intentar siguiente modelo
+        if (modelError?.message?.includes('404') || 
+            modelError?.message?.includes('not found') ||
+            modelError?.status === 404) {
+          console.log(`⚠️ [BOTTY-GEN] ${modelName} no disponible, intentando siguiente modelo...`);
+          continue; // Intentar siguiente modelo
+        }
+        
+        // Si es error de API key o autenticación, no intentar otros modelos
+        if (modelError?.message?.includes('API key') || 
+            modelError?.message?.includes('authentication') ||
+            modelError?.message?.includes('PERMISSION_DENIED')) {
+          console.error('❌ [BOTTY-GEN] Error de autenticación, no intentando más modelos');
+          throw modelError;
+        }
+        
+        // Si es otro tipo de error (rate limit, etc), intentar siguiente modelo
+        if (modelError?.status === 429 || modelError?.message?.includes('rate limit')) {
+          console.log(`⚠️ [BOTTY-GEN] Rate limit en ${modelName}, intentando siguiente modelo...`);
+          continue;
+        }
+        
+        // Para otros errores, solo continuar si es un error de modelo
+        if (modelError?.message?.includes('model') || modelError?.message?.includes('Model')) {
+          continue;
+        }
+        
+        // Si no es error de modelo, lanzar el error
+        throw modelError;
       }
-    );
+    }
     
-    const response = result;
-    let text = response.text().trim();
-
-    // Limpiar markdown si existe
-    text = text.replace(/```[\s\S]*?```/g, '').trim();
+    // Si llegamos aquí, todos los modelos fallaron
+    console.error('❌ [BOTTY-GEN] Todos los modelos fallaron. Último error:', lastError);
     
-    return text;
+    // Mensaje más específico según el error
+    if (lastError?.message?.includes('API key') || lastError?.message?.includes('authentication')) {
+      return 'Lo siento, hay un problema con la configuración del servicio de IA. Por favor, contacta a tu administrador.';
+    }
+    
+    if (lastError?.message?.includes('404') || lastError?.message?.includes('not found')) {
+      return 'Lo siento, el modelo de IA no está disponible en este momento. Por favor, intenta más tarde o contacta a tu administrador.';
+    }
+    
+    if (lastError?.status === 429 || lastError?.message?.includes('rate limit')) {
+      return 'Lo siento, el servicio está experimentando alta demanda. Por favor, intenta en unos momentos.';
+    }
+    
+    return 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta a tu administrador.';
 
-  } catch (error) {
-    console.error('Error generando respuesta del bot:', error);
+  } catch (error: any) {
+    console.error('❌ [BOTTY-GEN] Error generando respuesta del bot:', error);
+    console.error('❌ [BOTTY-GEN] Error details:', {
+      message: error?.message,
+      stack: error?.stack,
+      name: error?.name,
+      status: error?.status,
+      statusText: error?.statusText
+    });
+    
+    // Mensaje más específico según el error
+    if (error?.message?.includes('API key') || error?.message?.includes('authentication')) {
+      return 'Lo siento, hay un problema con la configuración del servicio de IA. Por favor, contacta a tu administrador.';
+    }
+    
+    if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+      return 'Lo siento, el modelo de IA no está disponible en este momento. Por favor, intenta más tarde o contacta a tu administrador.';
+    }
+    
     return 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta a tu administrador.';
   }
 }
