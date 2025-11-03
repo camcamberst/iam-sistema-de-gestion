@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
-import { renderElegantAvatar } from '@/lib/chat/user-avatar';
+import { renderElegantAvatar } from '@/lib/chat/user-avatar.tsx';
 
 interface IndividualChatWindowProps {
   conversationId: string;
