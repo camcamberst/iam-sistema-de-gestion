@@ -801,14 +801,16 @@ export default function AdminViewModelPage() {
                           const mix = (a: any, b: any, t: number) => ({ r: Math.round(a.r + (b.r - a.r) * t), g: Math.round(a.g + (b.g - a.g) * t), b: Math.round(a.b + (b.b - a.b) * t) });
                           const rgbToHex = (c: any) => `#${[c.r,c.g,c.b].map((x)=>x.toString(16).padStart(2,'0')).join('')}`;
                           const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
+                          const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
                           const t = pct / 100;
                           // 0–50% azul→verde, 50–100% verde→púrpura (consistente con las cards)
                           const base = t <= 0.5
                             ? mix(BLUE, GREEN, t / 0.5)
                             : mix(GREEN, PURPLE, (t - 0.5) / 0.5);
-                          // Un poco más de contraste para mejorar legibilidad
-                          const progressStart = rgbToHex(shade(base, 0.10));
-                          const progressEnd = rgbToHex(shade(base, 0.22));
+                          // Matizar (menos saturación, más suave)
+                          const muted = tint(base, 0.35);
+                          const progressStart = rgbToHex(tint(muted, 0.10));
+                          const progressEnd = rgbToHex(shade(muted, 0.05));
                           return (
                             <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
                               <div className="flex items-center justify-between mb-3">
@@ -823,7 +825,7 @@ export default function AdminViewModelPage() {
                                     <div className="text-xs text-gray-500 dark:text-gray-400">Meta: ${calculatedTotals.cuotaMinima} USD</div>
                                   </div>
                                 </div>
-                                <div className="text-xs font-bold px-3 py-1 rounded-lg text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.1))})`, border: `1px solid ${rgbToHex(shade(base, 0.3))}` }}>
+                                <div className="text-xs font-bold px-3 py-1 rounded-lg text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(muted, 0.05))}, ${rgbToHex(shade(muted, 0.12))})`, border: `1px solid ${rgbToHex(shade(muted, 0.25))}` }}>
                                   {pct.toFixed(1)}%
                                 </div>
                               </div>
@@ -847,7 +849,7 @@ export default function AdminViewModelPage() {
                                 </div>
                                 <div className="text-right">
                                   <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Faltante</div>
-                                  <div className={`text-sm font-semibold ${calculatedTotals.estaPorDebajo ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                                  <div className={`text-sm font-semibold text-gray-600 dark:text-gray-300`}>
                                     ${Math.max(0, calculatedTotals.cuotaMinima - calculatedTotals.usdModelo).toFixed(2)} USD
                                   </div>
                                 </div>
