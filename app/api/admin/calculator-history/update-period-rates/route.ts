@@ -456,31 +456,58 @@ export async function POST(request: NextRequest) {
       };
     });
 
-    // Actualizar todos los registros
+    // Actualizar todos los registros usando batch updates (más eficiente y confiable)
     let updatedCount = 0;
     const errors: string[] = [];
     
-    for (const update of updates) {
-      const { error: updateError } = await supabase
-        .from('calculator_history')
-        .update({
-          rate_eur_usd: update.rate_eur_usd,
-          rate_gbp_usd: update.rate_gbp_usd,
-          rate_usd_cop: update.rate_usd_cop,
-          value_usd_bruto: update.value_usd_bruto,
-          value_usd_modelo: update.value_usd_modelo,
-          value_cop_modelo: update.value_cop_modelo,
-          updated_at: update.updated_at
-        })
-        .eq('id', update.id);
+    console.log(`🔄 [PERIOD-RATES-UPDATE] Preparando actualizar ${updates.length} registros...`);
+    
+    // Actualizar en lotes de 50 para mejor rendimiento y evitar timeouts
+    const batchSize = 50;
+    for (let i = 0; i < updates.length; i += batchSize) {
+      const batch = updates.slice(i, i + batchSize);
+      console.log(`🔄 [PERIOD-RATES-UPDATE] Procesando lote ${Math.floor(i / batchSize) + 1}/${Math.ceil(updates.length / batchSize)} (${batch.length} registros)`);
+      
+      // Actualizar en paralelo dentro del lote
+      const batchPromises = batch.map(async (update) => {
+        const { data, error: updateError, count } = await supabase
+          .from('calculator_history')
+          .update({
+            rate_eur_usd: update.rate_eur_usd,
+            rate_gbp_usd: update.rate_gbp_usd,
+            rate_usd_cop: update.rate_usd_cop,
+            value_usd_bruto: update.value_usd_bruto,
+            value_usd_modelo: update.value_usd_modelo,
+            value_cop_modelo: update.value_cop_modelo,
+            updated_at: update.updated_at
+          })
+          .eq('id', update.id)
+          .select('id', { count: 'exact', head: true });
 
-      if (updateError) {
-        console.error(`❌ [PERIOD-RATES-UPDATE] Error actualizando registro ${update.id}:`, updateError);
-        errors.push(`Registro ${update.id}: ${updateError.message}`);
-      } else {
-        updatedCount++;
-      }
+        if (updateError) {
+          console.error(`❌ [PERIOD-RATES-UPDATE] Error actualizando registro ${update.id}:`, updateError);
+          errors.push(`Registro ${update.id}: ${updateError.message}`);
+          return false;
+        }
+        
+        // Verificar que realmente se actualizó
+        if (count !== null && count === 0) {
+          console.warn(`⚠️ [PERIOD-RATES-UPDATE] Registro ${update.id} no se actualizó (count: ${count})`);
+          errors.push(`Registro ${update.id}: No se encontró para actualizar`);
+          return false;
+        }
+        
+        return true;
+      });
+
+      const batchResults = await Promise.all(batchPromises);
+      const batchSuccessCount = batchResults.filter(r => r === true).length;
+      updatedCount += batchSuccessCount;
+      
+      console.log(`✅ [PERIOD-RATES-UPDATE] Lote completado: ${batchSuccessCount}/${batch.length} actualizados exitosamente`);
     }
+    
+    console.log(`📊 [PERIOD-RATES-UPDATE] Resumen: ${updatedCount}/${updates.length} registros actualizados exitosamente`);
 
     // 📝 AUDITORÍA: Guardar registro de quién editó las tasas
     const auditLog = {
