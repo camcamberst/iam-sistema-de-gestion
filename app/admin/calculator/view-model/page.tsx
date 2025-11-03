@@ -565,35 +565,26 @@ export default function AdminViewModelPage() {
 
             {/* Footer actions */}
               <div className="flex justify-end gap-2 flex-shrink-0">
+                {/* Ver Historial - Estándar visual */}
                 <button
                   onClick={() => router.push(`/admin/model/calculator/historial?modelId=${selectedModel.id}`)}
-                  className="px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap bg-gradient-to-r from-purple-500 to-purple-600 text-white shadow-md hover:shadow-lg"
+                  className="px-3 py-2 text-xs font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
                 >
                   Ver Historial
                 </button>
+                {/* Guardar - Estándar visual; quitar 'Sincronizar Totales' */}
                 <button
-                  onClick={syncTotals}
-                  disabled={syncingTotals || !selectedModel?.calculatorData}
-                  className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
-                    !syncingTotals
-                      ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md hover:shadow-lg'
+                  onClick={handleSave}
+                  disabled={saving || !hasChanges}
+                  className={`px-3 py-2 text-xs font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 shadow-md transform hover:-translate-y-0.5 whitespace-nowrap ${
+                    hasChanges && !saving
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
                   }`}
                 >
-                  {syncingTotals ? 'Sincronizando...' : 'Sincronizar Totales'}
+                  {saving ? 'Guardando...' : 'Guardar'}
                 </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !hasChanges}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
-                  hasChanges && !saving
-                    ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg'
-                    : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                }`}
-              >
-                {saving ? 'Guardando...' : 'Guardar'}
-              </button>
-            </div>
+              </div>
             </div>
           </div>
 
@@ -799,47 +790,50 @@ export default function AdminViewModelPage() {
                         </div>
                       </div>
                       
-                      {/* Barra de Objetivo Básico */}
-                      <div className="mb-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg border border-blue-200 dark:border-blue-700/50">
-                        <div className="flex items-center justify-between mb-3">
-                          <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                            {calculatedTotals.estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
-                          </h4>
-                          <div className="text-xs font-medium text-gray-600 dark:text-gray-300">
-                            ${calculatedTotals.usdModelo.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD
-                          </div>
-                        </div>
-                        
-                        {/* Barra de progreso */}
-                        <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden mb-2">
-                          <div 
-                            className={`h-3 transition-all duration-500 ${
-                              calculatedTotals.estaPorDebajo 
-                                ? 'bg-gradient-to-r from-orange-400 to-red-500' 
-                                : 'bg-gradient-to-r from-green-500 to-emerald-500'
-                            }`}
-                            style={{ 
-                              width: `${Math.min(100, Math.max(0, calculatedTotals.porcentajeAlcanzado))}%` 
-                            }}
-                          ></div>
-                        </div>
-                        
-                        {/* Información de progreso */}
-                        <div className="flex items-center justify-between text-xs">
-                          <div className={`font-medium ${
-                            calculatedTotals.estaPorDebajo 
-                              ? 'text-orange-600 dark:text-orange-400' 
-                              : 'text-green-600 dark:text-green-400'
-                          }`}>
-                            {calculatedTotals.estaPorDebajo 
-                              ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdModelo)} USD`
-                              : `Excelente +${Math.max(0, calculatedTotals.porcentajeAlcanzado - 100).toFixed(0)}%`
-                            }
-                          </div>
-                          <div className="text-gray-600 dark:text-gray-300">
-                            {Math.min(100, Math.max(0, calculatedTotals.porcentajeAlcanzado)).toFixed(0)}%
-                          </div>
-                        </div>
+                      {/* Barra de Objetivo Básico - Estética mejorada */}
+                      <div className="mb-6">
+                        {(() => {
+                          const pct = Math.max(0, Math.min(100, calculatedTotals.porcentajeAlcanzado || 0));
+                          // Paleta: Rojo -> Púrpura -> Esmeralda
+                          const RED = { r: 229, g: 57, b: 53 };
+                          const PURPLE = { r: 142, g: 36, b: 170 };
+                          const EMERALD = { r: 46, g: 125, b: 50 };
+                          const mix = (a: any, b: any, t: number) => ({ r: Math.round(a.r + (b.r - a.r) * t), g: Math.round(a.g + (b.g - a.g) * t), b: Math.round(a.b + (b.b - a.b) * t) });
+                          const rgbToHex = (c: any) => `#${[c.r,c.g,c.b].map((x)=>x.toString(16).padStart(2,'0')).join('')}`;
+                          const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
+                          const t = pct / 100;
+                          const base = t <= 0.6 ? mix(RED, PURPLE, t / 0.6) : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
+                          const progressStart = rgbToHex(shade(base, 0.05));
+                          const progressEnd = rgbToHex(shade(base, 0.15));
+                          return (
+                            <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
+                              <div className="flex items-center justify-between mb-3">
+                                <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  {calculatedTotals.estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
+                                </h4>
+                                <div className="text-xs font-bold px-3 py-1 rounded-lg text-white shadow-sm" style={{
+                                  background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.1))})`,
+                                  border: `1px solid ${rgbToHex(shade(base, 0.3))}`
+                                }}>
+                                  {pct.toFixed(1)}%
+                                </div>
+                              </div>
+                              <div className="w-full bg-gray-200/80 dark:bg-gray-700/80 rounded-full h-4 overflow-hidden shadow-inner mb-2">
+                                <div className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}>
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between text-xs">
+                                <div className="font-semibold" style={{ color: rgbToHex(shade(base, 0.5)) }}>
+                                  ${calculatedTotals.usdModelo.toFixed(0)} / ${calculatedTotals.cuotaMinima} USD
+                                </div>
+                                <div className={`font-semibold ${calculatedTotals.estaPorDebajo ? 'text-red-600 dark:text-red-400' : 'text-gray-600 dark:text-gray-300'}`}>
+                                  {calculatedTotals.estaPorDebajo ? `Faltan $${Math.ceil(calculatedTotals.cuotaMinima - calculatedTotals.usdModelo)} USD` : `Excelente +${Math.max(0, pct - 100).toFixed(0)}%`}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
                       </div>
 
                       {/* 90% de anticipo - DESDE SERVIDOR */}
