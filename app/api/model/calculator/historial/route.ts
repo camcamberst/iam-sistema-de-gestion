@@ -345,6 +345,41 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // PASO 5: Si algún período no tiene tasas, obtener tasas activas actuales y completarlas
+    const periodsWithMissingRates = periodsArray.filter((p: any) => 
+      !p.rates?.eur_usd && !p.rates?.gbp_usd && !p.rates?.usd_cop
+    );
+
+    if (periodsWithMissingRates.length > 0) {
+      console.log(`⚠️ [CALCULATOR-HISTORIAL] ${periodsWithMissingRates.length} períodos sin tasas guardadas, obteniendo tasas activas actuales...`);
+      
+      // Obtener tasas activas actuales como fallback
+      const { data: activeRates, error: ratesError } = await supabase
+        .from('rates')
+        .select('kind, value')
+        .eq('active', true)
+        .is('valid_to', null)
+        .order('valid_from', { ascending: false });
+
+      if (!ratesError && activeRates) {
+        const defaultRates = {
+          eur_usd: activeRates.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+          gbp_usd: activeRates.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20,
+          usd_cop: activeRates.find((r: any) => r.kind === 'USD→COP')?.value || 3900
+        };
+
+        // Completar tasas para períodos que no las tienen
+        periodsWithMissingRates.forEach((period: any) => {
+          period.rates = {
+            eur_usd: defaultRates.eur_usd,
+            gbp_usd: defaultRates.gbp_usd,
+            usd_cop: defaultRates.usd_cop
+          };
+          console.log(`✅ [CALCULATOR-HISTORIAL] Tasas completadas para período ${period.period_date} (${period.period_type})`);
+        });
+      }
+    }
+
     // Convertir a array y ordenar por fecha descendente
     const periods = periodsArray.sort((a, b) => {
       const dateA = new Date(a.period_date);
