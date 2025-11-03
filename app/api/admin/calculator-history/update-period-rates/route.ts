@@ -72,13 +72,6 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
-    if (!isAdmin) {
-      return NextResponse.json({
-        success: false,
-        error: 'No autorizado: Solo admins pueden consultar información de períodos'
-      }, { status: 403 });
-    }
-
     // Obtener grupos del admin si no es super_admin
     let allowedGroupIds: string[] = [];
     if (!isSuperAdmin) {
