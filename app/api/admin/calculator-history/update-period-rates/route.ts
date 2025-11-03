@@ -451,8 +451,8 @@ export async function POST(request: NextRequest) {
         rate_usd_cop: validatedRates.usd_cop,
         value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
         value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
-        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2)),
-        updated_at: new Date().toISOString()
+        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2))
+        // No incluimos updated_at - la tabla calculator_history no tiene esta columna
       };
     });
 
@@ -477,6 +477,7 @@ export async function POST(request: NextRequest) {
         // 3. Problemas de permisos a nivel de base de datos
         
         // Actualizar registro y verificar que se actualizó correctamente
+        // NOTA: No incluimos updated_at porque esta columna no existe en calculator_history
         const { data: updatedData, error: updateError } = await supabase
           .from('calculator_history')
           .update({
@@ -485,8 +486,8 @@ export async function POST(request: NextRequest) {
             rate_usd_cop: update.rate_usd_cop,
             value_usd_bruto: update.value_usd_bruto,
             value_usd_modelo: update.value_usd_modelo,
-            value_cop_modelo: update.value_cop_modelo,
-            updated_at: update.updated_at
+            value_cop_modelo: update.value_cop_modelo
+            // No incluimos updated_at - la tabla calculator_history no tiene esta columna
           })
           .eq('id', update.id)
           .select('id')
