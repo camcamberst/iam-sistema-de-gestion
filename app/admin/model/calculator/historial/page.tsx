@@ -221,6 +221,32 @@ export default function CalculatorHistorialPage() {
     });
   };
 
+  // Formatear mes y período (ej: "Octubre - 2da Quincena")
+  const formatPeriodMonth = (dateStr: string, periodType: string) => {
+    const date = new Date(dateStr);
+    const monthName = date.toLocaleDateString('es-CO', { month: 'long' });
+    // Capitalizar primera letra
+    const monthCapitalized = monthName.charAt(0).toUpperCase() + monthName.slice(1);
+    const periodLabel = periodType === '1-15' ? '1ra Quincena' : '2da Quincena';
+    return `${monthCapitalized} - ${periodLabel}`;
+  };
+
+  // Formatear fecha de archivado con hora (ej: "1 de noviembre de 2025 (14:30)")
+  const formatArchivedDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const datePart = date.toLocaleDateString('es-CO', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    const timePart = date.toLocaleTimeString('es-CO', {
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    });
+    return `${datePart} (${timePart})`;
+  };
+
   const formatPeriodType = (periodType: string) => {
     return periodType === '1-15' ? '1ra Quincena' : '2da Quincena';
   };
@@ -537,10 +563,10 @@ export default function CalculatorHistorialPage() {
                   </div>
                   <div className="flex-1">
                     <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                      {formatDate(period.period_date)} - {formatPeriodType(period.period_type)}
+                      {formatPeriodMonth(period.period_date, period.period_type)}
                     </h3>
                     <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Archivado: {formatDate(period.archived_at)}
+                      Archivado: {formatArchivedDate(period.archived_at)}
                     </p>
                   </div>
                 </div>
