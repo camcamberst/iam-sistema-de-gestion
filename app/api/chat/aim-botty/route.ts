@@ -28,8 +28,19 @@ import { withCache, generateCacheKey } from '@/lib/cache/query-cache';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-// Inicializar Google Gemini
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY as string);
+// Inicializar Google Gemini (lazy initialization)
+let genAIInstance: GoogleGenerativeAI | null = null;
+
+function getGenAI(): GoogleGenerativeAI {
+  if (!genAIInstance) {
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error('GOOGLE_GEMINI_API_KEY no está configurada en las variables de entorno');
+    }
+    genAIInstance = new GoogleGenerativeAI(apiKey);
+  }
+  return genAIInstance;
+}
 
 // POST: Procesar mensaje del usuario y generar respuesta del bot
 export async function POST(request: NextRequest) {

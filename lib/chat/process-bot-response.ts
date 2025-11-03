@@ -344,18 +344,46 @@ RESPUESTA:
       message: error?.message,
       stack: error?.stack,
       name: error?.name,
-      status: error?.status
+      status: error?.status,
+      statusText: error?.statusText,
+      code: error?.code,
+      response: error?.response ? {
+        status: error.response.status,
+        statusText: error.response.statusText,
+        data: error.response.data
+      } : null
     });
     
+    // Log completo del error para debugging
+    if (error?.response) {
+      console.error('❌ [BOTTY-GEN] Error response completo:', JSON.stringify(error.response, null, 2));
+    }
+    
     // Mensaje más específico según el error
-    if (error?.message?.includes('API key') || error?.message?.includes('authentication')) {
+    if (error?.message?.includes('API key') || 
+        error?.message?.includes('authentication') || 
+        error?.message?.includes('PERMISSION_DENIED') ||
+        error?.message?.includes('no está configurada')) {
       return 'Lo siento, hay un problema con la configuración del servicio de IA. Por favor, contacta a tu administrador.';
     }
     
-    if (error?.message?.includes('404') || error?.message?.includes('not found')) {
+    // Si el error contiene información de 404 o not found, o si todos los modelos fallaron
+    if (error?.message?.includes('404') || 
+        error?.message?.includes('not found') ||
+        error?.message?.includes('Todos los modelos fallaron') ||
+        error?.status === 404 ||
+        (error?.response?.status === 404)) {
+      console.error('❌ [BOTTY-GEN] Todos los modelos fallaron con 404 - verificando API key...');
+      console.error('❌ [BOTTY-GEN] API Key presente:', !!process.env.GOOGLE_GEMINI_API_KEY);
       return 'Lo siento, el modelo de IA no está disponible en este momento. Por favor, intenta más tarde o contacta a tu administrador.';
     }
     
+    if (error?.status === 429 || error?.message?.includes('rate limit')) {
+      return 'Lo siento, el servicio está experimentando alta demanda. Por favor, intenta en unos momentos.';
+    }
+    
+    // Si hay un error desconocido, intentar dar más información
+    console.error('❌ [BOTTY-GEN] Error desconocido, mostrando mensaje genérico');
     return 'Lo siento, hubo un error al procesar tu mensaje. Por favor, intenta de nuevo o contacta a tu administrador.';
   }
 }
