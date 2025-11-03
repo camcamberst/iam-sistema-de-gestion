@@ -611,44 +611,52 @@ export default function UsersListPage() {
                         <td className="px-4 py-2">
                           <div className="flex items-center space-x-2">
                             {(() => {
-                              // Avatar elegante con inicial estilizada
-                              const initial = (user.name || user.email || '?').charAt(0).toUpperCase();
+                              // Avatar simbólico homogéneo por rol
                               const role = user.role || 'modelo';
                               
                               let gradient = 'bg-gradient-to-br from-pink-500 via-rose-500 to-purple-500';
+                              let symbol: React.ReactElement;
+                              
                               if (role === 'super_admin') {
                                 gradient = 'bg-gradient-to-br from-amber-500 via-yellow-500 to-amber-600';
+                                symbol = (
+                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                                    <path d="M5 16L3 10l5.5-2L12 10l3.5-2L21 10l-2 6H5zm14.5-7.5L18.5 8l-3.5 1.5L12 8l-2.5 1.5L6 8l-1 0.5L5 11l14 0.5z"/>
+                                    <circle cx="8" cy="16" r="1.5" fill="currentColor" opacity="0.8"/>
+                                    <circle cx="16" cy="16" r="1.5" fill="currentColor" opacity="0.8"/>
+                                    <circle cx="12" cy="14" r="1.5" fill="currentColor" opacity="0.9"/>
+                                  </svg>
+                                );
                               } else if (role === 'admin') {
                                 gradient = 'bg-gradient-to-br from-blue-500 to-indigo-600';
+                                symbol = (
+                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                                    <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.4-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                                  </svg>
+                                );
+                              } else {
+                                symbol = (
+                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                                    <circle cx="12" cy="12" r="2" fill="currentColor"/>
+                                    <circle cx="12" cy="8" r="1.5" fill="currentColor" opacity="0.8"/>
+                                    <circle cx="12" cy="16" r="1.5" fill="currentColor" opacity="0.8"/>
+                                    <circle cx="8" cy="12" r="1.5" fill="currentColor" opacity="0.8"/>
+                                    <circle cx="16" cy="12" r="1.5" fill="currentColor" opacity="0.8"/>
+                                    <circle cx="10" cy="10" r="1.2" fill="currentColor" opacity="0.7"/>
+                                    <circle cx="14" cy="10" r="1.2" fill="currentColor" opacity="0.7"/>
+                                    <circle cx="10" cy="14" r="1.2" fill="currentColor" opacity="0.7"/>
+                                    <circle cx="14" cy="14" r="1.2" fill="currentColor" opacity="0.7"/>
+                                  </svg>
+                                );
                               }
-                              
-                              // Hash para patrón visual consistente
-                              const identifier = user.email || user.name || user.id || '';
-                              let hash = 0;
-                              for (let i = 0; i < identifier.length; i++) {
-                                hash = identifier.charCodeAt(i) + ((hash << 5) - hash);
-                              }
-                              const pattern = Math.abs(hash) % 4;
-                              
-                              const getPatternStyle = () => {
-                                if (pattern === 1) {
-                                  return { background: 'radial-gradient(circle, transparent 30%, rgba(255,255,255,0.15) 30%)' };
-                                } else if (pattern === 2) {
-                                  return { background: 'linear-gradient(135deg, transparent 45%, rgba(255,255,255,0.1) 45%, rgba(255,255,255,0.1) 55%, transparent 55%)' };
-                                } else if (pattern === 3) {
-                                  return { background: 'radial-gradient(circle at center, rgba(255,255,255,0.1) 0%, transparent 70%)' };
-                                }
-                                return {};
-                              };
                               
                               return (
                                 <div 
                                   className={`w-6 h-6 ${gradient} rounded-full flex items-center justify-center text-xs shadow-sm border border-white/20 flex-shrink-0 relative overflow-hidden`}
-                                  style={getPatternStyle()}
                                 >
-                                  <span className="text-white font-bold tracking-wider relative z-10 drop-shadow-sm text-[10px]">
-                                    {initial}
-                                  </span>
+                                  <div className="text-white flex items-center justify-center">
+                                    {symbol}
+                                  </div>
                                 </div>
                               );
                             })()}
