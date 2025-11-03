@@ -770,37 +770,123 @@ export default function CalculatorHistorialPage() {
                     </div>
                   </div>
 
-                  {/* Barra de objetivo - Porcentaje alcanzado */}
+                  {/* Barra de objetivo - Porcentaje alcanzado - Mejora visual */}
                   {period.cuota_minima !== undefined && (
                     <div className="mb-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                          Objetivo del período
-                        </div>
-                        <div className={`text-xs font-semibold ${
-                          period.esta_por_debajo 
-                            ? 'text-red-600 dark:text-red-400' 
-                            : 'text-green-600 dark:text-green-400'
-                        }`}>
-                          {period.porcentaje_alcanzado?.toFixed(1) || 0}%
-                        </div>
-                      </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all duration-300 ${
-                            period.esta_por_debajo
-                              ? 'bg-gradient-to-r from-red-500 to-red-600'
-                              : 'bg-gradient-to-r from-green-500 to-green-600'
-                          }`}
-                          style={{
-                            width: `${Math.min(period.porcentaje_alcanzado || 0, 100)}%`
-                          }}
-                        />
-                      </div>
-                      <div className="flex items-center justify-between mt-1 text-xs text-gray-500 dark:text-gray-400">
-                        <span>USD Bruto: {formatCurrency(period.total_usd_bruto || 0, 'USD')}</span>
-                        <span>Meta: {formatCurrency(period.cuota_minima || 0, 'USD')}</span>
-                      </div>
+                      {(() => {
+                        const porcentajeAlcanzado = period.porcentaje_alcanzado || 0;
+                        const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
+                        
+                        // Paleta: Rojo -> Púrpura -> Esmeralda (sin amarillos)
+                        const RED = { r: 229, g: 57, b: 53 };     // #E53935
+                        const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
+                        const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
+
+                        const mix = (a: {r: number, g: number, b: number}, b: {r: number, g: number, b: number}, t: number) => ({
+                          r: Math.round(a.r + (b.r - a.r) * t),
+                          g: Math.round(a.g + (b.g - a.g) * t),
+                          b: Math.round(a.b + (b.b - a.b) * t)
+                        });
+                        
+                        const rgbToHex = (c: {r: number, g: number, b: number}) => 
+                          `#${[c.r, c.g, c.b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
+                        const shade = (c: {r: number, g: number, b: number}, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
+
+                        const t = progressPct / 100;
+                        // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
+                        const base = t <= 0.6
+                          ? mix(RED, PURPLE, t / 0.6)
+                          : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
+
+                        const progressStart = rgbToHex(shade(base, 0.05));
+                        const progressEnd = rgbToHex(shade(base, 0.15));
+
+                        return (
+                          <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
+                            {/* Header con icono y porcentaje */}
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center gap-2">
+                                <div 
+                                  className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm"
+                                  style={{
+                                    background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.2))})`
+                                  }}
+                                >
+                                  <svg 
+                                    className="w-4 h-4 text-white" 
+                                    fill="none" 
+                                    stroke="currentColor" 
+                                    viewBox="0 0 24 24"
+                                  >
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                    Objetivo del período
+                                  </div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                                    Meta: {formatCurrency(period.cuota_minima || 0, 'USD')}
+                                  </div>
+                                </div>
+                              </div>
+                              <div 
+                                className="text-lg font-bold px-3 py-1 rounded-lg shadow-sm"
+                                style={{
+                                  color: rgbToHex(shade(base, 0.5)),
+                                  background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.88))}, ${rgbToHex(shade(base, 0.92))})`,
+                                  border: `1px solid ${rgbToHex(shade(base, 0.7))}`
+                                }}
+                              >
+                                {porcentajeAlcanzado.toFixed(1)}%
+                              </div>
+                            </div>
+
+                            {/* Barra de progreso mejorada */}
+                            <div className="mb-3">
+                              <div className="w-full bg-gray-200/80 dark:bg-gray-700/80 rounded-full h-4 overflow-hidden shadow-inner">
+                                <div
+                                  className="h-full rounded-full transition-all duration-500 ease-out shadow-sm relative overflow-hidden"
+                                  style={{
+                                    width: `${Math.min(progressPct, 100)}%`,
+                                    background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
+                                  }}
+                                >
+                                  {/* Efecto de brillo sutil */}
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Información de progreso */}
+                            <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/50 dark:border-gray-600/30">
+                              <div>
+                                <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                                  Alcanzado
+                                </div>
+                                <div 
+                                  className="text-sm font-semibold"
+                                  style={{ color: rgbToHex(shade(base, 0.5)) }}
+                                >
+                                  {formatCurrency(period.total_usd_bruto || 0, 'USD')}
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">
+                                  Faltante
+                                </div>
+                                <div className={`text-sm font-semibold ${
+                                  period.esta_por_debajo 
+                                    ? 'text-red-600 dark:text-red-400' 
+                                    : 'text-gray-600 dark:text-gray-400'
+                                }`}>
+                                  {formatCurrency(Math.max(0, (period.cuota_minima || 0) - (period.total_usd_bruto || 0)), 'USD')}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })()}
                     </div>
                   )}
 
