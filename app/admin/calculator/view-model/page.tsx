@@ -794,18 +794,18 @@ export default function AdminViewModelPage() {
                       <div className="mb-6">
                         {(() => {
                           const pct = Math.max(0, Math.min(100, calculatedTotals.porcentajeAlcanzado || 0));
-                          // Paleta de marca (más viva y consistente)
-                          const ROSE = { r: 244, g: 63, b: 94 };      // #f43f5e
-                          const VIOLET = { r: 139, g: 92, b: 246 };   // #8b5cf6
-                          const EMERALD = { r: 16, g: 185, b: 129 };  // #10b981
+                          // Paleta alineada con las cards: Azul (USD Bruto) → Verde (USD Modelo) → Púrpura (COP Modelo)
+                          const BLUE = { r: 59, g: 130, b: 246 };     // #3B82F6
+                          const GREEN = { r: 16, g: 185, b: 129 };    // #10B981
+                          const PURPLE = { r: 168, g: 85, b: 247 };   // #A855F7
                           const mix = (a: any, b: any, t: number) => ({ r: Math.round(a.r + (b.r - a.r) * t), g: Math.round(a.g + (b.g - a.g) * t), b: Math.round(a.b + (b.b - a.b) * t) });
                           const rgbToHex = (c: any) => `#${[c.r,c.g,c.b].map((x)=>x.toString(16).padStart(2,'0')).join('')}`;
                           const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
                           const t = pct / 100;
-                          // 0–50% rosa→violeta, 50–100% violeta→esmeralda
+                          // 0–50% azul→verde, 50–100% verde→púrpura (consistente con las cards)
                           const base = t <= 0.5
-                            ? mix(ROSE, VIOLET, t / 0.5)
-                            : mix(VIOLET, EMERALD, (t - 0.5) / 0.5);
+                            ? mix(BLUE, GREEN, t / 0.5)
+                            : mix(GREEN, PURPLE, (t - 0.5) / 0.5);
                           // Un poco más de contraste para mejorar legibilidad
                           const progressStart = rgbToHex(shade(base, 0.10));
                           const progressEnd = rgbToHex(shade(base, 0.22));
