@@ -347,6 +347,23 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // 3.2.5. Obtener tasa USD/COP actual (más reciente) - necesaria para cálculos de historial
+    const { data: usdCopRate, error: ratesError } = await supabase
+      .from('rates')
+      .select('value')
+      .eq('active', true)
+      .eq('kind', 'USD→COP')
+      .order('valid_from', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (ratesError) {
+      console.error('❌ [BILLING-SUMMARY] Error al obtener tasas:', ratesError);
+      // No es crítico, usamos 3900 por defecto
+    }
+
+    const usdCopRateValue = usdCopRate?.value || 3900;
+
     // 3.3. Procesar datos del historial (período cerrado)
     // IMPORTANTE: Seguir la misma lógica que "Mi Historial" de "Mi Calculadora"
     // USD Bruto: Suma de todos los value_usd_bruto de todas las plataformas (sin repartición)
@@ -444,23 +461,6 @@ export async function GET(request: NextRequest) {
       fromHistory: Array.from(historyMap.keys()).length,
       fromTotals: Array.from(totalsMap.keys()).length
     });
-
-    // 4. Obtener tasa USD/COP actual (más reciente) - para períodos sin tasa guardada
-    const { data: usdCopRate, error: ratesError } = await supabase
-      .from('rates')
-      .select('value')
-      .eq('active', true)
-      .eq('kind', 'USD→COP')
-      .order('valid_from', { ascending: false })
-      .limit(1)
-      .single();
-
-    if (ratesError) {
-      console.error('❌ [BILLING-SUMMARY] Error al obtener tasas:', ratesError);
-      // No es crítico, usamos 3900 por defecto
-    }
-
-    const usdCopRateValue = usdCopRate?.value || 3900;
 
     // 5. Consolidar datos por modelo: incluir todas las modelos del set (cero si no hay datos en rango)
     const billingData = models.map(model => {
