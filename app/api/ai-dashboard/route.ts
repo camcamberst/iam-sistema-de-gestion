@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
+import { withCache, generateCacheKey, queryCache } from '@/lib/cache/query-cache';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -13,7 +14,7 @@ const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY as string
 // POST: Generar insights de IA para el dashboard
 export async function POST(request: NextRequest) {
   try {
-    const { userId, userRole } = await request.json();
+    const { userId, userRole, forceRefresh } = await request.json();
 
     if (!userId) {
       return NextResponse.json({ 
@@ -29,22 +30,33 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Obtener datos del usuario y su productividad
-    const userData = await getUserProductivityData(userId);
-    
-    if (!userData) {
+    // Cache per-user (TTL 7h). forceRefresh invalida manualmente.
+    const cacheKey = generateCacheKey('ai-dashboard', { userId });
+    if (forceRefresh) {
+      try { queryCache.invalidate(cacheKey); } catch {}
+    }
+
+    const payload = await withCache(
+      cacheKey,
+      async () => {
+        const userData = await getUserProductivityData(userId);
+        if (!userData) throw new Error('No se encontraron datos del usuario');
+        const aiInsights = await generateAIInsights(userData);
+        return aiInsights;
+      },
+      7 * 60 * 60 * 1000 // 7 horas
+    );
+
+    if (!payload) {
       return NextResponse.json({ 
         success: false, 
         error: 'No se encontraron datos del usuario' 
       }, { status: 404 });
     }
 
-    // Generar insights con Google Gemini
-    const aiInsights = await generateAIInsights(userData);
-
     return NextResponse.json({ 
       success: true, 
-      data: aiInsights
+      data: payload
     });
 
   } catch (error: any) {
