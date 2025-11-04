@@ -145,7 +145,7 @@ export async function PUT(
     // Verificar que el anuncio existe y el usuario puede editarlo
     const { data: existingAnnouncement } = await supabase
       .from('announcements')
-      .select('author_id, organization_id')
+      .select('author_id, organization_id, published_at')
       .eq('id', id)
       .single();
 
