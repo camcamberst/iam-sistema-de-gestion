@@ -252,7 +252,8 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
             </div>
           </div>
         ))}
-      </div>
+        </div>
+      )}
 
       {/* Modal de lectura completa */}
       {selectedAnnouncement && (
