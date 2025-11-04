@@ -44,7 +44,14 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) return;
 
-      const userGroupsParam = userGroups.join(',');
+      // Obtener IDs de grupos del usuario desde la base de datos
+      const { data: userGroupsData } = await supabase
+        .from('user_groups')
+        .select('group_id')
+        .eq('user_id', userId);
+
+      const userGroupIds = userGroupsData?.map(ug => ug.group_id) || [];
+      const userGroupsParam = userGroupIds.join(',');
       
       const response = await fetch(
         `/api/announcements?limit=5&userId=${userId}&userRole=modelo&userGroups=${userGroupsParam}`,
