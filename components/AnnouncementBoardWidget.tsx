@@ -37,24 +37,39 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
 
     // Suscribirse a cambios en tiempo real en la tabla announcements
     const channel = supabase
-      .channel('announcements-realtime')
+      .channel(`announcements-realtime-${userId}`)
       .on(
         'postgres_changes',
         {
           event: '*', // INSERT, UPDATE, DELETE
           schema: 'public',
-          table: 'announcements',
-          filter: 'is_published=eq.true'
+          table: 'announcements'
         },
         (payload) => {
           console.log('📢 [ANNOUNCEMENTS-WIDGET] Cambio detectado en tiempo real:', payload);
-          // Recargar anuncios cuando hay cambios
-          loadAnnouncements();
+          
+          // Solo recargar si el anuncio está publicado o se acaba de publicar
+          const eventType = payload.eventType || (payload as any).event;
+          if (eventType === 'INSERT' || eventType === 'UPDATE') {
+            const newRecord = payload.new as any;
+            if (newRecord && newRecord.is_published === true) {
+              // Recargar anuncios cuando hay cambios en publicaciones
+              console.log('🔄 [ANNOUNCEMENTS-WIDGET] Recargando anuncios por cambio en tiempo real');
+              loadAnnouncements();
+            }
+          } else if (eventType === 'DELETE') {
+            // Si se elimina un anuncio, recargar
+            console.log('🔄 [ANNOUNCEMENTS-WIDGET] Recargando anuncios por eliminación');
+            loadAnnouncements();
+          }
         }
       )
-      .subscribe();
+      .subscribe((status) => {
+        console.log('📡 [ANNOUNCEMENTS-WIDGET] Estado de suscripción:', status);
+      });
 
     return () => {
+      console.log('🧹 [ANNOUNCEMENTS-WIDGET] Limpiando suscripción');
       supabase.removeChannel(channel);
     };
   }, [userId, userGroups]);
