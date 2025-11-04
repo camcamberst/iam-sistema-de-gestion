@@ -64,10 +64,26 @@ export async function GET(request: NextRequest) {
 
       // Si el usuario tiene grupos, filtrar: generales O que tengan al menos un grupo objetivo del usuario
       if (userGroupIds.length > 0) {
-        // Filtrar: generales O que tengan al menos un grupo objetivo del usuario
-        query = query.or(
-          `is_general.eq.true,announcement_group_targets.group_id.in.(${userGroupIds.join(',')})`
-        );
+        // Obtener IDs de anuncios que tienen al menos un grupo objetivo del usuario
+        const { data: targetAnnouncements } = await supabase
+          .from('announcement_group_targets')
+          .select('announcement_id')
+          .in('group_id', userGroupIds);
+
+        const targetAnnouncementIds = targetAnnouncements?.map((t: any) => t.announcement_id) || [];
+
+        console.log('📋 [ANNOUNCEMENTS] Anuncios con grupos objetivo:', {
+          targetAnnouncementIds,
+          userGroupIds
+        });
+
+        // Filtrar: generales O que estén en la lista de anuncios con grupos objetivo
+        if (targetAnnouncementIds.length > 0) {
+          query = query.or(`is_general.eq.true,id.in.(${targetAnnouncementIds.join(',')})`);
+        } else {
+          // Si no hay anuncios con grupos objetivo, solo mostrar generales
+          query = query.eq('is_general', true);
+        }
       } else {
         // Si el usuario no tiene grupos, solo mostrar generales
         query = query.eq('is_general', true);
@@ -91,6 +107,21 @@ export async function GET(request: NextRequest) {
       console.error('❌ [ANNOUNCEMENTS] Error obteniendo anuncios:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
     }
+
+    console.log('📊 [ANNOUNCEMENTS] Resultados obtenidos:', {
+      count: data?.length || 0,
+      userId,
+      userRole,
+      isAdmin,
+      announcements: data?.map((a: any) => ({
+        id: a.id,
+        title: a.title,
+        is_published: a.is_published,
+        is_general: a.is_general,
+        published_at: a.published_at,
+        group_targets_count: a.group_targets?.length || 0
+      }))
+    });
 
     // Formatear datos
     const formatted = (data || []).map((announcement: any) => ({
@@ -190,25 +221,36 @@ export async function POST(request: NextRequest) {
     // Obtener organization_id si no se proporciona
     const organizationId = body.organization_id || userData.organization_id;
 
+    // Preparar datos para insertar
+    const announcementData = {
+      author_id: user.id,
+      category_id: category_id || null,
+      title,
+      content,
+      excerpt: excerpt || title.substring(0, 150),
+      featured_image_url: featured_image_url || null,
+      image_urls: image_urls || [],
+      is_general: is_general || false,
+      organization_id: organizationId,
+      is_published: is_published || false,
+      is_pinned: is_pinned || false,
+      priority: priority || 0,
+      published_at: is_published ? new Date().toISOString() : null,
+      expires_at: expires_at || null
+    };
+
+    console.log('📝 [ANNOUNCEMENTS] Creando anuncio:', {
+      title,
+      is_published,
+      is_general,
+      group_ids: group_ids || [],
+      published_at: announcementData.published_at
+    });
+
     // Crear anuncio
     const { data: announcement, error: insertError } = await supabase
       .from('announcements')
-      .insert({
-        author_id: user.id,
-        category_id: category_id || null,
-        title,
-        content,
-        excerpt: excerpt || title.substring(0, 150),
-        featured_image_url: featured_image_url || null,
-        image_urls: image_urls || [],
-        is_general: is_general || false,
-        organization_id: organizationId,
-        is_published: is_published || false,
-        is_pinned: is_pinned || false,
-        priority: priority || 0,
-        published_at: is_published ? new Date().toISOString() : null,
-        expires_at: expires_at || null
-      })
+      .insert(announcementData)
       .select()
       .single();
 
@@ -216,6 +258,14 @@ export async function POST(request: NextRequest) {
       console.error('❌ [ANNOUNCEMENTS] Error creando anuncio:', insertError);
       return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
+
+    console.log('✅ [ANNOUNCEMENTS] Anuncio creado:', {
+      id: announcement.id,
+      title: announcement.title,
+      is_published: announcement.is_published,
+      is_general: announcement.is_general,
+      published_at: announcement.published_at
+    });
 
     // Si no es general y hay grupos seleccionados, crear relaciones
     if (!is_general && group_ids && group_ids.length > 0) {
@@ -230,26 +280,44 @@ export async function POST(request: NextRequest) {
         const validGroupIds = group_ids.filter((gid: string) => allowedGroupIds.includes(gid));
 
         if (validGroupIds.length > 0) {
-          await supabase
+          const groupTargets = validGroupIds.map((group_id: string) => ({
+            announcement_id: announcement.id,
+            group_id
+          }));
+          
+          console.log('🔗 [ANNOUNCEMENTS] Creando relaciones con grupos (admin):', groupTargets);
+          
+          const { error: targetsError } = await supabase
             .from('announcement_group_targets')
-            .insert(
-              validGroupIds.map((group_id: string) => ({
-                announcement_id: announcement.id,
-                group_id
-              }))
-            );
+            .insert(groupTargets);
+
+          if (targetsError) {
+            console.error('❌ [ANNOUNCEMENTS] Error creando relaciones con grupos:', targetsError);
+          } else {
+            console.log('✅ [ANNOUNCEMENTS] Relaciones con grupos creadas exitosamente');
+          }
         }
       } else {
         // Super admin puede asignar a cualquier grupo
-        await supabase
+        const groupTargets = group_ids.map((group_id: string) => ({
+          announcement_id: announcement.id,
+          group_id
+        }));
+        
+        console.log('🔗 [ANNOUNCEMENTS] Creando relaciones con grupos (super_admin):', groupTargets);
+        
+        const { error: targetsError } = await supabase
           .from('announcement_group_targets')
-          .insert(
-            group_ids.map((group_id: string) => ({
-              announcement_id: announcement.id,
-              group_id
-            }))
-          );
+          .insert(groupTargets);
+
+        if (targetsError) {
+          console.error('❌ [ANNOUNCEMENTS] Error creando relaciones con grupos:', targetsError);
+        } else {
+          console.log('✅ [ANNOUNCEMENTS] Relaciones con grupos creadas exitosamente');
+        }
       }
+    } else if (is_general) {
+      console.log('📢 [ANNOUNCEMENTS] Anuncio general, no se crean relaciones con grupos');
     }
 
     return NextResponse.json({
