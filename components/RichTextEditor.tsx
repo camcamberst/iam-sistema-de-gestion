@@ -21,89 +21,116 @@ export default function RichTextEditor({
   placeholder = 'Escribe el contenido aquí...',
   className = '',
 }: RichTextEditorProps) {
-  const quillRef = useRef<any>(null);
+  const editorRef = useRef<HTMLDivElement>(null);
+  const quillInstanceRef = useRef<any>(null);
   const [uploading, setUploading] = useState(false);
 
+  // Función para subir imagen
+  const uploadImage = async (file: File) => {
+    // Validar tamaño (5MB máximo)
+    const maxSize = 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      alert('El archivo es demasiado grande (máximo 5MB)');
+      return null;
+    }
+
+    // Validar tipo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
+    if (!allowedTypes.includes(file.type)) {
+      alert('Tipo de archivo no permitido. Use JPEG, PNG, GIF o WebP');
+      return null;
+    }
+
+    try {
+      setUploading(true);
+      
+      // Obtener sesión
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        alert('No hay sesión activa');
+        return null;
+      }
+
+      // Preparar FormData
+      const formData = new FormData();
+      formData.append('file', file);
+
+      // Subir imagen
+      const response = await fetch('/api/announcements/upload-image', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+        },
+        body: formData,
+      });
+
+      const result = await response.json();
+
+      if (result.success && result.url) {
+        return result.url;
+      } else {
+        alert('Error subiendo imagen: ' + (result.error || 'Error desconocido'));
+        return null;
+      }
+    } catch (error) {
+      console.error('Error subiendo imagen:', error);
+      alert('Error al subir la imagen');
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  // Configurar el handler de imágenes después de que el editor esté montado
   useEffect(() => {
-    // Configurar el handler de imágenes personalizado cuando el editor esté listo
-    if (quillRef.current) {
-      const quill = quillRef.current.getEditor();
-      
-      // Obtener el toolbar y agregar el botón de imagen personalizado
-      const toolbar = quill.getModule('toolbar');
-      
-      // Reemplazar el handler de imagen por defecto
-      toolbar.addHandler('image', async () => {
-        const input = document.createElement('input');
-        input.setAttribute('type', 'file');
-        input.setAttribute('accept', 'image/*');
-        input.click();
+    if (!editorRef.current) return;
 
-        input.onchange = async () => {
-          const file = input.files?.[0];
-          if (!file) return;
+    // Función para encontrar el editor de Quill
+    const findQuillEditor = () => {
+      const quillElement = editorRef.current?.querySelector('.ql-editor');
+      if (quillElement && (quillElement as any).__quill) {
+        return (quillElement as any).__quill;
+      }
+      return null;
+    };
 
-          // Validar tamaño (5MB máximo)
-          const maxSize = 5 * 1024 * 1024;
-          if (file.size > maxSize) {
-            alert('El archivo es demasiado grande (máximo 5MB)');
-            return;
-          }
+    // Intentar encontrar el editor después de un breve delay
+    const timer = setTimeout(() => {
+      const quill = findQuillEditor();
+      if (quill && !quillInstanceRef.current) {
+        quillInstanceRef.current = quill;
+        
+        const toolbar = quill.getModule('toolbar');
+        
+        // Reemplazar el handler de imagen por defecto
+        toolbar.addHandler('image', async () => {
+          const input = document.createElement('input');
+          input.setAttribute('type', 'file');
+          input.setAttribute('accept', 'image/*');
+          input.click();
 
-          // Validar tipo
-          const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
-          if (!allowedTypes.includes(file.type)) {
-            alert('Tipo de archivo no permitido. Use JPEG, PNG, GIF o WebP');
-            return;
-          }
+          input.onchange = async () => {
+            const file = input.files?.[0];
+            if (!file) return;
 
-          try {
-            setUploading(true);
-            
-            // Obtener sesión
-            const { data: { session } } = await supabase.auth.getSession();
-            if (!session) {
-              alert('No hay sesión activa');
-              return;
-            }
-
-            // Preparar FormData
-            const formData = new FormData();
-            formData.append('file', file);
-
-            // Subir imagen
-            const response = await fetch('/api/announcements/upload-image', {
-              method: 'POST',
-              headers: {
-                'Authorization': `Bearer ${session.access_token}`,
-              },
-              body: formData,
-            });
-
-            const result = await response.json();
-
-            if (result.success && result.url) {
+            const imageUrl = await uploadImage(file);
+            if (imageUrl && quillInstanceRef.current) {
               // Obtener la posición del cursor
-              const range = quill.getSelection(true);
+              const range = quillInstanceRef.current.getSelection(true);
               
               // Insertar la imagen en el editor
-              quill.insertEmbed(range.index, 'image', result.url);
+              quillInstanceRef.current.insertEmbed(range.index, 'image', imageUrl);
               
               // Mover el cursor después de la imagen
-              quill.setSelection(range.index + 1);
-            } else {
-              alert('Error subiendo imagen: ' + (result.error || 'Error desconocido'));
+              quillInstanceRef.current.setSelection(range.index + 1);
             }
-          } catch (error) {
-            console.error('Error subiendo imagen:', error);
-            alert('Error al subir la imagen');
-          } finally {
-            setUploading(false);
-          }
-        };
-      });
-    }
-  }, []);
+          };
+        });
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [value]); // Re-ejecutar cuando el valor cambie (editor se monta)
 
   // Configuración del toolbar de Quill
   const modules = {
@@ -118,10 +145,7 @@ export default function RichTextEditor({
         [{ 'align': [] }],
         ['link', 'image', 'video'],
         ['clean']
-      ],
-      handlers: {
-        // El handler de imagen se configurará en useEffect
-      }
+      ]
     },
     clipboard: {
       matchVisual: false,
@@ -138,7 +162,7 @@ export default function RichTextEditor({
   ];
 
   return (
-    <div className={`rich-text-editor relative ${className}`}>
+    <div className={`rich-text-editor relative ${className}`} ref={editorRef}>
       {uploading && (
         <div className="absolute inset-0 bg-black/50 flex items-center justify-center z-50 rounded-lg" style={{ zIndex: 9999 }}>
           <div className="bg-white dark:bg-gray-800 px-4 py-2 rounded-lg shadow-lg">
@@ -150,7 +174,6 @@ export default function RichTextEditor({
         </div>
       )}
       <ReactQuill
-        ref={quillRef}
         theme="snow"
         value={value}
         onChange={onChange}
@@ -244,4 +267,3 @@ export default function RichTextEditor({
     </div>
   );
 }
-

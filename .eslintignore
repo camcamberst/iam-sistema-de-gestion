@@ -23,4 +23,5 @@ app/admin/model/dashboard/page.tsx
 app/admin/model/portafolio/page.tsx
 app/admin/rates/page.tsx
 app/admin/sedes/dashboard/page.tsx
+app/admin/sedes/dashboard/page_backup_*.tsx
 
