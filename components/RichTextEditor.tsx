@@ -27,12 +27,12 @@ export default function RichTextEditor({
 
   // Función para subir imagen
   const uploadImage = async (file: File) => {
-    // Validar tamaño (5MB máximo)
-    const maxSize = 5 * 1024 * 1024;
-    if (file.size > maxSize) {
-      alert('El archivo es demasiado grande (máximo 5MB)');
-      return null;
-    }
+        // Validar tamaño (4MB máximo para evitar problemas con límites de Vercel)
+        const maxSize = 4 * 1024 * 1024; // 4MB
+        if (file.size > maxSize) {
+          alert('El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.');
+          return null;
+        }
 
     // Validar tipo
     const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
@@ -64,7 +64,37 @@ export default function RichTextEditor({
         body: formData,
       });
 
-      const result = await response.json();
+      // Verificar si la respuesta es exitosa
+      if (!response.ok) {
+        // Si es error 413, mostrar mensaje específico
+        if (response.status === 413) {
+          alert('El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.');
+          return null;
+        }
+        
+        // Intentar parsear como JSON, si falla, mostrar mensaje genérico
+        let errorMessage = 'Error al subir la imagen';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Si no es JSON, usar el status text
+          errorMessage = `Error ${response.status}: ${response.statusText || 'Error desconocido'}`;
+        }
+        
+        alert(errorMessage);
+        return null;
+      }
+
+      // Intentar parsear la respuesta como JSON
+      let result;
+      try {
+        result = await response.json();
+      } catch (error) {
+        console.error('Error parseando respuesta JSON:', error);
+        alert('Error al procesar la respuesta del servidor');
+        return null;
+      }
 
       if (result.success && result.url) {
         return result.url;
@@ -74,7 +104,7 @@ export default function RichTextEditor({
       }
     } catch (error) {
       console.error('Error subiendo imagen:', error);
-      alert('Error al subir la imagen');
+      alert('Error al subir la imagen. Por favor, verifica tu conexión e intenta de nuevo.');
       return null;
     } finally {
       setUploading(false);

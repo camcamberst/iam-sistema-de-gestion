@@ -4,6 +4,10 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
+// Configurar límites más altos para uploads de imágenes
+export const runtime = 'nodejs';
+export const maxDuration = 30;
+
 export async function POST(request: NextRequest) {
   try {
     // Obtener usuario autenticado
@@ -47,10 +51,12 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Tipo de archivo no permitido' }, { status: 400 });
     }
 
-    // Validar tamaño (5MB máximo)
-    const maxSize = 5 * 1024 * 1024; // 5MB
+    // Validar tamaño (4MB máximo para evitar problemas con límites de Vercel)
+    const maxSize = 4 * 1024 * 1024; // 4MB (Vercel tiene límite de 4.5MB por defecto)
     if (file.size > maxSize) {
-      return NextResponse.json({ error: 'El archivo es demasiado grande (máximo 5MB)' }, { status: 400 });
+      return NextResponse.json({ 
+        error: 'El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.' 
+      }, { status: 400 });
     }
 
     // Generar nombre único para el archivo
@@ -89,6 +95,14 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('❌ [ANNOUNCEMENTS-UPLOAD] Error en POST:', error);
+    
+    // Si el error es por tamaño de archivo muy grande
+    if (error.message?.includes('413') || error.message?.includes('Request Entity Too Large')) {
+      return NextResponse.json({ 
+        error: 'El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.' 
+      }, { status: 413 });
+    }
+    
     return NextResponse.json({ error: error.message || 'Error interno' }, { status: 500 });
   }
 }

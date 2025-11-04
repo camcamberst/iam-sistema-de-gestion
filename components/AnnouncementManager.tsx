@@ -437,6 +437,13 @@ function AnnouncementEditor({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Validar tamaño antes de enviar (4MB máximo)
+    const maxSize = 4 * 1024 * 1024; // 4MB
+    if (file.size > maxSize) {
+      alert('El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.');
+      return;
+    }
+
     try {
       setUploadingImage(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -453,15 +460,46 @@ function AnnouncementEditor({
         body: formData
       });
 
-      const result = await response.json();
+      // Verificar si la respuesta es exitosa
+      if (!response.ok) {
+        // Si es error 413, mostrar mensaje específico
+        if (response.status === 413) {
+          alert('El archivo es demasiado grande. El límite máximo es 4MB. Por favor, comprime la imagen o usa una imagen más pequeña.');
+          return;
+        }
+        
+        // Intentar parsear como JSON, si falla, mostrar mensaje genérico
+        let errorMessage = 'Error al subir la imagen';
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // Si no es JSON, usar el status text
+          errorMessage = `Error ${response.status}: ${response.statusText || 'Error desconocido'}`;
+        }
+        
+        alert(errorMessage);
+        return;
+      }
+
+      // Intentar parsear la respuesta como JSON
+      let result;
+      try {
+        result = await response.json();
+      } catch (error) {
+        console.error('Error parseando respuesta JSON:', error);
+        alert('Error al procesar la respuesta del servidor');
+        return;
+      }
+
       if (result.success) {
         setFormData(prev => ({ ...prev, featured_image_url: result.url }));
       } else {
-        alert('Error subiendo imagen: ' + result.error);
+        alert('Error subiendo imagen: ' + (result.error || 'Error desconocido'));
       }
     } catch (error) {
       console.error('Error subiendo imagen:', error);
-      alert('Error al subir la imagen');
+      alert('Error al subir la imagen. Por favor, verifica tu conexión e intenta de nuevo.');
     } finally {
       setUploadingImage(false);
     }
