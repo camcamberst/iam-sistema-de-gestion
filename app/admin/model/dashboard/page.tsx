@@ -345,6 +345,11 @@ export default function ModelDashboard() {
           </div>
         </div>
 
+        {/* Corcho Informativo - Widget */}
+        <div className="mb-6">
+          <AnnouncementBoardWidget userId={user.id} userGroups={user.groups} />
+        </div>
+
         {/* Resumen de productividad y progreso de meta (solo para modelos) */}
         {user.role === 'modelo' && (
         <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
@@ -516,11 +521,6 @@ export default function ModelDashboard() {
         {/* AI Dashboard */}
         <div className="mt-6">
           <AIDashboard userId={user.id} userRole={user.role} />
-        </div>
-
-        {/* Corcho Informativo - Widget */}
-        <div className="mt-6">
-          <AnnouncementBoardWidget userId={user.id} userGroups={user.groups} />
         </div>
 
       </div>
