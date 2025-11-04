@@ -47,7 +47,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Si es modelo, filtrar por sus grupos o generales
-    if (userRole === 'modelo' && userGroups.length > 0) {
+    if (userRole === 'modelo') {
       // Obtener IDs de grupos del usuario
       const { data: userGroupsData } = await supabase
         .from('user_groups')
@@ -56,10 +56,22 @@ export async function GET(request: NextRequest) {
 
       const userGroupIds = userGroupsData?.map(ug => ug.group_id) || [];
 
-      // Filtrar: generales O que tengan al menos un grupo objetivo del usuario
-      query = query.or(
-        `is_general.eq.true,announcement_group_targets.group_id.in.(${userGroupIds.join(',')})`
-      );
+      console.log('🔍 [ANNOUNCEMENTS] Filtrado para modelo:', {
+        userId,
+        userGroupIds,
+        userGroupsParam: userGroups
+      });
+
+      // Si el usuario tiene grupos, filtrar: generales O que tengan al menos un grupo objetivo del usuario
+      if (userGroupIds.length > 0) {
+        // Filtrar: generales O que tengan al menos un grupo objetivo del usuario
+        query = query.or(
+          `is_general.eq.true,announcement_group_targets.group_id.in.(${userGroupIds.join(',')})`
+        );
+      } else {
+        // Si el usuario no tiene grupos, solo mostrar generales
+        query = query.eq('is_general', true);
+      }
     }
 
     // Filtrar por categoría si se especifica

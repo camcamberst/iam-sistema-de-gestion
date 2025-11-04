@@ -42,19 +42,32 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
       setLoading(true);
       
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) {
+        console.warn('⚠️ [ANNOUNCEMENTS-WIDGET] No hay sesión activa');
+        return;
+      }
 
       // Obtener IDs de grupos del usuario desde la base de datos
-      const { data: userGroupsData } = await supabase
+      const { data: userGroupsData, error: groupsError } = await supabase
         .from('user_groups')
         .select('group_id')
         .eq('user_id', userId);
 
+      if (groupsError) {
+        console.error('❌ [ANNOUNCEMENTS-WIDGET] Error obteniendo grupos:', groupsError);
+      }
+
       const userGroupIds = userGroupsData?.map(ug => ug.group_id) || [];
-      const userGroupsParam = userGroupIds.join(',');
+      const userGroupsParam = userGroupIds.length > 0 ? userGroupIds.join(',') : '';
+      
+      console.log('🔍 [ANNOUNCEMENTS-WIDGET] Cargando anuncios para:', {
+        userId,
+        userGroupIds,
+        userGroupsParam
+      });
       
       const response = await fetch(
-        `/api/announcements?limit=5&userId=${userId}&userRole=modelo&userGroups=${userGroupsParam}`,
+        `/api/announcements?limit=5&userId=${userId}&userRole=modelo${userGroupsParam ? `&userGroups=${userGroupsParam}` : ''}`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
@@ -62,10 +75,23 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
         }
       );
 
+      if (!response.ok) {
+        console.error('❌ [ANNOUNCEMENTS-WIDGET] Error en respuesta:', response.status, response.statusText);
+        return;
+      }
+
       const result = await response.json();
+      
+      console.log('📊 [ANNOUNCEMENTS-WIDGET] Resultado:', {
+        success: result.success,
+        count: result.data?.length || 0,
+        data: result.data
+      });
       
       if (result.success) {
         setAnnouncements(result.data || []);
+      } else {
+        console.error('❌ [ANNOUNCEMENTS-WIDGET] Error en respuesta:', result.error);
       }
     } catch (error) {
       console.error('❌ [ANNOUNCEMENTS-WIDGET] Error cargando anuncios:', error);
@@ -100,9 +126,10 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
     );
   }
 
-  if (announcements.length === 0) {
-    return null; // No mostrar si no hay anuncios
-  }
+  // Mostrar siempre el widget, incluso si no hay anuncios (para debug)
+  // if (announcements.length === 0) {
+  //   return null; // No mostrar si no hay anuncios
+  // }
 
   const displayAnnouncements = showAll ? announcements : announcements.slice(0, 3);
 
