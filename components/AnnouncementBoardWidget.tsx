@@ -34,6 +34,29 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
 
   useEffect(() => {
     loadAnnouncements();
+
+    // Suscribirse a cambios en tiempo real en la tabla announcements
+    const channel = supabase
+      .channel('announcements-realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*', // INSERT, UPDATE, DELETE
+          schema: 'public',
+          table: 'announcements',
+          filter: 'is_published=eq.true'
+        },
+        (payload) => {
+          console.log('📢 [ANNOUNCEMENTS-WIDGET] Cambio detectado en tiempo real:', payload);
+          // Recargar anuncios cuando hay cambios
+          loadAnnouncements();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [userId, userGroups]);
 
   const loadAnnouncements = async () => {

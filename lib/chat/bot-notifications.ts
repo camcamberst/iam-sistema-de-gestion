@@ -144,5 +144,16 @@ export async function notifyCalculatorReminder(userId: string): Promise<void> {
   await sendBotNotification(userId, 'recordatorio_ingreso');
 }
 
+// Enviar notificación de nueva publicación
+export async function notifyNewAnnouncement(
+  userId: string, 
+  announcementTitle?: string
+): Promise<void> {
+  const customMessage = announcementTitle 
+    ? `📌 ¡Hola! Hay una nueva publicación en el corcho informativo: "${announcementTitle}". Revisa tu dashboard para ver los detalles.`
+    : undefined;
+  await sendBotNotification(userId, 'nueva_publicacion', customMessage);
+}
+
 
 

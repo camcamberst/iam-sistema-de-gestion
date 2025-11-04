@@ -1,8 +1,79 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { notifyNewAnnouncement } from '@/lib/chat/bot-notifications';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+// Función para notificar a usuarios afectados por una publicación
+async function notifyAffectedUsers(
+  announcementId: string,
+  isGeneral: boolean,
+  groupIds: string[],
+  announcementTitle: string
+) {
+  try {
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+    
+    let userIds: string[] = [];
+
+    if (isGeneral) {
+      // Si es general, notificar a todos los modelos
+      const { data: allModels } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'modelo')
+        .eq('is_active', true);
+
+      userIds = allModels?.map((u: any) => u.id) || [];
+    } else if (groupIds.length > 0) {
+      // Si es específico de grupos, obtener modelos que pertenecen a esos grupos
+      const { data: userGroups } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', groupIds);
+
+      const userIdsFromGroups = userGroups?.map((ug: any) => ug.user_id) || [];
+      
+      // Obtener información de usuarios para filtrar solo modelos activos
+      if (userIdsFromGroups.length > 0) {
+        const { data: users } = await supabase
+          .from('users')
+          .select('id')
+          .in('id', userIdsFromGroups)
+          .eq('role', 'modelo')
+          .eq('is_active', true);
+
+        userIds = users?.map((u: any) => u.id) || [];
+      }
+    }
+
+    console.log('📢 [ANNOUNCEMENTS] Enviando notificaciones a usuarios:', {
+      announcementId,
+      isGeneral,
+      groupIds,
+      totalUsers: userIds.length
+    });
+
+    // Enviar notificaciones en paralelo (sin esperar todas)
+    const notificationPromises = userIds.map(userId => 
+      notifyNewAnnouncement(userId, announcementTitle).catch(err => {
+        console.error(`❌ [ANNOUNCEMENTS] Error notificando a usuario ${userId}:`, err);
+        return false;
+      })
+    );
+
+    // Ejecutar en segundo plano, no bloquear la respuesta
+    Promise.all(notificationPromises).then(results => {
+      const successCount = results.filter(r => r === true).length;
+      console.log(`✅ [ANNOUNCEMENTS] Notificaciones enviadas: ${successCount}/${userIds.length}`);
+    });
+
+  } catch (error) {
+    console.error('❌ [ANNOUNCEMENTS] Error notificando usuarios:', error);
+    // No fallar la creación del anuncio si fallan las notificaciones
+  }
+}
 
 export async function GET(
   request: NextRequest,
@@ -190,6 +261,19 @@ export async function PUT(
       return NextResponse.json({ error: updateError.message }, { status: 500 });
     }
 
+    // Obtener grupos objetivo actuales para notificaciones
+    let finalGroupIds: string[] = [];
+    if (body.group_ids !== undefined) {
+      finalGroupIds = body.group_ids;
+    } else {
+      // Si no se proporcionan group_ids, obtener los existentes
+      const { data: existingGroups } = await supabase
+        .from('announcement_group_targets')
+        .select('group_id')
+        .eq('announcement_id', id);
+      finalGroupIds = existingGroups?.map((g: any) => g.group_id) || [];
+    }
+
     // Actualizar grupos objetivo si se proporcionan
     if (body.group_ids !== undefined) {
       // Eliminar relaciones existentes
@@ -220,6 +304,7 @@ export async function PUT(
                 }))
               );
           }
+          finalGroupIds = validGroupIds;
         } else {
           // Super admin puede asignar a cualquier grupo
           await supabase
@@ -232,6 +317,17 @@ export async function PUT(
             );
         }
       }
+    }
+
+    // Si se publicó el anuncio (cambió de false a true), enviar notificaciones
+    const wasJustPublished = body.is_published === true && !existingAnnouncement.published_at;
+    if (wasJustPublished && updated) {
+      await notifyAffectedUsers(
+        id,
+        updated.is_general || false,
+        finalGroupIds,
+        updated.title || 'Nueva publicación'
+      );
     }
 
     return NextResponse.json({

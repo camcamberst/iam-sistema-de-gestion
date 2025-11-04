@@ -16,14 +16,15 @@ export type BotMessageType =
   | 'escalation';
 
 // Tipos de notificaciones
-export type NotificationType =
+export type NotificationType = 
   | 'anticipo_pendiente'
   | 'anticipo_aprobado'
   | 'anticipo_rechazado'
   | 'pagina_confirmada'
   | 'periodo_cerrado'
   | 'metas_alcanzadas'
-  | 'recordatorio_ingreso';
+  | 'recordatorio_ingreso'
+  | 'nueva_publicacion';
 
 // Contexto del usuario para el bot
 export interface UserContext {
@@ -96,7 +97,9 @@ export function generateNotificationMessage(
     
     metas_alcanzadas: `🏆 ¡Increíble ${context.name}! Has alcanzado tu meta del día. ¡Sigue así!`,
     
-    recordatorio_ingreso: `💡 ${context.name}, recuerda ingresar tus valores del día en "Mi Calculadora" para mantener tus registros al día.`
+    recordatorio_ingreso: `💡 ${context.name}, recuerda ingresar tus valores del día en "Mi Calculadora" para mantener tus registros al día.`,
+    
+    nueva_publicacion: `📌 ¡Hola ${context.name}! Hay una nueva publicación en el corcho informativo. Revisa tu dashboard para ver los detalles.`
   };
 
   return messages[type] || `🔔 ${context.name}, tienes una nueva notificación.`;
