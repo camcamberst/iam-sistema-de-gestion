@@ -1,0 +1,313 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+
+interface Announcement {
+  id: string;
+  title: string;
+  content?: string;
+  excerpt: string;
+  featured_image_url?: string;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    icon?: string;
+    color?: string;
+  } | null;
+  is_pinned: boolean;
+  priority: number;
+  published_at: string;
+  created_at: string;
+}
+
+interface AnnouncementBoardWidgetProps {
+  userId: string;
+  userGroups: string[];
+}
+
+export default function AnnouncementBoardWidget({ userId, userGroups }: AnnouncementBoardWidgetProps) {
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAll, setShowAll] = useState(false);
+  const [selectedAnnouncement, setSelectedAnnouncement] = useState<Announcement | null>(null);
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, [userId, userGroups]);
+
+  const loadAnnouncements = async () => {
+    try {
+      setLoading(true);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const userGroupsParam = userGroups.join(',');
+      
+      const response = await fetch(
+        `/api/announcements?limit=5&userId=${userId}&userRole=modelo&userGroups=${userGroupsParam}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`
+          }
+        }
+      );
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAnnouncements(result.data || []);
+      }
+    } catch (error) {
+      console.error('❌ [ANNOUNCEMENTS-WIDGET] Error cargando anuncios:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+
+    if (diffMins < 1) return 'Ahora';
+    if (diffMins < 60) return `hace ${diffMins} min`;
+    if (diffHours < 24) return `hace ${diffHours} h`;
+    if (diffDays < 7) return `hace ${diffDays} d`;
+    
+    return date.toLocaleDateString('es-CO', { day: 'numeric', month: 'short' });
+  };
+
+  if (loading) {
+    return (
+      <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6">
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (announcements.length === 0) {
+    return null; // No mostrar si no hay anuncios
+  }
+
+  const displayAnnouncements = showAll ? announcements : announcements.slice(0, 3);
+
+  return (
+    <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+      {/* Header */}
+      <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-600/50">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Corcho Informativo</h2>
+              <p className="text-xs text-gray-600 dark:text-gray-300">Información relevante para ti</p>
+            </div>
+          </div>
+          {announcements.length > 3 && (
+            <button
+              onClick={() => setShowAll(!showAll)}
+              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+            >
+              {showAll ? 'Ver menos' : `Ver todas (${announcements.length})`}
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Lista de anuncios */}
+      <div className="p-6 space-y-4">
+        {displayAnnouncements.map((announcement) => (
+          <div
+            key={announcement.id}
+            onClick={() => setSelectedAnnouncement(announcement)}
+            className="cursor-pointer group bg-gray-50/50 dark:bg-gray-600/30 rounded-lg p-4 border border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all duration-200 hover:shadow-md"
+          >
+            <div className="flex items-start space-x-3">
+              {/* Imagen destacada o icono de categoría */}
+              {announcement.featured_image_url ? (
+                <img
+                  src={announcement.featured_image_url}
+                  alt={announcement.title}
+                  className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                />
+              ) : (
+                <div
+                  className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
+                  style={{
+                    backgroundColor: announcement.category?.color ? `${announcement.category.color}20` : '#3B82F620',
+                    color: announcement.category?.color || '#3B82F6'
+                  }}
+                >
+                  {announcement.category?.icon || '📌'}
+                </div>
+              )}
+
+              {/* Contenido */}
+              <div className="flex-1 min-w-0">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-1">
+                      {announcement.is_pinned && (
+                        <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
+                      )}
+                      {announcement.priority > 0 && (
+                        <span className={`text-xs px-1.5 py-0.5 rounded ${
+                          announcement.priority === 2 
+                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+                            : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                        }`}>
+                          {announcement.priority === 2 ? 'Urgente' : 'Alta'}
+                        </span>
+                      )}
+                      {announcement.category && (
+                        <span
+                          className="text-xs px-2 py-0.5 rounded font-medium"
+                          style={{
+                            backgroundColor: `${announcement.category.color}20`,
+                            color: announcement.category.color
+                          }}
+                        >
+                          {announcement.category.name}
+                        </span>
+                      )}
+                    </div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                      {announcement.title}
+                    </h3>
+                    <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                      {announcement.excerpt}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between mt-2">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    {formatDate(announcement.published_at || announcement.created_at)}
+                  </span>
+                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium group-hover:underline">
+                    Leer más →
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Modal de lectura completa */}
+      {selectedAnnouncement && (
+        <AnnouncementModal
+          announcement={selectedAnnouncement}
+          onClose={() => setSelectedAnnouncement(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// Componente Modal con contenido completo
+function AnnouncementModal({ announcement, onClose }: { announcement: Announcement; onClose: () => void }) {
+  const [fullContent, setFullContent] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadFullContent();
+  }, [announcement.id]);
+
+  const loadFullContent = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(`/api/announcements/${announcement.id}`, {
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      const result = await response.json();
+      if (result.success) {
+        setFullContent(result.data.content);
+      }
+    } catch (error) {
+      console.error('Error cargando contenido completo:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      <div className="relative w-full max-w-2xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            {announcement.category && (
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-lg"
+                style={{
+                  backgroundColor: `${announcement.category.color}20`,
+                  color: announcement.category.color
+                }}
+              >
+                {announcement.category.icon || '📌'}
+              </div>
+            )}
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              {announcement.title}
+            </h2>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+          >
+            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="p-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+            </div>
+          ) : (
+            <>
+              {announcement.featured_image_url && (
+                <img
+                  src={announcement.featured_image_url}
+                  alt={announcement.title}
+                  className="w-full h-64 object-cover rounded-lg mb-4"
+                />
+              )}
+              <div className="prose dark:prose-invert max-w-none">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
+                  {fullContent || announcement.excerpt}
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+

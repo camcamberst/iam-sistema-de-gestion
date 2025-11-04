@@ -8,6 +8,7 @@ import { getColombiaDate } from '@/utils/calculator-dates';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import AIDashboard from '@/components/AIDashboard';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
+import AnnouncementBoardWidget from '@/components/AnnouncementBoardWidget';
 
 interface User {
   id: string;
@@ -515,6 +516,11 @@ export default function ModelDashboard() {
         {/* AI Dashboard */}
         <div className="mt-6">
           <AIDashboard userId={user.id} userRole={user.role} />
+        </div>
+
+        {/* Corcho Informativo - Widget */}
+        <div className="mt-6">
+          <AnnouncementBoardWidget userId={user.id} userGroups={user.groups} />
         </div>
 
       </div>
