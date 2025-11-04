@@ -23,6 +23,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
+    // Si el usuario es admin o super_admin, puede ver todas las publicaciones (incluyendo borradores)
+    // Si es modelo, solo puede ver publicadas
+    const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+    
     // Construir query base
     let query = supabase
       .from('announcements')
@@ -33,10 +37,14 @@ export async function GET(request: NextRequest) {
         group_targets:announcement_group_targets(
           group:groups(id, name)
         )
-      `)
-      .eq('is_published', true)
-      .is('expires_at', null)
-      .or('expires_at.gt.' + new Date().toISOString());
+      `);
+
+    // Si es modelo, solo mostrar publicadas y no expiradas
+    if (!isAdmin) {
+      query = query
+        .eq('is_published', true)
+        .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+    }
 
     // Si es modelo, filtrar por sus grupos o generales
     if (userRole === 'modelo' && userGroups.length > 0) {
