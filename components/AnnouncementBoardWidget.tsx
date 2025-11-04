@@ -348,15 +348,127 @@ function AnnouncementModal({ announcement, onClose }: { announcement: Announceme
                   className="w-full h-64 object-cover rounded-lg mb-4"
                 />
               )}
-              <div className="prose dark:prose-invert max-w-none">
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-line">
-                  {fullContent || announcement.excerpt}
-                </p>
-              </div>
+              <div 
+                className="prose dark:prose-invert max-w-none announcement-content"
+                dangerouslySetInnerHTML={{ __html: fullContent || announcement.excerpt || '' }}
+              />
             </>
           )}
         </div>
       </div>
+      <style jsx global>{`
+        .announcement-content {
+          color: #374151;
+        }
+        
+        .dark .announcement-content {
+          color: #f3f4f6;
+        }
+        
+        .announcement-content h1,
+        .announcement-content h2,
+        .announcement-content h3,
+        .announcement-content h4,
+        .announcement-content h5,
+        .announcement-content h6 {
+          font-weight: 600;
+          margin-top: 1.5em;
+          margin-bottom: 0.5em;
+          color: #111827;
+        }
+        
+        .dark .announcement-content h1,
+        .dark .announcement-content h2,
+        .dark .announcement-content h3,
+        .dark .announcement-content h4,
+        .dark .announcement-content h5,
+        .dark .announcement-content h6 {
+          color: #f9fafb;
+        }
+        
+        .announcement-content p {
+          margin-bottom: 1em;
+          line-height: 1.6;
+        }
+        
+        .announcement-content img {
+          max-width: 100%;
+          height: auto;
+          border-radius: 0.5rem;
+          margin: 1.5em 0;
+        }
+        
+        .announcement-content ul,
+        .announcement-content ol {
+          margin: 1em 0;
+          padding-left: 2em;
+        }
+        
+        .announcement-content li {
+          margin: 0.5em 0;
+        }
+        
+        .announcement-content a {
+          color: #3b82f6;
+          text-decoration: underline;
+        }
+        
+        .dark .announcement-content a {
+          color: #60a5fa;
+        }
+        
+        .announcement-content a:hover {
+          color: #2563eb;
+        }
+        
+        .dark .announcement-content a:hover {
+          color: #93c5fd;
+        }
+        
+        .announcement-content blockquote {
+          border-left: 4px solid #e5e7eb;
+          padding-left: 1em;
+          margin: 1em 0;
+          font-style: italic;
+          color: #6b7280;
+        }
+        
+        .dark .announcement-content blockquote {
+          border-left-color: #4b5563;
+          color: #9ca3af;
+        }
+        
+        .announcement-content code {
+          background-color: #f3f4f6;
+          padding: 0.2em 0.4em;
+          border-radius: 0.25rem;
+          font-size: 0.9em;
+          color: #dc2626;
+        }
+        
+        .dark .announcement-content code {
+          background-color: #374151;
+          color: #fca5a5;
+        }
+        
+        .announcement-content pre {
+          background-color: #f3f4f6;
+          padding: 1em;
+          border-radius: 0.5rem;
+          overflow-x: auto;
+          margin: 1em 0;
+        }
+        
+        .dark .announcement-content pre {
+          background-color: #374151;
+        }
+        
+        .announcement-content pre code {
+          background-color: transparent;
+          padding: 0;
+          color: inherit;
+        }
+      `}</style>
     </div>
   );
 }
