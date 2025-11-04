@@ -33,6 +33,83 @@ export default function AnnouncementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  // Detectar y aplicar el tema oscuro
+  useEffect(() => {
+    const applyTheme = () => {
+      try {
+        // localStorage se comparte entre ventanas del mismo origen, así que podemos leerlo directamente
+        const savedTheme = localStorage.getItem('theme') as 'light' | 'dark' | null;
+        let theme: 'light' | 'dark' = 'light';
+
+        if (savedTheme) {
+          theme = savedTheme;
+        } else if (window.opener) {
+          // Si no hay tema guardado, intentar detectar desde la ventana padre
+          try {
+            const parentHasDark = window.opener.document.documentElement.classList.contains('dark');
+            theme = parentHasDark ? 'dark' : 'light';
+          } catch (e) {
+            // Si no se puede acceder a la ventana padre, usar preferencia del sistema
+            const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+            theme = prefersDark ? 'dark' : 'light';
+          }
+        } else {
+          // Usar preferencia del sistema
+          const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+          theme = prefersDark ? 'dark' : 'light';
+        }
+
+        // Aplicar el tema
+        if (theme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      } catch (error) {
+        console.error('Error aplicando tema:', error);
+        // Fallback: usar preferencia del sistema
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (prefersDark) {
+          document.documentElement.classList.add('dark');
+        }
+      }
+    };
+
+    // Aplicar tema inmediatamente al cargar
+    applyTheme();
+
+    // También escuchar cambios en localStorage (por si el usuario cambia el tema en otra ventana)
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === 'theme') {
+        applyTheme();
+      }
+    };
+
+    // Escuchar cambios en la preferencia del sistema (solo si no hay tema guardado)
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handleMediaChange = (e: MediaQueryListEvent) => {
+      if (!localStorage.getItem('theme')) {
+        if (e.matches) {
+          document.documentElement.classList.add('dark');
+        } else {
+          document.documentElement.classList.remove('dark');
+        }
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    if (!localStorage.getItem('theme')) {
+      mediaQuery.addEventListener('change', handleMediaChange);
+    }
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+      if (!localStorage.getItem('theme')) {
+        mediaQuery.removeEventListener('change', handleMediaChange);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     loadAnnouncement();
   }, [params.id]);
