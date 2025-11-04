@@ -524,18 +524,43 @@ function AnnouncementEditor({
 
   useEffect(() => {
     setMounted(true);
-    return () => setMounted(false);
+    // Prevenir scroll del body cuando el modal está abierto
+    document.body.style.overflow = 'hidden';
+    return () => {
+      setMounted(false);
+      document.body.style.overflow = '';
+    };
   }, []);
 
   if (!mounted) return null;
 
   const modalContent = (
-    <div className="fixed inset-0 z-[9999999] flex items-center justify-center p-4" style={{ position: 'fixed' }}>
+    <div 
+      className="fixed inset-0 flex items-center justify-center p-4" 
+      style={{ 
+        position: 'fixed',
+        zIndex: 99999999,
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        isolation: 'isolate'
+      } as React.CSSProperties}
+    >
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-sm"
         onClick={onClose}
+        style={{ zIndex: 1 } as React.CSSProperties}
       />
-      <div className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto" style={{ zIndex: 9999999 }}>
+      <div 
+        className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto" 
+        style={{ 
+          zIndex: 2,
+          position: 'relative',
+          isolation: 'isolate'
+        } as React.CSSProperties}
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {announcement ? 'Editar Publicación' : 'Nueva Publicación'}
