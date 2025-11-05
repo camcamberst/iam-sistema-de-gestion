@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { supabase } from '@/lib/supabase';
 import RichTextEditor from './RichTextEditor';
+import AppleDropdown from '@/components/ui/AppleDropdown';
 
 interface Announcement {
   id: string;
@@ -236,16 +237,19 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
             Borradores
           </button>
         </div>
-        <select
+        <AppleDropdown
+          options={[
+            { value: 'all', label: 'Todas las categorías' },
+            ...categories.map(cat => ({
+              value: cat.id,
+              label: cat.name
+            }))
+          ]}
           value={selectedCategory}
-          onChange={(e) => setSelectedCategory(e.target.value)}
-          className="px-3 py-1.5 text-xs border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-        >
-          <option value="all">Todas las categorías</option>
-          {categories.map(cat => (
-            <option key={cat.id} value={cat.id}>{cat.name}</option>
-          ))}
-        </select>
+          onChange={(value) => setSelectedCategory(value)}
+          placeholder="Todas las categorías"
+          className="text-xs"
+        />
       </div>
 
       {/* Lista de publicaciones */}
@@ -668,16 +672,18 @@ function AnnouncementEditor({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Categoría
               </label>
-              <select
-                value={formData.category_id}
-                onChange={(e) => setFormData(prev => ({ ...prev, category_id: e.target.value }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="">Sin categoría</option>
-                {categories.map(cat => (
-                  <option key={cat.id} value={cat.id}>{cat.name}</option>
-                ))}
-              </select>
+              <AppleDropdown
+                options={[
+                  { value: '', label: 'Sin categoría' },
+                  ...categories.map(cat => ({
+                    value: cat.id,
+                    label: cat.name
+                  }))
+                ]}
+                value={formData.category_id || ''}
+                onChange={(value) => setFormData(prev => ({ ...prev, category_id: value || '' }))}
+                placeholder="Sin categoría"
+              />
             </div>
 
             {/* Prioridad */}
@@ -685,15 +691,16 @@ function AnnouncementEditor({
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                 Prioridad
               </label>
-              <select
-                value={formData.priority}
-                onChange={(e) => setFormData(prev => ({ ...prev, priority: parseInt(e.target.value) }))}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
-              >
-                <option value="0">Normal</option>
-                <option value="1">Alta</option>
-                <option value="2">Urgente</option>
-              </select>
+              <AppleDropdown
+                options={[
+                  { value: '0', label: 'Normal' },
+                  { value: '1', label: 'Alta' },
+                  { value: '2', label: 'Urgente' }
+                ]}
+                value={formData.priority.toString()}
+                onChange={(value) => setFormData(prev => ({ ...prev, priority: parseInt(value) }))}
+                placeholder="Normal"
+              />
             </div>
           </div>
 
