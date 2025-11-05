@@ -802,16 +802,22 @@ function AnnouncementEditor({
                 </div>
               </div>
             )}
+          </div>
 
-            {/* Selección de admins específicos (solo para super_admin) */}
-            {userRole === 'super_admin' && admins.length > 0 && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Admins específicos (opcional)
-                </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Selecciona admins específicos para dirigir esta publicación exclusivamente a ellos
-                </p>
+          {/* Selección de admins específicos (solo para super_admin) */}
+          {userRole === 'super_admin' && (
+            <div className="mt-4">
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                Admins específicos (opcional)
+              </label>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                Selecciona admins específicos para dirigir esta publicación exclusivamente a ellos. Esta opción es independiente de los grupos objetivo.
+              </p>
+              {admins.length === 0 ? (
+                <div className="text-xs text-gray-500 dark:text-gray-400 italic p-2 border border-gray-300 dark:border-gray-600 rounded-lg">
+                  No hay admins disponibles en el sistema
+                </div>
+              ) : (
                 <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
                   {admins.map(admin => (
                     <label key={admin.id} className="flex items-center space-x-2 py-1">
@@ -831,9 +837,9 @@ function AnnouncementEditor({
                     </label>
                   ))}
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Opciones */}
           <div className="flex flex-wrap gap-4">
