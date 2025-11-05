@@ -222,17 +222,6 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {/* Corcho Informativo - Widget de Visualización */}
-        {user && (user.role === 'super_admin' || user.role === 'admin') && (
-          <div className="mb-8">
-            <AnnouncementBoardWidget 
-              userId={user.id}
-              userGroups={userGroupIds}
-              userRole={user.role as 'admin' | 'super_admin'}
-            />
-          </div>
-        )}
-
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
         {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin y Admin */}
@@ -243,6 +232,17 @@ export default function AdminDashboard() {
               userRole={user.role as 'admin' | 'super_admin'} 
               userId={user.id}
               userGroups={user.groups}
+            />
+          </div>
+        )}
+
+        {/* Corcho Informativo - Widget de Visualización */}
+        {user && (user.role === 'super_admin' || user.role === 'admin') && (
+          <div className="mb-8">
+            <AnnouncementBoardWidget 
+              userId={user.id}
+              userGroups={userGroupIds}
+              userRole={user.role as 'admin' | 'super_admin'}
             />
           </div>
         )}
