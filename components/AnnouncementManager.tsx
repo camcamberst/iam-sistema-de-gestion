@@ -54,17 +54,10 @@ interface AnnouncementManagerProps {
   userGroups: string[];
 }
 
-interface Admin {
-  id: string;
-  name: string;
-  email: string;
-}
-
 export default function AnnouncementManager({ userId, userRole, userGroups }: AnnouncementManagerProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
-  const [admins, setAdmins] = useState<Admin[]>([]);
   const [loading, setLoading] = useState(true);
   const [showEditor, setShowEditor] = useState(false);
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
@@ -111,20 +104,6 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
       const groupsData = await groupsResponse.json();
       if (groupsData.success) {
         setGroups(groupsData.groups || []);
-      }
-
-      // Cargar admins (solo para super_admin)
-      if (userRole === 'super_admin') {
-        const { data: adminUsers, error: adminsError } = await supabase
-          .from('users')
-          .select('id, name, email')
-          .eq('role', 'admin')
-          .eq('is_active', true)
-          .order('name');
-        
-        if (!adminsError && adminUsers) {
-          setAdmins(adminUsers);
-        }
       }
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -392,7 +371,6 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
           announcement={editingAnnouncement}
           categories={categories}
           groups={userRole === 'super_admin' ? groups : groups.filter(g => userGroups.includes(g.id))}
-          admins={admins}
           userId={userId}
           userRole={userRole}
           onClose={() => {
@@ -415,7 +393,6 @@ function AnnouncementEditor({
   announcement,
   categories,
   groups,
-  admins,
   userId,
   userRole,
   onClose,
@@ -424,7 +401,6 @@ function AnnouncementEditor({
   announcement: Announcement | null;
   categories: Category[];
   groups: Group[];
-  admins: Admin[];
   userId: string;
   userRole: 'super_admin' | 'admin';
   onClose: () => void;
@@ -438,7 +414,7 @@ function AnnouncementEditor({
     featured_image_url: string;
     is_general: boolean;
     group_ids: string[];
-    admin_ids: string[];
+    target_roles: string[];
     is_published: boolean;
     is_pinned: boolean;
     priority: number;
@@ -451,32 +427,12 @@ function AnnouncementEditor({
     featured_image_url: announcement?.featured_image_url || '',
     is_general: announcement?.is_general || false,
     group_ids: announcement?.group_targets.map(gt => gt.id) || [],
-    admin_ids: [],
+    target_roles: (announcement as any)?.target_roles || [],
     is_published: announcement?.is_published || false,
     is_pinned: announcement?.is_pinned || false,
     priority: announcement?.priority || 0,
     expires_at: announcement?.expires_at ? announcement.expires_at.split('T')[0] : ''
   });
-
-  // Cargar admin_ids cuando se edita un anuncio
-  useEffect(() => {
-    if (announcement && userRole === 'super_admin') {
-      const loadAdminTargets = async () => {
-        const { data: adminTargets } = await supabase
-          .from('announcement_admin_targets')
-          .select('admin_id')
-          .eq('announcement_id', announcement.id);
-        
-        if (adminTargets) {
-          setFormData(prev => ({
-            ...prev,
-            admin_ids: adminTargets.map((t: any) => t.admin_id)
-          }));
-        }
-      };
-      loadAdminTargets();
-    }
-  }, [announcement, userRole]);
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
 
@@ -572,7 +528,7 @@ function AnnouncementEditor({
         featured_image_url: formData.featured_image_url || null,
         is_general: formData.is_general,
         group_ids: formData.is_general ? [] : formData.group_ids,
-        admin_ids: userRole === 'super_admin' ? formData.admin_ids : [],
+        target_roles: userRole === 'super_admin' ? formData.target_roles : [],
         is_published: formData.is_published,
         is_pinned: formData.is_pinned,
         priority: formData.priority,
@@ -802,44 +758,51 @@ function AnnouncementEditor({
                 </div>
               </div>
             )}
-          </div>
 
-          {/* Selección de admins específicos (solo para super_admin) */}
-          {userRole === 'super_admin' && (
-            <div className="mt-4">
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                Admins específicos (opcional)
-              </label>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                Selecciona admins específicos para dirigir esta publicación exclusivamente a ellos. Esta opción es independiente de los grupos objetivo.
-              </p>
-              {admins.length === 0 ? (
-                <div className="text-xs text-gray-500 dark:text-gray-400 italic p-2 border border-gray-300 dark:border-gray-600 rounded-lg">
-                  No hay admins disponibles en el sistema
+            {/* Selección por rol (solo para super_admin) */}
+            {userRole === 'super_admin' && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  Roles objetivo (opcional)
+                </label>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                  Selecciona roles específicos para dirigir esta publicación a todos los usuarios de ese rol
+                </p>
+                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
+                  <label className="flex items-center space-x-2 py-1">
+                    <input
+                      type="checkbox"
+                      checked={formData.target_roles.includes('admin')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
+                        } else {
+                          setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
+                  </label>
+                  <label className="flex items-center space-x-2 py-1">
+                    <input
+                      type="checkbox"
+                      checked={formData.target_roles.includes('super_admin')}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
+                        } else {
+                          setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
+                        }
+                      }}
+                      className="rounded"
+                    />
+                    <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
+                  </label>
                 </div>
-              ) : (
-                <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                  {admins.map(admin => (
-                    <label key={admin.id} className="flex items-center space-x-2 py-1">
-                      <input
-                        type="checkbox"
-                        checked={formData.admin_ids.includes(admin.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData(prev => ({ ...prev, admin_ids: [...prev.admin_ids, admin.id] }));
-                          } else {
-                            setFormData(prev => ({ ...prev, admin_ids: prev.admin_ids.filter(id => id !== admin.id) }));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{admin.name} ({admin.email})</span>
-                    </label>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
+              </div>
+            )}
+          </div>
 
           {/* Opciones */}
           <div className="flex flex-wrap gap-4">

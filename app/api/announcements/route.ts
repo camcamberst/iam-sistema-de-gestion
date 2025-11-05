@@ -166,20 +166,30 @@ export async function GET(request: NextRequest) {
         groupAnnouncementIds = targetAnnouncements?.map((t: any) => t.announcement_id) || [];
       }
 
-      // Obtener publicaciones dirigidas específicamente a este admin
-      const { data: adminTargetAnnouncements } = await supabase
-        .from('announcement_admin_targets')
-        .select('announcement_id')
-        .eq('admin_id', user.id);
+      // Obtener publicaciones dirigidas por rol (si el admin tiene el rol seleccionado)
+      const { data: roleTargetAnnouncements } = await supabase
+        .from('announcements')
+        .select('id, target_roles')
+        .eq('is_published', true);
       
-      const adminTargetAnnouncementIds = adminTargetAnnouncements?.map((t: any) => t.announcement_id) || [];
+      let roleAnnouncementIds: string[] = [];
+      if (roleTargetAnnouncements && roleTargetAnnouncements.length > 0) {
+        // Verificar si alguna publicación tiene el rol del usuario actual en target_roles
+        for (const ann of roleTargetAnnouncements) {
+          if (ann.target_roles && Array.isArray(ann.target_roles) && ann.target_roles.length > 0) {
+            if (ann.target_roles.includes(actualUserRole)) {
+              roleAnnouncementIds.push(ann.id);
+            }
+          }
+        }
+      }
 
       // Combinar todos los IDs únicos
       const allAnnouncementIds = [
         ...ownAnnouncementIds,
         ...generalAnnouncementIds,
         ...groupAnnouncementIds,
-        ...adminTargetAnnouncementIds
+        ...roleAnnouncementIds
       ].filter((id, index, arr) => arr.indexOf(id) === index); // Eliminar duplicados
 
       if (allAnnouncementIds.length > 0) {
@@ -336,7 +346,7 @@ export async function POST(request: NextRequest) {
       image_urls,
       is_general,
       group_ids,
-      admin_ids,
+      target_roles,
       is_published,
       is_pinned,
       priority,
@@ -389,6 +399,7 @@ export async function POST(request: NextRequest) {
       image_urls: image_urls || [],
       is_general: is_general || false,
       organization_id: organizationId,
+      target_roles: target_roles && target_roles.length > 0 ? target_roles : [],
       is_published: is_published || false,
       is_pinned: is_pinned || false,
       priority: priority || 0,
@@ -401,7 +412,7 @@ export async function POST(request: NextRequest) {
       is_published,
       is_general,
       group_ids: group_ids || [],
-      admin_ids: admin_ids || [],
+      target_roles: target_roles || [],
       published_at: announcementData.published_at
     });
 
@@ -478,22 +489,9 @@ export async function POST(request: NextRequest) {
       console.log('📢 [ANNOUNCEMENTS] Anuncio general, no se crean relaciones con grupos');
     }
 
-    // Crear relaciones con admins específicos (solo para super_admin)
-    if (userData.role === 'super_admin' && admin_ids && admin_ids.length > 0) {
-      const adminTargets = admin_ids.map((admin_id: string) => ({
-        announcement_id: announcement.id,
-        admin_id
-      }));
-
-      const { error: adminTargetsError } = await supabase
-        .from('announcement_admin_targets')
-        .insert(adminTargets);
-
-      if (adminTargetsError) {
-        console.error('❌ [ANNOUNCEMENTS] Error creando relaciones con admins:', adminTargetsError);
-      } else {
-        console.log('✅ [ANNOUNCEMENTS] Relaciones con admins creadas exitosamente');
-      }
+    // target_roles ya está guardado en announcementData, no se necesita acción adicional
+    if (target_roles && target_roles.length > 0) {
+      console.log('✅ [ANNOUNCEMENTS] Roles objetivo guardados:', target_roles);
     }
 
     // Si se publicó el anuncio, enviar notificaciones a los usuarios afectados

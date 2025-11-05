@@ -247,6 +247,7 @@ export async function PUT(
     if (body.is_pinned !== undefined) updateData.is_pinned = body.is_pinned;
     if (body.priority !== undefined) updateData.priority = body.priority;
     if (body.expires_at !== undefined) updateData.expires_at = body.expires_at;
+    if (body.target_roles !== undefined) updateData.target_roles = body.target_roles || [];
 
     // Actualizar anuncio
     const { data: updated, error: updateError } = await supabase
@@ -319,25 +320,9 @@ export async function PUT(
       }
     }
 
-    // Actualizar admins objetivo si se proporcionan (solo para super_admin)
-    if (userData.role === 'super_admin' && body.admin_ids !== undefined) {
-      // Eliminar relaciones existentes
-      await supabase
-        .from('announcement_admin_targets')
-        .delete()
-        .eq('announcement_id', id);
-
-      // Crear nuevas relaciones si hay admins
-      if (body.admin_ids && body.admin_ids.length > 0) {
-        await supabase
-          .from('announcement_admin_targets')
-          .insert(
-            body.admin_ids.map((admin_id: string) => ({
-              announcement_id: id,
-              admin_id
-            }))
-          );
-      }
+    // target_roles ya está actualizado en updateData, no se necesita acción adicional
+    if (body.target_roles !== undefined && body.target_roles.length > 0) {
+      console.log('✅ [ANNOUNCEMENTS] Roles objetivo actualizados:', body.target_roles);
     }
 
     // Si se publicó el anuncio (cambió de false a true), enviar notificaciones
