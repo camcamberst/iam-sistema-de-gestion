@@ -94,9 +94,24 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
     }
 
-    // Si el usuario es admin o super_admin, puede ver todas las publicaciones (incluyendo borradores)
-    // Si es modelo, solo puede ver publicadas
-    const isAdmin = userRole === 'super_admin' || userRole === 'admin';
+    // Obtener información del usuario autenticado
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+    
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Usuario no autenticado' }, { status: 401 });
+    }
+
+    // Obtener rol del usuario desde la base de datos
+    const { data: userData } = await supabase
+      .from('users')
+      .select('id, role')
+      .eq('id', user.id)
+      .single();
+
+    const actualUserRole = userData?.role || userRole;
+    const isAdmin = actualUserRole === 'super_admin' || actualUserRole === 'admin';
+    const isSuperAdmin = actualUserRole === 'super_admin';
     
     // Construir query base
     let query = supabase
@@ -110,15 +125,20 @@ export async function GET(request: NextRequest) {
         )
       `);
 
+    // Si es admin (no super_admin), solo mostrar SUS propias publicaciones
+    if (isAdmin && !isSuperAdmin) {
+      query = query.eq('author_id', user.id);
+    }
+
     // Si es modelo, solo mostrar publicadas y no expiradas
-    if (!isAdmin) {
+    if (actualUserRole === 'modelo') {
       query = query
         .eq('is_published', true)
         .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
     }
 
     // Si es modelo, filtrar por sus grupos o generales
-    if (userRole === 'modelo') {
+    if (actualUserRole === 'modelo') {
       // Obtener IDs de grupos del usuario
       const { data: userGroupsData } = await supabase
         .from('user_groups')
