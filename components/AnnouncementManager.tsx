@@ -583,7 +583,8 @@ function AnnouncementEditor({
 
   const modalContent = (
     <div 
-      className="fixed inset-0 flex items-center justify-center p-4" 
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200 p-4" 
+      onClick={onClose}
       style={{ 
         position: 'fixed',
         zIndex: 99999999,
@@ -591,35 +592,26 @@ function AnnouncementEditor({
         left: 0,
         right: 0,
         bottom: 0,
-        isolation: 'isolate'
       } as React.CSSProperties}
     >
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-        style={{ zIndex: 1 } as React.CSSProperties}
-      />
       <div 
-        className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] flex flex-col" 
+        className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl w-full max-w-3xl max-h-[calc(100vh-2rem)] flex flex-col transform transition-all duration-200 ease-out" 
         style={{ 
           zIndex: 2,
           position: 'relative',
-          isolation: 'isolate'
         } as React.CSSProperties}
         onClick={(e) => e.stopPropagation()}
       >
         <div 
-          className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10"
-          style={{ 
-            zIndex: 10 
-          } as React.CSSProperties}
+          className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-600 px-7 py-5 flex items-center justify-between z-10 rounded-t-2xl"
         >
-          <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
             {announcement ? 'Editar Publicación' : 'Nueva Publicación'}
           </h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+            className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            aria-label="Cerrar"
           >
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -628,8 +620,7 @@ function AnnouncementEditor({
         </div>
 
         <div className="overflow-y-auto flex-1">
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+        <form onSubmit={handleSubmit} className="p-7 space-y-5">
           {/* Título */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -639,7 +630,7 @@ function AnnouncementEditor({
               type="text"
               value={formData.title}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+              className="apple-input"
               required
             />
           </div>
@@ -668,7 +659,7 @@ function AnnouncementEditor({
               value={formData.excerpt}
               onChange={(e) => setFormData(prev => ({ ...prev, excerpt: e.target.value }))}
               rows={2}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+              className="apple-input"
               placeholder="Se generará automáticamente si se deja vacío"
             />
           </div>
@@ -842,7 +833,7 @@ function AnnouncementEditor({
               type="date"
               value={formData.expires_at}
               onChange={(e) => setFormData(prev => ({ ...prev, expires_at: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500"
+              className="apple-input"
             />
           </div>
 
