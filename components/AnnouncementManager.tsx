@@ -726,13 +726,24 @@ function AnnouncementEditor({
 
           {/* Distribución */}
           <div>
-            <label className="flex items-center space-x-2 mb-2">
-              <input
-                type="checkbox"
-                checked={formData.is_general}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_general: e.target.checked, group_ids: e.target.checked ? [] : prev.group_ids }))}
-                className="rounded"
-              />
+            <label className="flex items-center space-x-3 mb-2 cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={formData.is_general}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_general: e.target.checked, group_ids: e.target.checked ? [] : prev.group_ids }))}
+                  className="sr-only"
+                />
+                <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                  formData.is_general 
+                    ? 'bg-purple-500 dark:bg-purple-600' 
+                    : 'bg-gray-300 dark:bg-gray-600'
+                }`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out mt-0.5 ${
+                    formData.is_general ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}></div>
+                </div>
+              </div>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                 Publicación general (todos los grupos)
               </span>
@@ -746,23 +757,37 @@ function AnnouncementEditor({
                       Grupos objetivo
                     </label>
                     <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                      {groups.map(group => (
-                        <label key={group.id} className="flex items-center space-x-2 py-1">
-                          <input
-                            type="checkbox"
-                            checked={formData.group_ids.includes(group.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setFormData(prev => ({ ...prev, group_ids: [...prev.group_ids, group.id] }));
-                              } else {
-                                setFormData(prev => ({ ...prev, group_ids: prev.group_ids.filter(id => id !== group.id) }));
-                              }
-                            }}
-                            className="rounded"
-                          />
-                          <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
-                        </label>
-                      ))}
+                      {groups.map(group => {
+                        const isChecked = formData.group_ids.includes(group.id);
+                        return (
+                          <label key={group.id} className="flex items-center space-x-3 py-1 cursor-pointer">
+                            <div className="relative">
+                              <input
+                                type="checkbox"
+                                checked={isChecked}
+                                onChange={(e) => {
+                                  if (e.target.checked) {
+                                    setFormData(prev => ({ ...prev, group_ids: [...prev.group_ids, group.id] }));
+                                  } else {
+                                    setFormData(prev => ({ ...prev, group_ids: prev.group_ids.filter(id => id !== group.id) }));
+                                  }
+                                }}
+                                className="sr-only"
+                              />
+                              <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                                isChecked 
+                                  ? 'bg-purple-500 dark:bg-purple-600' 
+                                  : 'bg-gray-300 dark:bg-gray-600'
+                              }`}>
+                                <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out mt-0.5 ${
+                                  isChecked ? 'translate-x-5' : 'translate-x-0.5'
+                                }`}></div>
+                              </div>
+                            </div>
+                            <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
+                          </label>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
@@ -774,34 +799,56 @@ function AnnouncementEditor({
                       Roles objetivo (opcional)
                     </label>
                     <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                      <label className="flex items-center space-x-2 py-1">
-                        <input
-                          type="checkbox"
-                          checked={formData.target_roles.includes('admin')}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
-                            } else {
-                              setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
-                            }
-                          }}
-                          className="rounded"
-                        />
+                      <label className="flex items-center space-x-3 py-1 cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={formData.target_roles.includes('admin')}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
+                              } else {
+                                setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
+                              }
+                            }}
+                            className="sr-only"
+                          />
+                          <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                            formData.target_roles.includes('admin')
+                              ? 'bg-purple-500 dark:bg-purple-600' 
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}>
+                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out mt-0.5 ${
+                              formData.target_roles.includes('admin') ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}></div>
+                          </div>
+                        </div>
                         <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
                       </label>
-                      <label className="flex items-center space-x-2 py-1">
-                        <input
-                          type="checkbox"
-                          checked={formData.target_roles.includes('super_admin')}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
-                            } else {
-                              setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
-                            }
-                          }}
-                          className="rounded"
-                        />
+                      <label className="flex items-center space-x-3 py-1 cursor-pointer">
+                        <div className="relative">
+                          <input
+                            type="checkbox"
+                            checked={formData.target_roles.includes('super_admin')}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
+                              } else {
+                                setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
+                              }
+                            }}
+                            className="sr-only"
+                          />
+                          <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                            formData.target_roles.includes('super_admin')
+                              ? 'bg-purple-500 dark:bg-purple-600' 
+                              : 'bg-gray-300 dark:bg-gray-600'
+                          }`}>
+                            <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out mt-0.5 ${
+                              formData.target_roles.includes('super_admin') ? 'translate-x-5' : 'translate-x-0.5'
+                            }`}></div>
+                          </div>
+                        </div>
                         <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
                       </label>
                     </div>
@@ -813,13 +860,24 @@ function AnnouncementEditor({
 
           {/* Opciones */}
           <div className="flex flex-wrap gap-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_pinned}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_pinned: e.target.checked }))}
-                className="rounded"
-              />
+            <label className="flex items-center space-x-3 cursor-pointer">
+              <div className="relative">
+                <input
+                  type="checkbox"
+                  checked={formData.is_pinned}
+                  onChange={(e) => setFormData(prev => ({ ...prev, is_pinned: e.target.checked }))}
+                  className="sr-only"
+                />
+                <div className={`w-11 h-6 rounded-full transition-colors duration-200 ease-in-out ${
+                  formData.is_pinned 
+                    ? 'bg-purple-500 dark:bg-purple-600' 
+                    : 'bg-gray-300 dark:bg-gray-600'
+                }`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow-md transform transition-transform duration-200 ease-in-out mt-0.5 ${
+                    formData.is_pinned ? 'translate-x-5' : 'translate-x-0.5'
+                  }`}></div>
+                </div>
+              </div>
               <span className="text-sm text-gray-700 dark:text-gray-300">Fijar en la parte superior</span>
             </label>
           </div>
