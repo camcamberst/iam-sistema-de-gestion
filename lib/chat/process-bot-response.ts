@@ -200,6 +200,10 @@ async function generateBotResponse(
     // Obtener contexto de memoria del usuario
     const memoryContext = await getMemoryContext(userContext.userId);
     
+    // Obtener conocimiento del sistema
+    const { formatSystemKnowledgeForPrompt } = await import('./system-knowledge');
+    const systemKnowledge = formatSystemKnowledgeForPrompt(userContext.role);
+    
     console.log('🤖 [BOTTY-GEN] Construyendo contexto...');
     let contextInfo = '';
     if (userContext.role === 'modelo') {
@@ -237,6 +241,8 @@ INFORMACIÓN DEL SUPER ADMIN:
     const prompt = `
 ${personality}
 
+${systemKnowledge}
+
 ${contextInfo}
 
 ${memoryContext ? `\n${memoryContext}\n` : ''}
@@ -247,7 +253,7 @@ MENSAJE DEL USUARIO: ${userMessage}
 
 INSTRUCCIONES:
 1. Responde de manera SUPER CERCANA y amigable (como un buen amigo que te ayuda)
-2. Sé CONCISO: máximo 2-3 oraciones (las respuestas deben ser cortas y directas)
+2. Sé CONCISO: máximo 2-3 oraciones (las respuestas deben ser cortas y directas), EXCEPTO cuando preguntan sobre el sistema - en ese caso puedes ser más detallado
 3. Tono casual y cálido, habla de tú
 4. ${isFirstBotMessage ? 'SOLO en este primer mensaje puedes saludar brevemente (ej: "¡Hola!").' : 'NO saludes, NUNCA. Responde directamente al mensaje sin saludos.'}
 5. Si pregunta sobre plataformas, da tips breves y prácticos (1-2 oraciones máximo)
@@ -255,9 +261,12 @@ INSTRUCCIONES:
 7. Si no puedes resolver algo, menciona brevemente que puedes escalarlo
 8. Consejería emocional: sé empático pero breve
 9. Usa emojis con moderación (1-2 máximo por respuesta)
-10. NUNCA escribas párrafos largos, siempre respuestas cortas y al punto
+10. NUNCA escribas párrafos largos, siempre respuestas cortas y al punto, EXCEPTO cuando preguntan específicamente sobre el sistema - en ese caso puedes explicar en detalle
 11. Mantén el tono cercano, amigable y positivo
 ${!isFirstBotMessage ? '12. IMPORTANTE: NO uses saludos como "¡Hola!", "Hola!", "¡Buen día!", etc. Responde directamente.' : ''}
+13. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema (funcionalidades, cómo funciona algo, arquitectura, módulos, flujos de trabajo, APIs, estructura de datos, permisos, etc.), usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa y precisa.
+14. Para preguntas sobre el sistema, puedes ser más detallado y técnico si es necesario, pero mantén un tono conversacional.
+15. Si preguntan "¿cómo funciona X?" o "¿qué es Y?", explica el flujo completo usando el conocimiento del sistema.
 
 RESPUESTA:
 `;

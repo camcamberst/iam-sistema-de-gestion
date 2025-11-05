@@ -433,6 +433,10 @@ async function generateBotResponse(
     // Obtener contexto de memoria del usuario
     const memoryContext = await getMemoryContext(userContext.userId);
     
+    // Obtener conocimiento del sistema
+    const { formatSystemKnowledgeForPrompt } = await import('@/lib/chat/system-knowledge');
+    const systemKnowledge = formatSystemKnowledgeForPrompt(userContext.role);
+    
     // Construir información de contexto
     let contextInfo = '';
     let analyticsContext = '';
@@ -511,6 +515,8 @@ CAPACIDADES ANALÍTICAS DISPONIBLES:
     const prompt = `
 ${personality}
 
+${systemKnowledge}
+
 ${contextInfo}
 
 ${memoryContext ? `\n${memoryContext}\n` : ''}
@@ -549,6 +555,9 @@ INSTRUCCIONES GENERALES:
 10. Si es una consulta que requiere escalamiento, indica claramente "Puedo escalar esto a tu administrador"
 ${analyticsData ? '11. Formatea números grandes de manera legible (ej: $1,234.56 USD, $2.5M USD)' : ''}
 ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma mencionada esté en el portafolio del usuario antes de dar información sobre ella.' : ''}
+13. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema (funcionalidades, cómo funciona algo, arquitectura, módulos, flujos de trabajo, APIs, estructura de datos, permisos, etc.), usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa y precisa.
+14. Para preguntas técnicas sobre el sistema, sé específico y detallado. Explica cómo funcionan las cosas, qué tablas se usan, qué flujos se ejecutan, etc.
+15. Si preguntan "¿cómo funciona X?", explica el flujo completo desde el inicio hasta el final usando el conocimiento del sistema.
 
 RESPUESTA:
 `;
