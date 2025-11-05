@@ -11,14 +11,7 @@ CREATE TABLE IF NOT EXISTS announcement_admin_targets (
   announcement_id UUID REFERENCES announcements(id) ON DELETE CASCADE,
   admin_id UUID REFERENCES users(id) ON DELETE CASCADE,
   created_at TIMESTAMPTZ DEFAULT now(),
-  UNIQUE(announcement_id, admin_id),
-  CONSTRAINT check_admin_role CHECK (
-    EXISTS (
-      SELECT 1 FROM users 
-      WHERE id = admin_id 
-      AND role IN ('admin', 'super_admin')
-    )
-  )
+  UNIQUE(announcement_id, admin_id)
 );
 
 -- Índices para optimización
@@ -44,6 +37,26 @@ USING (
     AND role = 'super_admin'
   )
 );
+
+-- Trigger para validar que admin_id sea admin o super_admin (opcional)
+CREATE OR REPLACE FUNCTION validate_admin_target_role()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM users 
+    WHERE id = NEW.admin_id 
+    AND role IN ('admin', 'super_admin')
+  ) THEN
+    RAISE EXCEPTION 'El usuario seleccionado debe ser admin o super_admin';
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trigger_validate_admin_target_role
+  BEFORE INSERT OR UPDATE ON announcement_admin_targets
+  FOR EACH ROW
+  EXECUTE FUNCTION validate_admin_target_role();
 
 -- Comentarios de documentación
 COMMENT ON TABLE announcement_admin_targets IS 'Relación N:M entre anuncios y admins específicos como destinatarios';
