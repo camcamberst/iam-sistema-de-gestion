@@ -732,74 +732,79 @@ function AnnouncementEditor({
                 Publicación general (todos los grupos)
               </span>
             </label>
-            {!formData.is_general && (
-              <div className="mt-2">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Grupos objetivo
-                </label>
-                <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                  {groups.map(group => (
-                    <label key={group.id} className="flex items-center space-x-2 py-1">
-                      <input
-                        type="checkbox"
-                        checked={formData.group_ids.includes(group.id)}
-                        onChange={(e) => {
-                          if (e.target.checked) {
-                            setFormData(prev => ({ ...prev, group_ids: [...prev.group_ids, group.id] }));
-                          } else {
-                            setFormData(prev => ({ ...prev, group_ids: prev.group_ids.filter(id => id !== group.id) }));
-                          }
-                        }}
-                        className="rounded"
-                      />
-                      <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
+            {(!formData.is_general || userRole === 'super_admin') && (
+              <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Grupos objetivo */}
+                {!formData.is_general && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Grupos objetivo
                     </label>
-                  ))}
-                </div>
-              </div>
-            )}
+                    <div className="max-h-32 overflow-y-auto border border-gray-300 dark:border-gray-600 rounded-lg p-2">
+                      {groups.map(group => (
+                        <label key={group.id} className="flex items-center space-x-2 py-1">
+                          <input
+                            type="checkbox"
+                            checked={formData.group_ids.includes(group.id)}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setFormData(prev => ({ ...prev, group_ids: [...prev.group_ids, group.id] }));
+                              } else {
+                                setFormData(prev => ({ ...prev, group_ids: prev.group_ids.filter(id => id !== group.id) }));
+                              }
+                            }}
+                            className="rounded"
+                          />
+                          <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-            {/* Selección por rol (solo para super_admin) */}
-            {userRole === 'super_admin' && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Roles objetivo (opcional)
-                </label>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                  Selecciona roles específicos para dirigir esta publicación a todos los usuarios de ese rol
-                </p>
-                <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                  <label className="flex items-center space-x-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={formData.target_roles.includes('admin')}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
-                        } else {
-                          setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
-                        }
-                      }}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
-                  </label>
-                  <label className="flex items-center space-x-2 py-1">
-                    <input
-                      type="checkbox"
-                      checked={formData.target_roles.includes('super_admin')}
-                      onChange={(e) => {
-                        if (e.target.checked) {
-                          setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
-                        } else {
-                          setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
-                        }
-                      }}
-                      className="rounded"
-                    />
-                    <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
-                  </label>
-                </div>
+                {/* Selección por rol (solo para super_admin) */}
+                {userRole === 'super_admin' && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                      Roles objetivo (opcional)
+                    </label>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
+                      Selecciona roles específicos para dirigir esta publicación a todos los usuarios de ese rol
+                    </p>
+                    <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
+                      <label className="flex items-center space-x-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={formData.target_roles.includes('admin')}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'admin'] }));
+                            } else {
+                              setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'admin') }));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
+                      </label>
+                      <label className="flex items-center space-x-2 py-1">
+                        <input
+                          type="checkbox"
+                          checked={formData.target_roles.includes('super_admin')}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setFormData(prev => ({ ...prev, target_roles: [...prev.target_roles, 'super_admin'] }));
+                            } else {
+                              setFormData(prev => ({ ...prev, target_roles: prev.target_roles.filter(role => role !== 'super_admin') }));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
