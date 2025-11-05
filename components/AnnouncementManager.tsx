@@ -77,7 +77,8 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
       const token = session.access_token;
 
       // Cargar publicaciones (todas, incluyendo borradores)
-      const announcementsResponse = await fetch('/api/announcements?limit=100', {
+      // Super admin verá todas, admin solo las suyas
+      const announcementsResponse = await fetch(`/api/announcements?limit=100&userRole=${userRole}`, {
         headers: {
           'Authorization': `Bearer ${token}`
         }
