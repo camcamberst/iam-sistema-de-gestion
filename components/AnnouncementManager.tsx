@@ -734,14 +734,14 @@ function AnnouncementEditor({
                   onChange={(e) => setFormData(prev => ({ ...prev, is_general: e.target.checked, group_ids: e.target.checked ? [] : prev.group_ids }))}
                   className="sr-only"
                 />
-                <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
+                <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
                   formData.is_general 
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                     : 'bg-gray-300 dark:bg-gray-600'
                 } group-hover:shadow-md`}>
                   <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                    formData.is_general ? 'translate-x-3.5' : 'translate-x-0.5'
-                  } ${formData.is_general ? 'shadow-blue-200/50' : ''}`}></div>
+                    formData.is_general ? 'translate-x-3' : 'translate-x-0.5'
+                  } ${formData.is_general ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
                 </div>
               </div>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -774,14 +774,14 @@ function AnnouncementEditor({
                                 }}
                                 className="sr-only"
                               />
-                              <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
+                              <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
                                 isChecked 
                                   ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                                   : 'bg-gray-300 dark:bg-gray-600'
                               } group-hover:shadow-md`}>
                                 <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                                  isChecked ? 'translate-x-3.5' : 'translate-x-0.5'
-                                } ${isChecked ? 'shadow-blue-200/50' : ''}`}></div>
+                                  isChecked ? 'translate-x-3' : 'translate-x-0.5'
+                                } ${isChecked ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
                               </div>
                             </div>
                             <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
@@ -813,14 +813,14 @@ function AnnouncementEditor({
                             }}
                             className="sr-only"
                           />
-                          <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
+                          <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
                             formData.target_roles.includes('admin')
                               ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                               : 'bg-gray-300 dark:bg-gray-600'
                           } group-hover:shadow-md`}>
                             <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                              formData.target_roles.includes('admin') ? 'translate-x-3.5' : 'translate-x-0.5'
-                            } ${formData.target_roles.includes('admin') ? 'shadow-blue-200/50' : ''}`}></div>
+                              formData.target_roles.includes('admin') ? 'translate-x-3' : 'translate-x-0.5'
+                            } ${formData.target_roles.includes('admin') ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
                           </div>
                         </div>
                         <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
@@ -839,14 +839,14 @@ function AnnouncementEditor({
                             }}
                             className="sr-only"
                           />
-                          <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
+                          <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
                             formData.target_roles.includes('super_admin')
                               ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                               : 'bg-gray-300 dark:bg-gray-600'
                           } group-hover:shadow-md`}>
                             <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                              formData.target_roles.includes('super_admin') ? 'translate-x-3.5' : 'translate-x-0.5'
-                            } ${formData.target_roles.includes('super_admin') ? 'shadow-blue-200/50' : ''}`}></div>
+                              formData.target_roles.includes('super_admin') ? 'translate-x-3' : 'translate-x-0.5'
+                            } ${formData.target_roles.includes('super_admin') ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
                           </div>
                         </div>
                         <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
@@ -868,14 +868,14 @@ function AnnouncementEditor({
                   onChange={(e) => setFormData(prev => ({ ...prev, is_pinned: e.target.checked }))}
                   className="sr-only"
                 />
-                <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
+                <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
                   formData.is_pinned 
                     ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                     : 'bg-gray-300 dark:bg-gray-600'
                 } group-hover:shadow-md`}>
                   <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
-                    formData.is_pinned ? 'translate-x-3.5' : 'translate-x-0.5'
-                  } ${formData.is_pinned ? 'shadow-blue-200/50' : ''}`}></div>
+                    formData.is_pinned ? 'translate-x-3' : 'translate-x-0.5'
+                  } ${formData.is_pinned ? 'shadow-blue-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
                 </div>
               </div>
               <span className="text-sm text-gray-700 dark:text-gray-300">Fijar en la parte superior</span>
