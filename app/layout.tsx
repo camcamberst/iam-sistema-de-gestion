@@ -7,11 +7,11 @@ export const metadata: Metadata = {
   description: "Sistema de gestión de usuarios con roles y grupos - Diseño Apple.com",
   icons: {
     icon: [
-      { url: '/favicon.svg', type: 'image/svg+xml' },
+      { url: '/favicon.png', type: 'image/png' },
       { url: '/favicon.ico', type: 'image/x-icon' }
     ],
     apple: [
-      { url: '/favicon.svg', type: 'image/svg+xml' }
+      { url: '/favicon.png', type: 'image/png' }
     ]
   }
 };
