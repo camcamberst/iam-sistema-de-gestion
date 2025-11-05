@@ -428,7 +428,7 @@ function AnnouncementEditor({
     is_general: announcement?.is_general || false,
     group_ids: announcement?.group_targets.map(gt => gt.id) || [],
     target_roles: (announcement as any)?.target_roles || [],
-    is_published: announcement?.is_published || false,
+    is_published: announcement?.is_published !== undefined ? announcement.is_published : true,
     is_pinned: announcement?.is_pinned || false,
     priority: announcement?.priority || 0,
     expires_at: announcement?.expires_at ? announcement.expires_at.split('T')[0] : ''
@@ -811,15 +811,6 @@ function AnnouncementEditor({
 
           {/* Opciones */}
           <div className="flex flex-wrap gap-4">
-            <label className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                checked={formData.is_published}
-                onChange={(e) => setFormData(prev => ({ ...prev, is_published: e.target.checked }))}
-                className="rounded"
-              />
-              <span className="text-sm text-gray-700 dark:text-gray-300">Publicar ahora</span>
-            </label>
             <label className="flex items-center space-x-2">
               <input
                 type="checkbox"
