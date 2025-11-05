@@ -733,7 +733,7 @@ function AnnouncementEditor({
               </span>
             </label>
             {(!formData.is_general || userRole === 'super_admin') && (
-              <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="mt-1 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Grupos objetivo */}
                 {!formData.is_general && (
                   <div className="flex flex-col">
