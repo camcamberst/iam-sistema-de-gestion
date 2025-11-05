@@ -600,7 +600,7 @@ function AnnouncementEditor({
         style={{ zIndex: 1 } as React.CSSProperties}
       />
       <div 
-        className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] overflow-y-auto" 
+        className="relative w-full max-w-3xl bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 max-h-[90vh] flex flex-col" 
         style={{ 
           zIndex: 2,
           position: 'relative',
@@ -608,7 +608,12 @@ function AnnouncementEditor({
         } as React.CSSProperties}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between">
+        <div 
+          className="sticky top-0 bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-6 py-4 flex items-center justify-between z-10"
+          style={{ 
+            zIndex: 10 
+          } as React.CSSProperties}
+        >
           <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
             {announcement ? 'Editar Publicación' : 'Nueva Publicación'}
           </h2>
@@ -621,6 +626,8 @@ function AnnouncementEditor({
             </svg>
           </button>
         </div>
+
+        <div className="overflow-y-auto flex-1">
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           {/* Título */}
@@ -864,6 +871,7 @@ function AnnouncementEditor({
             </button>
           </div>
         </form>
+        </div>
       </div>
     </div>
   );
