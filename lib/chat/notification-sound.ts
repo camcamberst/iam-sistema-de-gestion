@@ -31,10 +31,11 @@ function initAudioContext(): AudioContext | null {
 }
 
 /**
- * Genera un sonido tipo "ping" discreto usando Web Audio API
- * Similar a las notificaciones de iOS/macOS
+ * Genera un sonido tipo "glass" distintivo usando Web Audio API
+ * Similar a las notificaciones de iOS/macOS (estilo "Glass" o "Blow")
+ * Más audible y con timbre más rico que el anterior
  */
-export function playNotificationSound(volume: number = 0.3): void {
+export function playNotificationSound(volume: number = 0.6): void {
   if (typeof window === 'undefined') return;
   
   const ctx = initAudioContext();
@@ -44,31 +45,61 @@ export function playNotificationSound(volume: number = 0.3): void {
   }
   
   try {
-    // Crear oscilador para el tono
-    const oscillator = ctx.createOscillator();
-    const gainNode = ctx.createGain();
+    const now = ctx.currentTime;
+    const duration = 0.4; // 400ms - un poco más largo para ser más perceptible
+    
+    // Crear múltiples osciladores para un sonido más rico (estilo Apple)
+    // Sonido principal: tono medio-alto con armónicos
+    const oscillator1 = ctx.createOscillator();
+    const oscillator2 = ctx.createOscillator();
+    const gainNode1 = ctx.createGain();
+    const gainNode2 = ctx.createGain();
+    const masterGain = ctx.createGain();
+    
+    // Configurar oscilador principal (tono base)
+    oscillator1.type = 'sine';
+    oscillator1.frequency.setValueAtTime(880, now); // La5 - más audible que 800Hz
+    
+    // Configurar oscilador secundario (armónico para timbre más rico)
+    oscillator2.type = 'sine';
+    oscillator2.frequency.setValueAtTime(1320, now); // Mi6 - quinta perfecta arriba
     
     // Conectar nodos
-    oscillator.connect(gainNode);
-    gainNode.connect(ctx.destination);
+    oscillator1.connect(gainNode1);
+    oscillator2.connect(gainNode2);
+    gainNode1.connect(masterGain);
+    gainNode2.connect(masterGain);
+    masterGain.connect(ctx.destination);
     
-    // Configurar tono (frecuencia tipo "ping" agradable)
-    oscillator.frequency.value = 800; // Hz - tono medio-alto, discreto
-    oscillator.type = 'sine'; // Onda senoidal suave
+    // Configurar ganancias individuales
+    gainNode1.gain.setValueAtTime(0, now);
+    gainNode1.gain.linearRampToValueAtTime(volume * 0.7, now + 0.01);
+    gainNode1.gain.exponentialRampToValueAtTime(0.01, now + duration);
     
-    // Configurar volumen con fade-out para suavizar
-    gainNode.gain.setValueAtTime(0, ctx.currentTime);
-    gainNode.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.01);
-    gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.25);
+    gainNode2.gain.setValueAtTime(0, now);
+    gainNode2.gain.linearRampToValueAtTime(volume * 0.3, now + 0.01);
+    gainNode2.gain.exponentialRampToValueAtTime(0.01, now + duration);
     
-    // Duración corta (250ms)
-    oscillator.start(ctx.currentTime);
-    oscillator.stop(ctx.currentTime + 0.25);
+    // Volumen master con fade-out suave
+    masterGain.gain.setValueAtTime(0, now);
+    masterGain.gain.linearRampToValueAtTime(volume, now + 0.02);
+    masterGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+    
+    // Iniciar osciladores
+    oscillator1.start(now);
+    oscillator2.start(now);
+    oscillator1.stop(now + duration);
+    oscillator2.stop(now + duration);
     
     // Limpiar después de la reproducción
-    oscillator.onended = () => {
-      oscillator.disconnect();
-      gainNode.disconnect();
+    oscillator1.onended = () => {
+      oscillator1.disconnect();
+      gainNode1.disconnect();
+    };
+    oscillator2.onended = () => {
+      oscillator2.disconnect();
+      gainNode2.disconnect();
+      masterGain.disconnect();
     };
   } catch (e) {
     console.warn('⚠️ Error reproduciendo sonido de notificación:', e);
