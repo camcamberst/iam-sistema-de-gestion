@@ -205,6 +205,15 @@ export default function IndividualChatWindow({
   const loadMessages = async () => {
     if (!conversationId || !session) return;
     
+    // 🔧 Limpiar mensajes inmediatamente si cambió la conversación
+    // Esto asegura que no se muestren mensajes de la conversación anterior
+    if (prevConversationIdRef.current !== null && 
+        prevConversationIdRef.current !== conversationId) {
+      console.log('🔄 [IndividualChat] Limpiando mensajes previos al cambiar de conversación');
+      setMessages([]);
+      setNewMessage('');
+    }
+    
     try {
       setIsLoading(true);
       const response = await fetch(`/api/chat/messages?conversation_id=${conversationId}`, {
@@ -215,7 +224,12 @@ export default function IndividualChatWindow({
       const data = await response.json();
       
       if (data.success) {
-        setMessages(data.messages || []);
+        const newMessages = data.messages || [];
+        console.log('📨 [IndividualChat] Mensajes cargados:', { 
+          conversationId,
+          count: newMessages.length 
+        });
+        setMessages(newMessages);
       }
     } catch (error) {
       console.error('Error cargando mensajes:', error);
@@ -307,6 +321,24 @@ export default function IndividualChatWindow({
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // 🔧 LIMPIAR ESTADO AL CAMBIAR DE CONVERSACIÓN
+  const prevConversationIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Limpiar mensajes y input cuando cambia la conversación
+    if (prevConversationIdRef.current !== null && 
+        prevConversationIdRef.current !== conversationId && 
+        conversationId) {
+      console.log('🔄 [IndividualChat] Cambio de conversación detectado:', {
+        from: prevConversationIdRef.current,
+        to: conversationId
+      });
+      setMessages([]); // Limpiar mensajes inmediatamente
+      setNewMessage(''); // Limpiar input de mensaje
+      setMessageReadStatus({}); // Limpiar estados de lectura
+    }
+    prevConversationIdRef.current = conversationId;
+  }, [conversationId]);
 
   // Cargar mensajes iniciales
   useEffect(() => {

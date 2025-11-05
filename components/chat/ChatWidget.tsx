@@ -387,6 +387,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const loadMessages = async (conversationId: string) => {
     if (!session) return;
     
+    // 🔧 LIMPIAR MENSAJES INMEDIATAMENTE si cambió la conversación
+    // Esto asegura que no se muestren mensajes de la conversación anterior
+    if (selectedConversation !== conversationId) {
+      console.log('🔄 [ChatWidget] Limpiando mensajes previos al cambiar de conversación');
+      setMessages([]);
+      setNewMessage('');
+    }
+    
     try {
       const response = await fetch(`/api/chat/messages?conversation_id=${conversationId}`, {
         headers: {
@@ -396,40 +404,33 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        // Solo actualizar si hay cambios en los mensajes
-        setMessages(prev => {
-          const newMessages = data.messages;
-          const hasChanges = prev.length !== newMessages.length || 
-            prev.some((msg, index) => !newMessages[index] || msg.id !== newMessages[index].id);
-          
-          if (hasChanges) {
-            console.log('📨 [ChatWidget] Mensajes actualizados:', { 
-              previous: prev.length, 
-              new: newMessages.length 
-            });
-            
-            // Verificar si hay mensajes nuevos de otros usuarios
-            if (newMessages.length > prev.length) {
-              const latestMessage = newMessages[newMessages.length - 1];
-              if (latestMessage && 
-                  latestMessage.sender_id !== userId && 
-                  latestMessage.id !== lastProcessedMessageIdRef.current &&
-                  !isOpen) {
-                lastProcessedMessageIdRef.current = latestMessage.id;
-              }
-            }
+        // Actualizar mensajes directamente (ya se limpiaron si era necesario)
+        const newMessages = data.messages || [];
+        console.log('📨 [ChatWidget] Mensajes cargados:', { 
+          conversationId,
+          count: newMessages.length 
+        });
+        
+        setMessages(newMessages);
+        
+        // Verificar si hay mensajes nuevos de otros usuarios
+        if (newMessages.length > 0) {
+          const latestMessage = newMessages[newMessages.length - 1];
+          if (latestMessage && 
+              latestMessage.sender_id !== userId && 
+              latestMessage.id !== lastProcessedMessageIdRef.current &&
+              !isOpen) {
+            lastProcessedMessageIdRef.current = latestMessage.id;
           }
           
           // Marcar último mensaje como visto localmente (solo estado local)
-          if (newMessages.length > 0) {
-            const last = newMessages[newMessages.length - 1];
-            markMessageAsSeen(conversationId, last.id);
-          }
-          
-          return hasChanges ? newMessages : prev;
-        });
+          markMessageAsSeen(conversationId, latestMessage.id);
+        }
         
-        setSelectedConversation(conversationId);
+        // Actualizar selectedConversation solo si no está ya establecida
+        if (selectedConversation !== conversationId) {
+          setSelectedConversation(conversationId);
+        }
 
         // 🔧 MARCADO CENTRALIZADO: Marcar TODOS los mensajes como leídos en el servidor
         // Usar función centralizada con debouncing
@@ -959,6 +960,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       clearInterval(conversationsPollingInterval);
     };
   }, [session]);
+
+  // 🔧 LIMPIAR ESTADO AL CAMBIAR DE CONVERSACIÓN
+  const prevConversationRef = useRef<string | null>(null);
+  useEffect(() => {
+    // Solo limpiar si cambiamos de una conversación válida a otra
+    // Esto evita que los mensajes del modelo A persistan al cambiar al modelo B
+    if (prevConversationRef.current !== null && 
+        prevConversationRef.current !== selectedConversation && 
+        selectedConversation !== null) {
+      console.log('🔄 [ChatWidget] Cambio de conversación detectado:', {
+        from: prevConversationRef.current,
+        to: selectedConversation
+      });
+      setMessages([]); // Limpiar mensajes inmediatamente
+      setNewMessage(''); // Limpiar input de mensaje
+      setTempChatUser(null); // Limpiar usuario temporal si existe
+    }
+    prevConversationRef.current = selectedConversation;
+  }, [selectedConversation]);
 
   // Auto-scroll a mensajes nuevos
   useEffect(() => {
