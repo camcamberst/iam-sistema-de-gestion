@@ -876,9 +876,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }]);
     
     // Reproducir sonido (con throttling mínimo de 2 segundos)
+    // Usar volumen más alto (0.6) para que sea más audible y con estilo Apple
     const now = Date.now();
     if (now - lastSoundTimeRef.current > 2000) {
-      playNotificationSound(0.3);
+      playNotificationSound(0.6); // Volumen aumentado de 0.3 a 0.6 para mejor audibilidad
       lastSoundTimeRef.current = now;
     }
   };
