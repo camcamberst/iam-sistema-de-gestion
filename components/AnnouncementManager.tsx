@@ -736,7 +736,7 @@ function AnnouncementEditor({
               <div className="mt-2 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Grupos objetivo */}
                 {!formData.is_general && (
-                  <div>
+                  <div className="flex flex-col">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Grupos objetivo
                     </label>
@@ -764,7 +764,7 @@ function AnnouncementEditor({
 
                 {/* Selección por rol (solo para super_admin) */}
                 {userRole === 'super_admin' && (
-                  <div>
+                  <div className="flex flex-col">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Roles objetivo (opcional)
                     </label>
