@@ -9,6 +9,7 @@ import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
 import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
+import AnnouncementBoardWidget from "../../../components/AnnouncementBoardWidget";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -17,6 +18,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({ total: 0, super_admin: 0, admin: 0, modelo: 0 });
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<{ id: string; name: string; email: string; role: Role; groups: string[] } | null>(null);
+  const [userGroupIds, setUserGroupIds] = useState<string[]>([]);
   // Resumen de productividad (modelo)
   const [summary, setSummary] = useState<{ usdBruto: number; usdModelo: number; copModelo: number; goalUsd: number; pct: number } | null>(null);
 
@@ -40,12 +42,14 @@ export default function AdminDashboard() {
           .eq('id', uid)
           .single();
         let groups: string[] = [];
+        let groupIds: string[] = [];
         if (userRow && userRow.role !== 'super_admin') {
           const { data: ug } = await supabase
             .from('user_groups')
-            .select('groups(name)')
+            .select('group_id, groups(name)')
             .eq('user_id', uid);
           groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
+          groupIds = (ug || []).map((r: any) => r.group_id).filter(Boolean);
         }
         const current = {
           id: userRow?.id || uid,
@@ -55,6 +59,7 @@ export default function AdminDashboard() {
           groups,
         };
         setUser(current);
+        setUserGroupIds(groupIds);
 
         // Load global stats (super admin) or filtered stats (admin)
         const { data: all } = await supabase.from('users').select('id,role');
@@ -214,6 +219,17 @@ export default function AdminDashboard() {
                 </div>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Corcho Informativo - Widget de Visualización */}
+        {user && (user.role === 'super_admin' || user.role === 'admin') && (
+          <div className="mb-8">
+            <AnnouncementBoardWidget 
+              userId={user.id}
+              userGroups={userGroupIds}
+              userRole={user.role as 'admin' | 'super_admin'}
+            />
           </div>
         )}
 
