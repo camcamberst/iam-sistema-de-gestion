@@ -726,7 +726,7 @@ function AnnouncementEditor({
 
           {/* Distribución */}
           <div>
-            <label className="flex items-center space-x-2.5 mb-2 cursor-pointer">
+            <label className="flex items-center space-x-2 mb-2 cursor-pointer group">
               <div className="relative">
                 <input
                   type="checkbox"
@@ -734,14 +734,14 @@ function AnnouncementEditor({
                   onChange={(e) => setFormData(prev => ({ ...prev, is_general: e.target.checked, group_ids: e.target.checked ? [] : prev.group_ids }))}
                   className="sr-only"
                 />
-                <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out ${
+                <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
                   formData.is_general 
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700' 
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                     : 'bg-gray-300 dark:bg-gray-600'
-                }`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out mt-0.5 ${
-                    formData.is_general ? 'translate-x-4' : 'translate-x-0.5'
-                  }`}></div>
+                } group-hover:shadow-md`}>
+                  <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
+                    formData.is_general ? 'translate-x-3.5' : 'translate-x-0.5'
+                  } ${formData.is_general ? 'shadow-blue-200/50' : ''}`}></div>
                 </div>
               </div>
               <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -760,7 +760,7 @@ function AnnouncementEditor({
                       {groups.map(group => {
                         const isChecked = formData.group_ids.includes(group.id);
                         return (
-                          <label key={group.id} className="flex items-center space-x-2.5 py-1 cursor-pointer">
+                          <label key={group.id} className="flex items-center space-x-2 py-1 cursor-pointer group">
                             <div className="relative">
                               <input
                                 type="checkbox"
@@ -774,14 +774,14 @@ function AnnouncementEditor({
                                 }}
                                 className="sr-only"
                               />
-                              <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out ${
+                              <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
                                 isChecked 
-                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700' 
+                                  ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                                   : 'bg-gray-300 dark:bg-gray-600'
-                              }`}>
-                                <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out mt-0.5 ${
-                                  isChecked ? 'translate-x-4' : 'translate-x-0.5'
-                                }`}></div>
+                              } group-hover:shadow-md`}>
+                                <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
+                                  isChecked ? 'translate-x-3.5' : 'translate-x-0.5'
+                                } ${isChecked ? 'shadow-blue-200/50' : ''}`}></div>
                               </div>
                             </div>
                             <span className="text-sm text-gray-700 dark:text-gray-300">{group.name}</span>
@@ -799,7 +799,7 @@ function AnnouncementEditor({
                       Roles objetivo (opcional)
                     </label>
                     <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
-                      <label className="flex items-center space-x-2.5 py-1 cursor-pointer">
+                      <label className="flex items-center space-x-2 py-1 cursor-pointer group">
                         <div className="relative">
                           <input
                             type="checkbox"
@@ -813,19 +813,19 @@ function AnnouncementEditor({
                             }}
                             className="sr-only"
                           />
-                          <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out ${
+                          <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
                             formData.target_roles.includes('admin')
-                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700' 
+                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                               : 'bg-gray-300 dark:bg-gray-600'
-                          }`}>
-                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out mt-0.5 ${
-                              formData.target_roles.includes('admin') ? 'translate-x-4' : 'translate-x-0.5'
-                            }`}></div>
+                          } group-hover:shadow-md`}>
+                            <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
+                              formData.target_roles.includes('admin') ? 'translate-x-3.5' : 'translate-x-0.5'
+                            } ${formData.target_roles.includes('admin') ? 'shadow-blue-200/50' : ''}`}></div>
                           </div>
                         </div>
                         <span className="text-sm text-gray-700 dark:text-gray-300">Admin</span>
                       </label>
-                      <label className="flex items-center space-x-2.5 py-1 cursor-pointer">
+                      <label className="flex items-center space-x-2 py-1 cursor-pointer group">
                         <div className="relative">
                           <input
                             type="checkbox"
@@ -839,14 +839,14 @@ function AnnouncementEditor({
                             }}
                             className="sr-only"
                           />
-                          <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out ${
+                          <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
                             formData.target_roles.includes('super_admin')
-                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700' 
+                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                               : 'bg-gray-300 dark:bg-gray-600'
-                          }`}>
-                            <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out mt-0.5 ${
-                              formData.target_roles.includes('super_admin') ? 'translate-x-4' : 'translate-x-0.5'
-                            }`}></div>
+                          } group-hover:shadow-md`}>
+                            <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
+                              formData.target_roles.includes('super_admin') ? 'translate-x-3.5' : 'translate-x-0.5'
+                            } ${formData.target_roles.includes('super_admin') ? 'shadow-blue-200/50' : ''}`}></div>
                           </div>
                         </div>
                         <span className="text-sm text-gray-700 dark:text-gray-300">Super Admin</span>
@@ -860,7 +860,7 @@ function AnnouncementEditor({
 
           {/* Opciones */}
           <div className="flex flex-wrap gap-4">
-            <label className="flex items-center space-x-2.5 cursor-pointer">
+            <label className="flex items-center space-x-2 cursor-pointer group">
               <div className="relative">
                 <input
                   type="checkbox"
@@ -868,14 +868,14 @@ function AnnouncementEditor({
                   onChange={(e) => setFormData(prev => ({ ...prev, is_pinned: e.target.checked }))}
                   className="sr-only"
                 />
-                <div className={`w-9 h-5 rounded-full transition-colors duration-200 ease-in-out ${
+                <div className={`w-8 h-4.5 rounded-full transition-all duration-200 ease-in-out ${
                   formData.is_pinned 
-                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700' 
+                    ? 'bg-gradient-to-r from-blue-500 to-indigo-600 dark:from-blue-600 dark:to-indigo-700 shadow-inner' 
                     : 'bg-gray-300 dark:bg-gray-600'
-                }`}>
-                  <div className={`w-4 h-4 bg-white rounded-full shadow-sm transform transition-transform duration-200 ease-in-out mt-0.5 ${
-                    formData.is_pinned ? 'translate-x-4' : 'translate-x-0.5'
-                  }`}></div>
+                } group-hover:shadow-md`}>
+                  <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
+                    formData.is_pinned ? 'translate-x-3.5' : 'translate-x-0.5'
+                  } ${formData.is_pinned ? 'shadow-blue-200/50' : ''}`}></div>
                 </div>
               </div>
               <span className="text-sm text-gray-700 dark:text-gray-300">Fijar en la parte superior</span>
