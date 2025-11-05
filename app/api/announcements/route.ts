@@ -122,7 +122,8 @@ export async function GET(request: NextRequest) {
         author:users(id, name, email),
         group_targets:announcement_group_targets(
           group:groups(id, name)
-        )
+        ),
+        target_roles
       `);
 
     // Si es admin (no super_admin), mostrar:
@@ -319,7 +320,8 @@ export async function GET(request: NextRequest) {
       group_targets: announcement.group_targets?.map((gt: any) => ({
         id: gt.group.id,
         name: gt.group.name
-      })) || []
+      })) || [],
+      target_roles: announcement.target_roles || []
     }));
 
     return NextResponse.json({
