@@ -768,9 +768,6 @@ function AnnouncementEditor({
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                       Roles objetivo (opcional)
                     </label>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">
-                      Selecciona roles específicos para dirigir esta publicación a todos los usuarios de ese rol
-                    </p>
                     <div className="border border-gray-300 dark:border-gray-600 rounded-lg p-2">
                       <label className="flex items-center space-x-2 py-1">
                         <input
