@@ -41,6 +41,7 @@ export default function IndividualChatWindow({
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const windowRef = useRef<HTMLDivElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const prevConversationIdRef = useRef<string | null>(null); // Para detectar cambios de conversación
 
   // Calcular posición inicial basada en el índice de la ventana
   const getInitialPosition = () => {
@@ -323,7 +324,6 @@ export default function IndividualChatWindow({
   }, [messages]);
 
   // 🔧 LIMPIAR ESTADO AL CAMBIAR DE CONVERSACIÓN
-  const prevConversationIdRef = useRef<string | null>(null);
   useEffect(() => {
     // Limpiar mensajes y input cuando cambia la conversación
     if (prevConversationIdRef.current !== null && 
