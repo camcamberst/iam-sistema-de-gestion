@@ -18,3 +18,4 @@ $$ LANGUAGE plpgsql SECURITY DEFINER;
 -- Comentario
 COMMENT ON FUNCTION increment_announcement_views IS 'Incrementa el contador de visualizaciones de un anuncio';
 
+

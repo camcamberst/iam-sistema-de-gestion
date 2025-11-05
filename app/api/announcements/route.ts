@@ -125,9 +125,69 @@ export async function GET(request: NextRequest) {
         )
       `);
 
-    // Si es admin (no super_admin), solo mostrar SUS propias publicaciones
+    // Si es admin (no super_admin), mostrar:
+    // - SUS propias publicaciones
+    // - Publicaciones generales del super admin
+    // - Publicaciones dirigidas a sus grupos
+    // - Publicaciones dirigidas específicamente a él
     if (isAdmin && !isSuperAdmin) {
-      query = query.eq('author_id', user.id);
+      // Obtener publicaciones donde el admin es autor
+      const { data: ownAnnouncements } = await supabase
+        .from('announcements')
+        .select('id')
+        .eq('author_id', user.id);
+      
+      const ownAnnouncementIds = ownAnnouncements?.map((a: any) => a.id) || [];
+
+      // Obtener publicaciones generales del super admin
+      const { data: generalAnnouncements } = await supabase
+        .from('announcements')
+        .select('id')
+        .eq('is_general', true)
+        .eq('is_published', true);
+      
+      const generalAnnouncementIds = generalAnnouncements?.map((a: any) => a.id) || [];
+
+      // Obtener publicaciones dirigidas a los grupos del admin
+      const { data: userGroupsData } = await supabase
+        .from('user_groups')
+        .select('group_id')
+        .eq('user_id', user.id);
+      
+      const userGroupIds = userGroupsData?.map((ug: any) => ug.group_id) || [];
+      let groupAnnouncementIds: string[] = [];
+      
+      if (userGroupIds.length > 0) {
+        const { data: targetAnnouncements } = await supabase
+          .from('announcement_group_targets')
+          .select('announcement_id')
+          .in('group_id', userGroupIds);
+        
+        groupAnnouncementIds = targetAnnouncements?.map((t: any) => t.announcement_id) || [];
+      }
+
+      // Obtener publicaciones dirigidas específicamente a este admin
+      const { data: adminTargetAnnouncements } = await supabase
+        .from('announcement_admin_targets')
+        .select('announcement_id')
+        .eq('admin_id', user.id);
+      
+      const adminTargetAnnouncementIds = adminTargetAnnouncements?.map((t: any) => t.announcement_id) || [];
+
+      // Combinar todos los IDs únicos
+      const allAnnouncementIds = [
+        ...ownAnnouncementIds,
+        ...generalAnnouncementIds,
+        ...groupAnnouncementIds,
+        ...adminTargetAnnouncementIds
+      ].filter((id, index, arr) => arr.indexOf(id) === index); // Eliminar duplicados
+
+      if (allAnnouncementIds.length > 0) {
+        query = query.in('id', allAnnouncementIds);
+      } else {
+        // Si no hay publicaciones, devolver array vacío
+        query = query.eq('id', '00000000-0000-0000-0000-000000000000'); // UUID inválido para no devolver resultados
+      }
     }
 
     // Si es modelo, solo mostrar publicadas y no expiradas
@@ -135,6 +195,11 @@ export async function GET(request: NextRequest) {
       query = query
         .eq('is_published', true)
         .or('expires_at.is.null,expires_at.gt.' + new Date().toISOString());
+    }
+
+    // Si es admin, solo mostrar publicadas (para el widget de visualización)
+    if (isAdmin && !isSuperAdmin && actualUserRole !== 'modelo') {
+      query = query.eq('is_published', true);
     }
 
     // Si es modelo, filtrar por sus grupos o generales
@@ -271,6 +336,7 @@ export async function POST(request: NextRequest) {
       image_urls,
       is_general,
       group_ids,
+      admin_ids,
       is_published,
       is_pinned,
       priority,
@@ -335,6 +401,7 @@ export async function POST(request: NextRequest) {
       is_published,
       is_general,
       group_ids: group_ids || [],
+      admin_ids: admin_ids || [],
       published_at: announcementData.published_at
     });
 
@@ -409,6 +476,24 @@ export async function POST(request: NextRequest) {
       }
     } else if (is_general) {
       console.log('📢 [ANNOUNCEMENTS] Anuncio general, no se crean relaciones con grupos');
+    }
+
+    // Crear relaciones con admins específicos (solo para super_admin)
+    if (userData.role === 'super_admin' && admin_ids && admin_ids.length > 0) {
+      const adminTargets = admin_ids.map((admin_id: string) => ({
+        announcement_id: announcement.id,
+        admin_id
+      }));
+
+      const { error: adminTargetsError } = await supabase
+        .from('announcement_admin_targets')
+        .insert(adminTargets);
+
+      if (adminTargetsError) {
+        console.error('❌ [ANNOUNCEMENTS] Error creando relaciones con admins:', adminTargetsError);
+      } else {
+        console.log('✅ [ANNOUNCEMENTS] Relaciones con admins creadas exitosamente');
+      }
     }
 
     // Si se publicó el anuncio, enviar notificaciones a los usuarios afectados

@@ -264,3 +264,4 @@ COMMENT ON COLUMN announcements.is_general IS 'true = visible para todos, false 
 COMMENT ON COLUMN announcements.is_pinned IS 'true = aparece fijado en la parte superior';
 COMMENT ON COLUMN announcements.priority IS '0=normal, 1=alta, 2=urgente';
 
+

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import BillingSummary from '../../../../components/BillingSummary';
 import AnnouncementManager from '../../../../components/AnnouncementManager';
+import AnnouncementBoardWidget from '../../../../components/AnnouncementBoardWidget';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface DashboardStats {
@@ -835,6 +836,17 @@ export default function DashboardSedesPage() {
                 <p className="text-sm text-red-800 dark:text-red-400">{error}</p>
               </div>
             </div>
+          </div>
+        )}
+
+        {/* Corcho Informativo - Widget de Visualización */}
+        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
+          <div className="mb-8">
+            <AnnouncementBoardWidget 
+              userId={userId}
+              userGroups={userGroups}
+              userRole={userRole as 'admin' | 'super_admin'}
+            />
           </div>
         )}
 

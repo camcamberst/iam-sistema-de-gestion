@@ -319,6 +319,27 @@ export async function PUT(
       }
     }
 
+    // Actualizar admins objetivo si se proporcionan (solo para super_admin)
+    if (userData.role === 'super_admin' && body.admin_ids !== undefined) {
+      // Eliminar relaciones existentes
+      await supabase
+        .from('announcement_admin_targets')
+        .delete()
+        .eq('announcement_id', id);
+
+      // Crear nuevas relaciones si hay admins
+      if (body.admin_ids && body.admin_ids.length > 0) {
+        await supabase
+          .from('announcement_admin_targets')
+          .insert(
+            body.admin_ids.map((admin_id: string) => ({
+              announcement_id: id,
+              admin_id
+            }))
+          );
+      }
+    }
+
     // Si se publicó el anuncio (cambió de false a true), enviar notificaciones
     const wasJustPublished = body.is_published === true && !existingAnnouncement.published_at;
     if (wasJustPublished && updated) {

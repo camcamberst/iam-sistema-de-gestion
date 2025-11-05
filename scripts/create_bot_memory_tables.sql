@@ -71,3 +71,6 @@ CREATE POLICY "Users can view own conversation summaries" ON bot_conversation_su
 CREATE POLICY "Service role can manage all summaries" ON bot_conversation_summaries
   FOR ALL USING (auth.role() = 'service_role');
 
+
+
+

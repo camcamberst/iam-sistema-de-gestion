@@ -60,3 +60,4 @@ CREATE POLICY "admins_eliminar_announcement_images"
     )
   );
 
+

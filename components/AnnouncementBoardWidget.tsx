@@ -25,9 +25,10 @@ interface Announcement {
 interface AnnouncementBoardWidgetProps {
   userId: string;
   userGroups: string[];
+  userRole?: 'modelo' | 'admin' | 'super_admin';
 }
 
-export default function AnnouncementBoardWidget({ userId, userGroups }: AnnouncementBoardWidgetProps) {
+export default function AnnouncementBoardWidget({ userId, userGroups, userRole = 'modelo' }: AnnouncementBoardWidgetProps) {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
@@ -104,7 +105,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups }: Announce
       });
       
       const response = await fetch(
-        `/api/announcements?limit=5&userId=${userId}&userRole=modelo${userGroupsParam ? `&userGroups=${userGroupsParam}` : ''}`,
+        `/api/announcements?limit=5&userId=${userId}&userRole=${userRole}${userGroupsParam ? `&userGroups=${userGroupsParam}` : ''}`,
         {
           headers: {
             'Authorization': `Bearer ${session.access_token}`
