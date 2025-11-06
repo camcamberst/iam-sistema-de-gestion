@@ -437,6 +437,11 @@ async function generateBotResponse(
     const { formatSystemKnowledgeForPrompt } = await import('@/lib/chat/system-knowledge');
     const systemKnowledge = formatSystemKnowledgeForPrompt(userContext.role);
     
+    // Obtener recursos útiles relevantes para la consulta
+    const { getRelevantResources, formatResourcesForPrompt } = await import('@/lib/chat/bot-resources');
+    const relevantResources = await getRelevantResources(userMessage, userContext);
+    const resourcesContext = formatResourcesForPrompt(relevantResources);
+    
     // Construir información de contexto
     let contextInfo = '';
     let analyticsContext = '';
