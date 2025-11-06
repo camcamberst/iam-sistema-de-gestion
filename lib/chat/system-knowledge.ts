@@ -386,3 +386,6 @@ CAPACIDADES ESPECIALES PARA ADMIN:
   return knowledgeText;
 }
 
+
+
+

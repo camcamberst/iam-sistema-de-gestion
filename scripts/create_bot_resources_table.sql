@@ -68,3 +68,6 @@ CREATE TRIGGER update_bot_resources_updated_at_trigger
   FOR EACH ROW
   EXECUTE FUNCTION update_bot_resources_updated_at();
 
+
+
+

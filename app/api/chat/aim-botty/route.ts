@@ -24,6 +24,7 @@ import {
   getMemoryContext 
 } from '@/lib/chat/bot-memory';
 import { withCache, generateCacheKey } from '@/lib/cache/query-cache';
+import { fetchUrlContent, type FetchedContent } from '@/lib/chat/web-fetcher';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -437,10 +438,13 @@ async function generateBotResponse(
     const { formatSystemKnowledgeForPrompt } = await import('@/lib/chat/system-knowledge');
     const systemKnowledge = formatSystemKnowledgeForPrompt(userContext.role);
     
-    // Obtener recursos útiles relevantes para la consulta
+    // Obtener recursos útiles relevantes para la consulta (solo URLs, no contenido)
     const { getRelevantResources, formatResourcesForPrompt } = await import('@/lib/chat/bot-resources');
     const relevantResources = await getRelevantResources(userMessage, userContext);
     const resourcesContext = formatResourcesForPrompt(relevantResources);
+    
+    // Extraer URLs de recursos para function calling
+    const resourceUrls = relevantResources.map(r => r.url);
     
     // Construir información de contexto
     let contextInfo = '';
@@ -517,7 +521,8 @@ CAPACIDADES ANALÍTICAS DISPONIBLES:
 `;
     }
 
-    const prompt = `
+    // Construir prompt base (sin recursos, ya que los obtendremos con function calling si es necesario)
+    const basePrompt = `
 ${personality}
 
 ${systemKnowledge}
@@ -527,8 +532,6 @@ ${contextInfo}
 ${memoryContext ? `\n${memoryContext}\n` : ''}
 
 ${analyticsContext}
-
-${resourcesContext}
 
 ${historyText ? `\nHISTORIAL DE CONVERSACIÓN (últimos 10 mensajes):\n${historyText}\n` : ''}
 
@@ -565,8 +568,8 @@ ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma
 13. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema (funcionalidades, cómo funciona algo, arquitectura, módulos, flujos de trabajo, APIs, estructura de datos, permisos, etc.), usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa y precisa.
 14. Para preguntas técnicas sobre el sistema, sé específico y detallado. Explica cómo funcionan las cosas, qué tablas se usan, qué flujos se ejecutan, etc.
 15. Si preguntan "¿cómo funciona X?", explica el flujo completo desde el inicio hasta el final usando el conocimiento del sistema.
-16. ${resourcesContext ? 'IMPORTANTE: Si hay RECURSOS ÚTILES disponibles arriba y el usuario pregunta sobre algo relacionado, menciónalos y sugiere que los visite. Puedes mencionar el título y la URL del recurso relevante. Si hay múltiples recursos relevantes, puedes mencionar varios.' : ''}
-17. ${resourcesContext ? 'Cuando menciones un recurso, sé específico: "Te recomiendo revisar este artículo: [Título] - [URL]" o "Para más información sobre esto, puedes consultar: [Título] ([URL])"' : ''}
+16. Si necesitas información detallada de alguna URL de los recursos disponibles, usa la función fetch_url_content para obtener el contenido. Solo usa esta función si realmente necesitas información específica de la URL.
+17. Si obtienes contenido de una URL, úsalo para responder de manera precisa y detallada al usuario.
 
 RESPUESTA:
 `;
@@ -590,17 +593,93 @@ RESPUESTA:
     // Obtener instancia de Gemini
     const geminiInstance = getGenAI();
     
+    // Definir schema de función para Gemini
+    const fetchUrlContentFunction = {
+      name: 'fetch_url_content',
+      description: 'Obtiene el contenido de una URL específica. Úsala cuando necesites información detallada de un recurso o enlace web para responder con precisión.',
+      parameters: {
+        type: 'object',
+        properties: {
+          url: {
+            type: 'string',
+            description: 'La URL completa del recurso del cual obtener el contenido'
+          }
+        },
+        required: ['url']
+      }
+    };
+
+    // Construir lista de URLs disponibles para el contexto
+    const availableUrlsText = resourceUrls.length > 0 
+      ? `\n\nRECURSOS DISPONIBLES (URLs que puedes consultar si necesitas información detallada):\n${resourceUrls.map((url, i) => `${i + 1}. ${url}`).join('\n')}\n`
+      : '';
+
+    const prompt = basePrompt + availableUrlsText;
+
     // Intentar con cada modelo hasta que uno funcione
     for (const modelName of modelNames) {
       try {
         console.log(`🤖 [BOTTY-GEN] Intentando con modelo: ${modelName}`);
-        const model = geminiInstance.getGenerativeModel({ model: modelName });
+        const model = geminiInstance.getGenerativeModel({ 
+          model: modelName,
+          tools: [{
+            functionDeclarations: [fetchUrlContentFunction]
+          }]
+        });
         
-        // Ejecutar con rate limiting
+        // Ejecutar con rate limiting y manejar function calling
         const result = await executeWithRateLimit(
           async () => {
-            const result = await model.generateContent(prompt);
-            return result.response;
+            let response = await model.generateContent(prompt);
+            
+            // Verificar si Gemini quiere llamar a una función
+            while (response.candidates && response.candidates[0]?.content?.parts?.[0]?.functionCall) {
+              const functionCall = response.candidates[0].content.parts[0].functionCall;
+              
+              console.log(`🔧 [BOTTY-GEN] Gemini quiere usar función: ${functionCall.name}`);
+              
+              if (functionCall.name === 'fetch_url_content') {
+                const url = functionCall.args?.url;
+                if (!url) {
+                  console.error('❌ [BOTTY-GEN] URL no proporcionada en function call');
+                  break;
+                }
+                
+                console.log(`🌐 [BOTTY-GEN] Obteniendo contenido de: ${url}`);
+                const fetchedContent = await fetchUrlContent(url);
+                
+                // Construir respuesta de función para Gemini
+                const functionResponse = {
+                  functionResponse: {
+                    name: 'fetch_url_content',
+                    response: fetchedContent.success 
+                      ? {
+                          success: true,
+                          url: fetchedContent.url,
+                          title: fetchedContent.title,
+                          content: fetchedContent.content
+                        }
+                      : {
+                          success: false,
+                          url: fetchedContent.url,
+                          error: fetchedContent.error || 'Error desconocido'
+                        }
+                  }
+                };
+                
+                // Continuar la conversación con el resultado de la función
+                response = await model.generateContent([
+                  { text: prompt },
+                  ...(response.candidates[0]?.content?.parts || []),
+                  functionResponse
+                ]);
+              } else {
+                console.warn(`⚠️ [BOTTY-GEN] Función desconocida: ${functionCall.name}`);
+                break;
+              }
+            }
+            
+            return response;
           }
         );
         
