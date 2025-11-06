@@ -204,6 +204,11 @@ async function generateBotResponse(
     const { formatSystemKnowledgeForPrompt } = await import('./system-knowledge');
     const systemKnowledge = formatSystemKnowledgeForPrompt(userContext.role);
     
+    // Obtener recursos útiles relevantes para la consulta
+    const { getRelevantResources, formatResourcesForPrompt } = await import('./bot-resources');
+    const relevantResources = await getRelevantResources(userMessage, userContext);
+    const resourcesContext = formatResourcesForPrompt(relevantResources);
+    
     console.log('🤖 [BOTTY-GEN] Construyendo contexto...');
     let contextInfo = '';
     if (userContext.role === 'modelo') {
@@ -247,6 +252,8 @@ ${contextInfo}
 
 ${memoryContext ? `\n${memoryContext}\n` : ''}
 
+${resourcesContext}
+
 ${historyText ? `\nHISTORIAL DE CONVERSACIÓN (últimos 10 mensajes):\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
@@ -267,6 +274,8 @@ ${!isFirstBotMessage ? '12. IMPORTANTE: NO uses saludos como "¡Hola!", "Hola!",
 13. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema (funcionalidades, cómo funciona algo, arquitectura, módulos, flujos de trabajo, APIs, estructura de datos, permisos, etc.), usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa y precisa.
 14. Para preguntas sobre el sistema, puedes ser más detallado y técnico si es necesario, pero mantén un tono conversacional.
 15. Si preguntan "¿cómo funciona X?" o "¿qué es Y?", explica el flujo completo usando el conocimiento del sistema.
+16. ${resourcesContext ? 'IMPORTANTE: Si hay RECURSOS ÚTILES disponibles arriba y el usuario pregunta sobre algo relacionado, menciónalos y sugiere que los visite. Puedes mencionar el título y la URL del recurso relevante. Si hay múltiples recursos relevantes, puedes mencionar varios.' : ''}
+17. ${resourcesContext ? 'Cuando menciones un recurso, sé específico: "Te recomiendo revisar este artículo: [Título] - [URL]" o "Para más información sobre esto, puedes consultar: [Título] ([URL])"' : ''}
 
 RESPUESTA:
 `;

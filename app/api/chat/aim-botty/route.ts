@@ -523,6 +523,8 @@ ${memoryContext ? `\n${memoryContext}\n` : ''}
 
 ${analyticsContext}
 
+${resourcesContext}
+
 ${historyText ? `\nHISTORIAL DE CONVERSACIÓN (últimos 10 mensajes):\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
@@ -558,6 +560,8 @@ ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma
 13. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema (funcionalidades, cómo funciona algo, arquitectura, módulos, flujos de trabajo, APIs, estructura de datos, permisos, etc.), usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa y precisa.
 14. Para preguntas técnicas sobre el sistema, sé específico y detallado. Explica cómo funcionan las cosas, qué tablas se usan, qué flujos se ejecutan, etc.
 15. Si preguntan "¿cómo funciona X?", explica el flujo completo desde el inicio hasta el final usando el conocimiento del sistema.
+16. ${resourcesContext ? 'IMPORTANTE: Si hay RECURSOS ÚTILES disponibles arriba y el usuario pregunta sobre algo relacionado, menciónalos y sugiere que los visite. Puedes mencionar el título y la URL del recurso relevante. Si hay múltiples recursos relevantes, puedes mencionar varios.' : ''}
+17. ${resourcesContext ? 'Cuando menciones un recurso, sé específico: "Te recomiendo revisar este artículo: [Título] - [URL]" o "Para más información sobre esto, puedes consultar: [Título] ([URL])"' : ''}
 
 RESPUESTA:
 `;
