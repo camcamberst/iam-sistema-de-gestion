@@ -25,6 +25,8 @@ import {
 } from '@/lib/chat/bot-memory';
 import { withCache, generateCacheKey } from '@/lib/cache/query-cache';
 import { fetchUrlContent, type FetchedContent } from '@/lib/chat/web-fetcher';
+import { saveKnowledge, getRelevantKnowledge, formatKnowledgeForPrompt } from '@/lib/chat/bot-knowledge';
+import { saveMemory } from '@/lib/chat/bot-memory';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -446,6 +448,14 @@ async function generateBotResponse(
     // Extraer URLs de recursos para function calling
     const resourceUrls = relevantResources.map(r => r.url);
     
+    // Obtener conocimiento aprendido (solo para admins/super admins)
+    let learnedKnowledgeContext = '';
+    if (userContext.role === 'super_admin' || userContext.role === 'admin') {
+      const { getRelevantKnowledge, formatKnowledgeForPrompt } = await import('@/lib/chat/bot-knowledge');
+      const relevantKnowledge = await getRelevantKnowledge(userMessage, 5);
+      learnedKnowledgeContext = formatKnowledgeForPrompt(relevantKnowledge);
+    }
+    
     // Construir información de contexto
     let contextInfo = '';
     let analyticsContext = '';
@@ -533,6 +543,8 @@ ${memoryContext ? `\n${memoryContext}\n` : ''}
 
 ${analyticsContext}
 
+${learnedKnowledgeContext}
+
 ${historyText ? `\nHISTORIAL DE CONVERSACIÓN (últimos 10 mensajes):\n${historyText}\n` : ''}
 
 MENSAJE DEL USUARIO: ${userMessage}
@@ -570,6 +582,9 @@ ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma
 15. Si preguntan "¿cómo funciona X?", explica el flujo completo desde el inicio hasta el final usando el conocimiento del sistema.
 16. Si necesitas información detallada de alguna URL de los recursos disponibles, usa la función fetch_url_content para obtener el contenido. Solo usa esta función si realmente necesitas información específica de la URL.
 17. Si obtienes contenido de una URL, úsalo para responder de manera precisa y detallada al usuario.
+18. ${userContext.role === 'super_admin' || userContext.role === 'admin' ? 'IMPORTANTE: Si el usuario te pide que guardes información (ej: "guarda esto", "recuerda esto", "aprende esto"), usa la función save_knowledge para guardar el conocimiento en la base de datos. Asegúrate de extraer un título claro, categoría apropiada, contenido completo y tags relevantes.' : ''}
+19. Si el usuario te pide que recuerdes algo sobre él (preferencias, metas, información personal), usa la función save_memory para guardarlo en su memoria personal.
+20. Cuando guardes conocimiento o memoria, confirma al usuario que lo has guardado exitosamente.
 
 RESPUESTA:
 `;
@@ -593,7 +608,7 @@ RESPUESTA:
     // Obtener instancia de Gemini
     const geminiInstance = getGenAI();
     
-    // Definir schema de función para Gemini
+    // Definir schemas de funciones para Gemini
     const fetchUrlContentFunction = {
       name: 'fetch_url_content',
       description: 'Obtiene el contenido de una URL específica. Úsala cuando necesites información detallada de un recurso o enlace web para responder con precisión.',
@@ -609,6 +624,72 @@ RESPUESTA:
       }
     };
 
+    // Función para guardar conocimiento (solo para admins/super admins)
+    const saveKnowledgeFunction = {
+      name: 'save_knowledge',
+      description: 'Guarda información importante en la base de conocimiento de Botty para que la use en futuras conversaciones. SOLO usa esta función si el usuario (admin/super admin) te pide explícitamente que guardes algo, o si dice "recuerda esto", "guarda esto", "aprende esto", etc.',
+      parameters: {
+        type: 'object',
+        properties: {
+          category: {
+            type: 'string',
+            enum: ['system_info', 'tips', 'policies', 'procedures', 'faq', 'custom'],
+            description: 'Categoría del conocimiento'
+          },
+          title: {
+            type: 'string',
+            description: 'Título breve y descriptivo del conocimiento'
+          },
+          content: {
+            type: 'string',
+            description: 'Contenido completo del conocimiento a guardar'
+          },
+          tags: {
+            type: 'array',
+            items: { type: 'string' },
+            description: 'Tags relevantes para búsqueda (ej: ["makeup", "iluminacion", "anticipos"])'
+          }
+        },
+        required: ['category', 'title', 'content']
+      }
+    };
+
+    // Función para guardar memoria del usuario
+    const saveMemoryFunction = {
+      name: 'save_memory',
+      description: 'Guarda información importante sobre el usuario actual en su memoria personal. SOLO usa esta función si el usuario te pide que recuerdes algo sobre él, o si menciona información personal relevante (preferencias, metas, problemas, etc.).',
+      parameters: {
+        type: 'object',
+        properties: {
+          type: {
+            type: 'string',
+            enum: ['preference', 'context', 'fact', 'reminder', 'goal', 'issue'],
+            description: 'Tipo de memoria'
+          },
+          key: {
+            type: 'string',
+            description: 'Clave única para esta memoria (ej: "favorite_platform", "preferred_hours")'
+          },
+          value: {
+            type: 'string',
+            description: 'Valor de la memoria (puede ser texto, número, o JSON)'
+          }
+        },
+        required: ['type', 'key', 'value']
+      }
+    };
+
+    // Construir lista de funciones según el rol
+    const availableFunctions = [fetchUrlContentFunction];
+    
+    // Solo admins/super admins pueden guardar conocimiento
+    if (userContext.role === 'super_admin' || userContext.role === 'admin') {
+      availableFunctions.push(saveKnowledgeFunction);
+    }
+    
+    // Todos pueden guardar memoria personal
+    availableFunctions.push(saveMemoryFunction);
+
     // Construir lista de URLs disponibles para el contexto
     const availableUrlsText = resourceUrls.length > 0 
       ? `\n\nRECURSOS DISPONIBLES (URLs que puedes consultar si necesitas información detallada):\n${resourceUrls.map((url, i) => `${i + 1}. ${url}`).join('\n')}\n`
@@ -623,7 +704,7 @@ RESPUESTA:
         const model = geminiInstance.getGenerativeModel({ 
           model: modelName,
           tools: [{
-            functionDeclarations: [fetchUrlContentFunction]
+            functionDeclarations: availableFunctions
           }]
         });
         
@@ -668,6 +749,104 @@ RESPUESTA:
                 };
                 
                 // Continuar la conversación con el resultado de la función
+                response = await model.generateContent([
+                  { text: prompt },
+                  ...(response.candidates[0]?.content?.parts || []),
+                  functionResponse
+                ]);
+              } else if (functionCall.name === 'save_knowledge') {
+                // Solo admins/super admins pueden guardar conocimiento
+                if (userContext.role !== 'super_admin' && userContext.role !== 'admin') {
+                  const functionResponse = {
+                    functionResponse: {
+                      name: 'save_knowledge',
+                      response: {
+                        success: false,
+                        error: 'No tienes permisos para guardar conocimiento. Solo admins y super admins pueden hacerlo.'
+                      }
+                    }
+                  };
+                  response = await model.generateContent([
+                    { text: prompt },
+                    ...(response.candidates[0]?.content?.parts || []),
+                    functionResponse
+                  ]);
+                  continue;
+                }
+
+                const { category, title, content, tags } = functionCall.args || {};
+                
+                if (!category || !title || !content) {
+                  console.error('❌ [BOTTY-GEN] Parámetros incompletos para save_knowledge');
+                  break;
+                }
+                
+                console.log(`💾 [BOTTY-GEN] Guardando conocimiento: ${title}`);
+                const savedKnowledge = await saveKnowledge({
+                  category,
+                  title,
+                  content,
+                  tags: tags || [],
+                  priority: 0,
+                  is_active: true,
+                  created_by: userContext.userId
+                });
+                
+                const functionResponse = {
+                  functionResponse: {
+                    name: 'save_knowledge',
+                    response: savedKnowledge
+                      ? {
+                          success: true,
+                          message: `Conocimiento guardado exitosamente: "${title}". Ahora lo usaré en futuras conversaciones.`
+                        }
+                      : {
+                          success: false,
+                          error: 'Error al guardar el conocimiento'
+                        }
+                  }
+                };
+                
+                response = await model.generateContent([
+                  { text: prompt },
+                  ...(response.candidates[0]?.content?.parts || []),
+                  functionResponse
+                ]);
+              } else if (functionCall.name === 'save_memory') {
+                const { type, key, value } = functionCall.args || {};
+                
+                if (!type || !key || !value) {
+                  console.error('❌ [BOTTY-GEN] Parámetros incompletos para save_memory');
+                  break;
+                }
+                
+                console.log(`💾 [BOTTY-GEN] Guardando memoria: ${key} = ${value}`);
+                const saved = await saveMemory({
+                  user_id: userContext.userId,
+                  type,
+                  key,
+                  value,
+                  metadata: {
+                    source_conversation_id: conversationId,
+                    mentioned_at: new Date().toISOString()
+                  }
+                });
+                
+                const functionResponse = {
+                  functionResponse: {
+                    name: 'save_memory',
+                    response: saved
+                      ? {
+                          success: true,
+                          message: `Información guardada en tu memoria. La recordaré en futuras conversaciones.`
+                        }
+                      : {
+                          success: false,
+                          error: 'Error al guardar la memoria'
+                        }
+                  }
+                };
+                
                 response = await model.generateContent([
                   { text: prompt },
                   ...(response.candidates[0]?.content?.parts || []),

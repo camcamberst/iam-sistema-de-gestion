@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS bot_resources (
     'seguridad',
     'general'
   )),
-  platform_id UUID REFERENCES platforms(id) ON DELETE SET NULL, -- NULL = general, no específico de plataforma
+  platform_id TEXT REFERENCES calculator_platforms(id) ON DELETE SET NULL, -- NULL = general, no específico de plataforma
   tags TEXT[] DEFAULT '{}'::TEXT[], -- Tags para búsqueda: ['makeup', 'iluminacion', 'angulos', etc.]
   priority INTEGER DEFAULT 0, -- 0 = normal, >0 = más importante
   is_active BOOLEAN DEFAULT true,
