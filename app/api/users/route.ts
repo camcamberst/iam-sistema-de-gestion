@@ -511,10 +511,10 @@ export async function PUT(request: NextRequest) {
       // Cuando se reactiva un usuario, asegurar que el email esté confirmado
       if (is_active !== undefined) {
         if (is_active) {
-          // Usuario se está activando: confirmar email y remover cualquier ban
+          // Usuario se está activando: confirmar email explícitamente
+          // Esto asegura que el usuario pueda iniciar sesión después de ser reactivado
           authUpdates.email_confirm = true;
-          authUpdates.ban_duration = 'none'; // Remover ban si existe
-          console.log('✅ [API] Activando usuario en Auth - confirmando email y removiendo restricciones');
+          console.log('✅ [API] Activando usuario en Auth - confirmando email para permitir login');
         } else {
           // Usuario se está desactivando: mantener email confirmado pero el login será bloqueado por is_active en la app
           authUpdates.email_confirm = true; // Mantener confirmado para cuando se reactive
