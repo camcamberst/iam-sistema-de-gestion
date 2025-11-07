@@ -873,13 +873,15 @@ RESPUESTA:
               }
             }
             
-            // Retornar la respuesta final (usar responseData si está disponible)
-            return responseData || response;
+            // Retornar la respuesta final
+            return response;
           }
         );
         
         const response = result;
-        let text = response.text().trim();
+        // Acceder al texto de la respuesta (puede estar en response.response)
+        const responseText = (response as any).response?.text?.() || (response as any).text?.() || '';
+        let text = typeof responseText === 'string' ? responseText.trim() : responseText;
 
         // Limpiar markdown si existe
         text = text.replace(/```[\s\S]*?```/g, '').trim();
