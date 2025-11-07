@@ -191,29 +191,36 @@ export function canEditUser(currentUser: CurrentUser, targetUser: User): boolean
 
 /**
  * Verifica si un usuario puede eliminar a otro usuario
+ * NOTA: El estado is_active NO afecta los permisos de eliminación.
+ * Esto permite eliminar usuarios inactivos si se tienen permisos.
  */
 export function canDeleteUser(currentUser: CurrentUser, targetUser: User): boolean {
-  // Super Admin puede eliminar a cualquiera
+  // Super Admin puede eliminar a cualquiera (activos o inactivos)
   if (currentUser.role === 'super_admin') {
     return true;
   }
   
-  // Admin puede eliminar modelos de sus grupos
+  // Admin puede eliminar modelos de sus grupos (activos o inactivos)
   if (currentUser.role === 'admin') {
     const userGroupIds = currentUser.groups.map(g => g.id);
-    const targetUserGroupIds = targetUser.groups.map(g => g.id);
+    // Asegurar que targetUser.groups existe y es un array
+    const targetUserGroupIds = (targetUser.groups || []).map((g: any) => typeof g === 'string' ? g : g.id);
     
     console.log('🔍 [JERARQUÍA] Verificando permisos de eliminación:', {
       currentUserRole: currentUser.role,
       currentUserGroups: userGroupIds,
       targetUserRole: targetUser.role,
       targetUserGroups: targetUserGroupIds,
+      targetUserIsActive: targetUser.is_active,
       canDelete: targetUser.role === 'modelo' && 
-                 targetUserGroupIds.some(groupId => userGroupIds.includes(groupId))
+                 (targetUserGroupIds.length === 0 || targetUserGroupIds.some(groupId => userGroupIds.includes(groupId)))
     });
     
+    // Permitir eliminar si es modelo y:
+    // 1. Tiene grupos en común con el admin, O
+    // 2. No tiene grupos (para permitir eliminación de usuarios sin grupos)
     return targetUser.role === 'modelo' && 
-           targetUserGroupIds.some(groupId => userGroupIds.includes(groupId));
+           (targetUserGroupIds.length === 0 || targetUserGroupIds.some(groupId => userGroupIds.includes(groupId)));
   }
   
   // Modelo no puede eliminar otros usuarios
