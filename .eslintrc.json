@@ -4,7 +4,7 @@
     "no-restricted-syntax": [
       "error",
       {
-        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value.value && attr.value.value.includes('fixed inset-0'))]",
+        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value && attr.value.type === 'Literal' && typeof attr.value.value === 'string' && attr.value.value.indexOf('fixed inset-0') !== -1)]",
         "message": "❌ MODAL ESTÁNDAR REQUERIDO: Usa el componente StandardModal en lugar de crear modales manuales con 'fixed inset-0'. Importa desde 'components/ui/StandardModal' y sigue el estándar del proyecto."
       }
     ],

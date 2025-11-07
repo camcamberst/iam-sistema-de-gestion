@@ -589,9 +589,6 @@ ${userContext.role === 'modelo' ? '12. SIEMPRE verifica que cualquier plataforma
 RESPUESTA:
 `;
 
-    console.log('🤖 [BOTTY-GEN] Generando respuesta con IA...');
-    console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
-
     // Lista de modelos para intentar (más recientes primero - Gemini 2.5 2025)
     // Modelos actualizados a las versiones más recientes disponibles
     const modelNames = [
@@ -696,6 +693,9 @@ RESPUESTA:
       : '';
 
     const prompt = basePrompt + availableUrlsText;
+
+    console.log('🤖 [BOTTY-GEN] Generando respuesta con IA...');
+    console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
 
     // Intentar con cada modelo hasta que uno funcione
     for (const modelName of modelNames) {
