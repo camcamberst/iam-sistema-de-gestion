@@ -493,47 +493,56 @@ export async function PUT(request: NextRequest) {
 
     console.log('✅ [API] Usuario actualizado exitosamente (tabla users):', id);
 
-    // Sincronizar cambios sensibles con Supabase Auth (email/contraseña)
+    // Sincronizar cambios sensibles con Supabase Auth (email/contraseña/is_active)
     try {
-      // Solo si hay cambios proporcionados
-      if (email || password) {
-        const updates: { email?: string; password?: string } = {};
-        if (email) updates.email = email;
-        if (password && typeof password === 'string' && password.trim().length >= 6) {
-          updates.password = password.trim();
+      const authUpdates: { 
+        email?: string; 
+        password?: string;
+        email_confirm?: boolean;
+      } = {};
+      
+      // Si hay cambios de email o contraseña
+      if (email) authUpdates.email = email;
+      if (password && typeof password === 'string' && password.trim().length >= 6) {
+        authUpdates.password = password.trim();
+      }
+      
+      // 🔧 CRÍTICO: Manejar activación/desactivación en Auth
+      // Cuando se reactiva un usuario, asegurar que el email esté confirmado
+      if (is_active !== undefined) {
+        if (is_active) {
+          // Usuario se está activando: confirmar email y remover cualquier ban
+          authUpdates.email_confirm = true;
+          authUpdates.ban_duration = 'none'; // Remover ban si existe
+          console.log('✅ [API] Activando usuario en Auth - confirmando email y removiendo restricciones');
+        } else {
+          // Usuario se está desactivando: mantener email confirmado pero el login será bloqueado por is_active en la app
+          authUpdates.email_confirm = true; // Mantener confirmado para cuando se reactive
+          console.log('⚠️ [API] Desactivando usuario - email permanece confirmado para reactivación futura');
         }
-        if (updates.email || updates.password) {
-          console.log('🔐 [API] Sincronizando con Supabase Auth:', { hasEmail: !!updates.email, hasPassword: !!updates.password });
-          const { error: authUpdateError } = await supabaseAuth.auth.admin.updateUserById(id, updates);
-          if (authUpdateError) {
-            console.error('❌ [API] Error sincronizando con Auth:', authUpdateError);
-            // No abortar: devolveremos success con warning
-          } else {
-            console.log('✅ [API] Auth actualizado para usuario:', id);
-          }
+      } else {
+        // Si no se especifica is_active pero el usuario existe, asegurar email confirmado
+        authUpdates.email_confirm = true;
+      }
+      
+      // Solo actualizar Auth si hay cambios
+      if (authUpdates.email || authUpdates.password || authUpdates.email_confirm !== undefined) {
+        console.log('🔐 [API] Sincronizando con Supabase Auth:', { 
+          hasEmail: !!authUpdates.email, 
+          hasPassword: !!authUpdates.password,
+          emailConfirm: authUpdates.email_confirm
+        });
+        
+        const { error: authUpdateError } = await supabaseAuth.auth.admin.updateUserById(id, authUpdates);
+        if (authUpdateError) {
+          console.error('❌ [API] Error sincronizando con Auth:', authUpdateError);
+          // No abortar: devolveremos success con warning
+        } else {
+          console.log('✅ [API] Auth actualizado para usuario:', id);
         }
       }
     } catch (e) {
       console.error('⚠️ [API] Excepción sincronizando con Auth (continuando):', e);
-    }
-
-    // Actualizar contraseña si se proporcionó
-    if (password && password.trim().length >= 6) {
-      console.log('🔍 [DEBUG] Actualizando contraseña para usuario:', id);
-      const { error: passwordError } = await supabase.auth.admin.updateUserById(
-        id,
-        { password: password.trim() }
-      );
-
-      if (passwordError) {
-        console.error('❌ [API] Error actualizando contraseña:', passwordError);
-        // No fallar la actualización del usuario por esto, solo logear
-        console.log('⚠️ [WARNING] Contraseña no actualizada, pero usuario sí');
-      } else {
-        console.log('✅ [API] Contraseña actualizada exitosamente');
-      }
-    } else if (password && password.trim().length < 6) {
-      console.log('⚠️ [WARNING] Contraseña muy corta, no se actualiza');
     }
 
     // Actualizar grupos si se proporcionaron
