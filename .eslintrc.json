@@ -1,13 +1,14 @@
 {
   "extends": ["next/core-web-vitals"],
   "rules": {
-    "no-restricted-syntax": [
-      "warn",
-      {
-        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value && attr.value.type === 'Literal' && attr.value.value && attr.value.value.includes && attr.value.value.includes('fixed') && attr.value.value.includes('inset-0'))]",
-        "message": "❌ MODAL ESTÁNDAR REQUERIDO: Usa el componente StandardModal en lugar de crear modales manuales con 'fixed inset-0'. Importa desde 'components/ui/StandardModal' y sigue el estándar del proyecto."
-      }
-    ],
+    // Desactivar temporalmente la regla problemática del selector
+    // "no-restricted-syntax": [
+    //   "warn",
+    //   {
+    //     "selector": "...",
+    //     "message": "❌ MODAL ESTÁNDAR REQUERIDO: Usa el componente StandardModal..."
+    //   }
+    // ],
     "no-restricted-imports": [
       "error",
       {

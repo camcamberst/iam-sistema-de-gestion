@@ -752,9 +752,12 @@ RESPUESTA:
                 // Continuar la conversación con el resultado de la función
                 response = await model.generateContent([
                   { text: prompt },
-                  ...(response.candidates[0]?.content?.parts || []),
+                  ...(responseData.candidates[0]?.content?.parts || []),
                   functionResponse
                 ]);
+                // Actualizar responseData para la siguiente iteración
+                const updatedResponseData = (response as any).response || response;
+                Object.assign(responseData, updatedResponseData);
               } else if (functionCall.name === 'save_knowledge') {
                 // Solo admins/super admins pueden guardar conocimiento
                 if (userContext.role !== 'super_admin' && userContext.role !== 'admin') {
@@ -769,9 +772,12 @@ RESPUESTA:
                   };
                   response = await model.generateContent([
                     { text: prompt },
-                    ...(response.candidates[0]?.content?.parts || []),
+                    ...(responseData.candidates[0]?.content?.parts || []),
                     functionResponse
                   ]);
+                  // Actualizar responseData para la siguiente iteración
+                  const updatedResponseData = (response as any).response || response;
+                  Object.assign(responseData, updatedResponseData);
                   continue;
                 }
 
@@ -810,9 +816,12 @@ RESPUESTA:
                 
                 response = await model.generateContent([
                   { text: prompt },
-                  ...(response.candidates[0]?.content?.parts || []),
+                  ...(responseData.candidates[0]?.content?.parts || []),
                   functionResponse
                 ]);
+                // Actualizar responseData para la siguiente iteración
+                const updatedResponseData = (response as any).response || response;
+                Object.assign(responseData, updatedResponseData);
               } else if (functionCall.name === 'save_memory') {
                 const { type, key, value } = functionCall.args || {};
                 
@@ -850,9 +859,12 @@ RESPUESTA:
                 
                 response = await model.generateContent([
                   { text: prompt },
-                  ...(response.candidates[0]?.content?.parts || []),
+                  ...(responseData.candidates[0]?.content?.parts || []),
                   functionResponse
                 ]);
+                // Actualizar responseData para la siguiente iteración
+                const updatedResponseData = (response as any).response || response;
+                Object.assign(responseData, updatedResponseData);
               } else {
                 console.warn(`⚠️ [BOTTY-GEN] Función desconocida: ${functionCall.name}`);
                 break;
