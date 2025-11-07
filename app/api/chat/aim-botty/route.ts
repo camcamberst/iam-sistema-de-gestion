@@ -715,8 +715,10 @@ RESPUESTA:
             let response = await model.generateContent(prompt);
             
             // Verificar si Gemini quiere llamar a una función
-            while (response.candidates && response.candidates[0]?.content?.parts?.[0]?.functionCall) {
-              const functionCall = response.candidates[0].content.parts[0].functionCall;
+            // Acceder a candidates a través de response.response
+            const responseData = (response as any).response || response;
+            while (responseData.candidates && responseData.candidates[0]?.content?.parts?.[0]?.functionCall) {
+              const functionCall = responseData.candidates[0].content.parts[0].functionCall;
               
               console.log(`🔧 [BOTTY-GEN] Gemini quiere usar función: ${functionCall.name}`);
               
@@ -871,7 +873,8 @@ RESPUESTA:
               }
             }
             
-            return response;
+            // Retornar la respuesta final (usar responseData si está disponible)
+            return responseData || response;
           }
         );
         
