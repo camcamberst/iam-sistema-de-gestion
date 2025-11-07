@@ -4,7 +4,8 @@
  * Utiliza function calling de Gemini para acceder a contenido web en tiempo real
  */
 
-import cheerio from 'cheerio';
+// Importación dinámica de cheerio para evitar problemas con webpack en build
+let cheerio: any = null;
 
 export interface FetchedContent {
   url: string;
@@ -52,6 +53,11 @@ export async function fetchUrlContent(url: string): Promise<FetchedContent> {
     }
 
     const html = await response.text();
+    
+    // Importar cheerio dinámicamente solo cuando se necesite (evita problemas con webpack)
+    if (!cheerio) {
+      cheerio = (await import('cheerio')).default;
+    }
     
     // Parsear HTML con cheerio
     const $ = cheerio.load(html);
