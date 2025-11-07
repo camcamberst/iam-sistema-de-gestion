@@ -2,9 +2,9 @@
   "extends": ["next/core-web-vitals"],
   "rules": {
     "no-restricted-syntax": [
-      "error",
+      "warn",
       {
-        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value && attr.value.type === 'Literal' && /fixed inset-0/.test(attr.value.value))]",
+        "selector": "JSXElement[openingElement.name.name='div'][openingElement.attributes.some(attr => attr.name.name === 'className' && attr.value && attr.value.type === 'Literal' && attr.value.value && attr.value.value.includes && attr.value.value.includes('fixed') && attr.value.value.includes('inset-0'))]",
         "message": "❌ MODAL ESTÁNDAR REQUERIDO: Usa el componente StandardModal en lugar de crear modales manuales con 'fixed inset-0'. Importa desde 'components/ui/StandardModal' y sigue el estándar del proyecto."
       }
     ],

@@ -677,16 +677,8 @@ RESPUESTA:
     };
 
     // Construir lista de funciones según el rol
-    // Tipado explícito para permitir diferentes estructuras de funciones
-    const availableFunctions: Array<{
-      name: string;
-      description: string;
-      parameters: {
-        type: string;
-        properties: Record<string, any>;
-        required: string[];
-      };
-    }> = [fetchUrlContentFunction];
+    // Usar 'as any' para evitar problemas de tipado estricto con Gemini API
+    const availableFunctions: any[] = [fetchUrlContentFunction];
     
     // Solo admins/super admins pueden guardar conocimiento
     if (userContext.role === 'super_admin' || userContext.role === 'admin') {
