@@ -82,7 +82,7 @@ export async function fetchUrlContent(url: string): Promise<FetchedContent> {
     const contentSource = article.length ? article : (main.length ? main : body);
     
     // Extraer texto de párrafos, listas, y encabezados
-    contentSource.find('p, li, h1, h2, h3, h4, h5, h6').each((_, el) => {
+    contentSource.find('p, li, h1, h2, h3, h4, h5, h6').each((_: number, el: cheerio.Element) => {
       const text = $(el).text().trim();
       if (text && text.length > 20) { // Solo párrafos con contenido significativo
         content += text + '\n\n';
