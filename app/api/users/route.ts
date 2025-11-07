@@ -545,7 +545,8 @@ export async function PUT(request: NextRequest) {
       console.error('⚠️ [API] Excepción sincronizando con Auth (continuando):', e);
     }
 
-    // Actualizar grupos si se proporcionaron
+    // Actualizar grupos si se proporcionaron explícitamente
+    // NOTA: Si group_ids es undefined, NO se tocan los grupos existentes (preserva grupos al cambiar solo is_active)
     if (group_ids !== undefined) {
       console.log('🔍 [DEBUG] Actualizando grupos:', group_ids);
       console.log('🔍 [DEBUG] Group IDs recibidos en PUT:', JSON.stringify(group_ids, null, 2));
@@ -556,7 +557,7 @@ export async function PUT(request: NextRequest) {
         .delete()
         .eq('user_id', id);
 
-      // Agregar nuevos grupos
+      // Agregar nuevos grupos (incluso si es array vacío, se eliminan todos)
       if (group_ids.length > 0) {
         const userGroups = group_ids.map((groupId: string) => ({
           user_id: id,
@@ -577,7 +578,11 @@ export async function PUT(request: NextRequest) {
         } else {
           console.log('✅ [API] Grupos actualizados exitosamente');
         }
+      } else {
+        console.log('⚠️ [API] Array de grupos vacío - todos los grupos fueron eliminados');
       }
+    } else {
+      console.log('ℹ️ [API] group_ids no proporcionado - grupos existentes se preservan');
     }
 
     // Actualizar asignación de modelo (solo si es modelo y se proporcionaron jornada/room)
