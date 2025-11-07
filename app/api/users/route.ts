@@ -702,6 +702,44 @@ export async function PUT(request: NextRequest) {
 
     console.log('✅ [API] Usuario actualizado:', id);
 
+    // Obtener grupos actuales del usuario para devolverlos en la respuesta
+    let currentGroups: Array<{ id: string; name: string }> = [];
+    if (group_ids !== undefined) {
+      // Si se actualizaron grupos, obtener los nuevos
+      if (group_ids.length > 0) {
+        const { data: groupsData } = await supabase
+          .from('user_groups')
+          .select(`
+            groups!inner(
+              id,
+              name
+            )
+          `)
+          .eq('user_id', id);
+        
+        currentGroups = groupsData?.map((ug: any) => ({
+          id: ug.groups.id,
+          name: ug.groups.name
+        })) || [];
+      }
+    } else {
+      // Si no se actualizaron grupos, obtener los existentes (preservados)
+      const { data: groupsData } = await supabase
+        .from('user_groups')
+        .select(`
+          groups!inner(
+            id,
+            name
+          )
+        `)
+        .eq('user_id', id);
+      
+      currentGroups = groupsData?.map((ug: any) => ({
+        id: ug.groups.id,
+        name: ug.groups.name
+      })) || [];
+    }
+
     return NextResponse.json({
       success: true,
       user: { 
@@ -710,7 +748,7 @@ export async function PUT(request: NextRequest) {
         email, 
         role, 
         is_active,
-        groups: group_ids || []
+        groups: currentGroups
       }
     });
 
