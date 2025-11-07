@@ -222,7 +222,7 @@ export default function PartialSyncDiagnostic() {
             🔍 Diagnóstico de Sincronización Parcial
           </h1>
           <p className="text-gray-600 dark:text-gray-300 mb-6">
-            Analiza por qué algunos modelos muestran valores en "Resumen de Facturación" y otros muestran $0.00
+            Analiza por qué algunos modelos muestran valores en &quot;Resumen de Facturación&quot; y otros muestran $0.00
           </p>
           
           <button

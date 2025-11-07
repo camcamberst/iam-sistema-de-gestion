@@ -951,7 +951,7 @@ export default function GestionarSedesPage() {
                     </svg>
                   </div>
                   <p className="text-sm font-medium text-gray-600 dark:text-gray-300">No hay rooms configurados en esta sede</p>
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Usa el botón "Crear Room" para agregar rooms</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Usa el botón &quot;Crear Room&quot; para agregar rooms</p>
                 </div>
               )}
             </div>

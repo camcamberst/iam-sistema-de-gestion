@@ -265,7 +265,7 @@ export default function UsersHierarchyDebugPage() {
                 <div className="text-sm text-gray-700 dark:text-gray-300 space-y-2">
                   <p>1. Revisa la consola del navegador para ver los logs detallados</p>
                   <p>2. Si hay problemas, verifica que el usuario tenga grupos asignados</p>
-                  <p>3. Compara estos resultados con lo que ves en "Consultar Usuarios"</p>
+                  <p>3. Compara estos resultados con lo que ves en &quot;Consultar Usuarios&quot;</p>
                 </div>
               </div>
             </div>

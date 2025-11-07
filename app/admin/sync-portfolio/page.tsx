@@ -54,7 +54,7 @@ export default function SyncPortfolioPage() {
                   <li>• Busca modelos con configuración de calculadora activa</li>
                   <li>• Verifica cuáles NO tienen Portafolio</li>
                   <li>• Crea automáticamente el Portafolio con las plataformas habilitadas</li>
-                  <li>• Marca las plataformas como "entregada" (verde)</li>
+                  <li>• Marca las plataformas como &quot;entregada&quot; (verde)</li>
                   <li>• Marca como configuración inicial</li>
                 </ul>
               </div>

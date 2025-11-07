@@ -212,7 +212,7 @@ export default function TestOriginalSoundsPage() {
           <div className="mt-8 p-4 bg-gray-50 rounded-lg">
             <h3 className="font-semibold text-gray-900 mb-2">💡 Instrucciones:</h3>
             <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Haz clic en "Probar" para escuchar cada sonido original</li>
+              <li>• Haz clic en &quot;Probar&quot; para escuchar cada sonido original</li>
               <li>• Estos son los sonidos que tenías en la versión anterior del chat</li>
               <li>• Una vez que elijas tu favorito, lo implementaré en el nuevo sistema</li>
               <li>• Los sonidos son generados usando Web Audio API (sin archivos externos)</li>

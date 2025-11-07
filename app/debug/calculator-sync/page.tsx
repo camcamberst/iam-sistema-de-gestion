@@ -398,7 +398,7 @@ export default function DebugCalculatorSyncPage() {
             <p><strong>Fecha de Análisis:</strong> {new Date().toLocaleString()}</p>
             <p><strong>Tablas Analizadas:</strong> model_values, calculator_totals</p>
             <p><strong>Período:</strong> {new Date().toISOString().split('T')[0]}</p>
-            <p><strong>Filtros:</strong> role = 'modelo', is_active = true</p>
+            <p><strong>Filtros:</strong> role = &apos;modelo&apos;, is_active = true</p>
             <p><strong>Supabase URL:</strong> {process.env.NEXT_PUBLIC_SUPABASE_URL ? '✅ Configurado' : '❌ No configurado'}</p>
             <p><strong>Supabase Key:</strong> {process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ? '✅ Configurado' : '❌ No configurado'}</p>
           </div>
@@ -412,7 +412,7 @@ export default function DebugCalculatorSyncPage() {
             <h3 className="font-medium text-yellow-800 dark:text-yellow-200">⚠️ Información de Debugging</h3>
           </div>
           <div className="text-sm text-yellow-700 dark:text-yellow-300">
-            <p className="mb-2">Si el diagnóstico muestra "0 modelos", esto puede indicar:</p>
+            <p className="mb-2">Si el diagnóstico muestra &quot;0 modelos&quot;, esto puede indicar:</p>
             <ul className="list-disc list-inside space-y-1 ml-4">
               <li>Problema de permisos RLS (Row Level Security) en Supabase</li>
               <li>Error en la consulta de usuarios</li>
