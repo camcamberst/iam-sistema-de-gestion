@@ -43,6 +43,12 @@ export function canAssignRole(currentUser: CurrentUser, targetRole: string): boo
     return true;
   }
   
+  // Gestor y Fotografía pueden asignar roles de admin (pero NO modelos)
+  if ((currentUser.role === 'gestor' || currentUser.role === 'fotografia') && 
+      (targetRole === 'admin' || targetRole === 'super_admin')) {
+    return true;
+  }
+  
   // Modelo no puede asignar roles
   return false;
 }
@@ -60,6 +66,11 @@ export function canAssignGroups(currentUser: CurrentUser, targetGroups: string[]
   if (currentUser.role === 'admin') {
     const userGroupIds = currentUser.groups.map(g => g.id);
     return targetGroups.every(groupId => userGroupIds.includes(groupId));
+  }
+  
+  // Gestor y Fotografía pueden asignar cualquier grupo (interactúan con todos los admins)
+  if (currentUser.role === 'gestor' || currentUser.role === 'fotografia') {
+    return true;
   }
   
   // Modelo no puede asignar grupos
@@ -103,25 +114,13 @@ export function validateGroupRestrictions(role: string, groupIds: string[]): { v
     return { valid: true };
   }
   
-  // Gestor: mínimo un grupo (similar a admin)
+  // Gestor: no requiere grupos (interactúa con todos los admins)
   if (role === 'gestor') {
-    if (groupIds.length === 0) {
-      return { 
-        valid: false, 
-        error: 'Los gestores deben tener al menos un grupo asignado' 
-      };
-    }
     return { valid: true };
   }
   
-  // Fotografía: mínimo un grupo (similar a admin)
+  // Fotografía: no requiere grupos (interactúa con todos los admins)
   if (role === 'fotografia') {
-    if (groupIds.length === 0) {
-      return { 
-        valid: false, 
-        error: 'Los usuarios de fotografía deben tener al menos un grupo asignado' 
-      };
-    }
     return { valid: true };
   }
   
@@ -171,12 +170,12 @@ export function getDefaultGroups(role: string, allGroups: Array<{ id: string; na
   }
   
   if (role === 'gestor') {
-    // Gestor: al menos un grupo (se debe seleccionar manualmente)
+    // Gestor: no requiere grupos (interactúa con todos los admins)
     return [];
   }
   
   if (role === 'fotografia') {
-    // Fotografía: al menos un grupo (se debe seleccionar manualmente)
+    // Fotografía: no requiere grupos (interactúa con todos los admins)
     return [];
   }
   
@@ -217,6 +216,11 @@ export function canEditUser(currentUser: CurrentUser, targetUser: User): boolean
            (targetUserGroupIds.length === 0 || targetUserGroupIds.some(groupId => userGroupIds.includes(groupId)));
   }
   
+  // Gestor y Fotografía pueden editar admins (pero NO modelos)
+  if (currentUser.role === 'gestor' || currentUser.role === 'fotografia') {
+    return targetUser.role === 'admin' || targetUser.role === 'super_admin';
+  }
+  
   // Modelo no puede editar otros usuarios
   return false;
 }
@@ -255,6 +259,11 @@ export function canDeleteUser(currentUser: CurrentUser, targetUser: User): boole
            (targetUserGroupIds.length === 0 || targetUserGroupIds.some(groupId => userGroupIds.includes(groupId)));
   }
   
+  // Gestor y Fotografía pueden eliminar admins (pero NO modelos)
+  if (currentUser.role === 'gestor' || currentUser.role === 'fotografia') {
+    return targetUser.role === 'admin' || targetUser.role === 'super_admin';
+  }
+  
   // Modelo no puede eliminar otros usuarios
   return false;
 }
@@ -272,6 +281,11 @@ export function getAvailableGroups(currentUser: CurrentUser, allGroups: Array<{ 
   if (currentUser.role === 'admin') {
     const userGroupIds = currentUser.groups.map(g => g.id);
     return allGroups.filter(group => userGroupIds.includes(group.id));
+  }
+  
+  // Gestor y Fotografía pueden asignar cualquier grupo (interactúan con todos los admins)
+  if (currentUser.role === 'gestor' || currentUser.role === 'fotografia') {
+    return allGroups;
   }
   
   // Modelo no puede asignar grupos

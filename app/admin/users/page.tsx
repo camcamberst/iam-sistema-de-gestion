@@ -161,6 +161,18 @@ export default function UsersListPage() {
           });
           
           console.log('🔍 [USUARIOS] Usuarios después del filtro:', filteredUsers.length);
+        } else if (currentUser?.role === 'gestor' || currentUser?.role === 'fotografia') {
+          // Gestor y Fotografía solo pueden ver admins (NO modelos)
+          console.log('🔍 [USUARIOS] Aplicando filtro de jerarquía para gestor/fotografia:', {
+            totalUsers: usersData.users.length
+          });
+          
+          filteredUsers = usersData.users.filter((user: any) => {
+            // Solo pueden ver admins y super admins (NO modelos)
+            return user.role === 'admin' || user.role === 'super_admin';
+          });
+          
+          console.log('🔍 [USUARIOS] Usuarios después del filtro (solo admins):', filteredUsers.length);
         }
         
         setUsers(filteredUsers);
@@ -994,9 +1006,9 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     } else if (role === 'admin') {
       setRestrictionMessage('💡 Los administradores deben tener al menos un grupo asignado');
     } else if (role === 'gestor') {
-      setRestrictionMessage('💡 Los gestores deben tener al menos un grupo asignado');
+      setRestrictionMessage('💡 Los gestores interactúan con todos los admins (no requieren grupos)');
     } else if (role === 'fotografia') {
-      setRestrictionMessage('💡 Los usuarios de fotografía deben tener al menos un grupo asignado');
+      setRestrictionMessage('💡 Los usuarios de fotografía interactúan con todos los admins (no requieren grupos)');
     } else if (role === 'super_admin') {
       setRestrictionMessage('💡 Los super administradores tienen acceso a todos los grupos');
     }
