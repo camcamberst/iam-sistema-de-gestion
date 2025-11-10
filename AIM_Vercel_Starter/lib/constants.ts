@@ -11,14 +11,18 @@ export const DEFAULT_GROUPS = [
 export const DEFAULT_ROLES = [
   "super_admin",
   "admin",
+  "gestor",
+  "fotografia",
   "modelo"
 ];
 
 export const BRAND_TITLE = "Sistema de Gestión AIM";
 
 export const ROLE_HIERARCHY: Record<string, number> = {
-  super_admin: 3,
-  admin: 2,
+  super_admin: 5,
+  admin: 4,
+  gestor: 3,
+  fotografia: 2,
   modelo: 1
 };
 

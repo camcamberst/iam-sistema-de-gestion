@@ -326,6 +326,8 @@ export default function CreateUserPage() {
               options={(() => {
                 const allRoles = [
                   { value: 'modelo', label: 'Modelo' },
+                  { value: 'fotografia', label: 'Fotografía' },
+                  { value: 'gestor', label: 'Gestor' },
                   { value: 'admin', label: 'Admin' },
                   { value: 'super_admin', label: 'Super Admin' }
                 ];

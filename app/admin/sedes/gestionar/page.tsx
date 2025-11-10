@@ -433,14 +433,23 @@ export default function GestionarSedesPage() {
     setSelectedJornada(jornada);
     
     // Cargar modelos disponibles del grupo
+    // Agregamos cache-busting para asegurar datos frescos después de actualizaciones
     try {
-      const response = await fetch(`/api/groups/${selectedRoom.group_id}/models`);
+      const cacheBuster = `?t=${Date.now()}`;
+      const response = await fetch(`/api/groups/${selectedRoom.group_id}/models${cacheBuster}`, {
+        cache: 'no-store',
+        headers: {
+          'Cache-Control': 'no-cache'
+        }
+      });
       const data = await response.json();
       
       if (data.success) {
+        console.log(`✅ [FRONTEND] Modelos cargados para grupo ${selectedRoom.group_id}:`, data.models?.length || 0);
         setAvailableModels(data.models || []);
         setShowModelSelector(true);
       } else {
+        console.error('❌ [FRONTEND] Error en respuesta:', data.error);
         setError('Error cargando modelos: ' + data.error);
       }
     } catch (error) {

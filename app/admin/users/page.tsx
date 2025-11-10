@@ -21,7 +21,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'modelo';
+  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
   is_active: boolean;
   last_login?: string;
   created_at: string;
@@ -268,6 +268,8 @@ export default function UsersListPage() {
         const allRoles = [
           { label: 'Super Admin', value: 'super_admin' },
           { label: 'Admin', value: 'admin' },
+          { label: 'Gestor', value: 'gestor' },
+          { label: 'Fotografía', value: 'fotografia' },
           { label: 'Modelo', value: 'modelo' }
         ];
         
@@ -426,6 +428,10 @@ export default function UsersListPage() {
         return 'bg-red-600 text-red-100';
       case 'admin':
         return 'bg-blue-600 text-blue-100';
+      case 'gestor':
+        return 'bg-orange-600 text-orange-100';
+      case 'fotografia':
+        return 'bg-purple-600 text-purple-100';
       case 'modelo':
         return 'bg-green-600 text-green-100';
       case 'chatter':
@@ -632,6 +638,20 @@ export default function UsersListPage() {
                                 symbol = (
                                   <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
                                     <path d="M12 15.5A3.5 3.5 0 0 1 8.5 12A3.5 3.5 0 0 1 12 8.5a3.5 3.5 0 0 1 3.5 3.5a3.5 3.5 0 0 1-3.5 3.5m7.43-2.53c.04-.32.07-.64.07-.97c0-.33-.03-.66-.07-1l2.11-1.63c.19-.15.24-.42.12-.64l-2-3.46c-.12-.22-.39-.31-.61-.22l-2.49 1c-.52-.4-1.06-.73-1.69-.98l-.37-2.65A.506.506 0 0 0 14 2h-4c-.25 0-.46.18-.5.42l-.37 2.65c-.63.25-1.17.59-1.69.98l-2.49-1c-.22-.09-.49 0-.61.22l-2 3.46c-.13.22-.07.49.12.64L4.57 11c-.04.34-.07.67-.07 1c0 .33.03.65.07.97l-2.11 1.66c-.19.15-.25.42-.12.64l2 3.46c.12.22.39.3.61.22l2.49-1.01c.52.4 1.06.74 1.69.99l.37 2.65c.04.24.25.42.5.42h4c.25 0 .46-.18.5-.42l.37-2.65c.63-.26 1.17-.59 1.69-.99l2.49 1.01c.22.08.49 0 .61-.22l2-3.46c.12-.22.07-.49-.12-.64l-2.11-1.66Z"/>
+                                  </svg>
+                                );
+                              } else if (role === 'gestor') {
+                                gradient = 'bg-gradient-to-br from-orange-500 to-amber-600';
+                                symbol = (
+                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                                  </svg>
+                                );
+                              } else if (role === 'fotografia') {
+                                gradient = 'bg-gradient-to-br from-purple-500 to-pink-600';
+                                symbol = (
+                                  <svg viewBox="0 0 24 24" fill="currentColor" className="w-3.5 h-3.5">
+                                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
                                   </svg>
                                 );
                               } else {
@@ -967,12 +987,16 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   // Mostrar mensajes de restricción según rol
   const handleRoleChange = (role: string) => {
-    setFormData(prev => ({ ...prev, role: role as 'super_admin' | 'admin' | 'modelo' }));
+    setFormData(prev => ({ ...prev, role: role as 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' }));
     
     if (role === 'modelo') {
       setRestrictionMessage('💡 Los modelos solo pueden estar en un grupo a la vez');
     } else if (role === 'admin') {
       setRestrictionMessage('💡 Los administradores deben tener al menos un grupo asignado');
+    } else if (role === 'gestor') {
+      setRestrictionMessage('💡 Los gestores deben tener al menos un grupo asignado');
+    } else if (role === 'fotografia') {
+      setRestrictionMessage('💡 Los usuarios de fotografía deben tener al menos un grupo asignado');
     } else if (role === 'super_admin') {
       setRestrictionMessage('💡 Los super administradores tienen acceso a todos los grupos');
     }
@@ -1086,6 +1110,8 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             <AppleDropdown
               options={[
                 { value: 'modelo', label: 'Modelo' },
+                { value: 'fotografia', label: 'Fotografía' },
+                { value: 'gestor', label: 'Gestor' },
                 { value: 'admin', label: 'Admin' },
                 { value: 'super_admin', label: 'Super Admin' }
               ]}

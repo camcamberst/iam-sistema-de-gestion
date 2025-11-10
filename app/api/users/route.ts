@@ -551,11 +551,17 @@ export async function PUT(request: NextRequest) {
       console.log('🔍 [DEBUG] Actualizando grupos:', group_ids);
       console.log('🔍 [DEBUG] Group IDs recibidos en PUT:', JSON.stringify(group_ids, null, 2));
       
-      // Eliminar grupos existentes
-      await supabase
+      // Eliminar grupos existentes y esperar a que se complete
+      const { error: deleteError } = await supabase
         .from('user_groups')
         .delete()
         .eq('user_id', id);
+
+      if (deleteError) {
+        console.error('❌ [API] Error eliminando grupos existentes:', deleteError);
+      } else {
+        console.log('✅ [API] Grupos antiguos eliminados');
+      }
 
       // Agregar nuevos grupos (incluso si es array vacío, se eliminan todos)
       if (group_ids.length > 0) {
@@ -567,9 +573,10 @@ export async function PUT(request: NextRequest) {
 
         console.log('🔍 [DEBUG] User groups a insertar en PUT:', JSON.stringify(userGroups, null, 2));
 
-        const { error: groupsError } = await supabase
+        const { error: groupsError, data: insertedGroups } = await supabase
           .from('user_groups')
-          .insert(userGroups);
+          .insert(userGroups)
+          .select();
 
         if (groupsError) {
           console.error('❌ [API] Error actualizando grupos:', groupsError);
@@ -577,6 +584,19 @@ export async function PUT(request: NextRequest) {
           // No fallar la actualización del usuario por esto
         } else {
           console.log('✅ [API] Grupos actualizados exitosamente');
+          console.log('🔍 [DEBUG] Grupos insertados:', JSON.stringify(insertedGroups, null, 2));
+          
+          // Verificar que los grupos se insertaron correctamente
+          const { data: verifyGroups, error: verifyError } = await supabase
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', id);
+          
+          if (verifyError) {
+            console.error('❌ [API] Error verificando grupos insertados:', verifyError);
+          } else {
+            console.log('✅ [API] Verificación de grupos:', verifyGroups?.map((g: any) => g.group_id));
+          }
         }
       } else {
         console.log('⚠️ [API] Array de grupos vacío - todos los grupos fueron eliminados');

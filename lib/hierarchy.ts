@@ -8,7 +8,7 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'modelo';
+  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
   is_active: boolean;
   groups: Array<{
     id: string;
@@ -18,7 +18,7 @@ export interface User {
 
 export interface CurrentUser {
   id: string;
-  role: 'super_admin' | 'admin' | 'modelo';
+  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
   groups: Array<{
     id: string;
     name: string;
@@ -103,6 +103,28 @@ export function validateGroupRestrictions(role: string, groupIds: string[]): { v
     return { valid: true };
   }
   
+  // Gestor: mínimo un grupo (similar a admin)
+  if (role === 'gestor') {
+    if (groupIds.length === 0) {
+      return { 
+        valid: false, 
+        error: 'Los gestores deben tener al menos un grupo asignado' 
+      };
+    }
+    return { valid: true };
+  }
+  
+  // Fotografía: mínimo un grupo (similar a admin)
+  if (role === 'fotografia') {
+    if (groupIds.length === 0) {
+      return { 
+        valid: false, 
+        error: 'Los usuarios de fotografía deben tener al menos un grupo asignado' 
+      };
+    }
+    return { valid: true };
+  }
+  
   return { valid: true };
 }
 
@@ -145,6 +167,16 @@ export function getDefaultGroups(role: string, allGroups: Array<{ id: string; na
   
   if (role === 'modelo') {
     // Modelo: un grupo (se debe seleccionar manualmente)
+    return [];
+  }
+  
+  if (role === 'gestor') {
+    // Gestor: al menos un grupo (se debe seleccionar manualmente)
+    return [];
+  }
+  
+  if (role === 'fotografia') {
+    // Fotografía: al menos un grupo (se debe seleccionar manualmente)
     return [];
   }
   

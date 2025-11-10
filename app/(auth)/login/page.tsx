@@ -64,6 +64,12 @@ export default function LoginPage() {
         case 'admin':
           router.push('/admin/dashboard');
           break;
+        case 'gestor':
+          router.push('/gestor/dashboard');
+          break;
+        case 'fotografia':
+          router.push('/fotografia/dashboard');
+          break;
         case 'modelo':
           router.push('/admin/model/dashboard');
           break;

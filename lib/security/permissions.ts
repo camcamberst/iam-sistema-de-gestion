@@ -55,7 +55,7 @@ export type Permission =
   | 'modelo.sessions.create'
   
 
-export type Role = 'super_admin' | 'admin' | 'modelo';
+export type Role = 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
 
 export interface PermissionMatrix {
   [key: string]: Permission[];
@@ -129,6 +129,28 @@ export const PERMISSION_MATRIX: PermissionMatrix = {
     'modelo.profile.update',
     'modelo.sessions.read',
     'modelo.sessions.create'
+  ],
+  
+  gestor: [
+    // TODO: Definir permisos específicos para Gestor
+    // Por ahora, permisos básicos de lectura
+    'admin.users.read',
+    'admin.groups.read',
+    'admin.organization.read',
+    'admin.reports.read',
+    'modelo.profile.read',
+    'modelo.sessions.read'
+  ],
+  
+  fotografia: [
+    // TODO: Definir permisos específicos para Fotografía
+    // Por ahora, permisos básicos de lectura
+    'admin.users.read',
+    'admin.groups.read',
+    'admin.organization.read',
+    'admin.reports.read',
+    'modelo.profile.read',
+    'modelo.sessions.read'
   ]
 };
 
@@ -274,8 +296,10 @@ export function createPermissionAudit(
 
 export function getRoleHierarchy(): Record<Role, number> {
   return {
-    super_admin: 3,
-    admin: 2,
+    super_admin: 5,
+    admin: 4,
+    gestor: 3,
+    fotografia: 2,
     modelo: 1
   };
 }
