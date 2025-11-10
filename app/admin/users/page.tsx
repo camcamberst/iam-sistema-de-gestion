@@ -999,7 +999,16 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
   // Mostrar mensajes de restricción según rol
   const handleRoleChange = (role: string) => {
-    setFormData(prev => ({ ...prev, role: role as 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' }));
+    // Limpiar grupos si se selecciona gestor o fotografia
+    if (role === 'gestor' || role === 'fotografia') {
+      setFormData(prev => ({ 
+        ...prev, 
+        role: role as 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia',
+        group_ids: []
+      }));
+    } else {
+      setFormData(prev => ({ ...prev, role: role as 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' }));
+    }
     
     if (role === 'modelo') {
       setRestrictionMessage('💡 Los modelos solo pueden estar en un grupo a la vez');
@@ -1152,25 +1161,34 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
             </div>
           </div>
 
-          {/* Grupos - ancho completo */}
-          <div>
-            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
-            <AppleDropdown
-              options={groups.map(group => ({
-                value: group.id,
-                label: group.name
-              }))}
-              value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
-              onChange={handleGroupChange}
-              placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
-              className="text-sm"
-            />
-            {restrictionMessage && (
-              <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
-                {restrictionMessage}
-              </div>
-            )}
-          </div>
+          {/* Grupos - ancho completo (oculto para gestor y fotografia) */}
+          {formData.role !== 'gestor' && formData.role !== 'fotografia' && (
+            <div>
+              <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
+              <AppleDropdown
+                options={groups.map(group => ({
+                  value: group.id,
+                  label: group.name
+                }))}
+                value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
+                onChange={handleGroupChange}
+                placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
+                className="text-sm"
+              />
+              {restrictionMessage && (
+                <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
+                  {restrictionMessage}
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Mostrar mensaje de restricción para gestor y fotografia */}
+          {(formData.role === 'gestor' || formData.role === 'fotografia') && restrictionMessage && (
+            <div className="text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
+              {restrictionMessage}
+            </div>
+          )}
 
           {/* Botones - centrados */}
           <div className="flex justify-center space-x-4 pt-4">
