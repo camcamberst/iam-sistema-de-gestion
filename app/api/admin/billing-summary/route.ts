@@ -353,7 +353,11 @@ export async function GET(request: NextRequest) {
             });
 
             // Calcular totales para cada modelo (lógica simplificada - usar la misma que Mi Calculadora)
-            for (const [modelId, modelValues] of valuesByModel) {
+            const modelIds = Array.from(valuesByModel.keys());
+            for (let i = 0; i < modelIds.length; i++) {
+              const modelId = modelIds[i];
+              const modelValues = valuesByModel.get(modelId) || [];
+              
               // Obtener configuración del modelo
               const { data: config } = await supabase
                 .from('calculator_config')
@@ -374,9 +378,14 @@ export async function GET(request: NextRequest) {
                 }
               });
 
-              valuesByPlatform.forEach((mv, platformId) => {
+              const platformIds = Array.from(valuesByPlatform.keys());
+              for (let j = 0; j < platformIds.length; j++) {
+                const platformId = platformIds[j];
+                const mv = valuesByPlatform.get(platformId);
+                if (!mv) continue;
+                
                 const platform = mv.platforms;
-                if (!platform || !mv.value || mv.value <= 0) return;
+                if (!platform || !mv.value || mv.value <= 0) continue;
 
                 let usdBruto = 0;
                 if (platform.currency === 'EUR') {
@@ -394,7 +403,7 @@ export async function GET(request: NextRequest) {
                   else usdBruto = mv.value;
                 }
                 totalUsdBruto += usdBruto;
-              });
+              }
 
               const modelPercentage = config?.percentage_override || config?.group_percentage || 70;
               const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
