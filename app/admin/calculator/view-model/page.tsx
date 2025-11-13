@@ -671,6 +671,8 @@ export default function AdminViewModelPage() {
                               usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
                             } else if (platform.id === 'mondo') {
                               usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                            } else if (platform.id === 'superfoon') {
+                              usdBruto = currentValue * (rates?.eur_usd || 1.01); // EUR a USD directo
                             } else {
                               usdBruto = currentValue * (rates?.eur_usd || 1.01);
                             }
@@ -689,22 +691,25 @@ export default function AdminViewModelPage() {
                               usdBruto = currentValue * 0.60;
                             } else if (platform.id === 'secretfriends') {
                               usdBruto = currentValue * 0.5;
-                            } else if (platform.id === 'superfoon') {
-                              usdBruto = currentValue;
                             } else {
                               usdBruto = currentValue;
                             }
                           }
                           
                           // Aplicar porcentaje de reparto del modelo al USD bruto
-                          const usdModeloFinal = (usdBruto * platform.percentage) / 100;
+                          // SUPERFOON: Aplicar 100% para la modelo (especial)
+                          const usdModeloFinal = (platform.id === 'superfoon') 
+                            ? usdBruto  // 100% directo, sin porcentaje
+                            : (usdBruto * platform.percentage) / 100;
                           const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
                           
                           return (
                             <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-200 group">
                               <td className="py-3 px-3">
                                 <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
-                                <div className="text-xs text-gray-500 dark:text-gray-400">Reparto: {platform.percentage}%</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                                </div>
                               </td>
                               <td className="py-3 px-3">
                                 <div className="relative group">
