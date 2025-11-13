@@ -287,6 +287,148 @@ export async function GET(request: NextRequest) {
       } else {
         totalsData = totals;
       }
+
+      // 🔧 FIX: Si hay modelos con valores pero sin totales, intentar sincronizar
+      const modelsWithValues = new Set();
+      const modelsWithTotals = new Set(totalsData?.map(t => t.model_id) || []);
+      
+      // Verificar qué modelos tienen valores pero no totales
+      const { data: valuesCheck, error: valuesCheckError } = await supabase
+        .from('model_values')
+        .select('model_id, period_date')
+        .in('model_id', modelIds)
+        .gte('period_date', startStr)
+        .lte('period_date', endStr);
+
+      if (!valuesCheckError && valuesCheck) {
+        valuesCheck.forEach(v => {
+          if (!modelsWithTotals.has(v.model_id)) {
+            modelsWithValues.add(v.model_id);
+          }
+        });
+
+        // Si hay modelos con valores pero sin totales, calcular totales directamente desde model_values
+        if (modelsWithValues.size > 0) {
+          console.log('⚠️ [BILLING-SUMMARY] Detectados modelos con valores pero sin totales:', Array.from(modelsWithValues));
+          
+          // Obtener valores de modelos faltantes y calcular totales
+          const { data: missingValues, error: missingValuesError } = await supabase
+            .from('model_values')
+            .select(`
+              *,
+              platforms!inner(id, name, currency, percentage)
+            `)
+            .in('model_id', Array.from(modelsWithValues))
+            .gte('period_date', startStr)
+            .lte('period_date', endStr)
+            .order('updated_at', { ascending: false });
+
+          if (!missingValuesError && missingValues && missingValues.length > 0) {
+            // Obtener tasas y configuraciones necesarias
+            const { data: ratesData } = await supabase
+              .from('rates')
+              .select('kind, value')
+              .eq('active', true)
+              .is('valid_to', null)
+              .order('valid_from', { ascending: false });
+
+            let rates = { usd_cop: 3900, eur_usd: 1.01, gbp_usd: 1.20 };
+            if (ratesData) {
+              ratesData.forEach(rate => {
+                if (rate.kind === 'USD→COP') rates.usd_cop = rate.value;
+                if (rate.kind === 'EUR→USD') rates.eur_usd = rate.value;
+                if (rate.kind === 'GBP→USD') rates.gbp_usd = rate.value;
+              });
+            }
+
+            // Agrupar valores por modelo y calcular totales
+            const totalsToInsert: any[] = [];
+            const valuesByModel = new Map<string, any[]>();
+            
+            missingValues.forEach(mv => {
+              if (!valuesByModel.has(mv.model_id)) {
+                valuesByModel.set(mv.model_id, []);
+              }
+              valuesByModel.get(mv.model_id)!.push(mv);
+            });
+
+            // Calcular totales para cada modelo (lógica simplificada - usar la misma que Mi Calculadora)
+            for (const [modelId, modelValues] of valuesByModel) {
+              // Obtener configuración del modelo
+              const { data: config } = await supabase
+                .from('calculator_config')
+                .select('percentage_override, group_percentage')
+                .eq('model_id', modelId)
+                .eq('active', true)
+                .single();
+
+              // Calcular totales (lógica simplificada - similar a Mi Calculadora)
+              let totalUsdBruto = 0;
+              const valuesByPlatform = new Map();
+              
+              modelValues.forEach(mv => {
+                const platformId = mv.platform_id;
+                if (!valuesByPlatform.has(platformId) || 
+                    new Date(mv.updated_at) > new Date(valuesByPlatform.get(platformId)?.updated_at || 0)) {
+                  valuesByPlatform.set(platformId, mv);
+                }
+              });
+
+              valuesByPlatform.forEach((mv, platformId) => {
+                const platform = mv.platforms;
+                if (!platform || !mv.value || mv.value <= 0) return;
+
+                let usdBruto = 0;
+                if (platform.currency === 'EUR') {
+                  if (platformId === 'big7') usdBruto = (mv.value * rates.eur_usd) * 0.84;
+                  else if (platformId === 'mondo') usdBruto = (mv.value * rates.eur_usd) * 0.78;
+                  else usdBruto = mv.value * rates.eur_usd;
+                } else if (platform.currency === 'GBP') {
+                  if (platformId === 'aw') usdBruto = (mv.value * rates.gbp_usd) * 0.677;
+                  else usdBruto = mv.value * rates.gbp_usd;
+                } else if (platform.currency === 'USD') {
+                  if (['cmd', 'camlust', 'skypvt'].includes(platformId)) usdBruto = mv.value * 0.75;
+                  else if (['chaturbate', 'myfreecams', 'stripchat'].includes(platformId)) usdBruto = mv.value * 0.05;
+                  else if (platformId === 'dxlive') usdBruto = mv.value * 0.60;
+                  else if (platformId === 'secretfriends') usdBruto = mv.value * 0.5;
+                  else usdBruto = mv.value;
+                }
+                totalUsdBruto += usdBruto;
+              });
+
+              const modelPercentage = config?.percentage_override || config?.group_percentage || 70;
+              const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
+              const totalCopModelo = totalUsdModelo * rates.usd_cop;
+
+              totalsToInsert.push({
+                model_id: modelId,
+                period_date: todayStr,
+                total_usd_bruto: Math.round(totalUsdBruto * 100) / 100,
+                total_usd_modelo: Math.round(totalUsdModelo * 100) / 100,
+                total_cop_modelo: Math.round(totalCopModelo),
+                updated_at: new Date().toISOString()
+              });
+            }
+
+            // Insertar totales calculados
+            if (totalsToInsert.length > 0) {
+              const { data: insertedTotals, error: insertError } = await supabase
+                .from('calculator_totals')
+                .upsert(totalsToInsert, { onConflict: 'model_id,period_date' })
+                .select();
+
+              if (!insertError && insertedTotals) {
+                // Agregar los nuevos totales a totalsData
+                totalsData = [...(totalsData || []), ...insertedTotals];
+                console.log(`✅ [BILLING-SUMMARY] Sincronizados ${insertedTotals.length} totales faltantes`);
+              } else if (insertError) {
+                console.error('❌ [BILLING-SUMMARY] Error insertando totales:', insertError);
+              }
+            }
+          }
+        }
+      }
+
       historyData = [];
     } else {
       // Período cerrado: usar calculator_history
