@@ -55,7 +55,7 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [BILLING-SUMMARY] Is Super Admin:', isSuperAdmin);
     console.log('🔍 [BILLING-SUMMARY] Is Admin:', isAdmin);
 
-    // 2. Obtener modelos según permisos (sin filtrar por is_active para no excluir datos válidos)
+    // 2. Obtener modelos según permisos (solo modelos activos)
     let modelsQuery = supabase
       .from('users')
       .select(`
@@ -63,7 +63,8 @@ export async function GET(request: NextRequest) {
         email, 
         name
       `)
-      .eq('role', 'modelo');
+      .eq('role', 'modelo')
+      .eq('is_active', true);
 
     // Excluir AIM Botty explícitamente
     modelsQuery = modelsQuery.neq('id', AIM_BOTTY_ID).neq('email', AIM_BOTTY_EMAIL);
