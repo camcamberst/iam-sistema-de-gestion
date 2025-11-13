@@ -231,12 +231,12 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
     }
   };
 
-  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 30 segundos
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 15 segundos para mejor sincronización
   const { isPolling, isSilentUpdating, manualRefresh } = useBillingPolling(
     loadBillingData,
     [selectedDate, selectedSede, userId],
     {
-      refreshInterval: 30000, // 30 segundos
+      refreshInterval: 15000, // 15 segundos (reducido de 30s para mejor sincronización)
       enabled: true,
       silentUpdate: true, // Actualizaciones silenciosas sin parpadeos
       onRefresh: () => {
