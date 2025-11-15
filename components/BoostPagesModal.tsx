@@ -262,34 +262,71 @@ export default function BoostPagesModal({
           )}
         </div>
 
-        {/* Vista previa del Google Drive */}
+        {/* Acceso a Google Drive */}
         {config.folderId && !editing && (
-          <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-            <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">Vista previa</h4>
-              <a
-                href={config.folderUrl || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Abrir en nueva pestaña
-              </a>
+          <div className="space-y-4">
+            {/* Advertencia importante */}
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
+                <div className="flex-1">
+                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-1">
+                    ⚠️ Importante: Arrastrar fotos no funciona en la vista previa
+                  </p>
+                  <p className="text-xs text-yellow-700 dark:text-yellow-400">
+                    Por restricciones de seguridad del navegador, el arrastre de archivos no funciona dentro del iframe. 
+                    Debes abrir el Google Drive en una nueva pestaña usando el botón de abajo para poder arrastrar las fotos.
+                  </p>
+                </div>
+              </div>
             </div>
-            <div className="relative" style={{ height: '500px' }}>
-              <iframe
-                src={iframeUrl || ''}
-                className="w-full h-full border-0"
-                title="Google Drive Folder"
-                allow="autoplay"
-              />
+
+            {/* Botón principal para abrir Google Drive */}
+            <a
+              href={config.folderUrl || '#'}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3 text-base font-semibold"
+            >
+              <Upload className="w-5 h-5" />
+              <span>Abrir Google Drive en nueva pestaña</span>
+              <ExternalLink className="w-5 h-5" />
+            </a>
+
+            {/* Vista previa opcional (solo para visualización) */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+              <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">Vista previa (solo lectura)</h4>
+                <span className="text-xs text-gray-500 dark:text-gray-400">No se pueden arrastrar archivos aquí</span>
+              </div>
+              <div className="relative bg-gray-100 dark:bg-gray-900" style={{ height: '400px' }}>
+                <iframe
+                  src={iframeUrl || ''}
+                  className="w-full h-full border-0 opacity-75"
+                  title="Google Drive Folder Preview"
+                  allow="autoplay"
+                />
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg px-4 py-2 shadow-lg">
+                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                      Usa el botón de arriba para abrir y arrastrar archivos
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-2 border-t border-blue-200 dark:border-blue-800">
-              <p className="text-xs text-gray-600 dark:text-gray-400">
-                💡 <strong>Instrucciones:</strong> Arrastra las fotos desde tu computadora directamente a las carpetas de cada plataforma en el Google Drive. 
-                Tu aplicación externa detectará automáticamente los cambios y subirá las fotos a las plataformas correspondientes.
+
+            {/* Instrucciones */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-3 border border-blue-200 dark:border-blue-800 rounded-lg">
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
+                📋 Instrucciones paso a paso:
               </p>
+              <ol className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-decimal list-inside">
+                <li>Haz clic en el botón "Abrir Google Drive en nueva pestaña"</li>
+                <li>En la nueva pestaña, arrastra las fotos desde tu computadora</li>
+                <li>Suelta las fotos en la carpeta correspondiente a cada plataforma</li>
+                <li>Tu aplicación externa detectará automáticamente los cambios y subirá las fotos</li>
+              </ol>
             </div>
           </div>
         )}
