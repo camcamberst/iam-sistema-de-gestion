@@ -330,7 +330,7 @@ export default function BoostPagesModal({
                 📋 Instrucciones paso a paso:
               </p>
               <ol className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-decimal list-inside">
-                <li>Haz clic en el botón "Abrir Google Drive en nueva pestaña"</li>
+                <li>Haz clic en el botón &quot;Abrir Google Drive en nueva pestaña&quot;</li>
                 <li>En la nueva pestaña, arrastra las fotos desde tu computadora</li>
                 <li>Suelta las fotos en la carpeta correspondiente a cada plataforma</li>
                 <li>Tu aplicación externa detectará automáticamente los cambios y subirá las fotos</li>
