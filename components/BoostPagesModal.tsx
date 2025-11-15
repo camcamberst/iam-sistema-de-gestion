@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { X, Upload, Folder, Settings, ExternalLink, AlertCircle, CheckCircle } from 'lucide-react';
 import StandardModal from '@/components/ui/StandardModal';
+import BoostPagesFileUpload from '@/components/BoostPagesFileUpload';
 
 interface BoostPagesModalProps {
   isOpen: boolean;
@@ -10,6 +11,7 @@ interface BoostPagesModalProps {
   modelId: string;
   modelName: string;
   modelEmail: string;
+  userId: string; // ID del usuario autenticado (admin)
 }
 
 interface GoogleDriveConfig {
@@ -22,7 +24,8 @@ export default function BoostPagesModal({
   onClose,
   modelId,
   modelName,
-  modelEmail
+  modelEmail,
+  userId
 }: BoostPagesModalProps) {
   const [config, setConfig] = useState<GoogleDriveConfig>({ folderUrl: null, folderId: null });
   const [loading, setLoading] = useState(true);
@@ -265,33 +268,38 @@ export default function BoostPagesModal({
         {/* Acceso a Google Drive */}
         {config.folderId && !editing && (
           <div className="space-y-4">
-            {/* Advertencia importante */}
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5 flex-shrink-0" />
-                <div className="flex-1">
-                  <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300 mb-1">
-                    ⚠️ Importante: Arrastrar fotos no funciona en la vista previa
-                  </p>
-                  <p className="text-xs text-yellow-700 dark:text-yellow-400">
-                    Por restricciones de seguridad del navegador, el arrastre de archivos no funciona dentro del iframe. 
-                    Debes abrir el Google Drive en una nueva pestaña usando el botón de abajo para poder arrastrar las fotos.
-                  </p>
-                </div>
-              </div>
+            {/* Componente de drag & drop para subir archivos */}
+            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
+              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
+                <Upload className="w-4 h-4" />
+                Subir fotos directamente
+              </h4>
+              <BoostPagesFileUpload
+                folderId={config.folderId}
+                modelId={modelId}
+                userId={userId}
+                onUploadComplete={() => {
+                  setSuccess('Archivos subidos correctamente');
+                  setTimeout(() => setSuccess(''), 3000);
+                }}
+              />
             </div>
 
-            {/* Botón principal para abrir Google Drive */}
-            <a
-              href={config.folderUrl || '#'}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block w-full px-6 py-4 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 flex items-center justify-center gap-3 text-base font-semibold"
-            >
-              <Upload className="w-5 h-5" />
-              <span>Abrir Google Drive en nueva pestaña</span>
-              <ExternalLink className="w-5 h-5" />
-            </a>
+            {/* Opción alternativa: Abrir en nueva pestaña */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
+                O si prefieres, puedes abrir el Google Drive en una nueva pestaña:
+              </p>
+              <a
+                href={config.folderUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm text-center flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Abrir Google Drive en nueva pestaña</span>
+              </a>
+            </div>
 
             {/* Vista previa opcional (solo para visualización) */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">

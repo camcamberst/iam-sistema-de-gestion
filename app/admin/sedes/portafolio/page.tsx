@@ -780,7 +780,7 @@ export default function PortafolioModelos() {
         )}
 
         {/* Modal Boost Pages */}
-        {showBoostPagesModal && selectedModelForBoost && (
+        {showBoostPagesModal && selectedModelForBoost && userId && (
           <BoostPagesModal
             isOpen={showBoostPagesModal}
             onClose={() => {
@@ -790,6 +790,7 @@ export default function PortafolioModelos() {
             modelId={selectedModelForBoost.id}
             modelName={selectedModelForBoost.name}
             modelEmail={selectedModelForBoost.email}
+            userId={userId}
           />
         )}
       </div>
