@@ -36,6 +36,8 @@ export async function POST(request: NextRequest) {
     }
 
     try {
+      console.log('🔍 [GOOGLE-DRIVE-UPLOAD] Iniciando upload:', { fileName: file.name, folderId, modelId, userId, fileSize: file.size, fileType: file.type });
+      
       // Obtener cliente OAuth2 autenticado
       const oauth2Client = await getAuthenticatedOAuth2Client(userId);
       const drive = google.drive({ version: 'v3', auth: oauth2Client });
@@ -43,6 +45,8 @@ export async function POST(request: NextRequest) {
       // Convertir File a Buffer
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+
+      console.log('📤 [GOOGLE-DRIVE-UPLOAD] Buffer creado, tamaño:', buffer.length, 'bytes');
 
       // Subir archivo
       const response = await drive.files.create({
@@ -57,7 +61,11 @@ export async function POST(request: NextRequest) {
         fields: 'id, name, webViewLink'
       });
 
-      console.log('✅ [GOOGLE-DRIVE-UPLOAD] Archivo subido exitosamente:', response.data.name);
+      console.log('✅ [GOOGLE-DRIVE-UPLOAD] Archivo subido exitosamente:', {
+        fileId: response.data.id,
+        fileName: response.data.name,
+        webViewLink: response.data.webViewLink
+      });
 
       return NextResponse.json({
         success: true,
@@ -67,15 +75,36 @@ export async function POST(request: NextRequest) {
       });
 
     } catch (authError: any) {
+      console.error('❌ [GOOGLE-DRIVE-UPLOAD] Error en upload:', {
+        message: authError.message,
+        code: authError.code,
+        errors: authError.errors,
+        stack: authError.stack
+      });
+
       // Si el error es de autenticación, retornar información para iniciar OAuth
-      if (authError.message.includes('no autenticado') || authError.message.includes('no está configurado')) {
+      if (authError.message?.includes('no autenticado') || 
+          authError.message?.includes('no está configurado') ||
+          authError.code === 401 ||
+          authError.code === 403) {
         return NextResponse.json({
           success: false,
-          error: authError.message,
+          error: authError.message || 'Error de autenticación con Google Drive',
           requiresAuth: true,
-          requiresSetup: authError.message.includes('no está configurado')
+          requiresSetup: authError.message?.includes('no está configurado')
         }, { status: 401 });
       }
+
+      // Si es un error de permisos o acceso
+      if (authError.code === 403 || authError.message?.includes('permission') || authError.message?.includes('access')) {
+        return NextResponse.json({
+          success: false,
+          error: `Error de permisos: ${authError.message || 'No tienes permisos para subir archivos a esta carpeta'}`,
+          requiresAuth: true
+        }, { status: 403 });
+      }
+
+      // Otros errores de Google Drive API
       throw authError;
     }
 

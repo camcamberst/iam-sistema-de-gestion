@@ -234,14 +234,20 @@ export default function BoostPagesModal({
         formData.append('modelId', modelId);
         formData.append('userId', userId);
 
+        console.log('📤 [BOOST-PAGES] Subiendo archivo:', { fileName: file.name, folderId, modelId, userId });
+        
         const response = await fetch('/api/google-drive/upload', {
           method: 'POST',
           body: formData,
         });
 
+        console.log('📥 [BOOST-PAGES] Respuesta del servidor:', response.status, response.statusText);
+
         const data = await response.json();
+        console.log('📦 [BOOST-PAGES] Datos de respuesta:', data);
 
         if (data.success) {
+          console.log('✅ [BOOST-PAGES] Archivo subido exitosamente:', data);
           setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'success' }));
           setSuccess(`Archivo ${file.name} subido correctamente a la carpeta`);
           setTimeout(() => {
@@ -253,22 +259,32 @@ export default function BoostPagesModal({
             });
           }, 3000);
         } else {
+          console.error('❌ [BOOST-PAGES] Error al subir archivo:', data);
           setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'error' }));
           if (data.requiresAuth) {
+            console.log('🔐 [BOOST-PAGES] Autenticación requerida, iniciando OAuth...');
             const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
             const authData = await authResponse.json();
             if (authData.success && authData.authUrl) {
               window.location.href = authData.authUrl;
               return;
+            } else {
+              setError('Error al iniciar autenticación con Google Drive');
             }
           } else {
-            setError(data.error || `Error al subir ${file.name}`);
+            const errorMessage = data.error || `Error al subir ${file.name}`;
+            console.error('❌ [BOOST-PAGES] Error:', errorMessage);
+            setError(errorMessage);
           }
         }
       }
     } catch (err: any) {
-      setError('Error al subir archivos');
-      console.error('Error uploading files:', err);
+      console.error('❌ [BOOST-PAGES] Error general al subir archivos:', err);
+      setError(`Error al subir archivos: ${err.message || 'Error desconocido'}`);
+      // Marcar todos los archivos como error
+      files.forEach(file => {
+        setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'error' }));
+      });
     } finally {
       setUploadingToFolder(null);
     }

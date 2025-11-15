@@ -37,9 +37,10 @@ export async function GET(request: NextRequest) {
     );
 
     // Scopes necesarios para Google Drive
+    // drive.file solo permite acceso a archivos creados por la app
+    // drive permite acceso completo a todas las carpetas y archivos
     const scopes = [
-      'https://www.googleapis.com/auth/drive.file', // Para subir archivos
-      'https://www.googleapis.com/auth/drive.readonly', // Para listar carpetas
+      'https://www.googleapis.com/auth/drive', // Acceso completo para subir a carpetas existentes
     ];
 
     // Generar URL de autorización
@@ -63,4 +64,5 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
 
