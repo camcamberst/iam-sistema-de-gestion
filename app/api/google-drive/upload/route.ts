@@ -82,14 +82,15 @@ export async function POST(request: NextRequest) {
         stack: authError.stack
       });
 
-      // Si el error es de autenticación, retornar información para iniciar OAuth
+      // Si el error es de autenticación o scope insuficiente, retornar información para iniciar OAuth
       if (authError.message?.includes('no autenticado') || 
           authError.message?.includes('no está configurado') ||
+          authError.message?.includes('necesita reautenticarse') ||
           authError.code === 401 ||
           authError.code === 403) {
         return NextResponse.json({
           success: false,
-          error: authError.message || 'Error de autenticación con Google Drive',
+          error: authError.message || 'Error de autenticación con Google Drive. Por favor, vuelve a autenticarte.',
           requiresAuth: true,
           requiresSetup: authError.message?.includes('no está configurado')
         }, { status: 401 });

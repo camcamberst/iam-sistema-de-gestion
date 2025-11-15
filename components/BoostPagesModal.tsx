@@ -176,12 +176,27 @@ export default function BoostPagesModal({
     }
   }, [config.folderId, userId]);
 
-  // Cargar carpetas cuando hay configuración
+  // Verificar scope y cargar carpetas cuando hay configuración
   useEffect(() => {
     if (config.folderId && !editing && isOpen) {
+      // Verificar scope primero
+      const verifyScope = async () => {
+        try {
+          const response = await fetch(`/api/google-drive/verify-scope?userId=${userId}`);
+          const data = await response.json();
+          
+          if (data.success && data.needsReauth) {
+            setError('Necesitas reautenticarte con permisos completos de Google Drive. Intenta subir un archivo para iniciar la autenticación.');
+          }
+        } catch (err) {
+          console.error('Error verificando scope:', err);
+        }
+      };
+      
+      verifyScope();
       loadFolders();
     }
-  }, [config.folderId, editing, isOpen, loadFolders]);
+  }, [config.folderId, editing, isOpen, loadFolders, userId]);
 
   // Manejar drag & drop sobre carpetas
   const handleFolderDragEnter = useCallback((e: React.DragEvent, folderId: string) => {

@@ -62,6 +62,14 @@ export async function getAuthenticatedOAuth2Client(userId: string) {
     throw new Error('Usuario no autenticado con Google Drive');
   }
 
+  // Verificar que el scope incluya acceso completo a Drive
+  const hasFullDriveAccess = tokens.scope?.includes('https://www.googleapis.com/auth/drive');
+  if (!hasFullDriveAccess) {
+    console.warn('⚠️ [GOOGLE-DRIVE-AUTH] Scope insuficiente. Scope actual:', tokens.scope);
+    throw new Error('Usuario necesita reautenticarse con permisos completos de Google Drive');
+  }
+
+  console.log('✅ [GOOGLE-DRIVE-AUTH] Tokens válidos con scope completo:', tokens.scope);
   oauth2Client.setCredentials(tokens);
 
   // Verificar si el token está expirado y refrescarlo si es necesario
@@ -101,4 +109,5 @@ export async function getAuthenticatedOAuth2Client(userId: string) {
 
   return oauth2Client;
 }
+
 
