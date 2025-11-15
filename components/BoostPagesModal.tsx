@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { X, Upload, Folder, Settings, ExternalLink, AlertCircle, CheckCircle } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { X, Upload, Folder, Settings, ExternalLink, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
 import StandardModal from '@/components/ui/StandardModal';
 import BoostPagesFileUpload from '@/components/BoostPagesFileUpload';
 
@@ -19,6 +19,11 @@ interface GoogleDriveConfig {
   folderId: string | null;
 }
 
+interface DriveFolder {
+  id: string;
+  name: string;
+}
+
 export default function BoostPagesModal({
   isOpen,
   onClose,
@@ -34,6 +39,11 @@ export default function BoostPagesModal({
   const [newFolderUrl, setNewFolderUrl] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [folders, setFolders] = useState<DriveFolder[]>([]);
+  const [loadingFolders, setLoadingFolders] = useState(false);
+  const [draggedOverFolder, setDraggedOverFolder] = useState<string | null>(null);
+  const [uploadingToFolder, setUploadingToFolder] = useState<string | null>(null);
+  const [uploadStatus, setUploadStatus] = useState<Record<string, 'uploading' | 'success' | 'error'>>({});
 
   // Extraer folder ID de la URL de Google Drive
   const extractFolderId = (url: string): string | null => {
@@ -133,9 +143,136 @@ export default function BoostPagesModal({
     setError('');
   };
 
-  const iframeUrl = config.folderId 
-    ? `https://drive.google.com/embeddedfolderview?id=${config.folderId}#grid`
-    : null;
+  // Cargar carpetas del Google Drive
+  const loadFolders = useCallback(async () => {
+    if (!config.folderId || !userId) return;
+    
+    try {
+      setLoadingFolders(true);
+      setError('');
+      const response = await fetch(`/api/google-drive/folders?folderId=${config.folderId}&userId=${userId}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setFolders(data.folders || []);
+      } else {
+        if (data.requiresAuth) {
+          const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
+          const authData = await authResponse.json();
+          if (authData.success && authData.authUrl) {
+            window.location.href = authData.authUrl;
+          }
+        } else if (data.requiresSetup) {
+          setError('Google OAuth no está configurado. Por favor, contacta al administrador.');
+        } else {
+          setError(data.error || 'Error al cargar carpetas');
+        }
+      }
+    } catch (err: any) {
+      setError('Error al cargar carpetas');
+      console.error('Error loading folders:', err);
+    } finally {
+      setLoadingFolders(false);
+    }
+  }, [config.folderId, userId]);
+
+  // Cargar carpetas cuando hay configuración
+  useEffect(() => {
+    if (config.folderId && !editing && isOpen) {
+      loadFolders();
+    }
+  }, [config.folderId, editing, isOpen, loadFolders]);
+
+  // Manejar drag & drop sobre carpetas
+  const handleFolderDragEnter = useCallback((e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedOverFolder(folderId);
+  }, []);
+
+  const handleFolderDragLeave = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Solo quitar el highlight si realmente salimos del elemento
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const x = e.clientX;
+    const y = e.clientY;
+    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
+      setDraggedOverFolder(null);
+    }
+  }, []);
+
+  const handleFolderDragOver = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  }, []);
+
+  const handleFolderDrop = useCallback(async (e: React.DragEvent, folderId: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggedOverFolder(null);
+
+    const files = Array.from(e.dataTransfer.files).filter(file => 
+      file.type.startsWith('image/')
+    );
+
+    if (files.length === 0) {
+      setError('Por favor arrastra solo archivos de imagen');
+      return;
+    }
+
+    try {
+      setUploadingToFolder(folderId);
+      setError('');
+
+      for (const file of files) {
+        setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'uploading' }));
+
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('folderId', folderId);
+        formData.append('modelId', modelId);
+        formData.append('userId', userId);
+
+        const response = await fetch('/api/google-drive/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'success' }));
+          setSuccess(`Archivo ${file.name} subido correctamente a la carpeta`);
+          setTimeout(() => {
+            setSuccess('');
+            setUploadStatus(prev => {
+              const newStatus = { ...prev };
+              delete newStatus[`${folderId}-${file.name}`];
+              return newStatus;
+            });
+          }, 3000);
+        } else {
+          setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'error' }));
+          if (data.requiresAuth) {
+            const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
+            const authData = await authResponse.json();
+            if (authData.success && authData.authUrl) {
+              window.location.href = authData.authUrl;
+              return;
+            }
+          } else {
+            setError(data.error || `Error al subir ${file.name}`);
+          }
+        }
+      }
+    } catch (err: any) {
+      setError('Error al subir archivos');
+      console.error('Error uploading files:', err);
+    } finally {
+      setUploadingToFolder(null);
+    }
+  }, [modelId, userId]);
 
   return (
     <StandardModal
@@ -301,40 +438,105 @@ export default function BoostPagesModal({
               </a>
             </div>
 
-            {/* Vista previa opcional (solo para visualización) */}
+            {/* Vista previa con carpetas interactivas */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm">Vista previa (solo lectura)</h4>
-                <span className="text-xs text-gray-500 dark:text-gray-400">No se pueden arrastrar archivos aquí</span>
+                <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm flex items-center gap-2">
+                  <Folder className="w-4 h-4" />
+                  Carpetas disponibles
+                </h4>
+                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
+                  Arrastra archivos directamente sobre las carpetas
+                </span>
               </div>
-              <div className="relative bg-gray-100 dark:bg-gray-900" style={{ height: '400px' }}>
-                <iframe
-                  src={iframeUrl || ''}
-                  className="w-full h-full border-0 opacity-75"
-                  title="Google Drive Folder Preview"
-                  allow="autoplay"
-                />
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                  <div className="bg-white/90 dark:bg-gray-800/90 rounded-lg px-4 py-2 shadow-lg">
-                    <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                      Usa el botón de arriba para abrir y arrastrar archivos
+              <div className="bg-white dark:bg-gray-900 p-4" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                {loadingFolders ? (
+                  <div className="flex items-center justify-center py-8">
+                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
+                      Cargando carpetas...
+                    </span>
+                  </div>
+                ) : folders.length > 0 ? (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                    {folders.map((folder) => {
+                      const isDraggedOver = draggedOverFolder === folder.id;
+                      const isUploading = uploadingToFolder === folder.id;
+                      const hasUploadingFiles = Object.keys(uploadStatus).some(key => 
+                        key.startsWith(`${folder.id}-`) && uploadStatus[key] === 'uploading'
+                      );
+                      const hasSuccessFiles = Object.keys(uploadStatus).some(key => 
+                        key.startsWith(`${folder.id}-`) && uploadStatus[key] === 'success'
+                      );
+
+                      return (
+                        <div
+                          key={folder.id}
+                          onDragEnter={(e) => handleFolderDragEnter(e, folder.id)}
+                          onDragLeave={handleFolderDragLeave}
+                          onDragOver={handleFolderDragOver}
+                          onDrop={(e) => handleFolderDrop(e, folder.id)}
+                          className={`
+                            relative border-2 rounded-lg p-4 transition-all duration-200 cursor-pointer
+                            ${isDraggedOver 
+                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 scale-105 shadow-lg' 
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700'
+                            }
+                            ${isUploading || hasUploadingFiles ? 'opacity-75' : ''}
+                          `}
+                        >
+                          <div className="flex flex-col items-center text-center">
+                            {hasUploadingFiles ? (
+                              <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-2" />
+                            ) : hasSuccessFiles ? (
+                              <CheckCircle className="w-8 h-8 text-green-500 mb-2" />
+                            ) : (
+                              <Folder className={`w-8 h-8 mb-2 ${isDraggedOver ? 'text-blue-500' : 'text-gray-400'}`} />
+                            )}
+                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate w-full">
+                              {folder.name}
+                            </span>
+                            {isDraggedOver && (
+                              <span className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
+                                Suelta aquí
+                              </span>
+                            )}
+                            {hasUploadingFiles && (
+                              <span className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                                Subiendo...
+                              </span>
+                            )}
+                            {hasSuccessFiles && !hasUploadingFiles && (
+                              <span className="text-xs text-green-600 dark:text-green-400 mt-1">
+                                ✓ Subido
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-8">
+                    <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      No se encontraron carpetas. Asegúrate de que el Google Drive tenga carpetas configuradas.
                     </p>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Instrucciones */}
             <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-3 border border-blue-200 dark:border-blue-800 rounded-lg">
               <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
-                📋 Instrucciones paso a paso:
+                📋 Instrucciones:
               </p>
-              <ol className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-decimal list-inside">
-                <li>Haz clic en el botón &quot;Abrir Google Drive en nueva pestaña&quot;</li>
-                <li>En la nueva pestaña, arrastra las fotos desde tu computadora</li>
-                <li>Suelta las fotos en la carpeta correspondiente a cada plataforma</li>
-                <li>Tu aplicación externa detectará automáticamente los cambios y subirá las fotos</li>
-              </ol>
+              <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
+                <li><strong>Método 1:</strong> Arrastra fotos directamente sobre las carpetas en la vista previa</li>
+                <li><strong>Método 2:</strong> Usa el módulo &quot;Subir fotos directamente&quot; arriba</li>
+                <li><strong>Método 3:</strong> Abre Google Drive en nueva pestaña y arrastra allí</li>
+              </ul>
             </div>
           </div>
         )}
