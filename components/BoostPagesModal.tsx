@@ -139,7 +139,8 @@ export default function BoostPagesModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Boost Pages"
-      size="large"
+      maxWidthClass="max-w-4xl"
+      paddingClass="p-6"
     >
       <div className="space-y-4">
         {/* Información del modelo */}
