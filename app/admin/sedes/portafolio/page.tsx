@@ -2,10 +2,11 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle } from 'lucide-react';
+import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle, Upload } from 'lucide-react';
 import AppleSelect from '@/components/AppleSelect';
 import StandardModal from '@/components/ui/StandardModal';
 import { getModelDisplayName } from '@/utils/model-display';
+import BoostPagesModal from '@/components/BoostPagesModal';
 
 interface ModeloPlatform {
   id: string | null;
@@ -96,6 +97,10 @@ export default function PortafolioModelos() {
   const [processingAction, setProcessingAction] = useState(false);
   const [modalStatus, setModalStatus] = useState<'disponible' | 'solicitada' | 'pendiente' | 'entregada' | 'desactivada' | 'inviable'>('disponible');
   const [openFiltersCount, setOpenFiltersCount] = useState(0);
+  
+  // Estados para Boost Pages Modal
+  const [showBoostPagesModal, setShowBoostPagesModal] = useState(false);
+  const [selectedModelForBoost, setSelectedModelForBoost] = useState<{ id: string; name: string; email: string } | null>(null);
 
   // Información del usuario
   const [userRole, setUserRole] = useState('');
@@ -580,23 +585,42 @@ export default function PortafolioModelos() {
                   className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/30 dark:border-gray-600/30 shadow-lg p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"
                 >
                   {/* Header del Modelo */}
-                  <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                      <User className="w-6 h-6 text-white" />
+                  <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                        <User className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h4 
+                          className="text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                          onClick={() => handleModelNameClick(model.model_id, model.model_email)}
+                          title="Ver calculadora de la modelo"
+                        >
+                          {getModelDisplayName(model.model_email)}
+                        </h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                          <Building2 className="w-4 h-4 mr-1" />
+                          {model.group_name}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <h4 
-                        className="text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
-                        onClick={() => handleModelNameClick(model.model_id, model.model_email)}
-                        title="Ver calculadora de la modelo"
-                      >
-                        {getModelDisplayName(model.model_email)}
-                      </h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                        <Building2 className="w-4 h-4 mr-1" />
-                        {model.group_name}
-                      </p>
-                    </div>
+                    
+                    {/* Botón Boost Pages */}
+                    <button
+                      onClick={() => {
+                        setSelectedModelForBoost({
+                          id: model.model_id,
+                          name: getModelDisplayName(model.model_email),
+                          email: model.model_email
+                        });
+                        setShowBoostPagesModal(true);
+                      }}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2 text-sm font-medium"
+                      title="Abrir Boost Pages para subir fotos a las plataformas"
+                    >
+                      <Upload className="w-4 h-4" />
+                      Boost Pages
+                    </button>
                   </div>
 
                   {/* Grid de Plataformas como etiquetas (todas las plataformas del catálogo) */}
@@ -753,6 +777,20 @@ export default function PortafolioModelos() {
                 </button>
               </div>
           </StandardModal>
+        )}
+
+        {/* Modal Boost Pages */}
+        {showBoostPagesModal && selectedModelForBoost && (
+          <BoostPagesModal
+            isOpen={showBoostPagesModal}
+            onClose={() => {
+              setShowBoostPagesModal(false);
+              setSelectedModelForBoost(null);
+            }}
+            modelId={selectedModelForBoost.id}
+            modelName={selectedModelForBoost.name}
+            modelEmail={selectedModelForBoost.email}
+          />
         )}
       </div>
     </div>
