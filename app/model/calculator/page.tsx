@@ -687,15 +687,6 @@ export default function ModelCalculatorPage() {
           
           console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map((p: Platform) => ({ id: p.id, name: p.name, value: p.value })));
           setPlatforms(updatedPlatforms);
-        } else {
-          // 🔧 CRÍTICO: Si no hay valores guardados, asegurar que las plataformas estén en cero
-          console.log('🔍 [CALCULATOR] No se encontraron valores guardados - reseteando plataformas a cero');
-          const resetPlatforms = enabledPlatforms.map((p: Platform) => ({
-            ...p,
-            value: 0
-          }));
-          setPlatforms(resetPlatforms);
-          syncPlatformsToInputs(resetPlatforms);
 
           // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
           const yesterdayDate = new Date(new Date(periodDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
