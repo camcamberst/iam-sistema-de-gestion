@@ -26,6 +26,35 @@ const supabase = createClient(
   }
 );
 
+const pad = (value: number) => String(value).padStart(2, '0');
+
+const computeNextPeriodFromReference = (
+  periodDate: string,
+  periodType: '1-15' | '16-31'
+): { periodDate: string; periodType: '1-15' | '16-31' } => {
+  const [yearStr, monthStr] = periodDate.split('-');
+  const year = Number(yearStr);
+  const month = Number(monthStr);
+
+  if (!Number.isFinite(year) || !Number.isFinite(month)) {
+    console.warn('⚠️ [CLOSE-PERIOD] No se pudo interpretar periodDate forzado, usando cálculo predeterminado');
+    return getNewPeriodAfterClosure();
+  }
+
+  if (periodType === '1-15') {
+    return {
+      periodDate: `${year}-${pad(month)}-16`,
+      periodType: '16-31'
+    };
+  }
+
+  const nextMonthDate = new Date(year, month - 1 + 1, 1);
+  return {
+    periodDate: `${nextMonthDate.getFullYear()}-${pad(nextMonthDate.getMonth() + 1)}-01`,
+    periodType: '1-15'
+  };
+};
+
 /**
  * POST: Cierra período completo (00:00 Colombia)
  */
@@ -34,39 +63,66 @@ export async function POST(request: NextRequest) {
     console.log('🔒 [CLOSE-PERIOD] Iniciando cierre completo de período...');
 
     const todayDate = getColombiaDate();
+    const testingMode = request.headers.get('x-testing-mode') === 'true';
+    const forcePeriodDateHeader = request.headers.get('x-force-period-date');
+    const forcePeriodTypeHeader = request.headers.get('x-force-period-type');
+    const forceCloseSecret = request.headers.get('x-force-close-secret');
+    const cronSecret = process.env.CRON_SECRET_KEY || 'cron-secret';
+    const forcedBySecret = !!(forceCloseSecret && forceCloseSecret === cronSecret);
+    const bypassGuardrails = testingMode || forcedBySecret;
+    const validForcedType = forcePeriodTypeHeader === '1-15' || forcePeriodTypeHeader === '16-31';
+    const canForceOverride = !!(
+      (forcePeriodDateHeader && validForcedType && bypassGuardrails)
+    );
+
+    let { periodDate: periodToCloseDate, periodType: periodToCloseType } = getPeriodToClose();
+    let forcedOverrideApplied = false;
+
+    if (canForceOverride && forcePeriodDateHeader && validForcedType) {
+      periodToCloseDate = forcePeriodDateHeader;
+      periodToCloseType = forcePeriodTypeHeader as '1-15' | '16-31';
+      forcedOverrideApplied = true;
+      console.log('🛠️ [CLOSE-PERIOD] Período forzado vía encabezados:', {
+        periodToCloseDate,
+        periodToCloseType
+      });
+    }
     
     // 🔧 CORRECCIÓN: Obtener el período que se debe CERRAR (no el actual)
     // Día 1: cierra período 16-31 del mes anterior
     // Día 16: cierra período 1-15 del mes actual
-    const { periodDate: periodToCloseDate, periodType: periodToCloseType } = getPeriodToClose();
-    
     // Obtener el período que inicia después del cierre
-    const { periodDate: newPeriodDate, periodType: newPeriodType } = getNewPeriodAfterClosure();
+    const {
+      periodDate: newPeriodDate,
+      periodType: newPeriodType
+    } = forcedOverrideApplied
+      ? computeNextPeriodFromReference(periodToCloseDate, periodToCloseType)
+      : getNewPeriodAfterClosure();
     
     console.log(`📅 [CLOSE-PERIOD] Fecha de hoy: ${todayDate}`);
     console.log(`📦 [CLOSE-PERIOD] Período a cerrar: ${periodToCloseDate} (${periodToCloseType})`);
     console.log(`🆕 [CLOSE-PERIOD] Nuevo período que inicia: ${newPeriodDate} (${newPeriodType})`);
 
-    // Verificar modo testing desde header
-    const testingMode = request.headers.get('x-testing-mode') === 'true';
-    
     // Verificar que es día de cierre y hora correcta (o si está en modo testing)
-    if (!testingMode && !isClosureDay()) {
+    if (!bypassGuardrails && !isClosureDay()) {
       return NextResponse.json({
         success: false,
         error: 'No es día de cierre (días 1 y 16)'
       }, { status: 400 });
     }
 
-    if (!testingMode && !isFullClosureTime()) {
+    if (!bypassGuardrails && !isFullClosureTime()) {
       return NextResponse.json({
         success: false,
         error: 'No es momento de cierre completo (00:00 Colombia)'
       }, { status: 400 });
     }
     
-    if (testingMode) {
-      console.log('🧪 [CLOSE-PERIOD] MODO TESTING ACTIVADO');
+    if (bypassGuardrails) {
+      console.log('🧪 [CLOSE-PERIOD] MODO BYPASS ACTIVADO', {
+        testingMode,
+        forcedBySecret
+      });
     }
 
     // Verificar estado actual (usar la fecha del período a cerrar)
@@ -156,9 +212,9 @@ export async function POST(request: NextRequest) {
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'waiting_summary');
     
     // TEMPORAL PARA TESTING: 5 segundos en lugar de 150 segundos
-    const waitTime = testingMode ? 5000 : 150000;
-    if (testingMode) {
-      console.log('🧪 [CLOSE-PERIOD] Modo testing: espera reducida a 5 segundos');
+    const waitTime = bypassGuardrails ? 5000 : 150000;
+    if (bypassGuardrails) {
+      console.log('🧪 [CLOSE-PERIOD] Modo bypass: espera reducida a 5 segundos');
     }
     await new Promise(resolve => setTimeout(resolve, waitTime));
 

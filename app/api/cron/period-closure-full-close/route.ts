@@ -30,7 +30,15 @@ export async function GET(request: NextRequest) {
     }
 
     // Llamar al endpoint de close-period
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const envBaseUrl = process.env.NEXT_PUBLIC_APP_URL?.trim();
+    const vercelHost = process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim();
+    const inferredBaseUrl = request.nextUrl?.origin;
+    const baseUrl =
+      envBaseUrl ||
+      (vercelHost ? `https://${vercelHost}` : '') ||
+      inferredBaseUrl ||
+      'https://iam-sistema-de-gestion.vercel.app';
+
     const response = await fetch(`${baseUrl}/api/calculator/period-closure/close-period`, {
       method: 'POST',
       headers: {
