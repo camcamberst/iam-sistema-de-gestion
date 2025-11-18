@@ -53,8 +53,17 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
-  // 🔧 Usar fecha de Colombia para el período
+  // 🔧 Usar fecha de Colombia para el período - siempre actualizada
   const [periodDate, setPeriodDate] = useState<string>(getColombiaDate());
+  
+  // 🔧 CRÍTICO: Actualizar periodDate cada vez que se monte el componente para usar fecha actual
+  useEffect(() => {
+    const currentDate = getColombiaDate();
+    if (periodDate !== currentDate) {
+      console.log('🔄 [CALCULATOR] Actualizando periodDate:', { anterior: periodDate, nueva: currentDate });
+      setPeriodDate(currentDate);
+    }
+  }, []); // Solo al montar
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
@@ -678,6 +687,15 @@ export default function ModelCalculatorPage() {
           
           console.log('🔍 [CALCULATOR] Plataformas actualizadas:', updatedPlatforms.map((p: Platform) => ({ id: p.id, name: p.name, value: p.value })));
           setPlatforms(updatedPlatforms);
+        } else {
+          // 🔧 CRÍTICO: Si no hay valores guardados, asegurar que las plataformas estén en cero
+          console.log('🔍 [CALCULATOR] No se encontraron valores guardados - reseteando plataformas a cero');
+          const resetPlatforms = enabledPlatforms.map((p: Platform) => ({
+            ...p,
+            value: 0
+          }));
+          setPlatforms(resetPlatforms);
+          syncPlatformsToInputs(resetPlatforms);
 
           // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
           const yesterdayDate = new Date(new Date(periodDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
@@ -721,15 +739,25 @@ export default function ModelCalculatorPage() {
           // Se calculará en el useEffect cuando yesterdayValues esté listo
         } else {
           console.log('🔍 [CALCULATOR] No se encontraron valores guardados o API falló:', savedJson);
-          // Asegurar que las plataformas se muestren aunque no haya valores guardados
-          setPlatforms(enabledPlatforms);
-          syncPlatformsToInputs(enabledPlatforms);
+          // 🔧 CRÍTICO: Si no hay valores, resetear explícitamente a cero
+          console.log('🔍 [CALCULATOR] Reseteando plataformas a cero porque no hay valores guardados');
+          const resetPlatforms = enabledPlatforms.map((p: Platform) => ({
+            ...p,
+            value: 0
+          }));
+          setPlatforms(resetPlatforms);
+          syncPlatformsToInputs(resetPlatforms);
         }
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
-        // Asegurar que las plataformas se muestren aunque haya error
-        setPlatforms(enabledPlatforms);
-        syncPlatformsToInputs(enabledPlatforms);
+        // 🔧 CRÍTICO: Si hay error, resetear explícitamente a cero
+        console.log('🔍 [CALCULATOR] Reseteando plataformas a cero debido a error al cargar');
+        const resetPlatforms = enabledPlatforms.map((p: Platform) => ({
+          ...p,
+          value: 0
+        }));
+        setPlatforms(resetPlatforms);
+        syncPlatformsToInputs(resetPlatforms);
       }
 
     } catch (err: any) {
