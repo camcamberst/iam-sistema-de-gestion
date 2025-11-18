@@ -136,11 +136,14 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (currentStatus?.status === 'completed') {
-      return NextResponse.json({
-        success: true,
-        message: 'Período ya fue cerrado',
-        already_closed: true
-      });
+      if (!bypassGuardrails) {
+        return NextResponse.json({
+          success: true,
+          message: 'Período ya fue cerrado',
+          already_closed: true
+        });
+      }
+      console.warn('⚠️ [CLOSE-PERIOD] Reejecución forzada sobre período marcado como completado');
     }
 
     // Actualizar estado a closing_calculators (usar período a cerrar)
