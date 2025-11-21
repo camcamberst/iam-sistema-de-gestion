@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { google } from 'googleapis';
 import { getAuthenticatedOAuth2Client } from '@/lib/google-drive/auth';
+import { Readable } from 'stream';
 
 export const dynamic = 'force-dynamic';
 
@@ -53,11 +54,15 @@ export async function POST(request: NextRequest) {
       const drive = google.drive({ version: 'v3', auth: oauth2Client });
       console.log('✅ [GOOGLE-DRIVE-UPLOAD] Cliente Drive inicializado');
       
-      // Convertir File a Buffer
+      // Convertir File a Buffer y luego a Stream
       console.log('📤 [GOOGLE-DRIVE-UPLOAD] Convirtiendo archivo a buffer...');
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
       console.log('✅ [GOOGLE-DRIVE-UPLOAD] Buffer creado, tamaño:', buffer.length, 'bytes');
+      
+      // Convertir Buffer a Stream (requerido por Google Drive API)
+      const stream = Readable.from(buffer);
+      console.log('✅ [GOOGLE-DRIVE-UPLOAD] Stream creado desde buffer');
 
       // Verificar que el folderId existe y es accesible
       console.log('🔍 [GOOGLE-DRIVE-UPLOAD] Verificando acceso a carpeta:', folderId);
@@ -85,7 +90,7 @@ export async function POST(request: NextRequest) {
         },
         media: {
           mimeType: file.type,
-          body: buffer
+          body: stream  // Usar stream en lugar de buffer
         },
         fields: 'id, name, webViewLink'
       });
