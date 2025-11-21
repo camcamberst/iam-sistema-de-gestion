@@ -36,19 +36,48 @@ export async function POST(request: NextRequest) {
     }
 
     try {
-      console.log('🔍 [GOOGLE-DRIVE-UPLOAD] Iniciando upload:', { fileName: file.name, folderId, modelId, userId, fileSize: file.size, fileType: file.type });
+      console.log('🔍 [GOOGLE-DRIVE-UPLOAD] Iniciando upload:', { 
+        fileName: file.name, 
+        folderId, 
+        modelId, 
+        userId, 
+        fileSize: file.size, 
+        fileType: file.type 
+      });
       
       // Obtener cliente OAuth2 autenticado
+      console.log('🔍 [GOOGLE-DRIVE-UPLOAD] Obteniendo cliente OAuth2 para userId:', userId);
       const oauth2Client = await getAuthenticatedOAuth2Client(userId);
+      console.log('✅ [GOOGLE-DRIVE-UPLOAD] Cliente OAuth2 obtenido exitosamente');
+      
       const drive = google.drive({ version: 'v3', auth: oauth2Client });
+      console.log('✅ [GOOGLE-DRIVE-UPLOAD] Cliente Drive inicializado');
       
       // Convertir File a Buffer
+      console.log('📤 [GOOGLE-DRIVE-UPLOAD] Convirtiendo archivo a buffer...');
       const arrayBuffer = await file.arrayBuffer();
       const buffer = Buffer.from(arrayBuffer);
+      console.log('✅ [GOOGLE-DRIVE-UPLOAD] Buffer creado, tamaño:', buffer.length, 'bytes');
 
-      console.log('📤 [GOOGLE-DRIVE-UPLOAD] Buffer creado, tamaño:', buffer.length, 'bytes');
+      // Verificar que el folderId existe y es accesible
+      console.log('🔍 [GOOGLE-DRIVE-UPLOAD] Verificando acceso a carpeta:', folderId);
+      try {
+        await drive.files.get({
+          fileId: folderId,
+          fields: 'id, name, mimeType'
+        });
+        console.log('✅ [GOOGLE-DRIVE-UPLOAD] Carpeta verificada y accesible');
+      } catch (folderError: any) {
+        console.error('❌ [GOOGLE-DRIVE-UPLOAD] Error verificando carpeta:', {
+          message: folderError.message,
+          code: folderError.code,
+          errors: folderError.errors
+        });
+        throw new Error(`No se puede acceder a la carpeta: ${folderError.message}`);
+      }
 
       // Subir archivo
+      console.log('📤 [GOOGLE-DRIVE-UPLOAD] Iniciando subida de archivo a Google Drive...');
       const response = await drive.files.create({
         requestBody: {
           name: file.name,

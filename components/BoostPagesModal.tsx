@@ -249,17 +249,54 @@ export default function BoostPagesModal({
         formData.append('modelId', modelId);
         formData.append('userId', userId);
 
-        console.log('📤 [BOOST-PAGES] Subiendo archivo:', { fileName: file.name, folderId, modelId, userId });
+        console.log('📤 [BOOST-PAGES] Subiendo archivo:', { 
+          fileName: file.name, 
+          folderId, 
+          modelId, 
+          userId,
+          fileSize: file.size,
+          fileType: file.type
+        });
         
         const response = await fetch('/api/google-drive/upload', {
           method: 'POST',
           body: formData,
         });
 
-        console.log('📥 [BOOST-PAGES] Respuesta del servidor:', response.status, response.statusText);
+        console.log('📥 [BOOST-PAGES] Respuesta del servidor:', {
+          status: response.status,
+          statusText: response.statusText,
+          ok: response.ok,
+          headers: Object.fromEntries(response.headers.entries())
+        });
 
-        const data = await response.json();
-        console.log('📦 [BOOST-PAGES] Datos de respuesta:', data);
+        // Verificar si la respuesta es exitosa antes de parsear JSON
+        let data;
+        try {
+          const responseText = await response.text();
+          console.log('📦 [BOOST-PAGES] Respuesta como texto (raw):', responseText);
+          
+          if (!responseText) {
+            throw new Error('Respuesta vacía del servidor');
+          }
+          
+          try {
+            data = JSON.parse(responseText);
+            console.log('📦 [BOOST-PAGES] Datos de respuesta (parseados):', data);
+          } catch (parseError) {
+            console.error('❌ [BOOST-PAGES] Error parseando JSON:', parseError);
+            console.error('❌ [BOOST-PAGES] Texto que falló al parsear:', responseText);
+            throw new Error(`Error al procesar respuesta del servidor (${response.status}): ${responseText.substring(0, 200)}`);
+          }
+        } catch (jsonError: any) {
+          console.error('❌ [BOOST-PAGES] Error procesando respuesta:', jsonError);
+          throw new Error(`Error al procesar respuesta del servidor: ${jsonError.message || response.status} ${response.statusText}`);
+        }
+        
+        // Si la respuesta HTTP no es exitosa, tratar como error
+        if (!response.ok && !data) {
+          throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+        }
 
         if (data.success) {
           console.log('✅ [BOOST-PAGES] Archivo subido exitosamente:', data);
@@ -295,7 +332,16 @@ export default function BoostPagesModal({
       }
     } catch (err: any) {
       console.error('❌ [BOOST-PAGES] Error general al subir archivos:', err);
-      setError(`Error al subir archivos: ${err.message || 'Error desconocido'}`);
+      console.error('❌ [BOOST-PAGES] Detalles del error:', {
+        message: err.message,
+        stack: err.stack,
+        name: err.name,
+        cause: err.cause
+      });
+      
+      const errorMessage = err.message || 'Error desconocido al subir archivos';
+      setError(`Error al subir archivos: ${errorMessage}`);
+      
       // Marcar todos los archivos como error
       files.forEach(file => {
         setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'error' }));
