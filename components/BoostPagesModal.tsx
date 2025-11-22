@@ -477,22 +477,6 @@ export default function BoostPagesModal({
         {config.folderId && !editing && (
           <div className="space-y-4">
             
-            {/* Opción alternativa: Abrir en nueva pestaña */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
-                O si prefieres, puedes abrir el Google Drive en una nueva pestaña:
-              </p>
-              <a
-                href={config.folderUrl || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm text-center flex items-center justify-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Abrir Google Drive en nueva pestaña</span>
-              </a>
-            </div>
-
             {/* Vista previa con carpetas interactivas */}
             <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
@@ -626,6 +610,23 @@ export default function BoostPagesModal({
                 <li><strong>Google Drive:</strong> Abre el enlace para gestionar archivos manualmente.</li>
               </ul>
             </div>
+
+            {/* Opción alternativa: Abrir en nueva pestaña */}
+            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
+              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
+                O si prefieres, puedes abrir el Google Drive en una nueva pestaña:
+              </p>
+              <a
+                href={config.folderUrl || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm text-center flex items-center justify-center gap-2"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Abrir Google Drive en nueva pestaña</span>
+              </a>
+            </div>
+          </div>
           </div>
         )}
 
