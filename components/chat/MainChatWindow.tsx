@@ -95,6 +95,22 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         return;
       }
       
+      // Verificar antigüedad del mensaje (si tiene más de 60 segundos, ignorar)
+      // Esto evita que mensajes antiguos ejecuten acciones al recargar la página
+      const messageTime = new Date(lastMessage.created_at).getTime();
+      const now = new Date().getTime();
+      const isRecent = (now - messageTime) < 60000; // 60 segundos
+      
+      if (!isRecent) {
+        // Si es antiguo pero tiene acción, lo marcamos como procesado para no volver a chequearlo
+        if (lastMessage.sender_id === AIM_BOTTY_ID && 
+            typeof lastMessage.content === 'string' && 
+            lastMessage.content.includes('<<ACTION:')) {
+          processedMessageIdsRef.current.add(lastMessage.id);
+        }
+        return;
+      }
+      
       // Solo procesar mensajes del bot que contengan la acción
       if (lastMessage.sender_id === AIM_BOTTY_ID && 
           typeof lastMessage.content === 'string' && 
