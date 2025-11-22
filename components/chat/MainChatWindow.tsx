@@ -83,11 +83,17 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   // Estado para Boost Page Launcher
   const [showBoostModal, setShowBoostModal] = useState(false);
   const [boostModelInfo, setBoostModelInfo] = useState<{id: string, name: string, email: string} | null>(null);
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
   
   // Detectar acciones en los mensajes nuevos del bot
   useEffect(() => {
     if (messages && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
+      
+      // Si ya procesamos este mensaje, no hacer nada
+      if (processedMessageIdsRef.current.has(lastMessage.id)) {
+        return;
+      }
       
       // Solo procesar mensajes del bot que contengan la acción
       if (lastMessage.sender_id === AIM_BOTTY_ID && 
@@ -100,6 +106,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         if (match) {
           const [_, modelId, modelName, modelEmail] = match;
           console.log('🚀 [CHAT-LAUNCHER] Ejecutando acción Boost Page:', { modelId, modelName });
+          
+          // Marcar mensaje como procesado
+          processedMessageIdsRef.current.add(lastMessage.id);
           
           setBoostModelInfo({
             id: modelId,
