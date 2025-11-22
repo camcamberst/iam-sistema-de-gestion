@@ -469,23 +469,7 @@ export default function BoostPagesModal({
         {/* Acceso a Google Drive */}
         {config.folderId && !editing && (
           <div className="space-y-4">
-            {/* Componente de drag & drop para subir archivos */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4 bg-white dark:bg-gray-800">
-              <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center gap-2">
-                <Upload className="w-4 h-4" />
-                Subir fotos directamente
-              </h4>
-              <BoostPagesFileUpload
-                folderId={config.folderId}
-                modelId={modelId}
-                userId={userId}
-                onUploadComplete={() => {
-                  setSuccess('Archivos subidos correctamente');
-                  setTimeout(() => setSuccess(''), 3000);
-                }}
-              />
-            </div>
-
+            
             {/* Opción alternativa: Abrir en nueva pestaña */}
             <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
               <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
@@ -630,9 +614,9 @@ export default function BoostPagesModal({
                 📋 Instrucciones:
               </p>
               <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
-                <li><strong>Método 1:</strong> Arrastra fotos directamente sobre las carpetas en la vista previa</li>
-                <li><strong>Método 2:</strong> Usa el módulo &quot;Subir fotos directamente&quot; arriba</li>
-                <li><strong>Método 3:</strong> Abre Google Drive en nueva pestaña y arrastra allí</li>
+                <li><strong>Carga Masiva:</strong> Arrastra fotos a la zona superior para subirlas a TODAS las carpetas.</li>
+                <li><strong>Carga Individual:</strong> Arrastra fotos sobre una carpeta específica.</li>
+                <li><strong>Google Drive:</strong> Abre el enlace para gestionar archivos manualmente.</li>
               </ul>
             </div>
           </div>
