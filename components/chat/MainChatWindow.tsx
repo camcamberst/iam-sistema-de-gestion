@@ -94,6 +94,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       if (processedMessageIdsRef.current.has(lastMessage.id)) {
         return;
       }
+
+      // Verificar si ya fue procesado en localStorage (persistencia entre recargas)
+      const processedKey = `botty_action_processed_${lastMessage.id}`;
+      if (typeof window !== 'undefined' && localStorage.getItem(processedKey)) {
+        processedMessageIdsRef.current.add(lastMessage.id);
+        return;
+      }
       
       // Verificar antigüedad del mensaje (si tiene más de 60 segundos, ignorar)
       // Esto evita que mensajes antiguos ejecuten acciones al recargar la página
@@ -107,6 +114,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
             typeof lastMessage.content === 'string' && 
             lastMessage.content.includes('<<ACTION:')) {
           processedMessageIdsRef.current.add(lastMessage.id);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(processedKey, 'true');
+          }
         }
         return;
       }
@@ -123,8 +133,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
           const [_, modelId, modelName, modelEmail] = match;
           console.log('🚀 [CHAT-LAUNCHER] Ejecutando acción Boost Page:', { modelId, modelName });
           
-          // Marcar mensaje como procesado
+          // Marcar mensaje como procesado en memoria y localStorage
           processedMessageIdsRef.current.add(lastMessage.id);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(processedKey, 'true');
+          }
           
           setBoostModelInfo({
             id: modelId,
