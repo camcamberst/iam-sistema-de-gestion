@@ -72,8 +72,8 @@ export async function processBotResponse(
     // Extraer y guardar información relevante del mensaje
     await extractAndSaveMemory(userId, conversationId, messageContent, userContext);
 
-    // Generar respuesta con IA (con rate limiting)
-    const botResponse = await executeWithRateLimit(
+    // Generar respuesta con IA (con rate limiting) - Solo si no hubo cortocircuito
+    const botResponseRaw = await executeWithRateLimit(
       () => generateBotResponse(
         messageContent,
         userContext,
@@ -82,13 +82,13 @@ export async function processBotResponse(
       )
     );
 
-    // Crear mensaje del bot
+    // Crear mensaje del bot (Respuesta IA estándar)
     const { error: messageError } = await supabase
       .from('chat_messages')
       .insert({
         conversation_id: conversationId,
         sender_id: AIM_BOTTY_ID,
-        content: botResponse,
+        content: botResponseRaw, // Usar respuesta cruda de IA
         message_type: 'ai_response'
       });
 
