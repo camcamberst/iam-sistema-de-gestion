@@ -1115,13 +1115,24 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
               <p className="text-xs text-gray-300 mb-4">¿Estás seguro de que quieres eliminar esta conversación? Esta acción no se puede deshacer.</p>
               <div className="flex items-center gap-2">
                 <button
-                  onClick={() => setShowDeleteConfirm?.(null)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setShowDeleteConfirm?.(null);
+                  }}
                   className="flex-1 px-3 py-2 rounded-lg bg-gray-800 text-gray-200 hover:bg-gray-700 text-xs"
                 >
                   Cancelar
                 </button>
                 <button
-                  onClick={() => deleteConversation?.(showDeleteConfirm)}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    console.log('🔴 [MainChatWindow] Click en Eliminar confirmado. ID:', showDeleteConfirm);
+                    if (deleteConversation && showDeleteConfirm) {
+                      deleteConversation(showDeleteConfirm);
+                    } else {
+                      console.error('❌ [MainChatWindow] Función deleteConversation no disponible o ID inválido');
+                    }
+                  }}
                   className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"
                 >
                   Eliminar

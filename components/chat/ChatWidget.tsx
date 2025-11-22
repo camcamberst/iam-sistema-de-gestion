@@ -787,9 +787,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Eliminar conversación
   const deleteConversation = async (conversationId: string) => {
-    if (!session) return;
+    console.log('🗑️ [ChatWidget] Solicitud de eliminación para conversación:', conversationId);
+    
+    if (!session) {
+      console.error('❌ [ChatWidget] Error: No hay sesión activa para eliminar conversación');
+      return;
+    }
     
     try {
+      console.log('⏳ [ChatWidget] Enviando petición DELETE a API...');
       const response = await fetch(`/api/chat/conversations?conversation_id=${conversationId}`, {
         method: 'DELETE',
         headers: {
@@ -799,7 +805,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        console.log('🗑️ [ChatWidget] Conversación eliminada exitosamente');
+        console.log('✅ [ChatWidget] Conversación eliminada exitosamente');
         
         // Recargar conversaciones para actualizar la lista
         await loadConversations();
@@ -814,10 +820,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         setShowDeleteConfirm(null);
       } else {
-        console.error('❌ [ChatWidget] Error eliminando conversación:', data.error);
+        console.error('❌ [ChatWidget] Error eliminando conversación (API):', data.error);
       }
     } catch (error) {
-      console.error('❌ [ChatWidget] Error eliminando conversación:', error);
+      console.error('❌ [ChatWidget] Error eliminando conversación (Network/Code):', error);
     }
   };
 
