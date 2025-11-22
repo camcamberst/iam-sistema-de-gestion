@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Upload, Folder, Settings, ExternalLink, AlertCircle, CheckCircle, Loader2 } from 'lucide-react';
+import { X, Upload, Folder, Settings, ExternalLink, AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 import StandardModal from '@/components/ui/StandardModal';
 import BoostPagesFileUpload from '@/components/BoostPagesFileUpload';
 
@@ -44,6 +44,7 @@ export default function BoostPagesModal({
   const [draggedOverFolder, setDraggedOverFolder] = useState<string | null>(null);
   const [uploadingToFolder, setUploadingToFolder] = useState<string | null>(null);
   const [uploadStatus, setUploadStatus] = useState<Record<string, 'uploading' | 'success' | 'error'>>({});
+  const [isConfigExpanded, setIsConfigExpanded] = useState(false);
 
   // Extraer folder ID de la URL de Google Drive
   const extractFolderId = (url: string): string | null => {
@@ -360,108 +361,114 @@ export default function BoostPagesModal({
           </div>
         </div>
 
-        {/* Configuración de Google Drive */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-3">
+        {/* Configuración de Google Drive (Collapsible) */}
+        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
+          <div 
+            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
+            onClick={() => setIsConfigExpanded(!isConfigExpanded)}
+          >
             <div className="flex items-center gap-2">
+              {isConfigExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
               <Folder className="w-5 h-5 text-gray-600 dark:text-gray-400" />
               <h4 className="font-medium text-gray-900 dark:text-gray-100">Configuración de Google Drive</h4>
             </div>
+            
             {!editing && config.folderUrl && (
-              <button
-                onClick={() => setEditing(true)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 flex items-center gap-1"
-              >
-                <Settings className="w-4 h-4" />
-                Editar
-              </button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
+                  <CheckCircle className="w-3 h-3" />
+                  <span>Conectado</span>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setEditing(true);
+                    setIsConfigExpanded(true);
+                  }}
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1"
+                >
+                  <Settings className="w-4 h-4" />
+                </button>
+              </div>
             )}
           </div>
 
-          {loading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Cargando configuración...</p>
-            </div>
-          ) : editing ? (
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  URL de la carpeta de Google Drive
-                </label>
-                <input
-                  type="text"
-                  value={newFolderUrl}
-                  onChange={(e) => setNewFolderUrl(e.target.value)}
-                  placeholder="https://drive.google.com/drive/folders/..."
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                  Ingresa el enlace completo de la carpeta de Google Drive donde se encuentran las carpetas de cada plataforma
-                </p>
-              </div>
-              {error && (
-                <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                  <AlertCircle className="w-4 h-4" />
-                  {error}
+          {/* Contenido del acordeón */}
+          {(isConfigExpanded || editing || !config.folderUrl) && (
+            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
+              {loading ? (
+                <div className="text-center py-4">
+                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Cargando configuración...</p>
+                </div>
+              ) : editing ? (
+                <div className="space-y-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                      URL de la carpeta de Google Drive
+                    </label>
+                    <input
+                      type="text"
+                      value={newFolderUrl}
+                      onChange={(e) => setNewFolderUrl(e.target.value)}
+                      placeholder="https://drive.google.com/drive/folders/..."
+                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    />
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      Ingresa el enlace completo de la carpeta de Google Drive donde se encuentran las carpetas de cada plataforma
+                    </p>
+                  </div>
+                  {error && (
+                    <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
+                      <AlertCircle className="w-4 h-4" />
+                      {error}
+                    </div>
+                  )}
+                  {success && (
+                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded">
+                      <CheckCircle className="w-4 h-4" />
+                      {success}
+                    </div>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveConfig}
+                      disabled={saving}
+                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                      {saving ? 'Guardando...' : 'Guardar'}
+                    </button>
+                    <button
+                      onClick={handleCancelEdit}
+                      disabled={saving}
+                      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : config.folderUrl ? (
+                <div className="space-y-2">
+                  <div className="bg-gray-50 dark:bg-gray-800 rounded p-2">
+                    <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{config.folderUrl}</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  <div className="text-center py-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      No hay configuración de Google Drive para esta modelo
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setEditing(true)}
+                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    Configurar Google Drive
+                  </button>
                 </div>
               )}
-              {success && (
-                <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                  <CheckCircle className="w-4 h-4" />
-                  {success}
-                </div>
-              )}
-              <div className="flex gap-2">
-                <button
-                  onClick={handleSaveConfig}
-                  disabled={saving}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                >
-                  {saving ? 'Guardando...' : 'Guardar'}
-                </button>
-                <button
-                  onClick={handleCancelEdit}
-                  disabled={saving}
-                  className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          ) : config.folderUrl ? (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
-                <CheckCircle className="w-4 h-4 text-green-500" />
-                <span>Configurado correctamente</span>
-              </div>
-              <div className="bg-gray-50 dark:bg-gray-800 rounded p-2">
-                <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{config.folderUrl}</p>
-              </div>
-              <a
-                href={config.folderUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
-              >
-                <ExternalLink className="w-4 h-4" />
-                Abrir en Google Drive
-              </a>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="text-center py-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  No hay configuración de Google Drive para esta modelo
-                </p>
-              </div>
-              <button
-                onClick={() => setEditing(true)}
-                className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-              >
-                Configurar Google Drive
-              </button>
             </div>
           )}
         </div>
