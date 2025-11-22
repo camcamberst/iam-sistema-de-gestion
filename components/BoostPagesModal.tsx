@@ -627,7 +627,6 @@ export default function BoostPagesModal({
               </a>
             </div>
           </div>
-          </div>
         )}
 
         {/* Mensaje cuando no hay configuración */}
