@@ -72,6 +72,84 @@ export async function processBotResponse(
     // Extraer y guardar información relevante del mensaje
     await extractAndSaveMemory(userId, conversationId, messageContent, userContext);
 
+    // Detección de intención especial: Boost Page
+    let actionTag = '';
+    
+    // 1. Detección explícita con comando (Prioridad ALTA)
+    // Ejemplos: /boost holly, /boostpage hollyrogers
+    const commandMatch = messageContent.match(/^\/(?:boost|boostpage)\s+(.+)/i);
+    
+    // 2. Detección de lenguaje natural (Prioridad MEDIA)
+    // Ejemplos: boost page a holly, subir fotos para holly
+    const naturalMatch = messageContent.match(/(?:boost page|subir fotos?|cargar fotos?|boost)(?:\s+(?:a|para|de))?\s+([a-zA-Z0-9áéíóúÁÉÍÓÚñÑ\s@._-]+)/i);
+    
+    const boostMatch = commandMatch || naturalMatch;
+    
+    if (boostMatch && (userContext.role === 'admin' || userContext.role === 'superadmin')) {
+      const modelNameRaw = boostMatch[1].trim();
+      // Limpiar un poco el nombre (quitar "la modelo", etc si quedaron)
+      const modelName = modelNameRaw.replace(/^(a|la|el|para)\s+/i, '');
+      
+      console.log(`🔍 [BOTTY-INTENT] Detectado intento de Boost Page para: "${modelName}"`);
+      
+      // Buscar modelo en la base de datos
+      // Buscar por nombre completo O por email (parte antes del @ o email completo)
+      // IMPORTANTE: En algunos sistemas el rol es 'modelo' y en otros 'model', buscamos ambos para asegurar
+      const { data: models, error: searchError } = await supabase
+        .from('users')
+        .select('id, full_name, email')
+        .in('role', ['modelo', 'model', 'user']) // Ampliar búsqueda de roles para asegurar
+        .or(`full_name.ilike.%${modelName}%,email.ilike.%${modelName}%`)
+        .limit(1);
+
+      if (searchError) {
+        console.error('❌ [BOTTY-INTENT] Error buscando modelo:', searchError);
+      }
+
+      if (models && models.length > 0) {
+        const model = models[0];
+        console.log(`✅ [BOTTY-INTENT] Modelo encontrada: ${model.full_name} (${model.email})`);
+        
+        // CORTOCIRCUITO: Generar respuesta directa SIN llamar a la IA
+        // Esto garantiza que la acción se ejecute y ahorra tokens/latencia
+        const directResponse = `¡Entendido! Abriendo herramienta Boost Page para **${model.full_name}**...`;
+        actionTag = `\n\n<<ACTION:OPEN_BOOST_MODAL|${model.id}|${model.full_name}|${model.email}>>`;
+        
+        // Guardar mensaje y retornar (skip Gemini)
+        const { error: messageError } = await supabase
+          .from('chat_messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: AIM_BOTTY_ID,
+            content: directResponse + actionTag,
+            message_type: 'ai_response'
+          });
+
+        if (messageError) {
+          console.error('❌ [BOTTY-DIRECT] Error guardando respuesta directa:', messageError);
+          return false;
+        }
+        
+        console.log('✅ [BOTTY-DIRECT] Respuesta DIRECTA (intención detectada) enviada exitosamente');
+        return true;
+
+      } else {
+         console.log(`⚠️ [BOTTY-INTENT] No se encontró modelo con nombre/email: "${modelName}"`);
+         // Si usó el comando explícito /boost y falló, debemos informarle
+         if (commandMatch) {
+            const errorResponse = `No pude encontrar a ninguna modelo con el nombre o email "${modelName}". Por favor verifica que esté bien escrito.`;
+            await supabase.from('chat_messages').insert({
+                conversation_id: conversationId,
+                sender_id: AIM_BOTTY_ID,
+                content: errorResponse,
+                message_type: 'ai_response'
+            });
+            return true;
+         }
+         // Si fue lenguaje natural, dejamos que la IA responda
+      }
+    }
+
     // Generar respuesta con IA (con rate limiting) - Solo si no hubo cortocircuito
     const botResponseRaw = await executeWithRateLimit(
       () => generateBotResponse(
