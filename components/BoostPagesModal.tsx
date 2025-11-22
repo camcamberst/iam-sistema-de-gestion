@@ -240,116 +240,103 @@ export default function BoostPagesModal({
       setUploadingToFolder(folderId);
       setError('');
 
+      // Si el folderId es 'broadcast', subimos a TODAS las carpetas
+      const targetFolders = folderId === 'broadcast' ? folders : [{ id: folderId, name: '' }];
+      
+      console.log('🚀 [BOOST-PAGES] Iniciando carga...', { 
+        mode: folderId === 'broadcast' ? 'BROADCAST' : 'SINGLE', 
+        targetFoldersCount: targetFolders.length,
+        filesCount: files.length 
+      });
+
       for (const file of files) {
-        setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'uploading' }));
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folderId', folderId);
-        formData.append('modelId', modelId);
-        formData.append('userId', userId);
-
-        console.log('📤 [BOOST-PAGES] Subiendo archivo:', { 
-          fileName: file.name, 
-          folderId, 
-          modelId, 
-          userId,
-          fileSize: file.size,
-          fileType: file.type
-        });
-        
-        const response = await fetch('/api/google-drive/upload', {
-          method: 'POST',
-          body: formData,
-        });
-
-        console.log('📥 [BOOST-PAGES] Respuesta del servidor:', {
-          status: response.status,
-          statusText: response.statusText,
-          ok: response.ok,
-          headers: Object.fromEntries(response.headers.entries())
-        });
-
-        // Verificar si la respuesta es exitosa antes de parsear JSON
-        let data;
-        try {
-          const responseText = await response.text();
-          console.log('📦 [BOOST-PAGES] Respuesta como texto (raw):', responseText);
+        for (const targetFolder of targetFolders) {
+          const currentFolderId = targetFolder.id;
+          const uploadKey = `${currentFolderId}-${file.name}`;
           
-          if (!responseText) {
-            throw new Error('Respuesta vacía del servidor');
-          }
+          setUploadStatus(prev => ({ ...prev, [uploadKey]: 'uploading' }));
+
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('folderId', currentFolderId);
+          formData.append('modelId', modelId);
+          formData.append('userId', userId);
+
+          console.log(`📤 [BOOST-PAGES] Subiendo archivo a folder ${currentFolderId}:`, file.name);
           
+          const response = await fetch('/api/google-drive/upload', {
+            method: 'POST',
+            body: formData,
+          });
+
+          let data;
           try {
+            const responseText = await response.text();
+            if (!responseText) throw new Error('Respuesta vacía del servidor');
             data = JSON.parse(responseText);
-            console.log('📦 [BOOST-PAGES] Datos de respuesta (parseados):', data);
-          } catch (parseError) {
-            console.error('❌ [BOOST-PAGES] Error parseando JSON:', parseError);
-            console.error('❌ [BOOST-PAGES] Texto que falló al parsear:', responseText);
-            throw new Error(`Error al procesar respuesta del servidor (${response.status}): ${responseText.substring(0, 200)}`);
+          } catch (jsonError: any) {
+            console.error('❌ [BOOST-PAGES] Error procesando respuesta:', jsonError);
+            throw new Error(`Error al procesar respuesta del servidor: ${jsonError.message || response.status}`);
           }
-        } catch (jsonError: any) {
-          console.error('❌ [BOOST-PAGES] Error procesando respuesta:', jsonError);
-          throw new Error(`Error al procesar respuesta del servidor: ${jsonError.message || response.status} ${response.statusText}`);
-        }
-        
-        // Si la respuesta HTTP no es exitosa, tratar como error
-        if (!response.ok && !data) {
-          throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-        }
+          
+          if (!response.ok && !data) {
+            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
+          }
 
-        if (data.success) {
-          console.log('✅ [BOOST-PAGES] Archivo subido exitosamente:', data);
-          setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'success' }));
-          setSuccess(`Archivo ${file.name} subido correctamente a la carpeta`);
-          setTimeout(() => {
-            setSuccess('');
-            setUploadStatus(prev => {
-              const newStatus = { ...prev };
-              delete newStatus[`${folderId}-${file.name}`];
-              return newStatus;
-            });
-          }, 3000);
-        } else {
-          console.error('❌ [BOOST-PAGES] Error al subir archivo:', data);
-          setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'error' }));
-          if (data.requiresAuth) {
-            console.log('🔐 [BOOST-PAGES] Autenticación requerida, iniciando OAuth...');
-            const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
-            const authData = await authResponse.json();
-            if (authData.success && authData.authUrl) {
-              window.location.href = authData.authUrl;
-              return;
-            } else {
-              setError('Error al iniciar autenticación con Google Drive');
+          if (data.success) {
+            console.log(`✅ [BOOST-PAGES] Archivo subido a ${currentFolderId} exitosamente`);
+            setUploadStatus(prev => ({ ...prev, [uploadKey]: 'success' }));
+            
+            // Solo mostrar toast de éxito si es carga individual o al final del broadcast
+            if (folderId !== 'broadcast') {
+                setSuccess(`Archivo ${file.name} subido correctamente`);
+                setTimeout(() => {
+                    setSuccess('');
+                    setUploadStatus(prev => {
+                    const newStatus = { ...prev };
+                    delete newStatus[uploadKey];
+                    return newStatus;
+                    });
+                }, 3000);
             }
           } else {
-            const errorMessage = data.error || `Error al subir ${file.name}`;
-            console.error('❌ [BOOST-PAGES] Error:', errorMessage);
-            setError(errorMessage);
+            console.error(`❌ [BOOST-PAGES] Error al subir a ${currentFolderId}:`, data);
+            setUploadStatus(prev => ({ ...prev, [uploadKey]: 'error' }));
+            
+            if (data.requiresAuth) {
+              // ... lógica de auth existente
+              const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
+              const authData = await authResponse.json();
+              if (authData.success && authData.authUrl) {
+                window.location.href = authData.authUrl;
+                return;
+              } else {
+                setError('Error al iniciar autenticación con Google Drive');
+              }
+            } else {
+               if (folderId !== 'broadcast') setError(data.error || `Error al subir ${file.name}`);
+            }
           }
         }
       }
+      
+      if (folderId === 'broadcast') {
+        setSuccess(`¡Carga masiva completada! Archivos distribuidos en ${targetFolders.length} carpetas.`);
+        setTimeout(() => {
+            setSuccess('');
+            // Limpiar estados
+            setUploadStatus({});
+        }, 4000);
+      }
+
     } catch (err: any) {
       console.error('❌ [BOOST-PAGES] Error general al subir archivos:', err);
-      console.error('❌ [BOOST-PAGES] Detalles del error:', {
-        message: err.message,
-        stack: err.stack,
-        name: err.name,
-        cause: err.cause
-      });
-      
-      const errorMessage = err.message || 'Error desconocido al subir archivos';
-      setError(`Error al subir archivos: ${errorMessage}`);
-      
-      // Marcar todos los archivos como error
-      files.forEach(file => {
-        setUploadStatus(prev => ({ ...prev, [`${folderId}-${file.name}`]: 'error' }));
-      });
+      // ... manejo de error existente
+      setError(err.message || 'Error desconocido al subir archivos');
     } finally {
       setUploadingToFolder(null);
     }
-  }, [modelId, userId]);
+  }, [modelId, userId, folders]);
 
   return (
     <StandardModal
@@ -526,6 +513,39 @@ export default function BoostPagesModal({
                   Arrastra archivos directamente sobre las carpetas
                 </span>
               </div>
+              
+              {/* ZONA DE BROADCAST / CARGA MASIVA */}
+              {folders.length > 0 && !loadingFolders && (
+                <div 
+                  className={`
+                    mx-4 mt-4 mb-2 border-2 border-dashed rounded-xl p-6 transition-all duration-200 cursor-pointer text-center
+                    bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20
+                    ${draggedOverFolder === 'broadcast'
+                      ? 'border-indigo-500 scale-[1.02] shadow-lg ring-2 ring-indigo-400/30'
+                      : 'border-indigo-300 dark:border-indigo-700 hover:border-indigo-400 dark:hover:border-indigo-500'
+                    }
+                  `}
+                  onDragEnter={(e) => handleFolderDragEnter(e, 'broadcast')}
+                  onDragLeave={handleFolderDragLeave}
+                  onDragOver={handleFolderDragOver}
+                  onDrop={(e) => handleFolderDrop(e, 'broadcast')}
+                >
+                  <div className="flex flex-col items-center justify-center gap-2">
+                    <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full">
+                      <Upload className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                    </div>
+                    <div>
+                        <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-200">
+                            🚀 Carga Masiva / Difusión
+                        </h3>
+                        <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
+                            Arrastra tu foto aquí para subirla a <strong>TODAS las {folders.length} carpetas</strong> al mismo tiempo
+                        </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               <div className="bg-white dark:bg-gray-900 p-4" style={{ maxHeight: '400px', overflowY: 'auto' }}>
                 {loadingFolders ? (
                   <div className="flex items-center justify-center py-8">
