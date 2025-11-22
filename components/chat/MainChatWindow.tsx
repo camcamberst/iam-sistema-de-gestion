@@ -5,6 +5,7 @@ import StandardModal from '@/components/ui/StandardModal';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 import { renderElegantAvatar } from '@/lib/chat/user-avatar';
 import Badge from './Badge';
+import BoostPagesModal from '@/components/BoostPagesModal'; // Importar BoostPagesModal
 
 interface MainChatWindowProps {
   onClose: () => void;
@@ -78,6 +79,44 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   // Estado para emoji picker
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Estado para Boost Page Launcher
+  const [showBoostModal, setShowBoostModal] = useState(false);
+  const [boostModelInfo, setBoostModelInfo] = useState<{id: string, name: string, email: string} | null>(null);
+  
+  // Detectar acciones en los mensajes nuevos del bot
+  useEffect(() => {
+    if (messages && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      
+      // Solo procesar mensajes del bot que contengan la acción
+      if (lastMessage.sender_id === AIM_BOTTY_ID && 
+          typeof lastMessage.content === 'string' && 
+          lastMessage.content.includes('<<ACTION:OPEN_BOOST_MODAL')) {
+        
+        // Extraer información de la acción
+        const match = lastMessage.content.match(/<<ACTION:OPEN_BOOST_MODAL\|([^|]+)\|([^|]+)\|([^>]+)>>/);
+        
+        if (match) {
+          const [_, modelId, modelName, modelEmail] = match;
+          console.log('🚀 [CHAT-LAUNCHER] Ejecutando acción Boost Page:', { modelId, modelName });
+          
+          setBoostModelInfo({
+            id: modelId,
+            name: modelName,
+            email: modelEmail
+          });
+          setShowBoostModal(true);
+        }
+      }
+    }
+  }, [messages]);
+
+  // Función para limpiar el contenido del mensaje (quitar tags de acción)
+  const cleanMessageContent = (content: string) => {
+    if (!content) return '';
+    return content.replace(/<<ACTION:[^>]+>>/g, '').trim();
+  };
   
   // Emojis más comunes organizados por categorías
   const emojiCategories = {
@@ -754,7 +793,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                           </span>
                           <p className="text-xs leading-relaxed">
                             {searchTerm ? (
-                              message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
+                              cleanMessageContent(message.content)?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
                                 part.toLowerCase() === searchTerm.toLowerCase() ? (
                                   <mark key={i} className="bg-yellow-500/40 text-yellow-200 rounded px-0.5">
                                     {part}
@@ -764,7 +803,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                 )
                               )
                             ) : (
-                              message.content
+                              cleanMessageContent(message.content)
                             )}
                           </p>
                         </div>
@@ -799,7 +838,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                         <div className="px-3.5 py-2.5">
                           <p className={`text-sm leading-[1.4] ${message.sender_id === userId ? 'text-white' : 'text-gray-50'}`}>
                             {searchTerm ? (
-                              message.content?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
+                              cleanMessageContent(message.content)?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
                                 part.toLowerCase() === searchTerm.toLowerCase() ? (
                                   <mark key={i} className={`${message.sender_id === userId ? 'bg-blue-400/30 text-blue-100' : 'bg-yellow-500/30 text-yellow-200'} rounded px-0.5`}>
                                     {part}
@@ -809,7 +848,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                 )
                               )
                             ) : (
-                              message.content
+                              cleanMessageContent(message.content)
                             )}
                           </p>
                         </div>
@@ -1059,6 +1098,21 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       <div className="relative">
         <div id="aim-embedded-windows" className="absolute bottom-0 left-0 right-0" />
       </div>
+
+      {/* Boost Page Modal Launcher */}
+      {showBoostModal && boostModelInfo && userId && (
+        <BoostPagesModal
+          isOpen={showBoostModal}
+          onClose={() => {
+            setShowBoostModal(false);
+            setBoostModelInfo(null);
+          }}
+          modelId={boostModelInfo.id}
+          modelName={boostModelInfo.name}
+          modelEmail={boostModelInfo.email}
+          userId={userId}
+        />
+      )}
     </div>
   );
 };
