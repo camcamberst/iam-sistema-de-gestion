@@ -97,9 +97,9 @@ export async function processBotResponse(
       // IMPORTANTE: En algunos sistemas el rol es 'modelo' y en otros 'model', buscamos ambos para asegurar
       const { data: models, error: searchError } = await supabase
         .from('users')
-        .select('id, full_name, email')
+        .select('id, name, email')
         .in('role', ['modelo', 'model', 'user']) // Ampliar búsqueda de roles para asegurar
-        .or(`full_name.ilike.%${modelName}%,email.ilike.%${modelName}%`)
+        .or(`name.ilike.%${modelName}%,email.ilike.%${modelName}%`)
         .limit(1);
 
       if (searchError) {
@@ -108,12 +108,12 @@ export async function processBotResponse(
 
       if (models && models.length > 0) {
         const model = models[0];
-        console.log(`✅ [BOTTY-INTENT] Modelo encontrada: ${model.full_name} (${model.email})`);
+        console.log(`✅ [BOTTY-INTENT] Modelo encontrada: ${model.name} (${model.email})`);
         
         // CORTOCIRCUITO: Generar respuesta directa SIN llamar a la IA
         // Esto garantiza que la acción se ejecute y ahorra tokens/latencia
-        const directResponse = `¡Entendido! Abriendo herramienta Boost Page para **${model.full_name}**...`;
-        actionTag = `\n\n<<ACTION:OPEN_BOOST_MODAL|${model.id}|${model.full_name}|${model.email}>>`;
+        const directResponse = `¡Entendido! Abriendo herramienta Boost Page para **${model.name}**...`;
+        actionTag = `\n\n<<ACTION:OPEN_BOOST_MODAL|${model.id}|${model.name}|${model.email}>>`;
         
         // Guardar mensaje y retornar (skip Gemini)
         const { error: messageError } = await supabase
