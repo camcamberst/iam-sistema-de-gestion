@@ -49,7 +49,14 @@ export async function GET(request: NextRequest) {
 
     } catch (authError: any) {
       // Si el error es de autenticación, retornar información para iniciar OAuth
-      if (authError.message.includes('no autenticado') || authError.message.includes('no está configurado')) {
+      // Incluimos "Error al refrescar token de acceso" y "invalid_grant"
+      if (authError.message.includes('no autenticado') || 
+          authError.message.includes('no está configurado') ||
+          authError.message.includes('Error al refrescar token') ||
+          authError.message.includes('invalid_grant')) {
+        
+        console.log('🔐 [GOOGLE-DRIVE-FOLDERS] Autenticación requerida:', authError.message);
+        
         return NextResponse.json({
           success: false,
           error: authError.message,
