@@ -85,7 +85,7 @@ export async function processBotResponse(
     
     const boostMatch = commandMatch || naturalMatch;
     
-    if (boostMatch && (userContext.role === 'admin' || userContext.role === 'superadmin')) {
+    if (boostMatch && (userContext.role === 'admin' || userContext.role === 'super_admin')) {
       const modelNameRaw = boostMatch[1].trim();
       // Limpiar un poco el nombre (quitar "la modelo", etc si quedaron)
       const modelName = modelNameRaw.replace(/^(a|la|el|para)\s+/i, '');
