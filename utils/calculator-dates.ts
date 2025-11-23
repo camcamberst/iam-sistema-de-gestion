@@ -26,6 +26,29 @@ export const getCalculatorDateTime = (): string => {
 };
 
 /**
+ * Obtiene la fecha de inicio del período actual basado en la fecha de Colombia
+ * Retorna el día 1 o 16 del mes actual
+ * @returns Fecha en formato YYYY-MM-DD
+ */
+export const getColombiaPeriodStartDate = (): string => {
+  const colombiaDate = getColombiaDate();
+  const [year, month, day] = colombiaDate.split('-').map(Number);
+  
+  const startDay = day <= 15 ? 1 : 16;
+  return `${year}-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
+};
+
+/**
+ * Obtiene la fecha de ayer en Colombia
+ * @returns Fecha en formato YYYY-MM-DD
+ */
+export const getColombiaYesterday = (): string => {
+  const date = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  date.setDate(date.getDate() - 1);
+  return date.toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+};
+
+/**
  * Obtiene la fecha actual en formato YYYY-MM-DD usando Colombia
  * @returns Fecha en formato YYYY-MM-DD (Colombia)
  */

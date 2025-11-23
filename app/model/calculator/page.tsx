@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import { isClosureDay, isEarlyFreezeRelevantDay } from '@/utils/period-closure-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
@@ -53,15 +53,16 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
-  // 🔧 Usar fecha de Colombia para el período - siempre actualizada
-  const [periodDate, setPeriodDate] = useState<string>(getColombiaDate());
+  // 🔧 Usar fecha de INICIO DEL PERIODO para cargar/guardar siempre en el mismo "bucket"
+  // Esto evita que los valores se reinicien diariamente.
+  const [periodDate, setPeriodDate] = useState<string>(getColombiaPeriodStartDate());
   
-  // 🔧 CRÍTICO: Actualizar periodDate cada vez que se monte el componente para usar fecha actual
+  // 🔧 CRÍTICO: Actualizar periodDate cada vez que se monte el componente
   useEffect(() => {
-    const currentDate = getColombiaDate();
-    if (periodDate !== currentDate) {
-      console.log('🔄 [CALCULATOR] Actualizando periodDate:', { anterior: periodDate, nueva: currentDate });
-      setPeriodDate(currentDate);
+    const currentPeriodDate = getColombiaPeriodStartDate();
+    if (periodDate !== currentPeriodDate) {
+      console.log('🔄 [CALCULATOR] Actualizando periodDate:', { anterior: periodDate, nueva: currentPeriodDate });
+      setPeriodDate(currentPeriodDate);
     }
   }, []); // Solo al montar
   // Mantener valores escritos como texto para permitir decimales con coma y punto
@@ -689,7 +690,9 @@ export default function ModelCalculatorPage() {
           setPlatforms(updatedPlatforms);
 
           // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
-          const yesterdayDate = new Date(new Date(periodDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          // Usamos la fecha REAL de hoy (Colombia) menos un día para obtener "ayer"
+          const todayDateVal = getColombiaDate();
+          const yesterdayDate = new Date(new Date(todayDateVal).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
           console.log('🔍 [CALCULATOR] Loading yesterday values for date:', yesterdayDate);
           
           try {
