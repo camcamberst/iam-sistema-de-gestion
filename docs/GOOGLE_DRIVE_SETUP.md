@@ -99,3 +99,7 @@ Mientras tanto, los usuarios pueden usar la opción alternativa de abrir Google 
 - Usa HTTPS en producción
 - Implementa rate limiting para evitar abusos
 
+
+
+
+

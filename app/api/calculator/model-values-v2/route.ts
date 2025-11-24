@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -12,7 +12,7 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const periodDate = searchParams.get('periodDate') || getColombiaDate();
+  const periodDate = searchParams.get('periodDate') || getColombiaPeriodStartDate();
 
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
@@ -83,9 +83,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId y values son requeridos' }, { status: 400 });
     }
 
-    // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha de Colombia para consistencia
-    const effectiveDate = getColombiaDate();
-    console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values });
+    // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha del PERIODO enviada por el cliente (1 o 16)
+    // Esto asegura que los valores se mantengan durante toda la quincena
+    // Si no viene, calculamos el inicio del periodo actual
+    const effectiveDate = periodDate || getColombiaPeriodStartDate();
+    console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values, receivedPeriodDate: periodDate });
 
     const rows = Object.entries(values).map(([platformId, value]) => ({
       model_id: modelId,

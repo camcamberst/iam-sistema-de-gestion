@@ -32,3 +32,7 @@ AND column_name = 'google_drive_folder_url';
 -- SET google_drive_folder_url = 'https://drive.google.com/drive/folders/1_Dg8zUvjCAkGpOqa1ZngFyLx0XKT8lWf'
 -- WHERE id = '0976437e-15e6-424d-8122-afb65580239a';
 
+
+
+
+

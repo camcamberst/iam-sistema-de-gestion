@@ -688,7 +688,7 @@ export default function UsersListPage() {
                                 >
                                   <div className="text-white flex items-center justify-center">
                                     {symbol}
-                                  </div>
+                            </div>
                                 </div>
                               );
                             })()}
@@ -1163,24 +1163,24 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
           {/* Grupos - ancho completo (oculto para gestor y fotografia) */}
           {formData.role !== 'gestor' && formData.role !== 'fotografia' && (
-            <div>
-              <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
-              <AppleDropdown
-                options={groups.map(group => ({
-                  value: group.id,
-                  label: group.name
-                }))}
-                value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
-                onChange={handleGroupChange}
-                placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
-                className="text-sm"
-              />
-              {restrictionMessage && (
-                <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
-                  {restrictionMessage}
-                </div>
-              )}
-            </div>
+          <div>
+            <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Grupos</label>
+            <AppleDropdown
+              options={groups.map(group => ({
+                value: group.id,
+                label: group.name
+              }))}
+              value={formData.group_ids.length > 0 ? formData.group_ids[0] : ''}
+              onChange={handleGroupChange}
+              placeholder={formData.role === 'modelo' ? 'Selecciona un grupo' : 'Selecciona un grupo'}
+              className="text-sm"
+            />
+            {restrictionMessage && (
+              <div className="mt-3 text-sm text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-200 dark:border-blue-700/50">
+                {restrictionMessage}
+              </div>
+            )}
+          </div>
           )}
           
           {/* Mostrar mensaje de restricción para gestor y fotografia */}

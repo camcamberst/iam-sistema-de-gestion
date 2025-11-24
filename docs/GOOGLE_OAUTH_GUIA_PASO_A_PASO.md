@@ -23,7 +23,7 @@ Esta guía te llevará paso a paso para configurar Google OAuth 2.0 desde cero.
 
 1. En el menú lateral izquierdo, busca **"APIs & Services"** (APIs y Servicios)
 2. Haz clic en **"Library"** (Biblioteca)
-3. En el buscador, escribe: **"Google Drive API"**
+3. En el buscador, escribe: **"glGooe Drive API"**
 4. Haz clic en el resultado **"Google Drive API"**
 5. Haz clic en el botón azul **"ENABLE"** (Habilitar)
 6. Espera unos segundos - verás un mensaje de confirmación
@@ -47,10 +47,12 @@ Esta guía te llevará paso a paso para configurar Google OAuth 2.0 desde cero.
    - Más adelante agregaremos los scopes necesarios
 
 5. **Paso 3: Test users** (Usuarios de prueba):
-   - Si estás en modo "Testing" (Pruebas), agrega tu email como usuario de prueba
-   - Haz clic en **"ADD USERS"** (Agregar usuarios)
-   - Ingresa tu email
-   - Haz clic en **"ADD"** (Agregar)
+   - ⚠️ **IMPORTANTE**: Si estás en modo "Testing" (Pruebas), DEBES agregar usuarios de prueba
+   - Haz clic en **"+ ADD USERS"** o **"+ AGREGAR USUARIOS"**
+   - Agrega tu email: **camcamberst@gmail.com** (o el email que uses para Google)
+   - Puedes agregar más emails si otros usuarios necesitan acceder
+   - Haz clic en **"ADD"** o **"AGREGAR"**
+   - **Sin usuarios de prueba, verás el error 403: access_denied**
    - Haz clic en **"SAVE AND CONTINUE"** (Guardar y continuar)
 
 6. **Paso 4: Summary** (Resumen):
