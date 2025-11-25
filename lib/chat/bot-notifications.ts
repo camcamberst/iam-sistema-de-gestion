@@ -218,7 +218,7 @@ export async function notifyAdminsAnticipoRequest(
     const superAdminIds = superAdmins?.map(sa => sa.id) || [];
     
     // Combinar y eliminar duplicados
-    const allAdminIds = [...new Set([...adminIds, ...superAdminIds])];
+    const allAdminIds = Array.from(new Set([...adminIds, ...superAdminIds]));
 
     if (allAdminIds.length === 0) {
       console.warn('⚠️ [NOTIFY-ADMINS] No se encontraron admins para notificar');
