@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { canRequestAnticipo } from '@/utils/anticipo-restrictions';
+import { notifyAnticipoPending, notifyAdminsAnticipoRequest } from '@/lib/chat/bot-notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -354,6 +355,30 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [API ANTICIPOS] Anticipo creado:', newAnticipo.id);
+
+    // Notificar a la modelo que su solicitud fue enviada
+    try {
+      await notifyAnticipoPending(model_id, newAnticipo.id);
+      console.log('✅ [API ANTICIPOS] Notificación enviada a la modelo');
+    } catch (error) {
+      console.error('⚠️ [API ANTICIPOS] Error notificando a la modelo:', error);
+      // No fallar la creación del anticipo si falla la notificación
+    }
+
+    // Notificar a los admins correspondientes
+    try {
+      const modelName = (newAnticipo.model as any)?.name || 'Modelo';
+      await notifyAdminsAnticipoRequest(
+        model_id,
+        modelName,
+        newAnticipo.id,
+        monto_solicitado
+      );
+      console.log('✅ [API ANTICIPOS] Notificaciones enviadas a admins');
+    } catch (error) {
+      console.error('⚠️ [API ANTICIPOS] Error notificando a admins:', error);
+      // No fallar la creación del anticipo si falla la notificación
+    }
 
     return NextResponse.json({
       success: true,

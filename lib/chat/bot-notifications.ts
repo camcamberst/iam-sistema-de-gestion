@@ -155,5 +155,104 @@ export async function notifyNewAnnouncement(
   await sendBotNotification(userId, 'nueva_publicacion', customMessage);
 }
 
+// Notificar a admins cuando una modelo solicita un anticipo
+export async function notifyAdminsAnticipoRequest(
+  modelId: string,
+  modelName: string,
+  anticipoId: string,
+  montoSolicitado: number
+): Promise<void> {
+  try {
+    // Obtener información de la modelo
+    const { data: model } = await supabase
+      .from('users')
+      .select('id, name, email, role')
+      .eq('id', modelId)
+      .single();
+
+    if (!model) {
+      console.error('❌ [NOTIFY-ADMINS] Modelo no encontrada:', modelId);
+      return;
+    }
+
+    // Obtener grupos de la modelo
+    const { data: modelGroups } = await supabase
+      .from('user_groups')
+      .select('group_id')
+      .eq('user_id', modelId);
+
+    const groupIds = modelGroups?.map(g => g.group_id) || [];
+
+    // Obtener admins que deben ser notificados
+    let adminIds: string[] = [];
+
+    if (groupIds.length > 0) {
+      // Obtener admins de los grupos de la modelo
+      const { data: adminGroups } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .in('group_id', groupIds);
+
+      const adminGroupUserIds = adminGroups?.map(ag => ag.user_id) || [];
+
+      if (adminGroupUserIds.length > 0) {
+        // Obtener usuarios que son admins de esos grupos
+        const { data: admins } = await supabase
+          .from('users')
+          .select('id')
+          .in('id', adminGroupUserIds)
+          .in('role', ['admin', 'super_admin'])
+          .eq('is_active', true);
+
+        adminIds = admins?.map(a => a.id) || [];
+      }
+    }
+
+    // También notificar a todos los super_admins
+    const { data: superAdmins } = await supabase
+      .from('users')
+      .select('id')
+      .eq('role', 'super_admin')
+      .eq('is_active', true);
+
+    const superAdminIds = superAdmins?.map(sa => sa.id) || [];
+    
+    // Combinar y eliminar duplicados
+    const allAdminIds = [...new Set([...adminIds, ...superAdminIds])];
+
+    if (allAdminIds.length === 0) {
+      console.warn('⚠️ [NOTIFY-ADMINS] No se encontraron admins para notificar');
+      return;
+    }
+
+    console.log(`📢 [NOTIFY-ADMINS] Notificando a ${allAdminIds.length} admin(s) sobre solicitud de anticipo:`, {
+      modelId,
+      modelName,
+      anticipoId,
+      montoSolicitado,
+      adminIds: allAdminIds
+    });
+
+    // Formatear monto en COP
+    const montoFormateado = new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0
+    }).format(montoSolicitado);
+
+    // Notificar a cada admin
+    const notificationPromises = allAdminIds.map(adminId => {
+      const customMessage = `📋 Nueva solicitud de anticipo de **${modelName}** por ${montoFormateado}. Revisa la solicitud en "Gestión Anticipos > Solicitudes Pendientes".`;
+      return sendBotNotification(adminId, 'anticipo_pendiente', customMessage);
+    });
+
+    await Promise.all(notificationPromises);
+    console.log(`✅ [NOTIFY-ADMINS] Notificaciones enviadas a ${allAdminIds.length} admin(s)`);
+
+  } catch (error) {
+    console.error('❌ [NOTIFY-ADMINS] Error notificando admins:', error);
+  }
+}
+
 
 
