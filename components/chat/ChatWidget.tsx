@@ -1110,7 +1110,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     
     // Actualizar estado local inmediatamente para evitar mostrar notificaciones
     zeroUnreadForConversation(selectedConversation);
-  }, [isOpen, mainView, selectedConversation]);
+    
+    // 🔧 NUEVO: Marcar todos los mensajes de esta conversación como procesados
+    // Esto evita que aparezcan toasts al recargar si la conversación estaba abierta
+    const currentConv = conversations.find(c => c.id === selectedConversation);
+    if (currentConv?.last_message) {
+      processedMessageIdsRef.current.add(currentConv.last_message.id);
+      if (typeof window !== 'undefined') {
+        const processedArray = Array.from(processedMessageIdsRef.current);
+        const trimmedArray = processedArray.slice(-100);
+        localStorage.setItem('chat_processed_messages', JSON.stringify(trimmedArray));
+        processedMessageIdsRef.current = new Set(trimmedArray);
+      }
+    }
+  }, [isOpen, mainView, selectedConversation, conversations]);
 
   // Suscripción a tiempo real para mensajes nuevos
   useEffect(() => {
