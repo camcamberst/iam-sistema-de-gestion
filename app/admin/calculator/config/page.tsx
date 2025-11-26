@@ -22,6 +22,7 @@ interface Platform {
   discount_factor: number | null;
   tax_rate: number | null;
   direct_payout: boolean;
+  payment_frequency?: 'quincenal' | 'mensual'; // 🔧 NUEVO: Frecuencia de pago
 }
 
 // Porcentajes estandarizados por grupos
@@ -527,8 +528,53 @@ export default function ConfigCalculatorPage() {
                                   Disponible
                                 </span>
                               )}
+                              {/* 🔧 NUEVO: Indicador de plataforma mensual */}
+                              {platform.payment_frequency === 'mensual' && (
+                                <span className="text-xs px-2 py-1 rounded-full border bg-purple-100 text-purple-800 border-purple-200">
+                                  Mensual
+                                </span>
+                              )}
                             </div>
                             <p className="text-xs text-gray-500 dark:text-gray-400">{platform.description}</p>
+                            {/* 🔧 NUEVO: Checkbox para marcar como mensual */}
+                            <div className="flex items-center space-x-2 mt-2">
+                              <input
+                                type="checkbox"
+                                id={`monthly-${platform.id}`}
+                                checked={platform.payment_frequency === 'mensual'}
+                                onChange={async (e) => {
+                                  const newFrequency = e.target.checked ? 'mensual' : 'quincenal';
+                                  try {
+                                    const response = await fetch('/api/calculator/platforms', {
+                                      method: 'PATCH',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({
+                                        platformId: platform.id,
+                                        payment_frequency: newFrequency
+                                      })
+                                    });
+                                    const data = await response.json();
+                                    if (data.success) {
+                                      // Actualizar estado local
+                                      setPlatforms(prev => prev.map(p => 
+                                        p.id === platform.id 
+                                          ? { ...p, payment_frequency: newFrequency }
+                                          : p
+                                      ));
+                                    } else {
+                                      alert('Error al actualizar: ' + (data.error || 'Error desconocido'));
+                                    }
+                                  } catch (error) {
+                                    console.error('Error actualizando payment_frequency:', error);
+                                    alert('Error al actualizar la frecuencia de pago');
+                                  }
+                                }}
+                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                              />
+                              <label htmlFor={`monthly-${platform.id}`} className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                                Pago mensual
+                              </label>
+                            </div>
                           </div>
                           <button
                             type="button"

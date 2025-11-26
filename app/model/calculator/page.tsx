@@ -30,6 +30,7 @@ interface Platform {
   // Propiedades para debugging
   percentage_override?: number | null;
   group_percentage?: number | null;
+  payment_frequency?: 'quincenal' | 'mensual'; // 🔧 NUEVO: Frecuencia de pago
 }
 
 interface CalculatorResult {
@@ -64,6 +65,11 @@ export default function ModelCalculatorPage() {
       console.log('🔄 [CALCULATOR] Actualizando periodDate:', { anterior: periodDate, nueva: currentPeriodDate });
       setPeriodDate(currentPeriodDate);
     }
+    
+    // 🔧 NUEVO: Detectar si estamos en P2 (día 16-31)
+    const colombiaDate = getColombiaDate();
+    const day = parseInt(colombiaDate.split('-')[2]);
+    setIsPeriod2(day >= 16 && day <= 31);
   }, []); // Solo al montar
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
@@ -78,6 +84,10 @@ export default function ModelCalculatorPage() {
   const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
   const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]); // 🔒 Plataformas congeladas
+  // 🔧 NUEVO: Estados para plataformas mensuales en P2
+  const [p1Values, setP1Values] = useState<Record<string, number>>({}); // Valores de P1 para plataformas mensuales
+  const [monthlyTotals, setMonthlyTotals] = useState<Record<string, string>>({}); // Total mensual ingresado
+  const [isPeriod2, setIsPeriod2] = useState<boolean>(false); // Si estamos en P2
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -626,6 +636,7 @@ export default function ModelCalculatorPage() {
             percentage: finalPercentage,
             minQuota: platform.min_quota_override || platform.group_min_quota || 470,
             currency: platform.currency || 'USD', // CRÍTICO: Agregar currency
+            payment_frequency: platform.payment_frequency || 'quincenal', // 🔧 NUEVO: Frecuencia de pago
             // Propiedades para debugging
             percentage_override: platform.percentage_override,
             group_percentage: platform.group_percentage
@@ -728,6 +739,38 @@ export default function ModelCalculatorPage() {
           // Sincronizar manualmente
           syncPlatformsToInputs(updatedPlatforms);
           console.log('🔍 [CALCULATOR] Valores guardados aplicados y sincronizados');
+          
+          // 🔧 NUEVO: Si estamos en P2, cargar valores de P1 para plataformas mensuales
+          if (isPeriod2) {
+            const colombiaDate = getColombiaDate();
+            const [year, month] = colombiaDate.split('-').map(Number);
+            const p1Date = `${year}-${String(month).padStart(2, '0')}-01`; // Fecha de inicio de P1
+            
+            console.log('🔍 [CALCULATOR] P2 detectado, cargando valores de P1:', p1Date);
+            
+            try {
+              const p1Resp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${p1Date}`);
+              const p1Json = await p1Resp.json();
+              
+              if (p1Json.success && Array.isArray(p1Json.data) && p1Json.data.length > 0) {
+                const p1PlatformToValue: Record<string, number> = {};
+                for (const row of p1Json.data) {
+                  if (row && row.platform_id) {
+                    const parsed = Number.parseFloat(String(row.value));
+                    p1PlatformToValue[row.platform_id] = Number.isFinite(parsed) ? parsed : 0;
+                  }
+                }
+                setP1Values(p1PlatformToValue);
+                console.log('🔍 [CALCULATOR] Valores de P1 cargados:', p1PlatformToValue);
+              } else {
+                console.log('🔍 [CALCULATOR] No se encontraron valores de P1');
+                setP1Values({});
+              }
+            } catch (p1Error) {
+              console.error('❌ [CALCULATOR] Error cargando valores de P1:', p1Error);
+              setP1Values({});
+            }
+          }
           
           // 🔧 NUEVO: Calcular ganancias del día después de cargar yesterdayValues
           // Se calculará en el useEffect cuando yesterdayValues esté listo
@@ -928,7 +971,16 @@ export default function ModelCalculatorPage() {
         const isFrozen = frozenPlatforms.includes(platform.id.toLowerCase());
         // 🔧 FIX: Permitir guardar valor 0 - solo excluir si es undefined/null o está congelada
         if (platform.enabled && platform.value !== undefined && platform.value !== null && !isFrozen) {
-          acc[platform.id] = platform.value;
+          // 🔧 NUEVO: Para plataformas mensuales en P2, guardar solo P2 (diferencia)
+          // El valor ya está calculado como P2 = Total mensual - P1
+          if (isPeriod2 && platform.payment_frequency === 'mensual') {
+            // El valor en platform.value ya es P2 (diferencia), guardarlo directamente
+            acc[platform.id] = platform.value;
+            console.log(`🔍 [SAVE] Plataforma mensual ${platform.id}: guardando P2 (diferencia) = ${platform.value}`);
+          } else {
+            // Para plataformas quincenales o P1, guardar el valor normalmente
+            acc[platform.id] = platform.value;
+          }
         }
         return acc;
       }, {} as Record<string, number>);
@@ -1212,16 +1264,100 @@ export default function ModelCalculatorPage() {
                           <div className="flex items-center space-x-2">
                             {(() => {
                               const isFrozen = frozenPlatforms.includes(row.id.toLowerCase());
-                              // Log de depuración para las primeras plataformas especiales
-                              if (['777', 'babestation', 'livecreator', 'mdh', 'big7', 'mondo', 'vx', 'xmodels', 'dirtyfans'].includes(row.id.toLowerCase())) {
-                                console.log(`🔍 [RENDER] Plataforma ${row.id}:`, {
-                                  isFrozen,
-                                  frozenPlatforms,
-                                  rowId: row.id,
-                                  rowIdLower: row.id.toLowerCase(),
-                                  inFrozenList: frozenPlatforms.includes(row.id.toLowerCase())
-                                });
+                              const platform = platforms.find(p => p.id === row.id);
+                              const isMonthly = platform?.payment_frequency === 'mensual';
+                              const showMonthlyFields = isPeriod2 && isMonthly;
+                              
+                              // Si es plataforma mensual en P2, mostrar dos campos
+                              if (showMonthlyFields) {
+                                const p1Value = p1Values[row.id] || 0;
+                                const monthlyTotal = Number.parseFloat(monthlyTotals[row.id] || '0') || 0;
+                                const p2Value = monthlyTotal - p1Value;
+                                
+                                return (
+                                  <div className="flex flex-col space-y-2">
+                                    {/* Campo: Total mensual */}
+                                    <div className="flex items-center space-x-1">
+                                      <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">Total mensual:</label>
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={monthlyTotals[row.id] ?? ''}
+                                        onChange={(e) => {
+                                          if (isFrozen) return;
+                                          const rawValue = e.target.value;
+                                          const unifiedValue = rawValue.replace(',', '.');
+                                          setMonthlyTotals(prev => ({ ...prev, [row.id]: unifiedValue }));
+                                          
+                                          // Calcular P2 automáticamente
+                                          const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
+                                          const p2Calculated = monthlyTotalNum - p1Value;
+                                          
+                                          // Actualizar inputValues con P2 (diferencia)
+                                          setInputValues(prev => ({ ...prev, [row.id]: p2Calculated > 0 ? String(p2Calculated) : '' }));
+                                          setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: p2Calculated } : p));
+                                        }}
+                                        disabled={isFrozen}
+                                        className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
+                                          isFrozen
+                                            ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
+                                        }`}
+                                        placeholder="0.00"
+                                        title="Total mensual de la plataforma"
+                                      />
+                                    </div>
+                                    
+                                    {/* Campo: P1 (editable) */}
+                                    <div className="flex items-center space-x-1">
+                                      <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">P1 (editable):</label>
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={p1Value > 0 ? String(p1Value) : ''}
+                                        onChange={(e) => {
+                                          if (isFrozen) return;
+                                          const rawValue = e.target.value;
+                                          const unifiedValue = rawValue.replace(',', '.');
+                                          const p1NewValue = Number.parseFloat(unifiedValue) || 0;
+                                          
+                                          // Actualizar P1
+                                          setP1Values(prev => ({ ...prev, [row.id]: p1NewValue }));
+                                          
+                                          // Recalcular P2
+                                          const monthlyTotalNum = Number.parseFloat(monthlyTotals[row.id] || '0') || 0;
+                                          const p2Calculated = monthlyTotalNum - p1NewValue;
+                                          
+                                          // Actualizar inputValues con P2 (diferencia)
+                                          setInputValues(prev => ({ ...prev, [row.id]: p2Calculated > 0 ? String(p2Calculated) : '' }));
+                                          setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: p2Calculated } : p));
+                                        }}
+                                        disabled={isFrozen}
+                                        className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
+                                          isFrozen
+                                            ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                            : 'border-purple-300 dark:border-purple-600 bg-purple-50 dark:bg-purple-900/20 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500/50'
+                                        }`}
+                                        placeholder="0.00"
+                                        title="Valor de P1 (editable)"
+                                      />
+                                    </div>
+                                    
+                                    {/* Mostrar cálculo: P2 = Total - P1 */}
+                                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                                      P2 = {monthlyTotal.toFixed(2)} - {p1Value.toFixed(2)} = <strong>{p2Value.toFixed(2)}</strong>
+                                    </div>
+                                    
+                                    {isFrozen && (
+                                      <span className="text-[10px] font-medium bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 px-1.5 py-0.5 rounded border border-amber-300 dark:border-amber-700">
+                                        Cerrado
+                                      </span>
+                                    )}
+                                  </div>
+                                );
                               }
+                              
+                              // Comportamiento normal para plataformas quincenales o P1
                               return (
                                 <>
                                   <input

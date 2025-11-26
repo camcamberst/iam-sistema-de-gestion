@@ -92,6 +92,7 @@ export async function GET(request: NextRequest) {
         discount_factor: platform.discount_factor,
         tax_rate: platform.tax_rate,
         direct_payout: platform.direct_payout,
+        payment_frequency: platform.payment_frequency || 'quincenal', // 🔧 NUEVO: Frecuencia de pago
         enabled: true,
         percentage_override: config.percentage_override,
         group_percentage: config.group_percentage, // NO fallback aquí
