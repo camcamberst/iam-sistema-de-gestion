@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { 
+  notifyPlataformaConfirmada,
+  notifyAdminsPlataformaConfirmada
+} from '@/lib/chat/bot-notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -153,20 +157,28 @@ export async function POST(request: NextRequest) {
       console.warn('⚠️ [CONFIRM] Error sincronizando calculadora:', syncError?.message || syncError);
     }
 
-    // Notificar a admins via chatbot (opcional)
+    // Notificar a la modelo y a admins
     try {
-      await fetch('/api/chat/notifications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          type: 'platform_confirmed',
-          modelId: modelId,
-          platformId: platformId,
-          message: `Modelo confirmó recepción de plataforma ${platform.platform_name}`
-        })
-      });
+      const platformName = platform.platform_name || platformId;
+      
+      // Obtener nombre de la modelo
+      const { data: model } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', modelId)
+        .single();
+      
+      const modelName = model?.name || 'Modelo';
+      
+      // Notificar a la modelo
+      await notifyPlataformaConfirmada(modelId, platformName);
+      
+      // Notificar a admins
+      await notifyAdminsPlataformaConfirmada(modelId, modelName, platformName);
+      
+      console.log('✅ [CONFIRM] Notificaciones enviadas');
     } catch (notificationError) {
-      console.warn('Error enviando notificación:', notificationError);
+      console.warn('⚠️ [CONFIRM] Error enviando notificación:', notificationError);
     }
 
     return NextResponse.json({ 

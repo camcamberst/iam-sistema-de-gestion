@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { 
+  notifyAnticipoApproved, 
+  notifyAnticipoRejected,
+  notifyAnticipoRealizado,
+  notifyAdminsAnticipoConfirmado
+} from '@/lib/chat/bot-notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -140,6 +146,30 @@ export async function PUT(
     }
 
     console.log('✅ [API ANTICIPOS] Anticipo actualizado:', id, estado);
+
+    // Notificar según el estado
+    const modelId = updatedAnticipo.model_id;
+    const modelName = (updatedAnticipo.model as any)?.name || 'Modelo';
+    const montoSolicitado = updatedAnticipo.monto_solicitado;
+
+    try {
+      if (estado === 'aprobado') {
+        await notifyAnticipoApproved(modelId);
+        console.log('✅ [API ANTICIPOS] Notificación de aprobación enviada');
+      } else if (estado === 'rechazado') {
+        await notifyAnticipoRejected(modelId);
+        console.log('✅ [API ANTICIPOS] Notificación de rechazo enviada');
+      } else if (estado === 'realizado') {
+        await notifyAnticipoRealizado(modelId, montoSolicitado);
+        console.log('✅ [API ANTICIPOS] Notificación de realizado enviada');
+      } else if (estado === 'confirmado') {
+        await notifyAdminsAnticipoConfirmado(modelId, modelName, montoSolicitado);
+        console.log('✅ [API ANTICIPOS] Notificación de confirmación enviada a admins');
+      }
+    } catch (error) {
+      console.error('⚠️ [API ANTICIPOS] Error enviando notificación:', error);
+      // No fallar la actualización si falla la notificación
+    }
 
     return NextResponse.json({
       success: true,

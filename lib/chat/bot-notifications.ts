@@ -155,26 +155,13 @@ export async function notifyNewAnnouncement(
   await sendBotNotification(userId, 'nueva_publicacion', customMessage);
 }
 
-// Notificar a admins cuando una modelo solicita un anticipo
-export async function notifyAdminsAnticipoRequest(
-  modelId: string,
-  modelName: string,
-  anticipoId: string,
-  montoSolicitado: number
-): Promise<void> {
+// =====================================================
+// 🔔 FUNCIONES HELPER PARA NOTIFICACIONES
+// =====================================================
+
+// Función helper para obtener admins de un modelo
+async function getAdminsForModel(modelId: string): Promise<string[]> {
   try {
-    // Obtener información de la modelo
-    const { data: model } = await supabase
-      .from('users')
-      .select('id, name, email, role')
-      .eq('id', modelId)
-      .single();
-
-    if (!model) {
-      console.error('❌ [NOTIFY-ADMINS] Modelo no encontrada:', modelId);
-      return;
-    }
-
     // Obtener grupos de la modelo
     const { data: modelGroups } = await supabase
       .from('user_groups')
@@ -182,12 +169,9 @@ export async function notifyAdminsAnticipoRequest(
       .eq('user_id', modelId);
 
     const groupIds = modelGroups?.map(g => g.group_id) || [];
-
-    // Obtener admins que deben ser notificados
     let adminIds: string[] = [];
 
     if (groupIds.length > 0) {
-      // Obtener admins de los grupos de la modelo
       const { data: adminGroups } = await supabase
         .from('user_groups')
         .select('user_id')
@@ -196,7 +180,6 @@ export async function notifyAdminsAnticipoRequest(
       const adminGroupUserIds = adminGroups?.map(ag => ag.user_id) || [];
 
       if (adminGroupUserIds.length > 0) {
-        // Obtener usuarios que son admins de esos grupos
         const { data: admins } = await supabase
           .from('users')
           .select('id')
@@ -208,7 +191,7 @@ export async function notifyAdminsAnticipoRequest(
       }
     }
 
-    // También notificar a todos los super_admins
+    // También incluir todos los super_admins
     const { data: superAdmins } = await supabase
       .from('users')
       .select('id')
@@ -217,30 +200,38 @@ export async function notifyAdminsAnticipoRequest(
 
     const superAdminIds = superAdmins?.map(sa => sa.id) || [];
     
-    // Combinar y eliminar duplicados
-    const allAdminIds = Array.from(new Set([...adminIds, ...superAdminIds]));
+    return Array.from(new Set([...adminIds, ...superAdminIds]));
+  } catch (error) {
+    console.error('Error obteniendo admins:', error);
+    return [];
+  }
+}
+
+// =====================================================
+// 💰 NOTIFICACIONES DE ANTICIPOS
+// =====================================================
+
+// Notificar a admins cuando una modelo solicita un anticipo
+export async function notifyAdminsAnticipoRequest(
+  modelId: string,
+  modelName: string,
+  anticipoId: string,
+  montoSolicitado: number
+): Promise<void> {
+  try {
+    const allAdminIds = await getAdminsForModel(modelId);
 
     if (allAdminIds.length === 0) {
       console.warn('⚠️ [NOTIFY-ADMINS] No se encontraron admins para notificar');
       return;
     }
 
-    console.log(`📢 [NOTIFY-ADMINS] Notificando a ${allAdminIds.length} admin(s) sobre solicitud de anticipo:`, {
-      modelId,
-      modelName,
-      anticipoId,
-      montoSolicitado,
-      adminIds: allAdminIds
-    });
-
-    // Formatear monto en COP
     const montoFormateado = new Intl.NumberFormat('es-CO', {
       style: 'currency',
       currency: 'COP',
       minimumFractionDigits: 0
     }).format(montoSolicitado);
 
-    // Notificar a cada admin
     const notificationPromises = allAdminIds.map(adminId => {
       const customMessage = `📋 Nueva solicitud de anticipo de **${modelName}** por ${montoFormateado}. Revisa la solicitud en "Gestión Anticipos > Solicitudes Pendientes".`;
       return sendBotNotification(adminId, 'anticipo_pendiente', customMessage);
@@ -248,10 +239,296 @@ export async function notifyAdminsAnticipoRequest(
 
     await Promise.all(notificationPromises);
     console.log(`✅ [NOTIFY-ADMINS] Notificaciones enviadas a ${allAdminIds.length} admin(s)`);
-
   } catch (error) {
     console.error('❌ [NOTIFY-ADMINS] Error notificando admins:', error);
   }
+}
+
+// Notificar anticipo realizado (pagado)
+export async function notifyAnticipoRealizado(
+  modelId: string,
+  montoSolicitado: number
+): Promise<void> {
+  const montoFormateado = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(montoSolicitado);
+  
+  const customMessage = `💰 Tu anticipo de ${montoFormateado} ha sido pagado. Por favor confirma la recepción en "Mis Anticipos > Mis Solicitudes".`;
+  await sendBotNotification(modelId, 'anticipo_realizado', customMessage);
+}
+
+// Notificar anticipo confirmado por modelo
+export async function notifyAdminsAnticipoConfirmado(
+  modelId: string,
+  modelName: string,
+  montoSolicitado: number
+): Promise<void> {
+  try {
+    const allAdminIds = await getAdminsForModel(modelId);
+
+    if (allAdminIds.length === 0) return;
+
+    const montoFormateado = new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      minimumFractionDigits: 0
+    }).format(montoSolicitado);
+
+    const notificationPromises = allAdminIds.map(adminId => {
+      const customMessage = `✅ La modelo **${modelName}** confirmó la recepción del anticipo de ${montoFormateado}.`;
+      return sendBotNotification(adminId, 'anticipo_confirmado', customMessage);
+    });
+
+    await Promise.all(notificationPromises);
+  } catch (error) {
+    console.error('Error notificando anticipo confirmado:', error);
+  }
+}
+
+// Recordatorio de confirmar anticipo
+export async function notifyAnticipoConfirmarRecordatorio(modelId: string): Promise<void> {
+  await sendBotNotification(modelId, 'anticipo_confirmar_recordatorio');
+}
+
+// =====================================================
+// 📦 NOTIFICACIONES DE PORTAFOLIO/PLATAFORMAS
+// =====================================================
+
+// Notificar plataforma entregada
+export async function notifyPlataformaEntregada(
+  modelId: string,
+  platformName: string
+): Promise<void> {
+  const customMessage = `📦 Tu plataforma **${platformName}** ha sido entregada. Confirma la recepción para activarla en tu calculadora.`;
+  await sendBotNotification(modelId, 'plataforma_entregada', customMessage);
+}
+
+// Notificar plataforma confirmada
+export async function notifyPlataformaConfirmada(
+  modelId: string,
+  platformName: string
+): Promise<void> {
+  const customMessage = `✅ Plataforma **${platformName}** confirmada y activada exitosamente en tu calculadora.`;
+  await sendBotNotification(modelId, 'plataforma_confirmada', customMessage);
+}
+
+// Notificar admins cuando modelo confirma plataforma
+export async function notifyAdminsPlataformaConfirmada(
+  modelId: string,
+  modelName: string,
+  platformName: string
+): Promise<void> {
+  try {
+    const allAdminIds = await getAdminsForModel(modelId);
+    if (allAdminIds.length === 0) return;
+
+    const notificationPromises = allAdminIds.map(adminId => {
+      const customMessage = `✅ La modelo **${modelName}** confirmó la recepción de la plataforma **${platformName}**.`;
+      return sendBotNotification(adminId, 'plataforma_confirmada', customMessage);
+    });
+
+    await Promise.all(notificationPromises);
+  } catch (error) {
+    console.error('Error notificando plataforma confirmada:', error);
+  }
+}
+
+// Notificar nueva plataforma agregada
+export async function notifyPlataformaAgregada(
+  modelId: string,
+  platformName: string
+): Promise<void> {
+  const customMessage = `➕ Se agregó la plataforma **${platformName}** a tu portafolio.`;
+  await sendBotNotification(modelId, 'plataforma_agregada', customMessage);
+}
+
+// Notificar plataformas pendientes de confirmación
+export async function notifyPlataformasPendientes(modelId: string, count: number): Promise<void> {
+  const customMessage = `⏳ Tienes ${count} plataforma(s) entregada(s) esperando tu confirmación.`;
+  await sendBotNotification(modelId, 'plataforma_pendiente_confirmacion', customMessage);
+}
+
+// =====================================================
+// 🧮 NOTIFICACIONES DE CALCULADORA
+// =====================================================
+
+// Notificar meta del día alcanzada
+export async function notifyMetaDiaAlcanzada(modelId: string): Promise<void> {
+  await sendBotNotification(modelId, 'meta_dia_alcanzada');
+}
+
+// Notificar meta del período alcanzada
+export async function notifyMetaPeriodoAlcanzada(modelId: string): Promise<void> {
+  await sendBotNotification(modelId, 'meta_periodo_alcanzada');
+}
+
+// Notificar valores no ingresados
+export async function notifyValoresNoIngresados(
+  modelId: string,
+  diasSinIngresar: number
+): Promise<void> {
+  const customMessage = `⚠️ No has ingresado valores desde hace ${diasSinIngresar} día(s). Recuerda mantener tus registros actualizados.`;
+  await sendBotNotification(modelId, 'valores_no_ingresados', customMessage);
+}
+
+// Notificar cuota mínima en riesgo
+export async function notifyCuotaMinimaRiesgo(
+  modelId: string,
+  porcentajeRestante: number
+): Promise<void> {
+  const customMessage = `📉 Estás al ${porcentajeRestante}% de tu cuota mínima. ¡Sigue así, puedes lograrlo!`;
+  await sendBotNotification(modelId, 'cuota_minima_riesgo', customMessage);
+}
+
+// Notificar a admins sobre modelo sin ingresar valores
+export async function notifyAdminsValoresNoIngresados(
+  modelId: string,
+  modelName: string,
+  diasSinIngresar: number
+): Promise<void> {
+  try {
+    const allAdminIds = await getAdminsForModel(modelId);
+    if (allAdminIds.length === 0) return;
+
+    const notificationPromises = allAdminIds.map(adminId => {
+      const customMessage = `⚠️ La modelo **${modelName}** no ha ingresado valores desde hace ${diasSinIngresar} día(s).`;
+      return sendBotNotification(adminId, 'valores_no_ingresados', customMessage);
+    });
+
+    await Promise.all(notificationPromises);
+  } catch (error) {
+    console.error('Error notificando valores no ingresados:', error);
+  }
+}
+
+// Notificar a admins sobre meta alcanzada
+export async function notifyAdminsMetaAlcanzada(
+  modelId: string,
+  modelName: string,
+  tipoMeta: 'día' | 'período'
+): Promise<void> {
+  try {
+    const allAdminIds = await getAdminsForModel(modelId);
+    if (allAdminIds.length === 0) return;
+
+    const tipo = tipoMeta === 'día' ? 'del día' : 'del período';
+    const notificationPromises = allAdminIds.map(adminId => {
+      const customMessage = `🏆 La modelo **${modelName}** alcanzó su meta ${tipo}. ¡Felicitaciones!`;
+      return sendBotNotification(adminId, 'metas_alcanzadas', customMessage);
+    });
+
+    await Promise.all(notificationPromises);
+  } catch (error) {
+    console.error('Error notificando meta alcanzada:', error);
+  }
+}
+
+// =====================================================
+// 💬 NOTIFICACIONES DE CHAT
+// =====================================================
+
+// Notificar mensaje importante de admin
+export async function notifyMensajeImportanteAdmin(
+  modelId: string,
+  adminName: string
+): Promise<void> {
+  const customMessage = `📩 Tienes un mensaje importante de **${adminName}**. Revisa tu chat.`;
+  await sendBotNotification(modelId, 'mensaje_importante_admin', customMessage);
+}
+
+// Notificar escalamiento a admin
+export async function notifyEscalamientoAdmin(modelId: string): Promise<void> {
+  await sendBotNotification(modelId, 'escalamiento_admin');
+}
+
+// Notificar respuesta a escalamiento
+export async function notifyRespuestaEscalamiento(modelId: string, adminName: string): Promise<void> {
+  const customMessage = `💬 **${adminName}** respondió a tu consulta. Revisa tu chat.`;
+  await sendBotNotification(modelId, 'respuesta_escalamiento', customMessage);
+}
+
+// Notificar a admin sobre nuevo mensaje de modelo
+export async function notifyAdminNuevoMensajeModelo(
+  adminId: string,
+  modelName: string
+): Promise<void> {
+  const customMessage = `💬 Tienes un nuevo mensaje de **${modelName}**.`;
+  await sendBotNotification(adminId, 'nuevo_mensaje_modelo', customMessage);
+}
+
+// Notificar consulta escalada
+export async function notifyConsultaEscalada(
+  adminId: string,
+  modelName: string
+): Promise<void> {
+  const customMessage = `🚨 La modelo **${modelName}** necesita asistencia urgente. Revisa el chat.`;
+  await sendBotNotification(adminId, 'consulta_escalada', customMessage);
+}
+
+// Notificar modelo solicita ayuda
+export async function notifyModeloSolicitaAyuda(
+  adminId: string,
+  modelName: string
+): Promise<void> {
+  const customMessage = `🆘 La modelo **${modelName}** solicitó ayuda en el chat.`;
+  await sendBotNotification(adminId, 'modelo_solicita_ayuda', customMessage);
+}
+
+// =====================================================
+// ⚙️ NOTIFICACIONES DE SISTEMA
+// =====================================================
+
+// Notificar cambio de configuración
+export async function notifyCambioConfiguracion(
+  userId: string,
+  area: string
+): Promise<void> {
+  const customMessage = `⚙️ Se actualizó la configuración de **${area}**.`;
+  await sendBotNotification(userId, 'cambio_configuracion', customMessage);
+}
+
+// Notificar mantenimiento programado
+export async function notifyMantenimientoProgramado(
+  userId: string,
+  fecha: string,
+  detalles?: string
+): Promise<void> {
+  const customMessage = `🔧 El sistema estará en mantenimiento el **${fecha}**. ${detalles || ''}`;
+  await sendBotNotification(userId, 'mantenimiento_programado', customMessage);
+}
+
+// Notificar nueva funcionalidad
+export async function notifyNuevaFuncionalidad(
+  userId: string,
+  funcionalidad: string
+): Promise<void> {
+  const customMessage = `✨ Nueva funcionalidad disponible: **${funcionalidad}**. ¡Échale un vistazo!`;
+  await sendBotNotification(userId, 'nueva_funcionalidad', customMessage);
+}
+
+// Notificar error crítico (solo admins)
+export async function notifyErrorCritico(
+  adminId: string,
+  errorDescripcion: string
+): Promise<void> {
+  const customMessage = `🚨 Se detectó un error crítico: ${errorDescripcion}. Revisa los logs.`;
+  await sendBotNotification(adminId, 'error_critico', customMessage);
+}
+
+// Notificar backup completado
+export async function notifyBackupCompletado(adminId: string): Promise<void> {
+  await sendBotNotification(adminId, 'backup_completado');
+}
+
+// Notificar actualización de sistema
+export async function notifyActualizacionSistema(
+  userId: string,
+  version: string
+): Promise<void> {
+  const customMessage = `🔄 El sistema ha sido actualizado a la versión **${version}**.`;
+  await sendBotNotification(userId, 'actualizacion_sistema', customMessage);
 }
 
 
