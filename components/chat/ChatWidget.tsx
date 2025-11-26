@@ -144,7 +144,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           // Actualizar estado local inmediatamente
           zeroUnreadForConversation(conversationId);
           
+          // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
+          locallyMarkedAsReadRef.current.add(conversationId);
+          
           // Recargar conversaciones después de un breve delay para reflejar cambios del backend
+          // PERO preservar el estado local de conversaciones marcadas como leídas
           setTimeout(() => {
             loadConversations();
           }, 200);
@@ -336,6 +340,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, [userId]);
 
+  // 🔧 NUEVO: Ref para rastrear conversaciones que fueron marcadas como leídas localmente
+  const locallyMarkedAsReadRef = useRef<Set<string>>(new Set());
+
   // Cargar conversaciones
   const loadConversations = async () => {
     if (!session) return;
@@ -352,11 +359,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Si estamos viendo una conversación, marcarla como leída inmediatamente en el servidor
         // y forzar su unread_count a 0 localmente
         const normalized = (data.conversations || []).map((conv: any) => {
-          if (isOpen && mainView === 'chat' && selectedConversation === conv.id) {
-            // Marcar como leída inmediatamente si tiene mensajes no leídos
-            if (conv.unread_count > 0) {
+          const isCurrentlyOpen = isOpen && mainView === 'chat' && selectedConversation === conv.id;
+          const wasLocallyMarkedAsRead = locallyMarkedAsReadRef.current.has(conv.id);
+          
+          // Si la conversación está abierta O fue marcada como leída localmente, forzar unread_count a 0
+          if (isCurrentlyOpen || wasLocallyMarkedAsRead) {
+            // Marcar como leída en el servidor si tiene mensajes no leídos y no está ya marcada
+            if (conv.unread_count > 0 && isCurrentlyOpen) {
               markConversationAsRead(conv.id, true); // true = inmediato, sin debounce
             }
+            // Forzar unread_count a 0 para preservar el estado local
             return { ...conv, unread_count: 0 };
           }
           return conv;
@@ -1015,6 +1027,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         if (conv && (conv.unread_count ?? 0) > 0) {
           console.log('👁️ [ChatWidget] Marcando conversación como leída al recargar:', lastOpenConversation);
           markConversationAsRead(lastOpenConversation, true);
+          // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
+          locallyMarkedAsReadRef.current.add(lastOpenConversation);
           // Actualizar estado local inmediatamente
           zeroUnreadForConversation(lastOpenConversation);
         }
@@ -1110,6 +1124,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Cuando el usuario está viendo una conversación (incluyendo Botty), marcarla como leída INMEDIATAMENTE
     // Sin debounce para asegurar que se marque antes de cualquier recarga
     markConversationAsRead(selectedConversation, true); // true = inmediato, sin debounce
+    
+    // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
+    locallyMarkedAsReadRef.current.add(selectedConversation);
     
     // Cerrar toasts relacionados con esta conversación cuando se activa
     setToasts(prev => prev.filter(toast => toast.conversationId !== selectedConversation));
