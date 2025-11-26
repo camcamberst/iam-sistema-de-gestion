@@ -1201,6 +1201,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 });
                 // Si estamos viendo esta conversación (incluyendo Botty), marcar como leído inmediatamente
                 markConversationAsRead(newMessage.conversation_id, true);
+                // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
+                locallyMarkedAsReadRef.current.add(newMessage.conversation_id);
                 // Actualizar estado local inmediatamente
                 zeroUnreadForConversation(newMessage.conversation_id);
               } else {
