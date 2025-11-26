@@ -1129,12 +1129,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 loadConversations();
               }
               
-              // Si el mensaje es de otro usuario y no estamos viendo esa conversación, mostrar toast
+              // Si el mensaje es de otro usuario (incluyendo Botty) y no estamos viendo esa conversación, mostrar toast
+              // PERO solo si el mensaje realmente no ha sido leído (verificado en showToast)
               if (
                 newMessage.sender_id !== userId &&
                 !(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)
               ) {
                 // Recargar conversaciones para obtener datos completos y mostrar toast
+                // El toast solo se mostrará si unread_count > 0 (verificado en showToast)
                 setTimeout(() => loadConversations(), 100);
               }
               
