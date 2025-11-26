@@ -346,6 +346,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         const unread = normalized.reduce((acc: number, conv: any) => acc + (conv.unread_count || 0), 0);
 
         // Detectar mensajes nuevos para mostrar toast (solo si el chat está cerrado)
+        // IMPORTANTE: Solo mostrar toast si el mensaje NO ha sido leído
         if (!isOpen && unread > lastUnreadCountRef.current && lastUnreadCountRef.current >= 0) {
           // Encontrar conversaciones con nuevos mensajes
           normalized.forEach((conv: any) => {
@@ -354,7 +355,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               const prevConv = conversations.find((c: any) => c.id === conv.id);
               const prevUnread = prevConv?.unread_count || 0;
               
-              if (conv.unread_count > prevUnread && conv.last_message.sender_id !== userId) {
+              // Solo mostrar toast si:
+              // 1. Hay más mensajes no leídos que antes
+              // 2. El mensaje es de otro usuario (no propio)
+              // 3. El mensaje NO ha sido leído (unread_count > 0 significa que hay mensajes no leídos)
+              if (conv.unread_count > prevUnread && conv.last_message.sender_id !== userId && conv.unread_count > 0) {
                 showToast(conv, conv.last_message);
               }
             }
@@ -874,6 +879,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       return;
     }
     
+    // 🔧 NUEVO: No mostrar toast si la conversación no tiene mensajes no leídos
+    // Esto evita mostrar toasts de mensajes que ya fueron leídos al recargar la página
+    if (conversation.unread_count === 0 || !conversation.unread_count) {
+      console.log('⏭️ [ChatWidget] No mostrar toast: conversación ya está marcada como leída');
+      return;
+    }
+    
     const toastId = `${conversation.id}-${message.id}-${Date.now()}`;
     const sender = conversation.other_participant;
     
@@ -943,6 +955,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   }, [selectedConversation, isOpen, mainView]);
 
   // 🔧 NUEVO: Al cargar conversaciones, si hay una conversación que estaba abierta antes de recargar, marcarla como leída
+  // Esto incluye conversaciones con Botty/notificaciones
   useEffect(() => {
     if (session && conversations.length > 0) {
       const lastOpenConversation = localStorage.getItem('chat_last_open_conversation');
@@ -950,7 +963,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Si la conversación que estaba abierta tiene mensajes no leídos, marcarla como leída
         const conv = conversations.find(c => c.id === lastOpenConversation);
         if (conv && (conv.unread_count ?? 0) > 0) {
+          console.log('👁️ [ChatWidget] Marcando conversación como leída al recargar:', lastOpenConversation);
           markConversationAsRead(lastOpenConversation, true);
+          // Actualizar estado local inmediatamente
+          zeroUnreadForConversation(lastOpenConversation);
         }
       }
     }
@@ -1036,16 +1052,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   }, [messages]);
 
   // 🔧 OPTIMIZADO: Marcar conversación como leída cuando se abre/visualiza
+  // Esto incluye conversaciones con Botty/notificaciones
   useEffect(() => {
     if (!isOpen || mainView !== 'chat' || !selectedConversation) return;
     if (selectedConversation.startsWith('temp_')) return; // No marcar conversaciones temporales
     
-    // Cuando el usuario está viendo una conversación, marcarla como leída INMEDIATAMENTE
+    // Cuando el usuario está viendo una conversación (incluyendo Botty), marcarla como leída INMEDIATAMENTE
     // Sin debounce para asegurar que se marque antes de cualquier recarga
     markConversationAsRead(selectedConversation, true); // true = inmediato, sin debounce
     
     // Cerrar toasts relacionados con esta conversación cuando se activa
     setToasts(prev => prev.filter(toast => toast.conversationId !== selectedConversation));
+    
+    // Actualizar estado local inmediatamente para evitar mostrar notificaciones
+    zeroUnreadForConversation(selectedConversation);
   }, [isOpen, mainView, selectedConversation]);
 
   // Suscripción a tiempo real para mensajes nuevos
@@ -1099,8 +1119,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   console.log('➕ [ChatWidget] Agregando nuevo mensaje a la lista');
                   return [...prev, newMessage];
                 });
-                // Si estamos viendo esta conversación, marcar como leído inmediatamente
+                // Si estamos viendo esta conversación (incluyendo Botty), marcar como leído inmediatamente
                 markConversationAsRead(newMessage.conversation_id, true);
+                // Actualizar estado local inmediatamente
+                zeroUnreadForConversation(newMessage.conversation_id);
               } else {
                 // Si NO estamos viendo esta conversación, solo actualizar lista (el mensaje seguirá como no leído hasta que se abra)
                 console.log('🔄 [ChatWidget] Nuevo mensaje en conversación no activa, actualizando lista...');
