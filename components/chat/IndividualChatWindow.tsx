@@ -518,7 +518,56 @@ export default function IndividualChatWindow({
                     Difusión
                   </span>
                 )}
-                <p className="text-sm">{message.content}</p>
+                <p className="text-sm">
+                  {(() => {
+                    const content = message.content || '';
+                    const linkPattern = /\[LINK:([^\|]+)\|([^\]]+)\]/g;
+                    const parts: (string | JSX.Element)[] = [];
+                    let lastIndex = 0;
+                    let match;
+                    let key = 0;
+
+                    while ((match = linkPattern.exec(content)) !== null) {
+                      if (match.index > lastIndex) {
+                        parts.push(content.substring(lastIndex, match.index));
+                      }
+                      
+                      const linkText = match[1];
+                      const linkUrl = match[2];
+                      const isHashLink = linkUrl === '#';
+                      
+                      parts.push(
+                        <a
+                          key={key++}
+                          href={linkUrl}
+                          onClick={(e) => {
+                            if (isHashLink) {
+                              e.preventDefault();
+                              return;
+                            }
+                            e.preventDefault();
+                            if (typeof window !== 'undefined') {
+                              window.location.href = linkUrl;
+                            }
+                          }}
+                          className="underline font-medium hover:opacity-80 transition-opacity text-blue-300"
+                          target={linkUrl.startsWith('http') ? '_blank' : undefined}
+                          rel={linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+                        >
+                          {linkText}
+                        </a>
+                      );
+                      
+                      lastIndex = match.index + match[0].length;
+                    }
+                    
+                    if (lastIndex < content.length) {
+                      parts.push(content.substring(lastIndex));
+                    }
+                    
+                    return parts.length > 0 ? <>{parts}</> : content;
+                  })()}
+                </p>
                 <div className="flex items-center justify-between mt-1">
                   <p className="text-xs opacity-70">
                     {formatMessageTime(message.created_at)}

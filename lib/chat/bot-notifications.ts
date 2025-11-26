@@ -233,7 +233,7 @@ export async function notifyAdminsAnticipoRequest(
     }).format(montoSolicitado);
 
     const notificationPromises = allAdminIds.map(adminId => {
-      const customMessage = `📋 Nueva solicitud de anticipo de **${modelName}** por ${montoFormateado}. Revisa la solicitud en "Gestión Anticipos > Solicitudes Pendientes".`;
+      const customMessage = `📋 Nueva solicitud de anticipo de **${modelName}** por ${montoFormateado}. [LINK:Revisa la solicitud|/admin/anticipos/pending].`;
       return sendBotNotification(adminId, 'anticipo_pendiente', customMessage);
     });
 
@@ -255,7 +255,7 @@ export async function notifyAnticipoRealizado(
     minimumFractionDigits: 0
   }).format(montoSolicitado);
   
-  const customMessage = `💰 Tu anticipo de ${montoFormateado} ha sido pagado. Por favor confirma la recepción en "Mis Anticipos > Mis Solicitudes".`;
+  const customMessage = `💰 Tu anticipo de ${montoFormateado} ha sido pagado. Por favor [LINK:confirma la recepción|/admin/model/anticipos/solicitudes].`;
   await sendBotNotification(modelId, 'anticipo_realizado', customMessage);
 }
 

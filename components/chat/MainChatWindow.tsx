@@ -155,6 +155,66 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     if (!content) return '';
     return content.replace(/<<ACTION:[^>]+>>/g, '').trim();
   };
+
+  // Función para convertir marcadores [LINK:texto|url] en enlaces clickeables
+  const renderMessageWithLinks = (content: string, isMyMessage: boolean) => {
+    if (!content) return null;
+    
+    const linkPattern = /\[LINK:([^\|]+)\|([^\]]+)\]/g;
+    const parts: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    let match;
+    let key = 0;
+
+    while ((match = linkPattern.exec(content)) !== null) {
+      // Agregar texto antes del enlace
+      if (match.index > lastIndex) {
+        parts.push(content.substring(lastIndex, match.index));
+      }
+      
+      // Crear enlace
+      const linkText = match[1];
+      const linkUrl = match[2];
+      const isHashLink = linkUrl === '#';
+      
+      parts.push(
+        <a
+          key={key++}
+          href={linkUrl}
+          onClick={(e) => {
+            if (isHashLink) {
+              e.preventDefault();
+              // Si es un enlace al chat (#), no hacer nada (ya estamos en el chat)
+              return;
+            }
+            // Para otros enlaces, usar Next.js router
+            e.preventDefault();
+            if (typeof window !== 'undefined') {
+              window.location.href = linkUrl;
+            }
+          }}
+          className={`underline font-medium hover:opacity-80 transition-opacity ${
+            isMyMessage 
+              ? 'text-blue-100' 
+              : 'text-blue-400'
+          }`}
+          target={linkUrl.startsWith('http') ? '_blank' : undefined}
+          rel={linkUrl.startsWith('http') ? 'noopener noreferrer' : undefined}
+        >
+          {linkText}
+        </a>
+      );
+      
+      lastIndex = match.index + match[0].length;
+    }
+    
+    // Agregar texto restante
+    if (lastIndex < content.length) {
+      parts.push(content.substring(lastIndex));
+    }
+    
+    return parts.length > 0 ? <>{parts}</> : content;
+  };
   
   // Emojis más comunes organizados por categorías
   const emojiCategories = {
@@ -837,11 +897,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                     {part}
                                   </mark>
                                 ) : (
-                                  part
+                                  renderMessageWithLinks(part, false) || part
                                 )
                               )
                             ) : (
-                              cleanMessageContent(message.content)
+                              renderMessageWithLinks(cleanMessageContent(message.content), false) || cleanMessageContent(message.content)
                             )}
                           </p>
                         </div>
@@ -882,11 +942,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                     {part}
                                   </mark>
                                 ) : (
-                                  part
+                                  renderMessageWithLinks(part, message.sender_id === userId) || part
                                 )
                               )
                             ) : (
-                              cleanMessageContent(message.content)
+                              renderMessageWithLinks(cleanMessageContent(message.content), message.sender_id === userId) || cleanMessageContent(message.content)
                             )}
                           </p>
                         </div>

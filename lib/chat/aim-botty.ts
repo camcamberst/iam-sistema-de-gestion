@@ -108,6 +108,7 @@ export function getBotPersonalityForRole(role: string): string {
 }
 
 // Generar mensajes de notificación según el tipo
+// Formato de enlaces: [LINK:texto|url] se convertirá en un enlace clickeable
 export function generateNotificationMessage(
   type: NotificationType,
   context: UserContext
@@ -116,37 +117,37 @@ export function generateNotificationMessage(
     // Anticipos
     anticipo_pendiente: `📋 Hola ${context.name}! Tienes una nueva solicitud de anticipo pendiente de revisión. El administrador la revisará pronto.`,
     anticipo_aprobado: `✅ ¡Excelente noticia ${context.name}! Tu solicitud de anticipo ha sido aprobada. El pago se procesará según lo acordado.`,
-    anticipo_rechazado: `⚠️ ${context.name}, tu solicitud de anticipo fue rechazada. Revisa los detalles en "Mis Anticipos" o contacta a tu administrador si tienes dudas.`,
-    anticipo_realizado: `💰 ${context.name}, tu anticipo ha sido pagado. Por favor confirma la recepción en "Mis Anticipos > Mis Solicitudes".`,
+    anticipo_rechazado: `⚠️ ${context.name}, tu solicitud de anticipo fue rechazada. Revisa los detalles en [LINK:Mis Anticipos|/admin/model/anticipos/solicitudes] o contacta a tu administrador si tienes dudas.`,
+    anticipo_realizado: `💰 ${context.name}, tu anticipo ha sido pagado. Por favor [LINK:confirma la recepción|/admin/model/anticipos/solicitudes].`,
     anticipo_confirmado: `✅ ${context.name}, has confirmado la recepción de tu anticipo. ¡Gracias!`,
-    anticipo_confirmar_recordatorio: `⏰ ${context.name}, recuerda confirmar la recepción de tu anticipo pagado en "Mis Anticipos".`,
+    anticipo_confirmar_recordatorio: `⏰ ${context.name}, recuerda [LINK:confirmar la recepción de tu anticipo pagado|/admin/model/anticipos/solicitudes].`,
     
     // Portafolio/Plataformas
     pagina_confirmada: `🎉 ¡Felicidades ${context.name}! Se ha confirmado la entrega de tu página. ¡Excelente trabajo!`,
-    plataforma_entregada: `📦 ${context.name}, tu plataforma ha sido entregada. Confirma la recepción para activarla en tu calculadora.`,
+    plataforma_entregada: `📦 ${context.name}, tu plataforma ha sido entregada. [LINK:Confirma la recepción|/admin/model/portafolio] para activarla en tu calculadora.`,
     plataforma_confirmada: `✅ ${context.name}, plataforma confirmada y activada exitosamente en tu calculadora.`,
-    plataforma_agregada: `➕ ${context.name}, se agregó una nueva plataforma a tu portafolio.`,
-    plataforma_pendiente_confirmacion: `⏳ ${context.name}, hay plataformas entregadas esperando tu confirmación.`,
+    plataforma_agregada: `➕ ${context.name}, se agregó una nueva plataforma a tu portafolio. [LINK:Ver portafolio|/admin/model/portafolio]`,
+    plataforma_pendiente_confirmacion: `⏳ ${context.name}, hay plataformas entregadas esperando tu confirmación. [LINK:Revisar portafolio|/admin/model/portafolio]`,
     
     // Calculadora
-    periodo_cerrado: `📊 ${context.name}, el período de facturación ha sido cerrado. Puedes revisar tu resumen completo en el dashboard.`,
+    periodo_cerrado: `📊 ${context.name}, el período de facturación ha sido cerrado. Puedes [LINK:revisar tu resumen completo|/admin/model/dashboard] en el dashboard.`,
     metas_alcanzadas: `🏆 ¡Increíble ${context.name}! Has alcanzado tu meta del día. ¡Sigue así!`,
     meta_periodo_alcanzada: `🎯 ¡Excelente ${context.name}! Has alcanzado tu meta del período. ¡Felicitaciones!`,
     meta_dia_alcanzada: `⭐ ${context.name}, ¡alcanzaste tu meta del día!`,
-    recordatorio_ingreso: `💡 ${context.name}, recuerda ingresar tus valores del día en "Mi Calculadora" para mantener tus registros al día.`,
-    valores_no_ingresados: `⚠️ ${context.name}, no has ingresado valores desde hace varios días. Recuerda mantener tus registros actualizados.`,
+    recordatorio_ingreso: `💡 ${context.name}, recuerda [LINK:ingresar tus valores del día|/admin/model/calculator] en Mi Calculadora para mantener tus registros al día.`,
+    valores_no_ingresados: `⚠️ ${context.name}, no has ingresado valores desde hace varios días. [LINK:Actualiza tus registros|/admin/model/calculator] ahora.`,
     cuota_minima_riesgo: `📉 ${context.name}, estás cerca de no alcanzar tu cuota mínima. ¡Sigue así, puedes lograrlo!`,
     
     // Chat
-    mensaje_importante_admin: `📩 ${context.name}, tienes un mensaje importante de tu administrador. Revisa tu chat.`,
+    mensaje_importante_admin: `📩 ${context.name}, tienes un mensaje importante de tu administrador. [LINK:Revisa tu chat|#]`,
     escalamiento_admin: `🆘 ${context.name}, tu consulta ha sido escalada a un administrador. Te responderán pronto.`,
-    respuesta_escalamiento: `💬 ${context.name}, un administrador respondió a tu consulta. Revisa tu chat.`,
-    nuevo_mensaje_modelo: `💬 ${context.name}, tienes un nuevo mensaje de una modelo.`,
-    consulta_escalada: `🚨 ${context.name}, una modelo necesita asistencia urgente. Revisa el chat.`,
-    modelo_solicita_ayuda: `🆘 ${context.name}, una modelo solicitó ayuda en el chat.`,
+    respuesta_escalamiento: `💬 ${context.name}, un administrador respondió a tu consulta. [LINK:Revisa tu chat|#]`,
+    nuevo_mensaje_modelo: `💬 ${context.name}, tienes un nuevo mensaje de una modelo. [LINK:Abrir chat|#]`,
+    consulta_escalada: `🚨 ${context.name}, una modelo necesita asistencia urgente. [LINK:Revisar chat|#]`,
+    modelo_solicita_ayuda: `🆘 ${context.name}, una modelo solicitó ayuda en el chat. [LINK:Abrir chat|#]`,
     
     // Sistema
-    nueva_publicacion: `📌 ¡Hola ${context.name}! Hay una nueva publicación en el corcho informativo. Revisa tu dashboard para ver los detalles.`,
+    nueva_publicacion: `📌 ¡Hola ${context.name}! Hay una nueva publicación en el corcho informativo. [LINK:Revisa tu dashboard|/admin/model/dashboard] para ver los detalles.`,
     cambio_configuracion: `⚙️ ${context.name}, se actualizó la configuración del sistema.`,
     mantenimiento_programado: `🔧 ${context.name}, el sistema estará en mantenimiento. Revisa los detalles.`,
     nueva_funcionalidad: `✨ ${context.name}, hay una nueva funcionalidad disponible. ¡Échale un vistazo!`,
