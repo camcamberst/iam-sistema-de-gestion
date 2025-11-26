@@ -49,6 +49,11 @@ export default function AdminViewModelPage() {
   const [hasChanges, setHasChanges] = useState(false);
   const [syncingTotals, setSyncingTotals] = useState(false);
   const [calculatedTotals, setCalculatedTotals] = useState<any>(null);
+  // 🔧 NUEVO: Estado para input flotante de P1
+  const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null);
+  const [p1InputValue, setP1InputValue] = useState<string>('');
+  const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null);
+  const [p1Values, setP1Values] = useState<Record<string, number>>({});
   
   // Estados para filtros
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);

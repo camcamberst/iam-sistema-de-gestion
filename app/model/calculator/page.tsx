@@ -88,6 +88,10 @@ export default function ModelCalculatorPage() {
   const [p1Values, setP1Values] = useState<Record<string, number>>({}); // Valores de P1 para plataformas mensuales
   const [monthlyTotals, setMonthlyTotals] = useState<Record<string, string>>({}); // Total mensual ingresado
   const [isPeriod2, setIsPeriod2] = useState<boolean>(false); // Si estamos en P2
+  // 🔧 NUEVO: Estado para input flotante de P1
+  const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null); // ID de plataforma siendo editada
+  const [p1InputValue, setP1InputValue] = useState<string>(''); // Valor temporal del input
+  const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null); // Posición del input flotante
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -1254,8 +1258,22 @@ export default function ModelCalculatorPage() {
                     
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
-                        <td className="py-3 px-3">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1">{row.name}</div>
+                        <td className="py-3 px-3 relative">
+                          <div 
+                            className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block"
+                            onClick={(e) => {
+                              const rect = e.currentTarget.getBoundingClientRect();
+                              setEditingP1Platform(row.id);
+                              setP1InputValue(String(p1Values[row.id] || ''));
+                              setP1InputPosition({
+                                top: rect.bottom + 5,
+                                left: rect.left
+                              });
+                            }}
+                            title="Click para ingresar valor de P1"
+                          >
+                            {row.name}
+                          </div>
                           <div className="flex items-center space-x-3 mb-1">
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Reparto: {row.percentageLabel}
@@ -1268,6 +1286,7 @@ export default function ModelCalculatorPage() {
                                   htmlFor={`monthly-${row.id}`} 
                                   className="flex items-center space-x-1.5 cursor-pointer group hover:bg-purple-50 dark:hover:bg-purple-900/20 px-2 py-1 rounded-md transition-colors"
                                   title="Marcar como pago mensual (requiere restar P1 en P2)"
+                                  onClick={(e) => e.stopPropagation()}
                                 >
                                   <input
                                     type="checkbox"
@@ -1313,6 +1332,66 @@ export default function ModelCalculatorPage() {
                               );
                             })()}
                           </div>
+                          {/* 🔧 NUEVO: Input flotante para P1 */}
+                          {editingP1Platform === row.id && p1InputPosition && (
+                            <div
+                              className="fixed z-50 bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg shadow-xl p-3 min-w-[200px]"
+                              style={{
+                                top: `${p1InputPosition.top}px`,
+                                left: `${p1InputPosition.left}px`
+                              }}
+                            >
+                              <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                Ingresar valor de P1 para {row.name}
+                              </div>
+                              <div className="flex items-center space-x-2">
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  value={p1InputValue}
+                                  onChange={(e) => {
+                                    const rawValue = e.target.value;
+                                    const unifiedValue = rawValue.replace(',', '.');
+                                    setP1InputValue(unifiedValue);
+                                  }}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      const value = Number.parseFloat(p1InputValue) || 0;
+                                      setP1Values(prev => ({ ...prev, [row.id]: value }));
+                                      setEditingP1Platform(null);
+                                      setP1InputPosition(null);
+                                    } else if (e.key === 'Escape') {
+                                      setEditingP1Platform(null);
+                                      setP1InputPosition(null);
+                                    }
+                                  }}
+                                  autoFocus
+                                  className="flex-1 px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  placeholder="0.00"
+                                />
+                                <button
+                                  onClick={() => {
+                                    const value = Number.parseFloat(p1InputValue) || 0;
+                                    setP1Values(prev => ({ ...prev, [row.id]: value }));
+                                    setEditingP1Platform(null);
+                                    setP1InputPosition(null);
+                                  }}
+                                  className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
+                                >
+                                  Guardar
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setEditingP1Platform(null);
+                                    setP1InputPosition(null);
+                                  }}
+                                  className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
+                                >
+                                  Cancelar
+                                </button>
+                              </div>
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-3">
                           <div className="flex items-center space-x-2">
