@@ -949,7 +949,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (lastOpenConversation && isOpen && mainView === 'chat') {
         // Si la conversación que estaba abierta tiene mensajes no leídos, marcarla como leída
         const conv = conversations.find(c => c.id === lastOpenConversation);
-        if (conv && conv.unread_count > 0) {
+        if (conv && (conv.unread_count ?? 0) > 0) {
           markConversationAsRead(lastOpenConversation, true);
         }
       }
