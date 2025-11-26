@@ -61,24 +61,29 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     senderAvatar?: string | null;
     messagePreview: string;
   }>>([]);
-  // 🔧 MEJORADO: Inicializar lastUnreadCountRef desde localStorage para persistir entre recargas
-  const lastUnreadCountRef = useRef<number>(() => {
+  // 🔧 MEJORADO: Función helper para inicializar lastUnreadCount desde localStorage
+  const getInitialUnreadCount = (): number => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('chat_last_unread_count');
       return saved ? parseInt(saved, 10) : 0;
     }
     return 0;
-  }());
-  const lastSoundTimeRef = useRef<number>(0);
-  const lastProcessedMessageIdRef = useRef<string | null>(null);
-  // 🔧 NUEVO: Ref para rastrear mensajes ya procesados (para evitar toasts duplicados)
-  const processedMessageIdsRef = useRef<Set<string>>(new Set(() => {
+  };
+
+  // 🔧 MEJORADO: Función helper para inicializar processedMessages desde localStorage
+  const getInitialProcessedMessages = (): Set<string> => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('chat_processed_messages');
       return saved ? new Set(JSON.parse(saved)) : new Set();
     }
     return new Set();
-  }()));
+  };
+
+  const lastUnreadCountRef = useRef<number>(getInitialUnreadCount());
+  const lastSoundTimeRef = useRef<number>(0);
+  const lastProcessedMessageIdRef = useRef<string | null>(null);
+  // 🔧 NUEVO: Ref para rastrear mensajes ya procesados (para evitar toasts duplicados)
+  const processedMessageIdsRef = useRef<Set<string>>(getInitialProcessedMessages());
   // Registro local de último mensaje visto por conversación (usando ref para acceso inmediato)
   const [lastSeenMessageByConv, setLastSeenMessageByConv] = useState<Record<string, string>>({});
   const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
