@@ -1262,6 +1262,8 @@ export default function ModelCalculatorPage() {
                           <div 
                             className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1 cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block"
                             onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               const rect = e.currentTarget.getBoundingClientRect();
                               setEditingP1Platform(row.id);
                               setP1InputValue(String(p1Values[row.id] || ''));
@@ -1270,11 +1272,31 @@ export default function ModelCalculatorPage() {
                                 left: rect.left
                               });
                             }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.cursor = 'pointer';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.cursor = 'pointer';
+                            }}
                             title="Click para ingresar valor de P1"
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setEditingP1Platform(row.id);
+                                setP1InputValue(String(p1Values[row.id] || ''));
+                                setP1InputPosition({
+                                  top: rect.bottom + 5,
+                                  left: rect.left
+                                });
+                              }
+                            }}
                           >
                             {row.name}
                           </div>
-                          {/* 🔧 DEBUG: Forzar actualización de Vercel */}
+                          {/* 🔧 FIX: Forzar actualización de Vercel con cambios más significativos */}
                           <div className="flex items-center space-x-3 mb-1">
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Reparto: {row.percentageLabel}
