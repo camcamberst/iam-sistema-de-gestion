@@ -1259,10 +1259,13 @@ export default function ModelCalculatorPage() {
                             <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{row.name}</div>
                             {/* 🔧 NUEVO: Checkbox para marcar como mensual */}
                             <div className="flex items-center space-x-1">
-                              <input
-                                type="checkbox"
-                                id={`monthly-${row.id}`}
-                                checked={platform?.payment_frequency === 'mensual'}
+                              {(() => {
+                                const platform = platforms.find(p => p.id === row.id);
+                                return (
+                                  <input
+                                    type="checkbox"
+                                    id={`monthly-${row.id}`}
+                                    checked={platform?.payment_frequency === 'mensual'}
                                 onChange={async (e) => {
                                   const newFrequency = e.target.checked ? 'mensual' : 'quincenal';
                                   try {
@@ -1289,18 +1292,20 @@ export default function ModelCalculatorPage() {
                                     } else {
                                       alert('Error al actualizar: ' + (data.error || 'Error desconocido'));
                                     }
-                                  } catch (error) {
-                                    console.error('Error actualizando payment_frequency:', error);
-                                    alert('Error al actualizar la frecuencia de pago');
-                                  }
-                                }}
-                                className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                title="Marcar como pago mensual"
-                              />
-                              <label htmlFor={`monthly-${row.id}`} className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-                                Mensual
-                              </label>
-                            </div>
+                                    } catch (error) {
+                                      console.error('Error actualizando payment_frequency:', error);
+                                      alert('Error al actualizar la frecuencia de pago');
+                                    }
+                                  }}
+                                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                                  title="Marcar como pago mensual"
+                                />
+                                <label htmlFor={`monthly-${row.id}`} className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
+                                  Mensual
+                                </label>
+                              </div>
+                                );
+                              })()}
                           </div>
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Reparto: {row.percentageLabel}
