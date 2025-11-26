@@ -165,8 +165,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
     let lastIndex = 0;
     let match;
     let key = 0;
+    let hasLinks = false;
+
+    // Reset regex lastIndex para evitar problemas con múltiples llamadas
+    linkPattern.lastIndex = 0;
 
     while ((match = linkPattern.exec(content)) !== null) {
+      hasLinks = true;
       // Agregar texto antes del enlace
       if (match.index > lastIndex) {
         parts.push(content.substring(lastIndex, match.index));
@@ -213,7 +218,12 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       parts.push(content.substring(lastIndex));
     }
     
-    return parts.length > 0 ? <>{parts}</> : content;
+    // Si no hay enlaces, devolver el contenido original
+    if (!hasLinks) {
+      return null;
+    }
+    
+    return parts.length > 0 ? <>{parts}</> : null;
   };
   
   // Emojis más comunes organizados por categorías
