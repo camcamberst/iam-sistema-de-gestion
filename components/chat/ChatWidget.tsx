@@ -61,9 +61,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     senderAvatar?: string | null;
     messagePreview: string;
   }>>([]);
-  const lastUnreadCountRef = useRef<number>(0);
+  // 🔧 MEJORADO: Inicializar lastUnreadCountRef desde localStorage para persistir entre recargas
+  const lastUnreadCountRef = useRef<number>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chat_last_unread_count');
+      return saved ? parseInt(saved, 10) : 0;
+    }
+    return 0;
+  }());
   const lastSoundTimeRef = useRef<number>(0);
   const lastProcessedMessageIdRef = useRef<string | null>(null);
+  // 🔧 NUEVO: Ref para rastrear mensajes ya procesados (para evitar toasts duplicados)
+  const processedMessageIdsRef = useRef<Set<string>>(new Set(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('chat_processed_messages');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    }
+    return new Set();
+  }()));
   // Registro local de último mensaje visto por conversación (usando ref para acceso inmediato)
   const [lastSeenMessageByConv, setLastSeenMessageByConv] = useState<Record<string, string>>({});
   const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
@@ -345,28 +360,51 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Calcular total de no leídos basado en unread_count del backend
         const unread = normalized.reduce((acc: number, conv: any) => acc + (conv.unread_count || 0), 0);
 
-        // Detectar mensajes nuevos para mostrar toast (solo si el chat está cerrado)
-        // IMPORTANTE: Solo mostrar toast si el mensaje NO ha sido leído
-        if (!isOpen && unread > lastUnreadCountRef.current && lastUnreadCountRef.current >= 0) {
+        // 🔧 MEJORADO: Detectar mensajes nuevos para mostrar toast (solo si el chat está cerrado)
+        // IMPORTANTE: Solo mostrar toast si el mensaje NO ha sido leído Y no ha sido procesado antes
+        if (!isOpen) {
           // Encontrar conversaciones con nuevos mensajes
           normalized.forEach((conv: any) => {
             if (conv.unread_count > 0 && conv.last_message) {
+              const messageId = conv.last_message.id;
+              
+              // 🔧 CRÍTICO: Verificar si este mensaje ya fue procesado antes (evita toasts al recargar)
+              if (processedMessageIdsRef.current.has(messageId)) {
+                console.log('⏭️ [ChatWidget] Mensaje ya procesado, no mostrar toast:', messageId);
+                return;
+              }
+              
               // Verificar si esta conversación tenía menos mensajes antes
               const prevConv = conversations.find((c: any) => c.id === conv.id);
               const prevUnread = prevConv?.unread_count || 0;
               
               // Solo mostrar toast si:
-              // 1. Hay más mensajes no leídos que antes
+              // 1. Hay más mensajes no leídos que antes (mensaje realmente nuevo)
               // 2. El mensaje es de otro usuario (no propio)
-              // 3. El mensaje NO ha sido leído (unread_count > 0 significa que hay mensajes no leídos)
-              if (conv.unread_count > prevUnread && conv.last_message.sender_id !== userId && conv.unread_count > 0) {
+              // 3. El mensaje NO ha sido leído (unread_count > 0)
+              // 4. El mensaje no ha sido procesado antes
+              if (conv.unread_count > prevUnread && conv.last_message.sender_id !== userId) {
+                // Marcar mensaje como procesado antes de mostrar toast
+                processedMessageIdsRef.current.add(messageId);
+                // Persistir en localStorage
+                if (typeof window !== 'undefined') {
+                  const processedArray = Array.from(processedMessageIdsRef.current);
+                  // Mantener solo los últimos 100 mensajes procesados para evitar que localStorage crezca demasiado
+                  const trimmedArray = processedArray.slice(-100);
+                  localStorage.setItem('chat_processed_messages', JSON.stringify(trimmedArray));
+                  processedMessageIdsRef.current = new Set(trimmedArray);
+                }
                 showToast(conv, conv.last_message);
               }
             }
           });
         }
 
+        // 🔧 MEJORADO: Actualizar lastUnreadCountRef y persistir en localStorage
         lastUnreadCountRef.current = unread;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('chat_last_unread_count', unread.toString());
+        }
       }
     } catch (error) {
       console.error('Error cargando conversaciones:', error);
@@ -883,6 +921,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Esto evita mostrar toasts de mensajes que ya fueron leídos al recargar la página
     if (conversation.unread_count === 0 || !conversation.unread_count) {
       console.log('⏭️ [ChatWidget] No mostrar toast: conversación ya está marcada como leída');
+      return;
+    }
+    
+    // 🔧 NUEVO: Verificar si el mensaje ya fue procesado (doble verificación)
+    if (processedMessageIdsRef.current.has(message.id)) {
+      console.log('⏭️ [ChatWidget] No mostrar toast: mensaje ya procesado:', message.id);
       return;
     }
     
