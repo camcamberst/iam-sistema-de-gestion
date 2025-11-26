@@ -328,9 +328,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        // Si estamos viendo una conversación, forzar su unread_count a 0 localmente
+        // Si estamos viendo una conversación, marcarla como leída inmediatamente en el servidor
+        // y forzar su unread_count a 0 localmente
         const normalized = (data.conversations || []).map((conv: any) => {
           if (isOpen && mainView === 'chat' && selectedConversation === conv.id) {
+            // Marcar como leída inmediatamente si tiene mensajes no leídos
+            if (conv.unread_count > 0) {
+              markConversationAsRead(conv.id, true); // true = inmediato, sin debounce
+            }
             return { ...conv, unread_count: 0 };
           }
           return conv;
@@ -433,8 +438,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
 
         // 🔧 MARCADO CENTRALIZADO: Marcar TODOS los mensajes como leídos en el servidor
-        // Usar función centralizada con debouncing
+        // INMEDIATAMENTE cuando se cargan los mensajes (sin debounce)
+        // Esto asegura que al abrir una conversación, se marque como leída antes de cualquier recarga
         await markConversationAsRead(conversationId, true); // true = inmediato (sin debounce)
+        
+        // Actualizar estado local inmediatamente para evitar mostrar "no leído" durante la recarga
+        zeroUnreadForConversation(conversationId);
       } else {
         console.error('❌ [ChatWidget] Error en respuesta de mensajes:', data);
         
@@ -913,6 +922,40 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [session]);
 
+  // 🔧 NUEVO: Cuando se carga la página y hay una conversación seleccionada, marcarla como leída
+  useEffect(() => {
+    if (session && selectedConversation && isOpen && mainView === 'chat') {
+      // Si hay una conversación abierta al cargar, marcarla como leída inmediatamente
+      // Esto asegura que después de recargar la página, no se muestren como "no leídos"
+      if (!selectedConversation.startsWith('temp_')) {
+        markConversationAsRead(selectedConversation, true); // true = inmediato
+      }
+    }
+  }, [session, selectedConversation, isOpen, mainView]); // Solo cuando cambian estos valores críticos
+
+  // 🔧 NUEVO: Persistir conversación abierta en localStorage para recordarla después de recargar
+  useEffect(() => {
+    if (selectedConversation && isOpen && mainView === 'chat' && !selectedConversation.startsWith('temp_')) {
+      localStorage.setItem('chat_last_open_conversation', selectedConversation);
+    } else if (!isOpen || mainView !== 'chat') {
+      localStorage.removeItem('chat_last_open_conversation');
+    }
+  }, [selectedConversation, isOpen, mainView]);
+
+  // 🔧 NUEVO: Al cargar conversaciones, si hay una conversación que estaba abierta antes de recargar, marcarla como leída
+  useEffect(() => {
+    if (session && conversations.length > 0) {
+      const lastOpenConversation = localStorage.getItem('chat_last_open_conversation');
+      if (lastOpenConversation && isOpen && mainView === 'chat') {
+        // Si la conversación que estaba abierta tiene mensajes no leídos, marcarla como leída
+        const conv = conversations.find(c => c.id === lastOpenConversation);
+        if (conv && conv.unread_count > 0) {
+          markConversationAsRead(lastOpenConversation, true);
+        }
+      }
+    }
+  }, [conversations, session, isOpen, mainView]);
+
   // Actualizar lista de usuarios cada 15 segundos como respaldo (tiempo real es principal)
   // Esto ayuda a detectar usuarios que cerraron sesión más rápidamente
   useEffect(() => {
@@ -997,9 +1040,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (!isOpen || mainView !== 'chat' || !selectedConversation) return;
     if (selectedConversation.startsWith('temp_')) return; // No marcar conversaciones temporales
     
-    // Cuando el usuario está viendo una conversación, marcarla como leída
-    // Usar función centralizada con debouncing para evitar múltiples llamadas
-    markConversationAsRead(selectedConversation);
+    // Cuando el usuario está viendo una conversación, marcarla como leída INMEDIATAMENTE
+    // Sin debounce para asegurar que se marque antes de cualquier recarga
+    markConversationAsRead(selectedConversation, true); // true = inmediato, sin debounce
     
     // Cerrar toasts relacionados con esta conversación cuando se activa
     setToasts(prev => prev.filter(toast => toast.conversationId !== selectedConversation));
