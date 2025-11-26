@@ -1255,13 +1255,20 @@ export default function ModelCalculatorPage() {
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3">
-                          <div className="flex items-center space-x-2 mb-1">
-                            <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{row.name}</div>
+                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1">{row.name}</div>
+                          <div className="flex items-center space-x-3 mb-1">
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Reparto: {row.percentageLabel}
+                            </div>
                             {/* 🔧 NUEVO: Checkbox para marcar como mensual */}
                             {(() => {
                               const platform = platforms.find(p => p.id === row.id);
                               return (
-                                <div className="flex items-center space-x-1">
+                                <label 
+                                  htmlFor={`monthly-${row.id}`} 
+                                  className="flex items-center space-x-1.5 cursor-pointer group hover:bg-purple-50 dark:hover:bg-purple-900/20 px-2 py-1 rounded-md transition-colors"
+                                  title="Marcar como pago mensual (requiere restar P1 en P2)"
+                                >
                                   <input
                                     type="checkbox"
                                     id={`monthly-${row.id}`}
@@ -1297,18 +1304,14 @@ export default function ModelCalculatorPage() {
                                         alert('Error al actualizar la frecuencia de pago');
                                       }
                                     }}
-                                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                    title="Marcar como pago mensual"
+                                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 cursor-pointer"
                                   />
-                                  <label htmlFor={`monthly-${row.id}`} className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-                                    Mensual
-                                  </label>
-                                </div>
+                                  <span className="text-xs font-medium text-purple-700 dark:text-purple-400 group-hover:text-purple-800 dark:group-hover:text-purple-300">
+                                    📅 Mensual
+                                  </span>
+                                </label>
                               );
                             })()}
-                          </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Reparto: {row.percentageLabel}
                           </div>
                         </td>
                         <td className="py-3 px-3">
