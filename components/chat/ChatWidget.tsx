@@ -29,6 +29,7 @@ interface Conversation {
   id: string;
   other_participant: User;
   last_message?: {
+    id: string;
     content: string;
     created_at: string;
     sender_id: string;
@@ -1119,16 +1120,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // 🔧 NUEVO: Marcar todos los mensajes de esta conversación como procesados
     // Esto evita que aparezcan toasts al recargar si la conversación estaba abierta
     const currentConv = conversations.find(c => c.id === selectedConversation);
-    if (currentConv?.last_message && 'id' in currentConv.last_message) {
-      const messageId = (currentConv.last_message as any).id;
-      if (messageId) {
-        processedMessageIdsRef.current.add(messageId);
-        if (typeof window !== 'undefined') {
-          const processedArray = Array.from(processedMessageIdsRef.current);
-          const trimmedArray = processedArray.slice(-100);
-          localStorage.setItem('chat_processed_messages', JSON.stringify(trimmedArray));
-          processedMessageIdsRef.current = new Set(trimmedArray);
-        }
+    if (currentConv?.last_message?.id) {
+      processedMessageIdsRef.current.add(currentConv.last_message.id);
+      if (typeof window !== 'undefined') {
+        const processedArray = Array.from(processedMessageIdsRef.current);
+        const trimmedArray = processedArray.slice(-100);
+        localStorage.setItem('chat_processed_messages', JSON.stringify(trimmedArray));
+        processedMessageIdsRef.current = new Set(trimmedArray);
       }
     }
   }, [isOpen, mainView, selectedConversation, conversations]);
