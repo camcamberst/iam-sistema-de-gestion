@@ -1274,6 +1274,7 @@ export default function ModelCalculatorPage() {
                           >
                             {row.name}
                           </div>
+                          {/* 🔧 DEBUG: Forzar actualización de Vercel */}
                           <div className="flex items-center space-x-3 mb-1">
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Reparto: {row.percentageLabel}
