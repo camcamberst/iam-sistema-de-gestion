@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { notifyPlataformaEntregada, notifyPlataformaAgregada } from '@/lib/chat/bot-notifications';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL || '',
@@ -155,6 +156,36 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error changing platform status:', error);
       return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    // Notificar según el estado
+    try {
+      // Obtener nombre de la plataforma y modelo
+      const { data: platformInfo } = await supabase
+        .from('calculator_platforms')
+        .select('name')
+        .eq('id', normalizedId)
+        .single();
+      
+      const { data: modelInfo } = await supabase
+        .from('users')
+        .select('name')
+        .eq('id', model_id)
+        .single();
+
+      const platformName = platformInfo?.name || platform_id;
+
+      if (new_status === 'entregada') {
+        await notifyPlataformaEntregada(model_id, platformName);
+        console.log('✅ [PLATAFORMAS] Notificación de plataforma entregada enviada');
+      } else if (new_status === 'disponible' && data) {
+        // Si se está agregando una nueva plataforma (cambió de otro estado a disponible)
+        await notifyPlataformaAgregada(model_id, platformName);
+        console.log('✅ [PLATAFORMAS] Notificación de plataforma agregada enviada');
+      }
+    } catch (notificationError) {
+      console.warn('⚠️ [PLATAFORMAS] Error enviando notificación:', notificationError);
+      // No fallar la actualización si falla la notificación
     }
 
     // Sincronización con calculator_config según estado

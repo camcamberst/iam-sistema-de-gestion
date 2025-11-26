@@ -1,5 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
+import { 
+  notifyMetaDiaAlcanzada, 
+  notifyMetaPeriodoAlcanzada,
+  notifyAdminsMetaAlcanzada
+} from '@/lib/chat/bot-notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -83,6 +88,46 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [DAILY-EARNINGS] Earnings saved successfully:', data);
+
+    // Verificar si se alcanzó una meta
+    try {
+      // Obtener configuración de objetivos
+      const { data: config } = await supabase
+        .from('calculator_config')
+        .select('min_quota_override, group_min_quota, daily_goal_override, group_daily_goal')
+        .eq('model_id', modelId)
+        .eq('active', true)
+        .single();
+
+      if (config) {
+        const dailyGoal = config.daily_goal_override || config.group_daily_goal || 0;
+        const periodGoal = config.min_quota_override || config.group_min_quota || 0;
+
+        // Verificar meta del día
+        if (dailyGoal > 0 && earnings >= dailyGoal) {
+          await notifyMetaDiaAlcanzada(modelId);
+          
+          // Obtener nombre de la modelo para notificar a admins
+          const { data: model } = await supabase
+            .from('users')
+            .select('name')
+            .eq('id', modelId)
+            .single();
+          
+          if (model?.name) {
+            await notifyAdminsMetaAlcanzada(modelId, model.name, 'día');
+          }
+          
+          console.log('✅ [DAILY-EARNINGS] Meta del día alcanzada, notificaciones enviadas');
+        }
+
+        // Verificar meta del período (necesitaríamos calcular total del período)
+        // Esto se puede hacer en otro lugar o con un cron job
+      }
+    } catch (metaError) {
+      console.warn('⚠️ [DAILY-EARNINGS] Error verificando metas:', metaError);
+      // No fallar el guardado si falla la verificación de metas
+    }
 
     return NextResponse.json({
       success: true,

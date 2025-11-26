@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { AIM_BOTTY_ID, isBottyId } from '@/lib/chat/aim-botty';
 import { processBotResponse } from '@/lib/chat/process-bot-response';
+import { 
+  notifyMensajeImportanteAdmin,
+  notifyAdminNuevoMensajeModelo
+} from '@/lib/chat/bot-notifications';
 
 export const dynamic = 'force-dynamic';
 
@@ -269,6 +273,43 @@ export async function POST(request: NextRequest) {
       }).catch(error => {
         console.error('❌ [BOTTY] Error en processBotResponse:', error);
       });
+    }
+
+    // Notificar al receptor según roles
+    try {
+      const receiverId = conversation.participant_1_id === user.id 
+        ? conversation.participant_2_id 
+        : conversation.participant_1_id;
+
+      // Obtener información del receptor
+      const { data: receiver } = await supabase
+        .from('users')
+        .select('id, name, role')
+        .eq('id', receiverId)
+        .single();
+
+      // Obtener información del remitente
+      const { data: sender } = await supabase
+        .from('users')
+        .select('id, name, role')
+        .eq('id', user.id)
+        .single();
+
+      if (receiver && sender && !isBottyId(receiverId)) {
+        // Si admin envía mensaje a modelo
+        if ((sender.role === 'admin' || sender.role === 'super_admin') && receiver.role === 'modelo') {
+          await notifyMensajeImportanteAdmin(receiverId, sender.name || 'Administrador');
+          console.log('✅ [CHAT] Notificación de mensaje importante enviada a modelo');
+        }
+        // Si modelo envía mensaje a admin
+        else if (sender.role === 'modelo' && (receiver.role === 'admin' || receiver.role === 'super_admin')) {
+          await notifyAdminNuevoMensajeModelo(receiverId, sender.name || 'Modelo');
+          console.log('✅ [CHAT] Notificación de nuevo mensaje enviada a admin');
+        }
+      }
+    } catch (notificationError) {
+      console.warn('⚠️ [CHAT] Error enviando notificación:', notificationError);
+      // No fallar el envío si falla la notificación
     }
 
     // Actualizar estado de usuario en línea
