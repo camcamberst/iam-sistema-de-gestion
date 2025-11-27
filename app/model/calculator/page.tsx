@@ -1118,98 +1118,64 @@ export default function ModelCalculatorPage() {
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="flex items-center space-x-2">
-                            {(() => {
-                              const isFrozen = frozenPlatforms.includes(row.id.toLowerCase());
-                              // 🔧 FIX: Activar modo mensual automáticamente si hay un valor de P1 > 0
-                              const p1Value = p1Values[row.id] || 0;
-                              const showMonthlyFields = isPeriod2 && p1Value > 0;
-                              
-                              // Si es plataforma mensual en P2, mostrar dos campos
-                              if (showMonthlyFields) {
-                                const monthlyTotal = Number.parseFloat(monthlyTotals[row.id] || '0') || 0;
-                                const p2Value = monthlyTotal - p1Value;
-                                
+                          <div className="flex flex-col">
+                            <div className="flex items-center space-x-2 relative">
+                              {(() => {
+                                const isFrozen = frozenPlatforms.includes(row.id.toLowerCase());
+                                // 🔧 FIX: Activar modo mensual automáticamente si hay un valor de P1 > 0
+                                const p1Value = p1Values[row.id] || 0;
+                                const showMonthlyFields = isPeriod2 && p1Value > 0;
+
                                 return (
-                                  <div className="flex flex-col space-y-2">
-                                    {/* Campo: Total mensual */}
-                                    <div className="flex items-center space-x-1">
-                                      <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">Total mensual:</label>
-                                      <input
-                                        type="text"
-                                        inputMode="decimal"
-                                        value={monthlyTotals[row.id] ?? ''}
-                                        onChange={(e) => {
-                                          if (isFrozen) return;
-                                          const rawValue = e.target.value;
-                                          const unifiedValue = rawValue.replace(',', '.');
-                                          setMonthlyTotals(prev => ({ ...prev, [row.id]: unifiedValue }));
-                                          
-                                          // Calcular P2 automáticamente
-                                          const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
-                                          const p2Calculated = monthlyTotalNum - p1Value;
-                                          
-                                          // Actualizar inputValues con P2 (diferencia)
-                                          setInputValues(prev => ({ ...prev, [row.id]: p2Calculated > 0 ? String(p2Calculated) : '' }));
-                                          setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: p2Calculated } : p));
-                                        }}
-                                        disabled={isFrozen}
-                                        className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
-                                          isFrozen
-                                            ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                            : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
-                                        }`}
-                                        placeholder="0.00"
-                                        title="Total mensual de la plataforma"
-                                      />
-                                    </div>
-                                    
-                                    {/* Campo: P1 (editable) */}
-                                    <div className="flex items-center space-x-1">
-                                      <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">P1 (editable):</label>
-                                      <div 
-                                        className="text-sm font-medium text-blue-600 cursor-pointer hover:underline"
-                                        onClick={(e) => {
-                                          e.stopPropagation();
-                                          // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
-                                          setEditingP1Platform(row.id);
-                                          setP1InputValue(String(p1Values[row.id] || ''));
-                                        }}
-                                        title="Click para editar P1"
-                                      >
-                                        {p1Values[row.id]?.toFixed(2) || '0.00'}
-                                      </div>
-                                    </div>
-                                    
-                                    {/* Resultado: P2 (calculado) */}
-                                    <div className="text-xs text-gray-500 mt-1">
-                                      P2 = {monthlyTotal.toFixed(2)} - {p1Value.toFixed(2)} = <strong>{p2Value.toFixed(2)}</strong>
-                                    </div>
-                                  </div>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    // Si es mensual (P1>0), mostrar Total Mensual. Si no, mostrar Input Normal (P2)
+                                    value={showMonthlyFields ? (monthlyTotals[row.id] ?? '') : (inputValues[row.id] ?? '')}
+                                    onChange={(e) => {
+                                      if (isFrozen) return;
+                                      const rawValue = e.target.value;
+                                      const unifiedValue = rawValue.replace(',', '.');
+                                      
+                                      if (showMonthlyFields) {
+                                        // LÓGICA MENSUAL: Input es Total Mensual
+                                        setMonthlyTotals(prev => ({ ...prev, [row.id]: unifiedValue }));
+                                        
+                                        const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
+                                        const p2Calculated = monthlyTotalNum - p1Value;
+                                        
+                                        // Actualizar P2 calculado
+                                        // Nota: NO llamamos a handleInputChange para no sobreescribir inputValues con el valor calculado,
+                                        // ya que queremos mantener el Total Mensual visible en el input.
+                                        setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: p2Calculated } : p));
+                                      } else {
+                                        // LÓGICA NORMAL: Input es P2
+                                        handleInputChange(row.id, unifiedValue);
+                                      }
+                                    }}
+                                    className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
+                                      isFrozen
+                                        ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
+                                        : showMonthlyFields 
+                                          ? 'border-blue-400 dark:border-blue-500 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 ring-1 ring-blue-100 dark:ring-blue-900/30'
+                                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
+                                    }`}
+                                    placeholder="0.00"
+                                    disabled={isFrozen}
+                                    title={showMonthlyFields ? "Ingresa el TOTAL MENSUAL (El sistema restará P1 automáticamente)" : (isFrozen ? "Plataforma congelada" : "Ingresa el valor de la quincena")}
+                                  />
                                 );
-                              }
-                              
-                              // Renderizado normal para plataformas quincenales o P1
-                              return (
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={inputValues[row.id] ?? ''}
-                                  onChange={(e) => {
-                                    const val = e.target.value.replace(',', '.');
-                                    handleInputChange(row.id, val);
-                                  }}
-                                  disabled={isFrozen}
-                                  className={`w-full px-3 py-2 text-sm border rounded-md transition-all duration-200 ${
-                                    isFrozen
-                                      ? 'border-gray-400 dark:border-gray-500 bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 cursor-not-allowed'
-                                      : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
-                                  }`}
-                                  placeholder="0.00"
-                                  title={isFrozen ? "Plataforma congelada por cierre de periodo" : "Ingresar valor"}
-                                />
-                              );
-                            })()}
+                              })()}
+                              <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                                {row.currency || 'USD'}
+                              </span>
+                            </div>
+                            {/* Indicador discreto de resta P1 */}
+                            {isPeriod2 && (p1Values[row.id] || 0) > 0 && (
+                               <div className="text-[10px] text-blue-500/80 dark:text-blue-400/80 mt-0.5 font-medium ml-1">
+                                 - P1 ({(p1Values[row.id] || 0).toFixed(0)})
+                               </div>
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-3 font-medium text-gray-900 dark:text-white">
