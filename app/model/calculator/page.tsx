@@ -2,12 +2,9 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { createClient } from '@supabase/supabase-js';
-import { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import { isClosureDay, isEarlyFreezeRelevantDay } from '@/utils/period-closure-dates';
-import { InfoCardGrid } from '@/components/ui/InfoCard';
-import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
 // 🔧 FORCE DYNAMIC: Mantener para asegurar datos frescos
 export const dynamic = 'force-dynamic';
@@ -15,6 +12,17 @@ export const dynamic = 'force-dynamic';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
 const supabase = createClient(supabaseUrl, supabaseKey);
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'modelo';
+  groups: string[];
+  organization_id: string;
+  is_active: boolean;
+  last_login: string;
+}
 
 interface Platform {
   id: string;
