@@ -162,12 +162,17 @@ async function getUserProductivityData(userId: string) {
 }
 
 async function generateAIInsights(userData: any) {
-  // Lista de modelos para intentar (más recientes primero)
+  // Lista de modelos para intentar (más recientes primero - Gemini 3.0 2025)
   const modelNames = [
-    'gemini-2.0-flash-exp',           // Gemini 2.0 Flash Experimental
+    'gemini-3.0-pro',                 // Gemini 3.0 Pro - Más reciente (Nov 2025)
+    'gemini-3-pro-preview',            // Gemini 3.0 Pro Preview
+    'gemini-3.0-flash',                // Gemini 3.0 Flash - Más rápido
+    'gemini-3-flash-preview',          // Gemini 3.0 Flash Preview
+    'gemini-2.5-flash',               // Gemini 2.5 Flash - Fallback estable
+    'gemini-2.5-pro',                 // Gemini 2.5 Pro - Fallback estable
     'gemini-1.5-flash-latest',        // Gemini 1.5 Flash Latest
-    'gemini-1.5-pro-latest',         // Gemini 1.5 Pro Latest
-    'gemini-1.5-flash',              // Gemini 1.5 Flash (estable)
+    'gemini-1.5-pro-latest',          // Gemini 1.5 Pro Latest
+    'gemini-1.5-flash',               // Gemini 1.5 Flash (estable)
     'gemini-1.5-pro'                  // Gemini 1.5 Pro (estable)
   ];
   

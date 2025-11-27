@@ -68,12 +68,16 @@ export async function GET(_req: NextRequest) {
   try {
     const genAI = getGenAI();
     const modelNames = [
-      'gemini-2.5-flash',
-      'gemini-2.5-pro',
-      'gemini-2.5-flash-lite',
-      'gemini-1.5-flash',
-      'gemini-1.5-pro',
-      'gemini-pro',
+      'gemini-3.0-pro',                // Gemini 3.0 Pro - Más reciente (Nov 2025)
+      'gemini-3-pro-preview',           // Gemini 3.0 Pro Preview
+      'gemini-3.0-flash',               // Gemini 3.0 Flash - Más rápido
+      'gemini-3-flash-preview',         // Gemini 3.0 Flash Preview
+      'gemini-2.5-flash',               // Gemini 2.5 Flash - Fallback estable
+      'gemini-2.5-pro',                 // Gemini 2.5 Pro - Fallback estable
+      'gemini-2.5-flash-lite',          // Gemini 2.5 Flash-Lite - Optimizado
+      'gemini-1.5-flash',               // Fallback: versión estable anterior
+      'gemini-1.5-pro',                 // Fallback: versión estable anterior
+      'gemini-pro',                     // Legacy fallback
     ];
 
     let success = false;

@@ -361,15 +361,19 @@ RESPUESTA:
     console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
     console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
 
-    // Lista de modelos para intentar (más recientes primero - Gemini 2.5 2025)
+    // Lista de modelos para intentar (más recientes primero - Gemini 3.0 2025)
     // Modelos actualizados a las versiones más recientes disponibles
     const modelNames = [
-      'gemini-2.5-flash',              // Gemini 2.5 Flash - Más rápido (2025)
-      'gemini-2.5-pro',                // Gemini 2.5 Pro - Más avanzado (2025)
-      'gemini-2.5-flash-lite',         // Gemini 2.5 Flash-Lite - Optimizado (2025)
-      'gemini-1.5-flash',              // Fallback: versión estable anterior
-      'gemini-1.5-pro',                // Fallback: versión estable anterior
-      'gemini-pro'                     // Legacy fallback
+      'gemini-3.0-pro',                // Gemini 3.0 Pro - Más reciente (Nov 2025)
+      'gemini-3-pro-preview',           // Gemini 3.0 Pro Preview
+      'gemini-3.0-flash',               // Gemini 3.0 Flash - Más rápido
+      'gemini-3-flash-preview',         // Gemini 3.0 Flash Preview
+      'gemini-2.5-flash',               // Gemini 2.5 Flash - Fallback estable
+      'gemini-2.5-pro',                 // Gemini 2.5 Pro - Fallback estable
+      'gemini-2.5-flash-lite',         // Gemini 2.5 Flash-Lite - Optimizado
+      'gemini-1.5-flash',               // Fallback: versión estable anterior
+      'gemini-1.5-pro',                 // Fallback: versión estable anterior
+      'gemini-pro'                      // Legacy fallback
     ];
     
     let lastError: any = null;
