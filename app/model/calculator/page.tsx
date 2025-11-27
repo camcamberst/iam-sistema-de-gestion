@@ -1024,142 +1024,99 @@ export default function ModelCalculatorPage() {
                     
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
-                        <td className="py-3 px-3 relative">
-                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión simplificada (igual a view-model) */}
-                          <div 
-                            className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block mb-1"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
-                              setEditingP1Platform(row.id);
-                              setP1InputValue(String(p1Values[row.id] || ''));
-                            }}
-                            title="Click para ingresar valor de P1"
-                          >
-                            {row.name}
-                          </div>
-                          <div className="flex items-center space-x-3 mb-1">
+                        <td className="py-3 px-3">
+                          <div className="relative flex flex-col items-start gap-1">
+                            {/* 🔧 FIX: Nombre clickeable robusto con botón e indicador visual */}
+                            <button 
+                              type="button"
+                              className="font-medium text-gray-900 dark:text-gray-100 text-sm text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2 group"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('👆 [CALCULATOR] Click en plataforma:', row.id);
+                                setEditingP1Platform(row.id);
+                                setP1InputValue(String(p1Values[row.id] || ''));
+                              }}
+                              title="Click para ingresar valor de P1"
+                            >
+                              <span className="underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500">
+                                {row.name}
+                              </span>
+                              <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
+                                ✎
+                              </span>
+                            </button>
+                            
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Reparto: {row.percentageLabel}
                             </div>
-                            {/* 🔧 NUEVO: Checkbox para marcar como mensual */}
-                            {(() => {
-                              const platform = platforms.find(p => p.id === row.id);
-                              return (
-                                <label 
-                                  htmlFor={`monthly-${row.id}`} 
-                                  className="flex items-center space-x-1.5 cursor-pointer group hover:bg-purple-50 dark:hover:bg-purple-900/20 px-2 py-1 rounded-md transition-colors"
-                                  title="Marcar como pago mensual (requiere restar P1 en P2)"
-                                  onClick={(e) => e.stopPropagation()}
-                                >
+
+                            {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta con z-index alto */}
+                            {editingP1Platform === row.id && (
+                              <div
+                                className="absolute z-[100] bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 min-w-[140px]"
+                                style={{
+                                  top: '100%', 
+                                  left: '0',
+                                  marginTop: '4px'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
                                   <input
-                                    type="checkbox"
-                                    id={`monthly-${row.id}`}
-                                    checked={platform?.payment_frequency === 'mensual'}
-                                    onChange={async (e) => {
-                                      const newFrequency = e.target.checked ? 'mensual' : 'quincenal';
-                                      try {
-                                        const response = await fetch('/api/calculator/platforms', {
-                                          method: 'PATCH',
-                                          headers: { 'Content-Type': 'application/json' },
-                                          body: JSON.stringify({
-                                            platformId: row.id,
-                                            payment_frequency: newFrequency
-                                          })
-                                        });
-                                        const data = await response.json();
-                                        if (data.success) {
-                                          // Actualizar estado local
-                                          setPlatforms(prev => prev.map(p => 
-                                            p.id === row.id 
-                                              ? { ...p, payment_frequency: newFrequency }
-                                              : p
-                                          ));
-                                          // Recargar configuración para reflejar el cambio
-                                          if (user?.id) {
-                                            await loadCalculatorConfig(user.id);
-                                          }
-                                        } else {
-                                          alert('Error al actualizar: ' + (data.error || 'Error desconocido'));
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={p1InputValue}
+                                    onChange={(e) => {
+                                      const rawValue = e.target.value;
+                                      const unifiedValue = rawValue.replace(',', '.');
+                                      setP1InputValue(unifiedValue);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        const value = Number.parseFloat(p1InputValue) || 0;
+                                        setP1Values(prev => ({ ...prev, [row.id]: value }));
+                                        
+                                        // Recalcular P2 si hay total mensual
+                                        if (monthlyTotals[row.id]) {
+                                          const monthlyTotal = Number.parseFloat(monthlyTotals[row.id]) || 0;
+                                          const p2Value = monthlyTotal - value;
+                                          
+                                          setInputValues(prev => ({ ...prev, [row.id]: p2Value > 0 ? String(p2Value) : '' }));
+                                          setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: p2Value } : p));
                                         }
-                                      } catch (error) {
-                                        console.error('Error actualizando payment_frequency:', error);
-                                        alert('Error al actualizar la frecuencia de pago');
+                                        
+                                        setEditingP1Platform(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingP1Platform(null);
                                       }
                                     }}
-                                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-2 focus:ring-purple-500 focus:ring-offset-1 cursor-pointer"
+                                    autoFocus
+                                    className="w-16 px-1.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    placeholder="0.00"
                                   />
-                                  <span className="text-xs font-medium text-purple-700 dark:text-purple-400 group-hover:text-purple-800 dark:group-hover:text-purple-300">
-                                    📅 Mensual
-                                  </span>
-                                </label>
-                              );
-                            })()}
-                          </div>
-                          {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta relativa a la celda, diseño compacto */}
-                          {editingP1Platform === row.id && (
-                            <div
-                              className="absolute z-50 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-lg p-2"
-                              style={{
-                                top: '100%', // Justo debajo del contenido de la celda
-                                left: '12px', // Alineado con el padding de la celda (px-3 = 12px)
-                                marginTop: '4px' // Pequeño espacio
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <div className="flex items-center gap-1.5">
-                                <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
-                                <input
-                                  type="text"
-                                  inputMode="decimal"
-                                  value={p1InputValue}
-                                  onChange={(e) => {
-                                    const rawValue = e.target.value;
-                                    const unifiedValue = rawValue.replace(',', '.');
-                                    setP1InputValue(unifiedValue);
-                                  }}
-                                  onKeyDown={(e) => {
-                                    if (e.key === 'Enter') {
-                                      const value = Number.parseFloat(p1InputValue) || 0;
-                                      setP1Values(prev => ({ ...prev, [row.id]: value }));
-                                      
-                                      // Recalcular P2 si hay total mensual
-                                      if (monthlyTotals[row.id]) {
-                                        const monthlyTotal = Number.parseFloat(monthlyTotals[row.id]) || 0;
-                                        const p2Value = monthlyTotal - value;
-                                        
-                                        setInputValues(prev => ({ ...prev, [row.id]: p2Value > 0 ? String(p2Value) : '' }));
-                                        setPlatforms(prev => prev.map(p => p.id === row.id ? { ...p, value: p2Value } : p));
-                                      }
-                                      
+                                  <button
+                                    onClick={() => handleSaveP1Value(row.id)}
+                                    className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] font-medium hover:bg-blue-600 transition-colors"
+                                    title="Guardar"
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    onClick={() => {
                                       setEditingP1Platform(null);
-                                    } else if (e.key === 'Escape') {
-                                      setEditingP1Platform(null);
-                                    }
-                                  }}
-                                  autoFocus
-                                  className="w-16 px-1.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                                  placeholder="0.00"
-                                />
-                                <button
-                                  onClick={() => handleSaveP1Value(row.id)}
-                                  className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] font-medium hover:bg-blue-600 transition-colors"
-                                  title="Guardar"
-                                >
-                                  ✓
-                                </button>
-                                <button
-                                  onClick={() => {
-                                    setEditingP1Platform(null);
-                                  }}
-                                  className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-[10px] font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
-                                  title="Cancelar"
-                                >
-                                  ✕
-                                </button>
+                                    }}
+                                    className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-[10px] font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                                    title="Cancelar"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
                               </div>
-                            </div>
-                          )}
+                            )}
+                          </div>
+                        </td>
                         </td>
                         <td className="py-3 px-3">
                           <div className="flex items-center space-x-2">
