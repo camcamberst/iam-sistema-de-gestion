@@ -148,6 +148,25 @@ export default function ModelCalculatorPage() {
     const value = Number.parseFloat(p1InputValue) || 0;
     setP1Values(prev => ({ ...prev, [platformId]: value }));
     
+    // 🔧 NUEVO: Persistir valor de P1 en la base de datos (fecha día 1 del mes)
+    if (user) {
+        const p1Date = new Date(periodDate);
+        p1Date.setDate(1); // Primer día del mes
+        const p1DateStr = p1Date.toISOString().split('T')[0];
+        
+        console.log('💾 [P1 SAVE] Guardando P1 en background...', { platformId, value, date: p1DateStr });
+        
+        fetch('/api/calculator/model-values-v2', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                modelId: user.id,
+                values: { [platformId]: value },
+                periodDate: p1DateStr
+            })
+        }).catch(err => console.error('❌ [P1 SAVE] Error guardando P1:', err));
+    }
+    
     // Si ya hay un total mensual, recalcular P2
     if (monthlyTotals[platformId]) {
       const monthlyTotal = Number.parseFloat(monthlyTotals[platformId]) || 0;
