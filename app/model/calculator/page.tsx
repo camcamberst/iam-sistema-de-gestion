@@ -736,7 +736,6 @@ export default function ModelCalculatorPage() {
     }
     
     setEditingP1Platform(null);
-    setP1InputPosition(null);
   };
 
   const handleSave = async () => {
@@ -1216,13 +1215,9 @@ export default function ModelCalculatorPage() {
                                         className="text-sm font-medium text-blue-600 cursor-pointer hover:underline"
                                         onClick={(e) => {
                                           e.stopPropagation();
-                                          const rect = e.currentTarget.getBoundingClientRect();
+                                          // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
                                           setEditingP1Platform(row.id);
                                           setP1InputValue(String(p1Values[row.id] || ''));
-                                          setP1InputPosition({
-                                            top: rect.bottom + 5,
-                                            left: rect.left
-                                          });
                                         }}
                                         title="Click para editar P1"
                                       >
