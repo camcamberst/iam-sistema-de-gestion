@@ -89,7 +89,7 @@ export default function ModelCalculatorPage() {
   // 🔧 NUEVO: Estado para input flotante de P1
   const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null); // ID de plataforma siendo editada
   const [p1InputValue, setP1InputValue] = useState<string>(''); // Valor temporal del input
-  const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null); // Posición del input flotante
+  // const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null); // Eliminado
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -112,12 +112,11 @@ export default function ModelCalculatorPage() {
   // 🔧 NUEVO: Cerrar input flotante al hacer click fuera o presionar Escape
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (editingP1Platform && p1InputPosition) {
+      if (editingP1Platform) {
         const target = e.target as HTMLElement;
         // Cerrar si el click no es dentro del input flotante
-        if (!target.closest('.fixed.z-50')) {
+        if (!target.closest('.absolute.z-50')) {
           setEditingP1Platform(null);
-          setP1InputPosition(null);
         }
       }
     };
@@ -125,7 +124,6 @@ export default function ModelCalculatorPage() {
     const handleEscape = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && editingP1Platform) {
         setEditingP1Platform(null);
-        setP1InputPosition(null);
       }
     };
 
@@ -137,7 +135,7 @@ export default function ModelCalculatorPage() {
         document.removeEventListener('keydown', handleEscape);
       };
     }
-  }, [editingP1Platform, p1InputPosition]);
+  }, [editingP1Platform]);
 
   // Derivado único: filas computadas exactamente como se muestran en la tabla
   const computedRows = useMemo(() => {
@@ -1032,13 +1030,9 @@ export default function ModelCalculatorPage() {
                             className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block mb-1"
                             onClick={(e) => {
                               e.stopPropagation();
-                              const rect = e.currentTarget.getBoundingClientRect();
+                              // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
                               setEditingP1Platform(row.id);
                               setP1InputValue(String(p1Values[row.id] || ''));
-                              setP1InputPosition({
-                                top: rect.bottom + 5,
-                                left: rect.left
-                              });
                             }}
                             title="Click para ingresar valor de P1"
                           >
@@ -1102,14 +1096,16 @@ export default function ModelCalculatorPage() {
                               );
                             })()}
                           </div>
-                          {/* 🔧 NUEVO: Input flotante para P1 */}
-                          {editingP1Platform === row.id && p1InputPosition && (
+                          {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta relativa a la celda */}
+                          {editingP1Platform === row.id && (
                             <div
-                              className="fixed z-50 bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg shadow-xl p-3 min-w-[200px]"
+                              className="absolute z-50 bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg shadow-xl p-3 min-w-[200px]"
                               style={{
-                                top: `${p1InputPosition.top}px`,
-                                left: `${p1InputPosition.left}px`
+                                top: '100%', // Justo debajo del contenido de la celda
+                                left: '12px', // Alineado con el padding de la celda (px-3 = 12px)
+                                marginTop: '-10px' // Ajuste fino para superposición leve o cercanía
                               }}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                                 Ingresar valor de P1 para {row.name}
@@ -1139,10 +1135,8 @@ export default function ModelCalculatorPage() {
                                       }
                                       
                                       setEditingP1Platform(null);
-                                      setP1InputPosition(null);
                                     } else if (e.key === 'Escape') {
                                       setEditingP1Platform(null);
-                                      setP1InputPosition(null);
                                     }
                                   }}
                                   autoFocus
@@ -1158,7 +1152,6 @@ export default function ModelCalculatorPage() {
                                 <button
                                   onClick={() => {
                                     setEditingP1Platform(null);
-                                    setP1InputPosition(null);
                                   }}
                                   className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                                 >

@@ -52,7 +52,7 @@ export default function AdminViewModelPage() {
   // 🔧 NUEVO: Estado para input flotante de P1
   const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null);
   const [p1InputValue, setP1InputValue] = useState<string>('');
-  const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null);
+  // const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null); // Eliminado
   const [p1Values, setP1Values] = useState<Record<string, number>>({});
   
   // Estados para filtros
@@ -68,11 +68,10 @@ export default function AdminViewModelPage() {
   // 🔧 NUEVO: Cerrar input flotante al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
-      if (editingP1Platform && p1InputPosition) {
+      if (editingP1Platform) {
         const target = e.target as HTMLElement;
-        if (!target.closest('.fixed.z-50')) {
+        if (!target.closest('.absolute.z-50')) {
           setEditingP1Platform(null);
-          setP1InputPosition(null);
         }
       }
     };
@@ -80,7 +79,7 @@ export default function AdminViewModelPage() {
       document.addEventListener('mousedown', handleClickOutside);
       return () => document.removeEventListener('mousedown', handleClickOutside);
     }
-  }, [editingP1Platform, p1InputPosition]);
+  }, [editingP1Platform]);
 
   useEffect(() => {
     const load = async () => {
@@ -731,14 +730,10 @@ export default function AdminViewModelPage() {
                                 <div 
                                   className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block mb-1"
                                   onClick={(e) => {
-                                    const rect = e.currentTarget.getBoundingClientRect();
-                                    // 🔧 FIX: Posicionar relativo al elemento clickeado, no fijo arriba
+                                    e.stopPropagation();
+                                    // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
                                     setEditingP1Platform(platform.id);
                                     setP1InputValue(String(p1Values[platform.id] || ''));
-                                    setP1InputPosition({
-                                      top: rect.bottom + 5,
-                                      left: rect.left
-                                    });
                                   }}
                                   title="Click para ingresar valor de P1"
                                 >
@@ -747,14 +742,16 @@ export default function AdminViewModelPage() {
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                   Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                                 </div>
-                                {/* 🔧 NUEVO: Input flotante para P1 */}
-                                {editingP1Platform === platform.id && p1InputPosition && (
+                                {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta relativa a la celda */}
+                                {editingP1Platform === platform.id && (
                                   <div
-                                    className="fixed z-50 bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg shadow-xl p-3 min-w-[200px]"
+                                    className="absolute z-50 bg-white dark:bg-gray-800 border-2 border-blue-500 rounded-lg shadow-xl p-3 min-w-[200px]"
                                     style={{
-                                      top: `${p1InputPosition.top}px`,
-                                      left: `${p1InputPosition.left}px`
+                                      top: '100%', // Justo debajo del contenido de la celda
+                                      left: '12px', // Alineado con el padding de la celda (px-3 = 12px)
+                                      marginTop: '-10px' // Ajuste fino para superposición leve o cercanía
                                     }}
+                                    onClick={(e) => e.stopPropagation()}
                                   >
                                     <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
                                       Ingresar valor de P1 para {platform.name}
@@ -774,10 +771,8 @@ export default function AdminViewModelPage() {
                                             const value = Number.parseFloat(p1InputValue) || 0;
                                             setP1Values(prev => ({ ...prev, [platform.id]: value }));
                                             setEditingP1Platform(null);
-                                            setP1InputPosition(null);
                                           } else if (e.key === 'Escape') {
                                             setEditingP1Platform(null);
-                                            setP1InputPosition(null);
                                           }
                                         }}
                                         autoFocus
@@ -789,7 +784,6 @@ export default function AdminViewModelPage() {
                                           const value = Number.parseFloat(p1InputValue) || 0;
                                           setP1Values(prev => ({ ...prev, [platform.id]: value }));
                                           setEditingP1Platform(null);
-                                          setP1InputPosition(null);
                                         }}
                                         className="px-3 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                                       >
@@ -798,7 +792,6 @@ export default function AdminViewModelPage() {
                                       <button
                                         onClick={() => {
                                           setEditingP1Platform(null);
-                                          setP1InputPosition(null);
                                         }}
                                         className="px-3 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors text-sm"
                                       >
