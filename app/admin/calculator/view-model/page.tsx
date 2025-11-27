@@ -732,6 +732,7 @@ export default function AdminViewModelPage() {
                                   className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block mb-1"
                                   onClick={(e) => {
                                     const rect = e.currentTarget.getBoundingClientRect();
+                                    // 🔧 FIX: Posicionar relativo al elemento clickeado, no fijo arriba
                                     setEditingP1Platform(platform.id);
                                     setP1InputValue(String(p1Values[platform.id] || ''));
                                     setP1InputPosition({
@@ -742,54 +743,6 @@ export default function AdminViewModelPage() {
                                   title="Click para ingresar valor de P1"
                                 >
                                   {platform.name}
-                                </div>
-                                <div className="flex items-center space-x-2 mb-1">
-                                  {/* 🔧 NUEVO: Checkbox para marcar como mensual */}
-                                  <div className="flex items-center space-x-1">
-                                    <input
-                                      type="checkbox"
-                                      id={`monthly-${platform.id}`}
-                                      checked={platform.payment_frequency === 'mensual'}
-                                      onChange={async (e) => {
-                                        const newFrequency = e.target.checked ? 'mensual' : 'quincenal';
-                                        try {
-                                          const response = await fetch('/api/calculator/platforms', {
-                                            method: 'PATCH',
-                                            headers: { 'Content-Type': 'application/json' },
-                                            body: JSON.stringify({
-                                              platformId: platform.id,
-                                              payment_frequency: newFrequency
-                                            })
-                                          });
-                                          const data = await response.json();
-                                          if (data.success) {
-                                            // Recargar datos de la calculadora para reflejar el cambio
-                                            if (selectedModel && user) {
-                                              const calcResponse = await fetch(`/api/calculator/admin-view?modelId=${selectedModel.id}&adminId=${user.id}`);
-                                              const calcData = await calcResponse.json();
-                                              if (calcData.success) {
-                                                setSelectedModel({
-                                                  ...selectedModel,
-                                                  calculatorData: calcData
-                                                });
-                                              }
-                                            }
-                                          } else {
-                                            alert('Error al actualizar: ' + (data.error || 'Error desconocido'));
-                                          }
-                                        } catch (error) {
-                                          console.error('Error actualizando payment_frequency:', error);
-                                          alert('Error al actualizar la frecuencia de pago');
-                                        }
-                                      }}
-                                      className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
-                                      title="Marcar como pago mensual"
-                                      onClick={(e) => e.stopPropagation()}
-                                    />
-                                    <label htmlFor={`monthly-${platform.id}`} className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer">
-                                      Mensual
-                                    </label>
-                                  </div>
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                   Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
