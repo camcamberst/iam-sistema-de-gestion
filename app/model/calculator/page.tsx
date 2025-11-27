@@ -354,6 +354,9 @@ export default function ModelCalculatorPage() {
     return earnings;
   };
   
+  // Estado para almacenar valores de ayer
+  const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
+
   // 🔧 NUEVO: Recalcular ganancias cuando cambien los valores o las tasas
   useEffect(() => {
     const recalculate = async () => {
@@ -368,9 +371,6 @@ export default function ModelCalculatorPage() {
     };
     recalculate();
   }, [platforms, rates, yesterdayValues]);
-
-  // Estado para almacenar valores de ayer
-  const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
 
   const loadCalculatorConfig = async (userId: string) => {
     try {
