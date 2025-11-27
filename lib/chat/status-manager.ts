@@ -4,7 +4,29 @@
 // Maneja el estado "en línea" basado en login/logout
 // =====================================================
 
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+// Cliente de Supabase - se crea dinámicamente según el contexto
+// En servidor (API routes): usa SERVICE_ROLE_KEY
+// En cliente (componentes): usa ANON_KEY
+function getSupabaseClient() {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  
+  // Si estamos en el servidor (API route), usar SERVICE_ROLE_KEY
+  if (typeof window === 'undefined') {
+    const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+    return createClient(supabaseUrl, supabaseServiceKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    });
+  }
+  
+  // Si estamos en el cliente, usar ANON_KEY
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+  return createClient(supabaseUrl, supabaseAnonKey);
+}
 
 /**
  * 🔄 Actualizar estado de chat del usuario
@@ -15,6 +37,7 @@ export async function updateChatStatus(userId: string, isOnline: boolean): Promi
   try {
     console.log(`📊 [CHAT-STATUS] Actualizando estado de usuario ${userId}: ${isOnline ? 'EN LÍNEA' : 'OFFLINE'}`);
 
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('chat_user_status')
       .upsert({
@@ -56,6 +79,10 @@ export async function setUserOffline(userId: string): Promise<void> {
  */
 export async function cleanupInactiveUsers(): Promise<void> {
   try {
+    // Esta función solo se llama desde API routes (servidor)
+    // Usar cliente del servidor con SERVICE_ROLE_KEY
+    const supabase = getSupabaseClient();
+    
     // Verificar usuarios que no han enviado heartbeat en más de 2 minutos
     const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
     
@@ -92,6 +119,7 @@ export async function cleanupInactiveUsers(): Promise<void> {
  */
 export async function updateUserHeartbeat(userId: string): Promise<void> {
   try {
+    const supabase = getSupabaseClient();
     const { error } = await supabase
       .from('chat_user_status')
       .upsert({
