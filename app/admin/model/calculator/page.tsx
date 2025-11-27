@@ -29,6 +29,7 @@ interface Platform {
   // Propiedades para debugging
   percentage_override?: number | null;
   group_percentage?: number | null;
+  payment_frequency?: 'quincenal' | 'mensual';
 }
 
 interface CalculatorResult {
@@ -56,6 +57,13 @@ export default function ModelCalculatorPage() {
   const [periodDate, setPeriodDate] = useState<string>(new Date().toISOString().split('T')[0]);
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
+  // 🔧 NUEVO: Estados para plataformas mensuales en P2
+  const [p1Values, setP1Values] = useState<Record<string, number>>({}); // Valores de P1 para plataformas mensuales
+  const [monthlyTotals, setMonthlyTotals] = useState<Record<string, string>>({}); // Total mensual ingresado
+  const [isPeriod2, setIsPeriod2] = useState<boolean>(false); // Si estamos en P2
+  // 🔧 NUEVO: Estado para input flotante de P1
+  const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null); // ID de plataforma siendo editada
+  const [p1InputValue, setP1InputValue] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculatorResult | null>(null);
@@ -72,6 +80,85 @@ export default function ModelCalculatorPage() {
   const ENABLE_AUTOSAVE = true; // Habilitado con delay de inactividad
   // Animaciones deshabilitadas: sin lógica extra
   useEffect(() => {}, []);
+
+  // 🔧 NUEVO: Cargar valores de P1 si estamos en P2
+  useEffect(() => {
+    const loadP1Values = async () => {
+      if (!user) return;
+      
+      // Determinar si estamos en P2 (16-fin de mes)
+      const day = new Date(periodDate).getDate();
+      const isP2 = day >= 16;
+      setIsPeriod2(isP2);
+      
+      if (isP2) {
+        const p1Date = new Date(periodDate);
+        p1Date.setDate(1); // Primer día del mes
+        const p1DateStr = p1Date.toISOString().split('T')[0];
+        
+        console.log('🔍 [CALCULATOR] Fetching P1 values for monthly logic:', p1DateStr);
+        const p1Res = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${p1DateStr}`);
+        const p1Data = await p1Res.json();
+        
+        if (p1Data.success && p1Data.data) {
+          const p1Map: Record<string, number> = {};
+          p1Data.data.forEach((item: any) => {
+            p1Map[item.platform_id] = item.value;
+          });
+          setP1Values(p1Map);
+          console.log('🔍 [CALCULATOR] P1 Values loaded:', p1Map);
+        }
+      }
+    };
+    
+    if (user && periodDate) {
+      loadP1Values();
+    }
+  }, [user, periodDate]);
+
+  // 🔧 NUEVO: Cerrar input flotante al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editingP1Platform) {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.absolute.z-[100]') && !target.closest('.group')) {
+          setEditingP1Platform(null);
+        }
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setEditingP1Platform(null);
+      }
+    };
+
+    if (editingP1Platform) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [editingP1Platform]);
+
+  // Handler para guardar P1
+  const handleSaveP1Value = (platformId: string) => {
+    const value = Number.parseFloat(p1InputValue) || 0;
+    setP1Values(prev => ({ ...prev, [platformId]: value }));
+    
+    // Si ya hay un total mensual, recalcular P2
+    if (monthlyTotals[platformId]) {
+      const monthlyTotal = Number.parseFloat(monthlyTotals[platformId]) || 0;
+      const p2Value = monthlyTotal - value;
+      
+      setInputValues(prev => ({ ...prev, [platformId]: p2Value > 0 ? String(p2Value) : '' }));
+      setPlatforms(prev => prev.map(p => p.id === platformId ? { ...p, value: p2Value } : p));
+    }
+    
+    setEditingP1Platform(null);
+  };
   // 🔧 HELPER: Funciones de sincronización bidireccional
   const syncPlatformsToInputs = (platforms: Platform[]) => {
     const newInputValues: Record<string, string> = {};
@@ -1002,49 +1089,191 @@ export default function ModelCalculatorPage() {
                     }
                     const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
+                    const isMonthly = platform.payment_frequency === 'mensual';
+                    const showMonthlyFields = isPeriod2 && isMonthly;
+
                     return (
                       <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3">
-                          <div className="font-medium text-gray-900 dark:text-gray-100 text-sm">{platform.name}</div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                          <div className="relative flex flex-col items-start gap-1">
+                            {/* 🔧 FIX: Nombre clickeable robusto con botón e indicador visual */}
+                            <button 
+                              type="button"
+                              className="font-medium text-gray-900 dark:text-gray-100 text-sm text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2 group"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                console.log('👆 [CALCULATOR] Click en plataforma:', platform.id);
+                                setEditingP1Platform(platform.id);
+                                setP1InputValue(String(p1Values[platform.id] || ''));
+                              }}
+                              title="Click para ingresar valor de P1"
+                            >
+                              <span className="underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500">
+                                {platform.name}
+                              </span>
+                              <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
+                                ✎
+                              </span>
+                            </button>
+                            
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                            </div>
+
+                            {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta con z-index alto */}
+                            {editingP1Platform === platform.id && (
+                              <div
+                                className="absolute z-[100] bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 min-w-[140px]"
+                                style={{
+                                  top: '100%', 
+                                  left: '0',
+                                  marginTop: '4px'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={p1InputValue}
+                                    onChange={(e) => {
+                                      const rawValue = e.target.value;
+                                      const unifiedValue = rawValue.replace(',', '.');
+                                      setP1InputValue(unifiedValue);
+                                    }}
+                                    onKeyDown={(e) => {
+                                      if (e.key === 'Enter') {
+                                        const value = Number.parseFloat(p1InputValue) || 0;
+                                        setP1Values(prev => ({ ...prev, [platform.id]: value }));
+                                        
+                                        // Recalcular P2 si hay total mensual
+                                        if (monthlyTotals[platform.id]) {
+                                          const monthlyTotal = Number.parseFloat(monthlyTotals[platform.id]) || 0;
+                                          const p2Value = monthlyTotal - value;
+                                          
+                                          setInputValues(prev => ({ ...prev, [platform.id]: p2Value > 0 ? String(p2Value) : '' }));
+                                          setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Value } : p));
+                                        }
+                                        
+                                        setEditingP1Platform(null);
+                                      } else if (e.key === 'Escape') {
+                                        setEditingP1Platform(null);
+                                      }
+                                    }}
+                                    autoFocus
+                                    className="w-16 px-1.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    placeholder="0.00"
+                                  />
+                                  <button
+                                    onClick={() => handleSaveP1Value(platform.id)}
+                                    className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] font-medium hover:bg-blue-600 transition-colors"
+                                    title="Guardar"
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    onClick={() => {
+                                      setEditingP1Platform(null);
+                                    }}
+                                    className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-[10px] font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                                    title="Cancelar"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={inputValues[platform.id] ?? ''}
-                              onChange={(e) => {
-                                const rawValue = e.target.value;
+                          {showMonthlyFields ? (
+                            <div className="flex flex-col space-y-2">
+                                {/* Campo: Total mensual */}
+                                <div className="flex items-center space-x-1">
+                                  <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">Total mensual:</label>
+                                  <input
+                                    type="text"
+                                    inputMode="decimal"
+                                    value={monthlyTotals[platform.id] ?? ''}
+                                    onChange={(e) => {
+                                      const rawValue = e.target.value;
+                                      const unifiedValue = rawValue.replace(',', '.');
+                                      setMonthlyTotals(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                      
+                                      // Calcular P2 automáticamente
+                                      const p1Value = p1Values[platform.id] || 0;
+                                      const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
+                                      const p2Calculated = monthlyTotalNum - p1Value;
+                                      
+                                      // Actualizar inputValues con P2 (diferencia)
+                                      setInputValues(prev => ({ ...prev, [platform.id]: p2Calculated > 0 ? String(p2Calculated) : '' }));
+                                      setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Calculated } : p));
+                                    }}
+                                    className="w-20 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                                    placeholder="0.00"
+                                    title="Total mensual de la plataforma"
+                                  />
+                                </div>
                                 
-                                // 🔧 UNIFICAR SEPARADORES: Tanto punto como coma se muestran como punto
-                                const unifiedValue = rawValue.replace(',', '.');
+                                {/* Campo: P1 (editable) */}
+                                <div className="flex items-center space-x-1">
+                                  <label className="text-xs text-gray-600 dark:text-gray-400 whitespace-nowrap">P1 (editable):</label>
+                                  <div 
+                                    className="text-sm font-medium text-blue-600 cursor-pointer hover:underline"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      setEditingP1Platform(platform.id);
+                                      setP1InputValue(String(p1Values[platform.id] || ''));
+                                    }}
+                                    title="Click para editar P1"
+                                  >
+                                    {(p1Values[platform.id] || 0).toFixed(2)}
+                                  </div>
+                                </div>
                                 
-                                // 🔧 SYNC: Actualizar inputValues con valor unificado
-                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                {/* Resultado: P2 (calculado) */}
+                                <div className="text-xs text-gray-500 mt-1">
+                                  P2 = {(Number.parseFloat(monthlyTotals[platform.id] || '0') - (p1Values[platform.id] || 0)).toFixed(2)}
+                                </div>
+                            </div>
+                          ) : (
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                value={inputValues[platform.id] ?? ''}
+                                onChange={(e) => {
+                                  const rawValue = e.target.value;
+                                  
+                                  // 🔧 UNIFICAR SEPARADORES: Tanto punto como coma se muestran como punto
+                                  const unifiedValue = rawValue.replace(',', '.');
+                                  
+                                  // 🔧 SYNC: Actualizar inputValues con valor unificado
+                                  setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
 
-                                // 🔧 SYNC: Convertir a número (ya está normalizado)
-                                const numeric = Number.parseFloat(unifiedValue);
-                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
-                                
-                                console.log('🔍 [SYNC] Usuario escribió:', { 
-                                  platform: platform.id, 
-                                  original: rawValue,
-                                  unified: unifiedValue,
-                                  numeric: numericValue 
-                                });
-                              }}
-                              className="w-20 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
-                              placeholder="0.00"
-                              title="Ingresa valores con decimales (punto o coma se convierten a punto)"
-                            />
-                            <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                              {platform.currency || 'USD'}
-                            </span>
-                          </div>
+                                  // 🔧 SYNC: Convertir a número (ya está normalizado)
+                                  const numeric = Number.parseFloat(unifiedValue);
+                                  const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                  setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
+                                  
+                                  console.log('🔍 [SYNC] Usuario escribió:', { 
+                                    platform: platform.id, 
+                                    original: rawValue,
+                                    unified: unifiedValue,
+                                    numeric: numericValue 
+                                  });
+                                }}
+                                className="w-20 h-8 px-2 py-1 text-sm border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                                placeholder="0.00"
+                                title="Ingresa valores con decimales (punto o coma se convierten a punto)"
+                              />
+                              <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                                {platform.currency || 'USD'}
+                              </span>
+                            </div>
+                          )}
                         </td>
                         <td className="py-3 px-3">
                           <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
