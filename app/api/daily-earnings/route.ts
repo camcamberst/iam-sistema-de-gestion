@@ -30,9 +30,24 @@ export async function GET(request: NextRequest) {
       .eq('earnings_date', date)
       .single();
 
-    if (error && error.code !== 'PGRST116') {
-      console.error('❌ [DAILY-EARNINGS] Error:', error);
-      return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+    // 🔧 FIX: Manejar error cuando la tabla no existe (PGRST205)
+    if (error) {
+      if (error.code === 'PGRST205') {
+        // Tabla no existe - retornar 0 sin error
+        console.warn('⚠️ [DAILY-EARNINGS] Tabla daily_earnings no existe, retornando 0');
+        return NextResponse.json({
+          success: true,
+          earnings: 0,
+          date: date,
+          modelId: modelId,
+          warning: 'Tabla daily_earnings no configurada'
+        });
+      }
+      if (error.code !== 'PGRST116') {
+        // PGRST116 = no rows found (es normal)
+        console.error('❌ [DAILY-EARNINGS] Error:', error);
+        return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+      }
     }
 
     const earningsAmount = earnings?.earnings_amount || 0;
@@ -82,7 +97,17 @@ export async function POST(request: NextRequest) {
       .select()
       .single();
 
+    // 🔧 FIX: Manejar error cuando la tabla no existe (PGRST205)
     if (error) {
+      if (error.code === 'PGRST205') {
+        // Tabla no existe - retornar éxito sin guardar (no es crítico)
+        console.warn('⚠️ [DAILY-EARNINGS] Tabla daily_earnings no existe, omitiendo guardado. Ejecuta el script SQL para crear la tabla.');
+        return NextResponse.json({
+          success: true,
+          message: 'Ganancias no guardadas - tabla daily_earnings no configurada',
+          warning: 'La tabla daily_earnings no existe. Ejecuta create_daily_earnings_table.sql en Supabase SQL Editor.'
+        });
+      }
       console.error('❌ [DAILY-EARNINGS] Error saving:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
