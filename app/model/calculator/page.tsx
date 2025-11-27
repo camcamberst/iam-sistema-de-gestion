@@ -1289,38 +1289,35 @@ export default function ModelCalculatorPage() {
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3 relative">
-                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión mejorada */}
-                          <div 
-                            className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1 inline-block cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors select-none"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              console.log('🔍 [P1-INPUT] Click en nombre de plataforma:', row.name, row.id);
-                              const rect = e.currentTarget.getBoundingClientRect();
-                              setEditingP1Platform(row.id);
-                              setP1InputValue(String(p1Values[row.id] || ''));
-                              setP1InputPosition({
-                                top: rect.bottom + 5,
-                                left: rect.left
-                              });
-                            }}
-                            onMouseDown={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                            }}
-                            style={{ 
-                              cursor: 'pointer',
-                              userSelect: 'none',
-                              WebkitUserSelect: 'none',
-                              pointerEvents: 'auto'
-                            }}
-                            title="Click para ingresar valor de P1"
-                            role="button"
-                            tabIndex={0}
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter' || e.key === ' ') {
-                                e.preventDefault();
+                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión simplificada (igual a view-model) */}
+                          <div className="flex items-center gap-2 mb-1">
+                            <div 
+                              className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block"
+                              onClick={(e) => {
+                                console.log('🔍 [P1-INPUT] Click detectado en:', row.name, row.id);
                                 e.stopPropagation();
+                                const rect = e.currentTarget.getBoundingClientRect();
+                                setEditingP1Platform(row.id);
+                                setP1InputValue(String(p1Values[row.id] || ''));
+                                setP1InputPosition({
+                                  top: rect.bottom + 5,
+                                  left: rect.left
+                                });
+                              }}
+                              onMouseEnter={(e) => {
+                                (e.currentTarget as HTMLElement).style.cursor = 'pointer';
+                              }}
+                              title="Click para ingresar valor de P1"
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {row.name}
+                            </div>
+                            {/* 🔧 TEST: Botón de prueba para verificar funcionalidad */}
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                console.log('🔍 [P1-INPUT] Botón de prueba clickeado para:', row.name, row.id);
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                                 setEditingP1Platform(row.id);
                                 setP1InputValue(String(p1Values[row.id] || ''));
@@ -1328,10 +1325,12 @@ export default function ModelCalculatorPage() {
                                   top: rect.bottom + 5,
                                   left: rect.left
                                 });
-                              }
-                            }}
-                          >
-                            {row.name}
+                              }}
+                              className="text-xs px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                              title="Test: Click para abrir P1"
+                            >
+                              P1
+                            </button>
                           </div>
                           <div className="flex items-center space-x-3 mb-1">
                             <div className="text-xs text-gray-500 dark:text-gray-400">
