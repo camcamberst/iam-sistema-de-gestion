@@ -8,6 +8,7 @@ import { isClosureDay, isEarlyFreezeRelevantDay } from '@/utils/period-closure-d
 
 // 🔧 FORCE DYNAMIC: Mantener para asegurar datos frescos
 export const dynamic = 'force-dynamic';
+export const revalidate = 0; // Forzar revalidación en cada request
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
