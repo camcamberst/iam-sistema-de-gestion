@@ -1259,9 +1259,11 @@ export default function ModelCalculatorPage() {
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3 relative">
+                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión 2 */}
                           <div 
-                            className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block mb-1"
+                            className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1 inline-block cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
                             onClick={(e) => {
+                              e.stopPropagation();
                               const rect = e.currentTarget.getBoundingClientRect();
                               setEditingP1Platform(row.id);
                               setP1InputValue(String(p1Values[row.id] || ''));
@@ -1270,6 +1272,7 @@ export default function ModelCalculatorPage() {
                                 left: rect.left
                               });
                             }}
+                            style={{ cursor: 'pointer' }}
                             title="Click para ingresar valor de P1"
                           >
                             {row.name}
