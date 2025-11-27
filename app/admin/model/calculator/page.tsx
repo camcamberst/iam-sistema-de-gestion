@@ -1089,8 +1089,9 @@ export default function ModelCalculatorPage() {
                     }
                     const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
-                    const isMonthly = platform.payment_frequency === 'mensual';
-                    const showMonthlyFields = isPeriod2 && isMonthly;
+                    // 🔧 FIX: Activar modo mensual automáticamente si hay un valor de P1 > 0
+                    const p1Value = p1Values[platform.id] || 0;
+                    const showMonthlyFields = isPeriod2 && p1Value > 0;
 
                     return (
                       <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600">

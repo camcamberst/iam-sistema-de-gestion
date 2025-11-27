@@ -1121,13 +1121,12 @@ export default function ModelCalculatorPage() {
                           <div className="flex items-center space-x-2">
                             {(() => {
                               const isFrozen = frozenPlatforms.includes(row.id.toLowerCase());
-                              const platform = platforms.find(p => p.id === row.id);
-                              const isMonthly = platform?.payment_frequency === 'mensual';
-                              const showMonthlyFields = isPeriod2 && isMonthly;
+                              // 🔧 FIX: Activar modo mensual automáticamente si hay un valor de P1 > 0
+                              const p1Value = p1Values[row.id] || 0;
+                              const showMonthlyFields = isPeriod2 && p1Value > 0;
                               
                               // Si es plataforma mensual en P2, mostrar dos campos
                               if (showMonthlyFields) {
-                                const p1Value = p1Values[row.id] || 0;
                                 const monthlyTotal = Number.parseFloat(monthlyTotals[row.id] || '0') || 0;
                                 const p2Value = monthlyTotal - p1Value;
                                 
