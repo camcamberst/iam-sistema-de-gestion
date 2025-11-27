@@ -87,36 +87,26 @@ export default function ModelCalculatorPage() {
       if (!user) return;
       
       // Determinar si estamos en P2 (16-fin de mes)
-      // Asegurar que periodDate se interpreta correctamente (es YYYY-MM-DD)
-      const [year, month, day] = periodDate.split('-').map(Number);
+      const day = new Date(periodDate).getDate();
       const isP2 = day >= 16;
       setIsPeriod2(isP2);
       
       if (isP2) {
-        // Construir fecha del día 1 del mismo mes y año
-        const p1DateStr = `${year}-${String(month).padStart(2, '0')}-01`;
+        const p1Date = new Date(periodDate);
+        p1Date.setDate(1); // Primer día del mes
+        const p1DateStr = p1Date.toISOString().split('T')[0];
         
         console.log('🔍 [CALCULATOR] Fetching P1 values for monthly logic:', p1DateStr);
-        try {
-          const p1Res = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${p1DateStr}`);
-          const p1Data = await p1Res.json();
-          
-          if (p1Data.success && p1Data.data) {
-            const p1Map: Record<string, number> = {};
-            p1Data.data.forEach((item: any) => {
-              // Asegurar que el valor es numérico
-              const val = Number(item.value);
-              if (!isNaN(val) && val > 0) {
-                p1Map[item.platform_id] = val;
-              }
-            });
-            setP1Values(p1Map);
-            console.log('🔍 [CALCULATOR] P1 Values loaded:', p1Map);
-          } else {
-            console.warn('⚠️ [CALCULATOR] P1 fetch returned no success or no data:', p1Data);
-          }
-        } catch (error) {
-          console.error('❌ [CALCULATOR] Error fetching P1 values:', error);
+        const p1Res = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${p1DateStr}`);
+        const p1Data = await p1Res.json();
+        
+        if (p1Data.success && p1Data.data) {
+          const p1Map: Record<string, number> = {};
+          p1Data.data.forEach((item: any) => {
+            p1Map[item.platform_id] = item.value;
+          });
+          setP1Values(p1Map);
+          console.log('🔍 [CALCULATOR] P1 Values loaded:', p1Map);
         }
       }
     };
@@ -157,25 +147,6 @@ export default function ModelCalculatorPage() {
   const handleSaveP1Value = (platformId: string) => {
     const value = Number.parseFloat(p1InputValue) || 0;
     setP1Values(prev => ({ ...prev, [platformId]: value }));
-    
-    // 🔧 NUEVO: Persistir valor de P1 en la base de datos (fecha día 1 del mes)
-    if (user) {
-        // Construcción robusta de fecha (evitar problemas de zona horaria con new Date())
-        const [year, month] = periodDate.split('-').map(Number);
-        const p1DateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-        
-        console.log('💾 [P1 SAVE] Guardando P1 en background...', { platformId, value, date: p1DateStr });
-        
-        fetch('/api/calculator/model-values-v2', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                modelId: user.id,
-                values: { [platformId]: value },
-                periodDate: p1DateStr
-            })
-        }).catch(err => console.error('❌ [P1 SAVE] Error guardando P1:', err));
-    }
     
     // Si ya hay un total mensual, recalcular P2
     if (monthlyTotals[platformId]) {
