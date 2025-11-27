@@ -111,6 +111,36 @@ export default function ModelCalculatorPage() {
     setInputValues(prev => ({ ...prev, ...newInputValues }));
   };
 
+  // 🔧 NUEVO: Cerrar input flotante al hacer click fuera o presionar Escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editingP1Platform && p1InputPosition) {
+        const target = e.target as HTMLElement;
+        // Cerrar si el click no es dentro del input flotante
+        if (!target.closest('.fixed.z-50')) {
+          setEditingP1Platform(null);
+          setP1InputPosition(null);
+        }
+      }
+    };
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && editingP1Platform) {
+        setEditingP1Platform(null);
+        setP1InputPosition(null);
+      }
+    };
+
+    if (editingP1Platform) {
+      document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('keydown', handleEscape);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+        document.removeEventListener('keydown', handleEscape);
+      };
+    }
+  }, [editingP1Platform, p1InputPosition]);
+
   // Derivado único: filas computadas exactamente como se muestran en la tabla
   const computedRows = useMemo(() => {
     if (!rates) return [] as Array<{ id: string; name: string; usdModelo: number; copModelo: number; percentageLabel: string; currency?: string; value: number }>;
@@ -1259,11 +1289,13 @@ export default function ModelCalculatorPage() {
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3 relative">
-                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión 2 */}
+                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión mejorada */}
                           <div 
-                            className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1 inline-block cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
+                            className="font-medium text-gray-900 dark:text-gray-100 text-sm mb-1 inline-block cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors select-none"
                             onClick={(e) => {
+                              e.preventDefault();
                               e.stopPropagation();
+                              console.log('🔍 [P1-INPUT] Click en nombre de plataforma:', row.name, row.id);
                               const rect = e.currentTarget.getBoundingClientRect();
                               setEditingP1Platform(row.id);
                               setP1InputValue(String(p1Values[row.id] || ''));
@@ -1272,8 +1304,32 @@ export default function ModelCalculatorPage() {
                                 left: rect.left
                               });
                             }}
-                            style={{ cursor: 'pointer' }}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                            }}
+                            style={{ 
+                              cursor: 'pointer',
+                              userSelect: 'none',
+                              WebkitUserSelect: 'none',
+                              pointerEvents: 'auto'
+                            }}
                             title="Click para ingresar valor de P1"
+                            role="button"
+                            tabIndex={0}
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                setEditingP1Platform(row.id);
+                                setP1InputValue(String(p1Values[row.id] || ''));
+                                setP1InputPosition({
+                                  top: rect.bottom + 5,
+                                  left: rect.left
+                                });
+                              }
+                            }}
                           >
                             {row.name}
                           </div>
