@@ -469,6 +469,8 @@ export default function ModelCalculatorPage() {
         setConfigLoaded(true); // Marcar configuración como cargada
         return defaultPlatforms;
       }
+      
+      return []; // Retorno por defecto si no hay éxito
     } catch (err: any) {
       console.error('Error loading config:', err);
       setError(err.message || 'Error al cargar configuración');
