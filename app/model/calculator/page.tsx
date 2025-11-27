@@ -141,6 +141,26 @@ export default function ModelCalculatorPage() {
     }
   }, [editingP1Platform, p1InputPosition]);
 
+  // 🔧 DEBUG: Listener global para capturar todos los clicks en la tabla
+  useEffect(() => {
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      const platformElement = target.closest('[data-platform-id]');
+      if (platformElement) {
+        const platformId = platformElement.getAttribute('data-platform-id');
+        const platformName = platformElement.getAttribute('data-platform-name');
+        console.log('🔍 [DEBUG] Click global detectado en elemento con data-platform-id:', platformId, platformName);
+        console.log('🔍 [DEBUG] Target:', target.tagName, target.className);
+        console.log('🔍 [DEBUG] Platform element:', platformElement);
+      }
+    };
+
+    document.addEventListener('click', handleGlobalClick, true); // Usar captura
+    return () => {
+      document.removeEventListener('click', handleGlobalClick, true);
+    };
+  }, []);
+
   // Derivado único: filas computadas exactamente como se muestran en la tabla
   const computedRows = useMemo(() => {
     if (!rates) return [] as Array<{ id: string; name: string; usdModelo: number; copModelo: number; percentageLabel: string; currency?: string; value: number }>;
@@ -1288,13 +1308,14 @@ export default function ModelCalculatorPage() {
                     
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
-                        <td className="py-3 px-3 relative">
-                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión simplificada (igual a view-model) */}
-                          <div className="flex items-center gap-2 mb-1">
+                        <td className="py-3 px-3 relative" style={{ position: 'relative', zIndex: 1 }}>
+                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión con captura de eventos */}
+                          <div className="flex items-center gap-2 mb-1" style={{ position: 'relative', zIndex: 2 }}>
                             <div 
                               className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block"
                               onClick={(e) => {
-                                console.log('🔍 [P1-INPUT] Click detectado en:', row.name, row.id);
+                                console.log('🔍 [P1-INPUT] onClick - Click detectado en:', row.name, row.id);
+                                e.preventDefault();
                                 e.stopPropagation();
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 setEditingP1Platform(row.id);
@@ -1304,11 +1325,27 @@ export default function ModelCalculatorPage() {
                                   left: rect.left
                                 });
                               }}
-                              onMouseEnter={(e) => {
-                                (e.currentTarget as HTMLElement).style.cursor = 'pointer';
+                              onMouseDown={(e) => {
+                                console.log('🔍 [P1-INPUT] onMouseDown - Mouse down en:', row.name, row.id);
+                                e.stopPropagation();
+                              }}
+                              onMouseUp={(e) => {
+                                console.log('🔍 [P1-INPUT] onMouseUp - Mouse up en:', row.name, row.id);
+                                e.stopPropagation();
+                              }}
+                              onMouseEnter={() => {
+                                console.log('🔍 [P1-INPUT] Mouse enter en:', row.name);
                               }}
                               title="Click para ingresar valor de P1"
-                              style={{ cursor: 'pointer' }}
+                              style={{ 
+                                cursor: 'pointer',
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 10,
+                                userSelect: 'none'
+                              }}
+                              data-platform-id={row.id}
+                              data-platform-name={row.name}
                             >
                               {row.name}
                             </div>
@@ -1316,8 +1353,9 @@ export default function ModelCalculatorPage() {
                             <button
                               type="button"
                               onClick={(e) => {
+                                console.log('🔍 [P1-INPUT] Botón P1 clickeado para:', row.name, row.id);
+                                e.preventDefault();
                                 e.stopPropagation();
-                                console.log('🔍 [P1-INPUT] Botón de prueba clickeado para:', row.name, row.id);
                                 const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                                 setEditingP1Platform(row.id);
                                 setP1InputValue(String(p1Values[row.id] || ''));
@@ -1326,7 +1364,16 @@ export default function ModelCalculatorPage() {
                                   left: rect.left
                                 });
                               }}
+                              onMouseDown={(e) => {
+                                console.log('🔍 [P1-INPUT] Botón P1 mouse down');
+                                e.stopPropagation();
+                              }}
                               className="text-xs px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                              style={{ 
+                                pointerEvents: 'auto',
+                                position: 'relative',
+                                zIndex: 10
+                              }}
                               title="Test: Click para abrir P1"
                             >
                               P1
