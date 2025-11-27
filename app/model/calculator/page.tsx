@@ -1201,7 +1201,7 @@ export default function ModelCalculatorPage() {
           <div className="flex items-center justify-between gap-4">
             <div className="flex-1 min-w-0">
               <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap truncate">
-                Mi Calculadora
+                Mi Calculadora (v3 TEST)
               </h1>
               <p className="text-gray-500 dark:text-gray-400 text-sm truncate">
                 Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
@@ -1312,14 +1312,16 @@ export default function ModelCalculatorPage() {
                     return (
                       <tr key={row.id} className="border-b border-gray-100 dark:border-gray-600">
                         <td className="py-3 px-3 relative" style={{ position: 'relative', zIndex: 1 }}>
-                          {/* 🔧 FIX: Nombre clickeable para ingresar P1 - Versión con captura de eventos */}
-                          <div className="flex items-center gap-2 mb-1" style={{ position: 'relative', zIndex: 2 }}>
-                            <div 
-                              className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block"
+                          {/* 🔧 FIX: Elemento nativo BUTTON para asegurar clickeabilidad absoluta */}
+                          <div className="flex flex-col items-start gap-1 mb-1" style={{ position: 'relative', zIndex: 2 }}>
+                            <button 
+                              type="button"
+                              className="font-medium text-gray-900 dark:text-gray-100 text-sm text-left hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors"
                               onClick={(e) => {
-                                console.log('🔍 [P1-INPUT] onClick - Click detectado en:', row.name, row.id);
-                                e.preventDefault();
-                                e.stopPropagation();
+                                console.log('🔍 [P1-INPUT-FINAL] Click CONFIRMADO en:', row.name);
+                                e.preventDefault(); // Prevenir cualquier comportamiento por defecto
+                                e.stopPropagation(); // Detener propagación
+                                
                                 const rect = e.currentTarget.getBoundingClientRect();
                                 setEditingP1Platform(row.id);
                                 setP1InputValue(String(p1Values[row.id] || ''));
@@ -1328,58 +1330,20 @@ export default function ModelCalculatorPage() {
                                   left: rect.left
                                 });
                               }}
-                              onMouseDown={(e) => {
-                                console.log('🔍 [P1-INPUT] onMouseDown - Mouse down en:', row.name, row.id);
-                                e.stopPropagation();
-                              }}
-                              onMouseUp={(e) => {
-                                console.log('🔍 [P1-INPUT] onMouseUp - Mouse up en:', row.name, row.id);
-                                e.stopPropagation();
-                              }}
-                              onMouseEnter={() => {
-                                console.log('🔍 [P1-INPUT] Mouse enter en:', row.name);
-                              }}
-                              title="Click para ingresar valor de P1"
                               style={{ 
                                 cursor: 'pointer',
-                                pointerEvents: 'auto',
+                                border: '1px dashed red', // Borde DEBUG temporal visible
+                                padding: '2px 4px',
+                                borderRadius: '4px',
+                                background: 'rgba(255, 0, 0, 0.05)',
+                                pointerEvents: 'all', // Forzar eventos
                                 position: 'relative',
-                                zIndex: 10,
-                                userSelect: 'none'
+                                zIndex: 50,
+                                width: '100%'
                               }}
-                              data-platform-id={row.id}
-                              data-platform-name={row.name}
+                              title="Click aquí para editar P1"
                             >
-                              {row.name}
-                            </div>
-                            {/* 🔧 TEST: Botón de prueba para verificar funcionalidad */}
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                console.log('🔍 [P1-INPUT] Botón P1 clickeado para:', row.name, row.id);
-                                e.preventDefault();
-                                e.stopPropagation();
-                                const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-                                setEditingP1Platform(row.id);
-                                setP1InputValue(String(p1Values[row.id] || ''));
-                                setP1InputPosition({
-                                  top: rect.bottom + 5,
-                                  left: rect.left
-                                });
-                              }}
-                              onMouseDown={(e) => {
-                                console.log('🔍 [P1-INPUT] Botón P1 mouse down');
-                                e.stopPropagation();
-                              }}
-                              className="text-xs px-2 py-0.5 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                              style={{ 
-                                pointerEvents: 'auto',
-                                position: 'relative',
-                                zIndex: 10
-                              }}
-                              title="Test: Click para abrir P1"
-                            >
-                              P1
+                              {row.name} <span className="text-[10px] text-red-500 font-bold">(EDIT)</span>
                             </button>
                           </div>
                           <div className="flex items-center space-x-3 mb-1">
