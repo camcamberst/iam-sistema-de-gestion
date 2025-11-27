@@ -1117,7 +1117,6 @@ export default function ModelCalculatorPage() {
                             )}
                           </div>
                         </td>
-                        </td>
                         <td className="py-3 px-3">
                           <div className="flex items-center space-x-2">
                             {(() => {
