@@ -51,6 +51,9 @@ interface CalculatorResult {
 }
 
 export default function ModelCalculatorPage() {
+  // 🔧 FORCE BUNDLE UPDATE: Log visible para verificar que el código nuevo se carga
+  console.log('🔧 [BUNDLE-CHECK] Versión del código: 2025-11-27-v3 - Nombres clickeables con debugging');
+  
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
