@@ -162,37 +162,45 @@ async function getUserProductivityData(userId: string) {
 }
 
 async function generateAIInsights(userData: any) {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    
-    // Procesar datos para el análisis
-    const todayEarnings = userData.todayEarnings; // Ya es la diferencia calculada
-    const weeklyTotal = userData.weeklyData.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
-    const avgDaily = weeklyTotal / 7;
-    
-    // Encontrar mejor plataforma
-    const platformStats = new Map();
-    userData.weeklyData.forEach((item: any) => {
-      const platformName = item.calculator_platforms?.name || 'Unknown';
-      if (!platformStats.has(platformName)) {
-        platformStats.set(platformName, { total: 0, days: 0 });
-      }
-      const stats = platformStats.get(platformName);
-      stats.total += item.value || 0;
-      stats.days += 1;
-    });
+  // Lista de modelos para intentar (más recientes primero)
+  const modelNames = [
+    'gemini-2.0-flash-exp',           // Gemini 2.0 Flash Experimental
+    'gemini-1.5-flash-latest',        // Gemini 1.5 Flash Latest
+    'gemini-1.5-pro-latest',         // Gemini 1.5 Pro Latest
+    'gemini-1.5-flash',              // Gemini 1.5 Flash (estable)
+    'gemini-1.5-pro'                  // Gemini 1.5 Pro (estable)
+  ];
+  
+  let lastError: any = null;
+  
+  // Procesar datos para el análisis
+  const todayEarnings = userData.todayEarnings; // Ya es la diferencia calculada
+  const weeklyTotal = userData.weeklyData.reduce((sum: number, item: any) => sum + (item.value || 0), 0);
+  const avgDaily = weeklyTotal / 7;
+  
+  // Encontrar mejor plataforma
+  const platformStats = new Map();
+  userData.weeklyData.forEach((item: any) => {
+    const platformName = item.calculator_platforms?.name || 'Unknown';
+    if (!platformStats.has(platformName)) {
+      platformStats.set(platformName, { total: 0, days: 0 });
+    }
+    const stats = platformStats.get(platformName);
+    stats.total += item.value || 0;
+    stats.days += 1;
+  });
 
-    let bestPlatform = 'N/A';
-    let bestAvg = 0;
-    platformStats.forEach((stats, platform) => {
-      const avg = stats.total / stats.days;
-      if (avg > bestAvg) {
-        bestAvg = avg;
-        bestPlatform = platform;
-      }
-    });
+  let bestPlatform = 'N/A';
+  let bestAvg = 0;
+  platformStats.forEach((stats, platform) => {
+    const avg = stats.total / stats.days;
+    if (avg > bestAvg) {
+      bestAvg = avg;
+      bestPlatform = platform;
+    }
+  });
 
-    const prompt = `
+  const prompt = `
 Eres un asistente especializado en análisis de rendimiento para modelos de webcam. 
 Genera insights útiles y motivadores con un tono casual y amigable, pero profesional.
 
@@ -237,28 +245,44 @@ Responde en formato JSON:
 }
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    // Limpiar el texto de markdown si existe
-    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
-    
+  // Intentar con cada modelo hasta que uno funcione
+  for (const modelName of modelNames) {
     try {
-      const parsed = JSON.parse(cleanText);
-      return {
-        ...parsed,
-        lastUpdated: new Date().toISOString()
-      };
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
-      return getFallbackInsights(userData);
+      console.log(`🤖 [AI-DASHBOARD] Intentando con modelo: ${modelName}`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Limpiar el texto de markdown si existe
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      
+      try {
+        const parsed = JSON.parse(cleanText);
+        console.log(`✅ [AI-DASHBOARD] Éxito con modelo: ${modelName}`);
+        return {
+          ...parsed,
+          lastUpdated: new Date().toISOString()
+        };
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError);
+        // Continuar al siguiente modelo si hay error de parsing
+        lastError = parseError;
+        continue;
+      }
+      
+    } catch (error: any) {
+      console.warn(`⚠️ [AI-DASHBOARD] Error con modelo ${modelName}:`, error.message);
+      lastError = error;
+      // Continuar al siguiente modelo
+      continue;
     }
-    
-  } catch (error) {
-    console.error('Error generando insights con Gemini:', error);
-    return getFallbackInsights(userData);
   }
+  
+  // Si todos los modelos fallaron, usar fallback
+  console.error('❌ [AI-DASHBOARD] Todos los modelos fallaron, usando fallback');
+  return getFallbackInsights(userData);
 }
 
 function getFallbackInsights(userData: any) {

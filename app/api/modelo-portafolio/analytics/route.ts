@@ -201,10 +201,18 @@ export async function POST(request: NextRequest) {
 
 // Función para generar análisis con Google Gemini
 async function generateAIAnalysis(data: any) {
-  try {
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
-    
-    const prompt = `
+  // Lista de modelos para intentar (más recientes primero)
+  const modelNames = [
+    'gemini-2.0-flash-exp',           // Gemini 2.0 Flash Experimental
+    'gemini-1.5-flash-latest',        // Gemini 1.5 Flash Latest
+    'gemini-1.5-pro-latest',         // Gemini 1.5 Pro Latest
+    'gemini-1.5-flash',              // Gemini 1.5 Flash (estable)
+    'gemini-1.5-pro'                  // Gemini 1.5 Pro (estable)
+  ];
+  
+  let lastError: any = null;
+  
+  const prompt = `
 Eres un asistente especializado en análisis de rendimiento para modelos de webcam. 
 Analiza los siguientes datos y proporciona insights valiosos con un tono casual y amigable, pero profesional.
 
@@ -246,43 +254,51 @@ Responde en formato JSON:
 }
 `;
 
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    
-    // Limpiar el texto de markdown si existe
-    const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
-    
+  // Intentar con cada modelo hasta que uno funcione
+  for (const modelName of modelNames) {
     try {
-      const parsed = JSON.parse(cleanText);
-      return {
-        analysis: parsed.analysis || 'Análisis no disponible',
-        recommendations: parsed.recommendations || [],
-        trends: parsed.trends || []
-      };
-    } catch (parseError) {
-      console.error('Error parsing Gemini response:', parseError);
-      return {
-        analysis: 'Análisis generado por IA - datos procesados correctamente',
-        recommendations: [
-          'Mantén un registro consistente de tus ingresos',
-          'Diversifica tus plataformas para maximizar ganancias',
-          'Establece objetivos claros y medibles'
-        ],
-        trends: []
-      };
+      console.log(`🤖 [PORTFOLIO-ANALYTICS] Intentando con modelo: ${modelName}`);
+      const model = genAI.getGenerativeModel({ model: modelName });
+      
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      // Limpiar el texto de markdown si existe
+      const cleanText = text.replace(/```json\n?|\n?```/g, '').trim();
+      
+      try {
+        const parsed = JSON.parse(cleanText);
+        console.log(`✅ [PORTFOLIO-ANALYTICS] Éxito con modelo: ${modelName}`);
+        return {
+          analysis: parsed.analysis || 'Análisis no disponible',
+          recommendations: parsed.recommendations || [],
+          trends: parsed.trends || []
+        };
+      } catch (parseError) {
+        console.error('Error parsing Gemini response:', parseError);
+        // Continuar al siguiente modelo si hay error de parsing
+        lastError = parseError;
+        continue;
+      }
+      
+    } catch (error: any) {
+      console.warn(`⚠️ [PORTFOLIO-ANALYTICS] Error con modelo ${modelName}:`, error.message);
+      lastError = error;
+      // Continuar al siguiente modelo
+      continue;
     }
-    
-  } catch (error) {
-    console.error('Error generando análisis con Gemini:', error);
-    return {
-      analysis: 'Análisis no disponible temporalmente',
-      recommendations: [
-        'Mantén un registro consistente de tus ingresos',
-        'Diversifica tus plataformas para maximizar ganancias',
-        'Establece objetivos claros y medibles'
-      ],
-      trends: []
-    };
   }
+  
+  // Si todos los modelos fallaron, usar fallback
+  console.error('❌ [PORTFOLIO-ANALYTICS] Todos los modelos fallaron, usando fallback');
+  return {
+    analysis: 'Análisis no disponible temporalmente',
+    recommendations: [
+      'Mantén un registro consistente de tus ingresos',
+      'Diversifica tus plataformas para maximizar ganancias',
+      'Establece objetivos claros y medibles'
+    ],
+    trends: []
+  };
 }
