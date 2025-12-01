@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
+import { getColombiaDate, getColombiaPeriodStartDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
+
+export const dynamic = 'force-dynamic';
 
 // Usar service role key para bypass RLS
 const supabase = createClient(
@@ -8,58 +10,73 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
-// GET: Obtener valores de modelo (soporta periodDate opcional)
+// GET: Obtener valores de modelo
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const periodDate = searchParams.get('periodDate') || getColombiaPeriodStartDate();
+  
+  const rawPeriodDate = searchParams.get('periodDate') || getColombiaPeriodStartDate();
+  const periodDate = normalizeToPeriodStartDate(rawPeriodDate);
 
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
   }
 
   try {
-    console.log('🔍 [MODEL-VALUES-V2] Loading values:', { modelId, periodDate });
-    console.log('🔍 [MODEL-VALUES-V2] Service role key configured:', !!process.env.SUPABASE_SERVICE_ROLE_KEY);
-
-    // 🔍 DEBUG: Verificar si hay datos en la tabla (consulta simple)
-    console.log('🔍 [MODEL-VALUES-V2] Starting database query...');
+    console.log('🔍 [MODEL-VALUES-V2] Loading values (Enhanced Auto-Repair):', { modelId, periodDate });
     
-    // 1. Cargar valores específicos para la fecha del período solicitada
-    console.log('🔍 [MODEL-VALUES-V2] Buscando valores para fecha específica:', periodDate);
+    // Calcular rango del periodo completo
+    const isP2 = parseInt(periodDate.split('-')[2]) >= 16;
+    const periodStart = periodDate; // Start date is the normalized date (1 or 16)
+    const periodEndObj = new Date(periodDate);
+    if (isP2) {
+      // Fin de mes
+      periodEndObj.setMonth(periodEndObj.getMonth() + 1);
+      periodEndObj.setDate(0);
+    } else {
+      // Día 15
+      periodEndObj.setDate(15);
+    }
+    const periodEnd = periodEndObj.toISOString().split('T')[0];
 
-    const { data: currentValues, error: currentError } = await supabase
+    // 🔧 ESTRATEGIA ROBUSTA: Obtener TODOS los valores dentro del rango del periodo
+    // Esto incluye el bucket principal (ej: día 16) Y cualquier valor "húerfano" guardado en días intermedios (ej: día 28)
+    const { data: allValues, error: valuesError } = await supabase
       .from('model_values')
-      .select(`
-        model_id, platform_id, value, period_date, updated_at
-      `)
+      .select('platform_id, value, period_date, updated_at')
       .eq('model_id', modelId)
-      .eq('period_date', periodDate) // Fecha específica del período
+      .gte('period_date', periodStart)
+      .lte('period_date', periodEnd)
       .order('updated_at', { ascending: false });
 
-    console.log('🔍 [MODEL-VALUES-V2] Found values for periodDate:', currentValues?.length || 0);
-
-    console.log('🔍 [MODEL-VALUES-V2] Found values:', currentValues?.length || 0);
-
-    console.log('🔍 [MODEL-VALUES-V2] Current values query completed. Values:', currentValues);
-    console.log('🔍 [MODEL-VALUES-V2] Current values count:', currentValues?.length || 0);
-
-    if (currentError) {
-      console.error('❌ [MODEL-VALUES-V2] Database error:', currentError);
-      return NextResponse.json({ 
-        success: false, 
-        error: currentError.message,
-        details: currentError,
-        modelId,
-        periodDate
-      }, { status: 500 });
+    if (valuesError) {
+      console.error('❌ [MODEL-VALUES-V2] Database error:', valuesError);
+      return NextResponse.json({ success: false, error: valuesError.message }, { status: 500 });
     }
 
-    console.log('✅ [MODEL-VALUES-V2] Success! Returning data:', currentValues || []);
+    // Consolidar: Para cada plataforma, tomar el valor más reciente (updated_at)
+    // Esto resuelve el conflicto entre "0s viejos en el bucket" vs "valores reales nuevos en orphans"
+    const consolidatedMap = new Map();
+    allValues?.forEach((val: any) => {
+      // Si ya tenemos un valor para esta plataforma, solo lo reemplazamos si el actual es más reciente
+      // Pero como ya ordenamos por updated_at DESC, el primero que encontramos es el más reciente.
+      if (!consolidatedMap.has(val.platform_id)) {
+        consolidatedMap.set(val.platform_id, val);
+      }
+    });
+    
+    const consolidatedValues = Array.from(consolidatedMap.values());
+
+    console.log('✅ [MODEL-VALUES-V2] Consolidated values:', {
+      totalFound: allValues?.length || 0,
+      uniquePlatforms: consolidatedValues.length,
+      periodRange: `${periodStart} to ${periodEnd}`
+    });
+
     return NextResponse.json({ 
       success: true, 
-      data: currentValues || [],
-      count: currentValues?.length || 0,
+      data: consolidatedValues,
+      count: consolidatedValues.length,
       modelId,
       periodDate
     });
@@ -73,7 +90,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST: Guardar valores de modelo (lote) con upsert por (model_id, platform_id, period_date)
+// POST: Guardar valores de modelo
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -83,20 +100,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId y values son requeridos' }, { status: 400 });
     }
 
-    // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha del PERIODO enviada por el cliente (1 o 16)
-    // Esto asegura que los valores se mantengan durante toda la quincena
-    // Si no viene, calculamos el inicio del periodo actual
-    const effectiveDate = periodDate || getColombiaPeriodStartDate();
-    console.log('🔍 [MODEL-VALUES-V2] Saving values:', { modelId, effectiveDate, values, receivedPeriodDate: periodDate });
+    // 🔧 SOLUCIÓN DEFINITIVA: Usar SIEMPRE fecha de inicio de período normalizada
+    const rawEffectiveDate = periodDate || getColombiaPeriodStartDate();
+    const effectiveDate = normalizeToPeriodStartDate(rawEffectiveDate);
+    
+    console.log('🔍 [MODEL-VALUES-V2] Saving values (FORCED BUCKET):', { 
+      modelId, 
+      normalizedBucket: effectiveDate,
+      valuesCount: Object.keys(values).length 
+    });
 
     const rows = Object.entries(values).map(([platformId, value]) => ({
       model_id: modelId,
       platform_id: platformId,
       value: Number.parseFloat(String(value)) || 0,
-      period_date: effectiveDate
+      period_date: effectiveDate, // SIEMPRE al bucket 1 o 16
+      updated_at: new Date().toISOString()
     }));
 
-    console.log('🔍 [MODEL-VALUES-V2] Rows to upsert:', rows);
+    if (rows.length === 0) {
+       return NextResponse.json({ success: true, data: [], message: 'No values to save' });
+    }
 
     const { data, error } = await supabase
       .from('model_values')
@@ -108,7 +132,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    console.log('✅ [MODEL-VALUES-V2] Values saved successfully:', data);
+    console.log('✅ [MODEL-VALUES-V2] Values saved successfully to bucket:', effectiveDate);
     return NextResponse.json({ success: true, data: data || [], message: 'Valores guardados correctamente' });
 
   } catch (error: any) {

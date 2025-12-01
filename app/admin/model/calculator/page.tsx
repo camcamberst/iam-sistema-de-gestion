@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
@@ -53,8 +53,8 @@ export default function ModelCalculatorPage() {
   const [user, setUser] = useState<User | null>(null);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
   const [rates, setRates] = useState<any>(null);
-  // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha simple sin timezone complejo
-  const [periodDate, setPeriodDate] = useState<string>(new Date().toISOString().split('T')[0]);
+  // 🔧 SOLUCIÓN DEFINITIVA: Usar fecha de INICIO DE PERIODO (1 o 16) para sincronizar buckets
+  const [periodDate, setPeriodDate] = useState<string>(getColombiaPeriodStartDate());
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
   // 🔧 NUEVO: Estados para plataformas mensuales en P2
@@ -79,7 +79,13 @@ export default function ModelCalculatorPage() {
   // 🔧 FIX: Autosave solo después de 2 minutos de inactividad
   const ENABLE_AUTOSAVE = true; // Habilitado con delay de inactividad
   // Animaciones deshabilitadas: sin lógica extra
-  useEffect(() => {}, []);
+  
+  // 🔧 CRÍTICO: Asegurar que periodDate se inicialice correctamente al montar
+  useEffect(() => {
+    const start = getColombiaPeriodStartDate();
+    console.log('🔍 [CALCULATOR] Initializing periodDate (Frontend):', start);
+    setPeriodDate(start);
+  }, []);
 
   // 🔧 NUEVO: Cargar valores de P1 si estamos en P2
   useEffect(() => {
@@ -525,10 +531,21 @@ export default function ModelCalculatorPage() {
 
       // 🔧 NUEVO ENFOQUE: Cargar valores guardados DESPUÉS de que platforms esté establecido
       try {
-        console.log('🔍 [CALCULATOR] Loading saved values - V2 system only');
-        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+        console.log('🔍 [CALCULATOR] Loading saved values - V2 system only (Server Date Priority)');
+        // 🔧 FIX: NO enviar periodDate desde el cliente para la carga inicial.
+        // Dejar que el backend (API) determine la fecha actual de Colombia para evitar desajustes de zona horaria en el navegador del usuario.
+        // const periodStart = getColombiaPeriodStartDate(); 
+        
+        // 🔧 CACHE BUSTING: Añadir timestamp para evitar caché del navegador
+        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: {
+            'Pragma': 'no-cache',
+            'Cache-Control': 'no-cache'
+          }
+        });
         const savedJson = await savedResp.json();
-        console.log('🔍 [CALCULATOR] Saved values (v2):', savedJson);
+        console.log('🔍 [CALCULATOR] Saved values (v2) RAW RESPONSE:', savedJson);
         
         if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
           const platformToValue: Record<string, number> = {};
@@ -552,7 +569,7 @@ export default function ModelCalculatorPage() {
           setPlatforms(updatedPlatforms);
 
           // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
-          const yesterdayDate = new Date(new Date(periodDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          const yesterdayDate = new Date(new Date(periodStart).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
           console.log('🔍 [CALCULATOR] Loading yesterday values for date:', yesterdayDate);
           
           try {
@@ -682,7 +699,9 @@ export default function ModelCalculatorPage() {
 
       // 1. Guardar valores individuales por plataforma
       const endpoint = '/api/calculator/model-values-v2';
-      const payload = { modelId: user?.id, values, periodDate };
+      // 🔧 FIX: Usar periodDate correcto
+      const currentPeriodDate = getColombiaPeriodStartDate();
+      const payload = { modelId: user?.id, values, periodDate: currentPeriodDate };
       
       console.log('🔍 [CALCULATOR] Using endpoint:', endpoint);
       console.log('🔍 [CALCULATOR] Payload:', payload);
@@ -786,7 +805,7 @@ export default function ModelCalculatorPage() {
         },
         body: JSON.stringify({
           modelId: user?.id,
-          periodDate,
+          periodDate: currentPeriodDate,
           totalUsdBruto,
           totalUsdModelo,
           totalCopModelo
@@ -847,10 +866,11 @@ export default function ModelCalculatorPage() {
       try {
         console.log('🔄 [AUTOSAVE] Guardando después de 40 segundos de inactividad...');
         // Autosave solo para el usuario actual (modelo)
+        const periodStart = getColombiaPeriodStartDate();
         const res = await fetch('/api/calculator/model-values-v2', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ modelId: user.id, values, periodDate }),
+          body: JSON.stringify({ modelId: user.id, values, periodDate: periodStart }),
           signal: controller.signal
         });
         const json = await res.json();
@@ -1293,8 +1313,6 @@ export default function ModelCalculatorPage() {
                   if (p.currency === 'EUR') {
                     if (p.id === 'big7') {
                       usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                    } else if (p.id === 'mondo') {
-                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
                     } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
                       usdModelo = p.value * (rates?.eur_usd || 1.01);
                     } else {

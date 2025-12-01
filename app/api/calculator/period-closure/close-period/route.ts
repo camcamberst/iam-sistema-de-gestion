@@ -69,7 +69,42 @@ export async function POST(request: NextRequest) {
     const forceCloseSecret = request.headers.get('x-force-close-secret');
     const cronSecret = process.env.CRON_SECRET_KEY || 'cron-secret';
     const forcedBySecret = !!(forceCloseSecret && forceCloseSecret === cronSecret);
-    const bypassGuardrails = testingMode || forcedBySecret;
+    
+    // Verificar si es super_admin autenticado
+    let isSuperAdmin = false;
+    const authHeader = request.headers.get('authorization');
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        // Usar cliente anon para verificar usuario, o decodificar JWT si fuera necesario
+        // Pero dado que tenemos service role client, podemos usar auth.getUser(token) si supabase lo permite
+        // O mejor, creamos un cliente separado para validar auth
+        const supabaseAuth = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL as string,
+          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY as string
+        );
+        
+        const { data: { user }, error: authError } = await supabaseAuth.auth.getUser(token);
+        
+        if (user && !authError) {
+          // Verificar rol en tabla users con el cliente admin
+          const { data: userData } = await supabase
+            .from('users')
+            .select('role')
+            .eq('id', user.id)
+            .single();
+            
+          if (userData?.role === 'super_admin') {
+            isSuperAdmin = true;
+            console.log('🛡️ [CLOSE-PERIOD] Super Admin autenticado solicitando cierre manual:', user.email);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [CLOSE-PERIOD] Error validando super admin:', e);
+      }
+    }
+
+    const bypassGuardrails = testingMode || forcedBySecret || isSuperAdmin;
     const validForcedType = forcePeriodTypeHeader === '1-15' || forcePeriodTypeHeader === '16-31';
     const canForceOverride = !!(
       (forcePeriodDateHeader && validForcedType && bypassGuardrails)

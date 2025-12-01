@@ -11,7 +11,7 @@
  * @deprecated Use getColombiaDate() instead
  */
 export const getCalculatorDate = (): string => {
-  console.warn('⚠️ getCalculatorDate() is deprecated. Use getColombiaDate() instead.');
+  // console.warn('⚠️ getCalculatorDate() is deprecated. Use getColombiaDate() instead.');
   return getColombiaDate();
 };
 
@@ -21,7 +21,7 @@ export const getCalculatorDate = (): string => {
  * @deprecated Use getColombiaDateTime() instead
  */
 export const getCalculatorDateTime = (): string => {
-  console.warn('⚠️ getCalculatorDateTime() is deprecated. Use getColombiaDateTime() instead.');
+  // console.warn('⚠️ getCalculatorDateTime() is deprecated. Use getColombiaDateTime() instead.');
   return getColombiaDateTime();
 };
 
@@ -36,6 +36,58 @@ export const getColombiaPeriodStartDate = (): string => {
   
   const startDay = day <= 15 ? 1 : 16;
   return `${year}-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
+};
+
+/**
+ * 🔧 NUEVO: Normaliza cualquier fecha (YYYY-MM-DD) a su fecha de inicio de período (1 o 16)
+ * Útil para asegurar que guardamos/leemos del "bucket" correcto sin importar la fecha específica
+ */
+export const normalizeToPeriodStartDate = (dateStr: string): string => {
+  try {
+    // Validar formato básico YYYY-MM-DD
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+      console.warn('⚠️ [DATE-UTILS] Formato de fecha inválido para normalizar:', dateStr);
+      return getColombiaPeriodStartDate();
+    }
+
+    const [year, month, day] = dateStr.split('-').map(Number);
+    if (!year || !month || !day) return getColombiaPeriodStartDate();
+    
+    const startDay = day <= 15 ? 1 : 16;
+    return `${year}-${String(month).padStart(2, '0')}-${String(startDay).padStart(2, '0')}`;
+  } catch (e) {
+    console.error('❌ [DATE-UTILS] Error normalizando fecha:', e);
+    return getColombiaPeriodStartDate();
+  }
+};
+
+/**
+ * Calcula el rango y nombre correcto de un período quincenal
+ */
+export const getPeriodDetails = (dateStr: string) => {
+  try {
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const isP1 = day <= 15;
+    const startDate = `${year}-${String(month).padStart(2, '0')}-${isP1 ? '01' : '16'}`;
+    
+    let endDate = '';
+    if (isP1) {
+      endDate = `${year}-${String(month).padStart(2, '0')}-15`;
+    } else {
+      // Last day of month
+      const lastDay = new Date(year, month, 0).getDate();
+      endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+    }
+
+    const months = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const name = `${months[month - 1]} ${year} - Período ${isP1 ? '1' : '2'}`;
+
+    return { startDate, endDate, name, isP1 };
+  } catch (e) {
+    console.error('❌ [DATE-UTILS] Error calculando detalles del período:', e);
+    // Fallback safe
+    return { startDate: dateStr, endDate: dateStr, name: `Período ${dateStr}`, isP1: true };
+  }
 };
 
 /**
@@ -187,6 +239,7 @@ export const getNextCalculatorDate = (): string => {
 
 /**
  * Crea un período automáticamente si no existe
+ * 🔧 CORREGIDO: Ahora crea periodos quincenales (1-15, 16-End) y no diarios
  * @param date - Fecha del período (opcional, usa fecha actual si no se proporciona)
  * @returns Período creado o existente
  */
@@ -204,43 +257,55 @@ export const createPeriodIfNeeded = async (date?: string) => {
     }
   );
   
-  const targetDate = date || getCalculatorDate();
+  const targetDate = date || getColombiaDate();
+  const { startDate, endDate, name } = getPeriodDetails(targetDate);
   
   try {
-    // Verificar si existe período para la fecha
+    console.log('🔍 [CREATE-PERIOD] Verificando período quincenal:', { targetDate, startDate, endDate, name });
+
+    // 1. Verificar si existe período EXACTO (por nombre o fechas)
     const { data: existingPeriod, error: checkError } = await supabase
       .from('periods')
       .select('id, name, start_date, end_date, is_active')
-      .eq('start_date', targetDate)
-      .eq('end_date', targetDate)
+      .or(`name.eq.${name},and(start_date.eq.${startDate},end_date.eq.${endDate})`)
       .eq('is_active', true)
-      .single();
+      .maybeSingle(); // Usar maybeSingle para no lanzar error si hay 0
     
-    if (checkError && checkError.code !== 'PGRST116') {
+    if (checkError) {
       console.error('❌ [CREATE-PERIOD] Error verificando período:', checkError);
       throw checkError;
     }
     
     if (existingPeriod) {
-      console.log('✅ [CREATE-PERIOD] Período ya existe:', existingPeriod);
+      console.log('✅ [CREATE-PERIOD] Período quincenal ya existe:', existingPeriod.name);
       return existingPeriod;
     }
     
-    // Crear nuevo período
-    console.log('🔄 [CREATE-PERIOD] Creando período para:', targetDate);
+    // 2. Crear nuevo período QUINCENAL
+    console.log('🔄 [CREATE-PERIOD] Creando período quincenal:', name);
     
     const { data: newPeriod, error: createError } = await supabase
       .from('periods')
       .insert({
-        name: `Período ${targetDate}`,
-        start_date: targetDate,
-        end_date: targetDate,
+        name: name,
+        start_date: startDate,
+        end_date: endDate,
         is_active: true
       })
       .select()
       .single();
     
     if (createError) {
+      // Si falla por duplicado (race condition), intentamos buscarlo de nuevo
+      if (createError.code === '23505') {
+        console.log('⚠️ [CREATE-PERIOD] Race condition detectada, buscando periodo existente...');
+        const { data: retryPeriod } = await supabase
+          .from('periods')
+          .select('*')
+          .eq('name', name)
+          .single();
+        return retryPeriod;
+      }
       console.error('❌ [CREATE-PERIOD] Error creando período:', createError);
       throw createError;
     }
