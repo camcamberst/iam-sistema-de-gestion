@@ -22,7 +22,8 @@
     "quill": "^2.0.3",
     "react": "^18",
     "react-dom": "^18",
-    "react-quill": "^2.0.0"
+    "react-quill": "^2.0.0",
+    "resend": "^6.5.2"
   },
   "devDependencies": {
     "@types/cheerio": "^0.22.35",
