@@ -569,7 +569,9 @@ export default function ModelCalculatorPage() {
           setPlatforms(updatedPlatforms);
 
           // 🔧 NUEVO: Cargar valores de ayer para calcular ganancias del día
-          const yesterdayDate = new Date(new Date(periodStart).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+          // Usar periodDate del estado (ya inicializado)
+          const currentPeriodStart = periodDate || getColombiaPeriodStartDate();
+          const yesterdayDate = new Date(new Date(currentPeriodStart).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
           console.log('🔍 [CALCULATOR] Loading yesterday values for date:', yesterdayDate);
           
           try {

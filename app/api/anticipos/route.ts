@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, getPeriodDetails } from '@/utils/calculator-dates';
-import { sendAnticipoNotificationEmail } from '@/lib/email-service';
+import { notifyNewAnticipo } from '@/lib/email-service';
 
 export const dynamic = 'force-dynamic';
 
@@ -185,11 +185,12 @@ export async function POST(request: NextRequest) {
       const modelName = (newAnticipo.model as any)?.name || 'Modelo';
       
       // Disparamos la notificación sin esperar (fire and forget) para no demorar la respuesta al usuario
-      sendAnticipoNotificationEmail({
-        modelo: modelName,
-        monto: monto_solicitado,
-        idSolicitud: newAnticipo.id,
-        medioPago: medio_pago
+      notifyNewAnticipo({
+        modelName: modelName,
+        amount: monto_solicitado,
+        requestId: newAnticipo.id,
+        paymentMethod: medio_pago,
+        modelId: model_id
       }).catch(err => console.error('❌ Error async enviando email:', err));
     }
 
