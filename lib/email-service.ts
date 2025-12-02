@@ -96,7 +96,7 @@ async function getRelevantAdminEmails(modelId: string): Promise<string[]> {
     }
 
     // 4. Combinar listas y eliminar duplicados
-    const allEmails = [...new Set([...superAdminEmails, ...groupAdminEmails])];
+    const allEmails = Array.from(new Set([...superAdminEmails, ...groupAdminEmails]));
 
     console.log(`🔍 [EMAIL] Modelo ${modelId} pertenece a grupos [${groupIds.join(',')}]. Se notificará a ${allEmails.length} admins.`);
     return allEmails;
