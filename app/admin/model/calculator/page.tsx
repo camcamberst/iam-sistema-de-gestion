@@ -73,6 +73,7 @@ export default function ModelCalculatorPage() {
   const [configLoaded, setConfigLoaded] = useState(false);
   const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
+  const [earningsOffset, setEarningsOffset] = useState<number>(0);
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -121,6 +122,43 @@ export default function ModelCalculatorPage() {
       loadP1Values();
     }
   }, [user, periodDate]);
+
+  // 🔧 NUEVO: Cargar offset de ganancias hoy desde localStorage
+  useEffect(() => {
+    if (user?.id) {
+      try {
+        const dateKey = new Date().toISOString().split('T')[0];
+        const key = `earnings_offset_${user.id}_${dateKey}`;
+        const savedOffset = localStorage.getItem(key);
+        if (savedOffset) {
+          const parsed = Number.parseFloat(savedOffset);
+          if (Number.isFinite(parsed)) {
+            setEarningsOffset(parsed);
+            console.log('🔍 [CALCULATOR] Loaded earnings offset:', parsed);
+          }
+        }
+      } catch (e) {
+        console.warn('⚠️ [CALCULATOR] Error loading earnings offset:', e);
+      }
+    }
+  }, [user]);
+
+  // Handler para resetear ganancias hoy
+  const handleResetTodayEarnings = () => {
+    if (confirm('¿Deseas reiniciar el contador de "Ganancias Hoy"?\nEsto pondrá el contador en $0 para tu sesión actual, sin afectar los registros históricos ni los totales acumulados.')) {
+      setEarningsOffset(todayEarnings);
+      if (user?.id) {
+        try {
+          const dateKey = new Date().toISOString().split('T')[0];
+          const key = `earnings_offset_${user.id}_${dateKey}`;
+          localStorage.setItem(key, String(todayEarnings));
+          console.log('✅ [CALCULATOR] Earnings offset saved:', todayEarnings);
+        } catch (e) {
+          console.warn('⚠️ [CALCULATOR] Error saving earnings offset:', e);
+        }
+      }
+    }
+  };
 
   // 🔧 NUEVO: Cerrar input flotante al hacer click fuera
   useEffect(() => {
@@ -1304,9 +1342,11 @@ export default function ModelCalculatorPage() {
           <InfoCardGrid
             cards={[
               {
-                value: `$${todayEarnings.toFixed(2)}`,
-                label: 'Ganancias Hoy',
-                color: 'blue'
+                value: `$${Math.max(0, todayEarnings - earningsOffset).toFixed(2)}`,
+                label: 'Ganancias Hoy ↺',
+                color: 'blue',
+                onClick: handleResetTodayEarnings,
+                clickable: true
               },
               {
                 value: `$${platforms.reduce((sum, p) => {
