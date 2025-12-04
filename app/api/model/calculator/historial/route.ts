@@ -164,8 +164,8 @@ export async function GET(request: NextRequest) {
       total_usd_bruto: number;
       total_usd_modelo: number;
       total_cop_modelo: number;
-      total_anticipos: number; // 🔧 NUEVO
-      neto_pagar: number;      // 🔧 NUEVO
+      total_anticipos: number; 
+      neto_pagar: number | null; // 🔧 Changed to null for initialization
       rates: any;
     }>();
 
@@ -195,7 +195,7 @@ export async function GET(request: NextRequest) {
           total_usd_modelo: 0,
           total_cop_modelo: 0,
           total_anticipos: 0, // Inicializar
-          neto_pagar: 0,      // Inicializar
+          neto_pagar: null,   // 🔧 Inicializar a null para indicar que aún no se ha calculado
           // Tasas aplicadas al período (todos los items del período tienen las mismas tasas)
           rates: {
             eur_usd: item.rate_eur_usd || null,
@@ -410,6 +410,13 @@ export async function GET(request: NextRequest) {
         }
       }
     }
+
+    // 🔧 PASO FINAL: Asegurar que neto_pagar tenga valor si no se calculó arriba
+    periodsArray.forEach((period: any) => {
+      if (period.neto_pagar === null || period.neto_pagar === undefined) {
+        period.neto_pagar = period.total_cop_modelo;
+      }
+    });
 
     // Convertir a array y ordenar por fecha descendente
     const periods = periodsArray.sort((a, b) => {
