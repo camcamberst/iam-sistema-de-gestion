@@ -284,7 +284,7 @@ export default function ModelCalculatorPage() {
       if (!p.enabled) continue;
       
       const yesterdayValue = yesterdayValues[p.id] || 0;
-      if (yesterdayValue <= 0) continue;
+      if (yesterValue <= 0) continue;
       
       let usdModelo = 0;
       if (p.currency === 'EUR') {
@@ -1172,26 +1172,34 @@ export default function ModelCalculatorPage() {
                             {/* 🔧 FIX: Nombre clickeable robusto con botón e indicador visual */}
                             <button 
                               type="button"
-                              disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
+                              disabled={isFrozen || !isPeriod2} // 🧊 BLOQUEAR SI ESTÁ CONGELADO O NO ES P2
                               className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group ${
                                 isFrozen 
                                   ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                                  : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
+                                  : !isPeriod2
+                                    ? 'text-gray-900 dark:text-gray-100 cursor-default' // No clickable pero visible
+                                    : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
                               }`}
                               onClick={(e) => {
-                                if (isFrozen) return;
+                                if (isFrozen || !isPeriod2) return;
                                 e.preventDefault();
                                 e.stopPropagation();
                                 console.log('👆 [CALCULATOR] Click en plataforma:', platform.id);
                                 setEditingP1Platform(platform.id);
                                 setP1InputValue(String(p1Values[platform.id] || ''));
                               }}
-                              title={isFrozen ? "Plataforma cerrada por horario europeo" : "Click para ingresar valor de P1"}
+                              title={
+                                isFrozen 
+                                  ? "Plataforma cerrada por horario europeo" 
+                                  : !isPeriod2 
+                                    ? "Solo disponible en el segundo periodo (16-Fin de mes)" 
+                                    : "Click para ingresar valor de P1"
+                              }
                             >
-                              <span className={`${!isFrozen && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
+                              <span className={`${!isFrozen && isPeriod2 && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
                                 {platform.name}
                               </span>
-                              {!isFrozen && (
+                              {!isFrozen && isPeriod2 && (
                                 <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
                                   ✎
                                 </span>
@@ -1219,7 +1227,7 @@ export default function ModelCalculatorPage() {
                             )}
 
                             {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta con z-index alto */}
-                            {editingP1Platform === platform.id && !isFrozen && (
+                            {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
                               <div
                                 className="absolute z-[100] bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 min-w-[140px]"
                                 style={{
