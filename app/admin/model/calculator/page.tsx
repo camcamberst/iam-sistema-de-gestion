@@ -97,9 +97,12 @@ export default function ModelCalculatorPage() {
     const loadP1Values = async () => {
       if (!user) return;
       
-      // Determinar si estamos en P2 (16-fin de mes)
-      const day = new Date(periodDate).getDate();
+      // Determinar si estamos en P2 (16-fin de mes) usando parseo seguro de strings
+      // new Date('YYYY-MM-DD') usa UTC y puede devolver el día anterior en zonas horarias occidentales
+      const parts = periodDate.split('-');
+      const day = parseInt(parts[2], 10);
       const isP2 = day >= 16;
+      console.log('🔍 [CALCULATOR] Period check:', { periodDate, day, isP2 });
       setIsPeriod2(isP2);
       
       if (isP2) {
