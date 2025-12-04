@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, getColombiaPeriodStartDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
+import { getFrozenPlatformsForModel } from '@/lib/calculator/period-closure-helpers'; // Import added
 
 export const dynamic = 'force-dynamic';
 
@@ -138,6 +139,9 @@ export async function GET(request: NextRequest) {
     
     const modelValues = Array.from(consolidatedMap.values());
 
+    // 8. Obtener plataformas congeladas (EARLY FREEZE)
+    const frozenPlatforms = await getFrozenPlatformsForModel(periodDate, modelId);
+
     return NextResponse.json({
       success: true,
       model: { id: model.id, name: model.name, email: model.email, groups: model.groups?.map((g: any) => g.group) || [] },
@@ -153,7 +157,8 @@ export async function GET(request: NextRequest) {
       values: modelValues || [],
       periodDate: periodDate, // Devolver la fecha de periodo (bucket)
       rates: rates,
-      isConfigured: !!config
+      isConfigured: !!config,
+      frozenPlatforms // <--- Nuevo campo
     });
 
   } catch (error: any) {

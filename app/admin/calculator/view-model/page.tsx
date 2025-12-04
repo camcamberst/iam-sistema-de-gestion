@@ -55,6 +55,10 @@ export default function AdminViewModelPage() {
   // const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null); // Eliminado
   const [p1Values, setP1Values] = useState<Record<string, number>>({});
   
+  // 🔧 PARITY: Estados para control de periodo y congelamiento
+  const [isPeriod2, setIsPeriod2] = useState<boolean>(false);
+  const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
+
   // Estados para filtros
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
   const [selectedGroup, setSelectedGroup] = useState<string>('all');
@@ -268,6 +272,22 @@ export default function AdminViewModelPage() {
           calculatorData: data
         });
 
+        // 🔧 PARITY: Calcular isPeriod2 de forma segura
+        if (data.periodDate) {
+          const parts = data.periodDate.split('-');
+          const day = parseInt(parts[2], 10);
+          setIsPeriod2(day >= 16);
+          console.log('🔍 [ADMIN-VIEW] Period check:', { periodDate: data.periodDate, day, isP2: day >= 16 });
+        }
+
+        // 🔧 PARITY: Setear frozen platforms
+        if (data.frozenPlatforms) {
+          setFrozenPlatforms(data.frozenPlatforms);
+          console.log('🧊 [ADMIN-VIEW] Frozen platforms:', data.frozenPlatforms);
+        } else {
+          setFrozenPlatforms([]);
+        }
+
         // Cargar totales calculados desde el servidor
         await loadCalculatedTotals(model.id);
       } else {
@@ -286,6 +306,8 @@ export default function AdminViewModelPage() {
     setSelectedModelId('');
     setEditValues({});
     setHasChanges(false);
+    setIsPeriod2(false); // Reset
+    setFrozenPlatforms([]); // Reset
     
     // 🔧 UX FIX: Limpiar URL y localStorage al volver a la lista
     localStorage.removeItem('admin-selected-model-id');
@@ -724,26 +746,66 @@ export default function AdminViewModelPage() {
                             : (usdBruto * platform.percentage) / 100;
                           const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
                           
+                          // 🔧 PARITY: Determinar si está congelada
+                          const isFrozen = frozenPlatforms.includes(platform.id);
+                          const p1Value = p1Values[platform.id] || 0; // Se llenará si se implementa carga de P1
+
                           return (
-                            <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-200 group">
+                            <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-200 group ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
                               <td className="py-3 px-3 relative">
                                 <div 
-                                  className="font-medium text-gray-900 dark:text-gray-100 text-sm cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 hover:underline transition-colors inline-block mb-1"
+                                  className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group ${
+                                    isFrozen 
+                                      ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                      : !isPeriod2
+                                        ? 'text-gray-900 dark:text-gray-100 cursor-default' // No clickable pero visible
+                                        : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer'
+                                  }`}
                                   onClick={(e) => {
                                     e.stopPropagation();
+                                    if (isFrozen || !isPeriod2) return;
                                     // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
                                     setEditingP1Platform(platform.id);
                                     setP1InputValue(String(p1Values[platform.id] || ''));
                                   }}
-                                  title="Click para ingresar valor de P1"
+                                  title={
+                                    isFrozen 
+                                      ? "Plataforma cerrada por horario europeo" 
+                                      : !isPeriod2 
+                                        ? "Solo disponible en el segundo periodo (16-Fin de mes)" 
+                                        : "Click para ingresar valor de P1"
+                                  }
                                 >
-                                  {platform.name}
+                                  <span className={`${!isFrozen && isPeriod2 && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
+                                    {platform.name}
+                                  </span>
+                                  {!isFrozen && isPeriod2 && (
+                                    <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
+                                      ✎
+                                    </span>
+                                  )}
+                                  {isFrozen && (
+                                    <span 
+                                      className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                    >
+                                      🔒 Cerrado
+                                    </span>
+                                  )}
                                 </div>
                                 <div className="text-xs text-gray-500 dark:text-gray-400">
                                   Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                                 </div>
+                                
+                                {/* 🔧 REFERENCIA PERMANENTE DE P1 */}
+                                {p1Value > 0 && (
+                                   <div className="mt-1 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800/30 w-fit">
+                                     <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">P1:</span>
+                                     <span className="text-[10px] font-mono text-blue-700 dark:text-blue-300">{p1Value.toLocaleString('es-CO')}</span>
+                                   </div>
+                                )}
+
                                 {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta relativa a la celda, diseño compacto */}
-                                {editingP1Platform === platform.id && (
+                                {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
                                   <div
                                     className="absolute z-50 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-lg p-2"
                                     style={{
@@ -807,8 +869,10 @@ export default function AdminViewModelPage() {
                                     <input
                                       type="text"
                                       inputMode="decimal"
+                                      disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
                                       value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
                                       onChange={(e) => {
+                                        if (isFrozen) return; // Doble check
                                         const raw = e.target.value;
                                         const cleaned = raw.replace(/[^0-9.,]/g, '');
                                         const normalized = cleaned.replace(',', '.');
@@ -816,8 +880,13 @@ export default function AdminViewModelPage() {
                                         const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
                                         handleValueChange(platform.id, safeNormalized);
                                       }}
-                                      className="w-24 px-3 py-2 text-sm font-medium text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100"
-                                      placeholder="0.00"
+                                      className={`w-24 px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg ${
+                                        isFrozen
+                                          ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 cursor-not-allowed'
+                                          : 'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100'
+                                      }`}
+                                      placeholder={isFrozen ? "Locked" : "0.00"}
+                                      title={isFrozen ? "Plataforma cerrada por horario europeo" : "Ingresa el valor generado"}
                                     />
                                     <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 px-2 py-1 rounded-md">
                                       {platform.currency || 'USD'}
