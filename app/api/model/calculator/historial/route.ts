@@ -161,6 +161,12 @@ export async function GET(request: NextRequest) {
         value: number;
       }>;
       total_value: number;
+      total_usd_bruto: number;
+      total_usd_modelo: number;
+      total_cop_modelo: number;
+      total_anticipos: number; // 🔧 NUEVO
+      neto_pagar: number;      // 🔧 NUEVO
+      rates: any;
     }>();
 
     // PASO 3: Procesar y agrupar datos con validaciones
@@ -188,6 +194,8 @@ export async function GET(request: NextRequest) {
           total_usd_bruto: 0,
           total_usd_modelo: 0,
           total_cop_modelo: 0,
+          total_anticipos: 0, // Inicializar
+          neto_pagar: 0,      // Inicializar
           // Tasas aplicadas al período (todos los items del período tienen las mismas tasas)
           rates: {
             eur_usd: item.rate_eur_usd || null,
@@ -217,73 +225,41 @@ export async function GET(request: NextRequest) {
       };
       
       // Función para calcular USD bruto (misma lógica que en period-closure-helpers y Mi Calculadora)
-      // IMPORTANTE: Todas las reglas especiales deben coincidir exactamente con "Mi Calculadora"
       const calculateUsdBruto = (value: number, platformId: string, currency: string, rates: any): number => {
-        // Normalizar platformId para comparación (case-insensitive, sin caracteres especiales)
         const normalizedId = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
-        
         if (currency === 'EUR') {
-          if (normalizedId === 'big7') {
-            return (value * rates.eur_usd) * 0.84; // 16% impuesto
-          } else if (normalizedId === 'mondo') {
-            return (value * rates.eur_usd) * 0.78; // 22% descuento
-          } else if (normalizedId === 'superfoon') {
-            // CORRECCIÓN: SUPERFOON es EUR, no USD. Convertir EUR a USD directo
-            return value * rates.eur_usd;
-          } else {
-            // Otras plataformas EUR (modelka, xmodels, 777, vx, livecreator, mow, etc.)
-            return value * rates.eur_usd;
-          }
+          if (normalizedId === 'big7') return (value * rates.eur_usd) * 0.84;
+          else if (normalizedId === 'mondo') return (value * rates.eur_usd) * 0.78;
+          else if (normalizedId === 'superfoon') return value * rates.eur_usd;
+          else return value * rates.eur_usd;
         } else if (currency === 'GBP') {
-          if (normalizedId === 'aw') {
-            return (value * rates.gbp_usd) * 0.677; // 32.3% descuento
-          } else {
-            // Otras plataformas GBP (babestation, etc.)
-            return value * rates.gbp_usd;
-          }
+          if (normalizedId === 'aw') return (value * rates.gbp_usd) * 0.677;
+          else return value * rates.gbp_usd;
         } else if (currency === 'USD') {
-          if (normalizedId === 'cmd' || normalizedId === 'camlust' || normalizedId === 'skypvt') {
-            return value * 0.75; // 25% descuento
-          } else if (normalizedId === 'chaturbate' || normalizedId === 'myfreecams' || normalizedId === 'stripchat') {
-            return value * 0.05; // 100 tokens = 5 USD
-          } else if (normalizedId === 'dxlive') {
-            return value * 0.60; // 100 pts = 60 USD
-          } else if (normalizedId === 'secretfriends') {
-            return value * 0.5; // 50% descuento
-          } else {
-            // Otras plataformas USD (mdh, livejasmin, imlive, hegre, dirtyfans, camcontacts, etc.)
-            return value;
-          }
+          if (normalizedId === 'cmd' || normalizedId === 'camlust' || normalizedId === 'skypvt') return value * 0.75;
+          else if (normalizedId === 'chaturbate' || normalizedId === 'myfreecams' || normalizedId === 'stripchat') return value * 0.05;
+          else if (normalizedId === 'dxlive') return value * 0.60;
+          else if (normalizedId === 'secretfriends') return value * 0.5;
+          else return value;
         }
         return 0;
       };
       
-      // IMPORTANTE: SIEMPRE usar el porcentaje actual del modelo/grupo desde calculator_config
-      // NO usar el porcentaje guardado en calculator_history porque puede estar desactualizado
-      // El porcentaje correcto siempre viene de calculator_config (percentage_override o group_percentage)
-      // Regla especial: SUPERFOON paga directo 100% a la modelo
-      const isSuperfoon = String(item.platform_id || '')
-        .toLowerCase()
-        .replace(/[^a-z0-9]/g, '') === 'superfoon';
+      const isSuperfoon = String(item.platform_id || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'superfoon';
       const modelPercentage = isSuperfoon ? 100 : defaultModelPercentage;
       
-      // Calcular valores usando el porcentaje correcto del modelo
       let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
       let usdModelo: number | null = null;
       let copModelo: number | null = null;
       
-      // Si falta USD Bruto, calcularlo ahora
       if (usdBruto === null) {
         const currency = platformInfo?.currency || 'USD';
         usdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
       }
       
-      // SIEMPRE recalcular USD Modelo y COP Modelo con el porcentaje actual del modelo
-      // Esto asegura que se use el porcentaje correcto aunque los valores ya estén guardados
       usdModelo = usdBruto * (modelPercentage / 100);
       copModelo = usdModelo * rates.usd_cop;
       
-      // Asegurar que todos los valores sean números
       const finalUsdBruto = usdBruto ?? 0;
       const finalUsdModelo = usdModelo ?? 0;
       const finalCopModelo = copModelo ?? 0;
@@ -293,28 +269,24 @@ export async function GET(request: NextRequest) {
         platform_name: platformInfo?.name || item.platform_id,
         platform_currency: platformInfo?.currency || 'USD',
         value: safeValue,
-        // Nuevos campos de cálculos (SIEMPRE recalculados con porcentaje actual)
         value_usd_bruto: finalUsdBruto,
         value_usd_modelo: finalUsdModelo,
         value_cop_modelo: finalCopModelo,
-        // Guardar el porcentaje aplicado (100% para superfoon)
         platform_percentage: modelPercentage,
-        // Tasas aplicadas (guardadas en el historial o calculadas)
         rates: {
           eur_usd: rates.eur_usd,
           gbp_usd: rates.gbp_usd,
           usd_cop: rates.usd_cop
         }
-      } as any); // Type assertion needed because TypeScript infers the type from the first push()
+      } as any);
       
-      // Actualizar totales del período
       period.total_value += safeValue;
       period.total_usd_bruto += finalUsdBruto;
       period.total_usd_modelo += finalUsdModelo;
       period.total_cop_modelo += finalCopModelo;
     });
 
-    // PASO 4: Obtener alertas/notificaciones del período cerrado para cada período
+    // PASO 4: Obtener alertas y notificaciones
     const periodsArray = Array.from(periodsMap.values());
     const periodDates = periodsArray.map(p => p.period_date);
     
@@ -326,7 +298,6 @@ export async function GET(request: NextRequest) {
         .in('period_date', periodDates);
       
       if (!notificationsError && notifications) {
-        // Agrupar notificaciones por período
         const notificationsByPeriod = new Map<string, any[]>();
         notifications.forEach((notif: any) => {
           const periodKey = notif.period_date;
@@ -336,13 +307,11 @@ export async function GET(request: NextRequest) {
           notificationsByPeriod.get(periodKey)!.push(notif);
         });
         
-        // Agregar notificaciones a cada período y calcular porcentaje alcanzado
         periodsArray.forEach(period => {
           const periodKey = period.period_date;
           const periodNotifications = notificationsByPeriod.get(periodKey) || [];
           (period as any).alerts = periodNotifications
             .filter((n: any) => {
-              // Filtrar por tipo de notificación relevante al período
               const type = n.notification_type;
               return type === 'periodo_cerrado' || 
                      type === 'calculator_cleared' || 
@@ -360,7 +329,6 @@ export async function GET(request: NextRequest) {
             }))
             .sort((a: any, b: any) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
           
-          // Calcular porcentaje alcanzado basado en USD Bruto y cuota mínima
           const totalUsdBruto = (period as any).total_usd_bruto || 0;
           const porcentajeAlcanzado = cuotaMinima > 0 ? (totalUsdBruto / cuotaMinima) * 100 : 0;
           (period as any).cuota_minima = cuotaMinima;
@@ -370,15 +338,12 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // PASO 5: Si algún período no tiene tasas, obtener tasas activas actuales y completarlas
+    // PASO 5: Completar tasas faltantes
     const periodsWithMissingRates = periodsArray.filter((p: any) => 
       !p.rates?.eur_usd && !p.rates?.gbp_usd && !p.rates?.usd_cop
     );
 
     if (periodsWithMissingRates.length > 0) {
-      console.log(`⚠️ [CALCULATOR-HISTORIAL] ${periodsWithMissingRates.length} períodos sin tasas guardadas, obteniendo tasas activas actuales...`);
-      
-      // Obtener tasas activas actuales como fallback
       const { data: activeRates, error: ratesError } = await supabase
         .from('rates')
         .select('kind, value')
@@ -393,15 +358,56 @@ export async function GET(request: NextRequest) {
           usd_cop: activeRates.find((r: any) => r.kind === 'USD→COP')?.value || 3900
         };
 
-        // Completar tasas para períodos que no las tienen
         periodsWithMissingRates.forEach((period: any) => {
           period.rates = {
             eur_usd: defaultRates.eur_usd,
             gbp_usd: defaultRates.gbp_usd,
             usd_cop: defaultRates.usd_cop
           };
-          console.log(`✅ [CALCULATOR-HISTORIAL] Tasas completadas para período ${period.period_date} (${period.period_type})`);
         });
+      }
+    }
+
+    // 🔧 PASO 6 (NUEVO): Calcular y restar Anticipos Aprobados/Realizados
+    if (periodDates.length > 0) {
+      // 1. Obtener IDs de períodos correspondientes a las fechas del historial
+      //    period_date en history (bucket) = start_date en tabla periods
+      const { data: periodsRef, error: periodsRefError } = await supabase
+        .from('periods')
+        .select('id, start_date')
+        .in('start_date', periodDates);
+
+      if (!periodsRefError && periodsRef && periodsRef.length > 0) {
+        const periodIdMap = new Map(periodsRef.map((p: any) => [p.start_date, p.id]));
+        const relevantPeriodIds = periodsRef.map((p: any) => p.id);
+
+        // 2. Obtener anticipos aprobados/realizados para este modelo en estos períodos
+        const { data: anticipos, error: anticiposError } = await supabase
+          .from('anticipos')
+          .select('period_id, monto_solicitado')
+          .eq('model_id', modelId)
+          .in('period_id', relevantPeriodIds)
+          .in('estado', ['aprobado', 'realizado', 'confirmado']); // Incluir confirmado por si acaso
+
+        if (!anticiposError && anticipos) {
+          // 3. Agrupar anticipos por period_id
+          const anticiposByPeriodId = new Map<string, number>();
+          anticipos.forEach((a: any) => {
+            const current = anticiposByPeriodId.get(a.period_id) || 0;
+            anticiposByPeriodId.set(a.period_id, current + Number(a.monto_solicitado));
+          });
+
+          // 4. Asignar a los períodos del historial
+          periodsArray.forEach((period: any) => {
+            const pId = periodIdMap.get(period.period_date);
+            if (pId) {
+              const totalAnticipos = anticiposByPeriodId.get(pId) || 0;
+              period.total_anticipos = totalAnticipos;
+              // NETO = Generado (COP Modelo) - Anticipos
+              period.neto_pagar = Math.max(0, period.total_cop_modelo - totalAnticipos);
+            }
+          });
+        }
       }
     }
 
@@ -412,7 +418,6 @@ export async function GET(request: NextRequest) {
       if (dateA.getTime() !== dateB.getTime()) {
         return dateB.getTime() - dateA.getTime();
       }
-      // Si la fecha es igual, ordenar por period_type (1-15 primero, luego 16-31)
       return a.period_type === '1-15' ? -1 : 1;
     });
 
@@ -430,4 +435,3 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
-

@@ -38,6 +38,8 @@ interface Period {
   total_usd_bruto?: number;
   total_usd_modelo?: number;
   total_cop_modelo?: number;
+  total_anticipos?: number; // 🔧 NUEVO
+  neto_pagar?: number;      // 🔧 NUEVO
   rates?: {
     eur_usd?: number | null;
     gbp_usd?: number | null;
@@ -791,18 +793,44 @@ export default function CalculatorHistorialPage() {
                 
                 {/* Totales y alertas del período cerrado - Debajo de la tabla */}
                 <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600">
-                  {/* Totales computados */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div>
+                  {/* Totales computados CON DESGLOSE DE ANTICIPOS (🔧 NUEVO) */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+                    {/* Panel Izquierdo: Info Básica */}
+                    <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl border border-gray-100 dark:border-gray-600/50">
                       <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
                       <div className="text-lg font-bold text-green-600 dark:text-green-400">
                         {formatCurrency(period.total_usd_modelo || 0, 'USD')}
                       </div>
                     </div>
-                    <div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">COP Modelo</div>
-                      <div className="text-lg font-bold text-purple-600 dark:text-purple-400">
-                        {formatCurrency(period.total_cop_modelo || 0, 'COP')}
+
+                    {/* Panel Derecho: Desglose de Pago */}
+                    <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                      {/* Generado */}
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
+                        <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                          {formatCurrency(period.total_cop_modelo || 0, 'COP')}
+                        </span>
+                      </div>
+                      
+                      {/* Deducción Anticipos */}
+                      {(period.total_anticipos || 0) > 0 && (
+                        <div className="flex justify-between items-center mb-2 pb-2 border-b border-gray-200 dark:border-gray-600/50 border-dashed">
+                          <span className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1">
+                            <span>(-)</span> Anticipos
+                          </span>
+                          <span className="text-sm font-medium text-red-600 dark:text-red-400">
+                            - {formatCurrency(period.total_anticipos || 0, 'COP')}
+                          </span>
+                        </div>
+                      )}
+
+                      {/* Neto a Pagar */}
+                      <div className="flex justify-between items-center pt-1">
+                        <span className="text-xs font-bold text-gray-900 dark:text-gray-100 uppercase tracking-wide">Neto a Pagar</span>
+                        <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                          {formatCurrency(period.neto_pagar !== undefined ? period.neto_pagar : (period.total_cop_modelo || 0), 'COP')}
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -988,4 +1016,3 @@ export default function CalculatorHistorialPage() {
     </>
   );
 }
-
