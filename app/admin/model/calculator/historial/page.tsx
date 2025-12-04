@@ -174,9 +174,16 @@ export default function CalculatorHistorialPage() {
         const uniqueMonths = new Set<number>();
         
         loadedPeriods.forEach((period: Period) => {
-          const date = new Date(period.period_date);
-          uniqueYears.add(date.getFullYear());
-          uniqueMonths.add(date.getMonth() + 1); // Mes 1-12
+          // Parseo seguro usando split para evitar problemas de zona horaria
+          // '2025-11-01' -> [2025, 11]
+          if (period.period_date) {
+            const [yStr, mStr] = period.period_date.split('-');
+            const year = parseInt(yStr);
+            const month = parseInt(mStr);
+            
+            if (!isNaN(year)) uniqueYears.add(year);
+            if (!isNaN(month)) uniqueMonths.add(month);
+          }
         });
         
         const yearsOptions = Array.from(uniqueYears)
@@ -279,9 +286,13 @@ export default function CalculatorHistorialPage() {
     const month = parseInt(selectedMonth);
     
     return allPeriods.filter(period => {
-      const date = new Date(period.period_date);
-      const periodYear = date.getFullYear();
-      const periodMonth = date.getMonth() + 1; // Mes 1-12
+      // Parseo seguro de fecha YYYY-MM-DD sin problemas de zona horaria
+      // Evita que '2025-11-01' se convierta en '2025-10-31' por ajuste UTC-5
+      if (!period.period_date) return false;
+      
+      const [yStr, mStr] = period.period_date.split('-');
+      const periodYear = parseInt(yStr);
+      const periodMonth = parseInt(mStr);
       
       return periodYear === year && 
              periodMonth === month && 
