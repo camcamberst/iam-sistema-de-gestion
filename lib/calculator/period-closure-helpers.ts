@@ -200,6 +200,153 @@ const calculateUsdBruto = (
 };
 
 /**
+ * Archiva y resetea valores de un modelo de forma ATÓMICA usando RPC
+ */
+export const atomicArchiveAndReset = async (
+  modelId: string,
+  periodDate: string, // Fecha de referencia (ej: 2025-10-16 para período 16-31)
+  periodType: '1-15' | '16-31'
+): Promise<{ success: boolean; archived: number; deleted: number; error?: string }> => {
+  try {
+    // Calcular rango de fechas del período
+    const [year, month] = periodDate.split('-').map(Number);
+    let startDate: string;
+    let endDate: string;
+    
+    if (periodType === '1-15') {
+      startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      endDate = `${year}-${String(month).padStart(2, '0')}-15`;
+    } else {
+      startDate = `${year}-${String(month).padStart(2, '0')}-16`;
+      const lastDay = new Date(year, month, 0).getDate();
+      endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    }
+    
+    console.log(`⚛️ [ATOMIC-CLOSE] Iniciando cierre atómico para ${periodType}: ${startDate} a ${endDate}`);
+
+    // 1. Obtener tasas activas
+    const { data: ratesData, error: ratesError } = await supabase
+      .from('rates')
+      .select('kind, value')
+      .eq('active', true)
+      .is('valid_to', null)
+      .order('valid_from', { ascending: false });
+
+    if (ratesError) throw ratesError;
+
+    const rates = {
+      eur_usd: ratesData?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+      gbp_usd: ratesData?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20,
+      usd_cop: ratesData?.find((r: any) => r.kind === 'USD→COP')?.value || 3900
+    };
+
+    // 2. Obtener configuración del modelo
+    const { data: config, error: configError } = await supabase
+      .from('calculator_config')
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('active', true)
+      .single();
+
+    if (configError && configError.code !== 'PGRST116') throw configError;
+
+    const modelPercentage = config?.percentage_override || config?.group_percentage || 80;
+
+    // 3. Obtener información de plataformas
+    const { data: platforms, error: platformsError } = await supabase
+      .from('calculator_platforms')
+      .select('id, currency')
+      .eq('active', true);
+
+    if (platformsError) throw platformsError;
+
+    const platformMap = new Map((platforms || []).map((p: any) => [p.id, p]));
+
+    // 4. Obtener valores en el rango del período
+    const { data: values, error: valuesError } = await supabase
+      .from('model_values')
+      .select('*')
+      .eq('model_id', modelId)
+      .gte('period_date', startDate)
+      .lte('period_date', endDate);
+
+    if (valuesError) throw valuesError;
+
+    if (!values || values.length === 0) {
+      console.log(`⚛️ [ATOMIC-CLOSE] No hay valores para archivar en el rango ${startDate} a ${endDate}`);
+      return { success: true, archived: 0, deleted: 0 };
+    }
+
+    // 5. Consolidar valores (último update por plataforma)
+    const valuesByPlatform = new Map<string, any>();
+    for (const value of values) {
+      const existing = valuesByPlatform.get(value.platform_id);
+      if (!existing || new Date(value.updated_at) > new Date(existing.updated_at)) {
+        valuesByPlatform.set(value.platform_id, value);
+      }
+    }
+
+    // 6. Preparar datos históricos con cálculos
+    const historyRecords = [];
+    for (const [platformId, value] of Array.from(valuesByPlatform.entries())) {
+      const platform = platformMap.get(platformId);
+      const currency = platform?.currency || 'USD';
+      const platformPercentage = modelPercentage;
+      
+      const valueUsdBruto = calculateUsdBruto(Number(value.value), platformId, currency, rates);
+      const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
+      const valueCopModelo = valueUsdModelo * rates.usd_cop;
+
+      historyRecords.push({
+        model_id: value.model_id,
+        platform_id: platformId,
+        value: Number(value.value),
+        original_updated_at: value.updated_at,
+        rate_eur_usd: rates.eur_usd,
+        rate_gbp_usd: rates.gbp_usd,
+        rate_usd_cop: rates.usd_cop,
+        platform_percentage: platformPercentage,
+        value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
+        value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
+        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2))
+      });
+    }
+
+    // 7. LLAMAR AL RPC PARA TRANSACCIÓN ATÓMICA
+    const { data: rpcResult, error: rpcError } = await supabase.rpc('atomic_archive_period', {
+      p_model_id: modelId,
+      p_period_date: startDate,
+      p_period_type: periodType,
+      p_start_date: startDate,
+      p_end_date: endDate,
+      p_history_records: historyRecords
+    });
+
+    if (rpcError) throw rpcError;
+
+    if (!rpcResult.success) {
+      throw new Error(rpcResult.error || 'Fallo desconocido en RPC');
+    }
+
+    console.log(`✅ [ATOMIC-CLOSE] Éxito: Archivados ${rpcResult.archived}, Borrados ${rpcResult.deleted}`);
+    return { 
+      success: true, 
+      archived: rpcResult.archived, 
+      deleted: rpcResult.deleted 
+    };
+
+  } catch (error) {
+    console.error('❌ [ATOMIC-CLOSE] Error crítico:', error);
+    return {
+      success: false,
+      archived: 0,
+      deleted: 0,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+};
+
+/**
  * Archiva valores de un modelo para el período
  * IMPORTANTE: Busca valores en el RANGO del período y calcula todas las métricas necesarias
  */

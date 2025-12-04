@@ -10,8 +10,7 @@ import {
 } from '@/utils/period-closure-dates';
 import { 
   updateClosureStatus,
-  archiveModelValues,
-  resetModelValues
+  atomicArchiveAndReset
 } from '@/lib/calculator/period-closure-helpers';
 import { sendBotNotification } from '@/lib/chat/bot-notifications';
 
@@ -204,37 +203,38 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 [CLOSE-PERIOD] Procesando ${models?.length || 0} modelos...`);
 
-    // FASE 1: Archivar valores de todas las calculadoras
-    const archiveResults = [];
-    let archiveSuccessCount = 0;
-    let archiveErrorCount = 0;
+    // FASE 1: Archivar y Resetear valores de todas las calculadoras DE FORMA ATÓMICA
+    const closureResults = [];
+    let closureSuccessCount = 0;
+    let closureErrorCount = 0;
 
     for (const model of models || []) {
       try {
-        // Archivar valores del período que se está cerrando
-        const archiveResult = await archiveModelValues(model.id, periodToCloseDate, periodToCloseType);
+        // Ejecutar cierre atómico (archivar + borrar en una transacción)
+        const result = await atomicArchiveAndReset(model.id, periodToCloseDate, periodToCloseType);
         
-        if (archiveResult.success) {
-          archiveSuccessCount++;
-          archiveResults.push({
+        if (result.success) {
+          closureSuccessCount++;
+          closureResults.push({
             model_id: model.id,
             model_email: model.email,
-            status: 'archived',
-            archived_count: archiveResult.archived
+            status: 'completed',
+            archived_count: result.archived,
+            deleted_count: result.deleted
           });
         } else {
-          archiveErrorCount++;
-          archiveResults.push({
+          closureErrorCount++;
+          closureResults.push({
             model_id: model.id,
             model_email: model.email,
             status: 'error',
-            error: archiveResult.error
+            error: result.error
           });
         }
       } catch (error) {
-        archiveErrorCount++;
-        console.error(`❌ [CLOSE-PERIOD] Error archivando modelo ${model.email}:`, error);
-        archiveResults.push({
+        closureErrorCount++;
+        console.error(`❌ [CLOSE-PERIOD] Error cerrando modelo ${model.email}:`, error);
+        closureResults.push({
           model_id: model.id,
           model_email: model.email,
           status: 'error',
@@ -243,7 +243,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    console.log(`✅ [CLOSE-PERIOD] Archivo completado: ${archiveSuccessCount} exitosos, ${archiveErrorCount} errores`);
+    console.log(`✅ [CLOSE-PERIOD] Proceso completado: ${closureSuccessCount} exitosos, ${closureErrorCount} errores`);
 
     // FASE 2: Esperar 2.5 minutos (150 segundos) para que Resumen de Facturación reciba última actualización
     console.log('⏳ [CLOSE-PERIOD] Esperando para última actualización del resumen...');
@@ -263,46 +263,8 @@ export async function POST(request: NextRequest) {
     
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'closing_summary');
 
-    // FASE 4: Resetear todas las calculadoras (eliminar valores del período cerrado)
-    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'archiving');
-
-    const resetResults = [];
-    let resetSuccessCount = 0;
-    let resetErrorCount = 0;
-
-    for (const model of models || []) {
-      try {
-        // Resetear valores del período cerrado (eliminar de model_values)
-        const resetResult = await resetModelValues(model.id, periodToCloseDate, periodToCloseType);
-        
-        if (resetResult.success) {
-          resetSuccessCount++;
-          resetResults.push({
-            model_id: model.id,
-            model_email: model.email,
-            status: 'reset',
-            deleted_count: resetResult.deleted
-          });
-        } else {
-          resetErrorCount++;
-          resetResults.push({
-            model_id: model.id,
-            model_email: model.email,
-            status: 'error',
-            error: resetResult.error
-          });
-        }
-      } catch (error) {
-        resetErrorCount++;
-        console.error(`❌ [CLOSE-PERIOD] Error reseteando modelo ${model.email}:`, error);
-        resetResults.push({
-          model_id: model.id,
-          model_email: model.email,
-          status: 'error',
-          error: error instanceof Error ? error.message : 'Error desconocido'
-        });
-      }
-    }
+    // FASE 4: (ELIMINADA - YA SE HIZO EN FASE 1 ATÓMICA)
+    // El borrado ya ocurrió de forma segura dentro de atomicArchiveAndReset
 
     // FASE 5: Notificar a modelos
     for (const model of models || []) {
@@ -340,13 +302,13 @@ export async function POST(request: NextRequest) {
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'completed', {
       archive_results: {
         total: models?.length || 0,
-        successful: archiveSuccessCount,
-        failed: archiveErrorCount
+        successful: closureSuccessCount,
+        failed: closureErrorCount
       },
       reset_results: {
         total: models?.length || 0,
-        successful: resetSuccessCount,
-        failed: resetErrorCount
+        successful: closureSuccessCount, // En modelo atómico, si se archiva se resetea
+        failed: closureErrorCount
       },
       completed_at: new Date().toISOString()
     });
@@ -355,24 +317,23 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: 'Cierre de período completado exitosamente',
+      message: 'Cierre de período completado exitosamente (MODO ATÓMICO)',
       period_date: periodToCloseDate,
       period_type: periodToCloseType,
       new_period_date: newPeriodDate,
       new_period_type: newPeriodType,
       archive_summary: {
         total: models?.length || 0,
-        successful: archiveSuccessCount,
-        failed: archiveErrorCount
+        successful: closureSuccessCount,
+        failed: closureErrorCount
       },
       reset_summary: {
         total: models?.length || 0,
-        successful: resetSuccessCount,
-        failed: resetErrorCount
+        successful: closureSuccessCount,
+        failed: closureErrorCount
       },
       details: {
-        archived: archiveResults,
-        reset: resetResults
+        closure: closureResults
       }
     });
 
