@@ -284,7 +284,7 @@ export default function ModelCalculatorPage() {
       if (!p.enabled) continue;
       
       const yesterdayValue = yesterdayValues[p.id] || 0;
-      if (yesterValue <= 0) continue;
+      if (yesterdayValue <= 0) continue;
       
       let usdModelo = 0;
       if (p.currency === 'EUR') {
