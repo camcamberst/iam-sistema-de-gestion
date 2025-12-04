@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, getColombiaPeriodStartDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
-import { isPlatformFrozen } from '@/lib/calculator/period-closure-helpers';
+import { isPlatformFrozen, getFrozenPlatformsForModel } from '@/lib/calculator/period-closure-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -74,12 +74,19 @@ export async function GET(request: NextRequest) {
       periodRange: `${periodStart} to ${periodEnd}`
     });
 
+// En GET:
+    // ... (después de obtener valores)
+    
+    // Obtener plataformas congeladas para este modelo y fecha
+    const frozenPlatforms = await getFrozenPlatformsForModel(periodDate, modelId); // Usar fecha normalizada
+
     return NextResponse.json({ 
       success: true, 
       data: consolidatedValues,
       count: consolidatedValues.length,
       modelId,
-      periodDate
+      periodDate,
+      frozenPlatforms // <--- Nuevo campo
     });
 
   } catch (error: any) {

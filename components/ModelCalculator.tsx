@@ -69,6 +69,8 @@ export default function ModelCalculator({
   const [result, setResult] = useState<CalculatorResult | null>(null);
   const [calculating, setCalculating] = useState(false);
   const [saving, setSaving] = useState(false);
+  // Lista de plataformas congeladas (no editables) por "Early Freeze"
+  const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
 
   // Sistema V2 siempre activo (sin flags de entorno)
   // 🔧 FIX: Deshabilitar autosave para corregir problema de persistencia
@@ -162,12 +164,21 @@ export default function ModelCalculator({
       console.log('🔍 [MODEL-CALCULATOR] Enabled platforms:', enabledPlatforms);
       setPlatforms(enabledPlatforms);
 
-      // Cargar valores guardados previamente (solo sistema V2)
+          // Cargar valores guardados previamente (solo sistema V2)
       try {
         console.log('🔍 [MODEL-CALCULATOR] Loading saved values - V2 system only');
         const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
         const savedJson = await savedResp.json();
         console.log('🔍 [MODEL-CALCULATOR] Saved values (v2):', savedJson);
+        
+        // Actualizar lista de plataformas congeladas
+        if (savedJson.success && Array.isArray(savedJson.frozenPlatforms)) {
+          setFrozenPlatforms(savedJson.frozenPlatforms);
+          console.log('🔒 [MODEL-CALCULATOR] Plataformas congeladas:', savedJson.frozenPlatforms);
+        } else {
+          setFrozenPlatforms([]);
+        }
+
         if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
           const savedValues: Record<string, string> = {};
           savedJson.data.forEach((item: any) => {
@@ -479,20 +490,26 @@ export default function ModelCalculator({
             </div>
           ) : (
             <div className="space-y-4">
-              {platforms.map((platform) => (
-                <div key={platform.id} className="flex items-center space-x-4 p-4 bg-gray-50 rounded-lg">
+              {platforms.map((platform) => {
+                const isFrozen = frozenPlatforms.includes(platform.id);
+                return (
+                <div key={platform.id} className={`flex items-center space-x-4 p-4 rounded-lg ${isFrozen ? 'bg-gray-100 dark:bg-gray-800' : 'bg-gray-50 dark:bg-gray-700/50'}`}>
                   <div className="flex items-center space-x-2">
                     <input
                       type="checkbox"
                       checked={platform.enabled}
+                      disabled={isFrozen}
                       onChange={(e) => {
                         setPlatforms(prev => prev.map(p => 
                           p.id === platform.id ? { ...p, enabled: e.target.checked } : p
                         ));
                       }}
-                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 disabled:opacity-50"
                     />
-                    <span className="font-medium text-gray-900 dark:text-gray-100">{platform.name}</span>
+                    <span className={`font-medium ${isFrozen ? 'text-gray-500' : 'text-gray-900 dark:text-gray-100'}`}>
+                      {platform.name}
+                      {isFrozen && <span title="Plataforma congelada por horario europeo" className="ml-2 text-xs text-amber-600 bg-amber-100 px-1.5 py-0.5 rounded border border-amber-200 cursor-help">🔒 Cerrado</span>}
+                    </span>
                   </div>
                   
                   {platform.enabled && (
@@ -501,7 +518,11 @@ export default function ModelCalculator({
                         type="text"
                         value={inputValues[platform.id] || ''}
                         onChange={(e) => handleInputChange(platform.id, e.target.value)}
-                        className="w-24 px-2 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        disabled={isFrozen}
+                        className={`w-24 px-2 py-1 border rounded focus:outline-none focus:ring-2 focus:ring-blue-500 
+                          ${isFrozen 
+                            ? 'bg-gray-200 text-gray-500 border-gray-300 cursor-not-allowed' 
+                            : 'bg-white border-gray-300 dark:bg-gray-800 dark:border-gray-600 dark:text-white'}`}
                         placeholder="0"
                       />
                       <span className="text-sm text-gray-500 dark:text-gray-300">{platform.currency}</span>
@@ -509,7 +530,7 @@ export default function ModelCalculator({
                     </div>
                   )}
                 </div>
-              ))}
+              )})}
             </div>
           )}
 
