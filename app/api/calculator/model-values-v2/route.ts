@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, getColombiaPeriodStartDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
+import { isPlatformFrozen } from '@/lib/calculator/period-closure-helpers';
 
 export const dynamic = 'force-dynamic';
 
@@ -104,6 +105,18 @@ export async function POST(request: NextRequest) {
     const rawEffectiveDate = periodDate || getColombiaPeriodStartDate();
     const effectiveDate = normalizeToPeriodStartDate(rawEffectiveDate);
     
+    // 🔒 CANDADO EUROPEO: Verificar si hay plataformas congeladas
+    for (const platformId of Object.keys(values)) {
+      const isFrozen = await isPlatformFrozen(effectiveDate, modelId, platformId);
+      if (isFrozen) {
+        console.warn(`🔒 [MODEL-VALUES-V2] Bloqueo por Early Freeze: ${platformId} para modelo ${modelId}`);
+        return NextResponse.json({ 
+          success: false, 
+          error: `La plataforma '${platformId}' ya cerró facturación (horario europeo). No se permiten más ediciones hoy.` 
+        }, { status: 403 });
+      }
+    }
+
     console.log('🔍 [MODEL-VALUES-V2] Saving values (FORCED BUCKET):', { 
       modelId, 
       normalizedBucket: effectiveDate,
