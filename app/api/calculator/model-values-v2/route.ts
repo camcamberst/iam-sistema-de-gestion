@@ -105,15 +105,44 @@ export async function POST(request: NextRequest) {
     const rawEffectiveDate = periodDate || getColombiaPeriodStartDate();
     const effectiveDate = normalizeToPeriodStartDate(rawEffectiveDate);
     
-    // 🔒 CANDADO EUROPEO: Verificar si hay plataformas congeladas
+    // 🔒 CANDADO EUROPEO INTELIGENTE: Verificar si hay cambios reales en plataformas congeladas
+    const frozenPlatformsInPayload = [];
     for (const platformId of Object.keys(values)) {
+      // Verificar si la plataforma está congelada
       const isFrozen = await isPlatformFrozen(effectiveDate, modelId, platformId);
       if (isFrozen) {
-        console.warn(`🔒 [MODEL-VALUES-V2] Bloqueo por Early Freeze: ${platformId} para modelo ${modelId}`);
-        return NextResponse.json({ 
-          success: false, 
-          error: `La plataforma '${platformId}' ya cerró facturación (horario europeo). No se permiten más ediciones hoy.` 
-        }, { status: 403 });
+        frozenPlatformsInPayload.push(platformId);
+      }
+    }
+
+    // Si hay plataformas congeladas involucradas, verificar si sus valores han cambiado
+    if (frozenPlatformsInPayload.length > 0) {
+      console.log(`🔒 [MODEL-VALUES-V2] Verificando cambios en plataformas congeladas:`, frozenPlatformsInPayload);
+      
+      // Obtener valores actuales de la BD para comparar
+      const { data: currentValues } = await supabase
+        .from('model_values')
+        .select('platform_id, value')
+        .eq('model_id', modelId)
+        .eq('period_date', effectiveDate) // Comparar contra el bucket actual
+        .in('platform_id', frozenPlatformsInPayload);
+
+      const currentValuesMap = new Map(currentValues?.map((v: any) => [v.platform_id, Number(v.value)]) || []);
+
+      for (const platformId of frozenPlatformsInPayload) {
+        const newValue = Number(values[platformId]);
+        const currentValue = currentValuesMap.get(platformId) || 0;
+
+        // Si el valor cambió (con tolerancia mínima para floats), BLOQUEAR
+        if (Math.abs(newValue - currentValue) > 0.01) {
+           console.warn(`🔒 [MODEL-VALUES-V2] RECHAZADO por Early Freeze: ${platformId} cambió de ${currentValue} a ${newValue}`);
+           return NextResponse.json({ 
+             success: false, 
+             error: `La plataforma '${platformId}' ya cerró facturación (horario europeo). No se permiten cambios en este momento.` 
+           }, { status: 403 });
+        } else {
+          console.log(`✅ [MODEL-VALUES-V2] Permitido: ${platformId} no cambió de valor (${currentValue})`);
+        }
       }
     }
 
