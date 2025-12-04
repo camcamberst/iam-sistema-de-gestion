@@ -203,19 +203,36 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 [CLOSE-PERIOD] Procesando ${models?.length || 0} modelos...`);
 
+<<<<<<< HEAD
     // FASE 1: Archivar y Resetear valores de todas las calculadoras DE FORMA ATÓMICA
     const closureResults = [];
     let closureSuccessCount = 0;
     let closureErrorCount = 0;
+=======
+    // FASE 1: Archivar valores de todas las calculadoras
+    const archiveResults = [];
+    let archiveSuccessCount = 0;
+    let archiveErrorCount = 0;
+    
+    // 🔒 SEGURIDAD: Mapa para rastrear archivados exitosos
+    const successfulArchives = new Set<string>();
+>>>>>>> parent of 1483640 (Revert "Fix: Add safety check to prevent data loss during period closure if archive fails")
 
     for (const model of models || []) {
       try {
         // Ejecutar cierre atómico (archivar + borrar en una transacción)
         const result = await atomicArchiveAndReset(model.id, periodToCloseDate, periodToCloseType);
         
+<<<<<<< HEAD
         if (result.success) {
           closureSuccessCount++;
           closureResults.push({
+=======
+        if (archiveResult.success) {
+          archiveSuccessCount++;
+          successfulArchives.add(model.id); // ✅ Marcar como archivado exitosamente
+          archiveResults.push({
+>>>>>>> parent of 1483640 (Revert "Fix: Add safety check to prevent data loss during period closure if archive fails")
             model_id: model.id,
             model_email: model.email,
             status: 'completed',
@@ -223,8 +240,14 @@ export async function POST(request: NextRequest) {
             deleted_count: result.deleted
           });
         } else {
+<<<<<<< HEAD
           closureErrorCount++;
           closureResults.push({
+=======
+          archiveErrorCount++;
+          console.error(`❌ [CLOSE-PERIOD] Fallo archivado para ${model.email}: ${archiveResult.error}`);
+          archiveResults.push({
+>>>>>>> parent of 1483640 (Revert "Fix: Add safety check to prevent data loss during period closure if archive fails")
             model_id: model.id,
             model_email: model.email,
             status: 'error',
@@ -263,8 +286,64 @@ export async function POST(request: NextRequest) {
     
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'closing_summary');
 
+<<<<<<< HEAD
     // FASE 4: (ELIMINADA - YA SE HIZO EN FASE 1 ATÓMICA)
     // El borrado ya ocurrió de forma segura dentro de atomicArchiveAndReset
+=======
+    // FASE 4: Resetear todas las calculadoras (eliminar valores del período cerrado)
+    await updateClosureStatus(periodToCloseDate, periodToCloseType, 'archiving');
+
+    const resetResults = [];
+    let resetSuccessCount = 0;
+    let resetErrorCount = 0;
+
+    for (const model of models || []) {
+      // 🔒 SEGURIDAD: Solo resetear si se archivó correctamente
+      if (!successfulArchives.has(model.id)) {
+        console.warn(`⚠️ [CLOSE-PERIOD] Saltando reset para modelo ${model.email} - Falló el archivado previo`);
+        resetErrorCount++; // Contar como error/skipped
+        resetResults.push({
+          model_id: model.id,
+          model_email: model.email,
+          status: 'skipped',
+          error: 'Skipped due to archive failure'
+        });
+        continue;
+      }
+
+      try {
+        // Resetear valores del período cerrado (eliminar de model_values)
+        const resetResult = await resetModelValues(model.id, periodToCloseDate, periodToCloseType);
+        
+        if (resetResult.success) {
+          resetSuccessCount++;
+          resetResults.push({
+            model_id: model.id,
+            model_email: model.email,
+            status: 'reset',
+            deleted_count: resetResult.deleted
+          });
+        } else {
+          resetErrorCount++;
+          resetResults.push({
+            model_id: model.id,
+            model_email: model.email,
+            status: 'error',
+            error: resetResult.error
+          });
+        }
+      } catch (error) {
+        resetErrorCount++;
+        console.error(`❌ [CLOSE-PERIOD] Error reseteando modelo ${model.email}:`, error);
+        resetResults.push({
+          model_id: model.id,
+          model_email: model.email,
+          status: 'error',
+          error: error instanceof Error ? error.message : 'Error desconocido'
+        });
+      }
+    }
+>>>>>>> parent of 1483640 (Revert "Fix: Add safety check to prevent data loss during period closure if archive fails")
 
     // FASE 5: Notificar a modelos
     for (const model of models || []) {
