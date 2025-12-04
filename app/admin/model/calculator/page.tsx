@@ -74,6 +74,10 @@ export default function ModelCalculatorPage() {
   const [yesterdayValues, setYesterdayValues] = useState<Record<string, number>>({});
   const [todayEarnings, setTodayEarnings] = useState<number>(0);
   const [earningsOffset, setEarningsOffset] = useState<number>(0);
+  
+  // 🔧 EARLY FREEZE: Estado para plataformas congeladas
+  const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
+  
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -654,6 +658,13 @@ export default function ModelCalculatorPage() {
           setPlatforms(enabledPlatforms);
           syncPlatformsToInputs(enabledPlatforms);
         }
+
+        // 🔧 EARLY FREEZE: Cargar lista de plataformas congeladas
+        if (savedJson.success && Array.isArray(savedJson.frozenPlatforms)) {
+          setFrozenPlatforms(savedJson.frozenPlatforms);
+          console.log('🧊 [CALCULATOR] Plataformas congeladas cargadas:', savedJson.frozenPlatforms);
+        }
+
       } catch (e) {
         console.warn('⚠️ [CALCULATOR] No se pudieron cargar valores guardados:', e);
         // Asegurar que las plataformas se muestren aunque haya error
@@ -1092,6 +1103,7 @@ export default function ModelCalculatorPage() {
                   {platforms.filter(p => p.enabled).map(platform => {
                     // Calcular dólares y COP para esta plataforma usando fórmulas específicas
                     const usdBruto = platform.value;
+                    const isFrozen = frozenPlatforms.includes(platform.id); // 🧊 EARLY FREEZE
                     
                     // Aplicar fórmula específica según la plataforma
                     console.log('🔍 [CALCULATOR] Calculating for platform:', {
@@ -1154,36 +1166,60 @@ export default function ModelCalculatorPage() {
                     const showMonthlyFields = isPeriod2 && p1Value > 0;
 
                     return (
-                      <tr key={platform.id} className="border-b border-gray-100 dark:border-gray-600">
+                      <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
                         <td className="py-3 px-3">
                           <div className="relative flex flex-col items-start gap-1">
                             {/* 🔧 FIX: Nombre clickeable robusto con botón e indicador visual */}
                             <button 
                               type="button"
-                              className="font-medium text-gray-900 dark:text-gray-100 text-sm text-left hover:text-blue-600 dark:hover:text-blue-400 transition-colors flex items-center gap-2 group"
+                              disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
+                              className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group ${
+                                isFrozen 
+                                  ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                  : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
+                              }`}
                               onClick={(e) => {
+                                if (isFrozen) return;
                                 e.preventDefault();
                                 e.stopPropagation();
                                 console.log('👆 [CALCULATOR] Click en plataforma:', platform.id);
                                 setEditingP1Platform(platform.id);
                                 setP1InputValue(String(p1Values[platform.id] || ''));
                               }}
-                              title="Click para ingresar valor de P1"
+                              title={isFrozen ? "Plataforma cerrada por horario europeo" : "Click para ingresar valor de P1"}
                             >
-                              <span className="underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500">
+                              <span className={`${!isFrozen && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
                                 {platform.name}
                               </span>
-                              <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
-                                ✎
-                              </span>
+                              {!isFrozen && (
+                                <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
+                                  ✎
+                                </span>
+                              )}
+                              {isFrozen && (
+                                <span 
+                                  className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                >
+                                  🔒 Cerrado
+                                </span>
+                              )}
                             </button>
                             
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                             </div>
+                            
+                            {/* 🔧 REFERENCIA PERMANENTE DE P1 */}
+                            {/* Se muestra SIEMPRE que haya un valor de P1 > 0, independiente de si se está editando o no */}
+                            {p1Value > 0 && (
+                               <div className="mt-1 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800/30 w-fit">
+                                 <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">P1:</span>
+                                 <span className="text-[10px] font-mono text-blue-700 dark:text-blue-300">{p1Value.toLocaleString('es-CO')}</span>
+                               </div>
+                            )}
 
                             {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta con z-index alto */}
-                            {editingP1Platform === platform.id && (
+                            {editingP1Platform === platform.id && !isFrozen && (
                               <div
                                 className="absolute z-[100] bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 min-w-[140px]"
                                 style={{
@@ -1254,9 +1290,11 @@ export default function ModelCalculatorPage() {
                               <input
                                 type="text"
                                 inputMode="decimal"
+                                disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
                                 // Si es mensual (P1>0), mostrar Total Mensual. Si no, mostrar Input Normal (P2)
                                 value={showMonthlyFields ? (monthlyTotals[platform.id] ?? '') : (inputValues[platform.id] ?? '')}
                                 onChange={(e) => {
+                                  if (isFrozen) return; // Doble check
                                   const rawValue = e.target.value;
                                   const unifiedValue = rawValue.replace(',', '.');
                                   
@@ -1279,13 +1317,15 @@ export default function ModelCalculatorPage() {
                                     setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                   }
                                 }}
-                                className={`w-20 h-8 px-2 py-1 text-sm border rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 ${
-                                  showMonthlyFields 
-                                    ? 'border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/30' 
-                                    : 'border-gray-300 dark:border-gray-600'
+                                className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
+                                  isFrozen
+                                    ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500' // Estilos para congelado
+                                    : showMonthlyFields 
+                                      ? 'bg-white dark:bg-gray-800 border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/30 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50' 
+                                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
                                 }`}
-                                placeholder="0.00"
-                                title={showMonthlyFields ? "Ingresa el TOTAL MENSUAL del mes (el sistema restará automáticamente lo reportado en P1)" : "Ingresa el valor generado en este periodo"}
+                                placeholder={isFrozen ? "Locked" : "0.00"}
+                                title={isFrozen ? "Cerrado por horario europeo" : (showMonthlyFields ? "Ingresa el TOTAL MENSUAL del mes (el sistema restará automáticamente lo reportado en P1)" : "Ingresa el valor generado en este periodo")}
                               />
                               <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
                                 {platform.currency || 'USD'}
@@ -1701,6 +1741,7 @@ export default function ModelCalculatorPage() {
             position: absolute; inset: 0; pointer-events: none;
             animation: ripple-pop 900ms ease-out 1;
             background: radial-gradient(circle at 15% 50%, rgba(255,255,255,0.35) 0 30px, transparent 31px),
+            /* ... (resto de estilos igual) */
                         radial-gradient(circle at 50% 50%, rgba(255,255,255,0.25) 0 24px, transparent 25px),
                         radial-gradient(circle at 85% 50%, rgba(255,255,255,0.35) 0 30px, transparent 31px);
             background-repeat: no-repeat;
