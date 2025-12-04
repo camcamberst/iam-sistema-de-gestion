@@ -208,9 +208,6 @@ export async function POST(request: NextRequest) {
     const archiveResults = [];
     let archiveSuccessCount = 0;
     let archiveErrorCount = 0;
-    
-    // 🔒 SEGURIDAD: Mapa para rastrear archivados exitosos
-    const successfulArchives = new Set<string>();
 
     for (const model of models || []) {
       try {
@@ -219,7 +216,6 @@ export async function POST(request: NextRequest) {
         
         if (archiveResult.success) {
           archiveSuccessCount++;
-          successfulArchives.add(model.id); // ✅ Marcar como archivado exitosamente
           archiveResults.push({
             model_id: model.id,
             model_email: model.email,
@@ -228,7 +224,6 @@ export async function POST(request: NextRequest) {
           });
         } else {
           archiveErrorCount++;
-          console.error(`❌ [CLOSE-PERIOD] Fallo archivado para ${model.email}: ${archiveResult.error}`);
           archiveResults.push({
             model_id: model.id,
             model_email: model.email,
@@ -276,19 +271,6 @@ export async function POST(request: NextRequest) {
     let resetErrorCount = 0;
 
     for (const model of models || []) {
-      // 🔒 SEGURIDAD: Solo resetear si se archivó correctamente
-      if (!successfulArchives.has(model.id)) {
-        console.warn(`⚠️ [CLOSE-PERIOD] Saltando reset para modelo ${model.email} - Falló el archivado previo`);
-        resetErrorCount++; // Contar como error/skipped
-        resetResults.push({
-          model_id: model.id,
-          model_email: model.email,
-          status: 'skipped',
-          error: 'Skipped due to archive failure'
-        });
-        continue;
-      }
-
       try {
         // Resetear valores del período cerrado (eliminar de model_values)
         const resetResult = await resetModelValues(model.id, periodToCloseDate, periodToCloseType);
