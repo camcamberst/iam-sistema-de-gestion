@@ -16,19 +16,44 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const model_id = searchParams.get('modelId');
+    const admin_id = searchParams.get('adminId');
+    const estado = searchParams.get('estado');
 
-    if (!model_id) {
-      return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
+    // 🔧 FIX: Permitir consulta si es Admin (adminId) o Modelo (modelId)
+    if (!model_id && !admin_id) {
+      return NextResponse.json({ success: false, error: 'modelId o adminId es requerido' }, { status: 400 });
     }
 
-    const { data: anticipos, error } = await supabase
+    let query = supabase
       .from('anticipos')
       .select(`
         *,
-        period:periods(name, start_date, end_date)
+        period:periods(name, start_date, end_date),
+        model:users(name, email, id) 
       `)
-      .eq('model_id', model_id)
       .order('created_at', { ascending: false });
+
+    // Si se especifica modelo, filtrar por modelo
+    if (model_id) {
+      query = query.eq('model_id', model_id);
+    }
+
+    // Si se especifica estado (opcional, útil para admin)
+    if (estado) {
+      // Soporte para múltiples estados separados por coma
+      const estados = estado.split(',');
+      if (estados.length > 1) {
+        query = query.in('estado', estados);
+      } else {
+        query = query.eq('estado', estado);
+      }
+    }
+
+    // Si es consulta de admin, podríamos filtrar por grupos del admin, 
+    // pero por ahora devolvemos todos los que coincidan con los filtros
+    // (El frontend ya filtra visualmente, o se podrían agregar filtros de grupo aquí)
+
+    const { data: anticipos, error } = await query;
 
     if (error) {
       console.error('❌ [API ANTICIPOS] Error obteniendo anticipos:', error);
