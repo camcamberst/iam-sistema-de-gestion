@@ -299,18 +299,18 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                   : 'bg-gray-50/50 dark:bg-gray-600/30 border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
               }`}
             >
-              {/* Badge "Nuevo" en esquina superior derecha */}
+              {/* Badge "Nuevo" en esquina superior derecha - alineado con otras etiquetas */}
               {isNew && (
-                <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-md shadow-red-500/40 hover:shadow-lg hover:shadow-red-500/60 transition-all duration-200 z-10">
-                  {/* Punto parpadeante dinámico */}
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                <span className="absolute top-4 right-4 inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-sm shadow-red-500/30 hover:shadow-md hover:shadow-red-500/50 transition-all duration-200 z-10">
+                  {/* Punto parpadeante dinámico - más pequeño */}
+                  <span className="relative flex h-1 w-1">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70"></span>
+                    <span className="relative inline-flex rounded-full h-1 w-1 bg-white"></span>
                   </span>
-                  {/* Texto con sombra sutil */}
-                  <span className="relative drop-shadow-sm">Nuevo</span>
+                  {/* Texto */}
+                  <span className="relative">Nuevo</span>
                   {/* Efecto de brillo sutil animado */}
-                  <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-50 blur-sm -z-10 animate-pulse"></span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-40 blur-sm -z-10 animate-pulse"></span>
                 </span>
               )}
               
