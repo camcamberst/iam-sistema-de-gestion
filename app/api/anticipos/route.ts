@@ -29,7 +29,7 @@ export async function GET(request: NextRequest) {
       .select(`
         *,
         period:periods(name, start_date, end_date),
-        model:users(name, email, id) 
+        model:users!model_id(name, email, id) 
       `)
       .order('created_at', { ascending: false });
 
@@ -195,7 +195,7 @@ export async function POST(request: NextRequest) {
       .insert(anticipoData)
       .select(`
         *,
-        model:users(name, email)
+        model:users!model_id(name, email)
       `)
       .single();
 
