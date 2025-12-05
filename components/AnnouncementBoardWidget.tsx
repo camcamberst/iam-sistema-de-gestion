@@ -247,13 +247,8 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
                 Corcho Informativo
-                {hasNewAnnouncements && (
-                  <span className="text-xs font-medium text-red-600 dark:text-red-400">
-                    {newCount > 1 ? `${newCount} nuevas` : 'Nuevo'}
-                  </span>
-                )}
               </h2>
               <p className="text-xs text-gray-600 dark:text-gray-300">Información relevante para ti</p>
             </div>
@@ -330,7 +325,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {isNew && (
-                          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded">
+                          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded animate-pulse">
                             Nuevo
                           </span>
                         )}
