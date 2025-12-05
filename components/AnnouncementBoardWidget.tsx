@@ -325,8 +325,16 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {isNew && (
-                          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded animate-pulse">
-                            Nuevo
+                          <span className="relative inline-flex items-center gap-1.5 px-2.5 py-1 text-xs font-bold text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-lg shadow-red-500/50 hover:scale-105 transition-transform duration-200">
+                            {/* Punto parpadeante dinámico */}
+                            <span className="relative flex h-2 w-2">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-90"></span>
+                              <span className="relative inline-flex rounded-full h-2 w-2 bg-white"></span>
+                            </span>
+                            {/* Texto con sombra para mejor legibilidad */}
+                            <span className="relative drop-shadow-sm tracking-wide">Nuevo</span>
+                            {/* Efecto de brillo sutil animado */}
+                            <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-60 blur-sm -z-10 animate-pulse"></span>
                           </span>
                         )}
                         {announcement.is_pinned && (
