@@ -355,25 +355,34 @@ export default function CalculatorHistorialPage() {
         </div>
         <div className="flex items-center justify-between gap-4">
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">Mi Historial</h1>
-            <p className="text-gray-500 text-sm">Historial de períodos archivados</p>
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mi Historial</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Historial de períodos archivados</p>
           </div>
           {/* ... Filtros existentes ... */}
           <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-shrink-0"><label className="block text-xs font-medium mb-1">Año</label><AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[100px] text-sm" /></div>
-            <div className="flex-shrink-0"><label className="block text-xs font-medium mb-1">Mes</label><AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[120px] text-sm" /></div>
-            <div className="flex-shrink-0"><label className="block text-xs font-medium mb-1">Período</label><AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[100px] text-sm" /></div>
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
+              <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[100px] text-sm" />
+            </div>
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Mes</label>
+              <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[120px] text-sm" />
+            </div>
+            <div className="flex-shrink-0">
+              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Período</label>
+              <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[100px] text-sm" />
+            </div>
           </div>
         </div>
       </div>
 
-      {error && <div className="p-4 bg-red-50 text-red-600 rounded-lg mb-4 text-center">{error}</div>}
+      {error && <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg mb-4 text-center border border-red-100 dark:border-red-800">{error}</div>}
       
       {!error && filteredPeriods.length === 0 && (
-        <div className="p-12 bg-white rounded-2xl border text-center">
-          <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-gray-900">No hay datos</h3>
-          <p className="text-gray-500 text-sm">Selecciona un período válido con los filtros.</p>
+        <div className="p-12 bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 text-center">
+          <History className="w-16 h-16 text-gray-400 dark:text-gray-600 mx-auto mb-4" />
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white">No hay datos</h3>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Selecciona un período válido con los filtros.</p>
         </div>
       )}
 
