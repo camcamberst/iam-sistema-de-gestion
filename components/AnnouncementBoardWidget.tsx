@@ -32,6 +32,22 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [loading, setLoading] = useState(true);
   const [showAll, setShowAll] = useState(false);
+  const [readAnnouncements, setReadAnnouncements] = useState<Set<string>>(new Set());
+  const [hasNewAnnouncements, setHasNewAnnouncements] = useState(false);
+
+  // Cargar publicaciones leídas desde localStorage
+  useEffect(() => {
+    const storageKey = `announcements_read_${userId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (stored) {
+      try {
+        const readIds = JSON.parse(stored) as string[];
+        setReadAnnouncements(new Set(readIds));
+      } catch (e) {
+        console.warn('⚠️ [ANNOUNCEMENTS-WIDGET] Error parseando publicaciones leídas:', e);
+      }
+    }
+  }, [userId]);
 
   useEffect(() => {
     loadAnnouncements();
@@ -74,6 +90,27 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
       supabase.removeChannel(channel);
     };
   }, [userId, userGroups]);
+
+  // Verificar si hay publicaciones nuevas
+  useEffect(() => {
+    if (announcements.length === 0) {
+      setHasNewAnnouncements(false);
+      return;
+    }
+
+    // Verificar si hay alguna publicación no leída
+    const hasNew = announcements.some(ann => !readAnnouncements.has(ann.id));
+    setHasNewAnnouncements(hasNew);
+
+    // Si es la primera vez que se cargan anuncios y no hay nada en localStorage,
+    // marcar todas como "nuevas" inicialmente
+    const storageKey = `announcements_read_${userId}`;
+    const stored = localStorage.getItem(storageKey);
+    if (!stored && announcements.length > 0) {
+      // Primera vez: no marcar ninguna como leída, todas son nuevas
+      console.log('🆕 [ANNOUNCEMENTS-WIDGET] Primera carga: todas las publicaciones son nuevas');
+    }
+  }, [announcements, readAnnouncements, userId]);
 
   const loadAnnouncements = async () => {
     try {
@@ -138,6 +175,21 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
     }
   };
 
+  // Marcar publicación como leída
+  const markAsRead = (announcementId: string) => {
+    const storageKey = `announcements_read_${userId}`;
+    const newReadSet = new Set(readAnnouncements);
+    newReadSet.add(announcementId);
+    setReadAnnouncements(newReadSet);
+    
+    // Guardar en localStorage
+    localStorage.setItem(storageKey, JSON.stringify(Array.from(newReadSet)));
+    
+    // Verificar si aún hay publicaciones nuevas
+    const stillHasNew = announcements.some(ann => !newReadSet.has(ann.id));
+    setHasNewAnnouncements(stillHasNew);
+  };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
@@ -164,11 +216,6 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
     );
   }
 
-  // Mostrar siempre el widget, incluso si no hay anuncios (para debug)
-  // if (announcements.length === 0) {
-  //   return null; // No mostrar si no hay anuncios
-  // }
-
   const displayAnnouncements = showAll ? announcements : announcements.slice(0, 3);
 
   return (
@@ -177,13 +224,29 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
       <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-600/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-              </svg>
+            {/* 🔧 INDICADOR PARPADEANTE DE PUBLICACIONES NUEVAS */}
+            <div className="relative">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                </svg>
+              </div>
+              {/* Punto parpadeante cuando hay publicaciones nuevas */}
+              {hasNewAnnouncements && (
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-white dark:border-gray-700 animate-pulse">
+                  <span className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-75"></span>
+                </span>
+              )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Corcho Informativo</h2>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                Corcho Informativo
+                {hasNewAnnouncements && (
+                  <span className="text-xs font-normal text-red-500 dark:text-red-400 animate-pulse">
+                    ¡Nuevo!
+                  </span>
+                )}
+              </h2>
               <p className="text-xs text-gray-600 dark:text-gray-300">Información relevante para ti</p>
             </div>
           </div>
@@ -215,85 +278,98 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
         </div>
       ) : (
         <div className="p-6 space-y-4">
-          {displayAnnouncements.map((announcement) => (
-          <div
-            key={announcement.id}
-            onClick={() => {
-              // Abrir en nueva pestaña/ventana
-              const url = `/announcements/${announcement.id}`;
-              window.open(url, '_blank', 'width=800,height=900,scrollbars=yes,resizable=yes');
-            }}
-            className="cursor-pointer group bg-gray-50/50 dark:bg-gray-600/30 rounded-lg p-4 border border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50 transition-all duration-200 hover:shadow-md"
-          >
-            <div className="flex items-start space-x-3">
-              {/* Imagen destacada o icono de categoría */}
-              {announcement.featured_image_url ? (
-                <img
-                  src={announcement.featured_image_url}
-                  alt={announcement.title}
-                  className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                />
-              ) : (
-                <div
-                  className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
-                  style={{
-                    backgroundColor: announcement.category?.color ? `${announcement.category.color}20` : '#3B82F620',
-                    color: announcement.category?.color || '#3B82F6'
-                  }}
-                >
-                  {announcement.category?.icon || '📌'}
-                </div>
-              )}
-
-              {/* Contenido */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      {announcement.is_pinned && (
-                        <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
-                      )}
-                      {announcement.priority > 0 && (
-                        <span className={`text-xs px-1.5 py-0.5 rounded ${
-                          announcement.priority === 2 
-                            ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
-                            : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                        }`}>
-                          {announcement.priority === 2 ? 'Urgente' : 'Alta'}
-                        </span>
-                      )}
-                      {announcement.category && (
-                        <span
-                          className="text-xs px-2 py-0.5 rounded font-medium"
-                          style={{
-                            backgroundColor: `${announcement.category.color}20`,
-                            color: announcement.category.color
-                          }}
-                        >
-                          {announcement.category.name}
-                        </span>
-                      )}
-                    </div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
-                      {announcement.title}
-                    </h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
-                      {announcement.excerpt}
-                    </p>
+          {displayAnnouncements.map((announcement) => {
+            const isNew = !readAnnouncements.has(announcement.id);
+            return (
+            <div
+              key={announcement.id}
+              onClick={() => {
+                // Marcar como leída antes de abrir
+                markAsRead(announcement.id);
+                // Abrir en nueva pestaña/ventana
+                const url = `/announcements/${announcement.id}`;
+                window.open(url, '_blank', 'width=800,height=900,scrollbars=yes,resizable=yes');
+              }}
+              className={`cursor-pointer group bg-gray-50/50 dark:bg-gray-600/30 rounded-lg p-4 border transition-all duration-200 hover:shadow-md ${
+                isNew 
+                  ? 'border-blue-400 dark:border-blue-500/50 ring-2 ring-blue-200 dark:ring-blue-500/30 animate-pulse' 
+                  : 'border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
+              }`}
+            >
+              <div className="flex items-start space-x-3">
+                {/* Imagen destacada o icono de categoría */}
+                {announcement.featured_image_url ? (
+                  <img
+                    src={announcement.featured_image_url}
+                    alt={announcement.title}
+                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                  />
+                ) : (
+                  <div
+                    className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
+                    style={{
+                      backgroundColor: announcement.category?.color ? `${announcement.category.color}20` : '#3B82F620',
+                      color: announcement.category?.color || '#3B82F6'
+                    }}
+                  >
+                    {announcement.category?.icon || '📌'}
                   </div>
-                </div>
-                <div className="flex items-center justify-between mt-2">
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
-                    {formatDate(announcement.published_at || announcement.created_at)}
-                  </span>
-                  <span className="text-xs text-blue-600 dark:text-blue-400 font-medium group-hover:underline">
-                    Leer más →
-                  </span>
+                )}
+
+                {/* Contenido */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        {isNew && (
+                          <span className="text-xs font-bold text-red-500 dark:text-red-400 bg-red-50 dark:bg-red-900/30 px-1.5 py-0.5 rounded animate-pulse">
+                            NUEVO
+                          </span>
+                        )}
+                        {announcement.is_pinned && (
+                          <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
+                        )}
+                        {announcement.priority > 0 && (
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            announcement.priority === 2 
+                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+                              : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                          }`}>
+                            {announcement.priority === 2 ? 'Urgente' : 'Alta'}
+                          </span>
+                        )}
+                        {announcement.category && (
+                          <span
+                            className="text-xs px-2 py-0.5 rounded font-medium"
+                            style={{
+                              backgroundColor: `${announcement.category.color}20`,
+                              color: announcement.category.color
+                            }}
+                          >
+                            {announcement.category.name}
+                          </span>
+                        )}
+                      </div>
+                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
+                        {announcement.title}
+                      </h3>
+                      <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
+                        {announcement.excerpt}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between mt-2">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {formatDate(announcement.published_at || announcement.created_at)}
+                    </span>
+                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium group-hover:underline">
+                      Leer más →
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          )})}
         </div>
       )}
 
