@@ -220,49 +220,38 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
   const newCount = announcements.filter(ann => !readAnnouncements.has(ann.id)).length;
 
   return (
-    <div className={`relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border transition-all duration-500 ${
-      hasNewAnnouncements 
-        ? 'border-red-200/50 dark:border-red-500/30 shadow-lg shadow-red-200/20 dark:shadow-red-900/20 ring-1 ring-red-200/30 dark:ring-red-500/20' 
-        : 'border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15'
-    }`}>
+    <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
       {/* Header */}
       <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-600/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            {/* 🔧 INDICADOR APPLE STYLE - PUBLICACIONES NUEVAS */}
+            {/* 🔧 INDICADOR BALANCEADO - PUBLICACIONES NUEVAS */}
             <div className="relative">
-              <div className={`w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg transition-all duration-300 ${
-                hasNewAnnouncements ? 'ring-2 ring-red-400/50 dark:ring-red-500/50 shadow-red-200/50 dark:shadow-red-900/30' : ''
-              }`}>
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                 </svg>
               </div>
-              {/* Badge Apple Style - Punto rojo con animación elegante */}
+              {/* Badge sutil - Punto rojo pequeño con animación suave */}
               {hasNewAnnouncements && (
-                <div className="absolute -top-1 -right-1 flex items-center justify-center">
-                  <div className="relative">
-                    {/* Círculo exterior con pulso suave */}
-                    <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-60"></div>
-                    {/* Círculo principal con sombra */}
-                    <div className="relative w-5 h-5 bg-gradient-to-br from-red-500 to-red-600 rounded-full shadow-lg shadow-red-500/50 border-2 border-white dark:border-gray-800 flex items-center justify-center">
-                      {newCount > 1 && (
-                        <span className="text-[9px] font-bold text-white leading-none">
-                          {newCount > 9 ? '9+' : newCount}
-                        </span>
-                      )}
-                    </div>
+                <div className="absolute -top-0.5 -right-0.5">
+                  <div className="relative w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-700 shadow-sm">
+                    {newCount > 1 && (
+                      <span className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold text-white leading-none">
+                        {newCount > 9 ? '9+' : newCount}
+                      </span>
+                    )}
+                    <span className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-40"></span>
                   </div>
                 </div>
               )}
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2.5">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                 Corcho Informativo
                 {hasNewAnnouncements && (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full shadow-md shadow-red-500/30 animate-pulse">
-                    <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
-                    <span>NUEVO{newCount > 1 ? ` (${newCount})` : ''}</span>
+                  <span className="text-xs font-medium text-red-600 dark:text-red-400">
+                    {newCount > 1 ? `${newCount} nuevas` : 'Nuevo'}
                   </span>
                 )}
               </h2>
@@ -309,9 +298,9 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 const url = `/announcements/${announcement.id}`;
                 window.open(url, '_blank', 'width=800,height=900,scrollbars=yes,resizable=yes');
               }}
-              className={`cursor-pointer group rounded-xl p-4 border transition-all duration-300 hover:shadow-lg hover:scale-[1.01] ${
+              className={`cursor-pointer group rounded-lg p-4 border transition-all duration-200 hover:shadow-md ${
                 isNew 
-                  ? 'bg-gradient-to-br from-blue-50/80 to-indigo-50/50 dark:from-blue-900/20 dark:to-indigo-900/10 border-blue-300/60 dark:border-blue-500/40 ring-2 ring-blue-200/50 dark:ring-blue-500/30 shadow-md shadow-blue-200/30 dark:shadow-blue-900/20' 
+                  ? 'bg-blue-50/60 dark:bg-blue-900/10 border-blue-200/60 dark:border-blue-500/30' 
                   : 'bg-gray-50/50 dark:bg-gray-600/30 border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
               }`}
             >
@@ -341,9 +330,8 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-1">
                         {isNew && (
-                          <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-[10px] font-bold rounded-full shadow-sm shadow-red-500/40 animate-pulse">
-                            <span className="w-1.5 h-1.5 bg-white rounded-full animate-ping"></span>
-                            <span>NUEVO</span>
+                          <span className="text-xs font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 px-2 py-0.5 rounded">
+                            Nuevo
                           </span>
                         )}
                         {announcement.is_pinned && (
