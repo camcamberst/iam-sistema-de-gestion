@@ -89,16 +89,15 @@ export default function CalculatorHistorialPage() {
   // Estados para deducciones
   const [addingDeductionFor, setAddingDeductionFor] = useState<string | null>(null); // periodKey
   const [newDeduction, setNewDeduction] = useState<{concept: string, amount: string}>({concept: '', amount: ''});
+  const [deductionType, setDeductionType] = useState<'deduction' | 'bonus'>('deduction'); // 🔧 NUEVO
   
   const [saving, setSaving] = useState(false);
 
   // Función para recargar datos
   const loadData = async () => {
+    // ... (Misma lógica de carga)
     try {
-      // ... (lógica de carga igual a la anterior, simplificada aquí para referencia)
-      // Necesito mantener el targetModelId y lógica original
-      if (!targetModelId) return; // Si no hay targetModelId (primera carga), lo maneja el useEffect
-      
+      if (!targetModelId) return;
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       if (!token) return;
@@ -118,6 +117,7 @@ export default function CalculatorHistorialPage() {
   };
 
   useEffect(() => {
+    // ... (Misma lógica de inicialización)
     const initLoad = async () => {
       try {
         setLoading(true);
@@ -138,7 +138,6 @@ export default function CalculatorHistorialPage() {
         setUserRole(userRow.role || 'modelo');
         setUser({ id: userRow.id, name: userRow.name || 'Usuario', email: userRow.email || '' });
 
-        // Determinar targetModelId
         const searchParams = new URLSearchParams(window.location.search);
         const modelIdFromUrl = searchParams.get('modelId');
         let targetId = userRow.id;
@@ -148,7 +147,6 @@ export default function CalculatorHistorialPage() {
         }
         setTargetModelId(targetId);
 
-        // Cargar datos
         const { data: { session } } = await supabase.auth.getSession();
         const token = session?.access_token;
         if (!token) return;
@@ -164,7 +162,6 @@ export default function CalculatorHistorialPage() {
         setAllPeriods(loadedPeriods);
         setPeriods(loadedPeriods);
 
-        // Filtros
         const uniqueYears = new Set<number>();
         loadedPeriods.forEach((p: Period) => {
           if (p.period_date) {
@@ -190,7 +187,6 @@ export default function CalculatorHistorialPage() {
     initLoad();
   }, []);
 
-  // ... (Helpers de formateo iguales)
   const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-CO');
   const formatPeriodMonth = (dateStr: string, periodType: string) => {
     const date = new Date(dateStr);
@@ -217,7 +213,7 @@ export default function CalculatorHistorialPage() {
 
   const isAdmin = userRole === 'admin' || userRole === 'super_admin';
 
-  // ... (Funciones de edición de plataforma y rates iguales)
+  // ... (Funciones de edición plataforma/rates sin cambios)
   const startEditPlatform = (periodKey: string, platformId: string, val: number) => { setEditingPlatform({ periodKey, platformId }); setEditValue(val.toString()); };
   const startEditRates = (p: Period) => {
     const k = `${p.period_date}-${p.period_type}`;
@@ -228,11 +224,9 @@ export default function CalculatorHistorialPage() {
       usd_cop: p.rates?.usd_cop?.toString() || ''
     });
   };
-  const cancelEdit = () => { setEditingPlatform(null); setEditingRates(null); setEditValue(''); setAddingDeductionFor(null); };
+  const cancelEdit = () => { setEditingPlatform(null); setEditingRates(null); setEditValue(''); setAddingDeductionFor(null); setDeductionType('deduction'); };
 
   const savePlatformValue = async (periodKey: string, platformId: string) => {
-    /* ... (Código existente, usar loadData() al final en vez de window.location.reload()) ... */
-    // Por brevedad, asumo que el código existente funciona, solo cambiaré el reload por loadData
     if (!isAdmin) return;
     try {
       setSaving(true);
@@ -263,7 +257,6 @@ export default function CalculatorHistorialPage() {
   };
 
   const saveRates = async (period: Period) => {
-    /* ... (Código existente) ... */
     if (!isAdmin) return;
     try {
       setSaving(true);
@@ -294,7 +287,7 @@ export default function CalculatorHistorialPage() {
     } catch (e: any) { alert(e.message); } finally { setSaving(false); }
   };
 
-  // 🔧 NUEVAS FUNCIONES PARA DEDUCCIONES
+  // 🔧 NUEVAS FUNCIONES PARA DEDUCCIONES (CON TIPO)
   const handleAddDeduction = async (period: Period) => {
     if (!newDeduction.concept || !newDeduction.amount) return;
     try {
@@ -302,6 +295,15 @@ export default function CalculatorHistorialPage() {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
+      const rawAmount = Number(newDeduction.amount);
+      // Si es "deduction", enviamos positivo (el backend resta). Si es "bonus", enviamos negativo (el backend resta negativo = suma)
+      // Lógica ajustada: El backend hace: Neto = ... - total_deducciones
+      // total_deducciones = sum(amounts).
+      // Si quiero RESTAR 50k: envio 50000. Neto - 50000. Correcto.
+      // Si quiero SUMAR 50k: envio -50000. Neto - (-50000) = Neto + 50000. Correcto.
+      
+      const finalAmount = deductionType === 'deduction' ? rawAmount : -rawAmount;
+
       const response = await fetch('/api/model/calculator/historial/deductions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -310,7 +312,7 @@ export default function CalculatorHistorialPage() {
           period_date: period.period_date,
           period_type: period.period_type,
           concept: newDeduction.concept,
-          amount: Number(newDeduction.amount)
+          amount: finalAmount
         })
       });
       
@@ -319,12 +321,13 @@ export default function CalculatorHistorialPage() {
       
       setAddingDeductionFor(null);
       setNewDeduction({ concept: '', amount: '' });
+      setDeductionType('deduction');
       await loadData();
     } catch (e: any) { alert(e.message); } finally { setSaving(false); }
   };
 
   const handleDeleteDeduction = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar esta deducción?')) return;
+    if (!confirm('¿Estás seguro de eliminar este ítem?')) return;
     try {
       setSaving(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -347,7 +350,6 @@ export default function CalculatorHistorialPage() {
   return (
     <>
       <div className="mb-6">
-        {/* ... Header existente ... */}
         <div className="flex items-center justify-between mb-4">
           <button onClick={() => window.history.back()} className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
             <ArrowLeft className="w-5 h-5" /><span className="font-medium">Volver</span>
@@ -358,7 +360,6 @@ export default function CalculatorHistorialPage() {
             <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mi Historial</h1>
             <p className="text-gray-500 dark:text-gray-400 text-sm">Historial de períodos archivados</p>
           </div>
-          {/* ... Filtros existentes ... */}
           <div className="flex items-center gap-3 flex-wrap">
             <div className="flex-shrink-0">
               <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
@@ -392,7 +393,6 @@ export default function CalculatorHistorialPage() {
             const periodKey = `${period.period_date}-${period.period_type}`;
             return (
             <div key={periodKey} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-              {/* ... Period Header ... */}
               <div className="flex justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center"><Calendar className="w-5 h-5 text-white" /></div>
@@ -401,7 +401,6 @@ export default function CalculatorHistorialPage() {
                     <p className="text-xs text-gray-500">{formatArchivedDate(period.archived_at)}</p>
                   </div>
                 </div>
-                {/* ... Rates Edit ... */}
                 <div className="ml-4">
                   <div className="flex items-center justify-end gap-2 mb-2">
                     <div className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">RATES de cierre</div>
@@ -427,7 +426,6 @@ export default function CalculatorHistorialPage() {
                 </div>
               </div>
 
-              {/* ... Platforms Table (Simplified for brevity, assumes existing code is good) ... */}
               <div className="overflow-x-auto mb-4">
                 <table className="w-full text-sm text-gray-900 dark:text-gray-100">
                   <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400">
@@ -465,23 +463,19 @@ export default function CalculatorHistorialPage() {
                 </table>
               </div>
 
-              {/* ... Totals & Breakdown ... */}
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  {/* Left Panel */}
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
                     <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
                     <div className="text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(period.total_usd_modelo || 0, 'USD')}</div>
                   </div>
 
-                  {/* Right Panel: Desglose */}
                   <div className="bg-blue-50 dark:bg-blue-900/40 p-3 rounded-xl border border-blue-100 dark:border-blue-800/50">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
                       <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(period.total_cop_modelo || 0, 'COP')}</span>
                     </div>
 
-                    {/* Anticipos */}
                     {(period.total_anticipos || 0) > 0 && (
                       <div className="flex justify-between items-center mb-1">
                         <span className="text-xs text-red-500 dark:text-red-400 flex items-center gap-1"><span>(-)</span> Anticipos</span>
@@ -489,33 +483,55 @@ export default function CalculatorHistorialPage() {
                       </div>
                     )}
 
-                    {/* 🔧 DEDUCCIONES MANUALES */}
                     {(period.deducciones && period.deducciones.length > 0) || (isAdmin && addingDeductionFor === periodKey) ? (
                       <div className="mb-2 pb-2 border-b border-gray-200 dark:border-gray-700 border-dashed">
                         {period.deducciones?.map(d => (
                           <div key={d.id} className="flex justify-between items-center mb-1 group hover:bg-white/50 dark:hover:bg-gray-700/30 p-1 rounded">
                             <div className="flex items-center gap-2">
-                              <span className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
-                                <span>(-)</span> {d.concept}
-                              </span>
+                              {/* 🔧 LÓGICA DE VISUALIZACIÓN DEDUCCIÓN vs EXCEDENTE */}
+                              {d.amount > 0 ? (
+                                <span className="text-xs text-orange-600 dark:text-orange-400 flex items-center gap-1">
+                                  <span>(-)</span> {d.concept}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1">
+                                  <span>(+)</span> {d.concept}
+                                </span>
+                              )}
+                              
                               {isAdmin && (
                                 <button onClick={() => handleDeleteDeduction(d.id)} className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-400 transition-opacity" title="Eliminar">
                                   <Trash2 className="w-3 h-3" />
                                 </button>
                               )}
                             </div>
-                            <span className="text-sm font-medium text-orange-600 dark:text-orange-400">- {formatCurrency(d.amount, 'COP')}</span>
+                            {/* Si es positivo es deducción (Rojo/Naranja). Si es negativo es excedente (Verde) */}
+                            {d.amount > 0 ? (
+                              <span className="text-sm font-medium text-orange-600 dark:text-orange-400">- {formatCurrency(d.amount, 'COP')}</span>
+                            ) : (
+                              <span className="text-sm font-medium text-green-600 dark:text-green-400">+ {formatCurrency(Math.abs(d.amount), 'COP')}</span>
+                            )}
                           </div>
                         ))}
                         
-                        {/* Formulario Agregar Deducción */}
                         {isAdmin && addingDeductionFor === periodKey && (
                           <div className="mt-2 bg-white dark:bg-gray-700 p-2 rounded border border-orange-200 dark:border-orange-500/30 shadow-sm">
-                            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">Nueva Deducción</div>
+                            <div className="text-xs font-medium text-gray-700 dark:text-gray-300 mb-1 flex justify-between items-center">
+                              <span>Nueva entrada</span>
+                              {/* 🔧 DROPDOWN TIPO DE AJUSTE */}
+                              <select 
+                                value={deductionType}
+                                onChange={(e) => setDeductionType(e.target.value as 'deduction' | 'bonus')}
+                                className="text-xs border rounded bg-gray-50 dark:bg-gray-800 dark:text-white border-gray-300 dark:border-gray-600 px-1 py-0.5"
+                              >
+                                <option value="deduction">Deducción (-)</option>
+                                <option value="bonus">Excedente (+)</option>
+                              </select>
+                            </div>
                             <div className="flex gap-2 mb-2">
                               <input 
                                 type="text" 
-                                placeholder="Concepto (ej: Multa)" 
+                                placeholder={deductionType === 'deduction' ? "Concepto (ej: Multa)" : "Concepto (ej: Bono)"}
                                 className="flex-1 text-xs border rounded px-2 py-1 dark:bg-gray-800 dark:border-gray-600 dark:text-white dark:placeholder-gray-500"
                                 value={newDeduction.concept}
                                 onChange={e => setNewDeduction({...newDeduction, concept: e.target.value})}
@@ -529,11 +545,11 @@ export default function CalculatorHistorialPage() {
                               />
                             </div>
                             <div className="flex justify-end gap-2">
-                              <button onClick={() => setAddingDeductionFor(null)} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1">Cancelar</button>
+                              <button onClick={() => { setAddingDeductionFor(null); setDeductionType('deduction'); }} className="text-xs text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 px-2 py-1">Cancelar</button>
                               <button 
                                 onClick={() => handleAddDeduction(period)} 
                                 disabled={!newDeduction.concept || !newDeduction.amount}
-                                className="text-xs bg-orange-500 text-white px-2 py-1 rounded hover:bg-orange-600 disabled:opacity-50"
+                                className={`text-xs text-white px-2 py-1 rounded disabled:opacity-50 ${deductionType === 'deduction' ? 'bg-orange-500 hover:bg-orange-600' : 'bg-green-600 hover:bg-green-700'}`}
                               >
                                 Guardar
                               </button>
@@ -543,19 +559,17 @@ export default function CalculatorHistorialPage() {
                       </div>
                     ) : null}
 
-                    {/* Botón Agregar Deducción (solo admin y si no está agregando) */}
                     {isAdmin && addingDeductionFor !== periodKey && (
                       <div className="mb-2 text-right">
                         <button 
-                          onClick={() => { setAddingDeductionFor(periodKey); setNewDeduction({concept: '', amount: ''}); }}
+                          onClick={() => { setAddingDeductionFor(periodKey); setNewDeduction({concept: '', amount: ''}); setDeductionType('deduction'); }}
                           className="text-[10px] text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
                         >
-                          <Plus className="w-3 h-3" /> Agregar deducción
+                          <Plus className="w-3 h-3" /> Agregar ajuste
                         </button>
                       </div>
                     )}
 
-                    {/* Neto Final */}
                     <div className="flex justify-between items-center pt-1 border-t border-blue-200/50 dark:border-blue-800/30">
                       <span className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wide">Neto a Pagar</span>
                       <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
@@ -565,7 +579,6 @@ export default function CalculatorHistorialPage() {
                   </div>
                 </div>
                 
-                {/* ... Progress Bar & Alerts (Existing) ... */}
                 <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl mb-4">
                    <div className="flex justify-between items-center mb-2">
                      <span className="text-sm font-medium text-gray-900 dark:text-white">Objetivo ({formatCurrency(period.cuota_minima||0, 'USD')})</span>
