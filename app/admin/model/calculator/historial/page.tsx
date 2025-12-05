@@ -475,7 +475,7 @@ export default function CalculatorHistorialPage() {
                   </div>
 
                   {/* Right Panel: Desglose */}
-                  <div className="bg-blue-50/50 dark:bg-blue-900/10 p-3 rounded-xl border border-blue-100 dark:border-blue-800/30">
+                  <div className="bg-blue-50 dark:bg-blue-900/40 p-3 rounded-xl border border-blue-100 dark:border-blue-800/50">
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
                       <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(period.total_cop_modelo || 0, 'COP')}</span>
