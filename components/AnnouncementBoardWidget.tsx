@@ -9,6 +9,7 @@ interface Announcement {
   content?: string;
   excerpt: string;
   featured_image_url?: string;
+  image_urls?: string[];
   category: {
     id: string;
     name: string;
@@ -315,24 +316,37 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
               )}
               
               <div className="flex items-start space-x-3">
-                {/* Imagen destacada o icono de categoría */}
-                {announcement.featured_image_url ? (
-                  <img
-                    src={announcement.featured_image_url}
-                    alt={announcement.title}
-                    className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
-                  />
-                ) : (
-                  <div
-                    className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
-                    style={{
-                      backgroundColor: announcement.category?.color ? `${announcement.category.color}20` : '#3B82F620',
-                      color: announcement.category?.color || '#3B82F6'
-                    }}
-                  >
-                    {announcement.category?.icon || '📌'}
-                  </div>
-                )}
+                {/* Avatar: Imagen destacada, primera imagen de image_urls, o icono de categoría */}
+                {(() => {
+                  // Obtener la imagen a usar: featured_image_url tiene prioridad, luego primera de image_urls
+                  const imageUrl = announcement.featured_image_url || 
+                    (announcement.image_urls && announcement.image_urls.length > 0 
+                      ? announcement.image_urls[0] 
+                      : null);
+                  
+                  if (imageUrl) {
+                    return (
+                      <img
+                        src={imageUrl}
+                        alt={announcement.title}
+                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                      />
+                    );
+                  }
+                  
+                  // Si no hay imagen, mostrar ícono de categoría
+                  return (
+                    <div
+                      className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
+                      style={{
+                        backgroundColor: announcement.category?.color ? `${announcement.category.color}20` : '#3B82F620',
+                        color: announcement.category?.color || '#3B82F6'
+                      }}
+                    >
+                      {announcement.category?.icon || '📌'}
+                    </div>
+                  );
+                })()}
 
                 {/* Contenido */}
                 <div className="flex-1 min-w-0">
