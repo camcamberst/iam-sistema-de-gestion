@@ -165,7 +165,9 @@ export async function GET(request: NextRequest) {
       total_usd_modelo: number;
       total_cop_modelo: number;
       total_anticipos: number; 
+      total_deducciones: number; // 🔧 NUEVO
       neto_pagar: number | null; // 🔧 Changed to null for initialization
+      deducciones: Array<any>;   // 🔧 NUEVO
       rates: any;
     }>();
 
@@ -195,7 +197,9 @@ export async function GET(request: NextRequest) {
           total_usd_modelo: 0,
           total_cop_modelo: 0,
           total_anticipos: 0, // Inicializar
+          total_deducciones: 0, // 🔧 Inicializar
           neto_pagar: null,   // 🔧 Inicializar a null para indicar que aún no se ha calculado
+          deducciones: [],    // 🔧 Inicializar
           // Tasas aplicadas al período (todos los items del período tienen las mismas tasas)
           rates: {
             eur_usd: item.rate_eur_usd || null,
@@ -403,19 +407,63 @@ export async function GET(request: NextRequest) {
             if (pId) {
               const totalAnticipos = anticiposByPeriodId.get(pId) || 0;
               period.total_anticipos = totalAnticipos;
-              // NETO = Generado (COP Modelo) - Anticipos
-              period.neto_pagar = Math.max(0, period.total_cop_modelo - totalAnticipos);
+              // No calculamos neto aquí porque faltan deducciones
             }
           });
         }
       }
     }
 
-    // 🔧 PASO FINAL: Asegurar que neto_pagar tenga valor si no se calculó arriba
-    periodsArray.forEach((period: any) => {
-      if (period.neto_pagar === null || period.neto_pagar === undefined) {
-        period.neto_pagar = period.total_cop_modelo;
+    // 🔧 PASO 7 (NUEVO): Obtener y restar Deducciones Manuales
+    if (periodDates.length > 0) {
+      try {
+        // Intentar consultar la tabla de deducciones (puede que no exista aún)
+        const { data: deductions, error: deductionsError } = await supabase
+          .from('calculator_deductions')
+          .select('*')
+          .eq('model_id', modelId)
+          .in('period_date', periodDates);
+
+        if (!deductionsError && deductions) {
+          // Agrupar deducciones por periodo (usando key compuesta: date-type)
+          const deductionsByPeriod = new Map<string, any[]>();
+          deductions.forEach((d: any) => {
+            const key = `${d.period_date}-${d.period_type}`;
+            if (!deductionsByPeriod.has(key)) {
+              deductionsByPeriod.set(key, []);
+            }
+            deductionsByPeriod.get(key)!.push(d);
+          });
+
+          // Asignar a períodos
+          periodsArray.forEach((period: any) => {
+            const key = `${period.period_date}-${period.period_type}`;
+            const periodDeductions = deductionsByPeriod.get(key) || [];
+            
+            period.deducciones = periodDeductions;
+            period.total_deducciones = periodDeductions.reduce((sum: number, d: any) => sum + Number(d.amount), 0);
+          });
+        }
+      } catch (e) {
+        // Si falla (ej: tabla no existe), simplemente ignoramos las deducciones
+        console.warn('⚠️ [CALCULATOR-HISTORIAL] No se pudieron cargar deducciones manuales:', e);
       }
+    }
+
+    // 🔧 PASO FINAL: Asegurar que neto_pagar tenga valor y restar todo
+    periodsArray.forEach((period: any) => {
+      // Inicializar si no existen
+      if (period.total_anticipos === undefined) period.total_anticipos = 0;
+      if (period.total_deducciones === undefined) period.total_deducciones = 0;
+      
+      // CALCULO FINAL DEL NETO:
+      // Neto = Generado - Anticipos - Deducciones Manuales
+      const neto = period.total_cop_modelo - period.total_anticipos - period.total_deducciones;
+      
+      // El neto no debería ser negativo (aunque podría si hay multas altas, pero visualmente mostramos 0)
+      // Pero para el registro, guardamos el valor real, y en frontend decidimos si mostrar 0 o negativo
+      // Por consistencia con anticipos, usaremos Math.max(0, ...)
+      period.neto_pagar = Math.max(0, neto);
     });
 
     // Convertir a array y ordenar por fecha descendente
