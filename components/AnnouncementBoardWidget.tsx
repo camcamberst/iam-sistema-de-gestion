@@ -293,12 +293,27 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 const url = `/announcements/${announcement.id}`;
                 window.open(url, '_blank', 'width=800,height=900,scrollbars=yes,resizable=yes');
               }}
-              className={`cursor-pointer group rounded-lg p-4 border transition-all duration-200 hover:shadow-md ${
+              className={`relative cursor-pointer group rounded-lg p-4 border transition-all duration-200 hover:shadow-md ${
                 isNew 
                   ? 'bg-blue-50/60 dark:bg-blue-900/10 border-blue-200/60 dark:border-blue-500/30' 
                   : 'bg-gray-50/50 dark:bg-gray-600/30 border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
               }`}
             >
+              {/* Badge "Nuevo" en esquina superior derecha */}
+              {isNew && (
+                <span className="absolute top-2 right-2 inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-md shadow-red-500/40 hover:shadow-lg hover:shadow-red-500/60 transition-all duration-200 z-10">
+                  {/* Punto parpadeante dinámico */}
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                  </span>
+                  {/* Texto con sombra sutil */}
+                  <span className="relative drop-shadow-sm">Nuevo</span>
+                  {/* Efecto de brillo sutil animado */}
+                  <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-50 blur-sm -z-10 animate-pulse"></span>
+                </span>
+              )}
+              
               <div className="flex items-start space-x-3">
                 {/* Imagen destacada o icono de categoría */}
                 {announcement.featured_image_url ? (
@@ -323,19 +338,6 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 <div className="flex-1 min-w-0">
                   {/* Badges y etiquetas - con mejor espaciado */}
                   <div className="flex items-center flex-wrap gap-2 mb-3">
-                    {isNew && (
-                      <span className="relative inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-md shadow-red-500/40 hover:shadow-lg hover:shadow-red-500/60 transition-all duration-200">
-                        {/* Punto parpadeante dinámico - más pequeño y proporcional */}
-                        <span className="relative flex h-1.5 w-1.5">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
-                        </span>
-                        {/* Texto con sombra sutil */}
-                        <span className="relative drop-shadow-sm">Nuevo</span>
-                        {/* Efecto de brillo sutil animado */}
-                        <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-50 blur-sm -z-10 animate-pulse"></span>
-                      </span>
-                    )}
                     {announcement.is_pinned && (
                       <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
                     )}
