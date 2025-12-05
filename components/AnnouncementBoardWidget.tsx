@@ -321,55 +321,58 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
 
                 {/* Contenido */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        {isNew && (
-                          <span className="relative inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-md shadow-red-500/40 hover:shadow-lg hover:shadow-red-500/60 transition-all duration-200">
-                            {/* Punto parpadeante dinámico - más pequeño y proporcional */}
-                            <span className="relative flex h-1.5 w-1.5">
-                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
-                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
-                            </span>
-                            {/* Texto con sombra sutil */}
-                            <span className="relative drop-shadow-sm">Nuevo</span>
-                            {/* Efecto de brillo sutil animado */}
-                            <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-50 blur-sm -z-10 animate-pulse"></span>
-                          </span>
-                        )}
-                        {announcement.is_pinned && (
-                          <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
-                        )}
-                        {announcement.priority > 0 && (
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            announcement.priority === 2 
-                              ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
-                              : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
-                          }`}>
-                            {announcement.priority === 2 ? 'Urgente' : 'Alta'}
-                          </span>
-                        )}
-                        {announcement.category && (
-                          <span
-                            className="text-xs px-2 py-0.5 rounded font-medium"
-                            style={{
-                              backgroundColor: `${announcement.category.color}20`,
-                              color: announcement.category.color
-                            }}
-                          >
-                            {announcement.category.name}
-                          </span>
-                        )}
-                      </div>
-                      <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1">
-                        {announcement.title}
-                      </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2">
-                        {announcement.excerpt}
-                      </p>
-                    </div>
+                  {/* Badges y etiquetas - con mejor espaciado */}
+                  <div className="flex items-center flex-wrap gap-2 mb-3">
+                    {isNew && (
+                      <span className="relative inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-semibold text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-md shadow-red-500/40 hover:shadow-lg hover:shadow-red-500/60 transition-all duration-200">
+                        {/* Punto parpadeante dinámico - más pequeño y proporcional */}
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white"></span>
+                        </span>
+                        {/* Texto con sombra sutil */}
+                        <span className="relative drop-shadow-sm">Nuevo</span>
+                        {/* Efecto de brillo sutil animado */}
+                        <span className="absolute inset-0 bg-gradient-to-r from-red-400 via-pink-400 to-red-400 rounded-full opacity-50 blur-sm -z-10 animate-pulse"></span>
+                      </span>
+                    )}
+                    {announcement.is_pinned && (
+                      <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
+                    )}
+                    {announcement.priority > 0 && (
+                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                        announcement.priority === 2 
+                          ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
+                          : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
+                      }`}>
+                        {announcement.priority === 2 ? 'Urgente' : 'Alta'}
+                      </span>
+                    )}
+                    {announcement.category && (
+                      <span
+                        className="text-xs px-2 py-0.5 rounded font-medium"
+                        style={{
+                          backgroundColor: `${announcement.category.color}20`,
+                          color: announcement.category.color
+                        }}
+                      >
+                        {announcement.category.name}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex items-center justify-between mt-2">
+                  
+                  {/* Título - con mejor separación */}
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug">
+                    {announcement.title}
+                  </h3>
+                  
+                  {/* Excerpt - con mejor separación */}
+                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mb-3 leading-relaxed">
+                    {announcement.excerpt}
+                  </p>
+                  
+                  {/* Footer con fecha y acción - mejor separado */}
+                  <div className="flex items-center justify-between pt-2 border-t border-gray-200/30 dark:border-gray-600/30">
                     <span className="text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(announcement.published_at || announcement.created_at)}
                     </span>
