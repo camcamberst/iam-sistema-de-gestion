@@ -89,23 +89,36 @@ export default function GestorStatsPage() {
 
     try {
       setLoading(true);
+      console.log('🔍 [GESTOR STATS] Cargando datos para grupo:', selectedGroup);
       
       // Obtener los IDs de usuarios que pertenecen al grupo seleccionado
-      const { data: userGroupsData } = await supabase
+      const { data: userGroupsData, error: userGroupsError } = await supabase
         .from('user_groups')
         .select('user_id')
         .eq('group_id', selectedGroup);
 
+      if (userGroupsError) {
+        console.error('❌ [GESTOR STATS] Error obteniendo user_groups:', userGroupsError);
+        alert('Error al cargar usuarios del grupo: ' + userGroupsError.message);
+        setModels([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log('📊 [GESTOR STATS] Usuarios en el grupo:', userGroupsData?.length || 0);
+
       if (!userGroupsData || userGroupsData.length === 0) {
+        console.log('⚠️ [GESTOR STATS] No hay usuarios en el grupo seleccionado');
         setModels([]);
         setLoading(false);
         return;
       }
 
       const userIds = userGroupsData.map(ug => ug.user_id);
+      console.log('👥 [GESTOR STATS] IDs de usuarios encontrados:', userIds.length);
 
       // Cargar modelos que pertenecen al grupo
-      const { data: modelsData } = await supabase
+      const { data: modelsData, error: modelsError } = await supabase
         .from('users')
         .select('id, name, email')
         .eq('role', 'modelo')
@@ -113,16 +126,34 @@ export default function GestorStatsPage() {
         .in('id', userIds)
         .order('name');
 
+      if (modelsError) {
+        console.error('❌ [GESTOR STATS] Error obteniendo modelos:', modelsError);
+        alert('Error al cargar modelos: ' + modelsError.message);
+        setModels([]);
+        setLoading(false);
+        return;
+      }
+
+      console.log('✅ [GESTOR STATS] Modelos encontrados:', modelsData?.length || 0);
+
       if (modelsData) {
         setModels(modelsData as Model[]);
+      } else {
+        setModels([]);
       }
 
       // Cargar plataformas
-      const { data: platformsData } = await supabase
+      const { data: platformsData, error: platformsError } = await supabase
         .from('calculator_platforms')
         .select('id, name, currency')
         .eq('active', true)
         .order('name');
+
+      if (platformsError) {
+        console.error('❌ [GESTOR STATS] Error obteniendo plataformas:', platformsError);
+      } else {
+        console.log('📱 [GESTOR STATS] Plataformas cargadas:', platformsData?.length || 0);
+      }
 
       if (platformsData) {
         setPlatforms(platformsData as Platform[]);
@@ -130,12 +161,18 @@ export default function GestorStatsPage() {
 
       // Cargar registros existentes del gestor desde calculator_history
       const periodDate = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
-      const { data: registrosData } = await supabase
+      const { data: registrosData, error: registrosError } = await supabase
         .from('calculator_history')
         .select('*')
         .eq('period_date', periodDate)
         .eq('group_id', selectedGroup)
         .not('estado', 'is', null); // Solo registros con estado (del gestor)
+
+      if (registrosError) {
+        console.error('❌ [GESTOR STATS] Error obteniendo registros:', registrosError);
+      } else {
+        console.log('📝 [GESTOR STATS] Registros encontrados:', registrosData?.length || 0);
+      }
 
       if (registrosData) {
         // Organizar registros por modelo y plataforma
