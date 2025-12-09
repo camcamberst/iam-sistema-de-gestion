@@ -201,7 +201,7 @@ export default function CreatePlatformPage() {
 
         {/* Formulario Horizontal */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-lg">
+          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
             {/* Primera Fila: Información Básica */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
