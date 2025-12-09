@@ -379,7 +379,7 @@ export default function GestorStatsPage() {
         <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <p className="text-sm text-blue-800 dark:text-blue-200">
             <strong>Instrucciones:</strong> Haz clic en cualquier celda para ingresar o editar valores. 
-            Los datos se guardarán cuando presiones "Guardar Cambios". 
+            Los datos se guardarán cuando presiones &quot;Guardar Cambios&quot;. 
             Después de guardar, los administradores serán notificados para realizar la auditoría.
           </p>
         </div>
