@@ -68,3 +68,5 @@ CREATE POLICY "Admins can delete deductions" ON calculator_deductions
 COMMENT ON TABLE calculator_deductions IS 'Deducciones manuales aplicadas al pago de la modelo (ej: multas, préstamos externos)';
 COMMENT ON COLUMN calculator_deductions.amount IS 'Monto en COP a descontar del neto';
 
+
+

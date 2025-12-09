@@ -128,12 +128,33 @@ export default function GestorStatsPage() {
         setPlatforms(platformsData as Platform[]);
       }
 
-      // TODO: Cargar registros existentes cuando la tabla esté creada
-      // const { data: registrosData } = await supabase
-      //   .from('gestor_ingresos_registros')
-      //   .select('*')
-      //   .eq('periodo_date', `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`)
-      //   .eq('sede_id', selectedGroup);
+      // Cargar registros existentes del gestor desde calculator_history
+      const periodDate = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
+      const { data: registrosData } = await supabase
+        .from('calculator_history')
+        .select('*')
+        .eq('period_date', periodDate)
+        .eq('group_id', selectedGroup)
+        .not('estado', 'is', null); // Solo registros con estado (del gestor)
+
+      if (registrosData) {
+        // Organizar registros por modelo y plataforma
+        const registrosMap: Record<string, Record<string, IngresoRegistro>> = {};
+        registrosData.forEach((reg: any) => {
+          const key = `${reg.model_id}_${reg.platform_id}`;
+          if (!registrosMap[key]) {
+            registrosMap[key] = {};
+          }
+          registrosMap[key][reg.period_type] = {
+            model_id: reg.model_id,
+            platform_id: reg.platform_id,
+            periodo_type: reg.period_type,
+            valor_p1: reg.period_type === '1-15' ? parseFloat(reg.value) : undefined,
+            valor_p2: reg.period_type === '16-31' ? parseFloat(reg.value) : undefined
+          };
+        });
+        setRegistros(registrosMap);
+      }
 
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -287,7 +308,7 @@ export default function GestorStatsPage() {
                 onClick={loadData}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
               >
-                Guardar Cambios
+                Recargar Datos
               </button>
               <button
                 onClick={() => window.print()}
@@ -443,7 +464,7 @@ export default function GestorStatsPage() {
         <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
           <p className="text-sm text-blue-800 dark:text-blue-200">
             <strong>Instrucciones:</strong> Haz clic en cualquier celda para ingresar o editar valores. 
-            Los datos se guardarán cuando presiones &quot;Guardar Cambios&quot;. 
+            Los datos se guardan automáticamente al hacer clic fuera de la celda o presionar Enter. 
             Después de guardar, los administradores serán notificados para realizar la auditoría.
           </p>
         </div>
