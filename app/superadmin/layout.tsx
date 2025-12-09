@@ -200,6 +200,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       if (calculatorIndex !== -1) {
         baseItems[calculatorIndex].subItems = [
           { label: 'Definir RATES', href: '/admin/rates' },
+          { label: 'Crear Plataforma', href: '/admin/calculator/create-platform' },
           { label: 'Configurar Calculadora', href: '/admin/calculator/config' },
           { label: 'Ver Calculadora Modelo', href: '/admin/calculator/view-model' }
         ];

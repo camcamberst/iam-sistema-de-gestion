@@ -352,7 +352,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       // Agregar opciones administrativas de calculadora
       const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
       if (calculatorIndex !== -1) {
-        baseItems[calculatorIndex].subItems = [
+        const calculatorSubItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}> = [
           { 
             label: 'Definir RATES', 
             href: '/admin/rates',
@@ -362,7 +362,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               </svg>
             ),
             description: 'Configura las tasas de conversión'
-          },
+          }
+        ];
+
+        // Agregar "Crear Plataforma" solo para super_admin
+        if (userRole === 'super_admin') {
+          calculatorSubItems.push({
+            label: 'Crear Plataforma',
+            href: '/admin/calculator/create-platform',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+            ),
+            description: 'Crear nueva plataforma para el sistema'
+          });
+        }
+
+        calculatorSubItems.push(
           { 
             label: 'Configurar Calculadora', 
             href: '/admin/calculator/config',
@@ -385,7 +402,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             ),
             description: 'Vista de la calculadora para modelos'
           }
-        ];
+        );
+
+        baseItems[calculatorIndex].subItems = calculatorSubItems;
       }
     }
 

@@ -98,6 +98,17 @@ const adminMenu: MenuItem[] = [
         description: 'Configura las tasas de conversión'
       },
       { 
+        label: 'Crear Plataforma', 
+        href: '/admin/calculator/create-platform',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+        ),
+        description: 'Crear nueva plataforma para el sistema',
+        requiresSuperAdmin: true
+      },
+      { 
         label: 'Configurar Calculadora', 
         href: '/admin/calculator/config',
         icon: (
