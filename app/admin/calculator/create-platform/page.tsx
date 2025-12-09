@@ -21,7 +21,6 @@ export default function CreatePlatformPage() {
 
   // Estados del formulario
   const [formData, setFormData] = useState({
-    id: '',
     name: '',
     description: '',
     type: 'tokens' as PlatformType,
@@ -32,6 +31,19 @@ export default function CreatePlatformPage() {
     direct_payout: false,
     payment_frequency: 'quincenal'
   });
+
+  // Función para generar ID automáticamente desde el nombre
+  const generateIdFromName = (name: string): string => {
+    if (!name) return '';
+    
+    return name
+      .toLowerCase()
+      .trim()
+      .replace(/[^a-z0-9\s_-]/g, '') // Eliminar caracteres especiales
+      .replace(/\s+/g, '_') // Reemplazar espacios con guiones bajos
+      .replace(/_{2,}/g, '_') // Reemplazar múltiples guiones bajos con uno solo
+      .replace(/^_+|_+$/g, ''); // Eliminar guiones bajos al inicio y final
+  };
 
   // Validar autenticación y permisos
   useEffect(() => {
@@ -75,9 +87,16 @@ export default function CreatePlatformPage() {
         throw new Error('Usuario no autenticado');
       }
 
+      // Generar ID automáticamente desde el nombre
+      const generatedId = generateIdFromName(formData.name);
+      
+      if (!generatedId) {
+        throw new Error('El nombre de la plataforma es requerido para generar el ID');
+      }
+
       // Preparar datos según tipo
       const platformData: any = {
-        id: formData.id.toLowerCase().trim(),
+        id: generatedId,
         name: formData.name.trim(),
         description: formData.description.trim() || null,
         currency: formData.currency,
@@ -180,25 +199,7 @@ export default function CreatePlatformPage() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
               <div>
                 <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
-                  ID de Plataforma *
-                </label>
-                <input
-                  type="text"
-                  value={formData.id}
-                  onChange={(e) => setFormData({ ...formData, id: e.target.value })}
-                  placeholder="ej: nuevaplataforma"
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                  pattern="[a-z0-9_-]+"
-                />
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
-                  Solo minúsculas, números, guiones
-                </p>
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
-                  Nombre *
+                  Nombre de la Plataforma *
                 </label>
                 <input
                   type="text"
@@ -208,6 +209,11 @@ export default function CreatePlatformPage() {
                   className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
+                {formData.name && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                    ID generado: <span className="font-mono text-blue-600 dark:text-blue-400">{generateIdFromName(formData.name)}</span>
+                  </p>
+                )}
               </div>
 
               <div>
