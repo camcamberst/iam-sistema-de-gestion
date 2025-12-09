@@ -144,11 +144,6 @@ export default function GestorStatsPage() {
     }
   };
 
-  const getPeriodDate = () => {
-    const day = selectedPeriodType === '1-15' ? '01' : '16';
-    return `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-${day}`;
-  };
-
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
