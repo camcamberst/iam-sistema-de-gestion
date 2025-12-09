@@ -16,6 +16,11 @@ interface Platform {
   currency: string;
 }
 
+interface Group {
+  id: string;
+  name: string;
+}
+
 interface IngresoRegistro {
   model_id: string;
   platform_id: string;
@@ -28,6 +33,8 @@ export default function GestorStatsPage() {
   const [loading, setLoading] = useState(true);
   const [models, setModels] = useState<Model[]>([]);
   const [platforms, setPlatforms] = useState<Platform[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<{
     year: number;
     month: number;
@@ -44,19 +51,66 @@ export default function GestorStatsPage() {
   const [editValue, setEditValue] = useState<string>('');
 
   useEffect(() => {
-    loadData();
-  }, [selectedPeriod]);
+    loadGroups();
+  }, []);
+
+  useEffect(() => {
+    if (selectedGroup) {
+      loadData();
+    }
+  }, [selectedPeriod, selectedGroup]);
+
+  const loadGroups = async () => {
+    try {
+      // Cargar grupos/sedes disponibles
+      const { data: groupsData } = await supabase
+        .from('groups')
+        .select('id, name')
+        .eq('is_active', true)
+        .order('name');
+
+      if (groupsData) {
+        setGroups(groupsData as Group[]);
+        // Seleccionar el primer grupo por defecto si hay grupos disponibles
+        if (groupsData.length > 0 && !selectedGroup) {
+          setSelectedGroup(groupsData[0].id);
+        }
+      }
+    } catch (error) {
+      console.error('Error cargando grupos:', error);
+    }
+  };
 
   const loadData = async () => {
+    if (!selectedGroup) {
+      setModels([]);
+      return;
+    }
+
     try {
       setLoading(true);
       
-      // Cargar modelos
+      // Obtener los IDs de usuarios que pertenecen al grupo seleccionado
+      const { data: userGroupsData } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .eq('group_id', selectedGroup);
+
+      if (!userGroupsData || userGroupsData.length === 0) {
+        setModels([]);
+        setLoading(false);
+        return;
+      }
+
+      const userIds = userGroupsData.map(ug => ug.user_id);
+
+      // Cargar modelos que pertenecen al grupo
       const { data: modelsData } = await supabase
         .from('users')
         .select('id, name, email')
         .eq('role', 'modelo')
         .eq('is_active', true)
+        .in('id', userIds)
         .order('name');
 
       if (modelsData) {
@@ -79,7 +133,7 @@ export default function GestorStatsPage() {
       //   .from('gestor_ingresos_registros')
       //   .select('*')
       //   .eq('periodo_date', `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`)
-      //   .eq('periodo_type', selectedPeriodType);
+      //   .eq('sede_id', selectedGroup);
 
     } catch (error) {
       console.error('Error cargando datos:', error);
@@ -184,6 +238,22 @@ export default function GestorStatsPage() {
           <div className="flex flex-wrap items-center gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Sede/Grupo
+              </label>
+              <select
+                value={selectedGroup}
+                onChange={(e) => setSelectedGroup(e.target.value)}
+                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-w-[200px]"
+              >
+                <option value="">Seleccionar sede/grupo</option>
+                {groups.map(group => (
+                  <option key={group.id} value={group.id}>{group.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                 Año
               </label>
               <select
@@ -230,6 +300,19 @@ export default function GestorStatsPage() {
         </div>
 
         {/* Tabla Consolidada */}
+        {!selectedGroup ? (
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-8 text-center">
+            <p className="text-gray-600 dark:text-gray-300">
+              Por favor selecciona una sede/grupo para ver la planilla
+            </p>
+          </div>
+        ) : models.length === 0 ? (
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-8 text-center">
+            <p className="text-gray-600 dark:text-gray-300">
+              No hay modelos asignados a esta sede/grupo
+            </p>
+          </div>
+        ) : (
         <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 overflow-hidden">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
@@ -354,6 +437,7 @@ export default function GestorStatsPage() {
             </table>
           </div>
         </div>
+        )}
 
         {/* Información adicional */}
         <div className="mt-6 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
