@@ -105,8 +105,7 @@ const adminMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
         ),
-        description: 'Crear nueva plataforma para el sistema',
-        requiresSuperAdmin: true
+        description: 'Crear nueva plataforma para el sistema'
       },
       { 
         label: 'Configurar Calculadora', 
