@@ -35,7 +35,6 @@ export default function GestorStatsPage() {
     year: new Date().getFullYear(),
     month: new Date().getMonth() + 1
   });
-  const [selectedPeriodType, setSelectedPeriodType] = useState<'1-15' | '16-31'>('1-15');
   const [registros, setRegistros] = useState<Record<string, Record<string, IngresoRegistro>>>({});
   const [editingCell, setEditingCell] = useState<{
     modelId: string;
@@ -46,7 +45,7 @@ export default function GestorStatsPage() {
 
   useEffect(() => {
     loadData();
-  }, [selectedPeriod, selectedPeriodType]);
+  }, [selectedPeriod]);
 
   const loadData = async () => {
     try {
@@ -218,20 +217,6 @@ export default function GestorStatsPage() {
               </select>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Período
-              </label>
-              <select
-                value={selectedPeriodType}
-                onChange={(e) => setSelectedPeriodType(e.target.value as '1-15' | '16-31')}
-                className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="1-15">1-15 (Primera Quincena)</option>
-                <option value="16-31">16-31 (Segunda Quincena)</option>
-              </select>
-            </div>
-
             <div className="ml-auto flex gap-2">
               <button
                 onClick={loadData}
@@ -260,7 +245,7 @@ export default function GestorStatsPage() {
                     Clave
                   </th>
                   <th className="sticky left-[120px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 py-3 text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[200px]">
-                    Correo
+                    Usuario
                   </th>
                   
                   {/* Columnas dinámicas por plataforma */}
@@ -304,7 +289,7 @@ export default function GestorStatsPage() {
                       {model.clave || model.name}
                     </td>
                     <td className="sticky left-[120px] z-10 bg-white dark:bg-gray-800 px-4 py-3 text-gray-700 dark:text-gray-300 border-r-2 border-gray-300 dark:border-gray-500">
-                      {model.email}
+                      {model.email?.split('@')[0] || model.email}
                     </td>
 
                     {/* Celdas por plataforma */}
