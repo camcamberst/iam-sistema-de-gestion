@@ -303,7 +303,8 @@ export async function POST(request: NextRequest) {
         }
         // Si modelo envía mensaje a admin
         else if (sender.role === 'modelo' && (receiver.role === 'admin' || receiver.role === 'super_admin')) {
-          await notifyAdminNuevoMensajeModelo(receiverId, sender.name || 'Modelo');
+          // 🚫 REDUNDANTE: Botty no debe avisar por cada mensaje nuevo, ya hay notificaciones nativas
+          // await notifyAdminNuevoMensajeModelo(receiverId, sender.name || 'Modelo');
           console.log('✅ [CHAT] Notificación de nuevo mensaje enviada a admin');
         }
       }

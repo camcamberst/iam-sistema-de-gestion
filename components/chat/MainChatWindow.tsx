@@ -6,6 +6,7 @@ import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 import { renderElegantAvatar } from '@/lib/chat/user-avatar';
 import Badge from './Badge';
 import BoostPagesModal from '@/components/BoostPagesModal'; // Importar BoostPagesModal
+import { playNotificationSound, initAudio } from '@/lib/chat/notification-sound'; // Importar sonido
 
 interface MainChatWindowProps {
   onClose: () => void;
@@ -631,6 +632,20 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         <button onClick={onClose} className="text-gray-400 hover:text-white ml-2">
           <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+        {/* Botón de Test de Sonido (Oculto en producción, útil para debug) */}
+        <button 
+          onClick={(e) => {
+            e.stopPropagation();
+            initAudio(); // Asegurar contexto
+            playNotificationSound(0.8); // Reproducir sonido
+          }} 
+          className="text-gray-600 hover:text-gray-400 ml-1 p-1 opacity-0 hover:opacity-100 transition-opacity"
+          title="Probar sonido (Debug)"
+        >
+          <svg className="h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
           </svg>
         </button>
       </div>
