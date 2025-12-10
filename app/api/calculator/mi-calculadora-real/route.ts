@@ -17,215 +17,44 @@ const supabase = createClient(
   }
 );
 
-// GET: Obtener el valor real de Mi Calculadora usando la misma lógica
+// GET: Obtener el valor real de Mi Calculadora usando la misma lógica que el Dashboard de Modelo
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const rawPeriodDate = searchParams.get('periodDate') || getColombiaDate();
   
-  // 🔧 FIX: Normalizar la fecha al inicio del período (1 o 16) para que coincida con cómo se guardan los valores
-  const periodDate = normalizeToPeriodStartDate(rawPeriodDate);
-  console.log('🔍 [MI-CALCULADORA-REAL] Fecha recibida:', rawPeriodDate, '→ Normalizada:', periodDate);
-
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
   }
 
   try {
-    console.log('🔍 [MI-CALCULADORA-REAL] Obteniendo valor real de Mi Calculadora para modelId:', modelId, 'periodDate:', periodDate);
+    // 🔧 LOGICA DE DASHBOARD DE MODELO (app/admin/model/dashboard/page.tsx)
+    // Usamos getColombiaDate() para la fecha de hoy, igual que el dashboard
+    const todayDate = getColombiaDate();
+    const yesterdayDate = new Date(new Date(todayDate).getTime() - 24 * 60 * 60 * 1000).toISOString().split('T')[0];
     
-    // 0. Crear período si no existe (opcional, no crítico si falla)
-    try {
-      await createPeriodIfNeeded(periodDate);
-    } catch (periodCreateError) {
-      console.warn('⚠️ [MI-CALCULADORA-REAL] No se pudo crear período (no crítico):', periodCreateError);
-    }
+    // Normalizar la fecha del período para cálculos de corte (1-15 o 16-fin)
+    const periodStartDate = normalizeToPeriodStartDate(todayDate);
 
-    // 1. Intentar obtener el período (opcional, solo para logs)
-    let periodId = null;
-    const { data: period, error: periodError } = await supabase
-      .from('periods')
-      .select('id')
-      .eq('start_date', periodDate)
-      .single();
+    console.log('🔍 [MI-CALCULADORA-REAL] Obteniendo valores para modelId:', modelId);
+    console.log('🔍 [MI-CALCULADORA-REAL] Fechas: Hoy=', todayDate, 'Ayer=', yesterdayDate, 'Periodo=', periodStartDate);
 
-    if (periodError) {
-      console.warn('⚠️ [MI-CALCULADORA-REAL] No se encontró período en tabla periods (continuando sin él):', periodError.message);
-      // No es crítico, continuamos sin el período
-    } else {
-      periodId = period?.id;
-    }
-
-    // 2. Obtener anticipos pagados del corte vigente (1–15 o 16–fin): realizado + confirmado
-    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos PAGADOS del corte vigente (realizado+confirmado):', { modelId, periodId, periodDate });
-    const anticiposCorte = await getAnticiposPagadosDelCorte(modelId, periodDate);
-    const anticiposPagados = anticiposCorte.total;
-    
-    console.log('🔍 [MI-CALCULADORA-REAL] Anticipos pagados calculados:', anticiposPagados);
-
-    // 3. Obtener configuración de la modelo
-    const { data: config, error: configError } = await supabase
-      .from('calculator_config')
-      .select('*')
-      .eq('model_id', modelId)
-      .eq('active', true)
-      .single();
-
-    if (configError && configError.code !== 'PGRST116') {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener configuración:', configError);
-      return NextResponse.json({ success: false, error: 'Error al obtener configuración' }, { status: 500 });
-    }
-
-    if (!config) {
-      console.log('🔍 [MI-CALCULADORA-REAL] No se encontró configuración para modelId:', modelId);
-      return NextResponse.json({
-        success: true,
-        data: {
-          copModelo: 0,
-          anticipoDisponible: 0,
-          anticiposPagados: 0
-        }
-      });
-    }
-
-    // 4. Obtener plataformas habilitadas
-    const { data: platforms, error: platformsError } = await supabase
-      .from('calculator_platforms')
-      .select('*')
-      .in('id', config.enabled_platforms)
-      .eq('active', true);
-
-    if (platformsError) {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener plataformas:', platformsError);
-      return NextResponse.json({ success: false, error: 'Error al obtener plataformas' }, { status: 500 });
-    }
-
-    // 5. Obtener valores del modelo - MANTENER FILTRO ESTRICTO POR PERÍODO
-    // CRÍTICO: Los anticipos requieren datos exactos del período específico para integridad financiera
-    
-    // Primero intentar con la fecha exacta del período
-    let { data: exactValues, error: valuesError } = await supabase
-      .from('model_values')
-      .select('platform_id, value, period_date, updated_at')
-      .eq('model_id', modelId)
-      .eq('period_date', periodDate)
-      .order('updated_at', { ascending: false });
-
-    // Dedupe por plataforma tomando el más reciente
-    let values: any[] | null = null;
-    if (exactValues && exactValues.length > 0) {
-      const platformMap = new Map<string, any>();
-      for (const v of exactValues) {
-        if (!platformMap.has(v.platform_id)) {
-          platformMap.set(v.platform_id, v);
-        }
-      }
-      values = Array.from(platformMap.values());
-    }
-
-    console.log('🔍 [MI-CALCULADORA-REAL] Valores con fecha exacta (dedupe):', values?.length || 0);
-
-    // Si no encuentra datos con fecha exacta, buscar en fechas cercanas (±2 días) para manejar timezone
-    if (!values || values.length === 0) {
-      console.log('🔍 [MI-CALCULADORA-REAL] Buscando en fechas cercanas por timezone...');
-      
-      const currentDate = new Date(periodDate);
-      const dayBefore = new Date(currentDate);
-      dayBefore.setDate(dayBefore.getDate() - 1);
-      const dayAfter = new Date(currentDate);
-      dayAfter.setDate(dayAfter.getDate() + 1);
-      
-      const dates = [
-        dayBefore.toISOString().split('T')[0],
-        periodDate,
-        dayAfter.toISOString().split('T')[0]
-      ];
-
-      const { data: nearbyValues, error: nearbyError } = await supabase
-        .from('model_values')
-        .select('platform_id, value, period_date, updated_at')
-        .eq('model_id', modelId)
-        .in('period_date', dates)
-        .order('updated_at', { ascending: false });
-
-      if (nearbyError) {
-        valuesError = nearbyError;
-      } else {
-        // Obtener solo el valor más reciente por plataforma
-        const platformMap = new Map<string, any>();
-        nearbyValues?.forEach((value: any) => {
-          if (!platformMap.has(value.platform_id)) {
-            platformMap.set(value.platform_id, value);
-          }
-        });
-        values = Array.from(platformMap.values());
-        console.log('🔍 [MI-CALCULADORA-REAL] Valores encontrados en fechas cercanas:', values?.length || 0);
-      }
-    }
-
-    // Fallback final: si aún no hay valores, buscar los más recientes de los últimos 7 días
-    if (!values || values.length === 0) {
-      console.log('🔍 [MI-CALCULADORA-REAL] Fallback final: buscando últimos 7 días (dedupe por plataforma)');
-      const sevenDaysAgo = new Date();
-      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-      const sevenDaysAgoStr = sevenDaysAgo.toISOString().split('T')[0];
-
-      const { data: recentValues, error: recentError } = await supabase
-        .from('model_values')
-        .select('platform_id, value, period_date, updated_at')
-        .eq('model_id', modelId)
-        .gte('period_date', sevenDaysAgoStr)
-        .order('updated_at', { ascending: false });
-
-      if (recentError) {
-        valuesError = recentError;
-      } else {
-        const platformMap = new Map<string, any>();
-        recentValues?.forEach((value: any) => {
-          if (!platformMap.has(value.platform_id)) {
-            platformMap.set(value.platform_id, value);
-          }
-        });
-        values = Array.from(platformMap.values());
-        console.log('🔍 [MI-CALCULADORA-REAL] Valores últimos 7 días:', values?.length || 0);
-      }
-    }
-
-    if (valuesError) {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener valores:', valuesError);
-      return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
-    }
-
-    console.log('🔍 [MI-CALCULADORA-REAL] Valores finales encontrados:', values?.length || 0);
-    if (values && values.length > 0) {
-      console.log('📊 [MI-CALCULADORA-REAL] Detalle de valores:', values.map(v => ({
-        platform_id: v.platform_id,
-        value: v.value,
-        period_date: v.period_date
-      })));
-    } else {
-      console.warn('⚠️ [MI-CALCULADORA-REAL] NO se encontraron valores para modelId:', modelId, 'periodDate:', periodDate);
-    }
-
-    // 6. Obtener tasas
+    // 1. Obtener tasas activas
     const { data: ratesData, error: ratesError } = await supabase
       .from('rates')
-      .select('kind, value, valid_from, scope')
+      .select('kind, value, valid_from')
       .eq('active', true)
       .is('valid_to', null)
       .order('valid_from', { ascending: false });
 
     if (ratesError) {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener tasas:', ratesError);
-      return NextResponse.json({ success: false, error: 'Error al obtener tasas' }, { status: 500 });
+      throw new Error(`Error al obtener tasas: ${ratesError.message}`);
     }
 
-    // 7. Procesar tasas (usar la más reciente)
     const usdCopRates = ratesData?.filter((r: any) => r.kind === 'USD→COP') || [];
     const eurUsdRates = ratesData?.filter((r: any) => r.kind === 'EUR→USD') || [];
     const gbpUsdRates = ratesData?.filter((r: any) => r.kind === 'GBP→USD') || [];
     
-    // Usar la tasa más reciente (más alta valid_from)
+    // Usar la tasa más reciente
     const latestUsdCop = usdCopRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
     const latestEurUsd = eurUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
     const latestGbpUsd = gbpUsdRates.sort((a, b) => new Date(b.valid_from).getTime() - new Date(a.valid_from).getTime())[0];
@@ -235,140 +64,158 @@ export async function GET(request: NextRequest) {
       eur_usd: latestEurUsd?.value || 1.01,
       gbp_usd: latestGbpUsd?.value || 1.20
     };
-    
-    console.log('🔍 [MI-CALCULADORA-REAL] Tasas seleccionadas:', rates);
 
-    // 8. MAPEAR VALORES A PLATAFORMAS
-    console.log('🔍 [MI-CALCULADORA-REAL] Mapeando valores a plataformas...');
-    console.log('🔍 [MI-CALCULADORA-REAL] Valores encontrados:', values?.map(v => ({ platform_id: v.platform_id, value: v.value })));
-    console.log('🔍 [MI-CALCULADORA-REAL] Plataformas habilitadas en config:', config.enabled_platforms);
-    
-    const platformsWithValues = platforms?.map(platform => {
-      const value = values?.find(v => v.platform_id === platform.id);
-      const isEnabled = config.enabled_platforms.includes(platform.id);
-      const valueNum = value ? Number(value.value) || 0 : 0;
-      
-      // Usar porcentaje por plataforma si existe; fallback a override o grupo
-      const platformPercentage = (platform as any).percentage;
-      const effectivePercentage =
-        (typeof platformPercentage === 'number' && !Number.isNaN(platformPercentage))
-          ? platformPercentage
-          : (config.percentage_override || config.group_percentage || 80);
+    // 2. Obtener configuración de la modelo
+    const { data: config, error: configError } = await supabase
+      .from('calculator_config')
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('active', true)
+      .single();
 
-      const platformData = {
-        ...platform,
-        value: valueNum,
-        enabled: isEnabled,
-        percentage: effectivePercentage
-      };
-      
-      if (isEnabled && valueNum > 0) {
-        console.log(`✅ [MI-CALCULADORA-REAL] Plataforma ${platform.id}: value=${valueNum}, enabled=${isEnabled}, percentage=${effectivePercentage}`);
-      }
-      
-      return platformData;
-    }) || [];
-    
-    const enabledWithValues = platformsWithValues.filter(p => p.enabled && p.value > 0);
-    console.log('🔍 [MI-CALCULADORA-REAL] Plataformas habilitadas con valores > 0:', enabledWithValues.length);
+    if (configError && configError.code !== 'PGRST116') {
+      throw new Error(`Error al obtener configuración: ${configError.message}`);
+    }
 
-    // 9. CALCULAR USANDO LA MISMA LÓGICA DE MI CALCULADORA
-    console.log('🔍 [MI-CALCULADORA-REAL] Iniciando cálculo de totalUsdModelo...');
-    const totalUsdModelo = platformsWithValues.reduce((sum, p) => {
-      if (!p.enabled || p.value === 0) {
-        if (p.enabled && p.value === 0) {
-          console.log(`⚠️ [MI-CALCULADORA-REAL] Plataforma ${p.id} habilitada pero valor es 0`);
+    if (!config) {
+      console.log('🔍 [MI-CALCULADORA-REAL] No se encontró configuración para modelId:', modelId);
+      return NextResponse.json({
+        success: true,
+        data: {
+          usdModelo: 0,
+          copModelo: 0,
+          anticipoDisponible: 0,
+          anticiposPagados: 0
         }
-        return sum;
-      }
-      
-      console.log(`🔍 [MI-CALCULADORA-REAL] Procesando ${p.id}: value=${p.value}, currency=${p.currency}, percentage=${p.percentage}`);
-
-      // Calcular USD modelo usando fórmulas específicas + porcentaje (MISMA LÓGICA)
-      let usdModelo = 0;
-      
-      if (p.currency === 'EUR') {
-        if (p.id === 'big7') {
-          usdModelo = (p.value * rates.eur_usd) * 0.84;
-        } else if (p.id === 'mondo') {
-          usdModelo = (p.value * rates.eur_usd) * 0.78;
-        } else if (p.id === 'superfoon') {
-          usdModelo = p.value * rates.eur_usd; // EUR a USD directo
-        } else {
-          usdModelo = p.value * rates.eur_usd;
-        }
-      } else if (p.currency === 'GBP') {
-        if (p.id === 'aw') {
-          usdModelo = (p.value * rates.gbp_usd) * 0.677;
-        } else {
-          usdModelo = p.value * rates.gbp_usd;
-        }
-      } else if (p.currency === 'USD') {
-        if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-          usdModelo = p.value * 0.75;
-        } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-          usdModelo = p.value * 0.05;
-        } else if (p.id === 'dxlive') {
-          usdModelo = p.value * 0.60;
-        } else if (p.id === 'secretfriends') {
-          usdModelo = p.value * 0.5;
-        } else {
-          usdModelo = p.value;
-        }
-      }
-
-      // SUPERFOON: Aplicar 100% para la modelo (especial)
-      if (p.id === 'superfoon') {
-        return sum + usdModelo; // 100% directo, sin porcentaje
-      }
-
-      // Aplicar porcentaje de la modelo (MISMA LÓGICA)
-      return sum + (usdModelo * p.percentage / 100);
-    }, 0);
-
-    // 10. CALCULAR COP MODELO (MISMA LÓGICA)
-    const copModelo = Math.round(totalUsdModelo * rates.usd_cop);
-
-    // 11. CALCULAR 90% DE ANTICIPO
-    const anticipoDisponible = Math.round(copModelo * 0.9);
-
-    console.log('✅ [MI-CALCULADORA-REAL] Valores calculados con lógica real de Mi Calculadora:', {
-      totalUsdModelo: Math.round(totalUsdModelo * 100) / 100,
-      copModelo: copModelo,
-      anticipoDisponible: Math.max(0, anticipoDisponible - anticiposPagados),
-      anticiposPagados: anticiposPagados,
-      platformsProcessed: enabledWithValues.length,
-      rates: rates
-    });
-    
-    // Debug adicional si los valores son 0
-    if (totalUsdModelo === 0 || copModelo === 0) {
-      console.warn('⚠️ [MI-CALCULADORA-REAL] ⚠️ VALORES EN CERO - Diagnóstico completo:', {
-        modelId,
-        periodDate,
-        valuesFound: values?.length || 0,
-        valuesDetail: values?.map(v => ({ platform_id: v.platform_id, value: v.value })) || [],
-        platformsTotal: platforms?.length || 0,
-        platformsEnabled: config.enabled_platforms?.length || 0,
-        platformsWithValues: enabledWithValues.length,
-        enabledPlatformsList: config.enabled_platforms,
-        rates: rates,
-        platformsWithValuesDetail: platformsWithValues.map(p => ({
-          id: p.id,
-          enabled: p.enabled,
-          value: p.value,
-          currency: p.currency,
-          percentage: p.percentage
-        }))
       });
     }
+
+    // 3. Obtener plataformas habilitadas
+    const { data: platforms, error: platformsError } = await supabase
+      .from('calculator_platforms')
+      .select('*')
+      .in('id', config.enabled_platforms)
+      .eq('active', true);
+
+    if (platformsError) {
+      throw new Error(`Error al obtener plataformas: ${platformsError.message}`);
+    }
+
+    // 4. Obtener valores de HOY (usando getColombiaDate() como el Dashboard)
+    const { data: todayValues, error: todayError } = await supabase
+      .from('model_values')
+      .select('platform_id, value')
+      .eq('model_id', modelId)
+      .eq('period_date', todayDate); // Usar fecha exacta de hoy, NO fallbacks
+
+    if (todayError) {
+      throw new Error(`Error al obtener valores de hoy: ${todayError.message}`);
+    }
+
+    const todayIdToValue: Record<string, number> = {};
+    todayValues?.forEach((r) => {
+      todayIdToValue[r.platform_id] = Number(r.value) || 0;
+    });
+
+    // 5. Obtener valores de AYER (para cálculo de ganancias del día)
+    const { data: yesterdayValues, error: yesterdayError } = await supabase
+      .from('model_values')
+      .select('platform_id, value')
+      .eq('model_id', modelId)
+      .eq('period_date', yesterdayDate);
+
+    if (yesterdayError) {
+      console.warn('⚠️ [MI-CALCULADORA-REAL] Error al obtener valores de ayer (no crítico):', yesterdayError.message);
+    }
+
+    const yesterdayIdToValue: Record<string, number> = {};
+    yesterdayValues?.forEach((r) => {
+      yesterdayIdToValue[r.platform_id] = Number(r.value) || 0;
+    });
+
+    // 6. Obtener anticipos PAGADOS del corte vigente (1–15 o 16–fin)
+    // Esto se mantiene igual para la lógica de anticipos
+    const anticiposCorte = await getAnticiposPagadosDelCorte(modelId, periodStartDate);
+    const anticiposPagados = anticiposCorte.total;
+
+    // 7. CALCULAR RESULTADOS (Lógica exacta del Dashboard)
+    let todayUsdModelo = 0;
+    let yesterdayUsdModelo = 0;
+
+    // Procesar plataformas habilitadas
+    const enabledPlatforms = platforms || [];
+    
+    // Cálculo para HOY
+    for (const p of enabledPlatforms) {
+      const value = todayIdToValue[p.id] || 0;
+      if (value <= 0) continue;
+
+      const currency = p.currency || 'USD';
+      // Prioridad: Override > Group > Platform > Default (80)
+      const finalPct = (config.percentage_override ?? config.group_percentage ?? p.percentage ?? 80) as number;
+
+      let usdFromPlatform = 0;
+      
+      // Lógica de conversión de monedas (idéntica al Dashboard)
+      if (currency === 'EUR') {
+        if (p.id === 'big7') {
+          usdFromPlatform = (value * rates.eur_usd) * 0.84;
+        } else if (p.id === 'mondo') {
+          usdFromPlatform = (value * rates.eur_usd) * 0.78;
+        } else {
+          usdFromPlatform = value * rates.eur_usd;
+        }
+      } else if (currency === 'GBP') {
+        if (p.id === 'aw') {
+          usdFromPlatform = (value * rates.gbp_usd) * 0.677;
+        } else {
+          usdFromPlatform = value * rates.gbp_usd;
+        }
+      } else if (currency === 'USD') {
+        if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+          usdFromPlatform = value * 0.75;
+        } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+          usdFromPlatform = value * 0.05;
+        } else if (p.id === 'dxlive') {
+          usdFromPlatform = value * 0.60;
+        } else if (p.id === 'secretfriends') {
+          usdFromPlatform = value * 0.5;
+        } else if (p.id === 'superfoon') {
+          usdFromPlatform = value;
+        } else {
+          usdFromPlatform = value;
+        }
+      }
+
+      // Participación para modelo (superfoon 100%)
+      const share = (p.id === 'superfoon') ? usdFromPlatform : (usdFromPlatform * (finalPct / 100));
+      todayUsdModelo += share;
+    }
+
+    // Cálculo para AYER (si se necesitara para delta, aquí solo nos interesa el acumulado de hoy para COP Modelo)
+    // En el Dashboard, `todayUsdModelo` representa el ACUMULADO hasta hoy del periodo actual si `value` es el acumulado.
+    // Si `model_values` guarda el acumulado del periodo, entonces `todayUsdModelo` es el total acumulado.
+    
+    // Calcular COP Modelo
+    const copModelo = Math.round(todayUsdModelo * rates.usd_cop);
+    
+    // Calcular 90% de anticipo disponible
+    const anticipoTotal = Math.round(copModelo * 0.9);
+    const anticipoDisponible = Math.max(0, anticipoTotal - anticiposPagados);
+
+    console.log('✅ [MI-CALCULADORA-REAL] Resultados calculados (Lógica Dashboard):', {
+      usdModelo: todayUsdModelo,
+      copModelo,
+      anticipoDisponible,
+      anticiposPagados
+    });
 
     return NextResponse.json({
       success: true,
       data: {
-        usdModelo: Math.round(totalUsdModelo * 100) / 100,
+        usdModelo: Math.round(todayUsdModelo * 100) / 100,
         copModelo: copModelo,
-        anticipoDisponible: Math.max(0, anticipoDisponible - anticiposPagados),
+        anticipoDisponible: anticipoDisponible,
         anticiposPagados: anticiposPagados
       }
     });
