@@ -1402,7 +1402,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             right: 24,
             bottom: 'calc(env(safe-area-inset-bottom, 0px) + 24px)'
           }}
-          className="fixed w-10 h-10 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-visible"
+          className={`fixed w-10 h-10 hover:w-16 hover:h-10 text-white dark:text-gray-900 rounded-xl shadow-lg border border-white/20 dark:border-gray-700/30 transition-all duration-300 flex items-center justify-center z-[9995] group overflow-visible ${
+            totalUnreadCount > 0
+              ? 'bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 animate-gradient-x shadow-blue-500/30 ring-2 ring-blue-400/30'
+              : 'bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300'
+          }`}
           aria-label={`Abrir chat de soporte${totalUnreadCount > 0 ? ` (${totalUnreadCount} mensajes no leídos)` : ''}`}
         >
           <div className="flex items-center justify-center relative w-full h-full">
