@@ -34,10 +34,15 @@ export async function GET(request: NextRequest) {
   try {
     console.log('🔍 [MI-CALCULADORA-REAL] Obteniendo valor real de Mi Calculadora para modelId:', modelId, 'periodDate:', periodDate);
     
-    // 0. Crear período si no existe
-    await createPeriodIfNeeded(periodDate);
+    // 0. Crear período si no existe (opcional, no crítico si falla)
+    try {
+      await createPeriodIfNeeded(periodDate);
+    } catch (periodCreateError) {
+      console.warn('⚠️ [MI-CALCULADORA-REAL] No se pudo crear período (no crítico):', periodCreateError);
+    }
 
-    // 1. Obtener el período actual
+    // 1. Intentar obtener el período (opcional, solo para logs)
+    let periodId = null;
     const { data: period, error: periodError } = await supabase
       .from('periods')
       .select('id')
@@ -45,12 +50,14 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (periodError) {
-      console.error('❌ [MI-CALCULADORA-REAL] Error al obtener período:', periodError);
-      return NextResponse.json({ success: false, error: 'Error al obtener período' }, { status: 500 });
+      console.warn('⚠️ [MI-CALCULADORA-REAL] No se encontró período en tabla periods (continuando sin él):', periodError.message);
+      // No es crítico, continuamos sin el período
+    } else {
+      periodId = period?.id;
     }
 
     // 2. Obtener anticipos pagados del corte vigente (1–15 o 16–fin): realizado + confirmado
-    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos PAGADOS del corte vigente (realizado+confirmado):', { modelId, periodId: period.id, periodDate });
+    console.log('🔍 [MI-CALCULADORA-REAL] Buscando anticipos PAGADOS del corte vigente (realizado+confirmado):', { modelId, periodId, periodDate });
     const anticiposCorte = await getAnticiposPagadosDelCorte(modelId, periodDate);
     const anticiposPagados = anticiposCorte.total;
     

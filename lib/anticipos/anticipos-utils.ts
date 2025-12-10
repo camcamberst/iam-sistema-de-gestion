@@ -185,13 +185,15 @@ export async function getAnticiposPagadosDelCorte(
       .lte('start_date', endDate);
 
     if (cutPeriodsError) {
-      console.error('❌ [ANTICIPOS-UTILS] Error al obtener períodos del corte:', cutPeriodsError);
-      throw new Error('Error al obtener períodos del corte');
+      console.warn('⚠️ [ANTICIPOS-UTILS] No se pudieron obtener períodos del corte (continuando sin anticipos):', cutPeriodsError.message);
+      // Si no hay períodos, simplemente retornamos 0 anticipos (no es crítico)
+      return { anticipos: [], total: 0, count: 0, periodIds: [] };
     }
 
     const periodIds = (cutPeriods || []).map(p => p.id);
 
     if (periodIds.length === 0) {
+      console.log('🔍 [ANTICIPOS-UTILS] No se encontraron períodos en el rango:', { startDate, endDate });
       return { anticipos: [], total: 0, count: 0, periodIds: [] };
     }
 
