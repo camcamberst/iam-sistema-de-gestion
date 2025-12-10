@@ -31,6 +31,7 @@ interface AnticipoData {
 export default function SolicitarAnticipoPage() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadingProductivity, setLoadingProductivity] = useState(true); // Nuevo estado
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -40,8 +41,6 @@ export default function SolicitarAnticipoPage() {
     monto_solicitado: 0,
     medio_pago: 'nequi'
   });
-  
-  // AppleDropdown maneja automáticamente el estado de apertura
   
   // Datos de productividad
   const [productivityData, setProductivityData] = useState({
@@ -91,8 +90,6 @@ export default function SolicitarAnticipoPage() {
     console.log('🔍 [SOLICITAR ANTICIPO] Restricción temporal:', restriction);
   }, []);
 
-  // AppleDropdown maneja automáticamente el click-outside
-
   const loadUser = async () => {
     try {
       setLoading(true);
@@ -125,10 +122,10 @@ export default function SolicitarAnticipoPage() {
 
   const loadProductivityData = async (userId: string) => {
     try {
+      setLoadingProductivity(true);
       console.log('🔍 [SOLICITAR ANTICIPO] Iniciando carga de datos de productividad para userId:', userId);
       
       // Obtener datos de productividad del período actual (Colombia)
-      // 🔧 FIX: Usar fecha normalizada al inicio del período para que coincida con cómo se guardan los valores
       const periodDate = getColombiaPeriodStartDate();
       console.log('🔍 [SOLICITAR ANTICIPO] Periodo normalizado:', periodDate);
       
@@ -140,12 +137,6 @@ export default function SolicitarAnticipoPage() {
       
       if (miCalculadoraRealData.success) {
         console.log('✅ [SOLICITAR ANTICIPO] Valores reales de Mi Calculadora obtenidos correctamente:', {
-          copModelo: miCalculadoraRealData.data.copModelo,
-          anticipoDisponible: miCalculadoraRealData.data.anticipoDisponible,
-          anticiposPagados: miCalculadoraRealData.data.anticiposPagados
-        });
-
-        console.log('🔄 [SOLICITAR ANTICIPO] Estableciendo datos de productividad:', {
           copModelo: miCalculadoraRealData.data.copModelo,
           anticipoDisponible: miCalculadoraRealData.data.anticipoDisponible,
           anticiposPagados: miCalculadoraRealData.data.anticiposPagados
@@ -168,7 +159,9 @@ export default function SolicitarAnticipoPage() {
       }
     } catch (error) {
       console.error('Error loading productivity data:', error);
-      setError('Error al cargar datos de productividad');
+      // No bloquear la UI, pero mostrar error
+    } finally {
+      setLoadingProductivity(false);
     }
   };
 
@@ -540,32 +533,59 @@ export default function SolicitarAnticipoPage() {
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
         <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-            <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
-            Resumen de Productividad
-          </h2>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+              Resumen de Productividad
+            </h2>
+          </div>
+          
           <InfoCardGrid
             cards={[
               {
-                value: `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                value: loadingProductivity 
+                  ? '...' 
+                  : `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
                 label: 'COP Modelo',
                 color: 'blue'
               },
               {
-                value: `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                value: loadingProductivity
+                  ? '...'
+                  : `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
                 label: 'Anticipo Disponible',
                 color: 'green',
-                onClick: handleAnticipoDisponibleClick,
-                clickable: true
+                onClick: !loadingProductivity ? handleAnticipoDisponibleClick : undefined,
+                clickable: !loadingProductivity
               },
               {
-                value: `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                value: loadingProductivity
+                  ? '...'
+                  : `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
                 label: 'Ya Pagados',
                 color: 'orange'
               }
             ]}
             columns={3}
           />
+          
+          {productivityData.copModelo === 0 && !loadingProductivity && (
+            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg">
+              <div className="flex items-start">
+                <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+                </svg>
+                <div className="text-sm">
+                  <p className="font-medium text-yellow-800 dark:text-yellow-300">
+                    No se encontraron valores registrados
+                  </p>
+                  <p className="text-yellow-700 dark:text-yellow-400 mt-1">
+                    Asegúrate de haber ingresado y <strong>guardado</strong> tus ganancias en <button onClick={() => router.push('/admin/model/calculator')} className="underline hover:text-yellow-900 dark:hover:text-yellow-200">Mi Calculadora</button> para este periodo.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Formulario */}
