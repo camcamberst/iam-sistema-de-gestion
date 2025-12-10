@@ -31,6 +31,14 @@ function initAudioContext(): AudioContext | null {
 }
 
 /**
+ * Permite inicializar/reanudar el contexto de audio manualmente
+ * Útil para llamar en eventos de interacción del usuario (click, touch)
+ */
+export function initAudio(): void {
+  initAudioContext();
+}
+
+/**
  * Genera un sonido tipo "glass" distintivo usando Web Audio API
  * Similar a las notificaciones de iOS/macOS (estilo "Glass" o "Blow")
  * Más audible y con timbre más rico que el anterior

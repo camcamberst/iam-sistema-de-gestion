@@ -7,7 +7,7 @@ import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 import IndividualChatWindow from './IndividualChatWindow';
 import ChatBar from './ChatBar';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
-import { playNotificationSound } from '@/lib/chat/notification-sound';
+import { playNotificationSound, initAudio } from '@/lib/chat/notification-sound';
 import ToastNotification from './ToastNotification';
 import Badge from './Badge';
 
@@ -62,6 +62,29 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     senderAvatar?: string | null;
     messagePreview: string;
   }>>([]);
+
+  // 🔧 NUEVO: Inicializar audio en la primera interacción del usuario
+  useEffect(() => {
+    const handleInteraction = () => {
+      console.log('🔊 [ChatWidget] Inicializando sistema de audio por interacción del usuario');
+      initAudio();
+      // Remover listeners una vez inicializado
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+
+    window.addEventListener('click', handleInteraction);
+    window.addEventListener('keydown', handleInteraction);
+    window.addEventListener('touchstart', handleInteraction);
+
+    return () => {
+      window.removeEventListener('click', handleInteraction);
+      window.removeEventListener('keydown', handleInteraction);
+      window.removeEventListener('touchstart', handleInteraction);
+    };
+  }, []);
+
   // 🔧 MEJORADO: Función helper para inicializar lastUnreadCount desde localStorage
   const getInitialUnreadCount = (): number => {
     if (typeof window !== 'undefined') {
