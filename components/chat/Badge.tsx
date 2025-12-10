@@ -25,7 +25,7 @@ export default function Badge({
     : 'text-xs px-1.5 py-0.5 min-w-[18px] h-[18px]';
   const colorClasses = variant === 'blue' 
     ? 'bg-blue-500/90' 
-    : 'bg-red-500/90';
+    : 'bg-rose-600 shadow-rose-500/30 animate-pulse'; // Más visible, color rojo intenso y pulsando
   
   // Formatear número: mostrar "99+" si es mayor a 99
   const displayCount = count > 99 ? '99+' : count.toString();

@@ -46,60 +46,36 @@ export function playNotificationSound(volume: number = 0.6): void {
   
   try {
     const now = ctx.currentTime;
-    const duration = 0.4; // 400ms - un poco más largo para ser más perceptible
     
-    // Crear múltiples osciladores para un sonido más rico (estilo Apple)
-    // Sonido principal: tono medio-alto con armónicos
-    const oscillator1 = ctx.createOscillator();
-    const oscillator2 = ctx.createOscillator();
-    const gainNode1 = ctx.createGain();
-    const gainNode2 = ctx.createGain();
-    const masterGain = ctx.createGain();
+    // Configuración para sonido "Glass/Pop" más suave y elegante (Estilo Apple)
+    // Usamos una envolvente percusiva con un tono puro
     
-    // Configurar oscilador principal (tono base)
-    oscillator1.type = 'sine';
-    oscillator1.frequency.setValueAtTime(880, now); // La5 - más audible que 800Hz
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
     
-    // Configurar oscilador secundario (armónico para timbre más rico)
-    oscillator2.type = 'sine';
-    oscillator2.frequency.setValueAtTime(1320, now); // Mi6 - quinta perfecta arriba
+    osc.connect(gain);
+    gain.connect(ctx.destination);
     
-    // Conectar nodos
-    oscillator1.connect(gainNode1);
-    oscillator2.connect(gainNode2);
-    gainNode1.connect(masterGain);
-    gainNode2.connect(masterGain);
-    masterGain.connect(ctx.destination);
+    // Frecuencia base: Nota alta pero suave (ej. Do6 = 1046.50Hz)
+    // Deslizamos ligeramente hacia abajo para efecto "gota de agua"
+    osc.frequency.setValueAtTime(800, now);
+    osc.frequency.exponentialRampToValueAtTime(400, now + 0.1);
     
-    // Configurar ganancias individuales
-    gainNode1.gain.setValueAtTime(0, now);
-    gainNode1.gain.linearRampToValueAtTime(volume * 0.7, now + 0.01);
-    gainNode1.gain.exponentialRampToValueAtTime(0.01, now + duration);
+    // Tipo de onda: Senoidal pura para suavidad
+    osc.type = 'sine';
     
-    gainNode2.gain.setValueAtTime(0, now);
-    gainNode2.gain.linearRampToValueAtTime(volume * 0.3, now + 0.01);
-    gainNode2.gain.exponentialRampToValueAtTime(0.01, now + duration);
+    // Envolvente de volumen (ADSR rápido)
+    // Ataque muy rápido (pop) y decaimiento suave
+    gain.gain.setValueAtTime(0, now);
+    gain.gain.linearRampToValueAtTime(volume, now + 0.01); // Ataque rápido
+    gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3); // Decaimiento corto
     
-    // Volumen master con fade-out suave
-    masterGain.gain.setValueAtTime(0, now);
-    masterGain.gain.linearRampToValueAtTime(volume, now + 0.02);
-    masterGain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+    osc.start(now);
+    osc.stop(now + 0.3);
     
-    // Iniciar osciladores
-    oscillator1.start(now);
-    oscillator2.start(now);
-    oscillator1.stop(now + duration);
-    oscillator2.stop(now + duration);
-    
-    // Limpiar después de la reproducción
-    oscillator1.onended = () => {
-      oscillator1.disconnect();
-      gainNode1.disconnect();
-    };
-    oscillator2.onended = () => {
-      oscillator2.disconnect();
-      gainNode2.disconnect();
-      masterGain.disconnect();
+    osc.onended = () => {
+      osc.disconnect();
+      gain.disconnect();
     };
   } catch (e) {
     console.warn('⚠️ Error reproduciendo sonido de notificación:', e);

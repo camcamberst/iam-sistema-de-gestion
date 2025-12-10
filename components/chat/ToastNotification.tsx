@@ -80,19 +80,19 @@ export default function ToastNotification({
     >
       <div
         onClick={handleClick}
-        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-xl shadow-xl p-3 cursor-pointer hover:shadow-2xl transition-shadow animate-fadeIn"
+        className="bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-gray-100 dark:border-gray-700/50 border-l-4 border-l-blue-500 rounded-lg shadow-2xl p-4 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all duration-200 animate-fadeIn ring-1 ring-black/5 dark:ring-white/5"
       >
         <div className="flex items-start gap-3">
           {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 flex items-center justify-center shadow-md flex-shrink-0">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-blue-500/20 flex-shrink-0 text-white font-bold text-sm tracking-wide">
             {senderAvatar ? (
               <img 
                 src={senderAvatar} 
                 alt={senderName}
-                className="w-full h-full rounded-full object-cover"
+                className="w-full h-full rounded-full object-cover ring-2 ring-white/20"
               />
             ) : (
-              <span className="text-white font-bold text-sm tracking-wider">
+              <span>
                 {getInitial(senderName)}
               </span>
             )}
