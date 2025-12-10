@@ -101,21 +101,51 @@ export async function GET(request: NextRequest) {
       throw new Error(`Error al obtener plataformas: ${platformsError.message}`);
     }
 
-    // 4. Obtener valores de HOY (usando getColombiaDate() como el Dashboard)
-    const { data: todayValues, error: todayError } = await supabase
-      .from('model_values')
-      .select('platform_id, value')
-      .eq('model_id', modelId)
-      .eq('period_date', todayDate); // Usar fecha exacta de hoy, NO fallbacks
+    // 4. Obtener valores del PERIODO ACTUAL (Lógica "Enhanced Auto-Repair" de model-values-v2)
+    // En lugar de buscar solo HOY, buscamos en todo el rango del periodo y consolidamos.
+    
+    // Calcular rango del periodo
+    const isP2 = parseInt(periodStartDate.split('-')[2]) >= 16;
+    const periodStart = periodStartDate;
+    const periodEndObj = new Date(periodStartDate);
+    if (isP2) {
+      // Fin de mes
+      periodEndObj.setMonth(periodEndObj.getMonth() + 1);
+      periodEndObj.setDate(0);
+    } else {
+      // Día 15
+      periodEndObj.setDate(15);
+    }
+    const periodEnd = periodEndObj.toISOString().split('T')[0];
 
-    if (todayError) {
-      throw new Error(`Error al obtener valores de hoy: ${todayError.message}`);
+    console.log('🔍 [MI-CALCULADORA-REAL] Buscando valores en rango:', { periodStart, periodEnd });
+
+    const { data: allValues, error: valuesError } = await supabase
+      .from('model_values')
+      .select('platform_id, value, period_date, updated_at')
+      .eq('model_id', modelId)
+      .gte('period_date', periodStart)
+      .lte('period_date', periodEnd)
+      .order('updated_at', { ascending: false });
+
+    if (valuesError) {
+      throw new Error(`Error al obtener valores del periodo: ${valuesError.message}`);
     }
 
-    const todayIdToValue: Record<string, number> = {};
-    todayValues?.forEach((r) => {
-      todayIdToValue[r.platform_id] = Number(r.value) || 0;
+    // Consolidar valores (mismo método que model-values-v2)
+    const consolidatedMap = new Map<string, number>();
+    allValues?.forEach((val: any) => {
+      if (!consolidatedMap.has(val.platform_id)) {
+        consolidatedMap.set(val.platform_id, Number(val.value) || 0);
+      }
     });
+
+    const todayIdToValue: Record<string, number> = {};
+    consolidatedMap.forEach((value, key) => {
+      todayIdToValue[key] = value;
+    });
+
+    console.log(`✅ [MI-CALCULADORA-REAL] Valores consolidados encontrados: ${consolidatedMap.size}`);
 
     // 5. Obtener valores de AYER (para cálculo de ganancias del día)
     const { data: yesterdayValues, error: yesterdayError } = await supabase
