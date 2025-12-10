@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
+import { getColombiaDate, createPeriodIfNeeded, normalizeToPeriodStartDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import { getAnticiposConfirmadosDelMes, getAnticiposPorPeriodo, getAnticiposPagadosPeriodo, getAnticiposPagadosDelCorte } from '@/lib/anticipos/anticipos-utils';
 
 export const dynamic = 'force-dynamic';
@@ -21,7 +21,11 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const periodDate = searchParams.get('periodDate') || getColombiaDate();
+  const rawPeriodDate = searchParams.get('periodDate') || getColombiaDate();
+  
+  // 🔧 FIX: Normalizar la fecha al inicio del período (1 o 16) para que coincida con cómo se guardan los valores
+  const periodDate = normalizeToPeriodStartDate(rawPeriodDate);
+  console.log('🔍 [MI-CALCULADORA-REAL] Fecha recibida:', rawPeriodDate, '→ Normalizada:', periodDate);
 
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import { InfoCardGrid } from '@/components/ui/InfoCard';
@@ -128,8 +128,9 @@ export default function SolicitarAnticipoPage() {
       console.log('🔍 [SOLICITAR ANTICIPO] Iniciando carga de datos de productividad para userId:', userId);
       
       // Obtener datos de productividad del período actual (Colombia)
-      const periodDate = getColombiaDate();
-      console.log('🔍 [SOLICITAR ANTICIPO] Periodo:', periodDate);
+      // 🔧 FIX: Usar fecha normalizada al inicio del período para que coincida con cómo se guardan los valores
+      const periodDate = getColombiaPeriodStartDate();
+      console.log('🔍 [SOLICITAR ANTICIPO] Periodo normalizado:', periodDate);
       
       // 🚀 SOLUCIÓN REAL: Usar la misma lógica de Mi Calculadora para obtener valores correctos
       console.log('🔍 [SOLICITAR ANTICIPO] Obteniendo valores reales de Mi Calculadora...');
@@ -366,7 +367,8 @@ export default function SolicitarAnticipoPage() {
       setSubmitting(true);
       setError(null);
 
-      const periodDate = getColombiaDate();
+      // 🔧 FIX: Usar fecha normalizada al inicio del período
+      const periodDate = getColombiaPeriodStartDate();
       const porcentajeSolicitado = calculatePercentage();
 
       const response = await fetch('/api/anticipos', {
