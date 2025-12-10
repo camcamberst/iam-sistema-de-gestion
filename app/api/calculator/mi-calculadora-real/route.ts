@@ -189,6 +189,17 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Error al obtener valores' }, { status: 500 });
     }
 
+    console.log('🔍 [MI-CALCULADORA-REAL] Valores finales encontrados:', values?.length || 0);
+    if (values && values.length > 0) {
+      console.log('📊 [MI-CALCULADORA-REAL] Detalle de valores:', values.map(v => ({
+        platform_id: v.platform_id,
+        value: v.value,
+        period_date: v.period_date
+      })));
+    } else {
+      console.warn('⚠️ [MI-CALCULADORA-REAL] NO se encontraron valores para modelId:', modelId, 'periodDate:', periodDate);
+    }
+
     // 6. Obtener tasas
     const { data: ratesData, error: ratesError } = await supabase
       .from('rates')
@@ -221,8 +232,15 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MI-CALCULADORA-REAL] Tasas seleccionadas:', rates);
 
     // 8. MAPEAR VALORES A PLATAFORMAS
+    console.log('🔍 [MI-CALCULADORA-REAL] Mapeando valores a plataformas...');
+    console.log('🔍 [MI-CALCULADORA-REAL] Valores encontrados:', values?.map(v => ({ platform_id: v.platform_id, value: v.value })));
+    console.log('🔍 [MI-CALCULADORA-REAL] Plataformas habilitadas en config:', config.enabled_platforms);
+    
     const platformsWithValues = platforms?.map(platform => {
       const value = values?.find(v => v.platform_id === platform.id);
+      const isEnabled = config.enabled_platforms.includes(platform.id);
+      const valueNum = value ? Number(value.value) || 0 : 0;
+      
       // Usar porcentaje por plataforma si existe; fallback a override o grupo
       const platformPercentage = (platform as any).percentage;
       const effectivePercentage =
@@ -230,17 +248,34 @@ export async function GET(request: NextRequest) {
           ? platformPercentage
           : (config.percentage_override || config.group_percentage || 80);
 
-      return {
+      const platformData = {
         ...platform,
-        value: value ? Number(value.value) || 0 : 0,
-        enabled: config.enabled_platforms.includes(platform.id),
+        value: valueNum,
+        enabled: isEnabled,
         percentage: effectivePercentage
       };
+      
+      if (isEnabled && valueNum > 0) {
+        console.log(`✅ [MI-CALCULADORA-REAL] Plataforma ${platform.id}: value=${valueNum}, enabled=${isEnabled}, percentage=${effectivePercentage}`);
+      }
+      
+      return platformData;
     }) || [];
+    
+    const enabledWithValues = platformsWithValues.filter(p => p.enabled && p.value > 0);
+    console.log('🔍 [MI-CALCULADORA-REAL] Plataformas habilitadas con valores > 0:', enabledWithValues.length);
 
     // 9. CALCULAR USANDO LA MISMA LÓGICA DE MI CALCULADORA
+    console.log('🔍 [MI-CALCULADORA-REAL] Iniciando cálculo de totalUsdModelo...');
     const totalUsdModelo = platformsWithValues.reduce((sum, p) => {
-      if (!p.enabled || p.value === 0) return sum;
+      if (!p.enabled || p.value === 0) {
+        if (p.enabled && p.value === 0) {
+          console.log(`⚠️ [MI-CALCULADORA-REAL] Plataforma ${p.id} habilitada pero valor es 0`);
+        }
+        return sum;
+      }
+      
+      console.log(`🔍 [MI-CALCULADORA-REAL] Procesando ${p.id}: value=${p.value}, currency=${p.currency}, percentage=${p.percentage}`);
 
       // Calcular USD modelo usando fórmulas específicas + porcentaje (MISMA LÓGICA)
       let usdModelo = 0;
@@ -294,8 +329,32 @@ export async function GET(request: NextRequest) {
       totalUsdModelo: Math.round(totalUsdModelo * 100) / 100,
       copModelo: copModelo,
       anticipoDisponible: Math.max(0, anticipoDisponible - anticiposPagados),
-      anticiposPagados: anticiposPagados
+      anticiposPagados: anticiposPagados,
+      platformsProcessed: enabledWithValues.length,
+      rates: rates
     });
+    
+    // Debug adicional si los valores son 0
+    if (totalUsdModelo === 0 || copModelo === 0) {
+      console.warn('⚠️ [MI-CALCULADORA-REAL] ⚠️ VALORES EN CERO - Diagnóstico completo:', {
+        modelId,
+        periodDate,
+        valuesFound: values?.length || 0,
+        valuesDetail: values?.map(v => ({ platform_id: v.platform_id, value: v.value })) || [],
+        platformsTotal: platforms?.length || 0,
+        platformsEnabled: config.enabled_platforms?.length || 0,
+        platformsWithValues: enabledWithValues.length,
+        enabledPlatformsList: config.enabled_platforms,
+        rates: rates,
+        platformsWithValuesDetail: platformsWithValues.map(p => ({
+          id: p.id,
+          enabled: p.enabled,
+          value: p.value,
+          currency: p.currency,
+          percentage: p.percentage
+        }))
+      });
+    }
 
     return NextResponse.json({
       success: true,
