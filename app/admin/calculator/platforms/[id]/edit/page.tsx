@@ -74,8 +74,7 @@ export default function EditPlatformPage() {
       
       try {
         setFetching(true);
-        // Cargamos todas las plataformas y filtramos porque no hay endpoint individual aún expuesto públicamente de forma sencilla sin reescribir GET
-        // Nota: Idealmente deberíamos tener un endpoint GET /api/calculator/platforms/[id], pero el GET general es rápido para pocas plataformas
+        // Cargamos todas las plataformas y filtramos
         const response = await fetch('/api/calculator/platforms');
         const data = await response.json();
         
@@ -245,11 +244,11 @@ export default function EditPlatformPage() {
 
         {/* Formulario Horizontal */}
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+          <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
             {/* Primera Fila: Información Básica */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Nombre de la Plataforma *
                 </label>
                 <input
@@ -257,13 +256,13 @@ export default function EditPlatformPage() {
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="ej: Nueva Plataforma"
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="apple-input"
                   required
                 />
               </div>
 
-              <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+              <div className="md:col-span-2">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Descripción
                 </label>
                 <input
@@ -271,21 +270,21 @@ export default function EditPlatformPage() {
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Descripción opcional"
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="apple-input"
                 />
               </div>
             </div>
 
             {/* Segunda Fila: Tipo y Moneda */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Tipo de Plataforma *
                 </label>
                 <select
                   value={formData.type}
                   onChange={(e) => setFormData({ ...formData, type: e.target.value as PlatformType })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="apple-input"
                   required
                 >
                   <option value="tokens">Tokens (ej: Chaturbate)</option>
@@ -296,13 +295,13 @@ export default function EditPlatformPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                   Moneda Base *
                 </label>
                 <select
                   value={formData.currency}
                   onChange={(e) => setFormData({ ...formData, currency: e.target.value })}
-                  className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="apple-input"
                   required
                 >
                   <option value="USD">USD (Dólar)</option>
@@ -314,34 +313,36 @@ export default function EditPlatformPage() {
 
             {/* Tercera Fila: Campos según Tipo */}
             {formData.type === 'tokens' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Tasa de Conversión de Tokens *
                   </label>
-                  <input
-                    type="number"
-                    step="0.0001"
-                    min="0"
-                    max="1"
-                    value={formData.token_rate}
-                    onChange={(e) => setFormData({ ...formData, token_rate: e.target.value })}
-                    placeholder="ej: 0.05"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                    required
-                  />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <div className="relative">
+                    <input
+                      type="number"
+                      step="0.0001"
+                      min="0"
+                      max="1"
+                      value={formData.token_rate}
+                      onChange={(e) => setFormData({ ...formData, token_rate: e.target.value })}
+                      placeholder="ej: 0.05"
+                      className="apple-input"
+                      required
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     USD por 1 token (0.05 = 100 tokens = 5 USD)
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
                   <select
                     value={formData.payment_frequency}
                     onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   >
                     <option value="quincenal">Quincenal</option>
                     <option value="mensual">Mensual</option>
@@ -351,9 +352,9 @@ export default function EditPlatformPage() {
             )}
 
             {formData.type === 'credits' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Factor de Descuento *
                   </label>
                   <input
@@ -364,21 +365,21 @@ export default function EditPlatformPage() {
                     value={formData.discount_factor}
                     onChange={(e) => setFormData({ ...formData, discount_factor: e.target.value })}
                     placeholder="ej: 0.75"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                     required
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     0.75 = 75% del valor (25% descuento)
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
                   <select
                     value={formData.payment_frequency}
                     onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   >
                     <option value="quincenal">Quincenal</option>
                     <option value="mensual">Mensual</option>
@@ -388,9 +389,9 @@ export default function EditPlatformPage() {
             )}
 
             {formData.type === 'currency' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Factor de Descuento (Opcional)
                   </label>
                   <input
@@ -401,11 +402,11 @@ export default function EditPlatformPage() {
                     value={formData.discount_factor}
                     onChange={(e) => setFormData({ ...formData, discount_factor: e.target.value })}
                     placeholder="ej: 0.78"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Tasa de Impuesto (Opcional)
                   </label>
                   <input
@@ -416,20 +417,20 @@ export default function EditPlatformPage() {
                     value={formData.tax_rate}
                     onChange={(e) => setFormData({ ...formData, tax_rate: e.target.value })}
                     placeholder="ej: 0.16"
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   />
-                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
                     0.16 = 16% impuesto
                   </p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
                   <select
                     value={formData.payment_frequency}
                     onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   >
                     <option value="quincenal">Quincenal</option>
                     <option value="mensual">Mensual</option>
@@ -439,23 +440,23 @@ export default function EditPlatformPage() {
             )}
 
             {formData.type === 'direct' && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div>
-                  <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
                     Frecuencia de Pago
                   </label>
                   <select
                     value={formData.payment_frequency}
                     onChange={(e) => setFormData({ ...formData, payment_frequency: e.target.value })}
-                    className="w-full px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="apple-input"
                   >
                     <option value="quincenal">Quincenal</option>
                     <option value="mensual">Mensual</option>
                   </select>
                 </div>
-                <div className="flex items-end">
-                  <p className="text-xs text-gray-500 dark:text-gray-400">
-                    Pago directo 100% para la modelo
+                <div className="flex items-end mb-1.5">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 italic">
+                    Pago directo 100% para la modelo (sin conversiones)
                   </p>
                 </div>
               </div>
@@ -463,12 +464,21 @@ export default function EditPlatformPage() {
 
             {/* Mensajes de Error/Success */}
             {(error || success) && (
-              <div className={`rounded-lg p-3 mb-4 ${
+              <div className={`rounded-lg p-4 mb-6 flex items-center gap-3 ${
                 error 
                   ? 'bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800' 
                   : 'bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800'
               }`}>
-                <p className={`text-sm ${
+                {error ? (
+                  <svg className="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                ) : (
+                  <svg className="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                )}
+                <p className={`text-sm font-medium ${
                   error 
                     ? 'text-red-800 dark:text-red-200' 
                     : 'text-green-800 dark:text-green-200'
@@ -479,20 +489,28 @@ export default function EditPlatformPage() {
             )}
 
             {/* Botones */}
-            <div className="flex gap-3 justify-end pt-2 border-t border-gray-200 dark:border-gray-600">
+            <div className="flex gap-4 justify-end pt-4 border-t border-gray-200 dark:border-gray-600">
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="px-4 py-2 text-sm bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                className="px-4 py-2 text-sm font-medium bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600 transition-colors shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-200"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={loading}
-                className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors shadow-md"
+                className="px-6 py-2 text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               >
-                {loading ? 'Guardando...' : 'Guardar Cambios'}
+                {loading ? (
+                  <span className="flex items-center">
+                    <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    Guardando...
+                  </span>
+                ) : 'Guardar Cambios'}
               </button>
             </div>
           </div>
@@ -501,4 +519,3 @@ export default function EditPlatformPage() {
     </div>
   );
 }
-
