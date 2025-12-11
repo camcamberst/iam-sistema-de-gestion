@@ -86,29 +86,35 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, []);
 
-  // 🔧 MEJORADO: Función helper para inicializar lastUnreadCount desde localStorage
-  const getInitialUnreadCount = (): number => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('chat_last_unread_count');
-      return saved ? parseInt(saved, 10) : 0;
-    }
-    return 0;
-  };
-
-  // 🔧 MEJORADO: Función helper para inicializar processedMessages desde localStorage
-  const getInitialProcessedMessages = (): Set<string> => {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('chat_processed_messages');
-      return saved ? new Set(JSON.parse(saved)) : new Set();
-    }
-    return new Set();
-  };
-
-  const lastUnreadCountRef = useRef<number>(getInitialUnreadCount());
+  // 🔧 FIX: Inicializar refs con valores por defecto (sin localStorage durante renderizado inicial)
+  const lastUnreadCountRef = useRef<number>(0);
   const lastSoundTimeRef = useRef<number>(0);
   const lastProcessedMessageIdRef = useRef<string | null>(null);
   // 🔧 NUEVO: Ref para rastrear mensajes ya procesados (para evitar toasts duplicados)
-  const processedMessageIdsRef = useRef<Set<string>>(getInitialProcessedMessages());
+  const processedMessageIdsRef = useRef<Set<string>>(new Set());
+  
+  // 🔧 FIX: Cargar valores desde localStorage solo después del mount (en useEffect)
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      // Cargar lastUnreadCount desde localStorage
+      const savedUnreadCount = localStorage.getItem('chat_last_unread_count');
+      if (savedUnreadCount) {
+        lastUnreadCountRef.current = parseInt(savedUnreadCount, 10);
+      }
+      
+      // Cargar processedMessages desde localStorage
+      const savedProcessedMessages = localStorage.getItem('chat_processed_messages');
+      if (savedProcessedMessages) {
+        try {
+          const parsed = JSON.parse(savedProcessedMessages);
+          processedMessageIdsRef.current = new Set(parsed);
+        } catch (error) {
+          console.warn('⚠️ [ChatWidget] Error parseando processedMessages desde localStorage:', error);
+          processedMessageIdsRef.current = new Set();
+        }
+      }
+    }
+  }, []); // Solo ejecutar una vez después del mount
   // Registro local de último mensaje visto por conversación (usando ref para acceso inmediato)
   const [lastSeenMessageByConv, setLastSeenMessageByConv] = useState<Record<string, string>>({});
   const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
@@ -1630,7 +1636,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   return (
     <>
       {/* Botón flotante: independiente del árbol (Portal a document.body) y anclado al viewport */}
-      {isMounted && createPortal(
+      {isMounted && typeof document !== 'undefined' && document.body && createPortal(
         (
       <div className="relative">
         <button

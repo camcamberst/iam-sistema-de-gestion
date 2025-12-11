@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { supabase } from '@/lib/supabase';
 import { modernLogout } from '@/lib/auth-modern';
 import dynamic from 'next/dynamic';
+import ClientOnly from '@/components/ClientOnly';
 
 const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false });
 import ThemeToggle from '@/components/ThemeToggle';
@@ -336,7 +337,9 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
 
       {/* ChatWidget para fotografia */}
       {userInfo && userInfo.role === 'fotografia' && (
-        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+        <ClientOnly>
+          <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+        </ClientOnly>
       )}
     </div>
   );

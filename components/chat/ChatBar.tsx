@@ -90,7 +90,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
   return (
     <>
       {/* Ventana principal del AIM Assistant */}
-      {isMainChatOpen && isMounted && createPortal(
+      {isMainChatOpen && isMounted && typeof document !== 'undefined' && document.body && createPortal(
         (
           <MainChatWindow
             onClose={onCloseMainChat!}
@@ -125,7 +125,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
       )}
       
       {/* Ventanas individuales: si la ventana principal está abierta, renderizar DENTRO de ella */}
-      {isMainChatOpen && isMounted && document.getElementById('aim-embedded-windows')
+      {isMainChatOpen && isMounted && typeof document !== 'undefined' && document.getElementById('aim-embedded-windows')
         ? openChatWindows.map((window, index) => (
             createPortal(
               <IndividualChatWindow
