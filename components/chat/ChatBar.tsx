@@ -82,15 +82,24 @@ const ChatBar: React.FC<ChatBarProps> = ({
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => { setIsMounted(true); }, []);
+  
+  // 🔧 FIX: Retornar null durante el renderizado inicial del servidor para evitar errores de hidratación
+  if (!isMounted || typeof document === 'undefined') {
+    return null;
+  }
+  
   // Solo mostrar la barra si hay ventanas abiertas o la ventana principal está abierta
   if (openChatWindows.length === 0 && !isMainChatOpen) {
     return null;
   }
 
+  // 🔧 FIX: Obtener el elemento una sola vez y verificar que existe
+  const embeddedWindowsElement = document.getElementById('aim-embedded-windows');
+
   return (
     <>
       {/* Ventana principal del AIM Assistant */}
-      {isMainChatOpen && isMounted && typeof document !== 'undefined' && document.body && createPortal(
+      {isMainChatOpen && document.body && createPortal(
         (
           <MainChatWindow
             onClose={onCloseMainChat!}
@@ -125,7 +134,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
       )}
       
       {/* Ventanas individuales: si la ventana principal está abierta, renderizar DENTRO de ella */}
-      {isMainChatOpen && isMounted && typeof document !== 'undefined' && document.getElementById('aim-embedded-windows')
+      {isMainChatOpen && embeddedWindowsElement
         ? openChatWindows.map((window, index) => (
             createPortal(
               <IndividualChatWindow
@@ -139,7 +148,7 @@ const ChatBar: React.FC<ChatBarProps> = ({
                 windowIndex={index}
                 isInChatBar={true}
               />,
-              document.getElementById('aim-embedded-windows') as HTMLElement
+              embeddedWindowsElement
             )
           ))
         : openChatWindows.map((window, index) => (

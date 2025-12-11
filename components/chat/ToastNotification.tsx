@@ -126,6 +126,11 @@ export default function ToastNotification({
     </div>
   );
 
+  // 🔧 FIX: Verificar que document.body existe antes de usar createPortal
+  if (typeof document === 'undefined' || !document.body) {
+    return null;
+  }
+
   return createPortal(toastContent, document.body);
 }
 
