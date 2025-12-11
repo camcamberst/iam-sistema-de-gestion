@@ -391,7 +391,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Cargar conversaciones
   const loadConversations = async () => {
-    if (!session) return;
+    if (!session || !session.access_token) {
+      console.warn('⚠️ [ChatWidget] No hay sesión disponible para cargar conversaciones');
+      return;
+    }
     
     try {
       const response = await fetch('/api/chat/conversations', {
@@ -399,6 +402,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           'Authorization': `Bearer ${session.access_token}`
         }
       });
+      
+      // Si recibimos 401, la sesión expiró - no procesar
+      if (response.status === 401) {
+        console.warn('⚠️ [ChatWidget] Token inválido (401) al cargar conversaciones');
+        return;
+      }
       
       const data = await response.json();
       if (data.success) {
@@ -1171,10 +1180,24 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     console.log('🔄 [ChatWidget] Iniciando polling inteligente de conversaciones...');
     
     const conversationsPollingInterval = setInterval(async () => {
+      // Verificar que la sesión todavía existe y es válida
+      if (!session || !session.access_token) {
+        console.warn('⚠️ [Polling] Sesión no disponible, deteniendo polling');
+        clearInterval(conversationsPollingInterval);
+        return;
+      }
+      
       try {
         const response = await fetch('/api/chat/conversations', {
           headers: { 'Authorization': `Bearer ${session.access_token}` }
         });
+        
+        // Si recibimos 401, la sesión expiró - detener polling
+        if (response.status === 401) {
+          console.warn('⚠️ [Polling] Token inválido (401), deteniendo polling');
+          clearInterval(conversationsPollingInterval);
+          return;
+        }
         
         if (!response.ok) return;
         
