@@ -102,8 +102,13 @@ export async function GET(request: NextRequest) {
         groupUsers = usersInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
 
+      // 🔧 CORREGIDO: Evitar duplicados del super_admin
+      // Si el super_admin está en algún grupo, ya estará en groupUsers
+      // Solo agregarlo manualmente si no está ya en la lista
+      const superAdminInGroup = groupUsers.some((u: any) => u.id === superAdmin?.id);
+      
       availableUsers = [
-        ...(superAdmin ? [superAdmin] : []),
+        ...(superAdmin && !superAdminInGroup ? [superAdmin] : []),
         ...groupUsers
       ];
     } else if (currentUser.role === 'modelo') {

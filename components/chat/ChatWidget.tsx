@@ -1252,6 +1252,18 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               } else {
                 // Si NO estamos viendo esta conversación, solo actualizar lista (el mensaje seguirá como no leído hasta que se abra)
                 console.log('🔄 [ChatWidget] Nuevo mensaje en conversación no activa, actualizando lista...');
+                
+                // 🔔 CORREGIDO: Reproducir sonido cuando llega un mensaje nuevo en conversación no activa
+                // Incluso si el chat está abierto, pero no estamos viendo esa conversación
+                if (newMessage.sender_id !== userId) {
+                  const now = Date.now();
+                  if (now - lastSoundTimeRef.current > 2000) {
+                    console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo en conversación no activa');
+                    playNotificationSound(0.6);
+                    lastSoundTimeRef.current = now;
+                  }
+                }
+                
                 loadConversations();
               }
               
