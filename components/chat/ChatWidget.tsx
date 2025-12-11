@@ -1210,6 +1210,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         async (payload) => {
           const newMessage = payload.new as any;
           console.log('📨 [ChatWidget] Nuevo mensaje recibido:', newMessage);
+          console.log('📊 [ChatWidget] Estado actual - isOpen:', isOpen, 'selectedConversation:', selectedConversation, 'userId:', userId);
           
           // Verificar si el mensaje es para el usuario actual
           // Hacer una consulta directa para verificar si el usuario es participante de la conversación
@@ -1226,9 +1227,56 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             }
             
             const isParticipant = conversation.participant_1_id === userId || conversation.participant_2_id === userId;
+            console.log('👤 [ChatWidget] Es participante?', isParticipant, 'sender_id:', newMessage.sender_id, 'userId:', userId);
             
             if (isParticipant) {
               console.log('✅ [ChatWidget] Usuario es participante de la conversación');
+              
+              // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
+              // Esto debe hacerse antes de cualquier otra lógica para asegurar que el chat se abra
+              if (newMessage.sender_id !== userId) {
+                console.log('🔔 [ChatWidget] Mensaje de otro usuario detectado, verificando si abrir chat...');
+                
+                // Usar función de estado para obtener el valor más reciente y abrir el chat
+                setIsOpen(currentIsOpen => {
+                  console.log('📂 [ChatWidget] Estado isOpen actual:', currentIsOpen);
+                  
+                  // Si el chat está cerrado, abrirlo automáticamente
+                  if (!currentIsOpen) {
+                    console.log('📂 [ChatWidget] ⚡ ABRIENDO CHAT AUTOMÁTICAMENTE - Chat estaba cerrado');
+                    // Actualizar otros estados después de abrir el chat
+                    setTimeout(() => {
+                      setMainView('chat');
+                      setSelectedConversation(newMessage.conversation_id);
+                      loadConversations();
+                    }, 100);
+                    return true; // Abrir el chat
+                  }
+                  
+                  // Si el chat ya está abierto, cambiar a la conversación del mensaje nuevo
+                  setSelectedConversation(currentSelected => {
+                    if (currentSelected !== newMessage.conversation_id) {
+                      console.log('🔄 [ChatWidget] Cambiando a conversación del mensaje nuevo');
+                      setMainView('chat');
+                      setTimeout(() => {
+                        loadConversations();
+                      }, 100);
+                      return newMessage.conversation_id;
+                    }
+                    return currentSelected;
+                  });
+                  
+                  return currentIsOpen; // Mantener estado actual
+                });
+                
+                // Reproducir sonido
+                const now = Date.now();
+                if (now - lastSoundTimeRef.current > 2000) {
+                  console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo');
+                  playNotificationSound(0.6);
+                  lastSoundTimeRef.current = now;
+                }
+              }
               
               // Si es la conversación activa, agregar el mensaje directamente
               if (selectedConversation === newMessage.conversation_id) {
@@ -1250,47 +1298,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 // Actualizar estado local inmediatamente
                 zeroUnreadForConversation(newMessage.conversation_id);
               } else {
-                // Si NO estamos viendo esta conversación, solo actualizar lista (el mensaje seguirá como no leído hasta que se abra)
+                // Si NO estamos viendo esta conversación, actualizar lista
                 console.log('🔄 [ChatWidget] Nuevo mensaje en conversación no activa, actualizando lista...');
-                
-                // 🔔 CORREGIDO: Reproducir sonido cuando llega un mensaje nuevo en conversación no activa
-                // Incluso si el chat está abierto, pero no estamos viendo esa conversación
-                if (newMessage.sender_id !== userId) {
-                  const now = Date.now();
-                  if (now - lastSoundTimeRef.current > 2000) {
-                    console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo en conversación no activa');
-                    playNotificationSound(0.6);
-                    lastSoundTimeRef.current = now;
-                  }
-                }
-                
                 loadConversations();
-              }
-              
-              // 🔔 NUEVO: Abrir chat automáticamente cuando llega un mensaje nuevo
-              // Solo si el mensaje es de otro usuario
-              if (newMessage.sender_id !== userId) {
-                // Si el chat está cerrado, abrirlo automáticamente y mostrar la conversación
-                if (!isOpen) {
-                  console.log('📂 [ChatWidget] Abriendo chat automáticamente por mensaje nuevo');
-                  setIsOpen(true);
-                  setMainView('chat');
-                  setSelectedConversation(newMessage.conversation_id);
-                  // Cargar conversaciones para actualizar la lista
-                  setTimeout(() => {
-                    loadConversations();
-                  }, 100);
-                }
-                // Si el chat está abierto pero no estamos viendo esta conversación, cambiar a ella
-                else if (selectedConversation !== newMessage.conversation_id) {
-                  console.log('🔄 [ChatWidget] Cambiando a conversación del mensaje nuevo');
-                  setSelectedConversation(newMessage.conversation_id);
-                  setMainView('chat');
-                  // Cargar conversaciones para actualizar la lista
-                  setTimeout(() => {
-                    loadConversations();
-                  }, 100);
-                }
               }
               
               // Detectar si el mensaje es de AIM Botty y abrir ventana automáticamente (solo una vez)
