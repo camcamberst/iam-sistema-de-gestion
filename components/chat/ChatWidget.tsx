@@ -1278,6 +1278,52 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 }
               }
               
+              // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
+              // Esto debe hacerse ANTES de cualquier otra lógica
+              if (newMessage.sender_id !== userId) {
+                console.log('🔔 [ChatWidget] Mensaje de otro usuario detectado, verificando si abrir chat...');
+                
+                // Usar función de estado para obtener el valor más reciente
+                setIsOpen(currentIsOpen => {
+                  console.log('📂 [ChatWidget] Estado isOpen actual:', currentIsOpen);
+                  
+                  // Si el chat está cerrado, abrirlo automáticamente
+                  if (!currentIsOpen) {
+                    console.log('📂 [ChatWidget] ⚡ ABRIENDO CHAT AUTOMÁTICAMENTE - Chat estaba cerrado');
+                    // Actualizar otros estados después de abrir el chat
+                    setTimeout(() => {
+                      setMainView('chat');
+                      setSelectedConversation(newMessage.conversation_id);
+                      loadConversations();
+                    }, 100);
+                    return true; // Abrir el chat
+                  }
+                  
+                  return currentIsOpen; // Mantener estado actual
+                });
+                
+                // Si el chat ya está abierto pero no estamos viendo esta conversación, cambiar a ella
+                setSelectedConversation(currentSelected => {
+                  if (currentSelected !== newMessage.conversation_id) {
+                    console.log('🔄 [ChatWidget] Cambiando a conversación del mensaje nuevo');
+                    setMainView('chat');
+                    setTimeout(() => {
+                      loadConversations();
+                    }, 100);
+                    return newMessage.conversation_id;
+                  }
+                  return currentSelected;
+                });
+                
+                // Reproducir sonido
+                const now = Date.now();
+                if (now - lastSoundTimeRef.current > 2000) {
+                  console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo');
+                  playNotificationSound(0.6);
+                  lastSoundTimeRef.current = now;
+                }
+              }
+              
               // Si es la conversación activa, agregar el mensaje directamente
               if (selectedConversation === newMessage.conversation_id) {
                 console.log('💬 [ChatWidget] Agregando mensaje a conversación activa');
@@ -1292,7 +1338,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   return [...prev, newMessage];
                 });
                 // Si estamos viendo esta conversación (incluyendo Botty), marcar como leído inmediatamente
-                markConversationAsRead(newMessage.conversation_id, true);
+                // PERO no bloquear si falla - ejecutar de forma no bloqueante
+                markConversationAsRead(newMessage.conversation_id, true).catch(() => {
+                  // Error silencioso - no crítico para la funcionalidad
+                });
                 // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
                 locallyMarkedAsReadRef.current.add(newMessage.conversation_id);
                 // Actualizar estado local inmediatamente
