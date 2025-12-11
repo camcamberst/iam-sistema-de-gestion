@@ -113,8 +113,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const lastSeenMessageByConvRef = useRef<Record<string, string>>({});
   
   // 🔧 NUEVO: Ref para debouncing de marcado de lectura
-  const markAsReadTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
-  const markingAsReadRef = useRef<Set<string>>(new Set());
+  // Eliminadas las declaraciones duplicadas que causaban error de compilación
   
   // 🔧 NUEVO: Ref para controlar la primera carga y evitar notificaciones masivas al inicio
   const isFirstLoadRef = useRef<boolean>(true);
