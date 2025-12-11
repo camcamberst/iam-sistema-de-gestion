@@ -8,7 +8,9 @@ import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { supabase } from '@/lib/supabase';
 import { modernLogout } from '@/lib/auth-modern';
-import ChatWidget from '@/components/chat/ChatWidget';
+import dynamic from 'next/dynamic';
+
+const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false });
 import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
