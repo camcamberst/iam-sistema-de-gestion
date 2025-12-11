@@ -132,13 +132,26 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   };
 
   // 🔧 FUNCIÓN CENTRALIZADA: Marcar TODOS los mensajes de una conversación como leídos
+  // 🔧 NUEVO: Refs para evitar bucles de marcado como leído
+  const markingAsReadRef = useRef<Set<string>>(new Set());
+  const markAsReadTimeoutRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
+  const lastMarkedTimeRef = useRef<Map<string, number>>(new Map());
+
   // Con debouncing para evitar múltiples llamadas simultáneas
   const markConversationAsRead = async (conversationId: string, immediate = false) => {
     if (!session || !conversationId || conversationId.startsWith('temp_')) return;
 
     // Si ya se está marcando esta conversación, evitar duplicados
     if (markingAsReadRef.current.has(conversationId)) {
-      console.log('⏭️ [ChatWidget] Ya se está marcando esta conversación como leída');
+      // console.log('⏭️ [ChatWidget] Ya se está marcando esta conversación como leída');
+      return;
+    }
+
+    // Rate limiting: evitar marcar la misma conversación más de una vez cada 2 segundos
+    // a menos que sea una llamada explícita inmediata
+    const lastTime = lastMarkedTimeRef.current.get(conversationId) || 0;
+    const now = Date.now();
+    if (!immediate && now - lastTime < 2000) {
       return;
     }
 
@@ -151,7 +164,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     const executeMark = async () => {
       markingAsReadRef.current.add(conversationId);
-      console.log('👁️ [ChatWidget] Marcando conversación como leída:', conversationId);
+      // console.log('👁️ [ChatWidget] Marcando conversación como leída:', conversationId);
 
       try {
         const response = await fetch('/api/chat/messages/read', {
@@ -163,9 +176,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           body: JSON.stringify({ conversation_id: conversationId })
         });
 
+        // Incluso si falla, actualizamos el tiempo para evitar reintentos inmediatos
+        lastMarkedTimeRef.current.set(conversationId, Date.now());
+
         const data = await response.json();
         if (data.success) {
-          console.log(`✅ [ChatWidget] ${data.updated || 0} mensajes marcados como leídos`);
+          // console.log(`✅ [ChatWidget] ${data.updated || 0} mensajes marcados como leídos`);
           
           // Actualizar estado local inmediatamente
           zeroUnreadForConversation(conversationId);
@@ -174,12 +190,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           locallyMarkedAsReadRef.current.add(conversationId);
           
           // Recargar conversaciones después de un breve delay para reflejar cambios del backend
-          // PERO preservar el estado local de conversaciones marcadas como leídas
-          setTimeout(() => {
-            loadConversations();
-          }, 200);
+          // Solo si hubo cambios reales
+          if (data.updated > 0) {
+            setTimeout(() => {
+              loadConversations();
+            }, 200);
+          }
         } else {
-          console.error('❌ [ChatWidget] Error marcando como leído:', data.error);
+          // Si el servidor devuelve error pero no es 500, probablemente sea un error lógico
+          // No reintentar agresivamente
+          console.warn('⚠️ [ChatWidget] Advertencia al marcar leído:', data.error);
         }
       } catch (error) {
         console.error('❌ [ChatWidget] Error en fetch de marcar como leído:', error);
@@ -192,8 +212,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       // Ejecutar inmediatamente (sin debounce)
       await executeMark();
     } else {
-      // Debounce: esperar 300ms antes de ejecutar
-      const timeout = setTimeout(executeMark, 300);
+      // Debounce: esperar 500ms antes de ejecutar (aumentado de 300ms)
+      const timeout = setTimeout(executeMark, 500);
       markAsReadTimeoutRef.current.set(conversationId, timeout);
     }
   };

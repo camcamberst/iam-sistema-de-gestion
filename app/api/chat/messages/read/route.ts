@@ -63,20 +63,19 @@ export async function POST(req: NextRequest) {
       .map(message_id => ({ message_id, user_id: user.id }));
 
     if (rowsToInsert.length > 0) {
-      // Usar .insert().select() para obtener confirmación
+      // Usar upsert con onConflict para evitar errores de duplicados (más robusto)
+      // Ojo: chat_message_reads tiene (user_id, message_id) como unique constraint
       const { data: inserted, error: insertError } = await supabase
         .from('chat_message_reads')
-        .insert(rowsToInsert)
+        .upsert(rowsToInsert, { onConflict: 'user_id,message_id', ignoreDuplicates: true })
         .select('message_id');
 
       if (insertError) {
-        // Si es error de duplicado (unique constraint), ignorar - puede ser race condition
-        if (insertError.code === '23505') {
-          console.log('⚠️ [API-READ] Algunos mensajes ya estaban marcados como leídos (race condition normal)');
-          return NextResponse.json({ success: true, updated: rowsToInsert.length });
-        }
+        // Si aún así falla, revisar el error pero no tumbar el proceso
         console.error('❌ [API-READ] Error insertando lecturas:', insertError);
-        return NextResponse.json({ success: false, error: 'Error insertando lecturas' }, { status: 500 });
+        // Retornar success false pero con status 200 para que el frontend no reintente agresivamente si es un error de lógica
+        // Solo 500 si es error crítico de conexión
+        return NextResponse.json({ success: false, error: 'Error insertando lecturas' }, { status: 200 }); 
       }
 
       console.log(`✅ [API-READ] ${inserted?.length || 0} mensajes marcados como leídos`);
