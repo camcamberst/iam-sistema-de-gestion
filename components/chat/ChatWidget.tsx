@@ -1254,7 +1254,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
               // Esto debe hacerse antes de cualquier otra lógica para asegurar que el chat se abra
               if (newMessage.sender_id !== userId) {
-                console.log('🔔 [ChatWidget] Mensaje de otro usuario detectado, verificando si abrir chat...');
+                console.log('🔔 [ChatWidget] ¡MENSAJE DE OTRO USUARIO DETECTADO!');
+                
+                // Intentar reproducir sonido INMEDIATAMENTE
+                console.log('🔊 [ChatWidget] Intentando reproducir sonido...');
+                try {
+                  playNotificationSound(0.8); // Volumen alto
+                  console.log('🔊 [ChatWidget] Comando de sonido enviado');
+                } catch (err) {
+                  console.error('❌ [ChatWidget] Error al reproducir sonido:', err);
+                }
                 
                 // Usar función de estado para obtener el valor más reciente y abrir el chat
                 setIsOpen(currentIsOpen => {
@@ -1270,6 +1279,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                       loadConversations();
                     }, 100);
                     return true; // Abrir el chat
+                  } else {
+                    console.log('📂 [ChatWidget] El chat ya estaba abierto');
                   }
                   
                   // Si el chat ya está abierto, cambiar a la conversación del mensaje nuevo
@@ -1281,20 +1292,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         loadConversations();
                       }, 100);
                       return newMessage.conversation_id;
+                    } else {
+                      console.log('🔄 [ChatWidget] Ya estaba en la conversación correcta');
                     }
                     return currentSelected;
                   });
                   
                   return currentIsOpen; // Mantener estado actual
                 });
-                
-                // Reproducir sonido
-                const now = Date.now();
-                if (now - lastSoundTimeRef.current > 2000) {
-                  console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo');
-                  playNotificationSound(0.6);
-                  lastSoundTimeRef.current = now;
-                }
               }
               
               // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
