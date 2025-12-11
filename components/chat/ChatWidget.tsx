@@ -7,7 +7,7 @@ import { updateUserHeartbeat, setUserOffline } from '@/lib/chat/status-manager';
 import IndividualChatWindow from './IndividualChatWindow';
 import ChatBar from './ChatBar';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
-import { playNotificationSound, initAudio } from '@/lib/chat/notification-sound';
+import { playNotificationSound, initAudio, unlockAudioContext } from '@/lib/chat/notification-sound';
 import ToastNotification from './ToastNotification';
 import Badge from './Badge';
 
@@ -1136,23 +1136,106 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, [session, selectedConversation]);
 
+  // Efecto para desbloqueo global de audio
+  useEffect(() => {
+    const handleUnlock = () => {
+      unlockAudioContext();
+      // Remover listener después del primer desbloqueo exitoso
+      // Usamos un timeout pequeño para no bloquear el hilo principal
+      setTimeout(() => {
+        window.removeEventListener('click', handleUnlock);
+        window.removeEventListener('keydown', handleUnlock);
+        window.removeEventListener('touchstart', handleUnlock);
+      }, 100);
+    };
+
+    window.addEventListener('click', handleUnlock);
+    window.addEventListener('keydown', handleUnlock);
+    window.addEventListener('touchstart', handleUnlock);
+
+    return () => {
+      window.removeEventListener('click', handleUnlock);
+      window.removeEventListener('keydown', handleUnlock);
+      window.removeEventListener('touchstart', handleUnlock);
+    };
+  }, []);
+
   // Polling de conversaciones como respaldo al realtime (cada 5 segundos)
+  // 🔔 MEJORADO: Ahora también detecta mensajes nuevos y dispara notificaciones
   useEffect(() => {
     if (!session) return;
 
-    console.log('🔄 [ChatWidget] Iniciando polling de conversaciones como respaldo...');
+    console.log('🔄 [ChatWidget] Iniciando polling inteligente de conversaciones...');
     
     const conversationsPollingInterval = setInterval(async () => {
-      console.log('🔄 [ChatWidget] Polling: verificando conversaciones actualizadas...');
-      await loadConversations();
-    }, 5000); // Cada 5 segundos
+      try {
+        const response = await fetch('/api/chat/conversations', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        
+        if (!response.ok) return;
+        
+        const data = await response.json();
+        if (!data.success || !data.conversations) return;
+        
+        const newConversations = data.conversations;
+        
+        // Comparar con estado actual para detectar cambios
+        setConversations(prev => {
+          // Detectar mensajes nuevos comparando last_message_at
+          newConversations.forEach((newConv: any) => {
+            const oldConv = prev.find(p => p.id === newConv.id);
+            
+            // Si hay un mensaje nuevo (fecha más reciente y no leída)
+            if (oldConv && newConv.last_message_at > oldConv.last_message_at) {
+              const lastMsg = newConv.last_message;
+              
+              // Si el mensaje es de otro y no lo hemos visto
+              if (lastMsg && lastMsg.sender_id !== userId) {
+                console.log('🔄 [Polling] Mensaje nuevo detectado en polling:', lastMsg);
+                
+                // Disparar lógica de notificación si no se ha procesado
+                if (!processedMessageIdsRef.current.has(lastMsg.id)) {
+                  console.log('🔔 [Polling] Disparando notificación de respaldo...');
+                  
+                  // Marcar como procesado para evitar duplicados con realtime
+                  processedMessageIdsRef.current.add(lastMsg.id);
+                  
+                  // Reproducir sonido
+                  playNotificationSound(0.8);
+                  
+                  // Abrir chat si está cerrado
+                  setIsOpen(currentIsOpen => {
+                    if (!currentIsOpen) {
+                      setTimeout(() => {
+                        setMainView('chat');
+                        setSelectedConversation(newConv.id);
+                      }, 50);
+                      return true;
+                    }
+                    return currentIsOpen;
+                  });
+                  
+                  // Si ya está abierto pero en otra conv
+                  setSelectedConversation(current => {
+                    if (current !== newConv.id) return newConv.id;
+                    return current;
+                  });
+                }
+              }
+            }
+          });
+          
+          return newConversations;
+        });
+        
+      } catch (error) {
+        console.error('Error en polling:', error);
+      }
+    }, 4000); // Polling cada 4 segundos (más frecuente para ser útil como respaldo)
 
-    // Cleanup
-    return () => {
-      console.log('🧹 [ChatWidget] Deteniendo polling de conversaciones...');
-      clearInterval(conversationsPollingInterval);
-    };
-  }, [session]);
+    return () => clearInterval(conversationsPollingInterval);
+  }, [session, userId]);
 
   // 🔧 LIMPIAR ESTADO AL CAMBIAR DE CONVERSACIÓN
   const prevConversationRef = useRef<string | null>(null);

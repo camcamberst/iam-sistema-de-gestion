@@ -32,21 +32,48 @@ function initAudioContext(): AudioContext | null {
 }
 
 /**
+ * Desbloquea el contexto de audio reproduciendo un buffer silencioso
+ * Esto debe llamarse en respuesta a una interacción del usuario (click/touch)
+ * para habilitar la reproducción de audio posterior sin interacción
+ */
+export function unlockAudioContext(): void {
+  if (typeof window === 'undefined') return;
+  
+  // Si ya está inicializado y corriendo, no hacer nada
+  if (audioInitialized && audioContext && audioContext.state === 'running') {
+    return;
+  }
+  
+  const ctx = initAudioContext();
+  if (!ctx) return;
+  
+  try {
+    // Reanudar si está suspendido
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(e => console.warn('⚠️ No se pudo reanudar AudioContext en unlock:', e));
+    }
+    
+    // Crear y reproducir un buffer silencioso muy corto
+    const buffer = ctx.createBuffer(1, 1, 22050);
+    const source = ctx.createBufferSource();
+    source.buffer = buffer;
+    source.connect(ctx.destination);
+    source.start(0);
+    
+    // Marcar como inicializado
+    audioInitialized = true;
+    console.log('🔊 [Audio] Sistema de audio desbloqueado y listo');
+  } catch (e) {
+    console.warn('⚠️ Error al desbloquear audio:', e);
+  }
+}
+
+/**
  * Permite inicializar/reanudar el contexto de audio manualmente
  * Útil para llamar en eventos de interacción del usuario (click, touch)
  */
 export function initAudio(): void {
-  if (typeof window === 'undefined') return;
-  
-  // Inicializar AudioContext
-  const ctx = initAudioContext();
-  if (ctx && ctx.state === 'suspended') {
-    // Intentar reanudar el contexto si está suspendido
-    ctx.resume().catch(() => {
-      console.warn('⚠️ No se pudo reanudar AudioContext en initAudio');
-    });
-  }
-  audioInitialized = true;
+  unlockAudioContext();
 }
 
 /**
