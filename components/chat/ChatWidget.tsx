@@ -1405,6 +1405,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     const newIsOpen = !isOpen;
     setIsOpen(newIsOpen);
     
+    // 🔔 CORREGIDO: Inicializar audio cuando el usuario interactúa con el chat por primera vez
+    // Esto es necesario porque algunos navegadores requieren interacción del usuario para reproducir audio
+    if (newIsOpen) {
+      initAudio();
+    }
+    
     if (newIsOpen && session) {
       loadConversations();
     }
