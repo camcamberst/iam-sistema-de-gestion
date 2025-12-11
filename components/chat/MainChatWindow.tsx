@@ -7,6 +7,8 @@ import { renderElegantAvatar } from '@/lib/chat/user-avatar';
 import Badge from './Badge';
 import BoostPagesModal from '@/components/BoostPagesModal'; // Importar BoostPagesModal
 import { playNotificationSound, initAudio } from '@/lib/chat/notification-sound'; // Importar sonido
+import ReplyPreview from './ReplyPreview';
+import QuotedMessage from './QuotedMessage';
 
 interface MainChatWindowProps {
   onClose: () => void;
@@ -34,6 +36,8 @@ interface MainChatWindowProps {
   deleteConversation?: (id: string) => void;
   tempChatUser?: any;
   getDisplayName?: (user: any) => string;
+  replyTo?: any | null;
+  setReplyTo?: (reply: any | null) => void;
 }
 
 const MainChatWindow: React.FC<MainChatWindowProps> = ({
@@ -61,6 +65,8 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
   deleteConversation,
   tempChatUser,
   getDisplayName = (user) => user.name || user.email,
+  replyTo,
+  setReplyTo,
 }) => {
   // Helper para renderizar avatar elegante (diferenciado por rol)
   const renderAvatar = (user: any, size: 'small' | 'medium' = 'medium', isOffline: boolean = false) => {
@@ -959,6 +965,13 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                       >
                         {/* Contenedor interno con padding balanceado */}
                         <div className="px-3.5 py-2.5">
+                          {/* Mensaje citado si existe */}
+                          {message.reply_to_message && (
+                            <QuotedMessage
+                              message={message.reply_to_message}
+                              isOwnMessage={message.sender_id === userId}
+                            />
+                          )}
                           <p className={`text-sm leading-[1.4] ${message.sender_id === userId ? 'text-white' : 'text-gray-50'}`}>
                             {searchTerm ? (
                               cleanMessageContent(message.content)?.split(new RegExp(`(${searchTerm})`, 'gi')).map((part: string, i: number) => 
@@ -1027,7 +1040,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                   </button>
                                   <button
                                     onClick={() => {
-                                      // TODO: Implementar funcionalidad de responder
+                                      if (setReplyTo) {
+                                        setReplyTo(message);
+                                      }
                                     }}
                                     className="p-1 rounded-md transition-colors hover:bg-blue-500/30 text-blue-100/70 hover:text-white"
                                     title="Responder mensaje"
@@ -1057,7 +1072,9 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                   </button>
                                   <button
                                     onClick={() => {
-                                      // TODO: Implementar funcionalidad de responder
+                                      if (setReplyTo) {
+                                        setReplyTo(message);
+                                      }
                                     }}
                                     className="p-1 rounded-md transition-colors hover:bg-gray-700/50 text-gray-400/70 hover:text-gray-200"
                                     title="Responder mensaje"
@@ -1132,6 +1149,14 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                     ))}
                   </div>
                 </div>
+              )}
+              
+              {/* Preview de reply */}
+              {replyTo && setReplyTo && (
+                <ReplyPreview
+                  message={replyTo}
+                  onCancel={() => setReplyTo(null)}
+                />
               )}
               
               <div className="flex space-x-2 items-end">

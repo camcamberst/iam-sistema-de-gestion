@@ -46,6 +46,8 @@ interface ChatBarProps {
   getDisplayName?: (user: any) => string;
   conversationsTabBlinking?: boolean;
   onViewConversations?: () => void;
+  replyTo?: any | null;
+  setReplyTo?: (reply: any | null) => void;
 }
 
 const ChatBar: React.FC<ChatBarProps> = ({
@@ -75,6 +77,8 @@ const ChatBar: React.FC<ChatBarProps> = ({
   deleteConversation,
   tempChatUser,
   getDisplayName,
+  replyTo,
+  setReplyTo,
 }) => {
   const [isMounted, setIsMounted] = useState(false);
   useEffect(() => { setIsMounted(true); }, []);
@@ -113,6 +117,8 @@ const ChatBar: React.FC<ChatBarProps> = ({
             deleteConversation={deleteConversation}
             tempChatUser={tempChatUser}
             getDisplayName={getDisplayName}
+            replyTo={replyTo}
+            setReplyTo={setReplyTo}
           />
         ),
         document.body

@@ -54,6 +54,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   });
   const [tempChatUser, setTempChatUser] = useState<User | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [replyTo, setReplyTo] = useState<any | null>(null);
   // Nuevo sistema de notificaciones
   const [toasts, setToasts] = useState<Array<{
     id: string;
@@ -732,7 +733,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         },
         body: JSON.stringify({
           conversation_id: conversationId,
-          content: newMessage.trim()
+          content: newMessage.trim(),
+          reply_to_message_id: replyTo ? replyTo.id : undefined
         })
       });
       
@@ -742,6 +744,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (data.success) {
         console.log('✅ [ChatWidget] Mensaje enviado exitosamente');
         setNewMessage('');
+        setReplyTo(null); // Limpiar reply después de enviar
         
         // Como fallback, si la suscripción no funciona, recargar mensajes
         setTimeout(async () => {
@@ -1665,6 +1668,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         deleteConversation={deleteConversation}
         tempChatUser={tempChatUser}
         getDisplayName={getDisplayName}
+        replyTo={replyTo}
+        setReplyTo={setReplyTo}
       />
       
       {/* Renderizar toasts - solo si la conversación NO está activa */}

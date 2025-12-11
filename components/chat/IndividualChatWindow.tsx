@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { supabase } from '@/lib/supabase';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL, AIM_BOTTY_NAME } from '@/lib/chat/aim-botty';
 import { renderElegantAvatar } from '@/lib/chat/user-avatar';
+import ReplyPreview from './ReplyPreview';
+import QuotedMessage from './QuotedMessage';
 
 interface IndividualChatWindowProps {
   conversationId: string;
@@ -34,6 +36,7 @@ export default function IndividualChatWindow({
   const [messages, setMessages] = useState<any[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [replyTo, setReplyTo] = useState<any | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [messageReadStatus, setMessageReadStatus] = useState<Record<string, 'sent' | 'delivered' | 'read'>>({});
@@ -267,7 +270,8 @@ export default function IndividualChatWindow({
         },
         body: JSON.stringify({
           conversation_id: conversationId,
-          content: newMessage.trim()
+          content: newMessage.trim(),
+          reply_to_message_id: replyTo ? replyTo.id : undefined
         })
       });
       
@@ -295,6 +299,7 @@ export default function IndividualChatWindow({
         }
         
         setNewMessage('');
+        setReplyTo(null); // Limpiar reply después de enviar
         await loadMessages(); // Recargar mensajes
       } else {
         console.log('❌ [IndividualChat] Error en respuesta:', data.error);
@@ -506,7 +511,7 @@ export default function IndividualChatWindow({
               className={`flex ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
             >
               <div
-                className={`max-w-[70%] px-3 py-2 rounded-lg ${
+                className={`max-w-[70%] px-3 py-2 rounded-lg group ${
                   message.sender_id === userId
                     ? 'bg-blue-600 text-white'
                     : 'bg-gray-700 text-gray-100'
@@ -517,6 +522,13 @@ export default function IndividualChatWindow({
                   <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium bg-purple-500/20 text-purple-200 border border-purple-400/30 mr-2">
                     Difusión
                   </span>
+                )}
+                {/* Mensaje citado si existe */}
+                {message.reply_to_message && (
+                  <QuotedMessage
+                    message={message.reply_to_message}
+                    isOwnMessage={message.sender_id === userId}
+                  />
                 )}
                 <p className="text-sm">
                   {(() => {
@@ -569,9 +581,21 @@ export default function IndividualChatWindow({
                   })()}
                 </p>
                 <div className="flex items-center justify-between mt-1">
-                  <p className="text-xs opacity-70">
-                    {formatMessageTime(message.created_at)}
-                  </p>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setReplyTo(message)}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity p-1 rounded hover:bg-gray-600/50 text-gray-300 hover:text-white"
+                      title="Responder mensaje"
+                      aria-label="Responder mensaje"
+                    >
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                      </svg>
+                    </button>
+                    <p className="text-xs opacity-70">
+                      {formatMessageTime(message.created_at)}
+                    </p>
+                  </div>
                   {message.sender_id === userId && (
                     <span className="ml-2 flex items-center" title={message.is_read_by_other ? 'Visto' : 'Entregado'}>
                       {message.is_read_by_other ? (
@@ -604,6 +628,13 @@ export default function IndividualChatWindow({
       {/* Input de mensaje */}
       {!isMinimized && (
       <div className="p-4 border-t border-gray-700">
+        {/* Preview de reply */}
+        {replyTo && (
+          <ReplyPreview
+            message={replyTo}
+            onCancel={() => setReplyTo(null)}
+          />
+        )}
         <div className="flex items-center space-x-2">
           <input
             type="text"

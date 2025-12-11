@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'No tienes acceso a esta conversación' }, { status: 403 });
     }
 
-    // Obtener mensajes
+    // Obtener mensajes con información de reply
     const { data: messages, error } = await supabase
       .from('chat_messages')
       .select(`
@@ -67,7 +67,13 @@ export async function GET(request: NextRequest) {
         message_type,
         created_at,
         sender_id,
-        sender:sender_id(id, name, email, role)
+        reply_to_message_id,
+        sender:sender_id(id, name, email, role),
+        reply_to_message:reply_to_message_id(
+          id,
+          content,
+          sender:sender_id(name)
+        )
       `)
       .eq('conversation_id', conversationId)
       .order('created_at', { ascending: false })
@@ -156,7 +162,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { conversation_id, content, message_type = 'text' } = body;
+    const { conversation_id, content, message_type = 'text', reply_to_message_id } = body;
 
     if (!conversation_id || !content?.trim()) {
       return NextResponse.json({ 
@@ -212,7 +218,8 @@ export async function POST(request: NextRequest) {
         conversation_id: conversation_id,
         sender_id: user.id,
         content: content.trim(),
-        message_type: message_type
+        message_type: message_type,
+        reply_to_message_id: reply_to_message_id || null
       })
       .select(`
         id,
@@ -220,7 +227,13 @@ export async function POST(request: NextRequest) {
         message_type,
         created_at,
         sender_id,
-        sender:sender_id(id, name, email, role)
+        reply_to_message_id,
+        sender:sender_id(id, name, email, role),
+        reply_to_message:reply_to_message_id(
+          id,
+          content,
+          sender:sender_id(name)
+        )
       `)
       .single();
 
