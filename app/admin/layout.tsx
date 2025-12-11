@@ -10,6 +10,8 @@ import { supabase } from '@/lib/supabase';
 import { modernLogout } from '@/lib/auth-modern';
 import dynamic from 'next/dynamic';
 
+import ClientOnly from '@/components/ClientOnly';
+
 const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false });
 import ThemeToggle from '@/components/ThemeToggle';
 
@@ -742,7 +744,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* ChatWidget para admin/super_admin/modelo */}
       {userInfo && (userInfo.role === 'admin' || userInfo.role === 'super_admin' || userInfo.role === 'modelo') && (
-        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+        <ClientOnly>
+          <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+        </ClientOnly>
       )}
     </div>
   );

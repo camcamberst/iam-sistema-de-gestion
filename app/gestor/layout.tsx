@@ -7,6 +7,8 @@ import { supabase } from '@/lib/supabase';
 import { modernLogout } from '@/lib/auth-modern';
 import dynamic from 'next/dynamic';
 
+import ClientOnly from '@/components/ClientOnly';
+
 const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false });
 import ThemeToggle from '@/components/ThemeToggle';
 import { getMenuForRole } from '@/lib/menu-config';
@@ -336,7 +338,9 @@ export default function GestorLayout({ children }: { children: ReactNode }) {
 
       {/* ChatWidget para gestor */}
       {userInfo && userInfo.role === 'gestor' && (
-        <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+        <ClientOnly>
+          <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
+        </ClientOnly>
       )}
     </div>
   );
