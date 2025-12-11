@@ -3,8 +3,7 @@ import { createClient } from '@supabase/supabase-js';
 import { AIM_BOTTY_ID, isBottyId } from '@/lib/chat/aim-botty';
 import { processBotResponse } from '@/lib/chat/process-bot-response';
 import { 
-  notifyMensajeImportanteAdmin,
-  notifyAdminNuevoMensajeModelo
+  notifyMensajeImportanteAdmin
 } from '@/lib/chat/bot-notifications';
 
 export const dynamic = 'force-dynamic';
@@ -303,9 +302,7 @@ export async function POST(request: NextRequest) {
         }
         // Si modelo envía mensaje a admin
         else if (sender.role === 'modelo' && (receiver.role === 'admin' || receiver.role === 'super_admin')) {
-          // 🚫 REDUNDANTE: Botty no debe avisar por cada mensaje nuevo, ya hay notificaciones nativas
-          // await notifyAdminNuevoMensajeModelo(receiverId, sender.name || 'Modelo');
-          console.log('✅ [CHAT] Notificación de nuevo mensaje enviada a admin');
+          console.log('✅ [CHAT] Notificación de nuevo mensaje enviada a admin (Nativa)');
         }
       }
     } catch (notificationError) {
