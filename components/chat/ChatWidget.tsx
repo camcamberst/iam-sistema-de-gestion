@@ -1267,18 +1267,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 loadConversations();
               }
               
-              // Si el mensaje es de otro usuario (incluyendo Botty) y no estamos viendo esa conversación, mostrar toast
-              // PERO solo si el mensaje realmente no ha sido leído (verificado en showToast)
-              if (
-                newMessage.sender_id !== userId &&
-                !(isOpen && mainView === 'chat' && selectedConversation === newMessage.conversation_id)
-              ) {
-                // Recargar conversaciones para obtener datos completos y mostrar toast
-                // El toast solo se mostrará si unread_count > 0 (verificado en showToast)
-                setTimeout(() => loadConversations(), 100);
+              // 🔔 NUEVO: Abrir chat automáticamente cuando llega un mensaje nuevo
+              // Solo si el mensaje es de otro usuario
+              if (newMessage.sender_id !== userId) {
+                // Si el chat está cerrado, abrirlo automáticamente y mostrar la conversación
+                if (!isOpen) {
+                  console.log('📂 [ChatWidget] Abriendo chat automáticamente por mensaje nuevo');
+                  setIsOpen(true);
+                  setMainView('chat');
+                  setSelectedConversation(newMessage.conversation_id);
+                  // Cargar conversaciones para actualizar la lista
+                  setTimeout(() => {
+                    loadConversations();
+                  }, 100);
+                }
+                // Si el chat está abierto pero no estamos viendo esta conversación, cambiar a ella
+                else if (selectedConversation !== newMessage.conversation_id) {
+                  console.log('🔄 [ChatWidget] Cambiando a conversación del mensaje nuevo');
+                  setSelectedConversation(newMessage.conversation_id);
+                  setMainView('chat');
+                  // Cargar conversaciones para actualizar la lista
+                  setTimeout(() => {
+                    loadConversations();
+                  }, 100);
+                }
               }
               
               // Detectar si el mensaje es de AIM Botty y abrir ventana automáticamente (solo una vez)
+              // Esto es adicional a la apertura automática del chat principal
               if (newMessage.sender_id === AIM_BOTTY_ID && 
                   newMessage.id !== autoOpenedBottyRef.current &&
                   newMessage.sender_id !== userId) {
@@ -1299,19 +1315,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   }, 500); // Pequeño delay para mejor UX, no invasivo
                 } else if (bottyWindowExists) {
                   console.log('🪟 [ChatWidget] Ventana de AIM Botty ya está abierta');
-                } else if (!isOpen) {
-                  console.log('🪟 [ChatWidget] Chat principal cerrado, no abriendo ventana automáticamente');
                 }
-              }
-              
-              // Detectar mensaje nuevo para toast (solo si el chat está cerrado)
-              if (newMessage.sender_id !== userId && 
-                  newMessage.id !== lastProcessedMessageIdRef.current &&
-                  !isOpen) {
-                lastProcessedMessageIdRef.current = newMessage.id;
-                // El toast se mostrará automáticamente en la próxima carga de conversaciones
-                // Recargar conversaciones para obtener datos completos de la conversación
-                setTimeout(() => loadConversations(), 100);
               }
             } else {
               console.log('❌ [ChatWidget] Usuario no es participante de la conversación');
