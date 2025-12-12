@@ -167,6 +167,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: { autoRefreshToken: false, persistSession: false }
+    });
+
     // Obtener URL de login desde calculator_platforms
     const { data: platformData, error: platformError } = await supabase
       .from('calculator_platforms')
@@ -201,10 +205,6 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
-
-    const supabase = createClient(supabaseUrl, supabaseKey, {
-      auth: { autoRefreshToken: false, persistSession: false }
-    });
 
     // Verificar que la relación modelo-plataforma existe
     const { data: platformExists, error: checkError } = await supabase
