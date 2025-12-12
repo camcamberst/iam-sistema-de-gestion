@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle, Upload } from 'lucide-react';
+import { User, Building2, Grid3X3, Filter, Eye, AlertCircle, CheckCircle, Clock, XCircle, Minus, AlertTriangle, Upload, Lock, Unlock } from 'lucide-react';
 import AppleSelect from '@/components/AppleSelect';
 import StandardModal from '@/components/ui/StandardModal';
 import { getModelDisplayName } from '@/utils/model-display';
@@ -97,6 +97,15 @@ export default function PortafolioModelos() {
   const [processingAction, setProcessingAction] = useState(false);
   const [modalStatus, setModalStatus] = useState<'disponible' | 'solicitada' | 'pendiente' | 'entregada' | 'desactivada' | 'inviable'>('disponible');
   const [openFiltersCount, setOpenFiltersCount] = useState(0);
+  
+  // Estados para credenciales de plataforma
+  const [loginUrl, setLoginUrl] = useState('');
+  const [loginUsername, setLoginUsername] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [loadingCredentials, setLoadingCredentials] = useState(false);
+  const [hasCredentials, setHasCredentials] = useState(false);
+  const [platformsWithCredentials, setPlatformsWithCredentials] = useState<Set<string>>(new Set());
   
   // Estados para Boost Pages Modal
   const [showBoostPagesModal, setShowBoostPagesModal] = useState(false);
@@ -233,6 +242,11 @@ export default function PortafolioModelos() {
                  !platform.model_name.includes('Super Administrator');
         }) : [];
         setPlatforms(filteredData);
+        
+        // Cargar información de credenciales para plataformas entregadas (solo admin/super_admin)
+        if ((userRole === 'admin' || userRole === 'super_admin') && filteredData.length > 0) {
+          await loadCredentialsInfo(filteredData);
+        }
       } else {
         setError('Error al cargar las plataformas');
       }
@@ -363,12 +377,221 @@ export default function PortafolioModelos() {
     }
   };
 
-  const handlePlatformAction = (platform: ModeloPlatform, action: string) => {
+  const handlePlatformAction = async (platform: ModeloPlatform, action: string) => {
     setSelectedPlatformForAction(platform);
     setActionType(action as any);
     setActionNotes('');
     setModalStatus((platform.status as any) || 'disponible');
     setShowActionModal(true);
+    
+    // Si el status es "entregada", cargar credenciales existentes
+    if (platform.status === 'entregada' && (userRole === 'admin' || userRole === 'super_admin')) {
+      await loadPlatformCredentials(platform.model_id, platform.platform_id);
+    } else {
+      // Limpiar campos de credenciales
+      setLoginUrl('');
+      setLoginUsername('');
+      setLoginPassword('');
+      setHasCredentials(false);
+    }
+  };
+
+  // Helper para obtener token válido
+  const getValidToken = async (): Promise<string | null> => {
+    try {
+      const { supabase } = await import('@/lib/supabase');
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        return null;
+      }
+
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const now = Math.floor(Date.now() / 1000);
+        const expiresIn = expiresAt - now;
+        
+        if (expiresIn < 60) {
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshedSession) {
+            return null;
+          }
+          
+          return refreshedSession.access_token;
+        }
+      }
+      
+      return session.access_token;
+    } catch (error) {
+      console.error('Error obteniendo token:', error);
+      return null;
+    }
+  };
+
+  // Cargar credenciales de plataforma
+  const loadPlatformCredentials = async (modelId: string, platformId: string) => {
+    if (!userId) return;
+    
+    try {
+      setLoadingCredentials(true);
+      const token = await getValidToken();
+      if (!token) {
+        setLoginUrl('');
+        setLoginUsername('');
+        setLoginPassword('');
+        setHasCredentials(false);
+        return;
+      }
+
+      const response = await fetch(`/api/modelo-plataformas/credentials?model_id=${modelId}&platform_id=${platformId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.hasCredentials && data.data) {
+          setLoginUrl(data.data.login_url || '');
+          setLoginUsername(data.data.login_username || '');
+          setLoginPassword(data.data.login_password || '');
+          setHasCredentials(true);
+        } else {
+          setLoginUrl('');
+          setLoginUsername('');
+          setLoginPassword('');
+          setHasCredentials(false);
+        }
+      } else {
+        setLoginUrl('');
+        setLoginUsername('');
+        setLoginPassword('');
+        setHasCredentials(false);
+      }
+    } catch (error) {
+      console.error('Error cargando credenciales:', error);
+      setLoginUrl('');
+      setLoginUsername('');
+      setLoginPassword('');
+      setHasCredentials(false);
+    } finally {
+      setLoadingCredentials(false);
+    }
+  };
+
+  // Cargar información de credenciales para múltiples plataformas (para indicadores visuales)
+  const loadCredentialsInfo = async (platformsData: ModeloPlatform[]) => {
+    if (!userId || (userRole !== 'admin' && userRole !== 'super_admin')) return;
+    
+    try {
+      const token = await getValidToken();
+      if (!token) return;
+
+      const credentialsSet = new Set<string>();
+      const entregadas = platformsData.filter(p => p.status === 'entregada');
+      
+      // Verificar credenciales en paralelo (limitado a 10 a la vez para no sobrecargar)
+      const batchSize = 10;
+      for (let i = 0; i < entregadas.length; i += batchSize) {
+        const batch = entregadas.slice(i, i + batchSize);
+        const promises = batch.map(async (platform) => {
+          try {
+            const response = await fetch(
+              `/api/modelo-plataformas/credentials?model_id=${platform.model_id}&platform_id=${platform.platform_id}`,
+              { headers: { 'Authorization': `Bearer ${token}` } }
+            );
+            if (response.ok) {
+              const data = await response.json();
+              if (data.success && data.hasCredentials) {
+                return `${platform.model_id}-${platform.platform_id}`;
+              }
+            }
+          } catch (error) {
+            console.error(`Error verificando credenciales para ${platform.platform_id}:`, error);
+          }
+          return null;
+        });
+        
+        const results = await Promise.all(promises);
+        results.forEach(key => {
+          if (key) credentialsSet.add(key);
+        });
+      }
+      
+      setPlatformsWithCredentials(credentialsSet);
+    } catch (error) {
+      console.error('Error cargando información de credenciales:', error);
+    }
+  };
+
+  // Guardar credenciales de plataforma
+  const savePlatformCredentials = async () => {
+    if (!selectedPlatformForAction || !userId) return;
+
+    // Validaciones
+    if (!loginUrl.trim() || !loginUsername.trim() || !loginPassword.trim()) {
+      setError('Todos los campos de credenciales son requeridos');
+      return;
+    }
+
+    // Validar URL
+    try {
+      new URL(loginUrl);
+    } catch {
+      setError('La URL de login debe ser una URL válida');
+      return;
+    }
+
+    try {
+      setProcessingAction(true);
+      setError('');
+
+      const token = await getValidToken();
+      if (!token) {
+        setError('Error de autenticación');
+        return;
+      }
+
+      const response = await fetch('/api/modelo-plataformas/credentials', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          platform_id: selectedPlatformForAction.platform_id,
+          model_id: selectedPlatformForAction.model_id,
+          login_url: loginUrl.trim(),
+          login_username: loginUsername.trim(),
+          login_password: loginPassword
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setSuccess('Credenciales guardadas correctamente');
+          setHasCredentials(true);
+          // Actualizar el set de plataformas con credenciales
+          setPlatformsWithCredentials(prev => {
+            const newSet = new Set(prev);
+            newSet.add(`${selectedPlatformForAction.model_id}-${selectedPlatformForAction.platform_id}`);
+            return newSet;
+          });
+        } else {
+          setError(data.error || 'Error al guardar credenciales');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Error al guardar credenciales');
+      }
+    } catch (error) {
+      console.error('Error guardando credenciales:', error);
+      setError('Error al guardar credenciales');
+    } finally {
+      setProcessingAction(false);
+    }
   };
 
   const executeAction = async () => {
@@ -657,16 +880,27 @@ export default function PortafolioModelos() {
                         updated_at: null
                       } as ModeloPlatform;
 
+                      const hasCreds = platformsWithCredentials.has(`${tag.model_id}-${tag.platform_id}`);
+                      const finalStatus = (tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status;
+                      
                       return (
                         <button
                           key={`${model.model_id}-${p.id}`}
                           type="button"
-                          className={`px-2.5 py-1 rounded-full text-[11px] leading-5 font-medium transition-colors inline-flex items-center ${getTagClasses((tag.is_initial_config && tag.status !== 'desactivada') ? 'entregada' : tag.status)}`}
+                          className={`px-2.5 py-1 rounded-full text-[11px] leading-5 font-medium transition-colors inline-flex items-center relative ${getTagClasses(finalStatus)}`}
                           onClick={() => handlePlatformAction(tag, 'request')}
                         >
                           <span className="inline-flex items-center gap-1 align-middle">
                             {getStatusIcon(tag.status, tag.is_initial_config)}
                             {tag.platform_name}
+                            {/* Indicador sutil de credenciales guardadas */}
+                            {hasCreds && finalStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin') && (
+                              <span 
+                                className="ml-1 w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" 
+                                title="Credenciales guardadas"
+                                aria-label="Credenciales guardadas"
+                              />
+                            )}
                           </span>
                         </button>
                       );
@@ -759,6 +993,100 @@ export default function PortafolioModelos() {
                   placeholder="Agregar notas sobre esta acción..."
                 />
               </div>
+
+              {/* Sección de Credenciales (solo para plataformas entregadas y admin/super_admin) */}
+              {(modalStatus === 'entregada' || selectedPlatformForAction.status === 'entregada') && 
+               (userRole === 'admin' || userRole === 'super_admin') && (
+                <div className="mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center justify-between mb-3">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                      Credenciales de Login
+                    </label>
+                    {hasCredentials && (
+                      <span className="text-xs text-blue-600 dark:text-blue-400 flex items-center gap-1">
+                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+                        Guardadas
+                      </span>
+                    )}
+                  </div>
+                  
+                  {loadingCredentials ? (
+                    <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                      Cargando credenciales...
+                    </div>
+                  ) : (
+                    <>
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                          URL de Login <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="url"
+                          value={loginUrl}
+                          onChange={(e) => setLoginUrl(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          placeholder="https://ejemplo.com/login"
+                        />
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                          Usuario/Email <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={loginUsername}
+                          onChange={(e) => setLoginUsername(e.target.value)}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          placeholder="usuario@ejemplo.com"
+                        />
+                      </div>
+
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                          Contraseña <span className="text-red-500">*</span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type={showPassword ? 'text' : 'password'}
+                            value={loginPassword}
+                            onChange={(e) => setLoginPassword(e.target.value)}
+                            className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                            placeholder="••••••••"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                          >
+                            {showPassword ? <Eye className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={savePlatformCredentials}
+                        disabled={processingAction || !loginUrl.trim() || !loginUsername.trim() || !loginPassword.trim()}
+                        className="w-full px-3 py-2 text-xs font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                      >
+                        {hasCredentials ? (
+                          <>
+                            <CheckCircle className="w-4 h-4" />
+                            {processingAction ? 'Guardando...' : 'Actualizar Credenciales'}
+                          </>
+                        ) : (
+                          <>
+                            <Lock className="w-4 h-4" />
+                            {processingAction ? 'Guardando...' : 'Guardar Credenciales'}
+                          </>
+                        )}
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
 
               <div className="flex space-x-3">
                 <button
