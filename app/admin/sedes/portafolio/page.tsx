@@ -1036,7 +1036,7 @@ export default function PortafolioModelos() {
                           </div>
                         ) : (
                           <div className="w-full px-3 py-2 text-sm border border-yellow-300 dark:border-yellow-600 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">
-                            ⚠️ URL no configurado. Configúralo en "Gestión de Plataformas"
+                            ⚠️ URL no configurado. Configúralo en &quot;Gestión de Plataformas&quot;
                           </div>
                         )}
                         <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
