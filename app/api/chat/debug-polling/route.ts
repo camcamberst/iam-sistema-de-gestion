@@ -31,10 +31,16 @@ export async function GET(request: NextRequest) {
     
     if (authError) {
       console.error('❌ [DEBUG-POLLING] Error de autenticación:', authError);
+      
+      // Si el token está expirado, retornar 401 (no 403)
+      const isExpired = authError.message?.includes('expired') || authError.message?.includes('token is expired');
+      const statusCode = isExpired ? 401 : 401; // Siempre 401 para errores de autenticación
+      
       return NextResponse.json({ 
         error: 'Error de autenticación',
-        debug: authError.message
-      }, { status: 401 });
+        debug: authError.message,
+        expired: isExpired
+      }, { status: statusCode });
     }
 
     if (!user) {

@@ -276,6 +276,51 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Calcular total de mensajes no leídos
   const totalUnreadCount = conversations.reduce((sum, conv) => sum + (conv.unread_count || 0), 0);
 
+  // 🔧 Helper para obtener un token válido (refrescando si es necesario)
+  const getValidToken = async (): Promise<string | null> => {
+    try {
+      // Obtener sesión actual directamente de Supabase (más confiable que el estado)
+      const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !currentSession) {
+        console.warn('⚠️ [ChatWidget] No hay sesión disponible:', sessionError?.message);
+        return null;
+      }
+
+      // Verificar si el token está expirado (con margen de 60 segundos)
+      const expiresAt = currentSession.expires_at;
+      if (expiresAt) {
+        const now = Math.floor(Date.now() / 1000);
+        const expiresIn = expiresAt - now;
+        
+        // Si el token expira en menos de 60 segundos, refrescarlo
+        if (expiresIn < 60) {
+          console.log('🔄 [ChatWidget] Token expirando pronto, refrescando sesión...');
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError || !refreshedSession) {
+            console.error('❌ [ChatWidget] Error refrescando sesión:', refreshError);
+            return null;
+          }
+          
+          // Actualizar estado de sesión
+          setSession(refreshedSession);
+          return refreshedSession.access_token;
+        }
+      }
+      
+      // Si el token es válido, actualizar el estado de sesión por si acaso
+      if (currentSession !== session) {
+        setSession(currentSession);
+      }
+      
+      return currentSession.access_token;
+    } catch (error) {
+      console.error('❌ [ChatWidget] Error obteniendo token válido:', error);
+      return null;
+    }
+  };
+
   // Obtener sesión de Supabase
   useEffect(() => {
     setIsMounted(true);
@@ -689,13 +734,19 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Función de diagnóstico para problemas de polling
   const diagnosePollingIssue = async (conversationId: string) => {
-    if (!session) return;
-    
     try {
       console.log('🔍 [ChatWidget] Ejecutando diagnóstico de polling...');
+      
+      // Obtener token válido (refrescando si es necesario)
+      const token = await getValidToken();
+      if (!token) {
+        console.error('❌ [ChatWidget] No se pudo obtener token válido para diagnóstico');
+        return;
+      }
+      
       const response = await fetch(`/api/chat/debug-polling?conversation_id=${conversationId}`, {
         headers: {
-          'Authorization': `Bearer ${session.access_token}`
+          'Authorization': `Bearer ${token}`
         }
       });
       
@@ -1186,16 +1237,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     console.log('🔄 [ChatWidget] Iniciando polling inteligente de conversaciones...');
     
     const conversationsPollingInterval = setInterval(async () => {
-      // Verificar que la sesión todavía existe y es válida
-      if (!session || !session.access_token) {
-        console.warn('⚠️ [Polling] Sesión no disponible, deteniendo polling');
-        clearInterval(conversationsPollingInterval);
-        return;
-      }
-      
       try {
+        // Obtener token válido (refrescando si es necesario)
+        const token = await getValidToken();
+        if (!token) {
+          console.warn('⚠️ [Polling] No se pudo obtener token válido, deteniendo polling');
+          clearInterval(conversationsPollingInterval);
+          return;
+        }
+        
         const response = await fetch('/api/chat/conversations', {
-          headers: { 'Authorization': `Bearer ${session.access_token}` }
+          headers: { 'Authorization': `Bearer ${token}` }
         });
         
         // Si recibimos 401, la sesión expiró - detener polling
