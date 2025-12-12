@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
     const { data: platformExists, error: checkError } = await supabase
       .from('modelo_plataformas')
       .select('id, status')
-      .eq('model_id', modelId)
+      .eq('model_id', model_id)
       .eq('platform_id', platform_id)
       .maybeSingle();
 
@@ -211,7 +211,7 @@ export async function POST(request: NextRequest) {
         credentials_updated_by: auth.user!.id,
         updated_at: new Date().toISOString()
       })
-      .eq('model_id', modelId)
+      .eq('model_id', model_id)
       .eq('platform_id', platform_id)
       .select('id, login_url, login_username, credentials_updated_at')
       .single();
