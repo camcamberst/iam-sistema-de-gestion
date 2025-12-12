@@ -33,23 +33,22 @@ export async function GET(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Construir query
+    // Construir query (obtener login_url desde calculator_platforms)
     let query = supabase
       .from('modelo_plataformas')
       .select(`
         platform_id,
-        login_url,
         login_username,
         login_password_encrypted,
         status,
         calculator_platforms (
           id,
-          name
+          name,
+          login_url
         )
       `)
       .eq('model_id', modelId)
       .eq('status', 'entregada')
-      .not('login_url', 'is', null)
       .not('login_username', 'is', null)
       .not('login_password_encrypted', 'is', null);
 
@@ -85,11 +84,19 @@ export async function GET(request: NextRequest) {
     for (const item of data) {
       try {
         const password = decrypt(item.login_password_encrypted);
-        const platformName = (item.calculator_platforms as any)?.name || item.platform_id;
+        const platformInfo = item.calculator_platforms as any;
+        const platformName = platformInfo?.name || item.platform_id;
+        const platformLoginUrl = platformInfo?.login_url;
+
+        // Solo incluir si la plataforma tiene URL configurado
+        if (!platformLoginUrl) {
+          console.warn(`Plataforma ${item.platform_id} no tiene URL de login configurado`);
+          continue;
+        }
 
         credentials[item.platform_id] = {
           platform_name: platformName,
-          login_url: item.login_url!,
+          login_url: platformLoginUrl,
           login_username: item.login_username!,
           login_password: password,
           status: item.status
@@ -170,23 +177,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Misma lógica que GET pero con autenticación
+    // Misma lógica que GET pero con autenticación (obtener login_url desde calculator_platforms)
     let query = supabase
       .from('modelo_plataformas')
       .select(`
         platform_id,
-        login_url,
         login_username,
         login_password_encrypted,
         status,
         calculator_platforms (
           id,
-          name
+          name,
+          login_url
         )
       `)
       .eq('model_id', model_id)
       .eq('status', 'entregada')
-      .not('login_url', 'is', null)
       .not('login_username', 'is', null)
       .not('login_password_encrypted', 'is', null);
 
@@ -222,11 +228,19 @@ export async function POST(request: NextRequest) {
     for (const item of data) {
       try {
         const password = decrypt(item.login_password_encrypted);
-        const platformName = (item.calculator_platforms as any)?.name || item.platform_id;
+        const platformInfo = item.calculator_platforms as any;
+        const platformName = platformInfo?.name || item.platform_id;
+        const platformLoginUrl = platformInfo?.login_url;
+
+        // Solo incluir si la plataforma tiene URL configurado
+        if (!platformLoginUrl) {
+          console.warn(`Plataforma ${item.platform_id} no tiene URL de login configurado`);
+          continue;
+        }
 
         credentials[item.platform_id] = {
           platform_name: platformName,
-          login_url: item.login_url!,
+          login_url: platformLoginUrl,
           login_username: item.login_username!,
           login_password: password,
           status: item.status

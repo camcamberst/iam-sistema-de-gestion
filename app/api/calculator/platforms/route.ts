@@ -269,6 +269,7 @@ export async function PUT(request: Request) {
       tax_rate, 
       direct_payout,
       payment_frequency,
+      login_url,
       updated_by 
     } = body;
 
@@ -389,7 +390,19 @@ export async function PUT(request: Request) {
       }, { status: 400 });
     }
 
-    // 6. PREPARAR DATOS PARA ACTUALIZACIÓN
+    // 6. VALIDACIÓN DE LOGIN_URL (si se proporciona)
+    if (login_url !== undefined && login_url !== null && login_url !== '') {
+      try {
+        new URL(login_url.trim());
+      } catch {
+        return NextResponse.json({ 
+          success: false, 
+          error: 'login_url debe ser una URL válida' 
+        }, { status: 400 });
+      }
+    }
+
+    // 7. PREPARAR DATOS PARA ACTUALIZACIÓN
     const platformData: any = {
       name: name.trim(),
       description: description?.trim() || null,
@@ -399,12 +412,13 @@ export async function PUT(request: Request) {
       tax_rate: hasTaxRate ? Number(tax_rate) : null,
       direct_payout: isDirectPayout || false,
       payment_frequency: payment_frequency || 'quincenal',
+      login_url: login_url?.trim() || null,
       updated_at: new Date().toISOString()
     };
 
     console.log('🔍 [API-PLATFORMS-PUT] Datos a actualizar:', platformData);
 
-    // 7. ACTUALIZAR PLATAFORMA
+    // 8. ACTUALIZAR PLATAFORMA
     const { data: updatedPlatform, error: updateError } = await supabase
       .from('calculator_platforms')
       .update(platformData)

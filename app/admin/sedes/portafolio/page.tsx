@@ -99,7 +99,7 @@ export default function PortafolioModelos() {
   const [openFiltersCount, setOpenFiltersCount] = useState(0);
   
   // Estados para credenciales de plataforma
-  const [loginUrl, setLoginUrl] = useState('');
+  const [loginUrl, setLoginUrl] = useState(''); // URL de la plataforma (obtenido desde calculator_platforms)
   const [loginUsername, setLoginUsername] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -444,6 +444,21 @@ export default function PortafolioModelos() {
         return;
       }
 
+      // Obtener URL de la plataforma desde calculator_platforms
+      const platformResponse = await fetch('/api/calculator/platforms');
+      if (platformResponse.ok) {
+        const platformData = await platformResponse.json();
+        if (platformData.success && platformData.config?.platforms) {
+          const platform = platformData.config.platforms.find((p: any) => p.id === platformId);
+          if (platform?.login_url) {
+            setLoginUrl(platform.login_url);
+          } else {
+            setLoginUrl('');
+          }
+        }
+      }
+
+      // Obtener credenciales guardadas
       const response = await fetch(`/api/modelo-plataformas/credentials?model_id=${modelId}&platform_id=${platformId}`, {
         headers: {
           'Authorization': `Bearer ${token}`
@@ -453,18 +468,15 @@ export default function PortafolioModelos() {
       if (response.ok) {
         const data = await response.json();
         if (data.success && data.hasCredentials && data.data) {
-          setLoginUrl(data.data.login_url || '');
           setLoginUsername(data.data.login_username || '');
           setLoginPassword(data.data.login_password || '');
           setHasCredentials(true);
         } else {
-          setLoginUrl('');
           setLoginUsername('');
           setLoginPassword('');
           setHasCredentials(false);
         }
       } else {
-        setLoginUrl('');
         setLoginUsername('');
         setLoginPassword('');
         setHasCredentials(false);
@@ -529,17 +541,15 @@ export default function PortafolioModelos() {
   const savePlatformCredentials = async () => {
     if (!selectedPlatformForAction || !userId) return;
 
-    // Validaciones
-    if (!loginUrl.trim() || !loginUsername.trim() || !loginPassword.trim()) {
-      setError('Todos los campos de credenciales son requeridos');
+    // Validaciones (ya no validamos loginUrl porque viene de la plataforma)
+    if (!loginUsername.trim() || !loginPassword.trim()) {
+      setError('Usuario y contraseña son requeridos');
       return;
     }
 
-    // Validar URL
-    try {
-      new URL(loginUrl);
-    } catch {
-      setError('La URL de login debe ser una URL válida');
+    // Verificar que el URL de la plataforma esté configurado
+    if (!loginUrl.trim()) {
+      setError('La plataforma no tiene URL de login configurado. Configúralo en "Gestión de Plataformas"');
       return;
     }
 
@@ -562,7 +572,6 @@ export default function PortafolioModelos() {
         body: JSON.stringify({
           platform_id: selectedPlatformForAction.platform_id,
           model_id: selectedPlatformForAction.model_id,
-          login_url: loginUrl.trim(),
           login_username: loginUsername.trim(),
           login_password: loginPassword
         })
@@ -1016,17 +1025,23 @@ export default function PortafolioModelos() {
                     </div>
                   ) : (
                     <>
+                      {/* Mostrar URL de la plataforma (solo lectura) */}
                       <div className="mb-3">
                         <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
-                          URL de Login <span className="text-red-500">*</span>
+                          URL de Login de la Plataforma
                         </label>
-                        <input
-                          type="url"
-                          value={loginUrl}
-                          onChange={(e) => setLoginUrl(e.target.value)}
-                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                          placeholder="https://ejemplo.com/login"
-                        />
+                        {loginUrl ? (
+                          <div className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                            {loginUrl}
+                          </div>
+                        ) : (
+                          <div className="w-full px-3 py-2 text-sm border border-yellow-300 dark:border-yellow-600 rounded-lg bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400">
+                            ⚠️ URL no configurado. Configúralo en "Gestión de Plataformas"
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                          Este URL es común para todas las modelos de esta plataforma
+                        </p>
                       </div>
 
                       <div className="mb-3">
@@ -1068,7 +1083,7 @@ export default function PortafolioModelos() {
                       <button
                         type="button"
                         onClick={savePlatformCredentials}
-                        disabled={processingAction || !loginUrl.trim() || !loginUsername.trim() || !loginPassword.trim()}
+                        disabled={processingAction || !loginUsername.trim() || !loginPassword.trim()}
                         className="w-full px-3 py-2 text-xs font-medium bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg hover:from-green-600 hover:to-emerald-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                       >
                         {hasCredentials ? (

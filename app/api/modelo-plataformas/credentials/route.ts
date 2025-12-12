@@ -73,9 +73,18 @@ export async function GET(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
+    // Obtener URL de login desde calculator_platforms
+    const { data: platformData, error: platformError } = await supabase
+      .from('calculator_platforms')
+      .select('login_url')
+      .eq('id', platformId)
+      .single();
+
+    const platformLoginUrl = platformData?.login_url || null;
+
     const { data, error } = await supabase
       .from('modelo_plataformas')
-      .select('id, login_url, login_username, login_password_encrypted, credentials_updated_at, credentials_updated_by')
+      .select('id, login_username, login_password_encrypted, credentials_updated_at, credentials_updated_by')
       .eq('model_id', modelId)
       .eq('platform_id', platformId)
       .maybeSingle();
@@ -89,7 +98,11 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ 
         success: true, 
         hasCredentials: false,
-        data: null 
+        data: {
+          login_url: platformLoginUrl,
+          login_username: null,
+          login_password: null
+        }
       });
     }
 
@@ -109,10 +122,10 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      hasCredentials: !!(data.login_url && data.login_username && data.login_password_encrypted),
+      hasCredentials: !!(data.login_username && data.login_password_encrypted),
       data: {
         id: data.id,
-        login_url: data.login_url,
+        login_url: platformLoginUrl, // URL desde calculator_platforms
         login_username: data.login_username,
         login_password: password,
         credentials_updated_at: data.credentials_updated_at,
@@ -137,7 +150,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { platform_id, model_id, login_url, login_username, login_password } = body;
+    const { platform_id, model_id, login_username, login_password } = body;
 
     // Validaciones
     if (!platform_id || !model_id) {
@@ -147,22 +160,35 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!login_url || !login_username || !login_password) {
+    if (!login_username || !login_password) {
       return NextResponse.json(
-        { error: 'login_url, login_username y login_password son requeridos' },
+        { error: 'login_username y login_password son requeridos' },
         { status: 400 }
       );
     }
 
-    // Validar URL
-    try {
-      new URL(login_url);
-    } catch {
+    // Obtener URL de login desde calculator_platforms
+    const { data: platformData, error: platformError } = await supabase
+      .from('calculator_platforms')
+      .select('login_url')
+      .eq('id', platform_id)
+      .single();
+
+    if (platformError || !platformData) {
       return NextResponse.json(
-        { error: 'login_url debe ser una URL válida' },
+        { error: 'Plataforma no encontrada en el catálogo' },
+        { status: 404 }
+      );
+    }
+
+    if (!platformData.login_url) {
+      return NextResponse.json(
+        { error: 'La plataforma no tiene URL de login configurado. Configúralo en "Gestión de Plataformas"' },
         { status: 400 }
       );
     }
+
+    const login_url = platformData.login_url;
 
     // Encriptar contraseña
     let encryptedPassword: string;
@@ -180,7 +206,7 @@ export async function POST(request: NextRequest) {
       auth: { autoRefreshToken: false, persistSession: false }
     });
 
-    // Verificar que la plataforma existe
+    // Verificar que la relación modelo-plataforma existe
     const { data: platformExists, error: checkError } = await supabase
       .from('modelo_plataformas')
       .select('id, status')
@@ -200,11 +226,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Actualizar o insertar credenciales
+    // Actualizar o insertar credenciales (sin login_url, viene de calculator_platforms)
     const { data, error } = await supabase
       .from('modelo_plataformas')
       .update({
-        login_url,
         login_username,
         login_password_encrypted: encryptedPassword,
         credentials_updated_at: new Date().toISOString(),
@@ -213,7 +238,7 @@ export async function POST(request: NextRequest) {
       })
       .eq('model_id', model_id)
       .eq('platform_id', platform_id)
-      .select('id, login_url, login_username, credentials_updated_at')
+      .select('id, login_username, credentials_updated_at')
       .single();
 
     if (error) {
@@ -226,7 +251,7 @@ export async function POST(request: NextRequest) {
       message: 'Credenciales guardadas correctamente',
       data: {
         id: data.id,
-        login_url: data.login_url,
+        login_url: login_url, // URL desde calculator_platforms
         login_username: data.login_username,
         credentials_updated_at: data.credentials_updated_at
       }
@@ -266,7 +291,6 @@ export async function DELETE(request: NextRequest) {
     const { error } = await supabase
       .from('modelo_plataformas')
       .update({
-        login_url: null,
         login_username: null,
         login_password_encrypted: null,
         credentials_updated_at: null,

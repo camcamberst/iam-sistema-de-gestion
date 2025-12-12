@@ -33,7 +33,8 @@ export default function EditPlatformPage() {
     discount_factor: '',
     tax_rate: '',
     direct_payout: false,
-    payment_frequency: 'quincenal'
+    payment_frequency: 'quincenal',
+    login_url: ''
   });
 
   // Validar autenticación y permisos
@@ -104,7 +105,8 @@ export default function EditPlatformPage() {
           discount_factor: platform.discount_factor?.toString() || '',
           tax_rate: platform.tax_rate?.toString() || '',
           direct_payout: platform.direct_payout,
-          payment_frequency: platform.payment_frequency || 'quincenal'
+          payment_frequency: platform.payment_frequency || 'quincenal',
+          login_url: platform.login_url || ''
         });
 
       } catch (err: any) {
@@ -138,6 +140,7 @@ export default function EditPlatformPage() {
         currency: formData.currency,
         payment_frequency: formData.payment_frequency,
         direct_payout: formData.direct_payout,
+        login_url: formData.login_url.trim() || null,
         updated_by: currentUser.id
       };
 
@@ -461,6 +464,25 @@ export default function EditPlatformPage() {
                 </div>
               </div>
             )}
+
+            {/* Campo de URL de Login (común para todas las plataformas) */}
+            <div className="mb-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+              <div>
+                <label className="block text-xs font-medium mb-1.5 text-gray-700 dark:text-gray-300">
+                  URL de Login de la Plataforma
+                </label>
+                <input
+                  type="url"
+                  value={formData.login_url}
+                  onChange={(e) => setFormData({ ...formData, login_url: e.target.value })}
+                  placeholder="https://ejemplo.com/login"
+                  className="apple-input"
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Este URL será usado por todas las modelos de esta plataforma
+                </p>
+              </div>
+            </div>
 
             {/* Mensajes de Error/Success */}
             {(error || success) && (
