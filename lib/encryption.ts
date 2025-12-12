@@ -15,9 +15,14 @@ const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY ||
 
 // Asegurar que la clave tenga 32 bytes (256 bits) para AES-256
 const getEncryptionKey = (): Buffer => {
-  const key = ENCRYPTION_KEY.length >= 32 
-    ? ENCRYPTION_KEY.substring(0, 32)
-    : crypto.createHash('sha256').update(ENCRYPTION_KEY).digest().substring(0, 32);
+  let key: string;
+  if (ENCRYPTION_KEY.length >= 32) {
+    key = ENCRYPTION_KEY.substring(0, 32);
+  } else {
+    // Si la clave es corta, usar hash SHA-256 y tomar los primeros 32 bytes
+    const hash = crypto.createHash('sha256').update(ENCRYPTION_KEY).digest();
+    key = hash.toString('hex').substring(0, 32);
+  }
   return Buffer.from(key, 'utf8');
 };
 
