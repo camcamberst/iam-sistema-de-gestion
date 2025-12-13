@@ -14,7 +14,8 @@ import {
   Eye,
   Calendar,
   Target,
-  Activity
+  Activity,
+  ExternalLink
 } from 'lucide-react';
 
 interface Platform {
@@ -35,6 +36,7 @@ interface Platform {
     id: string;
     name: string;
     currency: string;
+    login_url: string | null;
   };
   stats: {
     totalDays: number;
@@ -485,6 +487,25 @@ export default function MiPortafolio() {
                             </div>
                           </div>
                         </div>
+
+                        {/* Enlace de login (si está disponible) */}
+                        {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && 
+                         selectedPlatform.calculator_platforms.login_url && (
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
+                            <a
+                              href={selectedPlatform.calculator_platforms.login_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                            >
+                              <ExternalLink className="w-4 h-4" />
+                              <span>Abrir plataforma</span>
+                            </a>
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                              Haz clic para acceder a la plataforma
+                            </p>
+                          </div>
+                        )}
 
                         {/* Información de estado y fechas */}
                         <div className="flex items-center justify-between">

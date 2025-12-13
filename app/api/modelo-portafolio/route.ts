@@ -41,7 +41,8 @@ export async function GET(request: NextRequest) {
         calculator_platforms (
           id,
           name,
-          currency
+          currency,
+          login_url
         )
       `)
       .eq('model_id', modelId)
