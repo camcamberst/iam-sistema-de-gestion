@@ -959,49 +959,111 @@ export default function PortafolioModelos() {
               actionType === 'revert' && 'Revertir Plataforma' ||
               'Acción'
             }
-            maxWidthClass="max-w-md"
+            maxWidthClass={actionType === 'request' ? 'max-w-4xl' : 'max-w-md'}
           >
-              <div className="mb-4">
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-                  <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
-                </p>
-                <p className="text-sm text-gray-600 dark:text-gray-400">
-                  <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
-                </p>
-              </div>
+              {actionType === 'request' ? (
+                // Diseño horizontal para "Solicitar Plataforma"
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Columna izquierda: Información */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Información</h3>
+                      <div className="space-y-2">
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
+                        </p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
+                          <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
+                        </p>
+                      </div>
+                    </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
-                <AppleSelect
-                  value={modalStatus}
-                  onChange={(v) => setModalStatus(v as any)}
-                  options={[
-                    { label: 'Disponible', value: 'disponible', color: '#e2e8f0' },
-                    { label: 'Solicitada', value: 'solicitada', color: '#93c5fd' },
-                    { label: 'Pendiente', value: 'pendiente', color: '#fde047' },
-                    { label: 'Entregada', value: 'entregada', color: '#86efac' },
-                    { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
-                    { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
-                  ]}
-                  className="text-sm"
-                />
-              </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
+                      <AppleSelect
+                        value={modalStatus}
+                        onChange={(v) => setModalStatus(v as any)}
+                        options={[
+                          { label: 'Disponible', value: 'disponible', color: '#e2e8f0' },
+                          { label: 'Solicitada', value: 'solicitada', color: '#93c5fd' },
+                          { label: 'Pendiente', value: 'pendiente', color: '#fde047' },
+                          { label: 'Entregada', value: 'entregada', color: '#86efac' },
+                          { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
+                          { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
+                        ]}
+                        className="text-sm"
+                      />
+                    </div>
+                  </div>
 
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
-                  Notas (opcional)
-                </label>
-                <textarea
-                  value={actionNotes}
-                  onChange={(e) => setActionNotes(e.target.value)}
-                  rows={3}
-                  className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                  placeholder="Agregar notas sobre esta acción..."
-                />
-              </div>
+                  {/* Columna derecha: Notas */}
+                  <div className="space-y-4">
+                    <div>
+                      <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">Detalles</h3>
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                          Notas (opcional)
+                        </label>
+                        <textarea
+                          value={actionNotes}
+                          onChange={(e) => setActionNotes(e.target.value)}
+                          rows={8}
+                          className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                          placeholder="Agregar notas sobre esta acción..."
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                // Diseño vertical para otros modales
+                <>
+                  <div className="mb-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <strong>Plataforma:</strong> {selectedPlatformForAction.platform_name}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                      <strong>Modelo:</strong> {getModelDisplayName(selectedPlatformForAction.model_email)}
+                    </p>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <strong>Estado actual:</strong> {getStatusText(selectedPlatformForAction.status)}
+                    </p>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Estado</label>
+                    <AppleSelect
+                      value={modalStatus}
+                      onChange={(v) => setModalStatus(v as any)}
+                      options={[
+                        { label: 'Disponible', value: 'disponible', color: '#e2e8f0' },
+                        { label: 'Solicitada', value: 'solicitada', color: '#93c5fd' },
+                        { label: 'Pendiente', value: 'pendiente', color: '#fde047' },
+                        { label: 'Entregada', value: 'entregada', color: '#86efac' },
+                        { label: 'Desactivada', value: 'desactivada', color: '#1f2937' },
+                        { label: 'Inviable', value: 'inviable', color: '#fca5a5' }
+                      ]}
+                      className="text-sm"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                      Notas (opcional)
+                    </label>
+                    <textarea
+                      value={actionNotes}
+                      onChange={(e) => setActionNotes(e.target.value)}
+                      rows={3}
+                      className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                      placeholder="Agregar notas sobre esta acción..."
+                    />
+                  </div>
+                </>
+              )}
 
               {/* Sección de Credenciales (solo para plataformas entregadas y admin/super_admin) */}
               {(modalStatus === 'entregada' || selectedPlatformForAction.status === 'entregada') && 
