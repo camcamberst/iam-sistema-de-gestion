@@ -89,14 +89,19 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         const spaceBelow = window.innerHeight - triggerRect.bottom;
         const spaceAbove = triggerRect.top;
         
+        // Margen estético entre dropdown y bordes del modal (aumentado para mejor apariencia)
+        const aestheticMargin = 32; // 32px de margen para mejor estética
+        
         // Altura estimada del dropdown (todas las opciones)
         const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
         
         // Determinar si debe abrirse hacia arriba o hacia abajo
-        const shouldOpenUp = spaceBelow < estimatedDropdownHeight && spaceAbove > spaceBelow;
+        const shouldOpenUp = spaceBelow < (estimatedDropdownHeight + aestheticMargin) && spaceAbove > spaceBelow;
         
-        // Calcular altura máxima disponible
-        const availableHeight = shouldOpenUp ? spaceAbove - 8 : spaceBelow - 8;
+        // Calcular altura máxima disponible con margen estético
+        const availableHeight = shouldOpenUp 
+          ? spaceAbove - aestheticMargin 
+          : spaceBelow - aestheticMargin;
         const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
         
         setDropdownPosition(shouldOpenUp ? 'top' : 'bottom');
@@ -113,9 +118,9 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           const containerRect = (scrollContainer as HTMLElement).getBoundingClientRect();
           const triggerTopInContainer = triggerRect.top - containerRect.top + scrollContainer.scrollTop;
           
-          // Calcular posición ideal del trigger (centrado considerando el dropdown)
+          // Calcular posición ideal del trigger (centrado considerando el dropdown y margen estético)
           const containerHeight = containerRect.height;
-          const idealTriggerPosition = (containerHeight / 2) - (estimatedDropdownHeight / 2);
+          const idealTriggerPosition = (containerHeight / 2) - (estimatedDropdownHeight / 2) - (aestheticMargin / 2);
           const scrollOffset = triggerTopInContainer - idealTriggerPosition;
           
           // Hacer scroll suave
