@@ -501,7 +501,7 @@ export default function MiPortafolio() {
                               <ExternalLink className="w-4 h-4" />
                               <span>Abrir plataforma</span>
                             </a>
-                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium animate-pulse">
                               Haz clic para acceder a la plataforma
                             </p>
                           </div>
