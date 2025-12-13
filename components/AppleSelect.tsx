@@ -85,12 +85,31 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         // Obtener posición del trigger
         const triggerRect = triggerElement.getBoundingClientRect();
         
-        // Calcular espacio disponible hacia abajo y hacia arriba
-        const spaceBelow = window.innerHeight - triggerRect.bottom;
-        const spaceAbove = triggerRect.top;
+        // Buscar el modal padre (StandardModal) o contenedor con scroll para calcular espacio dentro del modal
+        let modalContainer = triggerElement.closest('[class*="max-h-"]') || 
+                           triggerElement.closest('[class*="overflow-y-auto"]') || 
+                           triggerElement.closest('[class*="overflow-auto"]');
         
         // Margen estético entre dropdown y bordes del modal (aumentado para mejor apariencia)
         const aestheticMargin = 32; // 32px de margen para mejor estética
+        
+        let spaceBelow: number;
+        let spaceAbove: number;
+        
+        if (modalContainer && modalContainer !== document.body) {
+          // Calcular espacio disponible dentro del modal
+          const containerRect = (modalContainer as HTMLElement).getBoundingClientRect();
+          const triggerBottomInContainer = triggerRect.bottom - containerRect.top;
+          const triggerTopInContainer = triggerRect.top - containerRect.top;
+          
+          // Espacio disponible dentro del contenedor del modal
+          spaceBelow = containerRect.height - triggerBottomInContainer;
+          spaceAbove = triggerTopInContainer;
+        } else {
+          // Fallback: calcular espacio disponible en la ventana
+          spaceBelow = window.innerHeight - triggerRect.bottom;
+          spaceAbove = triggerRect.top;
+        }
         
         // Altura estimada del dropdown (todas las opciones)
         const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
@@ -99,19 +118,19 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         const shouldOpenUp = spaceBelow < (estimatedDropdownHeight + aestheticMargin) && spaceAbove > spaceBelow;
         
         // Calcular altura máxima disponible con margen estético
+        // Asegurar que siempre haya margen estético en ambos lados
+        // Reducir un poco más para asegurar que no llegue al borde
         const availableHeight = shouldOpenUp 
-          ? spaceAbove - aestheticMargin 
-          : spaceBelow - aestheticMargin;
+          ? Math.max(0, spaceAbove - aestheticMargin - 8) // Margen adicional de 8px
+          : Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
         const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
         
         setDropdownPosition(shouldOpenUp ? 'top' : 'bottom');
         setMaxHeight(`${calculatedMaxHeight}px`);
         
         // Hacer scroll del modal/ventana para que el dropdown sea completamente visible
-        // Buscar el modal padre (StandardModal) o contenedor con scroll
-        let scrollContainer = triggerElement.closest('[class*="overflow-y-auto"]') || 
-                             triggerElement.closest('[class*="overflow-auto"]') ||
-                             triggerElement.closest('[class*="max-h-"]');
+        // Usar el mismo contenedor que usamos para calcular el espacio
+        let scrollContainer = modalContainer;
         
         if (scrollContainer && scrollContainer !== document.body) {
           // Calcular la posición del trigger dentro del contenedor
@@ -185,7 +204,12 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           className={`absolute z-[9999] w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-auto apple-scroll ${
             dropdownPosition === 'top' ? 'mb-1 bottom-full' : 'mt-1 top-full'
           }`}
-          style={{ maxHeight }}
+          style={{ 
+            maxHeight,
+            // Agregar padding visual para mejor espaciado
+            paddingTop: '4px',
+            paddingBottom: '4px'
+          }}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           onMouseDown={(e) => {
