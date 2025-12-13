@@ -77,111 +77,132 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     if (open && ref.current && dropdownRef.current) {
       // Pequeño delay para asegurar que el dropdown se renderice
       setTimeout(() => {
-        const triggerElement = ref.current;
-        const dropdownElement = dropdownRef.current;
-        if (!triggerElement || !dropdownElement) return;
+        try {
+          const triggerElement = ref.current;
+          const dropdownElement = dropdownRef.current;
+          if (!triggerElement || !dropdownElement) return;
 
-        // Obtener posición del trigger
-        const triggerRect = triggerElement.getBoundingClientRect();
-        
-        // Buscar el modal padre (StandardModal) o contenedor con scroll para calcular espacio dentro del modal
-        let modalContainer = triggerElement.closest('[class*="max-h-"]') || 
-                           triggerElement.closest('[class*="overflow-y-auto"]') || 
-                           triggerElement.closest('[class*="overflow-auto"]');
-        
-        // Margen estético entre dropdown y bordes del modal (aumentado para mejor apariencia)
-        const aestheticMargin = 32; // 32px de margen para mejor estética
-        
-        let spaceBelow: number;
-        let spaceAbove: number;
-        
-        if (modalContainer && modalContainer !== document.body) {
-          // Calcular espacio disponible dentro del modal
-          const containerRect = (modalContainer as HTMLElement).getBoundingClientRect();
-          const triggerBottomInContainer = triggerRect.bottom - containerRect.top;
-          const triggerTopInContainer = triggerRect.top - containerRect.top;
+          // Obtener posición del trigger
+          const triggerRect = triggerElement.getBoundingClientRect();
           
-          // Buscar botones en la parte inferior del modal (Cancelar, Confirmar, etc.)
-          // Buscar el último div con botones que esté después del trigger
-          const allButtons = Array.from((modalContainer as HTMLElement).querySelectorAll('button'));
-          const buttonsAfterTrigger = allButtons.filter(btn => {
-            const btnRect = btn.getBoundingClientRect();
-            return btnRect.top > triggerRect.bottom;
-          });
+          // Buscar el modal padre (StandardModal) o contenedor con scroll para calcular espacio dentro del modal
+          let modalContainer = triggerElement.closest('[class*="max-h-"]') || 
+                             triggerElement.closest('[class*="overflow-y-auto"]') || 
+                             triggerElement.closest('[class*="overflow-auto"]');
           
-          if (buttonsAfterTrigger.length > 0) {
-            // Encontrar el botón más cercano al trigger (el primero en la lista)
-            const closestButton = buttonsAfterTrigger.reduce((closest, current) => {
-              const closestRect = closest.getBoundingClientRect();
-              const currentRect = current.getBoundingClientRect();
-              return currentRect.top < closestRect.top ? current : closest;
-            });
+          // Margen estético entre dropdown y bordes del modal (aumentado para mejor apariencia)
+          const aestheticMargin = 32; // 32px de margen para mejor estética
+          
+          let spaceBelow: number;
+          let spaceAbove: number;
+          
+          if (modalContainer && modalContainer !== document.body) {
+            // Calcular espacio disponible dentro del modal
+            const containerRect = (modalContainer as HTMLElement).getBoundingClientRect();
+            const triggerBottomInContainer = triggerRect.bottom - containerRect.top;
+            const triggerTopInContainer = triggerRect.top - containerRect.top;
             
-            const buttonsContainer = closestButton.closest('div.flex') || closestButton.parentElement;
-            if (buttonsContainer) {
-              const buttonsRect = (buttonsContainer as HTMLElement).getBoundingClientRect();
-              const buttonsTopInContainer = buttonsRect.top - containerRect.top;
-              // Calcular espacio hasta los botones (con margen adicional de 16px)
-              const spaceToButtons = buttonsTopInContainer - triggerBottomInContainer - 16;
-              spaceBelow = Math.max(0, spaceToButtons);
-            } else {
-              // Si no se encuentra el contenedor, usar el espacio disponible
+            // Buscar botones en la parte inferior del modal (Cancelar, Confirmar, etc.)
+            try {
+              const allButtons = Array.from((modalContainer as HTMLElement).querySelectorAll('button'));
+              const buttonsAfterTrigger = allButtons.filter(btn => {
+                try {
+                  const btnRect = btn.getBoundingClientRect();
+                  return btnRect.top > triggerRect.bottom;
+                } catch {
+                  return false;
+                }
+              });
+              
+              if (buttonsAfterTrigger.length > 0) {
+                // Encontrar el botón más cercano al trigger (el primero en la lista)
+                const closestButton = buttonsAfterTrigger.reduce((closest, current) => {
+                  try {
+                    const closestRect = closest.getBoundingClientRect();
+                    const currentRect = current.getBoundingClientRect();
+                    return currentRect.top < closestRect.top ? current : closest;
+                  } catch {
+                    return closest;
+                  }
+                });
+                
+                const buttonsContainer = closestButton?.closest('div.flex') || closestButton?.parentElement;
+                if (buttonsContainer) {
+                  const buttonsRect = (buttonsContainer as HTMLElement).getBoundingClientRect();
+                  const buttonsTopInContainer = buttonsRect.top - containerRect.top;
+                  // Calcular espacio hasta los botones (con margen adicional de 16px)
+                  const spaceToButtons = buttonsTopInContainer - triggerBottomInContainer - 16;
+                  spaceBelow = Math.max(0, spaceToButtons);
+                } else {
+                  // Si no se encuentra el contenedor, usar el espacio disponible
+                  spaceBelow = containerRect.height - triggerBottomInContainer;
+                }
+              } else {
+                // Si no se encuentran botones después del trigger, usar el espacio disponible en el contenedor
+                spaceBelow = containerRect.height - triggerBottomInContainer;
+              }
+            } catch (error) {
+              // Si hay error buscando botones, usar el espacio disponible del contenedor
+              console.warn('Error buscando botones en modal:', error);
               spaceBelow = containerRect.height - triggerBottomInContainer;
             }
+            
+            spaceAbove = triggerTopInContainer;
           } else {
-            // Si no se encuentran botones después del trigger, usar el espacio disponible en el contenedor
-            spaceBelow = containerRect.height - triggerBottomInContainer;
+            // Fallback: calcular espacio disponible en la ventana
+            spaceBelow = window.innerHeight - triggerRect.bottom;
+            spaceAbove = triggerRect.top;
           }
           
-          spaceAbove = triggerTopInContainer;
-        } else {
-          // Fallback: calcular espacio disponible en la ventana
-          spaceBelow = window.innerHeight - triggerRect.bottom;
-          spaceAbove = triggerRect.top;
-        }
-        
-        // Altura estimada del dropdown (todas las opciones)
-        const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
-        
-        // SIEMPRE abrir hacia abajo - calcular altura máxima disponible con margen estético
-        const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
-        const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
-        
-        setMaxHeight(`${calculatedMaxHeight}px`);
-        
-        // Hacer scroll del modal/ventana para que el dropdown sea completamente visible hacia abajo
-        // Usar el mismo contenedor que usamos para calcular el espacio
-        let scrollContainer = modalContainer;
-        
-        if (scrollContainer && scrollContainer !== document.body) {
-          // Calcular la posición del trigger dentro del contenedor
-          const containerRect = (scrollContainer as HTMLElement).getBoundingClientRect();
-          const triggerBottomInContainer = triggerRect.bottom - containerRect.top + scrollContainer.scrollTop;
+          // Altura estimada del dropdown (todas las opciones)
+          const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
           
-          // Calcular cuánto espacio necesitamos para el dropdown completo
-          const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
-          const currentSpaceBelow = containerRect.height - (triggerBottomInContainer - scrollContainer.scrollTop);
+          // SIEMPRE abrir hacia abajo - calcular altura máxima disponible con margen estético
+          // Asegurar altura mínima para que el dropdown sea visible
+          const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
+          const minHeight = 100; // Altura mínima para que el dropdown sea funcional
+          const calculatedMaxHeight = Math.max(minHeight, Math.min(availableHeight, 320)); // Máximo 320px (max-h-80), mínimo 100px
           
-          // Si no hay suficiente espacio, hacer scroll para crear más espacio
-          if (currentSpaceBelow < spaceNeededForDropdown) {
-            const scrollOffset = spaceNeededForDropdown - currentSpaceBelow;
-            (scrollContainer as HTMLElement).scrollTo({
-              top: scrollContainer.scrollTop + scrollOffset,
-              behavior: 'smooth'
-            });
+          setMaxHeight(`${calculatedMaxHeight}px`);
+          
+          // Hacer scroll del modal/ventana para que el dropdown sea completamente visible hacia abajo
+          // Usar el mismo contenedor que usamos para calcular el espacio
+          let scrollContainer = modalContainer;
+          
+          if (scrollContainer && scrollContainer !== document.body) {
+            // Calcular la posición del trigger dentro del contenedor
+            const containerRect = (scrollContainer as HTMLElement).getBoundingClientRect();
+            const triggerBottomInContainer = triggerRect.bottom - containerRect.top + scrollContainer.scrollTop;
+            
+            // Calcular cuánto espacio necesitamos para el dropdown completo
+            const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
+            const currentSpaceBelow = containerRect.height - (triggerBottomInContainer - scrollContainer.scrollTop);
+            
+            // Si no hay suficiente espacio, hacer scroll para crear más espacio
+            if (currentSpaceBelow < spaceNeededForDropdown) {
+              const scrollOffset = spaceNeededForDropdown - currentSpaceBelow;
+              (scrollContainer as HTMLElement).scrollTo({
+                top: scrollContainer.scrollTop + scrollOffset,
+                behavior: 'smooth'
+              });
+            }
+          } else {
+            // Si no hay contenedor con scroll, hacer scroll de la ventana
+            const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
+            const currentSpaceBelow = window.innerHeight - triggerRect.bottom;
+            
+            if (currentSpaceBelow < spaceNeededForDropdown) {
+              const scrollOffset = spaceNeededForDropdown - currentSpaceBelow;
+              window.scrollTo({
+                top: window.scrollY + scrollOffset,
+                behavior: 'smooth'
+              });
+            }
           }
-        } else {
-          // Si no hay contenedor con scroll, hacer scroll de la ventana
-          const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
-          const currentSpaceBelow = window.innerHeight - triggerRect.bottom;
-          
-          if (currentSpaceBelow < spaceNeededForDropdown) {
-            const scrollOffset = spaceNeededForDropdown - currentSpaceBelow;
-            window.scrollTo({
-              top: window.scrollY + scrollOffset,
-              behavior: 'smooth'
-            });
-          }
+        } catch (error) {
+          // Si hay un error, usar valores por defecto para que el dropdown funcione
+          console.error('Error calculando posición del dropdown:', error);
+          setMaxHeight('20rem'); // Valor por defecto
         }
       }, 50); // Reducido a 50ms para respuesta más rápida
     }
