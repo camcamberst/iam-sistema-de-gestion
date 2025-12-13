@@ -101,8 +101,38 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           const triggerBottomInContainer = triggerRect.bottom - containerRect.top;
           const triggerTopInContainer = triggerRect.top - containerRect.top;
           
-          // Espacio disponible dentro del contenedor del modal
-          spaceBelow = containerRect.height - triggerBottomInContainer;
+          // Buscar botones en la parte inferior del modal (Cancelar, Confirmar, etc.)
+          // Buscar el último div con botones que esté después del trigger
+          const allButtons = Array.from((modalContainer as HTMLElement).querySelectorAll('button'));
+          const buttonsAfterTrigger = allButtons.filter(btn => {
+            const btnRect = btn.getBoundingClientRect();
+            return btnRect.top > triggerRect.bottom;
+          });
+          
+          if (buttonsAfterTrigger.length > 0) {
+            // Encontrar el botón más cercano al trigger (el primero en la lista)
+            const closestButton = buttonsAfterTrigger.reduce((closest, current) => {
+              const closestRect = closest.getBoundingClientRect();
+              const currentRect = current.getBoundingClientRect();
+              return currentRect.top < closestRect.top ? current : closest;
+            });
+            
+            const buttonsContainer = closestButton.closest('div.flex') || closestButton.parentElement;
+            if (buttonsContainer) {
+              const buttonsRect = (buttonsContainer as HTMLElement).getBoundingClientRect();
+              const buttonsTopInContainer = buttonsRect.top - containerRect.top;
+              // Calcular espacio hasta los botones (con margen adicional de 16px)
+              const spaceToButtons = buttonsTopInContainer - triggerBottomInContainer - 16;
+              spaceBelow = Math.max(0, spaceToButtons);
+            } else {
+              // Si no se encuentra el contenedor, usar el espacio disponible
+              spaceBelow = containerRect.height - triggerBottomInContainer;
+            }
+          } else {
+            // Si no se encuentran botones después del trigger, usar el espacio disponible en el contenedor
+            spaceBelow = containerRect.height - triggerBottomInContainer;
+          }
+          
           spaceAbove = triggerTopInContainer;
         } else {
           // Fallback: calcular espacio disponible en la ventana
