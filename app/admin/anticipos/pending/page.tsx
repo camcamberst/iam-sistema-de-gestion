@@ -252,6 +252,7 @@ export default function SolicitudesPendientesPage() {
     const numeroCuenta = anticipo.numero_cuenta || '';
     const telefono = anticipo.numero_telefono || '';
     const email = anticipo.model?.email || '';
+    const grupos = anticipo.model?.groups?.map((g: any) => g.name).join(', ') || '';
 
     const lines: string[] = [
       `Anticipo de: ${anticipo.model?.name || ''}`,
@@ -266,6 +267,7 @@ export default function SolicitudesPendientesPage() {
     if (numeroCuenta) lines.push(`Número de cuenta: ${numeroCuenta}`);
     if (telefono) lines.push(`Teléfono: ${telefono}`);
     if (email) lines.push(`Email: ${email}`);
+    if (grupos) lines.push(`Grupo/Sede: ${grupos}`);
     return lines.join('\n');
   };
 
@@ -507,6 +509,11 @@ export default function SolicitudesPendientesPage() {
                             {anticipo.model?.email && (
                               <div className="sm:col-span-2">
                                 <span className="font-semibold">Email modelo:</span> {anticipo.model.email}
+                              </div>
+                            )}
+                            {anticipo.model?.groups && anticipo.model.groups.length > 0 && (
+                              <div className="sm:col-span-2">
+                                <span className="font-semibold">Grupo/Sede:</span> {anticipo.model.groups.map((g: any) => g.name).join(', ')}
                               </div>
                             )}
                             <div className="sm:col-span-2 mt-1">

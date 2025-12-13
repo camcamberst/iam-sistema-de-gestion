@@ -24,13 +24,97 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'modelId o adminId es requerido' }, { status: 400 });
     }
 
-    let query = supabase
-      .from('anticipos')
-      .select(`
+    // Determinar si necesitamos incluir grupos en la consulta
+    let includeGroups = false;
+    let adminGroups: string[] = [];
+    let modelIds: string[] = [];
+
+    // 🔒 FILTRAR POR GRUPOS DEL ADMIN (solo para admin, no super_admin)
+    if (admin_id && !model_id) {
+      // Obtener información del admin y sus grupos
+      const { data: adminUser, error: adminError } = await supabase
+        .from('users')
+        .select(`
+          role,
+          user_groups(
+            groups!inner(
+              id,
+              name
+            )
+          )
+        `)
+        .eq('id', admin_id)
+        .single();
+
+      if (adminError) {
+        console.error('❌ [API ANTICIPOS] Error al obtener admin:', adminError);
+        return NextResponse.json({ success: false, error: 'Admin no encontrado' }, { status: 404 });
+      }
+
+      const isSuperAdmin = adminUser.role === 'super_admin';
+      const isAdmin = adminUser.role === 'admin';
+
+      if (!isSuperAdmin && !isAdmin) {
+        return NextResponse.json({ success: false, error: 'No tienes permisos para ver anticipos' }, { status: 403 });
+      }
+
+      // Si es admin (no super_admin), filtrar por grupos asignados
+      if (isAdmin && !isSuperAdmin) {
+        adminGroups = adminUser.user_groups?.map((ug: any) => ug.groups.id) || [];
+        console.log('🔒 [API ANTICIPOS] Filtrando por grupos del admin:', adminGroups);
+
+        if (adminGroups.length > 0) {
+          // Obtener modelos que pertenecen a los grupos del admin
+          const { data: modelGroups, error: modelGroupsError } = await supabase
+            .from('user_groups')
+            .select('user_id')
+            .in('group_id', adminGroups);
+
+          if (modelGroupsError) {
+            console.error('❌ [API ANTICIPOS] Error al obtener grupos de modelos:', modelGroupsError);
+            return NextResponse.json({ success: false, error: 'Error al filtrar anticipos' }, { status: 500 });
+          }
+
+          modelIds = modelGroups?.map(mg => mg.user_id) || [];
+          if (modelIds.length === 0) {
+            // No hay modelos en los grupos del admin, devolver array vacío
+            return NextResponse.json({ success: true, data: [] });
+          }
+        } else {
+          // Admin sin grupos asignados, no puede ver anticipos
+          return NextResponse.json({ success: true, data: [] });
+        }
+      }
+      // Si es super_admin, no filtrar (ver todos los anticipos)
+      includeGroups = true; // Incluir grupos en la respuesta para admins
+    }
+
+    // Construir la consulta con el select apropiado
+    const selectQuery = includeGroups
+      ? `
+        *,
+        period:periods(name, start_date, end_date),
+        model:users!model_id(
+          id,
+          name,
+          email,
+          user_groups(
+            groups!inner(
+              id,
+              name
+            )
+          )
+        )
+      `
+      : `
         *,
         period:periods(name, start_date, end_date),
         model:users!model_id(name, email, id) 
-      `)
+      `;
+
+    let query = supabase
+      .from('anticipos')
+      .select(selectQuery)
       .order('created_at', { ascending: false });
 
     // Si se especifica modelo, filtrar por modelo
@@ -49,9 +133,10 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Si es consulta de admin, podríamos filtrar por grupos del admin, 
-    // pero por ahora devolvemos todos los que coincidan con los filtros
-    // (El frontend ya filtra visualmente, o se podrían agregar filtros de grupo aquí)
+    // Aplicar filtro por grupos del admin si es necesario
+    if (modelIds.length > 0) {
+      query = query.in('model_id', modelIds);
+    }
 
     const { data: anticipos, error } = await query;
 
@@ -60,7 +145,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    return NextResponse.json({ success: true, data: anticipos });
+    // Procesar anticipos para formatear grupos correctamente
+    const processedAnticipos = (anticipos || []).map((anticipo: any) => ({
+      ...anticipo,
+      model: {
+        ...anticipo.model,
+        groups: anticipo.model?.user_groups?.map((ug: any) => ug.groups) || []
+      }
+    }));
+
+    return NextResponse.json({ success: true, data: processedAnticipos });
 
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
