@@ -22,7 +22,6 @@ interface AppleSelectProps {
 export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "", onFocus, onBlur }: AppleSelectProps) {
   const [open, setOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
   const [maxHeight, setMaxHeight] = useState<string>('20rem'); // max-h-80
   const ref = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
@@ -114,49 +113,45 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         // Altura estimada del dropdown (todas las opciones)
         const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
         
-        // Determinar si debe abrirse hacia arriba o hacia abajo
-        const shouldOpenUp = spaceBelow < (estimatedDropdownHeight + aestheticMargin) && spaceAbove > spaceBelow;
-        
-        // Calcular altura máxima disponible con margen estético
-        // Asegurar que siempre haya margen estético en ambos lados
-        // Reducir un poco más para asegurar que no llegue al borde
-        const availableHeight = shouldOpenUp 
-          ? Math.max(0, spaceAbove - aestheticMargin - 8) // Margen adicional de 8px
-          : Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
+        // SIEMPRE abrir hacia abajo - calcular altura máxima disponible con margen estético
+        const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
         const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
         
-        setDropdownPosition(shouldOpenUp ? 'top' : 'bottom');
         setMaxHeight(`${calculatedMaxHeight}px`);
         
-        // Hacer scroll del modal/ventana para que el dropdown sea completamente visible
+        // Hacer scroll del modal/ventana para que el dropdown sea completamente visible hacia abajo
         // Usar el mismo contenedor que usamos para calcular el espacio
         let scrollContainer = modalContainer;
         
         if (scrollContainer && scrollContainer !== document.body) {
           // Calcular la posición del trigger dentro del contenedor
           const containerRect = (scrollContainer as HTMLElement).getBoundingClientRect();
-          const triggerTopInContainer = triggerRect.top - containerRect.top + scrollContainer.scrollTop;
+          const triggerBottomInContainer = triggerRect.bottom - containerRect.top + scrollContainer.scrollTop;
           
-          // Calcular posición ideal del trigger (centrado considerando el dropdown y margen estético)
-          const containerHeight = containerRect.height;
-          const idealTriggerPosition = (containerHeight / 2) - (estimatedDropdownHeight / 2) - (aestheticMargin / 2);
-          const scrollOffset = triggerTopInContainer - idealTriggerPosition;
+          // Calcular cuánto espacio necesitamos para el dropdown completo
+          const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
+          const currentSpaceBelow = containerRect.height - (triggerBottomInContainer - scrollContainer.scrollTop);
           
-          // Hacer scroll suave
-          (scrollContainer as HTMLElement).scrollTo({
-            top: Math.max(0, scrollOffset),
-            behavior: 'smooth'
-          });
+          // Si no hay suficiente espacio, hacer scroll para crear más espacio
+          if (currentSpaceBelow < spaceNeededForDropdown) {
+            const scrollOffset = spaceNeededForDropdown - currentSpaceBelow;
+            (scrollContainer as HTMLElement).scrollTo({
+              top: scrollContainer.scrollTop + scrollOffset,
+              behavior: 'smooth'
+            });
+          }
         } else {
           // Si no hay contenedor con scroll, hacer scroll de la ventana
-          const viewportCenter = window.innerHeight / 2;
-          const triggerCenter = triggerRect.top + (triggerRect.height / 2);
-          const scrollOffset = triggerCenter - viewportCenter;
+          const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
+          const currentSpaceBelow = window.innerHeight - triggerRect.bottom;
           
-          window.scrollTo({
-            top: window.scrollY + scrollOffset,
-            behavior: 'smooth'
-          });
+          if (currentSpaceBelow < spaceNeededForDropdown) {
+            const scrollOffset = spaceNeededForDropdown - currentSpaceBelow;
+            window.scrollTo({
+              top: window.scrollY + scrollOffset,
+              behavior: 'smooth'
+            });
+          }
         }
       }, 50); // Reducido a 50ms para respuesta más rápida
     }
@@ -201,9 +196,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       {open && (
         <div 
           ref={dropdownRef}
-          className={`absolute z-[9999] w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-auto apple-scroll ${
-            dropdownPosition === 'top' ? 'mb-1 bottom-full' : 'mt-1 top-full'
-          }`}
+          className="absolute z-[9999] w-full mt-1 top-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-auto apple-scroll"
           style={{ 
             maxHeight,
             // Agregar padding visual para mejor espaciado
