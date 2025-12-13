@@ -23,36 +23,37 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const [open, setOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
   const ref = useRef<HTMLDivElement | null>(null);
+  const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+      // Verificar que el clic no sea dentro del contenedor principal ni del dropdown
+      const target = e.target as Node;
+      const isClickInside = ref.current?.contains(target) || dropdownRef.current?.contains(target);
+      if (!isClickInside) {
+        setOpen(false);
+      }
     }
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') setOpen(false);
     }
-    document.addEventListener('mousedown', onDoc);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDoc);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, []);
-
-  // 🔧 FIX: Zona de tolerancia para evitar cierre accidental
-  useEffect(() => {
-    if (isHovering) {
-      setOpen(true);
-    } else {
-      // Delay para permitir movimiento del cursor
-      const timer = setTimeout(() => {
-        if (!isHovering) {
-          setOpen(false);
-        }
-      }, 150); // 150ms de tolerancia
-      return () => clearTimeout(timer);
+    // Usar 'click' en lugar de 'mousedown' para evitar cierre accidental durante scroll
+    if (open) {
+      document.addEventListener('click', onDoc);
+      document.addEventListener('keydown', onKey);
+      return () => {
+        document.removeEventListener('click', onDoc);
+        document.removeEventListener('keydown', onKey);
+      };
     }
-  }, [isHovering]);
+  }, [open]);
+
+  // 🔧 FIX: Mantener dropdown abierto cuando se está interactuando
+  useEffect(() => {
+    if (isHovering && !open) {
+      setOpen(true);
+    }
+  }, [isHovering, open]);
 
   // 🔧 FIX: Manejar focus/blur para coordinación entre dropdowns
   const handleFocus = () => {
@@ -90,8 +91,17 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     <div 
       className={`relative min-w-0 ${className}`} 
       ref={ref}
-      onMouseEnter={() => setIsHovering(true)}
-      onMouseLeave={() => setIsHovering(false)}
+      onMouseEnter={() => {
+        setIsHovering(true);
+        if (!open) setOpen(true);
+      }}
+      onMouseLeave={(e) => {
+        // Solo cerrar si el mouse no está entrando al dropdown
+        const relatedTarget = e.relatedTarget as Node;
+        if (dropdownRef.current && !dropdownRef.current.contains(relatedTarget)) {
+          setIsHovering(false);
+        }
+      }}
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
@@ -112,7 +122,20 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         </svg>
       </div>
       {open && (
-        <div className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-auto apple-scroll">
+        <div 
+          ref={dropdownRef}
+          className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-auto apple-scroll"
+          onMouseEnter={() => setIsHovering(true)}
+          onMouseLeave={() => setIsHovering(false)}
+          onMouseDown={(e) => {
+            // Prevenir que el clic dentro del dropdown lo cierre
+            e.stopPropagation();
+          }}
+          onWheel={(e) => {
+            // Prevenir que el scroll cierre el dropdown
+            e.stopPropagation();
+          }}
+        >
           {options.map((opt, index) => (
             <div key={opt.value}>
               {index > 0 && (
