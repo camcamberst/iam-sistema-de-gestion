@@ -22,6 +22,8 @@ interface AppleSelectProps {
 export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "", onFocus, onBlur }: AppleSelectProps) {
   const [open, setOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
+  const [dropdownPosition, setDropdownPosition] = useState<'bottom' | 'top'>('bottom');
+  const [maxHeight, setMaxHeight] = useState<string>('20rem'); // max-h-80
   const ref = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
@@ -71,19 +73,70 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     }, 100);
   };
 
-  // Scroll automático cuando se abre el dropdown
+  // Ajustar posición y altura del dropdown cuando se abre
   useEffect(() => {
-    if (open && ref.current) {
+    if (open && ref.current && dropdownRef.current) {
       // Pequeño delay para asegurar que el dropdown se renderice
       setTimeout(() => {
-        ref.current?.scrollIntoView({
-          behavior: 'smooth',
-          block: 'center',
-          inline: 'nearest'
-        });
-      }, 100);
+        const triggerElement = ref.current;
+        const dropdownElement = dropdownRef.current;
+        if (!triggerElement || !dropdownElement) return;
+
+        // Obtener posición del trigger
+        const triggerRect = triggerElement.getBoundingClientRect();
+        
+        // Calcular espacio disponible hacia abajo y hacia arriba
+        const spaceBelow = window.innerHeight - triggerRect.bottom;
+        const spaceAbove = triggerRect.top;
+        
+        // Altura estimada del dropdown (todas las opciones)
+        const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
+        
+        // Determinar si debe abrirse hacia arriba o hacia abajo
+        const shouldOpenUp = spaceBelow < estimatedDropdownHeight && spaceAbove > spaceBelow;
+        
+        // Calcular altura máxima disponible
+        const availableHeight = shouldOpenUp ? spaceAbove - 8 : spaceBelow - 8;
+        const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
+        
+        setDropdownPosition(shouldOpenUp ? 'top' : 'bottom');
+        setMaxHeight(`${calculatedMaxHeight}px`);
+        
+        // Hacer scroll del modal/ventana para que el dropdown sea completamente visible
+        // Buscar el modal padre (StandardModal) o contenedor con scroll
+        let scrollContainer = triggerElement.closest('[class*="overflow-y-auto"]') || 
+                             triggerElement.closest('[class*="overflow-auto"]') ||
+                             triggerElement.closest('[class*="max-h-"]');
+        
+        if (scrollContainer && scrollContainer !== document.body) {
+          // Calcular la posición del trigger dentro del contenedor
+          const containerRect = (scrollContainer as HTMLElement).getBoundingClientRect();
+          const triggerTopInContainer = triggerRect.top - containerRect.top + scrollContainer.scrollTop;
+          
+          // Calcular posición ideal del trigger (centrado considerando el dropdown)
+          const containerHeight = containerRect.height;
+          const idealTriggerPosition = (containerHeight / 2) - (estimatedDropdownHeight / 2);
+          const scrollOffset = triggerTopInContainer - idealTriggerPosition;
+          
+          // Hacer scroll suave
+          (scrollContainer as HTMLElement).scrollTo({
+            top: Math.max(0, scrollOffset),
+            behavior: 'smooth'
+          });
+        } else {
+          // Si no hay contenedor con scroll, hacer scroll de la ventana
+          const viewportCenter = window.innerHeight / 2;
+          const triggerCenter = triggerRect.top + (triggerRect.height / 2);
+          const scrollOffset = triggerCenter - viewportCenter;
+          
+          window.scrollTo({
+            top: window.scrollY + scrollOffset,
+            behavior: 'smooth'
+          });
+        }
+      }, 50); // Reducido a 50ms para respuesta más rápida
     }
-  }, [open]);
+  }, [open, options.length]);
 
   const selected = options.find(o => o.value === value);
 
@@ -124,7 +177,10 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       {open && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[9999] w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg max-h-80 overflow-auto apple-scroll"
+          className={`absolute z-[9999] w-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg overflow-auto apple-scroll ${
+            dropdownPosition === 'top' ? 'mb-1 bottom-full' : 'mt-1 top-full'
+          }`}
+          style={{ maxHeight }}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}
           onMouseDown={(e) => {
