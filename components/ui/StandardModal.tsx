@@ -75,29 +75,21 @@ export default function StandardModal({
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
       style={{ 
         position: 'fixed',
         top: 0,
         left: 0,
         right: 0,
         bottom: 0,
-        zIndex: 99999,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-        padding: '1rem'
+        zIndex: 99999
       }}
     >
       <div
-        className={`${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto ${className}`}
+        className={`${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl ${className}`}
         onClick={(e) => e.stopPropagation()}
         style={{ 
           position: 'relative',
-          backgroundColor: '#ffffff',
-          borderRadius: '1rem',
-          border: '1px solid #e5e7eb',
-          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
           display: 'block',
           visibility: 'visible',
           opacity: 1
