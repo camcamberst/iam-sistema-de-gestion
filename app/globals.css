@@ -161,6 +161,57 @@
   background: rgba(156, 163, 175, 0.4);
 }
 
+/* Scrollbar interior estilo Apple minimal (AppleStyle 2) para dropdowns */
+.apple-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.apple-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.apple-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.apple-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.45),
+    rgba(148, 163, 184, 0.25)
+  );
+  border-radius: 999px;
+}
+
+.apple-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.6),
+    rgba(148, 163, 184, 0.35)
+  );
+}
+
+.dark .apple-scroll {
+  scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+}
+
+.dark .apple-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.35),
+    rgba(148, 163, 184, 0.2)
+  );
+}
+
+.dark .apple-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.5),
+    rgba(148, 163, 184, 0.3)
+  );
+}
+
 /* 🌈 ANIMACIÓN DE GRADIENTE DINÁMICO (Apple Style Versátil) */
 @keyframes gradient-x {
   0% {

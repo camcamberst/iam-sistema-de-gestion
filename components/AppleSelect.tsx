@@ -231,7 +231,8 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           className="absolute z-[9999] w-full mt-1 top-full rounded-2xl border border-gray-200/90 dark:border-gray-700/80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.18)] dark:shadow-[0_22px_55px_rgba(15,23,42,0.85)] ring-1 ring-black/5 overflow-auto apple-scroll"
           style={{ 
             maxHeight,
-            minHeight: '100px',
+            // Altura mínima suficiente para mostrar al menos 3 opciones completas
+            minHeight: '144px',
             // Agregar padding visual para mejor espaciado
             paddingTop: '6px',
             paddingBottom: '6px'
