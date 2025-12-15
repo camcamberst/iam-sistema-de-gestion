@@ -33,28 +33,26 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       const isClickInside = ref.current?.contains(target) || dropdownRef.current?.contains(target);
       if (!isClickInside) {
         setOpen(false);
+        setIsHovering(false);
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key === 'Escape') {
+        setOpen(false);
+        setIsHovering(false);
+      }
     }
     // Usar 'click' en lugar de 'mousedown' para evitar cierre accidental durante scroll
     if (open) {
-      document.addEventListener('click', onDoc);
+      // Usar capture phase para detectar clics antes de que se propaguen
+      document.addEventListener('click', onDoc, true);
       document.addEventListener('keydown', onKey);
       return () => {
-        document.removeEventListener('click', onDoc);
+        document.removeEventListener('click', onDoc, true);
         document.removeEventListener('keydown', onKey);
       };
     }
   }, [open]);
-
-  // 🔧 FIX: Mantener dropdown abierto cuando se está interactuando
-  useEffect(() => {
-    if (isHovering && !open) {
-      setOpen(true);
-    }
-  }, [isHovering, open]);
 
   // 🔧 FIX: Manejar focus/blur para coordinación entre dropdowns
   const handleFocus = () => {
@@ -62,14 +60,20 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     setOpen(true);
   };
 
-  const handleBlur = () => {
+  const handleBlur = (e: React.FocusEvent) => {
     onBlur?.();
-    // Delay para permitir selección
-    setTimeout(() => {
-      if (!isHovering) {
-        setOpen(false);
-      }
-    }, 100);
+    // Verificar si el nuevo foco está dentro del componente
+    const relatedTarget = e.relatedTarget as Node;
+    const isFocusInside = ref.current?.contains(relatedTarget) || dropdownRef.current?.contains(relatedTarget);
+    
+    // Solo cerrar si el foco no está dentro del componente
+    if (!isFocusInside) {
+      setTimeout(() => {
+        if (!isHovering) {
+          setOpen(false);
+        }
+      }, 150);
+    }
   };
 
   // Ajustar posición y altura del dropdown cuando se abre
@@ -198,11 +202,14 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         if (!open) setOpen(true);
       }}
       onMouseLeave={(e) => {
-        // Solo cerrar si el mouse no está entrando al dropdown
+        // Solo mantener hover si el mouse está entrando al dropdown
         const relatedTarget = e.relatedTarget as Node;
-        if (dropdownRef.current && !dropdownRef.current.contains(relatedTarget)) {
-          setIsHovering(false);
+        if (dropdownRef.current && dropdownRef.current.contains(relatedTarget)) {
+          // El mouse está entrando al dropdown, mantener hover
+          return;
         }
+        // Si el mouse sale completamente del componente, cerrar
+        setIsHovering(false);
       }}
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
