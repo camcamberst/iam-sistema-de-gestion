@@ -378,6 +378,7 @@ export default function PortafolioModelos() {
   };
 
   const handlePlatformAction = async (platform: ModeloPlatform, action: string) => {
+    console.log('🟢 handlePlatformAction llamado', { platform: platform.platform_name, action });
     setSelectedPlatformForAction(platform);
     setActionType(action as any);
     setActionNotes('');
@@ -388,6 +389,7 @@ export default function PortafolioModelos() {
       : platform.status;
     setModalStatus((visualStatus as any) || 'disponible');
     setShowActionModal(true);
+    console.log('🟢 showActionModal establecido a true');
     
     // Si el estado visual es "entregada", cargar credenciales existentes
     if (visualStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin')) {
@@ -954,9 +956,14 @@ export default function PortafolioModelos() {
 
         {/* Action Modal */}
         {showActionModal && selectedPlatformForAction && (
-          <StandardModal 
-            isOpen={true} 
-            onClose={() => setShowActionModal(false)} 
+          <>
+            {console.log('🟡 Renderizando StandardModal', { showActionModal, hasPlatform: !!selectedPlatformForAction })}
+            <StandardModal 
+              isOpen={showActionModal} 
+              onClose={() => {
+                console.log('🔴 Cerrando modal');
+                setShowActionModal(false);
+              }} 
             title={
               actionType === 'request' && 'Estado de Plataforma' ||
               actionType === 'deliver' && 'Entregar Plataforma' ||
@@ -1198,6 +1205,7 @@ export default function PortafolioModelos() {
                 </button>
               </div>
           </StandardModal>
+          </>
         )}
 
         {/* Modal Boost Pages */}

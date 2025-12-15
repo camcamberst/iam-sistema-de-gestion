@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, ReactNode } from 'react';
+import { createPortal } from 'react-dom';
 
 interface StandardModalProps {
   isOpen: boolean;
@@ -29,14 +30,13 @@ export default function StandardModal({
   showCloseButton = true,
   closeOnBackdrop = true
 }: StandardModalProps) {
-  const [bodyOverflow, setBodyOverflow] = useState<string | null>(null);
+  const [mounted, setMounted] = useState(false);
 
   // Bloquear scroll del body cuando el modal está abierto
   useEffect(() => {
     if (!isOpen) return;
 
     const previousOverflow = document.body.style.overflow || '';
-    setBodyOverflow(previousOverflow);
     document.body.style.overflow = 'hidden';
 
     return () => {
@@ -53,20 +53,55 @@ export default function StandardModal({
     return () => window.removeEventListener('keydown', handleKey);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  // Asegurar que el componente esté montado antes de usar createPortal
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
-  return (
+  if (!isOpen || !mounted) return null;
+
+  // Verificar que document.body existe antes de usar createPortal
+  if (typeof document === 'undefined' || !document.body) {
+    return null;
+  }
+
+  // Debug: verificar que el modal se está intentando renderizar
+  if (isOpen) {
+    console.log('🔵 StandardModal: Renderizando modal', { isOpen, mounted, hasBody: !!document.body });
+  }
+
+  const modalContent = (
     <div
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
-      style={{ position: 'fixed' }}
+      style={{ 
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 99999,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        padding: '1rem'
+      }}
     >
       <div
-        className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl ${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto ${className}`}
+        className={`${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
-        style={{ position: 'relative' }}
+        style={{ 
+          position: 'relative',
+          backgroundColor: '#ffffff',
+          borderRadius: '1rem',
+          border: '1px solid #e5e7eb',
+          boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+          display: 'block',
+          visibility: 'visible',
+          opacity: 1
+        }}
       >
         {(title || showCloseButton) && (
           <div className={`flex items-center justify-between ${headerMarginClass}`}>
@@ -92,6 +127,8 @@ export default function StandardModal({
       </div>
     </div>
   );
+
+  return createPortal(modalContent, document.body);
 }
 
 
