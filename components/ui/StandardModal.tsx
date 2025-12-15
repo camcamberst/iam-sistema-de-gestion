@@ -68,7 +68,7 @@ export default function StandardModal({
 
   return (
     <div
-      className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start justify-center z-50 transition-opacity duration-200 p-4 pt-10 overflow-y-auto ${mounted ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200 p-4 overflow-y-auto ${mounted ? 'opacity-100' : 'opacity-0'}`}
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
