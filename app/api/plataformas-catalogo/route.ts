@@ -19,6 +19,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from('calculator_platforms')
       .select('id, name')
+      .eq('active', true) // Solo plataformas activas
       .order('name', { ascending: true });
 
     const { data: platforms, error } = await query;

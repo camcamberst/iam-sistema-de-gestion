@@ -140,6 +140,50 @@ export default function PortafolioModelos() {
     }
   }, [userRole, userGroups]);
 
+  // Recargar plataformas cuando la ventana vuelve a tener foco o cuando se detecta cambio
+  useEffect(() => {
+    const handleFocus = () => {
+      // Recargar catálogo de plataformas cuando la ventana vuelve a tener foco
+      // Esto asegura que los cambios en "Gestión de Plataformas" se reflejen
+      const reloadPlatforms = async () => {
+        try {
+          const platformsResponse = await fetch('/api/plataformas-catalogo');
+          if (platformsResponse.ok) {
+            const platformsData = await platformsResponse.json();
+            setAllPlatforms(Array.isArray(platformsData) ? platformsData : []);
+          }
+        } catch (error) {
+          console.error('Error recargando plataformas:', error);
+        }
+      };
+      reloadPlatforms();
+    };
+
+    // Recargar cuando la ventana vuelve a tener foco
+    window.addEventListener('focus', handleFocus);
+
+    // También recargar si se detecta que se viene de "Gestión de Plataformas"
+    const checkPlatformsUpdate = () => {
+      const lastPlatformsUpdate = sessionStorage.getItem('platforms_updated');
+      if (lastPlatformsUpdate) {
+        const updateTime = parseInt(lastPlatformsUpdate, 10);
+        const now = Date.now();
+        // Si la actualización fue hace menos de 5 minutos, recargar
+        if (now - updateTime < 5 * 60 * 1000) {
+          handleFocus();
+          sessionStorage.removeItem('platforms_updated');
+        }
+      }
+    };
+
+    // Verificar al montar el componente
+    checkPlatformsUpdate();
+
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
+  }, []);
+
   // Procesar parámetros de URL para filtro automático
   useEffect(() => {
     const modelId = searchParams.get('model');

@@ -194,6 +194,10 @@ export default function EditPlatformPage() {
       }
 
       setSuccess(true);
+      
+      // Marcar que se hizo un cambio en las plataformas para que "Portafolio Modelos" recargue
+      sessionStorage.setItem('platforms_updated', Date.now().toString());
+      
       setTimeout(() => {
         router.push('/admin/calculator/platforms');
       }, 1500);

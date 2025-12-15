@@ -99,6 +99,9 @@ export default function PlatformsListPage() {
 
       // Recargar lista
       await loadPlatforms();
+      
+      // Marcar que se hizo un cambio en las plataformas para que "Portafolio Modelos" recargue
+      sessionStorage.setItem('platforms_updated', Date.now().toString());
     } catch (err: any) {
       alert('Error al eliminar: ' + err.message);
     } finally {
