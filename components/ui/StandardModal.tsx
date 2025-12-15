@@ -30,6 +30,7 @@ export default function StandardModal({
   closeOnBackdrop = true
 }: StandardModalProps) {
   const [mounted, setMounted] = useState(false);
+  const [bodyOverflow, setBodyOverflow] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -38,6 +39,19 @@ export default function StandardModal({
     return () => {
       cancelAnimationFrame(id);
       setMounted(false);
+    };
+  }, [isOpen]);
+
+  // Bloquear scroll del body cuando el modal está abierto
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const previousOverflow = document.body.style.overflow || '';
+    setBodyOverflow(previousOverflow);
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
     };
   }, [isOpen]);
 
@@ -54,7 +68,7 @@ export default function StandardModal({
 
   return (
     <div
-      className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 transition-opacity duration-200 p-4 ${mounted ? 'opacity-100' : 'opacity-0'}`}
+      className={`fixed inset-0 bg-black/40 backdrop-blur-sm flex items-start justify-center z-50 transition-opacity duration-200 p-4 pt-10 overflow-y-auto ${mounted ? 'opacity-100' : 'opacity-0'}`}
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
