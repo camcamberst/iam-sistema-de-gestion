@@ -381,11 +381,16 @@ export default function PortafolioModelos() {
     setSelectedPlatformForAction(platform);
     setActionType(action as any);
     setActionNotes('');
-    setModalStatus((platform.status as any) || 'disponible');
+    // Usar el mismo criterio visual que en las etiquetas:
+    // si es configuración inicial activa, tratarla como "entregada"
+    const visualStatus = (platform.is_initial_config && platform.status !== 'desactivada')
+      ? 'entregada'
+      : platform.status;
+    setModalStatus((visualStatus as any) || 'disponible');
     setShowActionModal(true);
     
-    // Si el status es "entregada", cargar credenciales existentes
-    if (platform.status === 'entregada' && (userRole === 'admin' || userRole === 'super_admin')) {
+    // Si el estado visual es "entregada", cargar credenciales existentes
+    if (visualStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin')) {
       await loadPlatformCredentials(platform.model_id, platform.platform_id);
     } else {
       // Limpiar campos de credenciales
@@ -1065,9 +1070,20 @@ export default function PortafolioModelos() {
                 </>
               )}
 
-              {/* Sección de Credenciales (solo para plataformas entregadas y admin/super_admin) */}
-              {(modalStatus === 'entregada' || selectedPlatformForAction.status === 'entregada') && 
-               (userRole === 'admin' || userRole === 'super_admin') && (
+              {/* Sección de Credenciales (solo para plataformas que se ven como entregadas y admin/super_admin) */}
+              {(() => {
+                // Considerar como "entregada" también las configuraciones iniciales activas,
+                // igual que en las etiquetas verdes del portafolio
+                const visualStatus =
+                  (selectedPlatformForAction.is_initial_config && selectedPlatformForAction.status !== 'desactivada')
+                    ? 'entregada'
+                    : selectedPlatformForAction.status;
+                const isDeliveredVisual =
+                  modalStatus === 'entregada' ||
+                  visualStatus === 'entregada';
+
+                return isDeliveredVisual && (userRole === 'admin' || userRole === 'super_admin');
+              })() && (
                 <div className="mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                   <div className="flex items-center justify-between mb-3">
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
