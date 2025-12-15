@@ -224,6 +224,14 @@ export default function MiPortafolio() {
     }
   };
 
+  // Detectar si la plataforma seleccionada es Superfoon (por id o nombre)
+  const isSelectedPlatformSuperfoon =
+    !!selectedPlatform &&
+    (
+      selectedPlatform.calculator_platforms.id?.toLowerCase() === 'superfoon' ||
+      selectedPlatform.calculator_platforms.name?.toLowerCase().includes('superfoon')
+    );
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
@@ -491,19 +499,39 @@ export default function MiPortafolio() {
                         {/* Enlace de login (si está disponible) */}
                         {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && 
                          selectedPlatform.calculator_platforms.login_url && (
-                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600">
-                            <a
-                              href={selectedPlatform.calculator_platforms.login_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
-                            >
-                              <ExternalLink className="w-4 h-4" />
-                              <span>Abrir plataforma</span>
-                            </a>
-                            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium animate-pulse">
-                              Haz clic para acceder a la plataforma
-                            </p>
+                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-3">
+                            <div>
+                              <a
+                                href={selectedPlatform.calculator_platforms.login_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                                <span>Abrir plataforma</span>
+                              </a>
+                              <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium animate-pulse">
+                                Haz clic para acceder a la plataforma
+                              </p>
+                            </div>
+
+                            {/* Enlace especial solo para Superfoon */}
+                            {isSelectedPlatformSuperfoon && (
+                              <div className="pt-2 border-t border-dashed border-gray-200 dark:border-gray-600">
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
+                                  App de llamadas 3CX
+                                </p>
+                                <a
+                                  href="https://superfoon.synergy4.com/#/login"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center space-x-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline-offset-2 hover:underline"
+                                >
+                                  <ExternalLink className="w-3 h-3" />
+                                  <span>https://superfoon.synergy4.com/#/login</span>
+                                </a>
+                              </div>
+                            )}
                           </div>
                         )}
 
