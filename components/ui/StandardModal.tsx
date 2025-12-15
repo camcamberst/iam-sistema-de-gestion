@@ -57,14 +57,16 @@ export default function StandardModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4"
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
+      style={{ position: 'fixed' }}
     >
       <div
-        className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl ${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto transform transition-all duration-200 ease-out opacity-100 scale-100 ${className}`}
+        className={`bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl ${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto ${className}`}
         onClick={(e) => e.stopPropagation()}
+        style={{ position: 'relative' }}
       >
         {(title || showCloseButton) && (
           <div className={`flex items-center justify-between ${headerMarginClass}`}>
