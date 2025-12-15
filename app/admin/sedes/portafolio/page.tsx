@@ -958,7 +958,7 @@ export default function PortafolioModelos() {
             isOpen={true} 
             onClose={() => setShowActionModal(false)} 
             title={
-              actionType === 'request' && 'Solicitar Plataforma' ||
+              actionType === 'request' && 'Estado de Plataforma' ||
               actionType === 'deliver' && 'Entregar Plataforma' ||
               actionType === 'deactivate' && 'Desactivar Plataforma' ||
               actionType === 'revert' && 'Revertir Plataforma' ||

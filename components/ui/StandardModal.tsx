@@ -34,18 +34,7 @@ export default function StandardModal({
   useEffect(() => {
     if (!isOpen) return;
     const id = requestAnimationFrame(() => setMounted(true));
-    
-    // Scroll automático al centro del viewport cuando se abre el modal
-    const scrollToCenter = () => {
-      const viewportHeight = window.innerHeight;
-      const documentHeight = document.documentElement.scrollHeight;
-      const scrollPosition = (documentHeight - viewportHeight) / 2;
-      window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
-    };
-    
-    // Pequeño delay para asegurar que el modal esté renderizado
-    setTimeout(scrollToCenter, 100);
-    
+
     return () => {
       cancelAnimationFrame(id);
       setMounted(false);
