@@ -286,25 +286,47 @@ export async function GET(request: NextRequest) {
       if (totalsError) {
         console.error('❌ [BILLING-SUMMARY] Error al obtener totales:', totalsError);
       } else {
-        totalsData = totals;
+        // Agrupar totales por modelo_id, tomando el más reciente si hay múltiples
+        const totalsByModel = new Map();
+        if (totals && totals.length > 0) {
+          totals.forEach(t => {
+            const existing = totalsByModel.get(t.model_id);
+            if (!existing || new Date(t.updated_at) > new Date(existing.updated_at)) {
+              totalsByModel.set(t.model_id, t);
+            }
+          });
+          totalsData = Array.from(totalsByModel.values());
+        }
       }
 
       // 🔧 FIX: Si hay modelos con valores pero sin totales, intentar sincronizar
-      const modelsWithValues = new Set();
+      const modelsWithValues = new Set<string>();
       const modelsWithTotals = new Set(totalsData?.map(t => t.model_id) || []);
       
       // Verificar qué modelos tienen valores pero no totales
+      // Buscar valores en un rango más amplio para capturar todos los casos
       const { data: valuesCheck, error: valuesCheckError } = await supabase
         .from('model_values')
-        .select('model_id, period_date')
+        .select('model_id, period_date, value, updated_at')
         .in('model_id', modelIds)
         .gte('period_date', startStr)
-        .lte('period_date', endStr);
+        .lte('period_date', endStr)
+        .gt('value', 0); // Solo valores mayores a 0
 
-      if (!valuesCheckError && valuesCheck) {
+      if (!valuesCheckError && valuesCheck && valuesCheck.length > 0) {
+        // Agrupar por modelo y verificar si tienen valores válidos
+        const valuesByModel = new Map<string, any[]>();
         valuesCheck.forEach(v => {
-          if (!modelsWithTotals.has(v.model_id)) {
-            modelsWithValues.add(v.model_id);
+          if (!valuesByModel.has(v.model_id)) {
+            valuesByModel.set(v.model_id, []);
+          }
+          valuesByModel.get(v.model_id)!.push(v);
+        });
+
+        // Verificar modelos con valores pero sin totales
+        valuesByModel.forEach((values, modelId) => {
+          if (!modelsWithTotals.has(modelId) && values.some(v => v.value > 0)) {
+            modelsWithValues.add(modelId);
           }
         });
 
