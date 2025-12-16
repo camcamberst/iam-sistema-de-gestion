@@ -107,12 +107,14 @@ export async function GET(request: NextRequest) {
         console.log(`🧹 [PLATFORM-FREEZE-STATUS] Encontrados ${closedPeriodDates.length} períodos cerrados:`, closedPeriodDates);
         
         // Limpiar registros de períodos cerrados para este modelo específico
-        const { error: cleanupClosedError, count: deletedCount } = await supabase
+        const { data: deletedClosedData, error: cleanupClosedError } = await supabase
           .from('calculator_early_frozen_platforms')
           .delete()
           .eq('model_id', modelId)
           .in('period_date', closedPeriodDates)
-          .select('*', { count: 'exact', head: false });
+          .select();
+        
+        const deletedCount = deletedClosedData?.length || 0;
         
         if (cleanupClosedError) {
           console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error limpiando períodos cerrados:', cleanupClosedError);

@@ -394,21 +394,25 @@ export async function POST(request: NextRequest) {
     }
     
     // Limpiar por period_date exacto (el que se usó en el cierre)
-    const { error: cleanupError1, count: deletedCount1 } = await supabase
+    const { data: deletedData1, error: cleanupError1 } = await supabase
       .from('calculator_early_frozen_platforms')
       .delete()
       .eq('period_date', periodToCloseDate)
-      .select('*', { count: 'exact', head: false });
+      .select();
     
     // También limpiar por rango de fechas del período (por si hay registros con otras fechas)
-    const { error: cleanupError2, count: deletedCount2 } = await supabase
+    // Pero solo si no se eliminaron ya en el paso anterior
+    const { data: deletedData2, error: cleanupError2 } = await supabase
       .from('calculator_early_frozen_platforms')
       .delete()
       .gte('period_date', periodStartDate)
       .lte('period_date', periodEndDate)
-      .select('*', { count: 'exact', head: false });
+      .neq('period_date', periodToCloseDate) // Excluir los que ya se eliminaron
+      .select();
     
-    const totalDeleted = (deletedCount1 || 0) + (deletedCount2 || 0);
+    const deletedCount1 = deletedData1?.length || 0;
+    const deletedCount2 = deletedData2?.length || 0;
+    const totalDeleted = deletedCount1 + deletedCount2;
     
     if (cleanupError1 || cleanupError2) {
       console.error('❌ [CLOSE-PERIOD] Error limpiando early freeze:', cleanupError1 || cleanupError2);
