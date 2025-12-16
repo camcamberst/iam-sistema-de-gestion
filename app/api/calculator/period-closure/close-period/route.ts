@@ -256,6 +256,42 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(`✅ [CLOSE-PERIOD] Proceso de archivo completado: ${closureSuccessCount} exitosos, ${closureErrorCount} errores`);
+    
+    // 📊 RESUMEN DEL ARCHIVO COMPLETO: Verificar que todos los modelos tienen archivo completo con detalle por plataforma
+    if (closureSuccessCount > 0) {
+      console.log(`📊 [CLOSE-PERIOD] Verificando integridad del archivo completo generado...`);
+      const { data: archiveSummary, error: summaryError } = await supabase
+        .from('calculator_history')
+        .select('model_id, platform_id')
+        .eq('period_date', periodToCloseDate)
+        .eq('period_type', periodToCloseType);
+      
+      if (!summaryError && archiveSummary) {
+        const platformsByModel = new Map<string, Set<string>>();
+        archiveSummary.forEach((record: any) => {
+          if (!platformsByModel.has(record.model_id)) {
+            platformsByModel.set(record.model_id, new Set());
+          }
+          platformsByModel.get(record.model_id)?.add(record.platform_id);
+        });
+        
+        console.log(`✅ [CLOSE-PERIOD] Archivo completo generado correctamente:`);
+        console.log(`   - Total modelos con archivo: ${platformsByModel.size}`);
+        console.log(`   - Total registros archivados: ${archiveSummary.length}`);
+        console.log(`   - Promedio de plataformas por modelo: ${(archiveSummary.length / platformsByModel.size).toFixed(1)}`);
+        
+        // Verificar que cada modelo exitoso tiene al menos una plataforma archivada
+        const modelsWithoutPlatforms = Array.from(closureResults)
+          .filter(r => r.status === 'completed' && r.archived_count === 0)
+          .map(r => r.model_email);
+        
+        if (modelsWithoutPlatforms.length > 0) {
+          console.warn(`⚠️ [CLOSE-PERIOD] ${modelsWithoutPlatforms.length} modelos marcados como exitosos pero sin plataformas archivadas: ${modelsWithoutPlatforms.join(', ')}`);
+        }
+      } else if (summaryError) {
+        console.error(`❌ [CLOSE-PERIOD] Error obteniendo resumen del archivo:`, summaryError);
+      }
+    }
 
     // 🔒 VALIDACIÓN CRÍTICA: Si hay errores significativos, detener el proceso antes de resetear
     const errorThreshold = Math.floor((models?.length || 0) * 0.1); // 10% de errores es el umbral

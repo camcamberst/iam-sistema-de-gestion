@@ -482,8 +482,11 @@ export async function GET(request: NextRequest) {
         historyData = history;
       }
 
-      // 🔧 RECONSTRUCCIÓN: Si calculator_history está vacío, intentar reconstruir desde calculator_totals
-      // Esto es necesario para períodos que no se archivaron correctamente (ej: P1 diciembre 2025)
+      // ⚠️ RECONSTRUCCIÓN DE EMERGENCIA: Si calculator_history está vacío, intentar reconstruir desde calculator_totals
+      // NOTA: Esta es SOLO una medida de contingencia. El sistema debe generar el archivo completo en calculator_history
+      // durante el cierre normal. La reconstrucción desde calculator_totals solo proporciona totales consolidados,
+      // sin el detalle por plataforma que debería estar en calculator_history.
+      // Si esto se activa, indica que el proceso de cierre falló y debe investigarse.
       if (!historyData || historyData.length === 0) {
         console.log('⚠️ [BILLING-SUMMARY] calculator_history vacío para período cerrado. Intentando reconstruir desde calculator_totals...');
         
@@ -521,6 +524,10 @@ export async function GET(request: NextRequest) {
         const allTotals = [...(totals2025 || []), ...(totals2024 || [])];
         
         if (allTotals && allTotals.length > 0) {
+          console.warn(`⚠️ [BILLING-SUMMARY] RECONSTRUCCIÓN DE EMERGENCIA ACTIVADA`);
+          console.warn(`   El período ${expectedType} (${startStr} a ${endStr}) no tiene datos en calculator_history`);
+          console.warn(`   Esto indica que el proceso de cierre falló. Reconstruyendo desde calculator_totals...`);
+          console.warn(`   NOTA: Los datos reconstruidos solo incluyen totales consolidados, sin detalle por plataforma`);
           console.log(`✅ [BILLING-SUMMARY] Reconstruyendo desde calculator_totals: ${allTotals.length} registros encontrados`);
           
           // Agrupar por model_id y tomar el más reciente (por updated_at)

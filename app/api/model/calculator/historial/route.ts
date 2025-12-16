@@ -313,7 +313,11 @@ export async function GET(request: NextRequest) {
       period.total_cop_modelo += finalCopModelo;
     });
 
-    // 🔧 PASO 3.5 (NUEVO): Completar períodos faltantes desde calculator_totals
+    // ⚠️ PASO 3.5 (RECONSTRUCCIÓN DE EMERGENCIA): Completar períodos faltantes desde calculator_totals
+    // NOTA: Esta es SOLO una medida de contingencia. El sistema debe generar el archivo completo en calculator_history
+    // durante el cierre normal. La reconstrucción desde calculator_totals solo proporciona totales consolidados,
+    // sin el detalle por plataforma que debería estar en calculator_history.
+    // Si esto se activa, indica que el proceso de cierre falló y debe investigarse.
     // Buscar períodos que deberían existir pero no están en calculator_history
     // Específicamente para P1 de diciembre 2025 que no se archivó correctamente
     // También busca en 2024 por si hubo error de año (como ocurrió en el pasado)
@@ -347,6 +351,10 @@ export async function GET(request: NextRequest) {
     const totalsError = totalsError2025 || totalsError2024;
 
     if (!totalsError && missingTotals && missingTotals.length > 0) {
+      console.warn(`⚠️ [CALCULATOR-HISTORIAL] RECONSTRUCCIÓN DE EMERGENCIA ACTIVADA para modelo ${modelId}`);
+      console.warn(`   Se encontraron ${missingTotals.length} períodos en calculator_totals que no están en calculator_history`);
+      console.warn(`   Esto indica que el proceso de cierre falló. Reconstruyendo desde calculator_totals...`);
+      console.warn(`   NOTA: Los períodos reconstruidos solo incluyen totales consolidados, sin detalle por plataforma`);
       console.log(`🔧 [CALCULATOR-HISTORIAL] Encontrados ${missingTotals.length} totales en calculator_totals para períodos faltantes`);
       
       // Obtener tasas activas para el período
@@ -363,9 +371,13 @@ export async function GET(request: NextRequest) {
         usd_cop: activeRates?.find((r: any) => r.kind === 'USD→COP')?.value || 3900
       };
 
-      // Crear UN SOLO período sintético consolidado usando el último total disponible
-      // missingTotals ya viene ordenado por period_date DESC, así que tomamos el primero
-      const bestTotal = missingTotals[0];
+      // Crear UN SOLO período sintético consolidado
+      // Preferir explícitamente el registro del día 15 de diciembre si existe,
+      // y si no, usar el último total disponible (primer elemento de la lista ordenada).
+      const preferredTotal =
+        missingTotals.find((t: any) => String(t.period_date).endsWith('-12-15')) ||
+        missingTotals[0];
+      const bestTotal = preferredTotal;
       if (bestTotal) {
         const periodDate = bestTotal.period_date;
         const periodType = '1-15'; // P1 de diciembre

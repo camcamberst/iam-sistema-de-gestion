@@ -346,11 +346,12 @@ export const atomicArchiveAndReset = async (
         throw historyError;
       }
 
-      // 🔒 VALIDACIÓN CRÍTICA: Verificar que los datos SÍ se insertaron correctamente
-      console.log(`🔍 [ATOMIC-CLOSE] Validando que los datos se insertaron correctamente...`);
+      // 🔒 VALIDACIÓN CRÍTICA: Verificar que el archivo completo se generó correctamente
+      // IMPORTANTE: El archivo debe tener detalle por plataforma, no solo totales consolidados
+      console.log(`🔍 [ATOMIC-CLOSE] Validando que el archivo completo se generó correctamente...`);
       const { data: verificationData, error: verificationError } = await supabase
         .from('calculator_history')
-        .select('id, model_id, platform_id, period_date, period_type')
+        .select('id, model_id, platform_id, period_date, period_type, value_usd_bruto, value_usd_modelo, value_cop_modelo')
         .eq('model_id', modelId)
         .eq('period_date', startDate)
         .eq('period_type', periodType);
@@ -367,7 +368,31 @@ export const atomicArchiveAndReset = async (
         throw new Error(errorMsg);
       }
 
-      console.log(`✅ [ATOMIC-CLOSE] Validación exitosa: ${verifiedCount} registros verificados en calculator_history`);
+      // 🔒 VALIDACIÓN ADICIONAL: Verificar que el archivo tiene el detalle completo por plataforma
+      const verifiedPlatforms = new Set(verificationData?.map((r: any) => r.platform_id) || []);
+      const expectedPlatforms = new Set(historyInserts.map(r => r.platform_id));
+      
+      if (verifiedPlatforms.size !== expectedPlatforms.size) {
+        const errorMsg = `Validación fallida: Se esperaban ${expectedPlatforms.size} plataformas pero se verificaron ${verifiedPlatforms.size}. Plataformas esperadas: ${Array.from(expectedPlatforms).join(', ')}. Plataformas verificadas: ${Array.from(verifiedPlatforms).join(', ')}`;
+        console.error(`❌ [ATOMIC-CLOSE] ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
+      // 🔒 VALIDACIÓN DE INTEGRIDAD: Verificar que todos los registros tienen los campos calculados
+      const incompleteRecords = verificationData?.filter((r: any) => 
+        r.value_usd_bruto === null || r.value_usd_bruto === undefined ||
+        r.value_usd_modelo === null || r.value_usd_modelo === undefined ||
+        r.value_cop_modelo === null || r.value_cop_modelo === undefined
+      ) || [];
+
+      if (incompleteRecords.length > 0) {
+        const errorMsg = `Validación fallida: ${incompleteRecords.length} registros no tienen los campos calculados completos (value_usd_bruto, value_usd_modelo, value_cop_modelo)`;
+        console.error(`❌ [ATOMIC-CLOSE] ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
+      console.log(`✅ [ATOMIC-CLOSE] Validación exitosa: ${verifiedCount} registros verificados con detalle completo por plataforma`);
+      console.log(`   📊 Plataformas archivadas: ${Array.from(verifiedPlatforms).join(', ')}`);
     }
 
     console.log(`✅ [ATOMIC-CLOSE] ${historyInserts.length} registros archivados y verificados`);
