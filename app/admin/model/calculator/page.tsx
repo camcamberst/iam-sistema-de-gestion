@@ -1390,7 +1390,10 @@ export default function ModelCalculatorPage() {
                                 title={isFrozen ? "Cerrado por horario europeo" : (showMonthlyFields ? "Ingresa el TOTAL MENSUAL del mes (el sistema restará automáticamente lo reportado en P1)" : "Ingresa el valor generado en este periodo")}
                               />
                               <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
-                                {platform.currency || 'USD'}
+                                {/* Mostrar TKN para plataformas que usan tokens, no la moneda */}
+                                {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
+                                  ? 'TKN' 
+                                  : (platform.currency || 'USD')}
                               </span>
                             </div>
                             {/* Indicador discreto de resta P1 */}
