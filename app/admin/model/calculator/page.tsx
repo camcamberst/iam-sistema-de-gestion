@@ -150,6 +150,39 @@ export default function ModelCalculatorPage() {
     }
   }, [user]);
 
+  // 🔧 EARLY FREEZE: Cargar y actualizar estado de congelación periódicamente
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadFreezeStatus = async () => {
+      try {
+        const currentPeriodDate = periodDate || getColombiaPeriodStartDate();
+        const freezeStatusResponse = await fetch(
+          `/api/calculator/period-closure/platform-freeze-status?modelId=${user.id}&periodDate=${currentPeriodDate}`
+        );
+        const freezeStatusData = await freezeStatusResponse.json();
+        
+        if (freezeStatusData.success && Array.isArray(freezeStatusData.frozen_platforms)) {
+          const frozenPlatformsList = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
+          setFrozenPlatforms(frozenPlatformsList);
+          console.log('🧊 [CALCULATOR] Estado de congelación actualizado:', frozenPlatformsList);
+        } else {
+          setFrozenPlatforms([]);
+        }
+      } catch (freezeError) {
+        console.error('❌ [CALCULATOR] Error actualizando estado de congelación:', freezeError);
+      }
+    };
+
+    // Cargar inmediatamente
+    loadFreezeStatus();
+
+    // Actualizar cada 2 minutos para detectar cambios en tiempo real
+    const interval = setInterval(loadFreezeStatus, 2 * 60 * 1000);
+
+    return () => clearInterval(interval);
+  }, [user, periodDate]);
+
   // Handler para resetear ganancias hoy
   const handleResetTodayEarnings = () => {
     if (confirm('¿Deseas reiniciar el contador de "Ganancias Hoy"?\nEsto pondrá el contador en $0 para tu sesión actual, sin afectar los registros históricos ni los totales acumulados.')) {
@@ -662,10 +695,25 @@ export default function ModelCalculatorPage() {
           syncPlatformsToInputs(enabledPlatforms);
         }
 
-        // 🔧 EARLY FREEZE: Cargar lista de plataformas congeladas
-        if (savedJson.success && Array.isArray(savedJson.frozenPlatforms)) {
-          setFrozenPlatforms(savedJson.frozenPlatforms);
-          console.log('🧊 [CALCULATOR] Plataformas congeladas cargadas:', savedJson.frozenPlatforms);
+        // 🔧 EARLY FREEZE: Cargar lista de plataformas congeladas desde el endpoint
+        try {
+          const freezeStatusResponse = await fetch(
+            `/api/calculator/period-closure/platform-freeze-status?modelId=${userId}&periodDate=${periodDate || getColombiaPeriodStartDate()}`
+          );
+          const freezeStatusData = await freezeStatusResponse.json();
+          
+          if (freezeStatusData.success && Array.isArray(freezeStatusData.frozen_platforms)) {
+            const frozenPlatformsList = freezeStatusData.frozen_platforms.map((p: string) => p.toLowerCase());
+            setFrozenPlatforms(frozenPlatformsList);
+            console.log('🧊 [CALCULATOR] Plataformas congeladas cargadas desde endpoint:', frozenPlatformsList);
+            console.log('🧊 [CALCULATOR] Debug info:', freezeStatusData.debug);
+          } else {
+            console.log('🔍 [CALCULATOR] No hay plataformas congeladas o error en endpoint');
+            setFrozenPlatforms([]);
+          }
+        } catch (freezeError) {
+          console.error('❌ [CALCULATOR] Error cargando estado de congelación:', freezeError);
+          setFrozenPlatforms([]);
         }
 
       } catch (e) {
