@@ -10,7 +10,8 @@ import {
 } from '@/utils/period-closure-dates';
 import { 
   updateClosureStatus,
-  atomicArchiveAndReset
+  atomicArchiveAndReset,
+  createBackupSnapshot
 } from '@/lib/calculator/period-closure-helpers';
 import { sendBotNotification } from '@/lib/chat/bot-notifications';
 
@@ -203,7 +204,54 @@ export async function POST(request: NextRequest) {
 
     console.log(`🔄 [CLOSE-PERIOD] Procesando ${models?.length || 0} modelos...`);
 
-    // FASE 1: Archivar y Resetear valores de todas las calculadoras DE FORMA ATÓMICA
+    // FASE 1.5: CREAR BACKUP DE SEGURIDAD antes del archivado
+    console.log('💾 [CLOSE-PERIOD] Creando backups de seguridad antes del archivado...');
+    const backupResults = [];
+    let backupSuccessCount = 0;
+    let backupErrorCount = 0;
+
+    for (const model of models || []) {
+      try {
+        const backupResult = await createBackupSnapshot(model.id, periodToCloseDate, periodToCloseType);
+        if (backupResult.success) {
+          backupSuccessCount++;
+          backupResults.push({
+            model_id: model.id,
+            model_email: model.email,
+            status: 'success',
+            snapshot_id: backupResult.snapshotId
+          });
+        } else {
+          backupErrorCount++;
+          console.error(`❌ [CLOSE-PERIOD] Error creando backup para ${model.email}:`, backupResult.error);
+          backupResults.push({
+            model_id: model.id,
+            model_email: model.email,
+            status: 'error',
+            error: backupResult.error
+          });
+        }
+      } catch (error) {
+        backupErrorCount++;
+        const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
+        console.error(`❌ [CLOSE-PERIOD] Error crítico creando backup para ${model.email}:`, error);
+        backupResults.push({
+          model_id: model.id,
+          model_email: model.email,
+          status: 'error',
+          error: errorMsg
+        });
+      }
+    }
+
+    console.log(`💾 [CLOSE-PERIOD] Backups completados: ${backupSuccessCount} exitosos, ${backupErrorCount} errores`);
+    
+    // Continuar con el proceso incluso si algunos backups fallan (no es crítico)
+    if (backupErrorCount > 0) {
+      console.warn(`⚠️ [CLOSE-PERIOD] ${backupErrorCount} backups fallaron, pero continuando con el archivado...`);
+    }
+
+    // FASE 2: Archivar y Resetear valores de todas las calculadoras DE FORMA ATÓMICA
     const closureResults = [];
     let closureSuccessCount = 0;
     let closureErrorCount = 0;
@@ -423,6 +471,11 @@ export async function POST(request: NextRequest) {
 
     // FASE 8: Marcar como completado
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'completed', {
+      backup_summary: {
+        total: models?.length || 0,
+        successful: backupSuccessCount,
+        failed: backupErrorCount
+      },
       archive_results: {
         total: models?.length || 0,
         successful: closureSuccessCount,
@@ -445,6 +498,11 @@ export async function POST(request: NextRequest) {
       period_type: periodToCloseType,
       new_period_date: newPeriodDate,
       new_period_type: newPeriodType,
+      backup_summary: {
+        total: models?.length || 0,
+        successful: backupSuccessCount,
+        failed: backupErrorCount
+      },
       archive_summary: {
         total: models?.length || 0,
         successful: closureSuccessCount,

@@ -435,6 +435,149 @@ export const atomicArchiveAndReset = async (
 };
 
 /**
+ * Crea un backup de seguridad de los valores de un modelo antes del archivado
+ * Guarda todos los valores de model_values y las tasas aplicadas en calc_snapshots
+ */
+export const createBackupSnapshot = async (
+  modelId: string,
+  periodDate: string,
+  periodType: '1-15' | '16-31'
+): Promise<{ success: boolean; error?: string; snapshotId?: string }> => {
+  try {
+    // Calcular rango de fechas del período
+    const [year, month] = periodDate.split('-').map(Number);
+    let startDate: string;
+    let endDate: string;
+    
+    if (periodType === '1-15') {
+      startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      endDate = `${year}-${String(month).padStart(2, '0')}-15`;
+    } else {
+      startDate = `${year}-${String(month).padStart(2, '0')}-16`;
+      const lastDay = new Date(year, month, 0).getDate();
+      endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    }
+
+    console.log(`💾 [BACKUP] Creando snapshot para modelo ${modelId}, período ${periodType}: ${startDate} a ${endDate}`);
+
+    // 1. Obtener todos los valores de model_values del período
+    const { data: values, error: valuesError } = await supabase
+      .from('model_values')
+      .select('*')
+      .eq('model_id', modelId)
+      .gte('period_date', startDate)
+      .lte('period_date', endDate);
+
+    if (valuesError) {
+      console.error(`❌ [BACKUP] Error obteniendo valores:`, valuesError);
+      throw valuesError;
+    }
+
+    // 2. Obtener tasas activas en ese momento
+    const { data: ratesData, error: ratesError } = await supabase
+      .from('rates')
+      .select('*')
+      .eq('active', true)
+      .is('valid_to', null)
+      .order('valid_from', { ascending: false });
+
+    if (ratesError) {
+      console.error(`❌ [BACKUP] Error obteniendo tasas:`, ratesError);
+      throw ratesError;
+    }
+
+    // 3. Obtener configuración del modelo
+    const { data: config, error: configError } = await supabase
+      .from('calculator_config')
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('active', true)
+      .single();
+
+    if (configError && configError.code !== 'PGRST116') {
+      console.error(`❌ [BACKUP] Error obteniendo configuración:`, configError);
+      throw configError;
+    }
+
+    // 4. Preparar datos del snapshot
+    const snapshotData = {
+      period_date: periodDate,
+      period_type: periodType,
+      period_start: startDate,
+      period_end: endDate,
+      model_values: values || [],
+      rates: ratesData || [],
+      model_config: config || null,
+      created_at: new Date().toISOString()
+    };
+
+    // 5. Preparar datos del snapshot
+    // La tabla calc_snapshots requiere period_id (UUID), pero nuestro sistema usa period_date y period_type
+    // Generamos un UUID determinístico basado en period_date y period_type para mantener consistencia
+    // Usamos crypto para generar un UUID determinístico desde period_date + period_type + model_id
+    const periodReference = `${periodDate}_${periodType}_${modelId}`;
+    
+    // Generar UUID determinístico usando crypto (disponible en Node.js)
+    const crypto = require('crypto');
+    const periodIdHash = crypto.createHash('sha256').update(periodReference).digest('hex');
+    // Convertir a UUID v4 format (8-4-4-4-12)
+    const periodId = `${periodIdHash.substring(0, 8)}-${periodIdHash.substring(8, 12)}-${periodIdHash.substring(12, 16)}-${periodIdHash.substring(16, 20)}-${periodIdHash.substring(20, 32)}`;
+
+    const snapshotRecord = {
+      model_id: modelId,
+      period_id: periodId,
+      totals_json: {
+        period_date: periodDate,
+        period_type: periodType,
+        period_start: startDate,
+        period_end: endDate,
+        values: values || [],
+        total_platforms: values?.length || 0,
+        total_value: values?.reduce((sum: number, v: any) => sum + (Number(v.value) || 0), 0) || 0,
+        snapshot_metadata: {
+          created_at: new Date().toISOString(),
+          backup_purpose: 'period_closure_safety_backup'
+        }
+      },
+      rates_applied_json: {
+        rates: ratesData || [],
+        model_config: config || null,
+        snapshot_timestamp: new Date().toISOString(),
+        period_reference: periodReference
+      }
+    };
+
+    // 6. Guardar en calc_snapshots usando upsert para evitar duplicados
+    const { data: snapshotResult, error: snapshotError } = await supabase
+      .from('calc_snapshots')
+      .upsert(snapshotRecord, {
+        onConflict: 'model_id,period_id',
+        ignoreDuplicates: false
+      })
+      .select()
+      .single();
+
+    if (snapshotError) {
+      console.error(`❌ [BACKUP] Error guardando snapshot:`, snapshotError);
+      throw snapshotError;
+    }
+
+    console.log(`✅ [BACKUP] Snapshot creado exitosamente: ${snapshotResult?.id}`);
+    return {
+      success: true,
+      snapshotId: snapshotResult?.id
+    };
+
+  } catch (error) {
+    console.error('❌ [BACKUP] Error crítico creando snapshot:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Error desconocido'
+    };
+  }
+};
+
+/**
  * Archiva valores de un modelo para el período
  * IMPORTANTE: Busca valores en el RANGO del período y calcula todas las métricas necesarias
  */
