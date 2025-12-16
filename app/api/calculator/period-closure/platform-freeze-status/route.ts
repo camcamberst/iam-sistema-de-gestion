@@ -48,8 +48,28 @@ export async function GET(request: NextRequest) {
       ? `${currentYear}-${currentMonth}-01`
       : `${currentYear}-${currentMonth}-16`;
     
+    // 🔍 VERIFICAR SI EL PERÍODO ACTUAL YA FUE CERRADO PRIMERO
+    // Si ya fue cerrado, NO buscar registros en BD (deben estar limpios)
+    let periodAlreadyClosed = false;
+    const { data: closureStatus } = await supabase
+      .from('calculator_period_closure_status')
+      .select('status')
+      .eq('period_date', currentPeriodDate)
+      .eq('period_type', currentPeriodType)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+    
+    periodAlreadyClosed = closureStatus?.status === 'completed';
+    
     // Obtener plataformas congeladas para este modelo desde BD usando el período ACTUAL
-    const frozenPlatformsFromDB = await getFrozenPlatformsForModel(currentPeriodDate, modelId);
+    // SOLO si el período NO ha sido cerrado
+    let frozenPlatformsFromDB: string[] = [];
+    if (!periodAlreadyClosed) {
+      frozenPlatformsFromDB = await getFrozenPlatformsForModel(currentPeriodDate, modelId);
+    } else {
+      console.log(`✅ [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) ya cerrado. No buscar registros en BD.`);
+    }
     const allFrozenPlatforms = new Set(frozenPlatformsFromDB.map(p => p.toLowerCase()));
 
     // 🔒 VERIFICACIÓN AUTOMÁTICA ESCALABLE:
@@ -65,41 +85,69 @@ export async function GET(request: NextRequest) {
     // Verificar si es día previo al cierre (31 o 15)
     const isDayBeforeClosure = day === 31 || day === 15;
     
-    // 🔍 VERIFICAR SI EL PERÍODO ACTUAL YA FUE CERRADO
-    // Si el período ya fue cerrado, NO aplicar early freeze (período nuevo inició)
-    let periodAlreadyClosed = false;
-    if (isClosure || isDayBeforeClosure) {
-      const { data: closureStatus } = await supabase
-        .from('calculator_period_closure_status')
-        .select('status')
-        .eq('period_date', currentPeriodDate)
-        .eq('period_type', currentPeriodType)
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-      
-      periodAlreadyClosed = closureStatus?.status === 'completed';
-      
-      if (periodAlreadyClosed) {
-        console.log(`✅ [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) ya fue cerrado. No aplicar early freeze.`);
-      } else {
-        console.log(`📅 [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) aún no ha sido cerrado. Early freeze puede aplicarse.`);
-      }
+    // La verificación de período cerrado ya se hizo arriba
+    if (periodAlreadyClosed) {
+      console.log(`✅ [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) ya fue cerrado. No aplicar early freeze.`);
+    } else {
+      console.log(`📅 [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) aún no ha sido cerrado. Early freeze puede aplicarse.`);
     }
     
-    // 🧹 LIMPIEZA: Eliminar registros antiguos de períodos anteriores
+    // 🧹 LIMPIEZA AGRESIVA: Eliminar TODOS los registros de períodos ya cerrados
     // Esto asegura que no queden registros "zombie" de períodos ya cerrados
     try {
-      const { error: cleanupError } = await supabase
+      // Primero: Eliminar registros de períodos que ya fueron cerrados (status = 'completed')
+      // IMPORTANTE: Limpiar para TODOS los modelos, no solo el actual, para evitar registros "zombie"
+      const { data: closedPeriods } = await supabase
+        .from('calculator_period_closure_status')
+        .select('period_date')
+        .eq('status', 'completed');
+      
+      if (closedPeriods && closedPeriods.length > 0) {
+        const closedPeriodDates = closedPeriods.map(p => p.period_date);
+        console.log(`🧹 [PLATFORM-FREEZE-STATUS] Encontrados ${closedPeriodDates.length} períodos cerrados:`, closedPeriodDates);
+        
+        // Limpiar registros de períodos cerrados para este modelo específico
+        const { error: cleanupClosedError, count: deletedCount } = await supabase
+          .from('calculator_early_frozen_platforms')
+          .delete()
+          .eq('model_id', modelId)
+          .in('period_date', closedPeriodDates)
+          .select('*', { count: 'exact', head: false });
+        
+        if (cleanupClosedError) {
+          console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error limpiando períodos cerrados:', cleanupClosedError);
+        } else {
+          console.log(`🧹 [PLATFORM-FREEZE-STATUS] Limpieza de períodos cerrados: ${deletedCount || 0} registros eliminados para modelo ${modelId.substring(0, 8)}`);
+        }
+      }
+      
+      // Segundo: Eliminar registros que NO son del período actual
+      const { error: cleanupCurrentError } = await supabase
         .from('calculator_early_frozen_platforms')
         .delete()
         .eq('model_id', modelId)
         .neq('period_date', currentPeriodDate);
       
-      if (cleanupError) {
-        console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error limpiando registros antiguos:', cleanupError);
+      if (cleanupCurrentError) {
+        console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error limpiando registros del período actual:', cleanupCurrentError);
       } else {
-        console.log(`🧹 [PLATFORM-FREEZE-STATUS] Limpieza de registros antiguos completada para modelo ${modelId.substring(0, 8)}`);
+        console.log(`🧹 [PLATFORM-FREEZE-STATUS] Limpieza de registros fuera del período actual completada`);
+      }
+      
+      // Tercero: Si el período actual ya fue cerrado, eliminar TODOS los registros de este modelo
+      if (periodAlreadyClosed) {
+        const { error: cleanupAllError } = await supabase
+          .from('calculator_early_frozen_platforms')
+          .delete()
+          .eq('model_id', modelId);
+        
+        if (cleanupAllError) {
+          console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error limpiando todos los registros (período cerrado):', cleanupAllError);
+        } else {
+          console.log(`🧹 [PLATFORM-FREEZE-STATUS] Limpieza completa: período cerrado, todos los registros eliminados`);
+          // Limpiar también el Set para asegurar que no se devuelvan plataformas congeladas
+          allFrozenPlatforms.clear();
+        }
       }
     } catch (cleanupErr) {
       console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error en limpieza:', cleanupErr);

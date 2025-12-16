@@ -375,17 +375,46 @@ export async function POST(request: NextRequest) {
     }
 
     // FASE 7: Limpiar registros de early freeze del período cerrado
+    // IMPORTANTE: Limpiar TODOS los registros de este período, no solo los del período actual
+    // porque el early freeze puede haberse ejecutado con diferentes period_date
     console.log('🧹 [CLOSE-PERIOD] Limpiando registros de early freeze del período cerrado...');
-    const { error: cleanupError } = await supabase
+    
+    // Calcular todas las posibles fechas del período (puede haber registros con diferentes fechas)
+    const [year, month] = periodToCloseDate.split('-').map(Number);
+    let periodStartDate: string;
+    let periodEndDate: string;
+    
+    if (periodToCloseType === '1-15') {
+      periodStartDate = `${year}-${String(month).padStart(2, '0')}-01`;
+      periodEndDate = `${year}-${String(month).padStart(2, '0')}-15`;
+    } else {
+      periodStartDate = `${year}-${String(month).padStart(2, '0')}-16`;
+      const lastDay = new Date(year, month, 0).getDate();
+      periodEndDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+    }
+    
+    // Limpiar por period_date exacto (el que se usó en el cierre)
+    const { error: cleanupError1, count: deletedCount1 } = await supabase
       .from('calculator_early_frozen_platforms')
       .delete()
-      .eq('period_date', periodToCloseDate);
+      .eq('period_date', periodToCloseDate)
+      .select('*', { count: 'exact', head: false });
     
-    if (cleanupError) {
-      console.error('❌ [CLOSE-PERIOD] Error limpiando early freeze:', cleanupError);
+    // También limpiar por rango de fechas del período (por si hay registros con otras fechas)
+    const { error: cleanupError2, count: deletedCount2 } = await supabase
+      .from('calculator_early_frozen_platforms')
+      .delete()
+      .gte('period_date', periodStartDate)
+      .lte('period_date', periodEndDate)
+      .select('*', { count: 'exact', head: false });
+    
+    const totalDeleted = (deletedCount1 || 0) + (deletedCount2 || 0);
+    
+    if (cleanupError1 || cleanupError2) {
+      console.error('❌ [CLOSE-PERIOD] Error limpiando early freeze:', cleanupError1 || cleanupError2);
       // No es crítico, continuar con el proceso
     } else {
-      console.log('✅ [CLOSE-PERIOD] Registros de early freeze limpiados correctamente');
+      console.log(`✅ [CLOSE-PERIOD] Registros de early freeze limpiados: ${totalDeleted} registros eliminados`);
     }
 
     // FASE 8: Marcar como completado
