@@ -60,10 +60,13 @@ export async function GET(request: NextRequest) {
       .limit(1)
       .single();
     
-    periodAlreadyClosed = closureStatus?.status === 'completed';
+    // Considerar períodos cerrados o en proceso de cierre como "cerrados"
+    // Estados que indican que el período está cerrado o en proceso: completed, closing_calculators, waiting_summary, closing_summary
+    const closedStatuses = ['completed', 'closing_calculators', 'waiting_summary', 'closing_summary'];
+    periodAlreadyClosed = closureStatus?.status ? closedStatuses.includes(closureStatus.status) : false;
     
     // 🔒 CRÍTICO: Si estamos en día 16 o después, verificar si el período anterior (1-15) fue cerrado
-    // Si el período anterior fue cerrado, estamos en un período nuevo y NO debemos aplicar early freeze
+    // Si el período anterior fue cerrado o está en proceso de cierre, estamos en un período nuevo y NO debemos aplicar early freeze
     if (currentDay >= 16 && !periodAlreadyClosed) {
       const previousPeriodDate = `${currentYear}-${currentMonth}-01`;
       const { data: previousClosureStatus } = await supabase
@@ -75,9 +78,9 @@ export async function GET(request: NextRequest) {
         .limit(1)
         .single();
       
-      if (previousClosureStatus?.status === 'completed') {
+      if (previousClosureStatus?.status && closedStatuses.includes(previousClosureStatus.status)) {
         periodAlreadyClosed = true; // Tratar como cerrado para evitar early freeze en período nuevo
-        console.log(`✅ [PLATFORM-FREEZE-STATUS] Período anterior (1-15) fue cerrado. Estamos en período nuevo (16-31). No aplicar early freeze.`);
+        console.log(`✅ [PLATFORM-FREEZE-STATUS] Período anterior (1-15) está cerrado o en proceso (status: ${previousClosureStatus.status}). Estamos en período nuevo (16-31). No aplicar early freeze.`);
       }
     }
     
