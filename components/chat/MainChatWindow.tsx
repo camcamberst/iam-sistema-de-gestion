@@ -587,11 +587,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
             <>
               <div className="w-8 h-8 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 flex-shrink-0">
                 <span className="text-white dark:text-gray-900 font-bold text-xs tracking-wider">AIM</span>
-              </div>
+          </div>
               <div className="flex-1">
-                <p className="text-white text-sm font-semibold">AIM Assistant</p>
-                <p className="text-gray-400 text-xs">Soporte y tips</p>
-              </div>
+            <p className="text-white text-sm font-semibold">AIM Assistant</p>
+            <p className="text-gray-400 text-xs">Soporte y tips</p>
+          </div>
             </>
           )}
         </div>
@@ -953,10 +953,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                     )}
                     <div
                       className={`group flex items-start ${isGrouped ? 'mb-1' : 'mb-3'} ${message.sender_id === userId ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div
+                >
+                  <div
                         className={`relative max-w-[85%] rounded-2xl animate-fadeIn ${
-                          message.sender_id === userId
+                      message.sender_id === userId
                             ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white shadow-[0_2px_8px_rgba(59,130,246,0.25)]'
                             : 'bg-gray-800/95 backdrop-blur-sm text-gray-50 shadow-[0_2px_8px_rgba(0,0,0,0.15)]'
                         }`}
@@ -1089,7 +1089,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-[10px] leading-none text-gray-400/70" title={new Date(message.created_at).toLocaleString('es-ES')}>
                                     {formatMessageTime(message.created_at)}
-                                  </span>
+                    </span>
                                 </div>
                               </>
                             )}
@@ -1144,10 +1144,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                               {emoji}
                             </button>
                           ))}
-                        </div>
-                      </div>
-                    ))}
                   </div>
+                </div>
+              ))}
+            </div>
                 </div>
               )}
               
@@ -1194,17 +1194,17 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                   </button>
                   
                   {/* Botón enviar */}
-                  <button
-                    onClick={sendMessage}
-                    disabled={!newMessage.trim()}
+                <button
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim()}
                     className="flex-shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed text-white p-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200 shadow-md hover:shadow-lg"
                     title="Enviar mensaje (Enter)"
                     aria-label="Enviar mensaje"
-                  >
+                >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-                    </svg>
-                  </button>
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </button>
                 </div>
               </div>
             </div>

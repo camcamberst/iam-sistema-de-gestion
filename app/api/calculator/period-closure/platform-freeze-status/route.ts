@@ -102,8 +102,22 @@ export async function GET(request: NextRequest) {
         console.log(`⏳ [PLATFORM-FREEZE-STATUS] Aún no es hora de early freeze`);
         console.log(`   Falta ${(targetTimeMinutes + 15) - currentTimeMinutes} minutos`);
       }
+
+      // 🔒 DX LIVE: Congelación especial a las 10:00 AM Colombia (en días de cierre de período)
+      // DX Live sigue la misma lógica de cierre de período pero a las 10:00 AM Colombia
+      const dxLiveFreezeHour = 10; // 10:00 AM Colombia
+      const dxLiveFreezeMinutes = dxLiveFreezeHour * 60;
+      const hasPassedDxLiveFreeze = currentTimeMinutes >= (dxLiveFreezeMinutes + 5); // +5 minutos de margen
+      
+      if (hasPassedDxLiveFreeze) {
+        console.log(`🔒 [PLATFORM-FREEZE-STATUS] DX Live congelado (10:00 AM Colombia)`);
+        allFrozenPlatforms.add('dxlive');
+      } else {
+        console.log(`⏳ [PLATFORM-FREEZE-STATUS] DX Live aún no está congelado (antes de 10:00 AM Colombia)`);
+        console.log(`   Falta ${(dxLiveFreezeMinutes + 5) - currentTimeMinutes} minutos`);
+      }
     } else {
-      console.log(`📅 [PLATFORM-FREEZE-STATUS] No es día de cierre (días 1 y 16)`);
+      console.log(`📅 [PLATFORM-FREEZE-STATUS] No es día de cierre (días 1, 15, 16 o 31)`);
     }
 
     const frozenPlatforms = Array.from(allFrozenPlatforms);
