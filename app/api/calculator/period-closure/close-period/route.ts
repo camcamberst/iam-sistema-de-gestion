@@ -214,6 +214,15 @@ export async function POST(request: NextRequest) {
         const result = await atomicArchiveAndReset(model.id, periodToCloseDate, periodToCloseType);
         
         if (result.success) {
+          // 🔒 VALIDACIÓN ADICIONAL: Verificar que el archivo fue exitoso antes de continuar
+          if (result.archived === 0 && result.deleted > 0) {
+            // Caso especial: No había valores para archivar, pero se eliminaron valores residuales
+            console.log(`⚠️ [CLOSE-PERIOD] Modelo ${model.email}: No había valores para archivar (puede ser normal si el período ya estaba limpio)`);
+          } else if (result.archived === 0) {
+            // No se archivó nada y no se eliminó nada - puede ser normal si no había valores
+            console.log(`ℹ️ [CLOSE-PERIOD] Modelo ${model.email}: No había valores para procesar`);
+          }
+          
           closureSuccessCount++;
           closureResults.push({
             model_id: model.id,
@@ -224,26 +233,57 @@ export async function POST(request: NextRequest) {
           });
         } else {
           closureErrorCount++;
+          const errorMsg = result.error || 'Error desconocido en atomicArchiveAndReset';
+          console.error(`❌ [CLOSE-PERIOD] Error en cierre atómico para ${model.email}:`, errorMsg);
           closureResults.push({
             model_id: model.id,
             model_email: model.email,
             status: 'error',
-            error: result.error
+            error: errorMsg
           });
         }
       } catch (error) {
         closureErrorCount++;
+        const errorMsg = error instanceof Error ? error.message : 'Error desconocido';
         console.error(`❌ [CLOSE-PERIOD] Error cerrando modelo ${model.email}:`, error);
         closureResults.push({
           model_id: model.id,
           model_email: model.email,
           status: 'error',
-          error: error instanceof Error ? error.message : 'Error desconocido'
+          error: errorMsg
         });
       }
     }
 
-    console.log(`✅ [CLOSE-PERIOD] Proceso completado: ${closureSuccessCount} exitosos, ${closureErrorCount} errores`);
+    console.log(`✅ [CLOSE-PERIOD] Proceso de archivo completado: ${closureSuccessCount} exitosos, ${closureErrorCount} errores`);
+
+    // 🔒 VALIDACIÓN CRÍTICA: Si hay errores significativos, detener el proceso antes de resetear
+    const errorThreshold = Math.floor((models?.length || 0) * 0.1); // 10% de errores es el umbral
+    if (closureErrorCount > errorThreshold && !bypassGuardrails) {
+      const errorMsg = `Demasiados errores en el archivo (${closureErrorCount} de ${models?.length || 0}). El proceso se detiene para evitar pérdida de datos.`;
+      console.error(`❌ [CLOSE-PERIOD] ${errorMsg}`);
+      await updateClosureStatus(periodToCloseDate, periodToCloseType, 'failed', {
+        error: errorMsg,
+        archive_results: {
+          total: models?.length || 0,
+          successful: closureSuccessCount,
+          failed: closureErrorCount
+        },
+        failed_at: new Date().toISOString()
+      });
+      return NextResponse.json({
+        success: false,
+        error: errorMsg,
+        archive_summary: {
+          total: models?.length || 0,
+          successful: closureSuccessCount,
+          failed: closureErrorCount
+        },
+        details: {
+          closure: closureResults
+        }
+      }, { status: 500 });
+    }
 
     // FASE 2: Esperar 2.5 minutos (150 segundos) para que Resumen de Facturación reciba última actualización
     console.log('⏳ [CLOSE-PERIOD] Esperando para última actualización del resumen...');

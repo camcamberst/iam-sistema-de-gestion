@@ -481,6 +481,90 @@ export async function GET(request: NextRequest) {
       } else {
         historyData = history;
       }
+
+      // 🔧 RECONSTRUCCIÓN: Si calculator_history está vacío, intentar reconstruir desde calculator_totals
+      // Esto es necesario para períodos que no se archivaron correctamente (ej: P1 diciembre 2025)
+      if (!historyData || historyData.length === 0) {
+        console.log('⚠️ [BILLING-SUMMARY] calculator_history vacío para período cerrado. Intentando reconstruir desde calculator_totals...');
+        
+        // Buscar en calculator_totals para el rango del período (también buscar en 2024 por si hubo error de año)
+        const { data: totals2025, error: totalsError2025 } = await supabase
+          .from('calculator_totals')
+          .select('model_id, period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
+          .in('model_id', modelIds)
+          .gte('period_date', startStr)
+          .lte('period_date', endStr)
+          .order('period_date', { ascending: false });
+
+        // También buscar en 2024 por si hubo error de año (como ocurrió en el pasado)
+        const [yearStr, monthStr] = startStr.split('-');
+        const year2024 = parseInt(yearStr) - 1;
+        const startStr2024 = `${year2024}-${monthStr}-${startStr.split('-')[2]}`;
+        const endStr2024 = `${year2024}-${monthStr}-${endStr.split('-')[2]}`;
+        
+        const { data: totals2024, error: totalsError2024 } = await supabase
+          .from('calculator_totals')
+          .select('model_id, period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
+          .in('model_id', modelIds)
+          .gte('period_date', startStr2024)
+          .lte('period_date', endStr2024)
+          .order('period_date', { ascending: false });
+
+        if (totalsError2025) {
+          console.error('❌ [BILLING-SUMMARY] Error buscando totals 2025:', totalsError2025);
+        }
+        if (totalsError2024) {
+          console.error('❌ [BILLING-SUMMARY] Error buscando totals 2024:', totalsError2024);
+        }
+
+        // Combinar resultados (priorizar 2025, pero incluir 2024 si existe)
+        const allTotals = [...(totals2025 || []), ...(totals2024 || [])];
+        
+        if (allTotals && allTotals.length > 0) {
+          console.log(`✅ [BILLING-SUMMARY] Reconstruyendo desde calculator_totals: ${allTotals.length} registros encontrados`);
+          
+          // Agrupar por model_id y tomar el más reciente (por updated_at)
+          const totalsByModel = new Map();
+          for (const total of allTotals) {
+            const existing = totalsByModel.get(total.model_id);
+            if (!existing || new Date(total.updated_at) > new Date(existing.updated_at)) {
+              // Si es de 2024, corregir el año a 2025
+              const correctedPeriodDate = total.period_date.startsWith(year2024.toString()) 
+                ? total.period_date.replace(year2024.toString(), yearStr)
+                : total.period_date;
+              
+              totalsByModel.set(total.model_id, {
+                ...total,
+                period_date: correctedPeriodDate
+              });
+            }
+          }
+
+          // Convertir totals a formato compatible con historyData (solo para totales, sin detalle por plataforma)
+          // Crear registros sintéticos que representen los totales consolidados
+          const syntheticHistory: any[] = [];
+          for (const [modelId, total] of Array.from(totalsByModel.entries())) {
+            // Crear un registro sintético que represente el total consolidado
+            // Nota: No tenemos detalle por plataforma, solo totales
+            syntheticHistory.push({
+              model_id: modelId,
+              platform_id: '_consolidated', // Marcador especial para indicar que es consolidado
+              value: 0, // No tenemos el valor original por plataforma
+              value_usd_bruto: total.total_usd_bruto || 0,
+              value_usd_modelo: total.total_usd_modelo || 0,
+              value_cop_modelo: total.total_cop_modelo || 0,
+              period_date: total.period_date,
+              period_type: expectedType,
+              _is_synthetic: true // Flag para identificar registros reconstruidos
+            });
+          }
+
+          historyData = syntheticHistory;
+          console.log(`✅ [BILLING-SUMMARY] Reconstrucción completada: ${syntheticHistory.length} modelos con totales consolidados`);
+        } else {
+          console.log('⚠️ [BILLING-SUMMARY] No se encontraron datos en calculator_totals para reconstruir');
+        }
+      }
     }
 
     // Combinar datos (en activo: solo totals; en cerrado: solo history)
@@ -545,60 +629,95 @@ export async function GET(request: NextRequest) {
     // USD Agencia: USD Bruto - USD Modelo
     const historyMap = new Map();
     if (historyData && historyData.length > 0) {
-      console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history (misma lógica que Mi Historial)');
+      // Verificar si hay registros sintéticos (reconstruidos desde calculator_totals)
+      const hasSyntheticRecords = historyData.some((item: any) => item._is_synthetic);
       
-      historyData.forEach(item => {
-        if (!historyMap.has(item.model_id)) {
-          historyMap.set(item.model_id, {
-            model_id: item.model_id,
-            total_usd_bruto: 0,
-            total_usd_modelo: 0,
-            total_cop_modelo: 0,
-            period_date: item.period_date,
-            dataSource: 'calculator_history'
-          });
-        }
+      if (hasSyntheticRecords) {
+        console.log('📚 [BILLING-SUMMARY] Procesando datos sintéticos reconstruidos desde calculator_totals');
+        // Los registros sintéticos ya vienen con los totales consolidados, no necesitan sumarse por plataforma
+        historyData.forEach((item: any) => {
+          if (item._is_synthetic) {
+            historyMap.set(item.model_id, {
+              model_id: item.model_id,
+              total_usd_bruto: item.value_usd_bruto || 0,
+              total_usd_modelo: item.value_usd_modelo || 0,
+              total_cop_modelo: item.value_cop_modelo || 0,
+              period_date: item.period_date,
+              dataSource: 'calculator_totals_reconstructed'
+            });
+          }
+        });
+      } else {
+        console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history (misma lógica que Mi Historial)');
+        // Procesamiento normal: sumar por plataforma
+        historyData.forEach(item => {
+          if (!historyMap.has(item.model_id)) {
+            historyMap.set(item.model_id, {
+              model_id: item.model_id,
+              total_usd_bruto: 0,
+              total_usd_modelo: 0,
+              total_cop_modelo: 0,
+              period_date: item.period_date,
+              dataSource: 'calculator_history'
+            });
+          }
+          
+          const modelData = historyMap.get(item.model_id);
+          
+          // USD Bruto: Sumar todos los value_usd_bruto de todas las plataformas (sin repartición)
+          if (item.value_usd_bruto !== null && item.value_usd_bruto !== undefined) {
+            modelData.total_usd_bruto += Number(item.value_usd_bruto) || 0;
+          } else {
+            // Fallback: Si no hay value_usd_bruto, usar el valor original (datos antiguos)
+            // NOTA: Esto debería ser raro ya que los registros nuevos siempre tienen value_usd_bruto
+            modelData.total_usd_bruto += Number(item.value) || 0;
+          }
+          
+          // USD Modelo y COP Modelo: Sumar de los registros individuales
+          if (item.value_usd_modelo !== null && item.value_usd_modelo !== undefined) {
+            modelData.total_usd_modelo += Number(item.value_usd_modelo) || 0;
+          }
+          if (item.value_cop_modelo !== null && item.value_cop_modelo !== undefined) {
+            modelData.total_cop_modelo += Number(item.value_cop_modelo) || 0;
+          }
+        });
         
-        const modelData = historyMap.get(item.model_id);
-        
-        // USD Bruto: Sumar todos los value_usd_bruto de todas las plataformas (sin repartición)
-        if (item.value_usd_bruto !== null && item.value_usd_bruto !== undefined) {
-          modelData.total_usd_bruto += Number(item.value_usd_bruto) || 0;
-        } else {
-          // Fallback: Si no hay value_usd_bruto, usar el valor original (datos antiguos)
-          // NOTA: Esto debería ser raro ya que los registros nuevos siempre tienen value_usd_bruto
-          modelData.total_usd_bruto += Number(item.value) || 0;
+        // Para registros normales, si no tienen value_usd_modelo calculado, calcularlo ahora
+        // Obtener configuraciones de porcentaje por modelo (calculator_config)
+        const modelIds = Array.from(historyMap.keys());
+        const { data: modelConfigs, error: configError } = await supabase
+          .from('calculator_config')
+          .select('model_id, percentage_override, group_percentage')
+          .in('model_id', modelIds);
+
+        if (configError) {
+          console.warn('⚠️ [BILLING-SUMMARY] Error obteniendo configuraciones de modelos:', configError);
         }
-      });
 
-      // Obtener configuraciones de porcentaje por modelo (calculator_config)
-      const modelIds = Array.from(historyMap.keys());
-      const { data: modelConfigs, error: configError } = await supabase
-        .from('calculator_config')
-        .select('model_id, percentage_override, group_percentage')
-        .in('model_id', modelIds);
+        const configMap = new Map((modelConfigs || []).map((c: any) => [c.model_id, c]));
 
-      if (configError) {
-        console.warn('⚠️ [BILLING-SUMMARY] Error obteniendo configuraciones de modelos:', configError);
+        // Calcular USD Modelo y USD Agencia para cada modelo (solo si no están ya calculados)
+        historyMap.forEach((modelData: any, modelId) => {
+          // Si los totales ya están calculados (registros sintéticos o con value_usd_modelo), no recalcular
+          if (modelData.total_usd_modelo > 0 || modelData.total_cop_modelo > 0) {
+            console.log(`📊 [BILLING-SUMMARY] Modelo ${modelId}: Usando totales ya calculados (USD Modelo=${modelData.total_usd_modelo.toFixed(2)})`);
+            return;
+          }
+          
+          // Obtener porcentaje de la modelo (prioridad: percentage_override > group_percentage > 80% por defecto)
+          const config = configMap.get(modelId);
+          const modelPercentage = config?.percentage_override || config?.group_percentage || 80;
+          
+          // USD Modelo: USD Bruto × porcentaje de la modelo
+          modelData.total_usd_modelo = modelData.total_usd_bruto * (modelPercentage / 100);
+          
+          // COP Modelo: USD Modelo × tasa USD_COP (obtener tasa del período si está disponible)
+          // Por ahora usamos la tasa actual, pero idealmente deberíamos usar la tasa del período
+          modelData.total_cop_modelo = modelData.total_usd_modelo * (usdCopRateValue || 3900);
+          
+          console.log(`📊 [BILLING-SUMMARY] Modelo ${modelId}: USD Bruto=${modelData.total_usd_bruto.toFixed(2)}, Porcentaje=${modelPercentage}%, USD Modelo=${modelData.total_usd_modelo.toFixed(2)}`);
+        });
       }
-
-      const configMap = new Map((modelConfigs || []).map((c: any) => [c.model_id, c]));
-
-      // Calcular USD Modelo y USD Agencia para cada modelo
-      historyMap.forEach((modelData, modelId) => {
-        // Obtener porcentaje de la modelo (prioridad: percentage_override > group_percentage > 80% por defecto)
-        const config = configMap.get(modelId);
-        const modelPercentage = config?.percentage_override || config?.group_percentage || 80;
-        
-        // USD Modelo: USD Bruto × porcentaje de la modelo
-        modelData.total_usd_modelo = modelData.total_usd_bruto * (modelPercentage / 100);
-        
-        // COP Modelo: USD Modelo × tasa USD_COP (obtener tasa del período si está disponible)
-        // Por ahora usamos la tasa actual, pero idealmente deberíamos usar la tasa del período
-        modelData.total_cop_modelo = modelData.total_usd_modelo * (usdCopRateValue || 3900);
-        
-        console.log(`📊 [BILLING-SUMMARY] Modelo ${modelId}: USD Bruto=${modelData.total_usd_bruto.toFixed(2)}, Porcentaje=${modelPercentage}%, USD Modelo=${modelData.total_usd_modelo.toFixed(2)}`);
-      });
     }
 
     // 3.4. Procesar datos de calculator_totals (período activo) para modelos sin datos en historial

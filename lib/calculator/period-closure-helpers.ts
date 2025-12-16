@@ -345,9 +345,32 @@ export const atomicArchiveAndReset = async (
         console.error(`❌ [ATOMIC-CLOSE] Error archivando en history:`, historyError);
         throw historyError;
       }
+
+      // 🔒 VALIDACIÓN CRÍTICA: Verificar que los datos SÍ se insertaron correctamente
+      console.log(`🔍 [ATOMIC-CLOSE] Validando que los datos se insertaron correctamente...`);
+      const { data: verificationData, error: verificationError } = await supabase
+        .from('calculator_history')
+        .select('id, model_id, platform_id, period_date, period_type')
+        .eq('model_id', modelId)
+        .eq('period_date', startDate)
+        .eq('period_type', periodType);
+
+      if (verificationError) {
+        console.error(`❌ [ATOMIC-CLOSE] Error verificando inserción:`, verificationError);
+        throw new Error(`Validación fallida: No se pudo verificar la inserción en calculator_history: ${verificationError.message}`);
+      }
+
+      const verifiedCount = verificationData?.length || 0;
+      if (verifiedCount < historyInserts.length) {
+        const errorMsg = `Validación fallida: Se intentaron insertar ${historyInserts.length} registros pero solo se verificaron ${verifiedCount} en calculator_history`;
+        console.error(`❌ [ATOMIC-CLOSE] ${errorMsg}`);
+        throw new Error(errorMsg);
+      }
+
+      console.log(`✅ [ATOMIC-CLOSE] Validación exitosa: ${verifiedCount} registros verificados en calculator_history`);
     }
 
-    console.log(`✅ [ATOMIC-CLOSE] ${historyInserts.length} registros archivados`);
+    console.log(`✅ [ATOMIC-CLOSE] ${historyInserts.length} registros archivados y verificados`);
 
     // 8. ELIMINAR VALORES DE MODEL_VALUES (limpiar período cerrado)
     console.log(`🗑️ [ATOMIC-CLOSE] Eliminando valores del rango ${startDate} a ${endDate}...`);
