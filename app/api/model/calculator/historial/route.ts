@@ -363,25 +363,27 @@ export async function GET(request: NextRequest) {
         usd_cop: activeRates?.find((r: any) => r.kind === 'USD→COP')?.value || 3900
       };
 
-      // Para cada total encontrado, crear un período sintético
-      missingTotals.forEach((total: any) => {
-        const periodDate = total.period_date;
+      // Crear UN SOLO período sintético consolidado usando el último total disponible
+      // missingTotals ya viene ordenado por period_date DESC, así que tomamos el primero
+      const bestTotal = missingTotals[0];
+      if (bestTotal) {
+        const periodDate = bestTotal.period_date;
         const periodType = '1-15'; // P1 de diciembre
         const periodKey = `${periodDate}-${periodType}`;
 
         // Solo crear si no existe ya en periodsMap
         if (!periodsMap.has(periodKey)) {
-          console.log(`🔧 [CALCULATOR-HISTORIAL] Creando período sintético para ${periodKey} desde calculator_totals`);
+          console.log(`🔧 [CALCULATOR-HISTORIAL] Creando período sintético consolidado para ${periodKey} desde calculator_totals`);
           
           periodsMap.set(periodKey, {
             period_date: periodDate,
             period_type: periodType,
-            archived_at: total.updated_at || new Date().toISOString(),
+            archived_at: bestTotal.updated_at || new Date().toISOString(),
             platforms: [], // Sin desglose por plataforma
             total_value: 0, // No tenemos el valor original
-            total_usd_bruto: Number(total.total_usd_bruto) || 0,
-            total_usd_modelo: Number(total.total_usd_modelo) || 0,
-            total_cop_modelo: Number(total.total_cop_modelo) || 0,
+            total_usd_bruto: Number(bestTotal.total_usd_bruto) || 0,
+            total_usd_modelo: Number(bestTotal.total_usd_modelo) || 0,
+            total_cop_modelo: Number(bestTotal.total_cop_modelo) || 0,
             total_anticipos: 0,
             total_deducciones: 0,
             neto_pagar: null,
@@ -396,7 +398,7 @@ export async function GET(request: NextRequest) {
             synthetic_note: 'Período reconstruido desde totales (sin desglose por plataforma)'
           } as any);
         }
-      });
+      }
     }
 
     // PASO 4: Obtener alertas y notificaciones
