@@ -127,7 +127,12 @@ SELECT EXISTS (
   AND table_name = 'calc_snapshots'
 ) as tabla_calc_snapshots_existe;
 
--- 3.2 Si existe, buscar snapshots recientes
+-- 3.2 Buscar snapshots recientes (solo si la tabla existe)
+-- Si la tabla no existe, esta consulta fallará silenciosamente
+-- Puedes comentarla si prefieres evitar el error
+-- 
+-- DESCOMENTA las siguientes líneas SOLO si la tabla calc_snapshots existe:
+/*
 SELECT 
   'calc_snapshots: últimos 48h' as busqueda,
   COUNT(*) as total_snapshots,
@@ -135,7 +140,6 @@ SELECT
 FROM calc_snapshots
 WHERE created_at >= NOW() - INTERVAL '48 hours';
 
--- 3.3 MUESTRA DE SNAPSHOTS (si hay)
 SELECT 
   id,
   model_id,
@@ -147,6 +151,7 @@ FROM calc_snapshots
 WHERE created_at >= '2025-12-01'
 ORDER BY created_at DESC
 LIMIT 20;
+*/
 
 -- ============================================================
 -- 4. BUSCAR EN AUDIT_LOGS (si existe)
@@ -159,7 +164,8 @@ SELECT EXISTS (
   AND table_name = 'audit_logs'
 ) as tabla_audit_logs_existe;
 
--- 4.2 Si existe, buscar logs del cierre
+-- NOTA: Si la tabla audit_logs existe, descomenta las siguientes líneas:
+/*
 SELECT 
   'audit_logs: 01-16 dic' as busqueda,
   COUNT(*) as total_logs,
@@ -167,6 +173,7 @@ SELECT
 FROM audit_logs
 WHERE created_at >= '2025-12-01'
   AND created_at <= '2025-12-16';
+*/
 
 -- ============================================================
 -- 5. DISTRIBUCIÓN COMPLETA DE CALCULATOR_HISTORY
