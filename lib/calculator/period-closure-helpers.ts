@@ -312,27 +312,67 @@ export const atomicArchiveAndReset = async (
       });
     }
 
-    // 7. LLAMAR AL RPC PARA TRANSACCIÓN ATÓMICA
-    const { data: rpcResult, error: rpcError } = await supabase.rpc('atomic_archive_period', {
-      p_model_id: modelId,
-      p_period_date: startDate,
-      p_period_type: periodType,
-      p_start_date: startDate,
-      p_end_date: endDate,
-      p_history_records: historyRecords
-    });
+    // 7. ARCHIVAR VALORES EN CALCULATOR_HISTORY (sin RPC, operaciones directas)
+    console.log(`📝 [ATOMIC-CLOSE] Archivando ${historyRecords.length} registros en calculator_history...`);
+    
+    // Preparar registros con campos completos para calculator_history
+    const historyInserts = historyRecords.map(record => ({
+      model_id: record.model_id,
+      platform_id: record.platform_id,
+      period_date: startDate,
+      period_type: periodType,
+      value: record.value,
+      rate_eur_usd: record.rate_eur_usd,
+      rate_gbp_usd: record.rate_gbp_usd,
+      rate_usd_cop: record.rate_usd_cop,
+      platform_percentage: record.platform_percentage,
+      value_usd_bruto: record.value_usd_bruto,
+      value_usd_modelo: record.value_usd_modelo,
+      value_cop_modelo: record.value_cop_modelo,
+      archived_at: new Date().toISOString()
+    }));
 
-    if (rpcError) throw rpcError;
+    // Insertar en calculator_history (upsert para evitar duplicados)
+    if (historyInserts.length > 0) {
+      const { error: historyError } = await supabase
+        .from('calculator_history')
+        .upsert(historyInserts, { 
+          onConflict: 'model_id,platform_id,period_date,period_type',
+          ignoreDuplicates: false 
+        });
 
-    if (!rpcResult.success) {
-      throw new Error(rpcResult.error || 'Fallo desconocido en RPC');
+      if (historyError) {
+        console.error(`❌ [ATOMIC-CLOSE] Error archivando en history:`, historyError);
+        throw historyError;
+      }
     }
 
-    console.log(`✅ [ATOMIC-CLOSE] Éxito: Archivados ${rpcResult.archived}, Borrados ${rpcResult.deleted}`);
+    console.log(`✅ [ATOMIC-CLOSE] ${historyInserts.length} registros archivados`);
+
+    // 8. ELIMINAR VALORES DE MODEL_VALUES (limpiar período cerrado)
+    console.log(`🗑️ [ATOMIC-CLOSE] Eliminando valores del rango ${startDate} a ${endDate}...`);
+    
+    const { data: deletedData, error: deleteError } = await supabase
+      .from('model_values')
+      .delete()
+      .eq('model_id', modelId)
+      .gte('period_date', startDate)
+      .lte('period_date', endDate)
+      .select();
+
+    if (deleteError) {
+      console.error(`❌ [ATOMIC-CLOSE] Error eliminando model_values:`, deleteError);
+      throw deleteError;
+    }
+
+    const deletedCount = deletedData?.length || 0;
+    console.log(`✅ [ATOMIC-CLOSE] ${deletedCount} valores eliminados de model_values`);
+
+    console.log(`✅ [ATOMIC-CLOSE] Éxito: Archivados ${historyInserts.length}, Borrados ${deletedCount}`);
     return { 
       success: true, 
-      archived: rpcResult.archived, 
-      deleted: rpcResult.deleted 
+      archived: historyInserts.length, 
+      deleted: deletedCount 
     };
 
   } catch (error) {
