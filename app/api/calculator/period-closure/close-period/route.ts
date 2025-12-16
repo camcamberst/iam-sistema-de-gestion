@@ -374,7 +374,21 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // FASE 7: Marcar como completado
+    // FASE 7: Limpiar registros de early freeze del período cerrado
+    console.log('🧹 [CLOSE-PERIOD] Limpiando registros de early freeze del período cerrado...');
+    const { error: cleanupError } = await supabase
+      .from('calculator_early_frozen_platforms')
+      .delete()
+      .eq('period_date', periodToCloseDate);
+    
+    if (cleanupError) {
+      console.error('❌ [CLOSE-PERIOD] Error limpiando early freeze:', cleanupError);
+      // No es crítico, continuar con el proceso
+    } else {
+      console.log('✅ [CLOSE-PERIOD] Registros de early freeze limpiados correctamente');
+    }
+
+    // FASE 8: Marcar como completado
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'completed', {
       archive_results: {
         total: models?.length || 0,

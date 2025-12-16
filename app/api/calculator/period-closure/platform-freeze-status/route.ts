@@ -44,6 +44,7 @@ export async function GET(request: NextRequest) {
     // El early freeze debe activarse cuando:
     // 1. Es día de cierre (1 o 16) Y ya pasó medianoche Europa Central, O
     // 2. Es día previo al cierre (31 o 15) Y ya pasó medianoche Europa Central
+    // IMPORTANTE: Solo si el período NO ha sido cerrado aún
     // Esto NO depende de que el cron se haya ejecutado - es automático basado en hora/fecha
     const isClosure = isClosureDay();
     const colombiaDate = getColombiaDate();
@@ -52,17 +53,50 @@ export async function GET(request: NextRequest) {
     // Verificar si es día previo al cierre (31 o 15)
     const isDayBeforeClosure = day === 31 || day === 15;
     
+    // 🔍 VERIFICAR SI EL PERÍODO ACTUAL YA FUE CERRADO
+    // Si el período ya fue cerrado, NO aplicar early freeze (período nuevo inició)
+    let periodAlreadyClosed = false;
+    if (isClosure || isDayBeforeClosure) {
+      // Determinar el período actual basado en la fecha
+      // Si estamos en día 1-15, el período actual es 1-15 (fecha: día 1 del mes)
+      // Si estamos en día 16-31, el período actual es 16-31 (fecha: día 16 del mes)
+      const [year, month] = colombiaDate.split('-');
+      const currentPeriodType = day <= 15 ? '1-15' : '16-31';
+      const currentPeriodDate = day <= 15 
+        ? `${year}-${month}-01`
+        : `${year}-${month}-16`;
+      
+      const { data: closureStatus } = await supabase
+        .from('calculator_period_closure_status')
+        .select('status')
+        .eq('period_date', currentPeriodDate)
+        .eq('period_type', currentPeriodType)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      periodAlreadyClosed = closureStatus?.status === 'completed';
+      
+      if (periodAlreadyClosed) {
+        console.log(`✅ [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) ya fue cerrado. No aplicar early freeze.`);
+      } else {
+        console.log(`📅 [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) aún no ha sido cerrado. Early freeze puede aplicarse.`);
+      }
+    }
+    
     console.log(`🔍 [PLATFORM-FREEZE-STATUS] Verificando early freeze:`, {
       modelId: modelId.substring(0, 8),
       periodDate,
       colombiaDate,
       day,
       isClosureDay: isClosure,
-      isDayBeforeClosure
+      isDayBeforeClosure,
+      periodAlreadyClosed
     });
     
     // Verificar early freeze si es día de cierre O día previo al cierre
-    if (isClosure || isDayBeforeClosure) {
+    // PERO solo si el período NO ha sido cerrado aún
+    if ((isClosure || isDayBeforeClosure) && !periodAlreadyClosed) {
       const now = new Date();
       const europeMidnight = getEuropeanCentralMidnightInColombia(now);
       const colombiaTimeStr = getColombiaDateTime();
