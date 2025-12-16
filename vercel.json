@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/period-closure-early-freeze",
-      "schedule": "0 17,18,19,20,21,22,23,0,1,2,3,4,5,6,7 1,16 * *"
+      "schedule": "0 17,18,19,20,21,22,23,0,1,2,3,4,5,6,7 1,15,16,31 * *"
     },
     {
       "path": "/api/cron/period-closure-full-close",

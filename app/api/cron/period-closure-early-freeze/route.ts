@@ -1,22 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { isEarlyFreezeTime, isClosureDay } from '@/utils/period-closure-dates';
+import { isEarlyFreezeTime, isEarlyFreezeRelevantDay } from '@/utils/period-closure-dates';
 
 /**
  * GET: Cron job para congelación anticipada (medianoche Europa Central)
- * Se ejecuta los días 1 y 16
+ * Se ejecuta los días 1, 15, 16 y 31 para congelar las 10 plataformas especiales
  */
 export async function GET(request: NextRequest) {
   try {
     console.log('🕐 [CRON-EARLY-FREEZE] Verificando congelación anticipada...');
 
-    // Verificar que es día de cierre
-    if (!isClosureDay()) {
+    // Verificar que es día relevante para early freeze (15, 31 para congelar antes del cierre, 1 y 16 por si acaso)
+    if (!isEarlyFreezeRelevantDay()) {
       const currentDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
       const day = parseInt(currentDate.split('-')[2]);
       
       return NextResponse.json({
         success: true,
-        message: 'No es día de cierre (1 o 16)',
+        message: 'No es día relevante para early freeze (1, 15, 16 o 31)',
         current_day: day
       });
     }
