@@ -62,6 +62,25 @@ export async function GET(request: NextRequest) {
     
     periodAlreadyClosed = closureStatus?.status === 'completed';
     
+    // 🔒 CRÍTICO: Si estamos en día 16 o después, verificar si el período anterior (1-15) fue cerrado
+    // Si el período anterior fue cerrado, estamos en un período nuevo y NO debemos aplicar early freeze
+    if (currentDay >= 16 && !periodAlreadyClosed) {
+      const previousPeriodDate = `${currentYear}-${currentMonth}-01`;
+      const { data: previousClosureStatus } = await supabase
+        .from('calculator_period_closure_status')
+        .select('status')
+        .eq('period_date', previousPeriodDate)
+        .eq('period_type', '1-15')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (previousClosureStatus?.status === 'completed') {
+        periodAlreadyClosed = true; // Tratar como cerrado para evitar early freeze en período nuevo
+        console.log(`✅ [PLATFORM-FREEZE-STATUS] Período anterior (1-15) fue cerrado. Estamos en período nuevo (16-31). No aplicar early freeze.`);
+      }
+    }
+    
     // Obtener plataformas congeladas para este modelo desde BD usando el período ACTUAL
     // SOLO si el período NO ha sido cerrado
     let frozenPlatformsFromDB: string[] = [];
