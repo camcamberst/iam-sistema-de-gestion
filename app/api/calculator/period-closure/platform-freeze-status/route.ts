@@ -168,8 +168,10 @@ export async function GET(request: NextRequest) {
       frozenFromDB: frozenPlatformsFromDB.length
     });
     
-    // Verificar early freeze si es día de cierre O día previo al cierre
-    // PERO solo si el período NO ha sido cerrado aún
+    // 🔒 CRÍTICO: Verificar early freeze SOLO si:
+    // 1. Es día de cierre O día previo al cierre
+    // 2. Y el período NO ha sido cerrado aún
+    // 3. Y NO estamos en un período nuevo (después del cierre)
     if ((isClosure || isDayBeforeClosure) && !periodAlreadyClosed) {
       const now = new Date();
       const europeMidnight = getEuropeanCentralMidnightInColombia(now);
@@ -230,21 +232,32 @@ export async function GET(request: NextRequest) {
 
     const frozenPlatforms = Array.from(allFrozenPlatforms);
 
+    // 🔒 CRÍTICO: Si el período ya fue cerrado, FORZAR lista vacía
+    // Esto asegura que las plataformas se desbloqueen inmediatamente
+    const finalFrozenPlatforms = periodAlreadyClosed ? [] : frozenPlatforms;
+    
+    if (periodAlreadyClosed && frozenPlatforms.length > 0) {
+      console.warn(`⚠️ [PLATFORM-FREEZE-STATUS] Período cerrado pero había ${frozenPlatforms.length} plataformas congeladas. Forzando desbloqueo.`);
+    }
+
     console.log(`✅ [PLATFORM-FREEZE-STATUS] Respuesta final:`, {
       modelId: modelId.substring(0, 8),
-      frozenPlatformsCount: frozenPlatforms.length,
-      frozenPlatforms,
+      frozenPlatformsCount: finalFrozenPlatforms.length,
+      frozenPlatforms: finalFrozenPlatforms,
       fromDB: frozenPlatformsFromDB.length,
-      autoDetected: frozenPlatforms.length > frozenPlatformsFromDB.length
+      autoDetected: frozenPlatforms.length > frozenPlatformsFromDB.length,
+      periodClosed: periodAlreadyClosed,
+      forcedUnfreeze: periodAlreadyClosed && frozenPlatforms.length > 0
     });
 
     return NextResponse.json({
       success: true,
       model_id: modelId,
       period_date: currentPeriodDate, // Usar período actual, no el del parámetro
-      frozen_platforms: frozenPlatforms,
-      is_frozen: frozenPlatforms.length > 0,
+      frozen_platforms: finalFrozenPlatforms, // Usar lista vacía si período cerrado
+      is_frozen: finalFrozenPlatforms.length > 0,
       auto_detected: frozenPlatforms.length > frozenPlatformsFromDB.length,
+      period_closed: periodAlreadyClosed, // Indicar si período está cerrado
       // 🔍 DEBUG: Información adicional para diagnóstico
       debug: {
         isClosureDay: isClosure,
@@ -254,7 +267,9 @@ export async function GET(request: NextRequest) {
         currentPeriodType,
         periodAlreadyClosed,
         frozenFromDB: frozenPlatformsFromDB.length,
-        frozenAuto: frozenPlatforms.length - frozenPlatformsFromDB.length
+        frozenAuto: frozenPlatforms.length - frozenPlatformsFromDB.length,
+        finalFrozenCount: finalFrozenPlatforms.length,
+        forcedUnfreeze: periodAlreadyClosed && frozenPlatforms.length > 0
       }
     });
 
