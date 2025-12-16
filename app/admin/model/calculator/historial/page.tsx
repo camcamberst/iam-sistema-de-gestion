@@ -58,6 +58,8 @@ interface Period {
   cuota_minima?: number;
   porcentaje_alcanzado?: number;
   esta_por_debajo?: boolean;
+  is_synthetic?: boolean; // 🔧 NUEVO: Indica si es período reconstruido desde totales
+  synthetic_note?: string; // 🔧 NUEVO: Nota explicativa
 }
 
 interface User {
@@ -399,6 +401,12 @@ export default function CalculatorHistorialPage() {
                   <div>
                     <h3 className="font-semibold text-gray-900 dark:text-white">{formatPeriodMonth(period.period_date, period.period_type)}</h3>
                     <p className="text-xs text-gray-500">{formatArchivedDate(period.archived_at)}</p>
+                    {period.is_synthetic && (
+                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                        <AlertTriangle className="w-3 h-3" />
+                        {period.synthetic_note || 'Período reconstruido desde totales (sin desglose por plataforma)'}
+                      </p>
+                    )}
                   </div>
                 </div>
                 <div className="ml-4">
@@ -427,18 +435,29 @@ export default function CalculatorHistorialPage() {
               </div>
 
               <div className="overflow-x-auto mb-4">
-                <table className="w-full text-sm text-gray-900 dark:text-gray-100">
-                  <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400">
-                    <tr>
-                      <th className="px-3 py-2 text-left">Plataforma</th>
-                      <th className="px-3 py-2 text-left">Valor</th>
-                      <th className="px-3 py-2 text-left">USD</th>
-                      <th className="px-3 py-2 text-left">COP</th>
-                      {isAdmin && <th></th>}
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {period.platforms.filter(p=>p.value>0).map(p => (
+                {period.is_synthetic ? (
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-center">
+                    <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 mx-auto mb-2" />
+                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+                      Este período fue reconstruido desde totales consolidados
+                    </p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      No hay desglose por plataforma disponible. Solo se muestran los totales.
+                    </p>
+                  </div>
+                ) : (
+                  <table className="w-full text-sm text-gray-900 dark:text-gray-100">
+                    <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400">
+                      <tr>
+                        <th className="px-3 py-2 text-left">Plataforma</th>
+                        <th className="px-3 py-2 text-left">Valor</th>
+                        <th className="px-3 py-2 text-left">USD</th>
+                        <th className="px-3 py-2 text-left">COP</th>
+                        {isAdmin && <th></th>}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {period.platforms.filter(p=>p.value>0).map(p => (
                       <tr key={p.platform_id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
                         <td className="px-3 py-2 font-medium">{p.platform_name} <span className="text-xs text-gray-400 dark:text-gray-500 block">{p.platform_percentage}%</span></td>
                         <td className="px-3 py-2 font-medium">
@@ -458,9 +477,10 @@ export default function CalculatorHistorialPage() {
                           </td>
                         )}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </div>
 
               <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">

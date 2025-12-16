@@ -290,6 +290,70 @@ export async function GET(request: NextRequest) {
       period.total_cop_modelo += finalCopModelo;
     });
 
+    // 🔧 PASO 3.5 (NUEVO): Completar períodos faltantes desde calculator_totals
+    // Buscar períodos que deberían existir pero no están en calculator_history
+    // Específicamente para P1 de diciembre 2025 que no se archivó correctamente
+    const { data: missingTotals, error: totalsError } = await supabase
+      .from('calculator_totals')
+      .select('period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
+      .eq('model_id', modelId)
+      .gte('period_date', '2025-12-01')
+      .lte('period_date', '2025-12-15')
+      .order('period_date', { ascending: false });
+
+    if (!totalsError && missingTotals && missingTotals.length > 0) {
+      console.log(`🔧 [CALCULATOR-HISTORIAL] Encontrados ${missingTotals.length} totales en calculator_totals para períodos faltantes`);
+      
+      // Obtener tasas activas para el período
+      const { data: activeRates } = await supabase
+        .from('rates')
+        .select('kind, value')
+        .eq('active', true)
+        .is('valid_to', null)
+        .order('valid_from', { ascending: false });
+
+      const rates = {
+        eur_usd: activeRates?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
+        gbp_usd: activeRates?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.20,
+        usd_cop: activeRates?.find((r: any) => r.kind === 'USD→COP')?.value || 3900
+      };
+
+      // Para cada total encontrado, crear un período sintético
+      missingTotals.forEach((total: any) => {
+        const periodDate = total.period_date;
+        const periodType = '1-15'; // P1 de diciembre
+        const periodKey = `${periodDate}-${periodType}`;
+
+        // Solo crear si no existe ya en periodsMap
+        if (!periodsMap.has(periodKey)) {
+          console.log(`🔧 [CALCULATOR-HISTORIAL] Creando período sintético para ${periodKey} desde calculator_totals`);
+          
+          periodsMap.set(periodKey, {
+            period_date: periodDate,
+            period_type: periodType,
+            archived_at: total.updated_at || new Date().toISOString(),
+            platforms: [], // Sin desglose por plataforma
+            total_value: 0, // No tenemos el valor original
+            total_usd_bruto: Number(total.total_usd_bruto) || 0,
+            total_usd_modelo: Number(total.total_usd_modelo) || 0,
+            total_cop_modelo: Number(total.total_cop_modelo) || 0,
+            total_anticipos: 0,
+            total_deducciones: 0,
+            neto_pagar: null,
+            deducciones: [],
+            rates: {
+              eur_usd: rates.eur_usd,
+              gbp_usd: rates.gbp_usd,
+              usd_cop: rates.usd_cop
+            },
+            // Flag para indicar que es un período sintético (sin desglose)
+            is_synthetic: true,
+            synthetic_note: 'Período reconstruido desde totales (sin desglose por plataforma)'
+          } as any);
+        }
+      });
+    }
+
     // PASO 4: Obtener alertas y notificaciones
     const periodsArray = Array.from(periodsMap.values());
     const periodDates = periodsArray.map(p => p.period_date);
