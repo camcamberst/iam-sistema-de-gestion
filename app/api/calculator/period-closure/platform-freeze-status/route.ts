@@ -36,8 +36,20 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Obtener plataformas congeladas para este modelo desde BD (si existen)
-    const frozenPlatformsFromDB = await getFrozenPlatformsForModel(periodDate, modelId);
+    // 🔧 IMPORTANTE: Usar siempre la fecha actual de Colombia para determinar el período
+    // El periodDate del parámetro puede ser del período anterior
+    const currentColombiaDate = getColombiaDate();
+    const currentDay = parseInt(currentColombiaDate.split('-')[2]);
+    const [currentYear, currentMonth] = currentColombiaDate.split('-');
+    
+    // Determinar el período actual basado en la fecha ACTUAL
+    const currentPeriodType = currentDay <= 15 ? '1-15' : '16-31';
+    const currentPeriodDate = currentDay <= 15 
+      ? `${currentYear}-${currentMonth}-01`
+      : `${currentYear}-${currentMonth}-16`;
+    
+    // Obtener plataformas congeladas para este modelo desde BD usando el período ACTUAL
+    const frozenPlatformsFromDB = await getFrozenPlatformsForModel(currentPeriodDate, modelId);
     const allFrozenPlatforms = new Set(frozenPlatformsFromDB.map(p => p.toLowerCase()));
 
     // 🔒 VERIFICACIÓN AUTOMÁTICA ESCALABLE:
@@ -57,15 +69,6 @@ export async function GET(request: NextRequest) {
     // Si el período ya fue cerrado, NO aplicar early freeze (período nuevo inició)
     let periodAlreadyClosed = false;
     if (isClosure || isDayBeforeClosure) {
-      // Determinar el período actual basado en la fecha
-      // Si estamos en día 1-15, el período actual es 1-15 (fecha: día 1 del mes)
-      // Si estamos en día 16-31, el período actual es 16-31 (fecha: día 16 del mes)
-      const [year, month] = colombiaDate.split('-');
-      const currentPeriodType = day <= 15 ? '1-15' : '16-31';
-      const currentPeriodDate = day <= 15 
-        ? `${year}-${month}-01`
-        : `${year}-${month}-16`;
-      
       const { data: closureStatus } = await supabase
         .from('calculator_period_closure_status')
         .select('status')
@@ -84,14 +87,35 @@ export async function GET(request: NextRequest) {
       }
     }
     
+    // 🧹 LIMPIEZA: Eliminar registros antiguos de períodos anteriores
+    // Esto asegura que no queden registros "zombie" de períodos ya cerrados
+    try {
+      const { error: cleanupError } = await supabase
+        .from('calculator_early_frozen_platforms')
+        .delete()
+        .eq('model_id', modelId)
+        .neq('period_date', currentPeriodDate);
+      
+      if (cleanupError) {
+        console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error limpiando registros antiguos:', cleanupError);
+      } else {
+        console.log(`🧹 [PLATFORM-FREEZE-STATUS] Limpieza de registros antiguos completada para modelo ${modelId.substring(0, 8)}`);
+      }
+    } catch (cleanupErr) {
+      console.warn('⚠️ [PLATFORM-FREEZE-STATUS] Error en limpieza:', cleanupErr);
+    }
+    
     console.log(`🔍 [PLATFORM-FREEZE-STATUS] Verificando early freeze:`, {
       modelId: modelId.substring(0, 8),
-      periodDate,
-      colombiaDate,
-      day,
+      periodDateParam: periodDate,
+      currentColombiaDate,
+      currentDay,
+      currentPeriodDate,
+      currentPeriodType,
       isClosureDay: isClosure,
       isDayBeforeClosure,
-      periodAlreadyClosed
+      periodAlreadyClosed,
+      frozenFromDB: frozenPlatformsFromDB.length
     });
     
     // Verificar early freeze si es día de cierre O día previo al cierre
@@ -167,15 +191,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       model_id: modelId,
-      period_date: periodDate,
+      period_date: currentPeriodDate, // Usar período actual, no el del parámetro
       frozen_platforms: frozenPlatforms,
       is_frozen: frozenPlatforms.length > 0,
       auto_detected: frozenPlatforms.length > frozenPlatformsFromDB.length,
       // 🔍 DEBUG: Información adicional para diagnóstico
       debug: {
         isClosureDay: isClosure,
-        colombiaDate,
-        colombiaDay: day,
+        currentColombiaDate,
+        currentDay,
+        currentPeriodDate,
+        currentPeriodType,
+        periodAlreadyClosed,
         frozenFromDB: frozenPlatformsFromDB.length,
         frozenAuto: frozenPlatforms.length - frozenPlatformsFromDB.length
       }
