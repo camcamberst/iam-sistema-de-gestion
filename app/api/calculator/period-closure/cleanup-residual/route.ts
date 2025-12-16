@@ -16,8 +16,12 @@ const supabase = createClient(
 );
 
 /**
- * POST: Limpia valores residuales del período anterior que no se eliminaron durante el cierre
+ * POST: Limpia valores residuales de un período específico o el anterior
  * Solo accesible para super_admin o con cron secret
+ * 
+ * Body opcional:
+ * - cleanCurrentPeriod: boolean - si true, limpia el período ACTUAL en lugar del anterior
+ * - cleanAllPeriods: boolean - si true, limpia TODOS los valores de model_values
  */
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +68,37 @@ export async function POST(request: NextRequest) {
       }, { status: 401 });
     }
 
-    // Determinar el período anterior que se debe limpiar
+    // Leer opciones del body
+    let cleanCurrentPeriod = false;
+    let cleanAllPeriods = false;
+    try {
+      const body = await request.json();
+      cleanCurrentPeriod = body.cleanCurrentPeriod === true;
+      cleanAllPeriods = body.cleanAllPeriods === true;
+    } catch (e) {
+      // Body vacío o inválido, usar defaults
+    }
+
+    // Si cleanAllPeriods, eliminar TODO de model_values
+    if (cleanAllPeriods) {
+      console.log('🧹 [CLEANUP-RESIDUAL] Limpiando TODOS los valores de model_values...');
+      
+      const { data: allDeleted, error: deleteAllError } = await supabase
+        .from('model_values')
+        .delete()
+        .neq('model_id', '00000000-0000-0000-0000-000000000000') // Hack para eliminar todos
+        .select();
+
+      if (deleteAllError) throw deleteAllError;
+
+      return NextResponse.json({
+        success: true,
+        message: `Limpieza completa: ${allDeleted?.length || 0} valores eliminados de TODOS los períodos`,
+        deleted: allDeleted?.length || 0
+      });
+    }
+
+    // Determinar el período a limpiar
     const todayDate = getColombiaDate();
     const [year, month, day] = todayDate.split('-').map(Number);
     
@@ -72,19 +106,34 @@ export async function POST(request: NextRequest) {
     let endDate: string;
     let periodType: '1-15' | '16-31';
     
-    if (day >= 16) {
-      // Estamos en P2, limpiar P1 (1-15 del mes actual)
-      startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-      endDate = `${year}-${String(month).padStart(2, '0')}-15`;
-      periodType = '1-15';
+    if (cleanCurrentPeriod) {
+      // Limpiar período ACTUAL
+      if (day >= 16) {
+        startDate = `${year}-${String(month).padStart(2, '0')}-16`;
+        const lastDay = new Date(year, month, 0).getDate();
+        endDate = `${year}-${String(month).padStart(2, '0')}-${lastDay}`;
+        periodType = '16-31';
+      } else {
+        startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        endDate = `${year}-${String(month).padStart(2, '0')}-15`;
+        periodType = '1-15';
+      }
     } else {
-      // Estamos en P1, limpiar P2 del mes anterior (16-último día)
-      const prevMonth = month === 1 ? 12 : month - 1;
-      const prevYear = month === 1 ? year - 1 : year;
-      const lastDay = new Date(prevYear, prevMonth, 0).getDate();
-      startDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-16`;
-      endDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${lastDay}`;
-      periodType = '16-31';
+      // Limpiar período ANTERIOR
+      if (day >= 16) {
+        // Estamos en P2, limpiar P1 (1-15 del mes actual)
+        startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        endDate = `${year}-${String(month).padStart(2, '0')}-15`;
+        periodType = '1-15';
+      } else {
+        // Estamos en P1, limpiar P2 del mes anterior (16-último día)
+        const prevMonth = month === 1 ? 12 : month - 1;
+        const prevYear = month === 1 ? year - 1 : year;
+        const lastDay = new Date(prevYear, prevMonth, 0).getDate();
+        startDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-16`;
+        endDate = `${prevYear}-${String(prevMonth).padStart(2, '0')}-${lastDay}`;
+        periodType = '16-31';
+      }
     }
 
     console.log(`📅 [CLEANUP-RESIDUAL] Limpiando período ${periodType}: ${startDate} a ${endDate}`);
@@ -137,8 +186,8 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Limpieza completada: ${deletedCount} valores residuales eliminados`,
-      period: { startDate, endDate, periodType },
+      message: `Limpieza completada: ${deletedCount} valores eliminados del período ${cleanCurrentPeriod ? 'ACTUAL' : 'ANTERIOR'}`,
+      period: { startDate, endDate, periodType, isCurrent: cleanCurrentPeriod },
       deleted: deletedCount,
       models_affected: Object.keys(modelSummary).length,
       summary: modelSummary
