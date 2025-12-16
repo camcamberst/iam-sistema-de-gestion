@@ -9,7 +9,7 @@ const supabase = createClient(
 );
 
 /**
- * GET: Debug - muestra contenido de calculator_history
+ * GET: Debug - muestra contenido de calculator_history Y calculator_totals
  */
 export async function GET(request: NextRequest) {
   try {
@@ -35,12 +35,32 @@ export async function GET(request: NextRequest) {
       byModel[h.model_id] = (byModel[h.model_id] || 0) + 1;
     });
 
+    // También verificar calculator_totals
+    const { data: totals, error: totalsError } = await supabase
+      .from('calculator_totals')
+      .select('id, model_id, period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
+      .order('updated_at', { ascending: false })
+      .limit(50);
+
+    const totalsByPeriod: Record<string, number> = {};
+    totals?.forEach((t: any) => {
+      totalsByPeriod[t.period_date] = (totalsByPeriod[t.period_date] || 0) + 1;
+    });
+
     return NextResponse.json({
       success: true,
-      total_records: history?.length || 0,
-      distribution_by_period: byPeriod,
-      distribution_by_model: byModel,
-      sample_records: history?.slice(0, 20)
+      calculator_history: {
+        total_records: history?.length || 0,
+        distribution_by_period: byPeriod,
+        distribution_by_model: byModel,
+        sample_records: history?.slice(0, 10)
+      },
+      calculator_totals: {
+        total_records: totals?.length || 0,
+        distribution_by_period: totalsByPeriod,
+        sample_records: totals?.slice(0, 10),
+        error: totalsError?.message
+      }
     });
 
   } catch (error) {
