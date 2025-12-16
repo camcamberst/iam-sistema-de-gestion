@@ -1,8 +1,70 @@
 -- 🔍 BÚSQUEDA COMPLETA: Valores del P1 de Diciembre (1-15 de diciembre 2025)
+-- También busca en 2024 por si hubo error de año (como ocurrió en el pasado)
 -- Ejecutar este script directamente en Supabase SQL Editor
 
 -- ============================================================
--- 1. BUSCAR EN CALCULATOR_HISTORY
+-- 0. BUSCAR EN 2024 (POR SI HUBO ERROR DE AÑO)
+-- ============================================================
+
+-- 0.1 Buscar P1 de diciembre 2024
+SELECT 
+  'calculator_history: 2024-12-01 a 2024-12-15 (P1)' as busqueda,
+  COUNT(*) as total_registros,
+  COUNT(DISTINCT model_id) as modelos_unicas,
+  COUNT(DISTINCT platform_id) as plataformas_unicas
+FROM calculator_history
+WHERE period_date >= '2024-12-01' 
+  AND period_date <= '2024-12-15'
+  AND period_type = '1-15';
+
+-- 0.2 Muestra de registros de diciembre 2024
+SELECT 
+  id,
+  model_id,
+  platform_id,
+  value,
+  period_date,
+  period_type,
+  archived_at,
+  value_usd_bruto,
+  value_usd_modelo,
+  value_cop_modelo
+FROM calculator_history
+WHERE period_date >= '2024-12-01' 
+  AND period_date <= '2024-12-15'
+  AND period_type = '1-15'
+ORDER BY archived_at DESC
+LIMIT 50;
+
+-- 0.3 Buscar en calculator_totals de diciembre 2024
+SELECT 
+  'calculator_totals: 2024-12-01 a 2024-12-15' as busqueda,
+  COUNT(*) as total_registros,
+  COUNT(DISTINCT model_id) as modelos_unicas,
+  SUM(total_usd_bruto) as total_usd_bruto_sum,
+  SUM(total_usd_modelo) as total_usd_modelo_sum,
+  SUM(total_cop_modelo) as total_cop_modelo_sum
+FROM calculator_totals
+WHERE period_date >= '2024-12-01' 
+  AND period_date <= '2024-12-15';
+
+-- 0.4 Muestra de totales de diciembre 2024
+SELECT 
+  id,
+  model_id,
+  period_date,
+  total_usd_bruto,
+  total_usd_modelo,
+  total_cop_modelo,
+  updated_at
+FROM calculator_totals
+WHERE period_date >= '2024-12-01' 
+  AND period_date <= '2024-12-15'
+ORDER BY updated_at DESC
+LIMIT 50;
+
+-- ============================================================
+-- 1. BUSCAR EN CALCULATOR_HISTORY (2025)
 -- ============================================================
 
 -- 1.1 Por period_date = 2025-12-01

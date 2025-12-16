@@ -91,11 +91,34 @@ export async function GET(request: NextRequest) {
     }
 
     // PASO 1: Obtener datos completos de calculator_history (incluyendo cálculos y tasas)
-    const { data: history, error: historyError } = await supabase
+    // Buscar tanto en 2025 como en 2024 (por si hubo error de año)
+    const { data: history2025, error: historyError2025 } = await supabase
       .from('calculator_history')
       .select('id, platform_id, value, period_date, period_type, archived_at, rate_eur_usd, rate_gbp_usd, rate_usd_cop, platform_percentage, value_usd_bruto, value_usd_modelo, value_cop_modelo')
       .eq('model_id', modelId)
+      .gte('period_date', '2025-01-01')
       .order('period_date', { ascending: false });
+
+    const { data: history2024Dec, error: historyError2024 } = await supabase
+      .from('calculator_history')
+      .select('id, platform_id, value, period_date, period_type, archived_at, rate_eur_usd, rate_gbp_usd, rate_usd_cop, platform_percentage, value_usd_bruto, value_usd_modelo, value_cop_modelo')
+      .eq('model_id', modelId)
+      .gte('period_date', '2024-12-01')
+      .lte('period_date', '2024-12-15')
+      .eq('period_type', '1-15')
+      .order('period_date', { ascending: false });
+
+    // Combinar y corregir años si es necesario
+    const history2024Corrected = (history2024Dec || []).map((item: any) => ({
+      ...item,
+      period_date: item.period_date.replace('2024-', '2025-') // Corregir año a 2025
+    }));
+
+    const history = [
+      ...(history2025 || []),
+      ...history2024Corrected
+    ];
+    const historyError = historyError2025 || historyError2024;
 
     if (historyError) {
       console.error('❌ [CALCULATOR-HISTORIAL] Error obteniendo historial:', historyError);
@@ -293,13 +316,35 @@ export async function GET(request: NextRequest) {
     // 🔧 PASO 3.5 (NUEVO): Completar períodos faltantes desde calculator_totals
     // Buscar períodos que deberían existir pero no están en calculator_history
     // Específicamente para P1 de diciembre 2025 que no se archivó correctamente
-    const { data: missingTotals, error: totalsError } = await supabase
+    // También busca en 2024 por si hubo error de año (como ocurrió en el pasado)
+    
+    // Primero buscar en 2025
+    const { data: missingTotals2025, error: totalsError2025 } = await supabase
       .from('calculator_totals')
       .select('period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
       .eq('model_id', modelId)
       .gte('period_date', '2025-12-01')
       .lte('period_date', '2025-12-15')
       .order('period_date', { ascending: false });
+
+    // También buscar en 2024 (por si hubo error de año)
+    const { data: missingTotals2024, error: totalsError2024 } = await supabase
+      .from('calculator_totals')
+      .select('period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
+      .eq('model_id', modelId)
+      .gte('period_date', '2024-12-01')
+      .lte('period_date', '2024-12-15')
+      .order('period_date', { ascending: false });
+
+    // Combinar resultados (priorizar 2025, pero incluir 2024 si existe)
+    const missingTotals = [
+      ...(missingTotals2025 || []),
+      ...(missingTotals2024 || []).map((t: any) => ({
+        ...t,
+        period_date: t.period_date.replace('2024-', '2025-') // Corregir año a 2025
+      }))
+    ];
+    const totalsError = totalsError2025 || totalsError2024;
 
     if (!totalsError && missingTotals && missingTotals.length > 0) {
       console.log(`🔧 [CALCULATOR-HISTORIAL] Encontrados ${missingTotals.length} totales en calculator_totals para períodos faltantes`);
