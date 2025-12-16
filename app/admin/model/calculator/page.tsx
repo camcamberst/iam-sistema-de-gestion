@@ -1220,49 +1220,52 @@ export default function ModelCalculatorPage() {
                       <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
                         <td className="py-3 px-3">
                           <div className="relative flex flex-col items-start gap-1">
-                            {/* 🔧 FIX: Nombre clickeable robusto con botón e indicador visual */}
-                            <button 
-                              type="button"
-                              disabled={isFrozen || !isPeriod2} // 🧊 BLOQUEAR SI ESTÁ CONGELADO O NO ES P2
-                              className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group ${
-                                isFrozen 
-                                  ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                                  : !isPeriod2
-                                    ? 'text-gray-900 dark:text-gray-100 cursor-default' // No clickable pero visible
-                                    : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
-                              }`}
-                              onClick={(e) => {
-                                if (isFrozen || !isPeriod2) return;
-                                e.preventDefault();
-                                e.stopPropagation();
-                                console.log('👆 [CALCULATOR] Click en plataforma:', platform.id);
-                                setEditingP1Platform(platform.id);
-                                setP1InputValue(String(p1Values[platform.id] || ''));
-                              }}
-                              title={
-                                isFrozen 
-                                  ? "Plataforma cerrada por horario europeo" 
-                                  : !isPeriod2 
-                                    ? "Solo disponible en el segundo periodo (16-Fin de mes)" 
-                                    : "Click para ingresar valor de P1"
-                              }
-                            >
-                              <span className={`${!isFrozen && isPeriod2 && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
-                                {platform.name}
-                              </span>
-                              {!isFrozen && isPeriod2 && (
-                                <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
-                                  ✎
+                            {/* 🔧 FIX: Contenedor flex para alinear nombre y etiqueta Cerrado */}
+                            <div className="flex items-center gap-2 w-full">
+                              <button 
+                                type="button"
+                                disabled={isFrozen || !isPeriod2} // 🧊 BLOQUEAR SI ESTÁ CONGELADO O NO ES P2
+                                className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group min-w-[100px] ${
+                                  isFrozen 
+                                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                    : !isPeriod2
+                                      ? 'text-gray-900 dark:text-gray-100 cursor-default' // No clickable pero visible
+                                      : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
+                                }`}
+                                onClick={(e) => {
+                                  if (isFrozen || !isPeriod2) return;
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  console.log('👆 [CALCULATOR] Click en plataforma:', platform.id);
+                                  setEditingP1Platform(platform.id);
+                                  setP1InputValue(String(p1Values[platform.id] || ''));
+                                }}
+                                title={
+                                  isFrozen 
+                                    ? "Plataforma cerrada por horario europeo" 
+                                    : !isPeriod2 
+                                      ? "Solo disponible en el segundo periodo (16-Fin de mes)" 
+                                      : "Click para ingresar valor de P1"
+                                }
+                              >
+                                <span className={`${!isFrozen && isPeriod2 && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
+                                  {platform.name}
                                 </span>
-                              )}
+                                {!isFrozen && isPeriod2 && (
+                                  <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
+                                    ✎
+                                  </span>
+                                )}
+                              </button>
+                              {/* 🔒 Etiqueta Cerrado alineada a la derecha */}
                               {isFrozen && (
                                 <span 
-                                  className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap"
                                 >
                                   🔒 Cerrado
                                 </span>
                               )}
-                            </button>
+                            </div>
                             
                             <div className="text-xs text-gray-500 dark:text-gray-400">
                               Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
