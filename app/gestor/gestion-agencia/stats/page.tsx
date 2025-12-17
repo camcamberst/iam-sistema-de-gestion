@@ -508,10 +508,10 @@ export default function GestorStatsPage() {
               <thead className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 border-b-2 border-gray-300 dark:border-gray-500">
                 <tr>
                   {/* Columnas fijas */}
-                  <th className="sticky left-0 z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 text-xs text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[100px] whitespace-nowrap">
+                  <th className="sticky left-0 z-20 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 text-xs text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 w-[100px] whitespace-nowrap">
                     Clave
                   </th>
-                  <th className="sticky left-[100px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 text-xs text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[150px] whitespace-nowrap">
+                  <th className="sticky left-[100px] z-20 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 text-xs text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 w-[150px] whitespace-nowrap">
                     Usuario
                   </th>
                   
@@ -531,8 +531,8 @@ export default function GestorStatsPage() {
                 </tr>
                 <tr>
                   {/* Sub-header para P1 y P2 */}
-                  <th className="sticky left-0 z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 border-r-2 border-gray-300 dark:border-gray-500"></th>
-                  <th className="sticky left-[100px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 border-r-2 border-gray-300 dark:border-gray-500"></th>
+                  <th className="sticky left-0 z-20 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 border-r-2 border-gray-300 dark:border-gray-500 w-[100px]"></th>
+                  <th className="sticky left-[100px] z-20 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 border-r-2 border-gray-300 dark:border-gray-500 w-[150px]"></th>
                   {platforms.map(platform => (
                     <React.Fragment key={platform.id}>
                       <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
@@ -552,10 +552,10 @@ export default function GestorStatsPage() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     {/* Columnas fijas */}
-                    <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-2 py-1 text-xs font-medium text-gray-900 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 whitespace-nowrap">
+                    <td className="sticky left-0 z-20 bg-white dark:bg-gray-800 px-2 py-1 text-xs font-medium text-gray-900 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 w-[100px] whitespace-nowrap">
                       {model.clave || model.name}
                     </td>
-                    <td className="sticky left-[120px] z-10 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-700 dark:text-gray-300 border-r-2 border-gray-300 dark:border-gray-500 whitespace-nowrap">
+                    <td className="sticky left-[100px] z-20 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-700 dark:text-gray-300 border-r-2 border-gray-300 dark:border-gray-500 w-[150px] whitespace-nowrap">
                       {model.email?.split('@')[0] || model.email}
                     </td>
 
