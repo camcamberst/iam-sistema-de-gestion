@@ -220,13 +220,7 @@ export default function GestorStatsPage() {
       const periodDateP1 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
       const periodDateP2 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
 
-      // Obtener modelos del grupo
-      const { data: userGroupsData } = await supabase
-        .from('user_groups')
-        .select('user_id')
-        .eq('group_id', selectedGroup);
-
-      const userIds = userGroupsData?.map((ug: any) => ug.user_id) || [];
+      // Reutilizar userIds que ya se obtuvieron arriba (línea 130)
 
       // Obtener una muestra de rates desde calculator_history para cada período
       const { data: ratesP1Data } = await supabase
