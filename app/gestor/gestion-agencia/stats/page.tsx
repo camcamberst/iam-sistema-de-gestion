@@ -223,7 +223,7 @@ export default function GestorStatsPage() {
         console.log('📝 [GESTOR STATS] Registros encontrados:', registrosData?.length || 0);
       }
 
-      if (registrosData) {
+      if (registrosData && registrosData.length > 0) {
         // Organizar registros por modelo y plataforma
         const registrosMap: Record<string, Record<string, IngresoRegistro>> = {};
         registrosData.forEach((reg: any) => {
@@ -240,21 +240,11 @@ export default function GestorStatsPage() {
           };
         });
         setRegistros(registrosMap);
-        setSheetExists(registrosData.length > 0);
+        setSheetExists(true);
       } else {
+        setRegistros({});
         setSheetExists(false);
       }
-
-      // Verificar si existe la planilla para este mes
-      const { data: sheetCheck } = await supabase
-        .from('gestor_stats_values')
-        .select('id')
-        .eq('group_id', selectedGroup)
-        .in('period_date', [periodDateP1, periodDateP2])
-        .limit(1)
-        .single();
-      
-      setSheetExists(sheetCheck !== null);
 
     } catch (error) {
       console.error('Error cargando datos:', error);
