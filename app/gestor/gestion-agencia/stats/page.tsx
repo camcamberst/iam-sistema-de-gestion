@@ -140,11 +140,12 @@ export default function GestorStatsPage() {
         console.log('👥 [GESTOR STATS] Usuarios con rol modelo:', allUsersInGroup?.filter((u: any) => u.role === 'modelo').length);
       }
 
-      // Cargar modelos que pertenecen al grupo
+      // Cargar usuarios activos que pertenecen al grupo
+      // IMPORTANTE: Mostrar todos los usuarios activos del grupo, no solo los con rol 'modelo'
+      // porque la planilla puede tener registros para cualquier usuario del grupo
       const { data: modelsData, error: modelsError } = await supabase
         .from('users')
-        .select('id, name, email')
-        .eq('role', 'modelo')
+        .select('id, name, email, role')
         .eq('is_active', true)
         .in('id', userIds)
         .order('name');
@@ -268,8 +269,10 @@ export default function GestorStatsPage() {
       }
 
       alert(`Planilla generada exitosamente. ${result.recordsCreated || 0} registros creados.`);
-      // Recargar datos
-      await loadData();
+      // Recargar datos después de un pequeño delay para asegurar que la BD se actualizó
+      setTimeout(async () => {
+        await loadData();
+      }, 500);
     } catch (error: any) {
       console.error('Error generando planilla:', error);
       alert('Error generando planilla: ' + error.message);
