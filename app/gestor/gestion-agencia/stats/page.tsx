@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import { calculateProfits, calculatePeriodTotals, type HistoricalRates, type ModelConfig } from "@/lib/gestor/stats-calculations";
 
 interface Model {
   id: string;
@@ -14,6 +15,10 @@ interface Platform {
   id: string;
   name: string;
   currency: string;
+  discount_factor?: number;
+  tax_rate?: number;
+  token_rate?: number;
+  direct_payout?: boolean;
 }
 
 interface Group {
@@ -51,6 +56,8 @@ export default function GestorStatsPage() {
   const [editValue, setEditValue] = useState<string>('');
   const [generatingSheet, setGeneratingSheet] = useState(false);
   const [sheetExists, setSheetExists] = useState<boolean | null>(null);
+  const [historicalRates, setHistoricalRates] = useState<Record<string, HistoricalRates>>({}); // key: periodDate_periodType
+  const [modelConfigs, setModelConfigs] = useState<Record<string, ModelConfig>>({}); // key: modelId
 
   useEffect(() => {
     loadGroups();
@@ -188,10 +195,10 @@ export default function GestorStatsPage() {
         setModels([]);
       }
 
-      // Cargar plataformas
+      // Cargar plataformas con todos los campos necesarios
       const { data: platformsData, error: platformsError } = await supabase
         .from('calculator_platforms')
-        .select('id, name, currency')
+        .select('id, name, currency, discount_factor, tax_rate, token_rate, direct_payout')
         .eq('active', true)
         .order('name');
 
@@ -205,10 +212,67 @@ export default function GestorStatsPage() {
         setPlatforms(platformsData as Platform[]);
       }
 
-      // Cargar registros existentes del gestor desde gestor_stats_values
-      // Cargar ambos períodos (P1 y P2) del mes seleccionado
+      // Cargar rates históricas para ambos períodos
       const periodDateP1 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
       const periodDateP2 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
+
+      const { data: ratesData, error: ratesError } = await supabase
+        .from('gestor_historical_rates')
+        .select('*')
+        .eq('group_id', selectedGroup)
+        .in('period_date', [periodDateP1, periodDateP2])
+        .in('period_type', ['1-15', '16-31']);
+
+      if (ratesError) {
+        console.error('❌ [GESTOR STATS] Error obteniendo rates históricas:', ratesError);
+      } else {
+        console.log('💱 [GESTOR STATS] Rates históricas encontradas:', ratesData?.length || 0);
+      }
+
+      // Organizar rates por período
+      const ratesMap: Record<string, HistoricalRates> = {};
+      if (ratesData) {
+        ratesData.forEach((rate: any) => {
+          const key = `${rate.period_date}_${rate.period_type}`;
+          ratesMap[key] = {
+            rate_usd_cop: parseFloat(rate.rate_usd_cop),
+            rate_eur_usd: parseFloat(rate.rate_eur_usd),
+            rate_gbp_usd: parseFloat(rate.rate_gbp_usd)
+          };
+        });
+      }
+      setHistoricalRates(ratesMap);
+
+      // Cargar configuraciones de modelos (porcentajes)
+      const modelIds = modelsData?.map((m: any) => m.id) || [];
+      if (modelIds.length > 0) {
+        const { data: configsData, error: configsError } = await supabase
+          .from('calculator_config')
+          .select('model_id, percentage_override, group_percentage')
+          .in('model_id', modelIds)
+          .eq('active', true);
+
+        if (configsError) {
+          console.error('❌ [GESTOR STATS] Error obteniendo configuraciones:', configsError);
+        } else {
+          console.log('⚙️ [GESTOR STATS] Configuraciones encontradas:', configsData?.length || 0);
+        }
+
+        // Organizar configuraciones por modelo
+        const configsMap: Record<string, ModelConfig> = {};
+        if (configsData) {
+          configsData.forEach((config: any) => {
+            configsMap[config.model_id] = {
+              percentage_override: config.percentage_override ? parseFloat(config.percentage_override) : undefined,
+              group_percentage: config.group_percentage ? parseFloat(config.group_percentage) : undefined
+            };
+          });
+        }
+        setModelConfigs(configsMap);
+      }
+
+      // Cargar registros existentes del gestor desde gestor_stats_values
+      // (periodDateP1 y periodDateP2 ya están definidos arriba)
       
       const { data: registrosData, error: registrosError } = await supabase
         .from('gestor_stats_values')
@@ -382,6 +446,42 @@ export default function GestorStatsPage() {
     }
   };
 
+  // Función para calcular valores de un período para un modelo
+  const calculateModelPeriodValues = (modelId: string, periodType: '1-15' | '16-31') => {
+    const periodDate = periodType === '1-15' 
+      ? `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`
+      : `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
+    
+    const ratesKey = `${periodDate}_${periodType}`;
+    const rates = historicalRates[ratesKey];
+
+    // Si no hay rates históricas, no calcular
+    if (!rates) {
+      return {
+        totalUsdBruto: 0,
+        totalUsdModelo: 0,
+        totalCopModelo: 0,
+        totalUsdAgencia: 0,
+        totalCopAgencia: 0
+      };
+    }
+
+    const modelConfig = modelConfigs[modelId] || {};
+    const valuesByPlatform: Record<string, number> = {};
+
+    // Recopilar valores por plataforma
+    platforms.forEach(platform => {
+      const key = `${modelId}_${platform.id}`;
+      const registro = registros[key]?.[periodType];
+      const value = periodType === '1-15' ? registro?.valor_p1 : registro?.valor_p2;
+      if (value && value > 0) {
+        valuesByPlatform[platform.id] = value;
+      }
+    });
+
+    return calculatePeriodTotals(valuesByPlatform, platforms, rates, modelConfig);
+  };
+
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -541,6 +641,25 @@ export default function GestorStatsPage() {
                       </div>
                     </th>
                   ))}
+                  {/* Columnas de totales */}
+                  <th
+                    className="px-2 py-1 text-xs text-center font-semibold text-gray-700 dark:text-white border-l-2 border-gray-300 dark:border-gray-500 border-r border-gray-200 dark:border-gray-600 bg-blue-100 dark:bg-blue-900/30"
+                    colSpan={2}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-bold text-xs">TOTALES</span>
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400">P1 / P2</span>
+                    </div>
+                  </th>
+                  <th
+                    className="px-2 py-1 text-xs text-center font-semibold text-gray-700 dark:text-white border-r border-gray-200 dark:border-gray-600 bg-green-100 dark:bg-green-900/30"
+                    colSpan={2}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-bold text-xs">PROFIT</span>
+                      <span className="text-[10px] text-gray-500 dark:text-gray-400">MODELO / AGENCIA</span>
+                    </div>
+                  </th>
                 </tr>
                 <tr>
                   {/* Sub-header para P1 y P2 */}
@@ -556,6 +675,19 @@ export default function GestorStatsPage() {
                       </th>
                     </React.Fragment>
                   ))}
+                  {/* Sub-headers para totales */}
+                  <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-l-2 border-gray-300 dark:border-gray-500 border-r border-gray-200 dark:border-gray-600 bg-blue-100 dark:bg-blue-900/30">
+                    P1
+                  </th>
+                  <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-blue-100 dark:bg-blue-900/30">
+                    P2
+                  </th>
+                  <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-green-100 dark:bg-green-900/30">
+                    MODELO
+                  </th>
+                  <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-green-100 dark:bg-green-900/30">
+                    AGENCIA
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
@@ -633,6 +765,36 @@ export default function GestorStatsPage() {
                         </td>
                       </React.Fragment>
                     ))}
+                    {/* Columnas de totales */}
+                    {(() => {
+                      const p1Values = calculateModelPeriodValues(model.id, '1-15');
+                      const p2Values = calculateModelPeriodValues(model.id, '16-31');
+                      const totalUsdModelo = p1Values.totalUsdModelo + p2Values.totalUsdModelo;
+                      const totalCopModelo = p1Values.totalCopModelo + p2Values.totalCopModelo;
+                      const totalUsdAgencia = p1Values.totalUsdAgencia + p2Values.totalUsdAgencia;
+                      const totalCopAgencia = p1Values.totalCopAgencia + p2Values.totalCopAgencia;
+                      
+                      return (
+                        <>
+                          {/* Total P1 */}
+                          <td className="px-2 py-1 text-xs text-center border-l-2 border-gray-300 dark:border-gray-500 border-r border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/20 font-semibold whitespace-nowrap">
+                            {p1Values.totalUsdBruto > 0 ? formatCurrency(p1Values.totalUsdBruto, 'USD') : '-'}
+                          </td>
+                          {/* Total P2 */}
+                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/20 font-semibold whitespace-nowrap">
+                            {p2Values.totalUsdBruto > 0 ? formatCurrency(p2Values.totalUsdBruto, 'USD') : '-'}
+                          </td>
+                          {/* Profit Modelo */}
+                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/20 font-semibold whitespace-nowrap">
+                            {totalCopModelo > 0 ? formatCurrency(totalCopModelo, 'COP') : '-'}
+                          </td>
+                          {/* Profit Agencia */}
+                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/20 font-semibold whitespace-nowrap">
+                            {totalCopAgencia > 0 ? formatCurrency(totalCopAgencia, 'COP') : '-'}
+                          </td>
+                        </>
+                      );
+                    })()}
                   </tr>
                 ))}
               </tbody>
