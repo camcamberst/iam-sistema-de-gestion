@@ -141,9 +141,27 @@ export default function GestorStatsPage() {
       }
 
       // Cargar solo usuarios con rol 'modelo' que pertenecen al grupo
+      // Intentar incluir 'clave' si existe, si no, usar solo campos básicos
+      let selectFields = 'id, name, email, role';
+      try {
+        // Verificar si la columna clave existe haciendo una consulta de prueba
+        const { error: testError } = await supabase
+          .from('users')
+          .select('clave')
+          .limit(1);
+        
+        // Si no hay error, la columna existe
+        if (!testError) {
+          selectFields = 'id, name, email, role, clave';
+        }
+      } catch (e) {
+        // Si hay error, la columna no existe, usar campos básicos
+        console.log('⚠️ [GESTOR STATS] Columna clave no disponible, usando campos básicos');
+      }
+
       const { data: modelsData, error: modelsError } = await supabase
         .from('users')
-        .select('id, name, email, role, clave')
+        .select(selectFields)
         .eq('role', 'modelo')
         .eq('is_active', true)
         .in('id', userIds)
