@@ -143,7 +143,7 @@ export default function GestorStatsPage() {
       // Cargar solo usuarios con rol 'modelo' que pertenecen al grupo
       const { data: modelsData, error: modelsError } = await supabase
         .from('users')
-        .select('id, name, email, role')
+        .select('id, name, email, role, clave')
         .eq('role', 'modelo')
         .eq('is_active', true)
         .in('id', userIds)
