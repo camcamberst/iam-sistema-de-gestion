@@ -159,14 +159,17 @@ export default function GestorStatsPage() {
         setPlatforms(platformsData as Platform[]);
       }
 
-      // Cargar registros existentes del gestor desde calculator_history
-      const periodDate = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
+      // Cargar registros existentes del gestor desde gestor_stats_values
+      // Cargar ambos períodos (P1 y P2) del mes seleccionado
+      const periodDateP1 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
+      const periodDateP2 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
+      
       const { data: registrosData, error: registrosError } = await supabase
-        .from('calculator_history')
+        .from('gestor_stats_values')
         .select('*')
-        .eq('period_date', periodDate)
         .eq('group_id', selectedGroup)
-        .not('estado', 'is', null); // Solo registros con estado (del gestor)
+        .in('period_date', [periodDateP1, periodDateP2])
+        .in('period_type', ['1-15', '16-31']);
 
       if (registrosError) {
         console.error('❌ [GESTOR STATS] Error obteniendo registros:', registrosError);
@@ -207,28 +210,61 @@ export default function GestorStatsPage() {
     setEditValue(currentValue.toString());
   };
 
-  const handleCellSave = () => {
-    if (!editingCell) return;
+  const handleCellSave = async () => {
+    if (!editingCell || !selectedGroup) return;
 
     const { modelId, platformId, periodType } = editingCell;
     const key = `${modelId}_${platformId}`;
     const value = parseFloat(editValue) || 0;
 
-    setRegistros(prev => ({
-      ...prev,
-      [key]: {
-        ...prev[key],
-        [periodType]: {
-          model_id: modelId,
-          platform_id: platformId,
-          periodo_type: periodType,
-          ...(periodType === '1-15' ? { valor_p1: value } : { valor_p2: value })
-        }
-      }
-    }));
+    // Determinar periodDate según el período
+    const periodDate = periodType === '1-15' 
+      ? `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`
+      : `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
 
-    setEditingCell(null);
-    setEditValue('');
+    try {
+      // Guardar en la base de datos
+      const response = await fetch('/api/gestor/stats/save-value', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelId,
+          platformId,
+          periodDate,
+          periodType,
+          value,
+          groupId: selectedGroup
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Error guardando valor');
+      }
+
+      // Actualizar estado local solo si se guardó correctamente
+      setRegistros(prev => ({
+        ...prev,
+        [key]: {
+          ...prev[key],
+          [periodType]: {
+            model_id: modelId,
+            platform_id: platformId,
+            periodo_type: periodType,
+            ...(periodType === '1-15' ? { valor_p1: value } : { valor_p2: value })
+          }
+        }
+      }));
+
+      setEditingCell(null);
+      setEditValue('');
+    } catch (error: any) {
+      console.error('❌ [GESTOR STATS] Error guardando valor:', error);
+      alert('Error guardando valor: ' + error.message);
+    }
   };
 
   const handleCellCancel = () => {

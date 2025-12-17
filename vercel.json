@@ -15,6 +15,10 @@
     {
       "path": "/api/cron/period-closure-dxlive-freeze",
       "schedule": "0 15 1,15,16,31 * *"
+    },
+    {
+      "path": "/api/cron/gestor-generate-stats-sheet",
+      "schedule": "0 5 1,16 * *"
     }
   ]
 }
