@@ -247,6 +247,30 @@ export default function GestorStatsPage() {
       }
       setHistoricalRates(ratesMap);
 
+      // Inicializar rates de edición con valores por defecto si no existen
+      const p1Key = `${periodDateP1}_1-15`;
+      const p2Key = `${periodDateP2}_16-31`;
+      const editingRatesMap: Record<string, HistoricalRates> = {};
+      if (!ratesMap[p1Key]) {
+        editingRatesMap[p1Key] = {
+          rate_usd_cop: 3900,
+          rate_eur_usd: 1.01,
+          rate_gbp_usd: 1.20
+        };
+      } else {
+        editingRatesMap[p1Key] = { ...ratesMap[p1Key] };
+      }
+      if (!ratesMap[p2Key]) {
+        editingRatesMap[p2Key] = {
+          rate_usd_cop: 3900,
+          rate_eur_usd: 1.01,
+          rate_gbp_usd: 1.20
+        };
+      } else {
+        editingRatesMap[p2Key] = { ...ratesMap[p2Key] };
+      }
+      setEditingRates(editingRatesMap);
+
       // Cargar configuraciones de modelos (porcentajes)
       const modelIds = modelsData?.map((m: any) => m.id) || [];
       if (modelIds.length > 0) {
@@ -486,6 +510,119 @@ export default function GestorStatsPage() {
     return calculatePeriodTotals(valuesByPlatform, platforms, rates, modelConfig);
   };
 
+  const handleSaveRates = async (periodType: '1-15' | '16-31') => {
+    if (!selectedGroup) {
+      setRatesMessage({ type: 'error', text: 'Por favor selecciona un grupo' });
+      return;
+    }
+
+    try {
+      setSavingRates(true);
+      const periodDate = periodType === '1-15'
+        ? `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`
+        : `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
+      
+      const key = `${periodDate}_${periodType}`;
+      const rate = editingRates[key];
+
+      if (!rate) {
+        throw new Error('Rate no encontrada');
+      }
+
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) {
+        throw new Error('No autenticado');
+      }
+
+      const response = await fetch('/api/gestor/historical-rates', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          groupId: selectedGroup,
+          year: selectedPeriod.year,
+          month: selectedPeriod.month,
+          periodType: periodType,
+          rateUsdCop: rate.rate_usd_cop,
+          rateEurUsd: rate.rate_eur_usd,
+          rateGbpUsd: rate.rate_gbp_usd
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Error guardando rates');
+      }
+
+      setRatesMessage({ type: 'success', text: `Rates de ${periodType} guardadas correctamente` });
+      setTimeout(() => setRatesMessage(null), 3000);
+      await loadData(); // Recargar para actualizar rates
+    } catch (error: any) {
+      console.error('Error guardando rates:', error);
+      setRatesMessage({ type: 'error', text: error.message || 'Error guardando rates históricas' });
+    } finally {
+      setSavingRates(false);
+    }
+  };
+
+  const handleApplyRates = async (periodType: '1-15' | '16-31') => {
+    if (!selectedGroup) {
+      setRatesMessage({ type: 'error', text: 'Por favor selecciona un grupo' });
+      return;
+    }
+
+    if (!confirm(`¿Estás seguro de aplicar las rates de ${periodType}? Esto recalculará todos los valores históricos de este período.`)) {
+      return;
+    }
+
+    try {
+      setApplyingRates(true);
+      const periodDate = periodType === '1-15'
+        ? `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`
+        : `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
+
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) {
+        throw new Error('No autenticado');
+      }
+
+      const response = await fetch('/api/gestor/historical-rates/apply', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          groupId: selectedGroup,
+          year: selectedPeriod.year,
+          month: selectedPeriod.month,
+          periodType: periodType
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok || !result.success) {
+        throw new Error(result.error || 'Error aplicando rates');
+      }
+
+      setRatesMessage({ 
+        type: 'success', 
+        text: `Rates aplicadas correctamente. ${result.message || 'Registros actualizados.'}` 
+      });
+      setTimeout(() => setRatesMessage(null), 5000);
+      await loadData(); // Recargar para ver cambios
+    } catch (error: any) {
+      console.error('Error aplicando rates:', error);
+      setRatesMessage({ type: 'error', text: error.message || 'Error aplicando rates históricas' });
+    } finally {
+      setApplyingRates(false);
+    }
+  };
+
   const months = [
     'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
@@ -520,6 +657,206 @@ export default function GestorStatsPage() {
             </div>
           </div>
         </div>
+
+        {/* Configuración de Rates Históricas */}
+        {selectedGroup && (
+          <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 backdrop-blur-sm rounded-xl shadow-md border-2 border-yellow-200 dark:border-yellow-800 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                💱 Configuración de Rates Históricas
+              </h2>
+              <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
+                Solo afecta períodos históricos
+              </span>
+            </div>
+
+            {ratesMessage && (
+              <div className={`mb-4 p-3 rounded-lg text-sm ${
+                ratesMessage.type === 'success' 
+                  ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
+                  : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
+              }`}>
+                {ratesMessage.text}
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Período 1 (1-15) */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Período 1 (1-15)</h3>
+                  {historicalRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`] && (
+                    <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded">
+                      Configurado
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">USD→COP</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={editingRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`]?.rate_usd_cop || ''}
+                      onChange={(e) => {
+                        const key = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`;
+                        setEditingRates(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...(prev[key] || { rate_eur_usd: 1.01, rate_gbp_usd: 1.20 }),
+                            rate_usd_cop: parseFloat(e.target.value) || 0
+                          }
+                        }));
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">EUR→USD</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={editingRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`]?.rate_eur_usd || ''}
+                      onChange={(e) => {
+                        const key = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`;
+                        setEditingRates(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...(prev[key] || { rate_usd_cop: 3900, rate_gbp_usd: 1.20 }),
+                            rate_eur_usd: parseFloat(e.target.value) || 0
+                          }
+                        }));
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">GBP→USD</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={editingRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`]?.rate_gbp_usd || ''}
+                      onChange={(e) => {
+                        const key = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`;
+                        setEditingRates(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...(prev[key] || { rate_usd_cop: 3900, rate_eur_usd: 1.01 }),
+                            rate_gbp_usd: parseFloat(e.target.value) || 0
+                          }
+                        }));
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => handleSaveRates('1-15')}
+                    disabled={savingRates}
+                    className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
+                  >
+                    {savingRates ? 'Guardando...' : 'Guardar'}
+                  </button>
+                  <button
+                    onClick={() => handleApplyRates('1-15')}
+                    disabled={applyingRates || !historicalRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`]}
+                    className="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
+                  >
+                    {applyingRates ? 'Aplicando...' : 'Aplicar'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Período 2 (16-31) */}
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Período 2 (16-31)</h3>
+                  {historicalRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`] && (
+                    <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded">
+                      Configurado
+                    </span>
+                  )}
+                </div>
+                <div className="grid grid-cols-3 gap-2">
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">USD→COP</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={editingRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`]?.rate_usd_cop || ''}
+                      onChange={(e) => {
+                        const key = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`;
+                        setEditingRates(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...(prev[key] || { rate_eur_usd: 1.01, rate_gbp_usd: 1.20 }),
+                            rate_usd_cop: parseFloat(e.target.value) || 0
+                          }
+                        }));
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">EUR→USD</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={editingRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`]?.rate_eur_usd || ''}
+                      onChange={(e) => {
+                        const key = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`;
+                        setEditingRates(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...(prev[key] || { rate_usd_cop: 3900, rate_gbp_usd: 1.20 }),
+                            rate_eur_usd: parseFloat(e.target.value) || 0
+                          }
+                        }));
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">GBP→USD</label>
+                    <input
+                      type="number"
+                      step="0.0001"
+                      value={editingRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`]?.rate_gbp_usd || ''}
+                      onChange={(e) => {
+                        const key = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`;
+                        setEditingRates(prev => ({
+                          ...prev,
+                          [key]: {
+                            ...(prev[key] || { rate_usd_cop: 3900, rate_eur_usd: 1.01 }),
+                            rate_gbp_usd: parseFloat(e.target.value) || 0
+                          }
+                        }));
+                      }}
+                      className="w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={() => handleSaveRates('16-31')}
+                    disabled={savingRates}
+                    className="flex-1 px-3 py-1.5 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
+                  >
+                    {savingRates ? 'Guardando...' : 'Guardar'}
+                  </button>
+                  <button
+                    onClick={() => handleApplyRates('16-31')}
+                    disabled={applyingRates || !historicalRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`]}
+                    className="flex-1 px-3 py-1.5 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded text-xs font-medium transition-colors"
+                  >
+                    {applyingRates ? 'Aplicando...' : 'Aplicar'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Filtros */}
         <div className="mb-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4">
