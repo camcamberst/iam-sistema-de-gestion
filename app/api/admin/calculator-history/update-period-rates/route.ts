@@ -225,23 +225,25 @@ export async function POST(request: NextRequest) {
     const userRole = userData?.role || 'modelo';
     const isAdmin = userRole === 'admin' || userRole === 'super_admin';
     const isSuperAdmin = userRole === 'super_admin';
+    const isGestor = userRole === 'gestor';
 
-    if (!isAdmin) {
+    // Permitir admins, super_admins y gestores
+    if (!isAdmin && !isGestor) {
       console.warn(`🚫 [PERIOD-RATES-UPDATE] Usuario ${authenticatedUserId} sin permisos de edición`);
       return NextResponse.json({
         success: false,
-        error: 'No autorizado: Solo admins pueden editar tasas globales'
+        error: 'No autorizado: Solo admins, super_admins y gestores pueden editar tasas históricas'
       }, { status: 403 });
     }
 
-    // Obtener grupos del admin si no es super_admin
+    // Obtener grupos del usuario si no es super_admin
     let allowedGroupIds: string[] = [];
     if (!isSuperAdmin) {
-      const { data: adminGroups } = await supabase
+      const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
         .eq('user_id', authenticatedUserId);
-      allowedGroupIds = (adminGroups || []).map((ag: any) => ag.group_id);
+      allowedGroupIds = (userGroups || []).map((ag: any) => ag.group_id);
       
       if (allowedGroupIds.length === 0) {
         return NextResponse.json({

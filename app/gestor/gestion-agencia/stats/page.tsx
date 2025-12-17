@@ -216,35 +216,60 @@ export default function GestorStatsPage() {
         setPlatforms(platformsData as Platform[]);
       }
 
-      // Cargar rates históricas para ambos períodos
+      // Cargar rates históricas desde calculator_history para ambos períodos
       const periodDateP1 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
       const periodDateP2 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
 
-      const { data: ratesData, error: ratesError } = await supabase
-        .from('gestor_historical_rates')
-        .select('*')
-        .eq('group_id', selectedGroup)
-        .in('period_date', [periodDateP1, periodDateP2])
-        .in('period_type', ['1-15', '16-31']);
+      // Obtener modelos del grupo
+      const { data: userGroupsData } = await supabase
+        .from('user_groups')
+        .select('user_id')
+        .eq('group_id', selectedGroup);
 
-      if (ratesError) {
-        console.error('❌ [GESTOR STATS] Error obteniendo rates históricas:', ratesError);
-      } else {
-        console.log('💱 [GESTOR STATS] Rates históricas encontradas:', ratesData?.length || 0);
-      }
+      const userIds = userGroupsData?.map((ug: any) => ug.user_id) || [];
+
+      // Obtener una muestra de rates desde calculator_history para cada período
+      const { data: ratesP1Data } = await supabase
+        .from('calculator_history')
+        .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
+        .eq('period_date', periodDateP1)
+        .eq('period_type', '1-15')
+        .in('model_id', userIds.length > 0 ? userIds : [])
+        .not('archived_at', 'is', null)
+        .limit(1)
+        .single();
+
+      const { data: ratesP2Data } = await supabase
+        .from('calculator_history')
+        .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
+        .eq('period_date', periodDateP2)
+        .eq('period_type', '16-31')
+        .in('model_id', userIds.length > 0 ? userIds : [])
+        .not('archived_at', 'is', null)
+        .limit(1)
+        .single();
 
       // Organizar rates por período
       const ratesMap: Record<string, HistoricalRates> = {};
-      if (ratesData) {
-        ratesData.forEach((rate: any) => {
-          const key = `${rate.period_date}_${rate.period_type}`;
-          ratesMap[key] = {
-            rate_usd_cop: parseFloat(rate.rate_usd_cop),
-            rate_eur_usd: parseFloat(rate.rate_eur_usd),
-            rate_gbp_usd: parseFloat(rate.rate_gbp_usd)
-          };
-        });
+      
+      if (ratesP1Data) {
+        const key = `${periodDateP1}_1-15`;
+        ratesMap[key] = {
+          rate_usd_cop: parseFloat(ratesP1Data.rate_usd_cop) || 3900,
+          rate_eur_usd: parseFloat(ratesP1Data.rate_eur_usd) || 1.01,
+          rate_gbp_usd: parseFloat(ratesP1Data.rate_gbp_usd) || 1.20
+        };
       }
+      
+      if (ratesP2Data) {
+        const key = `${periodDateP2}_16-31`;
+        ratesMap[key] = {
+          rate_usd_cop: parseFloat(ratesP2Data.rate_usd_cop) || 3900,
+          rate_eur_usd: parseFloat(ratesP2Data.rate_eur_usd) || 1.01,
+          rate_gbp_usd: parseFloat(ratesP2Data.rate_gbp_usd) || 1.20
+        };
+      }
+      
       setHistoricalRates(ratesMap);
 
       // Inicializar rates de edición con valores por defecto si no existen
@@ -541,19 +566,24 @@ export default function GestorStatsPage() {
         throw new Error('No autenticado');
       }
 
-      const response = await fetch('/api/gestor/historical-rates', {
+      // Usar el mismo endpoint que Dashboard sedes y Ver historial
+      const response = await fetch('/api/admin/calculator-history/update-period-rates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          groupId: selectedGroup,
-          periodDate: periodDate,
-          periodType: periodType,
-          rateUsdCop: rate.rate_usd_cop,
-          rateEurUsd: rate.rate_eur_usd,
-          rateGbpUsd: rate.rate_gbp_usd
+          period_date: periodDate,
+          period_type: periodType,
+          group_id: selectedGroup, // Filtrar por grupo específico
+          rates: {
+            eur_usd: rate.rate_eur_usd,
+            gbp_usd: rate.rate_gbp_usd,
+            usd_cop: rate.rate_usd_cop
+          },
+          admin_id: (await supabase.auth.getUser(token)).data.user?.id,
+          admin_name: 'Gestor'
         })
       });
 
@@ -601,16 +631,32 @@ export default function GestorStatsPage() {
         throw new Error('No autenticado');
       }
 
-      const response = await fetch('/api/gestor/historical-rates/apply', {
+      // El endpoint update-period-rates ya recalcula automáticamente, no necesitamos endpoint separado
+      // Pero primero necesitamos obtener las rates configuradas
+      const key = `${periodDate}_${periodType}`;
+      const rate = editingRates[key];
+      
+      if (!rate) {
+        throw new Error('No hay rates configuradas para aplicar. Primero guarda las rates.');
+      }
+
+      const response = await fetch('/api/admin/calculator-history/update-period-rates', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
-          groupId: selectedGroup,
-          periodDate: periodDate,
-          periodType: periodType
+          period_date: periodDate,
+          period_type: periodType,
+          group_id: selectedGroup, // Filtrar por grupo específico
+          rates: {
+            eur_usd: rate.rate_eur_usd,
+            gbp_usd: rate.rate_gbp_usd,
+            usd_cop: rate.rate_usd_cop
+          },
+          admin_id: (await supabase.auth.getUser(token)).data.user?.id,
+          admin_name: 'Gestor'
         })
       });
 
