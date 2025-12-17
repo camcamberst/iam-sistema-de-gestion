@@ -68,24 +68,33 @@ COMMENT ON COLUMN gestor_historical_rates.aplicado_por IS 'ID del usuario que ap
 -- RLS (Row Level Security)
 ALTER TABLE gestor_historical_rates ENABLE ROW LEVEL SECURITY;
 
+-- Usar función SECURITY DEFINER para evitar dependencias circulares
+-- (Reutilizar la función existente si ya existe)
+CREATE OR REPLACE FUNCTION public.is_user_gestor_or_admin()
+RETURNS boolean
+LANGUAGE sql
+SECURITY DEFINER
+STABLE
+AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.users
+    WHERE id = auth.uid()
+    AND role IN ('gestor', 'admin', 'super_admin')
+    AND is_active = true
+  );
+$$;
+
 -- Política: Gestores, admins y super_admins pueden leer y escribir rates históricas
 CREATE POLICY "Gestores and admins can manage historical rates" ON gestor_historical_rates
     FOR ALL
-    USING (
-        EXISTS (
-            SELECT 1 FROM users
-            WHERE id = auth.uid()
-            AND role IN ('gestor', 'admin', 'super_admin')
-            AND is_active = true
-        )
-    );
+    USING (public.is_user_gestor_or_admin());
 
 -- Política: Modelos pueden leer rates históricas (solo lectura)
 CREATE POLICY "Modelos can read historical rates" ON gestor_historical_rates
     FOR SELECT
     USING (
         EXISTS (
-            SELECT 1 FROM users
+            SELECT 1 FROM public.users
             WHERE id = auth.uid()
             AND role = 'modelo'
             AND is_active = true
