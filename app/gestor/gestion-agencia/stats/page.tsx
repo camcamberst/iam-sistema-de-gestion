@@ -574,7 +574,13 @@ export default function GestorStatsPage() {
       return;
     }
 
-    if (!confirm(`¿Estás seguro de aplicar las rates de ${periodType}? Esto recalculará todos los valores históricos de este período.`)) {
+    const monthName = months[selectedPeriod.month - 1];
+    const periodDate = periodType === '1-15'
+      ? `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`
+      : `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
+    const endDay = periodType === '1-15' ? '15' : new Date(selectedPeriod.year, selectedPeriod.month, 0).getDate();
+    
+    if (!confirm(`¿Estás seguro de aplicar las rates de ${periodType} para ${monthName} ${selectedPeriod.year} (días ${periodType === '1-15' ? '1-15' : `16-${endDay}`})?\n\nEsto recalculará todos los valores históricos de este período en calculator_history.`)) {
       return;
     }
 
@@ -661,10 +667,15 @@ export default function GestorStatsPage() {
         {/* Configuración de Rates Históricas */}
         {selectedGroup && (
           <div className="mb-6 bg-gradient-to-r from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 backdrop-blur-sm rounded-xl shadow-md border-2 border-yellow-200 dark:border-yellow-800 p-4">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                💱 Configuración de Rates Históricas
-              </h2>
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                  💱 Configuración de Rates Históricas
+                </h2>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                  Para: <span className="font-semibold text-gray-900 dark:text-white">{months[selectedPeriod.month - 1]} {selectedPeriod.year}</span>
+                </p>
+              </div>
               <span className="text-xs bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200 px-2 py-1 rounded">
                 Solo afecta períodos históricos
               </span>
@@ -684,7 +695,12 @@ export default function GestorStatsPage() {
               {/* Período 1 (1-15) */}
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Período 1 (1-15)</h3>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Período 1 (1-15)</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {months[selectedPeriod.month - 1]} {selectedPeriod.year} - Días 1 al 15
+                    </p>
+                  </div>
                   {historicalRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01_1-15`] && (
                     <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded">
                       Configurado
@@ -771,7 +787,12 @@ export default function GestorStatsPage() {
               {/* Período 2 (16-31) */}
               <div className="bg-white dark:bg-gray-800 rounded-lg p-4 border border-yellow-200 dark:border-yellow-800">
                 <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Período 2 (16-31)</h3>
+                  <div>
+                    <h3 className="text-sm font-semibold text-gray-900 dark:text-white">Período 2 (16-31)</h3>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+                      {months[selectedPeriod.month - 1]} {selectedPeriod.year} - Días 16 al {new Date(selectedPeriod.year, selectedPeriod.month, 0).getDate()}
+                    </p>
+                  </div>
                   {historicalRates[`${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16_16-31`] && (
                     <span className="text-xs bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200 px-2 py-1 rounded">
                       Configurado
