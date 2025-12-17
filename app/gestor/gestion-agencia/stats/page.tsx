@@ -49,6 +49,8 @@ export default function GestorStatsPage() {
     periodType: '1-15' | '16-31';
   } | null>(null);
   const [editValue, setEditValue] = useState<string>('');
+  const [generatingSheet, setGeneratingSheet] = useState(false);
+  const [sheetExists, setSheetExists] = useState<boolean | null>(null);
 
   useEffect(() => {
     loadGroups();
@@ -194,12 +196,64 @@ export default function GestorStatsPage() {
           };
         });
         setRegistros(registrosMap);
+        setSheetExists(registrosData.length > 0);
+      } else {
+        setSheetExists(false);
       }
+
+      // Verificar si existe la planilla para este mes
+      const { data: sheetCheck } = await supabase
+        .from('gestor_stats_values')
+        .select('id')
+        .eq('group_id', selectedGroup)
+        .in('period_date', [periodDateP1, periodDateP2])
+        .limit(1)
+        .single();
+      
+      setSheetExists(sheetCheck !== null);
 
     } catch (error) {
       console.error('Error cargando datos:', error);
+      setSheetExists(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateSheet = async () => {
+    if (!selectedGroup) {
+      alert('Por favor selecciona un grupo primero');
+      return;
+    }
+
+    try {
+      setGeneratingSheet(true);
+      const response = await fetch('/api/gestor/stats/generate-sheet', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          year: selectedPeriod.year,
+          month: selectedPeriod.month,
+          groupId: selectedGroup
+        })
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Error generando planilla');
+      }
+
+      alert(`Planilla generada exitosamente. ${result.recordsCreated || 0} registros creados.`);
+      // Recargar datos
+      await loadData();
+    } catch (error: any) {
+      console.error('Error generando planilla:', error);
+      alert('Error generando planilla: ' + error.message);
+    } finally {
+      setGeneratingSheet(false);
     }
   };
 
@@ -377,6 +431,15 @@ export default function GestorStatsPage() {
             </div>
 
             <div className="ml-auto flex gap-2">
+              {sheetExists === false && (
+                <button
+                  onClick={generateSheet}
+                  disabled={generatingSheet}
+                  className="px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white rounded-lg transition-colors text-sm font-medium"
+                >
+                  {generatingSheet ? 'Generando...' : 'Generar Planilla'}
+                </button>
+              )}
               <button
                 onClick={loadData}
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm font-medium"
@@ -402,8 +465,17 @@ export default function GestorStatsPage() {
           </div>
         ) : models.length === 0 ? (
           <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-8 text-center">
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
               No hay modelos asignados a esta sede/grupo
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400">
+              Verifica que haya modelos activos asignados al grupo "{groups.find(g => g.id === selectedGroup)?.name || 'seleccionado'}"
+            </p>
+          </div>
+        ) : platforms.length === 0 ? (
+          <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-8 text-center">
+            <p className="text-gray-600 dark:text-gray-300">
+              No hay plataformas activas en el sistema
             </p>
           </div>
         ) : (
