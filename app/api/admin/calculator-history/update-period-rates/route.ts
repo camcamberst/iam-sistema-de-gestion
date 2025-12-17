@@ -64,22 +64,24 @@ export async function GET(request: NextRequest) {
     const userRole = userData?.role || 'modelo';
     const isAdmin = userRole === 'admin' || userRole === 'super_admin';
     const isSuperAdmin = userRole === 'super_admin';
+    const isGestor = userRole === 'gestor';
 
-    if (!isAdmin) {
+    // Permitir admins, super_admins y gestores
+    if (!isAdmin && !isGestor) {
       return NextResponse.json({
         success: false,
-        error: 'No autorizado: Solo admins pueden consultar información de períodos'
+        error: 'No autorizado: Solo admins, super_admins y gestores pueden consultar información de períodos'
       }, { status: 403 });
     }
 
-    // Obtener grupos del admin si no es super_admin
+    // Obtener grupos del usuario si no es super_admin
     let allowedGroupIds: string[] = [];
     if (!isSuperAdmin) {
-      const { data: adminGroups } = await supabase
+      const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
         .eq('user_id', authenticatedUserId);
-      allowedGroupIds = (adminGroups || []).map((ag: any) => ag.group_id);
+      allowedGroupIds = (userGroups || []).map((ag: any) => ag.group_id);
     }
 
     // Contar registros del período CERRADO (archivado)
@@ -177,12 +179,13 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const {
+      const {
       period_date,
       period_type,
       rates,
       admin_id,
-      admin_name
+      admin_name,
+      group_id // Opcional: para gestores que quieren filtrar por grupo específico
     } = body;
 
     if (!period_date || !period_type || !rates) {
@@ -287,25 +290,37 @@ export async function POST(request: NextRequest) {
       .eq('period_type', period_type)
       .not('archived_at', 'is', null); // Solo períodos archivados (cerrados)
 
-    // Si es admin (no super_admin), filtrar por grupos del admin
+    // Si no es super_admin, filtrar por grupos del usuario (admin o gestor)
     if (!isSuperAdmin && allowedGroupIds.length > 0) {
-      console.log(`🔍 [PERIOD-RATES-UPDATE] Admin con grupos asignados: ${allowedGroupIds.length} grupos`);
+      console.log(`🔍 [PERIOD-RATES-UPDATE] Usuario (${userRole}) con grupos asignados: ${allowedGroupIds.length} grupos`);
       
-      // Obtener IDs de modelos que pertenecen a los grupos del admin
+      // Si se especifica group_id, validar que el usuario tenga acceso a ese grupo
+      let finalGroupIds = allowedGroupIds;
+      if (group_id) {
+        if (!allowedGroupIds.includes(group_id)) {
+          return NextResponse.json({
+            success: false,
+            error: 'No tienes acceso al grupo especificado'
+          }, { status: 403 });
+        }
+        finalGroupIds = [group_id]; // Filtrar solo por el grupo especificado
+      }
+      
+      // Obtener IDs de modelos que pertenecen a los grupos del usuario
       const { data: modelGroups, error: modelGroupsError } = await supabase
         .from('user_groups')
         .select('user_id')
-        .in('group_id', allowedGroupIds);
+        .in('group_id', finalGroupIds);
       
       if (modelGroupsError) {
         console.error('❌ [PERIOD-RATES-UPDATE] Error obteniendo modelos de grupos:', modelGroupsError);
       }
       
       const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
-      console.log(`🔍 [PERIOD-RATES-UPDATE] Modelos en grupos del admin: ${allowedModelIds.length}`);
+      console.log(`🔍 [PERIOD-RATES-UPDATE] Modelos en grupos del usuario: ${allowedModelIds.length}`);
       
       if (allowedModelIds.length === 0) {
-        console.warn('⚠️ [PERIOD-RATES-UPDATE] No hay modelos en los grupos del admin');
+        console.warn(`⚠️ [PERIOD-RATES-UPDATE] No hay modelos en los grupos del usuario (${userRole})`);
         return NextResponse.json({
           success: false,
           error: 'No hay modelos en tus grupos asignados'
@@ -314,7 +329,7 @@ export async function POST(request: NextRequest) {
       
       periodRecordsQuery = periodRecordsQuery.in('model_id', allowedModelIds);
     } else if (!isSuperAdmin) {
-      console.warn('⚠️ [PERIOD-RATES-UPDATE] Admin sin grupos asignados');
+      console.warn(`⚠️ [PERIOD-RATES-UPDATE] Usuario (${userRole}) sin grupos asignados`);
     } else {
       console.log('🔍 [PERIOD-RATES-UPDATE] SuperAdmin: buscando todos los registros sin filtrar por grupos');
     }

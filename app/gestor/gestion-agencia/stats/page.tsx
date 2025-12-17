@@ -566,6 +566,9 @@ export default function GestorStatsPage() {
         throw new Error('No autenticado');
       }
 
+      // Obtener información del usuario
+      const { data: { user } } = await supabase.auth.getUser(token);
+      
       // Usar el mismo endpoint que Dashboard sedes y Ver historial
       const response = await fetch('/api/admin/calculator-history/update-period-rates', {
         method: 'POST',
@@ -582,7 +585,7 @@ export default function GestorStatsPage() {
             gbp_usd: rate.rate_gbp_usd,
             usd_cop: rate.rate_usd_cop
           },
-          admin_id: (await supabase.auth.getUser(token)).data.user?.id,
+          admin_id: user?.id,
           admin_name: 'Gestor'
         })
       });
@@ -640,6 +643,9 @@ export default function GestorStatsPage() {
         throw new Error('No hay rates configuradas para aplicar. Primero guarda las rates.');
       }
 
+      // Obtener información del usuario
+      const { data: { user } } = await supabase.auth.getUser(token);
+
       const response = await fetch('/api/admin/calculator-history/update-period-rates', {
         method: 'POST',
         headers: {
@@ -655,7 +661,7 @@ export default function GestorStatsPage() {
             gbp_usd: rate.rate_gbp_usd,
             usd_cop: rate.rate_usd_cop
           },
-          admin_id: (await supabase.auth.getUser(token)).data.user?.id,
+          admin_id: user?.id,
           admin_name: 'Gestor'
         })
       });
