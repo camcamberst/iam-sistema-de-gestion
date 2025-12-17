@@ -58,6 +58,10 @@ export default function GestorStatsPage() {
   const [sheetExists, setSheetExists] = useState<boolean | null>(null);
   const [historicalRates, setHistoricalRates] = useState<Record<string, HistoricalRates>>({}); // key: periodDate_periodType
   const [modelConfigs, setModelConfigs] = useState<Record<string, ModelConfig>>({}); // key: modelId
+  const [editingRates, setEditingRates] = useState<Record<string, HistoricalRates>>({}); // Rates en edición
+  const [savingRates, setSavingRates] = useState(false);
+  const [applyingRates, setApplyingRates] = useState(false);
+  const [ratesMessage, setRatesMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null);
 
   useEffect(() => {
     loadGroups();
