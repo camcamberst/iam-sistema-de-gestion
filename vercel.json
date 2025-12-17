@@ -18,7 +18,7 @@
     },
     {
       "path": "/api/cron/gestor-generate-stats-sheet",
-      "schedule": "0 5 1,16 * *"
+      "schedule": "0 5 1 * *"
     }
   ]
 }
