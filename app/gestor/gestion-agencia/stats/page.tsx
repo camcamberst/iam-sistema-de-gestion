@@ -118,6 +118,27 @@ export default function GestorStatsPage() {
 
       const userIds = userGroupsData.map(ug => ug.user_id);
       console.log('👥 [GESTOR STATS] IDs de usuarios encontrados:', userIds.length);
+      console.log('👥 [GESTOR STATS] IDs específicos:', userIds);
+
+      // Primero verificar qué usuarios hay y sus roles
+      const { data: allUsersInGroup, error: allUsersError } = await supabase
+        .from('users')
+        .select('id, name, email, role, is_active')
+        .in('id', userIds);
+
+      if (allUsersError) {
+        console.error('❌ [GESTOR STATS] Error obteniendo todos los usuarios:', allUsersError);
+      } else {
+        console.log('👥 [GESTOR STATS] Todos los usuarios del grupo:', allUsersInGroup);
+        console.log('👥 [GESTOR STATS] Usuarios por rol:', 
+          allUsersInGroup?.reduce((acc: any, u: any) => {
+            acc[u.role] = (acc[u.role] || 0) + 1;
+            return acc;
+          }, {})
+        );
+        console.log('👥 [GESTOR STATS] Usuarios activos:', allUsersInGroup?.filter((u: any) => u.is_active).length);
+        console.log('👥 [GESTOR STATS] Usuarios con rol modelo:', allUsersInGroup?.filter((u: any) => u.role === 'modelo').length);
+      }
 
       // Cargar modelos que pertenecen al grupo
       const { data: modelsData, error: modelsError } = await supabase
