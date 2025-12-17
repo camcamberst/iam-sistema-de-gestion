@@ -142,30 +142,35 @@ export default function GestorStatsPage() {
 
       // Cargar solo usuarios con rol 'modelo' que pertenecen al grupo
       // Intentar incluir 'clave' si existe, si no, usar solo campos básicos
-      let selectFields = 'id, name, email, role';
-      try {
-        // Verificar si la columna clave existe haciendo una consulta de prueba
-        const { error: testError } = await supabase
-          .from('users')
-          .select('clave')
-          .limit(1);
-        
-        // Si no hay error, la columna existe
-        if (!testError) {
-          selectFields = 'id, name, email, role, clave';
-        }
-      } catch (e) {
-        // Si hay error, la columna no existe, usar campos básicos
-        console.log('⚠️ [GESTOR STATS] Columna clave no disponible, usando campos básicos');
-      }
-
-      const { data: modelsData, error: modelsError } = await supabase
+      let modelsData: any[] | null = null;
+      let modelsError: any = null;
+      
+      // Primero intentar con 'clave' incluido
+      const { data: dataWithClave, error: errorWithClave } = await supabase
         .from('users')
-        .select(selectFields)
+        .select('id, name, email, role, clave')
         .eq('role', 'modelo')
         .eq('is_active', true)
         .in('id', userIds)
         .order('name');
+      
+      // Si la consulta con 'clave' falla porque la columna no existe, intentar sin ella
+      if (errorWithClave && errorWithClave.message?.includes('clave')) {
+        console.log('⚠️ [GESTOR STATS] Columna clave no existe, usando campos básicos');
+        const { data: dataWithoutClave, error: errorWithoutClave } = await supabase
+          .from('users')
+          .select('id, name, email, role')
+          .eq('role', 'modelo')
+          .eq('is_active', true)
+          .in('id', userIds)
+          .order('name');
+        
+        modelsData = dataWithoutClave;
+        modelsError = errorWithoutClave;
+      } else {
+        modelsData = dataWithClave;
+        modelsError = errorWithClave;
+      }
 
       if (modelsError) {
         console.error('❌ [GESTOR STATS] Error obteniendo modelos:', modelsError);
