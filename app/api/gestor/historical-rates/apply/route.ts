@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. Obtener configuraciones de modelos (porcentajes)
-    const modelIds = [...new Set(historyRecords.map((r: any) => r.model_id))];
+    const modelIds = Array.from(new Set(historyRecords.map((r: any) => r.model_id)));
     const { data: configs, error: configsError } = await supabase
       .from('calculator_config')
       .select('model_id, percentage_override, group_percentage')
