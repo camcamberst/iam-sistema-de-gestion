@@ -405,11 +405,18 @@ export default function GestorStatsPage() {
       : `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
 
     try {
+      // Obtener token de autenticación
+      const token = (await supabase.auth.getSession()).data.session?.access_token;
+      if (!token) {
+        throw new Error('No autenticado. Por favor inicia sesión nuevamente.');
+      }
+
       // Guardar en la base de datos
       const response = await fetch('/api/gestor/stats/save-value', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           modelId,
