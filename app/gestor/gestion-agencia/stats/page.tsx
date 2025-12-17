@@ -609,8 +609,7 @@ export default function GestorStatsPage() {
         },
         body: JSON.stringify({
           groupId: selectedGroup,
-          year: selectedPeriod.year,
-          month: selectedPeriod.month,
+          periodDate: periodDate,
           periodType: periodType
         })
       });
