@@ -549,8 +549,7 @@ export default function GestorStatsPage() {
         },
         body: JSON.stringify({
           groupId: selectedGroup,
-          year: selectedPeriod.year,
-          month: selectedPeriod.month,
+          periodDate: periodDate,
           periodType: periodType,
           rateUsdCop: rate.rate_usd_cop,
           rateEurUsd: rate.rate_eur_usd,
