@@ -140,12 +140,11 @@ export default function GestorStatsPage() {
         console.log('👥 [GESTOR STATS] Usuarios con rol modelo:', allUsersInGroup?.filter((u: any) => u.role === 'modelo').length);
       }
 
-      // Cargar usuarios activos que pertenecen al grupo
-      // IMPORTANTE: Mostrar todos los usuarios activos del grupo, no solo los con rol 'modelo'
-      // porque la planilla puede tener registros para cualquier usuario del grupo
+      // Cargar solo usuarios con rol 'modelo' que pertenecen al grupo
       const { data: modelsData, error: modelsError } = await supabase
         .from('users')
         .select('id, name, email, role')
+        .eq('role', 'modelo')
         .eq('is_active', true)
         .in('id', userIds)
         .order('name');
@@ -509,10 +508,10 @@ export default function GestorStatsPage() {
               <thead className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 border-b-2 border-gray-300 dark:border-gray-500">
                 <tr>
                   {/* Columnas fijas */}
-                  <th className="sticky left-0 z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 py-3 text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[120px]">
+                  <th className="sticky left-0 z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 text-xs text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[100px] whitespace-nowrap">
                     Clave
                   </th>
-                  <th className="sticky left-[120px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 py-3 text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[200px]">
+                  <th className="sticky left-[100px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 text-xs text-left font-semibold text-gray-700 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 min-w-[150px] whitespace-nowrap">
                     Usuario
                   </th>
                   
@@ -520,26 +519,26 @@ export default function GestorStatsPage() {
                   {platforms.map(platform => (
                     <th
                       key={platform.id}
-                      className="px-4 py-3 text-center font-semibold text-gray-700 dark:text-white border-r border-gray-200 dark:border-gray-600 min-w-[150px]"
+                      className="px-2 py-1 text-xs text-center font-semibold text-gray-700 dark:text-white border-r border-gray-200 dark:border-gray-600 min-w-[120px]"
                       colSpan={2}
                     >
                       <div className="flex flex-col">
-                        <span className="font-bold">{platform.name}</span>
-                        <span className="text-xs text-gray-500 dark:text-gray-400">{platform.currency}</span>
+                        <span className="font-bold text-xs">{platform.name}</span>
+                        <span className="text-[10px] text-gray-500 dark:text-gray-400">{platform.currency}</span>
                       </div>
                     </th>
                   ))}
                 </tr>
                 <tr>
                   {/* Sub-header para P1 y P2 */}
-                  <th className="sticky left-0 z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 py-2 border-r-2 border-gray-300 dark:border-gray-500"></th>
-                  <th className="sticky left-[120px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-4 py-2 border-r-2 border-gray-300 dark:border-gray-500"></th>
+                  <th className="sticky left-0 z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 border-r-2 border-gray-300 dark:border-gray-500"></th>
+                  <th className="sticky left-[100px] z-10 bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 px-2 py-1 border-r-2 border-gray-300 dark:border-gray-500"></th>
                   {platforms.map(platform => (
                     <React.Fragment key={platform.id}>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
+                      <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
                         P1
                       </th>
-                      <th className="px-3 py-2 text-center text-xs font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
+                      <th className="px-1 py-0.5 text-center text-[10px] font-medium text-gray-600 dark:text-gray-300 border-r border-gray-200 dark:border-gray-600 bg-gray-100 dark:bg-gray-700">
                         P2
                       </th>
                     </React.Fragment>
@@ -553,10 +552,10 @@ export default function GestorStatsPage() {
                     className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
                     {/* Columnas fijas */}
-                    <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-4 py-3 font-medium text-gray-900 dark:text-white border-r-2 border-gray-300 dark:border-gray-500">
+                    <td className="sticky left-0 z-10 bg-white dark:bg-gray-800 px-2 py-1 text-xs font-medium text-gray-900 dark:text-white border-r-2 border-gray-300 dark:border-gray-500 whitespace-nowrap">
                       {model.clave || model.name}
                     </td>
-                    <td className="sticky left-[120px] z-10 bg-white dark:bg-gray-800 px-4 py-3 text-gray-700 dark:text-gray-300 border-r-2 border-gray-300 dark:border-gray-500">
+                    <td className="sticky left-[120px] z-10 bg-white dark:bg-gray-800 px-2 py-1 text-xs text-gray-700 dark:text-gray-300 border-r-2 border-gray-300 dark:border-gray-500 whitespace-nowrap">
                       {model.email?.split('@')[0] || model.email}
                     </td>
 
@@ -565,7 +564,7 @@ export default function GestorStatsPage() {
                       <React.Fragment key={platform.id}>
                         {/* P1 */}
                         <td
-                          className="px-3 py-2 text-center border-r border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
                           onClick={() => handleCellClick(model.id, platform.id, '1-15')}
                         >
                           {editingCell?.modelId === model.id &&
@@ -581,19 +580,19 @@ export default function GestorStatsPage() {
                                   if (e.key === 'Enter') handleCellSave();
                                   if (e.key === 'Escape') handleCellCancel();
                                 }}
-                                className="w-full px-2 py-1 text-xs border rounded text-gray-900 dark:text-white dark:bg-gray-700"
+                                className="w-full px-1 py-0.5 text-xs border rounded text-gray-900 dark:text-white dark:bg-gray-700"
                                 autoFocus
                               />
                             </div>
                           ) : (
-                            <span className="text-gray-700 dark:text-gray-300">
+                            <span className="text-gray-700 dark:text-gray-300 text-xs">
                               {getCellValue(model.id, platform.id, '1-15') || '-'}
                             </span>
                           )}
                         </td>
                         {/* P2 */}
                         <td
-                          className="px-3 py-2 text-center border-r border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 cursor-pointer hover:bg-blue-50 dark:hover:bg-blue-900/20 whitespace-nowrap"
                           onClick={() => handleCellClick(model.id, platform.id, '16-31')}
                         >
                           {editingCell?.modelId === model.id &&
@@ -609,12 +608,12 @@ export default function GestorStatsPage() {
                                   if (e.key === 'Enter') handleCellSave();
                                   if (e.key === 'Escape') handleCellCancel();
                                 }}
-                                className="w-full px-2 py-1 text-xs border rounded text-gray-900 dark:text-white dark:bg-gray-700"
+                                className="w-full px-1 py-0.5 text-xs border rounded text-gray-900 dark:text-white dark:bg-gray-700"
                                 autoFocus
                               />
                             </div>
                           ) : (
-                            <span className="text-gray-700 dark:text-gray-300">
+                            <span className="text-gray-700 dark:text-gray-300 text-xs">
                               {getCellValue(model.id, platform.id, '16-31') || '-'}
                             </span>
                           )}
