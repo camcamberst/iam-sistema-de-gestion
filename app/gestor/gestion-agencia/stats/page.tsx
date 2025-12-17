@@ -490,7 +490,7 @@ export default function GestorStatsPage() {
               No hay modelos asignados a esta sede/grupo
             </p>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Verifica que haya modelos activos asignados al grupo "{groups.find(g => g.id === selectedGroup)?.name || 'seleccionado'}"
+              Verifica que haya modelos activos asignados al grupo &quot;{groups.find(g => g.id === selectedGroup)?.name || 'seleccionado'}&quot;
             </p>
           </div>
         ) : platforms.length === 0 ? (
