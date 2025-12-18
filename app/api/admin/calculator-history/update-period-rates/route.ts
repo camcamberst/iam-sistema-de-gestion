@@ -471,20 +471,44 @@ export async function POST(request: NextRequest) {
         // Las rates históricas son solo para el histórico y la planilla de stats, por lo que son globales
         console.log(`💾 [PERIOD-RATES-UPDATE] Guardando rates GLOBALES en gestor_historical_rates (aplican a todas las sedes)`);
         
-        const { error: saveError } = await supabase
+        // Primero verificar si existe un registro con este período
+        const { data: existingRate } = await supabase
           .from('gestor_historical_rates')
-          .upsert({
-            group_id: null, // NULL = rates globales (aplican a todas las sedes)
-            period_date: period_date,
-            period_type: period_type,
-            rate_usd_cop: validatedRates.usd_cop,
-            rate_eur_usd: validatedRates.eur_usd,
-            rate_gbp_usd: validatedRates.gbp_usd,
-            configurado_por: authenticatedUserId,
-            updated_at: new Date().toISOString()
-          }, {
-            onConflict: 'period_date,period_type'
-          });
+          .select('id')
+          .is('group_id', null)
+          .eq('period_date', period_date)
+          .eq('period_type', period_type)
+          .maybeSingle();
+        
+        let saveError;
+        if (existingRate) {
+          // Actualizar registro existente
+          const { error: updateError } = await supabase
+            .from('gestor_historical_rates')
+            .update({
+              rate_usd_cop: validatedRates.usd_cop,
+              rate_eur_usd: validatedRates.eur_usd,
+              rate_gbp_usd: validatedRates.gbp_usd,
+              configurado_por: authenticatedUserId,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', existingRate.id);
+          saveError = updateError;
+        } else {
+          // Crear nuevo registro
+          const { error: insertError } = await supabase
+            .from('gestor_historical_rates')
+            .insert({
+              group_id: null, // NULL = rates globales (aplican a todas las sedes)
+              period_date: period_date,
+              period_type: period_type,
+              rate_usd_cop: validatedRates.usd_cop,
+              rate_eur_usd: validatedRates.eur_usd,
+              rate_gbp_usd: validatedRates.gbp_usd,
+              configurado_por: authenticatedUserId
+            });
+          saveError = insertError;
+        }
         
         if (saveError) {
           console.error(`❌ [PERIOD-RATES-UPDATE] Error guardando rates globales:`, saveError);
