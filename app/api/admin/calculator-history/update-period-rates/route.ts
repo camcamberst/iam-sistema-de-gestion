@@ -282,10 +282,53 @@ export async function POST(request: NextRequest) {
       usd_cop: newRates.usd_cop as number
     };
 
-    // 🔒 IMPORTANTE: Solo afectar períodos CERRADOS (archivados)
-    // Verificar que el período esté archivado (tiene archived_at)
+    // 🔒 IMPORTANTE: Solo afectar períodos CERRADOS
+    // Verificar que el período esté cerrado (marcado como completed o sin datos en model_values)
     console.log(`🔍 [PERIOD-RATES-UPDATE] Buscando registros para período: ${period_date} (${period_type})`);
     console.log(`🔍 [PERIOD-RATES-UPDATE] Usuario: ${authenticatedUserId}, Rol: ${userRole}, SuperAdmin: ${isSuperAdmin}`);
+    
+    // Verificar estado de cierre del período
+    const { data: closureStatus } = await supabase
+      .from('calculator_period_closure_status')
+      .select('status, completed_at')
+      .eq('period_date', period_date)
+      .eq('period_type', period_type)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    
+    const isPeriodClosed = closureStatus?.status === 'completed' || 
+                          (closureStatus?.status && ['closing_calculators', 'waiting_summary', 'closing_summary', 'archiving'].includes(closureStatus.status));
+    
+    // Verificar si hay datos en model_values (si no hay, el período fue reseteado)
+    const periodStartDate = period_date;
+    const periodEndDate = period_type === '1-15' 
+      ? `${period_date.split('-')[0]}-${period_date.split('-')[1]}-15`
+      : `${period_date.split('-')[0]}-${period_date.split('-')[1]}-31`;
+    
+    const { count: modelValuesCount } = await supabase
+      .from('model_values')
+      .select('*', { count: 'exact', head: true })
+      .gte('period_date', periodStartDate)
+      .lte('period_date', periodEndDate);
+    
+    const periodWasReset = (modelValuesCount || 0) === 0;
+    
+    // Si el período no está cerrado Y hay datos en model_values, no permitir editar
+    if (!isPeriodClosed && !periodWasReset) {
+      return NextResponse.json({
+        success: false,
+        error: `El período ${period_date} (${period_type}) no está cerrado. Solo se pueden editar tasas de períodos cerrados.`
+      }, { status: 400 });
+    }
+    
+    // Si el período está cerrado o fue reseteado, permitir editar rates (aunque no haya registros archivados)
+    if (!isPeriodClosed && !periodWasReset) {
+      return NextResponse.json({
+        success: false,
+        error: `El período ${period_date} (${period_type}) no está cerrado. Solo se pueden editar tasas de períodos cerrados.`
+      }, { status: 400 });
+    }
     
     let periodRecordsQuery = supabase
       .from('calculator_history')
