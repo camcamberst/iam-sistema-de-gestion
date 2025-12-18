@@ -239,9 +239,10 @@ export async function POST(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Obtener grupos del usuario si no es super_admin
+    // Obtener grupos del usuario si no es super_admin ni gestor
+    // Los gestores tienen acceso a TODOS los grupos (como super_admins)
     let allowedGroupIds: string[] = [];
-    if (!isSuperAdmin) {
+    if (!isSuperAdmin && !isGestor) {
       const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
@@ -290,8 +291,9 @@ export async function POST(request: NextRequest) {
       .eq('period_type', period_type)
       .not('archived_at', 'is', null); // Solo períodos archivados (cerrados)
 
-    // Si no es super_admin, filtrar por grupos del usuario (admin o gestor)
-    if (!isSuperAdmin && allowedGroupIds.length > 0) {
+    // Si no es super_admin ni gestor, filtrar por grupos del usuario (solo admins)
+    // Los gestores tienen acceso a TODOS los grupos (como super_admins)
+    if (!isSuperAdmin && !isGestor && allowedGroupIds.length > 0) {
       console.log(`🔍 [PERIOD-RATES-UPDATE] Usuario (${userRole}) con grupos asignados: ${allowedGroupIds.length} grupos`);
       
       // Si se especifica group_id, validar que el usuario tenga acceso a ese grupo
@@ -328,10 +330,29 @@ export async function POST(request: NextRequest) {
       }
       
       periodRecordsQuery = periodRecordsQuery.in('model_id', allowedModelIds);
-    } else if (!isSuperAdmin) {
+    } else if (!isSuperAdmin && !isGestor) {
       console.warn(`⚠️ [PERIOD-RATES-UPDATE] Usuario (${userRole}) sin grupos asignados`);
     } else {
-      console.log('🔍 [PERIOD-RATES-UPDATE] SuperAdmin: buscando todos los registros sin filtrar por grupos');
+      // SuperAdmin o Gestor: buscar todos los registros, pero si se especifica group_id, filtrar por ese grupo
+      if (group_id) {
+        console.log(`🔍 [PERIOD-RATES-UPDATE] ${isGestor ? 'Gestor' : 'SuperAdmin'}: filtrando por grupo específico: ${group_id}`);
+        const { data: modelGroups } = await supabase
+          .from('user_groups')
+          .select('user_id')
+          .eq('group_id', group_id);
+        
+        const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
+        if (allowedModelIds.length > 0) {
+          periodRecordsQuery = periodRecordsQuery.in('model_id', allowedModelIds);
+        } else {
+          return NextResponse.json({
+            success: false,
+            error: 'No hay modelos en el grupo especificado'
+          }, { status: 404 });
+        }
+      } else {
+        console.log(`🔍 [PERIOD-RATES-UPDATE] ${isGestor ? 'Gestor' : 'SuperAdmin'}: buscando todos los registros sin filtrar por grupos`);
+      }
     }
 
     const { data: periodRecords, error: fetchError } = await periodRecordsQuery;
