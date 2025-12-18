@@ -375,32 +375,58 @@ export async function POST(request: NextRequest) {
 
     if (!periodRecords || periodRecords.length === 0) {
       // Debug: Intentar buscar sin el filtro de archived_at para diagnosticar
-      const { data: debugRecords, error: debugError } = await supabase
+      let debugQuery = supabase
         .from('calculator_history')
-        .select('id, period_date, period_type, archived_at')
-        .eq('period_date', period_date)
-        .eq('period_type', period_type)
-        .limit(5);
+        .select('id, period_date, period_type, archived_at, model_id')
+        .eq('period_type', period_type);
       
-      console.log(`🔍 [PERIOD-RATES-UPDATE] DEBUG - Registros sin filtro archived_at:`, {
-        total: debugRecords?.length || 0,
-        sample: debugRecords?.slice(0, 3),
+      // Si no es super_admin ni gestor, filtrar por grupos
+      if (!isSuperAdmin && !isGestor && allowedGroupIds.length > 0) {
+        const { data: modelGroups } = await supabase
+          .from('user_groups')
+          .select('user_id')
+          .in('group_id', allowedGroupIds);
+        const allowedModelIds = (modelGroups || []).map((mg: any) => mg.user_id);
+        if (allowedModelIds.length > 0) {
+          debugQuery = debugQuery.in('model_id', allowedModelIds);
+        }
+      }
+      
+      // Buscar con period_date exacto
+      const { data: debugRecords, error: debugError } = await debugQuery
+        .eq('period_date', period_date)
+        .limit(10);
+      
+      // También buscar registros del mismo mes (por si period_date es diferente)
+      const [year, month] = period_date.split('-');
+      const { data: monthRecords } = await supabase
+        .from('calculator_history')
+        .select('period_date, period_type, archived_at, COUNT(*)')
+        .eq('period_type', period_type)
+        .gte('period_date', `${year}-${month}-01`)
+        .lte('period_date', `${year}-${month}-31`)
+        .limit(10);
+      
+      console.log(`🔍 [PERIOD-RATES-UPDATE] DEBUG - Registros encontrados:`, {
+        period_date_exact: debugRecords?.length || 0,
+        period_date_sample: debugRecords?.slice(0, 3),
+        month_records: monthRecords?.length || 0,
+        month_sample: monthRecords?.slice(0, 3),
         error: debugError
       });
       
-      // También verificar si hay registros con period_date similar (por si hay diferencia en formato)
-      const { data: similarRecords } = await supabase
-        .from('calculator_history')
-        .select('period_date, period_type, archived_at')
-        .ilike('period_date', `${period_date.split('-')[0]}-${period_date.split('-')[1]}%`)
-        .eq('period_type', period_type)
-        .limit(5);
-      
-      console.log(`🔍 [PERIOD-RATES-UPDATE] DEBUG - Registros con fecha similar:`, similarRecords);
+      // Si hay registros sin archived_at, sugerir que el período no se cerró correctamente
+      const recordsWithoutArchived = debugRecords?.filter((r: any) => !r.archived_at) || [];
+      if (recordsWithoutArchived.length > 0) {
+        return NextResponse.json({
+          success: false,
+          error: `Se encontraron ${debugRecords?.length || 0} registros para el período ${period_date} (${period_type}), pero ${recordsWithoutArchived.length} no tienen 'archived_at'. El período puede no haberse cerrado correctamente. Contacta al administrador.`
+        }, { status: 404 });
+      }
       
       return NextResponse.json({
         success: false,
-        error: `No se encontraron registros CERRADOS (archivados) para el período ${period_date} (${period_type}). Solo se pueden editar tasas de períodos que ya fueron cerrados. Total sin filtro: ${debugRecords?.length || 0}`
+        error: `No se encontraron registros CERRADOS (archivados) para el período ${period_date} (${period_type}). Solo se pueden editar tasas de períodos que ya fueron cerrados. Total encontrado sin filtro: ${debugRecords?.length || 0}`
       }, { status: 404 });
     }
 
