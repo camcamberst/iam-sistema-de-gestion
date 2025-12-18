@@ -74,9 +74,10 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Obtener grupos del usuario si no es super_admin
+    // Obtener grupos del usuario si no es super_admin ni gestor
+    // Los gestores tienen acceso a TODOS los grupos (como super_admins)
     let allowedGroupIds: string[] = [];
-    if (!isSuperAdmin) {
+    if (!isSuperAdmin && !isGestor) {
       const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
@@ -92,8 +93,9 @@ export async function GET(request: NextRequest) {
       .eq('period_type', period_type)
       .not('archived_at', 'is', null); // Solo períodos archivados
 
-    // Si es admin (no super_admin), filtrar por grupos
-    if (!isSuperAdmin && allowedGroupIds.length > 0) {
+    // Si no es super_admin ni gestor, filtrar por grupos del usuario (solo admins)
+    // Los gestores tienen acceso a TODOS los grupos (como super_admins)
+    if (!isSuperAdmin && !isGestor && allowedGroupIds.length > 0) {
       const { data: modelGroups } = await supabase
         .from('user_groups')
         .select('user_id')
@@ -103,7 +105,7 @@ export async function GET(request: NextRequest) {
       if (allowedModelIds.length > 0) {
         countQuery = countQuery.in('model_id', allowedModelIds);
       } else {
-        // No hay modelos en los grupos del admin
+        // No hay modelos en los grupos del usuario
         return NextResponse.json({
           success: true,
           period_date,
@@ -133,8 +135,9 @@ export async function GET(request: NextRequest) {
       .not('archived_at', 'is', null)
       .limit(1);
 
-    // Si es admin (no super_admin), filtrar por grupos
-    if (!isSuperAdmin && allowedGroupIds.length > 0) {
+    // Si no es super_admin ni gestor, filtrar por grupos del usuario (solo admins)
+    // Los gestores tienen acceso a TODOS los grupos (como super_admins)
+    if (!isSuperAdmin && !isGestor && allowedGroupIds.length > 0) {
       const { data: modelGroups } = await supabase
         .from('user_groups')
         .select('user_id')
