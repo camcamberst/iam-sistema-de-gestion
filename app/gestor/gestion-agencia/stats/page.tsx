@@ -1265,20 +1265,20 @@ export default function GestorStatsPage() {
                       return (
                         <>
                           {/* Total P1 */}
-                          <td className="px-2 py-1 text-xs text-center border-l-2 border-gray-300 dark:border-gray-500 border-r border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/20 font-semibold whitespace-nowrap">
-                            {p1Values.totalUsdBruto > 0 ? formatCurrency(p1Values.totalUsdBruto, 'USD') : '-'}
+                          <td className="px-2 py-1 text-xs text-center border-l-2 border-gray-300 dark:border-gray-500 border-r border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/30 font-semibold whitespace-nowrap text-blue-900 dark:text-blue-100">
+                            {p1Values.totalUsdBruto > 0 ? formatCurrency(p1Values.totalUsdBruto, 'USD') : <span className="text-gray-400 dark:text-gray-500">-</span>}
                           </td>
                           {/* Total P2 */}
-                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/20 font-semibold whitespace-nowrap">
-                            {p2Values.totalUsdBruto > 0 ? formatCurrency(p2Values.totalUsdBruto, 'USD') : '-'}
+                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-blue-50 dark:bg-blue-900/30 font-semibold whitespace-nowrap text-blue-900 dark:text-blue-100">
+                            {p2Values.totalUsdBruto > 0 ? formatCurrency(p2Values.totalUsdBruto, 'USD') : <span className="text-gray-400 dark:text-gray-500">-</span>}
                           </td>
                           {/* Profit Modelo */}
-                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/20 font-semibold whitespace-nowrap">
-                            {totalCopModelo > 0 ? formatCurrency(totalCopModelo, 'COP') : '-'}
+                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/30 font-semibold whitespace-nowrap text-green-900 dark:text-green-100">
+                            {totalCopModelo > 0 ? formatCurrency(totalCopModelo, 'COP') : <span className="text-gray-400 dark:text-gray-500">-</span>}
                           </td>
                           {/* Profit Agencia */}
-                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/20 font-semibold whitespace-nowrap">
-                            {totalCopAgencia > 0 ? formatCurrency(totalCopAgencia, 'COP') : '-'}
+                          <td className="px-2 py-1 text-xs text-center border-r border-gray-200 dark:border-gray-600 bg-green-50 dark:bg-green-900/30 font-semibold whitespace-nowrap text-green-900 dark:text-green-100">
+                            {totalCopAgencia > 0 ? formatCurrency(totalCopAgencia, 'COP') : <span className="text-gray-400 dark:text-gray-500">-</span>}
                           </td>
                         </>
                       );
