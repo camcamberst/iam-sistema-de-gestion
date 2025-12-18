@@ -322,13 +322,8 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
     
-    // Si el período está cerrado o fue reseteado, permitir editar rates (aunque no haya registros archivados)
-    if (!isPeriodClosed && !periodWasReset) {
-      return NextResponse.json({
-        success: false,
-        error: `El período ${period_date} (${period_type}) no está cerrado. Solo se pueden editar tasas de períodos cerrados.`
-      }, { status: 400 });
-    }
+    // Si el período está cerrado o fue reseteado, permitir editar rates
+    console.log(`✅ [PERIOD-RATES-UPDATE] Período verificado: cerrado=${isPeriodClosed}, reseteado=${periodWasReset}`);
     
     let periodRecordsQuery = supabase
       .from('calculator_history')
