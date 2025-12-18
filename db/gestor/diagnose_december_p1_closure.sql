@@ -37,11 +37,14 @@ WHERE period_type = '1-15'
 GROUP BY period_date, period_type;
 
 -- 3. Verificar si hay datos en calculator_totals para reconstruir
--- NOTA: calculator_totals puede no tener period_type, verificar estructura primero
+-- NOTA: calculator_totals tiene: total_usd_bruto, total_usd_modelo, total_cop_modelo
 SELECT 
   period_date,
   COUNT(*) as total_registros,
-  SUM(value) as total_value,
+  COUNT(DISTINCT model_id) as modelos_con_totales,
+  SUM(total_usd_bruto) as suma_usd_bruto,
+  SUM(total_usd_modelo) as suma_usd_modelo,
+  SUM(total_cop_modelo) as suma_cop_modelo,
   MIN(period_date) as fecha_minima,
   MAX(period_date) as fecha_maxima
 FROM calculator_totals
