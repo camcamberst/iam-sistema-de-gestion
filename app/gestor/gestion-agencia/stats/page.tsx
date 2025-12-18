@@ -255,7 +255,8 @@ export default function GestorStatsPage() {
       let ratesP2FromHistorical = null;
 
       if (!ratesP1Data) {
-        const { data: historicalP1 } = await supabase
+        console.log('🔍 [GESTOR STATS] Buscando rates P1 en gestor_historical_rates para grupo:', selectedGroup, 'period_date:', periodDateP1);
+        const { data: historicalP1, error: historicalP1Error } = await supabase
           .from('gestor_historical_rates')
           .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
           .eq('group_id', selectedGroup)
@@ -263,13 +264,21 @@ export default function GestorStatsPage() {
           .eq('period_type', '1-15')
           .maybeSingle();
         
+        if (historicalP1Error) {
+          console.error('❌ [GESTOR STATS] Error consultando gestor_historical_rates P1:', historicalP1Error);
+        }
+        
         if (historicalP1) {
+          console.log('✅ [GESTOR STATS] Rates P1 encontradas en gestor_historical_rates:', historicalP1);
           ratesP1FromHistorical = historicalP1;
+        } else {
+          console.log('⚠️ [GESTOR STATS] No se encontraron rates P1 en gestor_historical_rates');
         }
       }
 
       if (!ratesP2Data) {
-        const { data: historicalP2 } = await supabase
+        console.log('🔍 [GESTOR STATS] Buscando rates P2 en gestor_historical_rates para grupo:', selectedGroup, 'period_date:', periodDateP2);
+        const { data: historicalP2, error: historicalP2Error } = await supabase
           .from('gestor_historical_rates')
           .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
           .eq('group_id', selectedGroup)
@@ -277,8 +286,15 @@ export default function GestorStatsPage() {
           .eq('period_type', '16-31')
           .maybeSingle();
         
+        if (historicalP2Error) {
+          console.error('❌ [GESTOR STATS] Error consultando gestor_historical_rates P2:', historicalP2Error);
+        }
+        
         if (historicalP2) {
+          console.log('✅ [GESTOR STATS] Rates P2 encontradas en gestor_historical_rates:', historicalP2);
           ratesP2FromHistorical = historicalP2;
+        } else {
+          console.log('⚠️ [GESTOR STATS] No se encontraron rates P2 en gestor_historical_rates');
         }
       }
 
