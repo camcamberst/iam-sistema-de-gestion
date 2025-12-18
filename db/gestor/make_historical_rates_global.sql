@@ -13,11 +13,11 @@ ALTER TABLE gestor_historical_rates
 ALTER TABLE gestor_historical_rates 
   ALTER COLUMN group_id DROP NOT NULL;
 
--- 3. Crear nuevo constraint único: solo period_date y period_type (rates globales)
+-- 3. Crear índice único parcial: solo period_date y period_type cuando group_id IS NULL (rates globales)
 -- Esto permite solo UN set de rates por período (global)
-ALTER TABLE gestor_historical_rates 
-  ADD CONSTRAINT gestor_historical_rates_period_unique 
-  UNIQUE (period_date, period_type) 
+-- PostgreSQL no permite WHERE en UNIQUE constraints, pero sí en índices únicos
+CREATE UNIQUE INDEX IF NOT EXISTS idx_gestor_historical_rates_global_unique 
+  ON gestor_historical_rates (period_date, period_type) 
   WHERE group_id IS NULL;
 
 -- 4. Si hay rates existentes con group_id, eliminarlas o migrarlas
