@@ -648,7 +648,7 @@ export default function GestorStatsPage() {
         body: JSON.stringify({
           period_date: periodDate,
           period_type: periodType,
-          group_id: selectedGroup, // Filtrar por grupo específico
+          // No enviar group_id - las rates históricas son GLOBALES (aplican a todas las sedes)
           rates: {
             eur_usd: rate.rate_eur_usd,
             gbp_usd: rate.rate_gbp_usd,
@@ -724,7 +724,7 @@ export default function GestorStatsPage() {
         body: JSON.stringify({
           period_date: periodDate,
           period_type: periodType,
-          group_id: selectedGroup, // Filtrar por grupo específico
+          // No enviar group_id - las rates históricas son GLOBALES (aplican a todas las sedes)
           rates: {
             eur_usd: rate.rate_eur_usd,
             gbp_usd: rate.rate_gbp_usd,
