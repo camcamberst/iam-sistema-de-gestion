@@ -307,30 +307,46 @@ export default function GestorStatsPage() {
         };
       }
       
+      console.log('📊 [GESTOR STATS] Rates cargadas:', {
+        ratesP1Data: ratesP1Data ? 'Sí (calculator_history)' : 'No',
+        ratesP1FromHistorical: ratesP1FromHistorical ? 'Sí (gestor_historical_rates)' : 'No',
+        ratesP2Data: ratesP2Data ? 'Sí (calculator_history)' : 'No',
+        ratesP2FromHistorical: ratesP2FromHistorical ? 'Sí (gestor_historical_rates)' : 'No',
+        ratesMap
+      });
+      
       setHistoricalRates(ratesMap);
 
       // Inicializar rates de edición con valores por defecto si no existen
       const p1Key = `${periodDateP1}_1-15`;
       const p2Key = `${periodDateP2}_16-31`;
       const editingRatesMap: Record<string, HistoricalRates> = {};
+      
       if (!ratesMap[p1Key]) {
+        console.log('⚠️ [GESTOR STATS] No hay rates para P1, usando valores por defecto');
         editingRatesMap[p1Key] = {
           rate_usd_cop: 3900,
           rate_eur_usd: 1.01,
           rate_gbp_usd: 1.20
         };
       } else {
+        console.log('✅ [GESTOR STATS] Rates P1 encontradas:', ratesMap[p1Key]);
         editingRatesMap[p1Key] = { ...ratesMap[p1Key] };
       }
+      
       if (!ratesMap[p2Key]) {
+        console.log('⚠️ [GESTOR STATS] No hay rates para P2, usando valores por defecto');
         editingRatesMap[p2Key] = {
           rate_usd_cop: 3900,
           rate_eur_usd: 1.01,
           rate_gbp_usd: 1.20
         };
       } else {
+        console.log('✅ [GESTOR STATS] Rates P2 encontradas:', ratesMap[p2Key]);
         editingRatesMap[p2Key] = { ...ratesMap[p2Key] };
       }
+      
+      console.log('📝 [GESTOR STATS] EditingRates inicializado:', editingRatesMap);
       setEditingRates(editingRatesMap);
 
       // Cargar configuraciones de modelos (porcentajes)
