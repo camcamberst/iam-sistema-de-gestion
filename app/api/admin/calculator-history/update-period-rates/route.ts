@@ -464,16 +464,70 @@ export async function POST(request: NextRequest) {
       
       // Si el período está cerrado o fue reseteado, permitir guardar rates aunque no haya registros
       if (isPeriodClosed || periodWasReset) {
-        console.log(`⚠️ [PERIOD-RATES-UPDATE] Período cerrado/reseteado pero sin registros archivados. Permitir guardar rates para uso futuro.`);
+        console.log(`⚠️ [PERIOD-RATES-UPDATE] Período cerrado/reseteado pero sin registros archivados. Guardando rates en gestor_historical_rates.`);
         console.log(`🔍 [PERIOD-RATES-UPDATE] Estado de cierre: ${JSON.stringify(closureStatus)}, isPeriodClosed: ${isPeriodClosed}, periodWasReset: ${periodWasReset}`);
-        // Retornar éxito pero sin actualizar registros (no hay registros para actualizar)
+        
+        // Guardar rates en gestor_historical_rates para el grupo especificado o todos los grupos
+        let groupsToSave: string[] = [];
+        
+        if (group_id) {
+          // Si se especifica un grupo, guardar solo para ese grupo
+          groupsToSave = [group_id];
+        } else if (isGestor || isSuperAdmin) {
+          // Si es gestor o super_admin sin grupo específico, guardar para todos los grupos
+          const { data: allGroups } = await supabase
+            .from('groups')
+            .select('id')
+            .eq('is_active', true);
+          groupsToSave = (allGroups || []).map((g: any) => g.id);
+        } else if (allowedGroupIds.length > 0) {
+          // Si es admin, guardar para sus grupos asignados
+          groupsToSave = allowedGroupIds;
+        }
+        
+        if (groupsToSave.length === 0) {
+          return NextResponse.json({
+            success: false,
+            error: 'No se pudo determinar para qué grupos guardar las rates'
+          }, { status: 400 });
+        }
+        
+        // Guardar rates para cada grupo
+        let savedCount = 0;
+        let errorCount = 0;
+        
+        for (const gId of groupsToSave) {
+          const { error: saveError } = await supabase
+            .from('gestor_historical_rates')
+            .upsert({
+              group_id: gId,
+              period_date: period_date,
+              period_type: period_type,
+              rate_usd_cop: validatedRates.usd_cop,
+              rate_eur_usd: validatedRates.eur_usd,
+              rate_gbp_usd: validatedRates.gbp_usd,
+              configurado_por: authenticatedUserId,
+              updated_at: new Date().toISOString()
+            }, {
+              onConflict: 'group_id,period_date,period_type'
+            });
+          
+          if (saveError) {
+            console.error(`❌ [PERIOD-RATES-UPDATE] Error guardando rates para grupo ${gId}:`, saveError);
+            errorCount++;
+          } else {
+            savedCount++;
+          }
+        }
+        
         return NextResponse.json({
           success: true,
-          message: `Período ${period_date} (${period_type}) está cerrado/reseteado pero no tiene registros archivados. Las rates se guardaron pero no se aplicaron a ningún registro.`,
+          message: `Período ${period_date} (${period_type}) está cerrado/reseteado pero no tiene registros archivados. Las rates se guardaron en gestor_historical_rates para ${savedCount} grupo(s).`,
           period_date,
           period_type,
           updated_count: 0,
-          warning: 'No hay registros archivados para este período. Las rates se guardaron para referencia futura.'
+          saved_to_historical_rates: savedCount,
+          warning: 'No hay registros archivados para este período. Las rates se guardaron en gestor_historical_rates para referencia futura.'
         });
       }
       
