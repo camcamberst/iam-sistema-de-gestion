@@ -467,67 +467,41 @@ export async function POST(request: NextRequest) {
         console.log(`⚠️ [PERIOD-RATES-UPDATE] Período cerrado/reseteado pero sin registros archivados. Guardando rates en gestor_historical_rates.`);
         console.log(`🔍 [PERIOD-RATES-UPDATE] Estado de cierre: ${JSON.stringify(closureStatus)}, isPeriodClosed: ${isPeriodClosed}, periodWasReset: ${periodWasReset}`);
         
-        // Guardar rates en gestor_historical_rates para el grupo especificado o todos los grupos
-        let groupsToSave: string[] = [];
+        // Guardar rates en gestor_historical_rates como GLOBALES (aplican a todas las sedes/grupos)
+        // Las rates históricas son solo para el histórico y la planilla de stats, por lo que son globales
+        console.log(`💾 [PERIOD-RATES-UPDATE] Guardando rates GLOBALES en gestor_historical_rates (aplican a todas las sedes)`);
         
-        if (group_id) {
-          // Si se especifica un grupo, guardar solo para ese grupo
-          groupsToSave = [group_id];
-        } else if (isGestor || isSuperAdmin) {
-          // Si es gestor o super_admin sin grupo específico, guardar para todos los grupos
-          const { data: allGroups } = await supabase
-            .from('groups')
-            .select('id')
-            .eq('is_active', true);
-          groupsToSave = (allGroups || []).map((g: any) => g.id);
-        } else if (allowedGroupIds.length > 0) {
-          // Si es admin, guardar para sus grupos asignados
-          groupsToSave = allowedGroupIds;
-        }
+        const { error: saveError } = await supabase
+          .from('gestor_historical_rates')
+          .upsert({
+            group_id: null, // NULL = rates globales (aplican a todas las sedes)
+            period_date: period_date,
+            period_type: period_type,
+            rate_usd_cop: validatedRates.usd_cop,
+            rate_eur_usd: validatedRates.eur_usd,
+            rate_gbp_usd: validatedRates.gbp_usd,
+            configurado_por: authenticatedUserId,
+            updated_at: new Date().toISOString()
+          }, {
+            onConflict: 'period_date,period_type'
+          });
         
-        if (groupsToSave.length === 0) {
+        if (saveError) {
+          console.error(`❌ [PERIOD-RATES-UPDATE] Error guardando rates globales:`, saveError);
           return NextResponse.json({
             success: false,
-            error: 'No se pudo determinar para qué grupos guardar las rates'
-          }, { status: 400 });
-        }
-        
-        // Guardar rates para cada grupo
-        let savedCount = 0;
-        let errorCount = 0;
-        
-        for (const gId of groupsToSave) {
-          const { error: saveError } = await supabase
-            .from('gestor_historical_rates')
-            .upsert({
-              group_id: gId,
-              period_date: period_date,
-              period_type: period_type,
-              rate_usd_cop: validatedRates.usd_cop,
-              rate_eur_usd: validatedRates.eur_usd,
-              rate_gbp_usd: validatedRates.gbp_usd,
-              configurado_por: authenticatedUserId,
-              updated_at: new Date().toISOString()
-            }, {
-              onConflict: 'group_id,period_date,period_type'
-            });
-          
-          if (saveError) {
-            console.error(`❌ [PERIOD-RATES-UPDATE] Error guardando rates para grupo ${gId}:`, saveError);
-            errorCount++;
-          } else {
-            savedCount++;
-          }
+            error: `Error guardando rates globales: ${saveError.message}`
+          }, { status: 500 });
         }
         
         return NextResponse.json({
           success: true,
-          message: `Período ${period_date} (${period_type}) está cerrado/reseteado pero no tiene registros archivados. Las rates se guardaron en gestor_historical_rates para ${savedCount} grupo(s).`,
+          message: `Período ${period_date} (${period_type}) está cerrado/reseteado pero no tiene registros archivados. Las rates GLOBALES se guardaron en gestor_historical_rates (aplican a todas las sedes).`,
           period_date,
           period_type,
           updated_count: 0,
-          saved_to_historical_rates: savedCount,
-          warning: 'No hay registros archivados para este período. Las rates se guardaron en gestor_historical_rates para referencia futura.'
+          saved_to_historical_rates: true,
+          warning: 'No hay registros archivados para este período. Las rates globales se guardaron para referencia futura.'
         });
       }
       
