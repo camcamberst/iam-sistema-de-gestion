@@ -224,35 +224,31 @@ export default function GestorStatsPage() {
 
       // Obtener una muestra de rates desde calculator_history para cada período
       // Nota: Si userIds está vacío, no filtrar por model_id (gestor tiene acceso a todos)
-      const ratesP1Query = supabase
+      let ratesP1Query = supabase
         .from('calculator_history')
         .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
         .eq('period_date', periodDateP1)
         .eq('period_type', '1-15')
-        .not('archived_at', 'is', null)
-        .limit(1)
-        .maybeSingle();
+        .not('archived_at', 'is', null);
       
       if (userIds.length > 0) {
-        ratesP1Query.in('model_id', userIds);
+        ratesP1Query = ratesP1Query.in('model_id', userIds);
       }
       
-      const { data: ratesP1Data } = await ratesP1Query;
+      const { data: ratesP1Data } = await ratesP1Query.limit(1).maybeSingle();
 
-      const ratesP2Query = supabase
+      let ratesP2Query = supabase
         .from('calculator_history')
         .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
         .eq('period_date', periodDateP2)
         .eq('period_type', '16-31')
-        .not('archived_at', 'is', null)
-        .limit(1)
-        .maybeSingle();
+        .not('archived_at', 'is', null);
       
       if (userIds.length > 0) {
-        ratesP2Query.in('model_id', userIds);
+        ratesP2Query = ratesP2Query.in('model_id', userIds);
       }
       
-      const { data: ratesP2Data } = await ratesP2Query;
+      const { data: ratesP2Data } = await ratesP2Query.limit(1).maybeSingle();
 
       // Organizar rates por período
       const ratesMap: Record<string, HistoricalRates> = {};
