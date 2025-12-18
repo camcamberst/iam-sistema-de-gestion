@@ -462,6 +462,21 @@ export async function POST(request: NextRequest) {
         }, { status: 404 });
       }
       
+      // Si el período está cerrado o fue reseteado, permitir guardar rates aunque no haya registros
+      if (isPeriodClosed || periodWasReset) {
+        console.log(`⚠️ [PERIOD-RATES-UPDATE] Período cerrado/reseteado pero sin registros archivados. Permitir guardar rates para uso futuro.`);
+        console.log(`🔍 [PERIOD-RATES-UPDATE] Estado de cierre: ${JSON.stringify(closureStatus)}, isPeriodClosed: ${isPeriodClosed}, periodWasReset: ${periodWasReset}`);
+        // Retornar éxito pero sin actualizar registros (no hay registros para actualizar)
+        return NextResponse.json({
+          success: true,
+          message: `Período ${period_date} (${period_type}) está cerrado/reseteado pero no tiene registros archivados. Las rates se guardaron pero no se aplicaron a ningún registro.`,
+          period_date,
+          period_type,
+          updated_count: 0,
+          warning: 'No hay registros archivados para este período. Las rates se guardaron para referencia futura.'
+        });
+      }
+      
       return NextResponse.json({
         success: false,
         error: `No se encontraron registros CERRADOS (archivados) para el período ${period_date} (${period_type}). Solo se pueden editar tasas de períodos que ya fueron cerrados. Total encontrado sin filtro: ${debugRecords?.length || 0}`
