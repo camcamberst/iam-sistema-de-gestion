@@ -37,16 +37,18 @@ WHERE period_type = '1-15'
 GROUP BY period_date, period_type;
 
 -- 3. Verificar si hay datos en calculator_totals para reconstruir
+-- NOTA: calculator_totals puede no tener period_type, verificar estructura primero
 SELECT 
   period_date,
-  period_type,
   COUNT(*) as total_registros,
-  SUM(value) as total_value
+  SUM(value) as total_value,
+  MIN(period_date) as fecha_minima,
+  MAX(period_date) as fecha_maxima
 FROM calculator_totals
-WHERE period_type = '1-15'
-  AND period_date >= '2025-12-01'
+WHERE period_date >= '2025-12-01'
   AND period_date <= '2025-12-31'
-GROUP BY period_date, period_type;
+GROUP BY period_date
+ORDER BY period_date;
 
 -- 4. Verificar si hay datos en model_values del período (deberían estar vacíos si se cerró)
 SELECT 
