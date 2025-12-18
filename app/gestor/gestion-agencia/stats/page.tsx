@@ -216,7 +216,7 @@ export default function GestorStatsPage() {
         setPlatforms(platformsData as Platform[]);
       }
 
-      // Cargar rates históricas desde calculator_history para ambos períodos
+      // Cargar rates históricas desde calculator_history o gestor_historical_rates para ambos períodos
       const periodDateP1 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-01`;
       const periodDateP2 = `${selectedPeriod.year}-${String(selectedPeriod.month).padStart(2, '0')}-16`;
 
@@ -250,24 +250,60 @@ export default function GestorStatsPage() {
       
       const { data: ratesP2Data } = await ratesP2Query.limit(1).maybeSingle();
 
-      // Organizar rates por período
+      // Si no hay rates en calculator_history, intentar cargar desde gestor_historical_rates
+      let ratesP1FromHistorical = null;
+      let ratesP2FromHistorical = null;
+
+      if (!ratesP1Data) {
+        const { data: historicalP1 } = await supabase
+          .from('gestor_historical_rates')
+          .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
+          .eq('group_id', selectedGroup)
+          .eq('period_date', periodDateP1)
+          .eq('period_type', '1-15')
+          .maybeSingle();
+        
+        if (historicalP1) {
+          ratesP1FromHistorical = historicalP1;
+        }
+      }
+
+      if (!ratesP2Data) {
+        const { data: historicalP2 } = await supabase
+          .from('gestor_historical_rates')
+          .select('rate_usd_cop, rate_eur_usd, rate_gbp_usd')
+          .eq('group_id', selectedGroup)
+          .eq('period_date', periodDateP2)
+          .eq('period_type', '16-31')
+          .maybeSingle();
+        
+        if (historicalP2) {
+          ratesP2FromHistorical = historicalP2;
+        }
+      }
+
+      // Organizar rates por período (prioridad: calculator_history > gestor_historical_rates)
       const ratesMap: Record<string, HistoricalRates> = {};
       
-      if (ratesP1Data) {
+      // Período 1: Usar calculator_history si existe, sino gestor_historical_rates
+      const ratesP1Final = ratesP1Data || ratesP1FromHistorical;
+      if (ratesP1Final) {
         const key = `${periodDateP1}_1-15`;
         ratesMap[key] = {
-          rate_usd_cop: parseFloat(ratesP1Data.rate_usd_cop) || 3900,
-          rate_eur_usd: parseFloat(ratesP1Data.rate_eur_usd) || 1.01,
-          rate_gbp_usd: parseFloat(ratesP1Data.rate_gbp_usd) || 1.20
+          rate_usd_cop: parseFloat(ratesP1Final.rate_usd_cop) || 3900,
+          rate_eur_usd: parseFloat(ratesP1Final.rate_eur_usd) || 1.01,
+          rate_gbp_usd: parseFloat(ratesP1Final.rate_gbp_usd) || 1.20
         };
       }
       
-      if (ratesP2Data) {
+      // Período 2: Usar calculator_history si existe, sino gestor_historical_rates
+      const ratesP2Final = ratesP2Data || ratesP2FromHistorical;
+      if (ratesP2Final) {
         const key = `${periodDateP2}_16-31`;
         ratesMap[key] = {
-          rate_usd_cop: parseFloat(ratesP2Data.rate_usd_cop) || 3900,
-          rate_eur_usd: parseFloat(ratesP2Data.rate_eur_usd) || 1.01,
-          rate_gbp_usd: parseFloat(ratesP2Data.rate_gbp_usd) || 1.20
+          rate_usd_cop: parseFloat(ratesP2Final.rate_usd_cop) || 3900,
+          rate_eur_usd: parseFloat(ratesP2Final.rate_eur_usd) || 1.01,
+          rate_gbp_usd: parseFloat(ratesP2Final.rate_gbp_usd) || 1.20
         };
       }
       
