@@ -365,12 +365,12 @@ export default function GestorStatsPage() {
       console.log('📝 [GESTOR STATS] EditingRates inicializado:', editingRatesMap);
       setEditingRates(editingRatesMap);
 
-      // Cargar configuraciones de modelos (porcentajes)
+      // Cargar configuraciones de modelos (porcentajes y todas las condiciones de cálculo)
       const modelIds = modelsData?.map((m: any) => m.id) || [];
       if (modelIds.length > 0) {
         const { data: configsData, error: configsError } = await supabase
           .from('calculator_config')
-          .select('model_id, percentage_override, group_percentage')
+          .select('model_id, percentage_override, group_percentage, enabled_platforms, min_quota_override, group_min_quota, group_id')
           .in('model_id', modelIds)
           .eq('active', true);
 
@@ -384,13 +384,43 @@ export default function GestorStatsPage() {
         const configsMap: Record<string, ModelConfig> = {};
         if (configsData) {
           configsData.forEach((config: any) => {
+            const percentageOverride = config.percentage_override ? parseFloat(config.percentage_override) : undefined;
+            const groupPercentage = config.group_percentage ? parseFloat(config.group_percentage) : undefined;
+            
+            // Determinar porcentaje final según prioridad
+            const finalPercentage = percentageOverride || groupPercentage || 80;
+            
+            console.log(`📊 [GESTOR STATS] Config para modelo ${config.model_id}:`, {
+              percentage_override: percentageOverride,
+              group_percentage: groupPercentage,
+              final_percentage: finalPercentage,
+              enabled_platforms: config.enabled_platforms?.length || 0,
+              group_id: config.group_id
+            });
+            
             configsMap[config.model_id] = {
-              percentage_override: config.percentage_override ? parseFloat(config.percentage_override) : undefined,
-              group_percentage: config.group_percentage ? parseFloat(config.group_percentage) : undefined
+              percentage_override: percentageOverride,
+              group_percentage: groupPercentage
             };
           });
         }
+        
+        // Para modelos sin configuración, usar valores por defecto
+        modelIds.forEach((modelId: string) => {
+          if (!configsMap[modelId]) {
+            console.log(`⚠️ [GESTOR STATS] Modelo ${modelId} sin configuración, usando valores por defecto (80%)`);
+            configsMap[modelId] = {
+              percentage_override: undefined,
+              group_percentage: undefined
+            };
+          }
+        });
+        
+        console.log('📋 [GESTOR STATS] Total configuraciones cargadas:', Object.keys(configsMap).length);
         setModelConfigs(configsMap);
+      } else {
+        console.warn('⚠️ [GESTOR STATS] No hay modelos para cargar configuraciones');
+        setModelConfigs({});
       }
 
       // Cargar registros existentes del gestor desde gestor_stats_values
