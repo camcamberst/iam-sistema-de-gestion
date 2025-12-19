@@ -616,6 +616,7 @@ export default function GestorStatsPage() {
 
     // Si no hay rates históricas, no calcular
     if (!rates) {
+      console.log(`⚠️ [GESTOR STATS] No hay rates históricas para ${periodDate} (${periodType}), no se pueden calcular valores`);
       return {
         totalUsdBruto: 0,
         totalUsdModelo: 0,
@@ -625,7 +626,17 @@ export default function GestorStatsPage() {
       };
     }
 
+    // Obtener configuración del modelo (con valores por defecto si no existe)
     const modelConfig = modelConfigs[modelId] || {};
+    const finalPercentage = modelConfig.percentage_override || modelConfig.group_percentage || 80;
+    
+    console.log(`🔍 [GESTOR STATS] Calculando valores para modelo ${modelId}, período ${periodType}:`, {
+      percentage_override: modelConfig.percentage_override,
+      group_percentage: modelConfig.group_percentage,
+      final_percentage: finalPercentage,
+      rates: rates
+    });
+    
     const valuesByPlatform: Record<string, number> = {};
 
     // Recopilar valores por plataforma
@@ -638,7 +649,18 @@ export default function GestorStatsPage() {
       }
     });
 
-    return calculatePeriodTotals(valuesByPlatform, platforms, rates, modelConfig);
+    const totals = calculatePeriodTotals(valuesByPlatform, platforms, rates, modelConfig);
+    
+    console.log(`📊 [GESTOR STATS] Totales calculados para modelo ${modelId}, período ${periodType}:`, {
+      totalUsdBruto: totals.totalUsdBruto,
+      totalUsdModelo: totals.totalUsdModelo,
+      totalCopModelo: totals.totalCopModelo,
+      totalUsdAgencia: totals.totalUsdAgencia,
+      totalCopAgencia: totals.totalCopAgencia,
+      porcentaje_usado: finalPercentage
+    });
+    
+    return totals;
   };
 
   const handleSaveRates = async (periodType: '1-15' | '16-31') => {
