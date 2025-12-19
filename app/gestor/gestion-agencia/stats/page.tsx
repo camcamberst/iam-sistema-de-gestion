@@ -4,6 +4,23 @@ import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { calculateProfits, calculatePeriodTotals, type HistoricalRates, type ModelConfig } from "@/lib/gestor/stats-calculations";
 
+// Porcentajes estandarizados por grupos (lógica de negocio)
+const getStandardPercentageByGroup = (groupName: string): number => {
+  const standardPercentages: Record<string, number> = {
+    'Cabecera': 60,
+    'Diamante': 60,
+    'Sede MP': 60,
+    'Terrazas': 60,
+    'Victoria': 60,
+    'Satélites': 80,
+    'Otros': 70
+  };
+  
+  const result = standardPercentages[groupName] || 80;
+  console.log(`🔍 [STANDARD PERCENTAGE] Grupo: "${groupName}" -> ${result}%`);
+  return result;
+};
+
 interface Model {
   id: string;
   name: string;

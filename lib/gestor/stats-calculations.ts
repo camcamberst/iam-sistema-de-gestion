@@ -98,7 +98,10 @@ export function calculateProfits(
 } {
   const usdBruto = calculateUsdBruto(value, platform, rates);
 
-  // Porcentaje para modelo (default 80%)
+  // Porcentaje para modelo según prioridad:
+  // 1. percentage_override (configuración personalizada del modelo)
+  // 2. group_percentage (porcentaje del grupo configurado o estándar)
+  // 3. 80% (fallback por defecto)
   let percentage = modelConfig.percentage_override || modelConfig.group_percentage || 80;
 
   // SUPERFOON: 100% para modelo
