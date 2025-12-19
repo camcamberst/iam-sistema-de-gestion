@@ -384,6 +384,11 @@ export default function GestorStatsPage() {
 
       // Cargar configuraciones de modelos (porcentajes y todas las condiciones de cálculo)
       const modelIds = modelsData?.map((m: any) => m.id) || [];
+      
+      // Obtener nombre del grupo seleccionado para aplicar porcentaje estándar
+      const selectedGroupName = groups.find(g => g.id === selectedGroup)?.name || '';
+      const standardGroupPercentage = getStandardPercentageByGroup(selectedGroupName);
+      
       if (modelIds.length > 0) {
         const { data: configsData, error: configsError } = await supabase
           .from('calculator_config')
@@ -404,12 +409,13 @@ export default function GestorStatsPage() {
             const percentageOverride = config.percentage_override ? parseFloat(config.percentage_override) : undefined;
             const groupPercentage = config.group_percentage ? parseFloat(config.group_percentage) : undefined;
             
-            // Determinar porcentaje final según prioridad
-            const finalPercentage = percentageOverride || groupPercentage || 80;
+            // Determinar porcentaje final según prioridad: override > group_percentage > estándar del grupo > 80%
+            const finalPercentage = percentageOverride || groupPercentage || standardGroupPercentage;
             
             console.log(`📊 [GESTOR STATS] Config para modelo ${config.model_id}:`, {
               percentage_override: percentageOverride,
               group_percentage: groupPercentage,
+              standard_group_percentage: standardGroupPercentage,
               final_percentage: finalPercentage,
               enabled_platforms: config.enabled_platforms?.length || 0,
               group_id: config.group_id
@@ -417,23 +423,24 @@ export default function GestorStatsPage() {
             
             configsMap[config.model_id] = {
               percentage_override: percentageOverride,
-              group_percentage: groupPercentage
+              group_percentage: groupPercentage || standardGroupPercentage // Usar estándar del grupo si no hay group_percentage
             };
           });
         }
         
-        // Para modelos sin configuración, usar valores por defecto
+        // Para modelos sin configuración, usar porcentaje estándar del grupo
         modelIds.forEach((modelId: string) => {
           if (!configsMap[modelId]) {
-            console.log(`⚠️ [GESTOR STATS] Modelo ${modelId} sin configuración, usando valores por defecto (80%)`);
+            console.log(`⚠️ [GESTOR STATS] Modelo ${modelId} sin configuración, usando porcentaje estándar del grupo "${selectedGroupName}": ${standardGroupPercentage}%`);
             configsMap[modelId] = {
               percentage_override: undefined,
-              group_percentage: undefined
+              group_percentage: standardGroupPercentage // Usar porcentaje estándar del grupo
             };
           }
         });
         
         console.log('📋 [GESTOR STATS] Total configuraciones cargadas:', Object.keys(configsMap).length);
+        console.log(`📋 [GESTOR STATS] Porcentaje estándar del grupo "${selectedGroupName}": ${standardGroupPercentage}%`);
         setModelConfigs(configsMap);
       } else {
         console.warn('⚠️ [GESTOR STATS] No hay modelos para cargar configuraciones');
