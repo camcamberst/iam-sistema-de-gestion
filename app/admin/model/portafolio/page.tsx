@@ -658,14 +658,14 @@ export default function MiPortafolio() {
                                   </div>
                                 )}
 
-                                {/* Enlace de login */}
+                                {/* Enlace de login - Siempre visible al final */}
                                 {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                  <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
+                                  <div className="pt-3 mt-3 border-t border-blue-200 dark:border-blue-800">
                                     <a
                                       href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
                                     >
                                       <ExternalLink className="w-4 h-4" />
                                       <span>Abrir plataforma</span>
