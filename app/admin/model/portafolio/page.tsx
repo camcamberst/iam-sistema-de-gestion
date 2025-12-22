@@ -499,10 +499,10 @@ export default function MiPortafolio() {
                   </div>
 
                   {/* Ventana de Visualización con transición */}
-                  <div className={`overflow-hidden transition-all duration-500 ease-out transform ${
+                  <div className={`overflow-visible transition-all duration-500 ease-out transform ${
                     selectedPlatform 
-                      ? 'max-h-[400px] opacity-100 translate-y-0 scale-100' 
-                      : 'max-h-0 opacity-0 translate-y-0 scale-100'
+                      ? 'opacity-100 translate-y-0 scale-100' 
+                      : 'max-h-0 opacity-0 translate-y-0 scale-100 overflow-hidden'
                   }`}>
                     {selectedPlatform && (
                       <div className="border border-gray-200 dark:border-gray-600/20 rounded-lg p-4 bg-white dark:bg-gray-700/80 hover:shadow-lg transition-shadow duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
@@ -687,17 +687,17 @@ export default function MiPortafolio() {
                                 
                                 {/* Enlace de login (siempre mostrar si existe, incluso sin credenciales) */}
                                 {(credentials?.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                  <div>
+                                  <div className="pt-2">
                                     <a
                                       href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
                                     >
                                       <ExternalLink className="w-4 h-4" />
                                       <span>Abrir plataforma</span>
                                     </a>
-                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 text-center font-medium">
                                       Haz clic para acceder a la plataforma
                                     </p>
                                   </div>
