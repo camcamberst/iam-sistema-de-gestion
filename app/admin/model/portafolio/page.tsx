@@ -707,19 +707,25 @@ export default function MiPortafolio() {
 
                             {/* Enlace especial solo para Superfoon */}
                             {isSelectedPlatformSuperfoon && (
-                              <div className="pt-2 border-t border-dashed border-gray-200 dark:border-gray-600">
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">
-                                  App de llamadas 3CX
-                                </p>
+                              <div className="pt-4 mt-4 border-t-2 border-dashed border-blue-400 dark:border-blue-500 bg-gradient-to-r from-blue-50/50 to-indigo-50/50 dark:from-blue-900/30 dark:to-indigo-900/30 rounded-lg p-4 animate-pulse">
+                                <div className="flex items-center space-x-2 mb-2">
+                                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping"></div>
+                                  <p className="text-sm font-bold text-blue-700 dark:text-blue-300 animate-pulse">
+                                    📞 App de llamadas 3CX
+                                  </p>
+                                </div>
                                 <a
                                   href="https://superfoon.synergy4.com/#/login"
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="inline-flex items-center space-x-1 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline-offset-2 hover:underline"
+                                  className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-lg hover:shadow-xl text-sm font-semibold animate-pulse"
                                 >
-                                  <ExternalLink className="w-3 h-3" />
+                                  <ExternalLink className="w-4 h-4" />
                                   <span>https://superfoon.synergy4.com/#/login</span>
                                 </a>
+                                <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                                  ⚡ Acceso directo a la aplicación de llamadas
+                                </p>
                               </div>
                             )}
                           </div>
