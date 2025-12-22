@@ -15,7 +15,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // Helper para verificar autenticación y rol
-async function authenticateUser(request: NextRequest) {
+async function authenticateUser(request: NextRequest, allowModel: boolean = false) {
   const authHeader = request.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) {
     return { error: 'No autorizado', user: null };
@@ -43,8 +43,14 @@ async function authenticateUser(request: NextRequest) {
     return { error: 'Error obteniendo datos de usuario', user: null };
   }
 
-  if (userData.role !== 'admin' && userData.role !== 'super_admin') {
-    return { error: 'No autorizado: solo admin y super_admin pueden acceder', user: null };
+  // Permitir admin, super_admin y modelo (si allowModel es true)
+  const allowedRoles = ['admin', 'super_admin'];
+  if (allowModel) {
+    allowedRoles.push('modelo');
+  }
+
+  if (!allowedRoles.includes(userData.role)) {
+    return { error: 'No autorizado', user: null };
   }
 
   return { error: null, user: { id: user.id, role: userData.role } };
@@ -53,7 +59,8 @@ async function authenticateUser(request: NextRequest) {
 // GET - Obtener credenciales de una plataforma
 export async function GET(request: NextRequest) {
   try {
-    const auth = await authenticateUser(request);
+    // Permitir acceso a modelos para ver sus propias credenciales
+    const auth = await authenticateUser(request, true);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: 401 });
     }
@@ -66,6 +73,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(
         { error: 'platform_id y model_id son requeridos' },
         { status: 400 }
+      );
+    }
+
+    // Si es modelo, solo puede ver sus propias credenciales
+    if (auth.user!.role === 'modelo' && auth.user!.id !== modelId) {
+      return NextResponse.json(
+        { error: 'No autorizado: solo puedes ver tus propias credenciales' },
+        { status: 403 }
       );
     }
 

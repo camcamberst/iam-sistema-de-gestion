@@ -12,10 +12,14 @@ import {
   BarChart3,
   AlertCircle,
   Eye,
+  EyeOff,
   Calendar,
   Target,
   Activity,
-  ExternalLink
+  ExternalLink,
+  Lock,
+  Copy,
+  User
 } from 'lucide-react';
 
 interface Platform {
@@ -61,6 +65,13 @@ interface PortfolioData {
   lastUpdated: string;
 }
 
+interface Credentials {
+  login_username: string | null;
+  login_password: string | null;
+  login_url: string | null;
+  hasCredentials: boolean;
+}
+
 export default function MiPortafolio() {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -69,6 +80,9 @@ export default function MiPortafolio() {
   const [confirmingPlatform, setConfirmingPlatform] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<'platforms' | 'analytics'>('platforms');
   const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [loadingCredentials, setLoadingCredentials] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const supabase = require('@/lib/supabase').supabase;
 
@@ -95,6 +109,16 @@ export default function MiPortafolio() {
       loadPortfolioData();
     }
   }, [user?.id]);
+
+  // Cargar credenciales cuando se selecciona una plataforma
+  useEffect(() => {
+    if (selectedPlatform && user?.id) {
+      loadCredentials(selectedPlatform.platform_id);
+    } else {
+      setCredentials(null);
+      setShowPassword(false);
+    }
+  }, [selectedPlatform, user?.id]);
 
   // 🔧 Asegurar que la página inicie en la parte superior (0%)
   useEffect(() => {
