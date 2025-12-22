@@ -228,33 +228,6 @@ export default function MiPortafolio() {
     });
   };
 
-  const confirmPlatform = async (platformId: string) => {
-    try {
-      setConfirmingPlatform(platformId);
-      const response = await fetch('/api/modelo-portafolio/confirm', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          platformId,
-          modelId: user?.id
-        })
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        // Recargar datos
-        await loadPortfolioData();
-      } else {
-        setError(result.error || 'Error al confirmar la plataforma');
-      }
-    } catch (err: any) {
-      setError(err.message || 'Error al confirmar la plataforma');
-    } finally {
-      setConfirmingPlatform(null);
-    }
-  };
-
   // Función para obtener estilos de etiquetas (igual que Portafolio Modelo)
   const getTagClasses = (status: string) => {
     switch (status) {
