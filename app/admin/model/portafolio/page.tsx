@@ -198,18 +198,29 @@ export default function MiPortafolio() {
       if (response.ok) {
         const result = await response.json();
         if (result.success) {
-          setCredentials(result.data);
+          // Asegurar que hasCredentials se establece correctamente
+          setCredentials({
+            ...result.data,
+            hasCredentials: result.hasCredentials !== undefined ? result.hasCredentials : !!(result.data?.login_username && result.data?.login_password)
+          });
         } else {
+          // Si no hay credenciales, usar el login_url de la plataforma
           setCredentials({
             login_username: null,
             login_password: null,
-            login_url: result.data?.login_url || null,
+            login_url: result.data?.login_url || selectedPlatform?.calculator_platforms?.login_url || null,
             hasCredentials: false
           });
         }
       } else {
         console.error('Error cargando credenciales:', await response.text());
-        setCredentials(null);
+        // Si hay error, al menos mostrar el login_url de la plataforma si existe
+        setCredentials({
+          login_username: null,
+          login_password: null,
+          login_url: selectedPlatform?.calculator_platforms?.login_url || null,
+          hasCredentials: false
+        });
       }
     } catch (err: any) {
       console.error('Error cargando credenciales:', err);
@@ -648,10 +659,10 @@ export default function MiPortafolio() {
                                 )}
 
                                 {/* Enlace de login */}
-                                {credentials.login_url && (
+                                {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
                                   <div className="pt-2 border-t border-blue-200 dark:border-blue-800">
                                     <a
-                                      href={credentials.login_url}
+                                      href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                       target="_blank"
                                       rel="noopener noreferrer"
                                       className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
@@ -663,13 +674,34 @@ export default function MiPortafolio() {
                                 )}
                               </div>
                             ) : (
-                              <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                                <div className="flex items-center space-x-2">
-                                  <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                                  <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                                    Las credenciales aún no han sido configuradas por el administrador.
-                                  </p>
+                              <div className="space-y-3">
+                                {/* Mensaje de advertencia si no hay credenciales */}
+                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                  <div className="flex items-center space-x-2">
+                                    <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                                      Las credenciales aún no han sido configuradas por el administrador.
+                                    </p>
+                                  </div>
                                 </div>
+                                
+                                {/* Enlace de login (siempre mostrar si existe, incluso sin credenciales) */}
+                                {(credentials?.login_url || selectedPlatform.calculator_platforms.login_url) && (
+                                  <div>
+                                    <a
+                                      href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="inline-flex items-center space-x-2 px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                    >
+                                      <ExternalLink className="w-4 h-4" />
+                                      <span>Abrir plataforma</span>
+                                    </a>
+                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 font-medium">
+                                      Haz clic para acceder a la plataforma
+                                    </p>
+                                  </div>
+                                )}
                               </div>
                             )}
 
