@@ -415,53 +415,6 @@ export default function MiPortafolio() {
 
         {activeTab === 'platforms' && (
           <>
-            {/* Resumen */}
-            {portfolioData && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Plataformas</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{portfolioData.summary.totalPlatforms}</p>
-                    </div>
-                    <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </div>
-
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Activas</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{portfolioData.summary.activePlatforms}</p>
-                    </div>
-                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
-                  </div>
-                </div>
-
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pendientes</p>
-                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{portfolioData.summary.pendingConfirmation}</p>
-                    </div>
-                    <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                </div>
-
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Ganancias (30 días)</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        ${portfolioData.summary.totalCopModelo.toLocaleString('es-CO')} COP
-                      </p>
-                    </div>
-                    <DollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Etiquetas de Plataformas */}
             <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
               <div className="flex items-center justify-between mb-6">
@@ -783,8 +736,58 @@ export default function MiPortafolio() {
         )}
 
         {activeTab === 'analytics' && (
-          <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <PortfolioAnalytics modelId={user?.id} />
+          <div className="space-y-6">
+            {/* Resumen - Tarjetas Estadísticas */}
+            {portfolioData && (
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Plataformas</p>
+                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{portfolioData.summary.totalPlatforms}</p>
+                    </div>
+                    <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                  </div>
+                </div>
+
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Activas</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{portfolioData.summary.activePlatforms}</p>
+                    </div>
+                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pendientes</p>
+                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{portfolioData.summary.pendingConfirmation}</p>
+                    </div>
+                    <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+                  </div>
+                </div>
+
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Ganancias (30 días)</p>
+                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        ${portfolioData.summary.totalCopModelo.toLocaleString('es-CO')} COP
+                      </p>
+                    </div>
+                    <DollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Análisis Detallado */}
+            <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+              <PortfolioAnalytics modelId={user?.id} />
+            </div>
           </div>
         )}
       </div>
