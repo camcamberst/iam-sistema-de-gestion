@@ -162,6 +162,88 @@ export default function MiPortafolio() {
 
       if (result.success) {
         // Recargar datos
+        loadPortfolioData();
+      } else {
+        setError(result.error || 'Error al confirmar plataforma');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al confirmar plataforma');
+    } finally {
+      setConfirmingPlatform(null);
+    }
+  };
+
+  const loadCredentials = async (platformId: string) => {
+    if (!user?.id || !platformId) return;
+
+    try {
+      setLoadingCredentials(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        console.error('No se pudo obtener token de autenticación');
+        return;
+      }
+
+      const response = await fetch(
+        `/api/modelo-plataformas/credentials?platform_id=${platformId}&model_id=${user.id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          setCredentials(result.data);
+        } else {
+          setCredentials({
+            login_username: null,
+            login_password: null,
+            login_url: result.data?.login_url || null,
+            hasCredentials: false
+          });
+        }
+      } else {
+        console.error('Error cargando credenciales:', await response.text());
+        setCredentials(null);
+      }
+    } catch (err: any) {
+      console.error('Error cargando credenciales:', err);
+      setCredentials(null);
+    } finally {
+      setLoadingCredentials(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // Opcional: mostrar notificación de éxito
+      alert('Copiado al portapapeles');
+    }).catch(err => {
+      console.error('Error copiando al portapapeles:', err);
+    });
+  };
+
+  const confirmPlatform = async (platformId: string) => {
+    try {
+      setConfirmingPlatform(platformId);
+      const response = await fetch('/api/modelo-portafolio/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platformId,
+          modelId: user?.id
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Recargar datos
         await loadPortfolioData();
       } else {
         setError(result.error || 'Error al confirmar la plataforma');
