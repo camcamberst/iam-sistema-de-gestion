@@ -35,7 +35,7 @@ async function authenticateUser(request: NextRequest) {
     return { error: 'Error obteniendo datos de usuario', user: null };
   }
 
-  // Permitir admin, super_admin y modelo
+  // Permitir admin, super_admin y modelo (solo lectura para modelo)
   const allowedRoles = ['admin', 'super_admin', 'modelo'];
   if (!allowedRoles.includes(userData.role)) {
     return { error: 'No autorizado', user: null };
@@ -128,12 +128,20 @@ export async function GET(request: NextRequest) {
   }
 }
 
-// POST - Guardar/actualizar credenciales de 3CX
+// POST - Guardar/actualizar credenciales de 3CX (solo administradores)
 export async function POST(request: NextRequest) {
   try {
     const auth = await authenticateUser(request);
     if (auth.error) {
       return NextResponse.json({ error: auth.error }, { status: 401 });
+    }
+
+    // Solo permitir a administradores editar credenciales
+    if (auth.user!.role !== 'admin' && auth.user!.role !== 'super_admin') {
+      return NextResponse.json(
+        { error: 'Solo los administradores pueden editar credenciales de 3CX' },
+        { status: 403 }
+      );
     }
 
     const body = await request.json();

@@ -107,6 +107,13 @@ export default function PortafolioModelos() {
   const [hasCredentials, setHasCredentials] = useState(false);
   const [platformsWithCredentials, setPlatformsWithCredentials] = useState<Set<string>>(new Set());
   
+  // Estados para credenciales de 3CX
+  const [app3CXUsername, setApp3CXUsername] = useState('');
+  const [app3CXPassword, setApp3CXPassword] = useState('');
+  const [showPassword3CX, setShowPassword3CX] = useState(false);
+  const [loading3CX, setLoading3CX] = useState(false);
+  const [hasCredentials3CX, setHasCredentials3CX] = useState(false);
+  
   // Estados para Boost Pages Modal
   const [showBoostPagesModal, setShowBoostPagesModal] = useState(false);
   const [selectedModelForBoost, setSelectedModelForBoost] = useState<{ id: string; name: string; email: string } | null>(null);
@@ -438,12 +445,25 @@ export default function PortafolioModelos() {
     // Si el estado visual es "entregada", cargar credenciales existentes
     if (visualStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin')) {
       await loadPlatformCredentials(platform.model_id, platform.platform_id);
+      // Cargar credenciales de 3CX si es Superfoon
+      const isSuperfoon = platform.platform_id?.toLowerCase() === 'superfoon' || 
+                          platform.platform_name?.toLowerCase().includes('superfoon');
+      if (isSuperfoon) {
+        await loadCredentials3CX(platform.model_id, platform.platform_id);
+      } else {
+        setApp3CXUsername('');
+        setApp3CXPassword('');
+        setHasCredentials3CX(false);
+      }
     } else {
       // Limpiar campos de credenciales
       setLoginUrl('');
       setLoginUsername('');
       setLoginPassword('');
       setHasCredentials(false);
+      setApp3CXUsername('');
+      setApp3CXPassword('');
+      setHasCredentials3CX(false);
     }
   };
 
@@ -540,6 +560,52 @@ export default function PortafolioModelos() {
       setHasCredentials(false);
     } finally {
       setLoadingCredentials(false);
+    }
+  };
+
+  // Cargar credenciales de 3CX
+  const loadCredentials3CX = async (modelId: string, platformId: string) => {
+    if (!userId) return;
+    
+    try {
+      setLoading3CX(true);
+      const token = await getValidToken();
+      if (!token) {
+        setApp3CXUsername('');
+        setApp3CXPassword('');
+        setHasCredentials3CX(false);
+        return;
+      }
+
+      const response = await fetch(`/api/modelo-plataformas/credentials-3cx?model_id=${modelId}&platform_id=${platformId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.data && data.data.hasCredentials) {
+          setApp3CXUsername(data.data.app_3cx_username || '');
+          setApp3CXPassword(data.data.app_3cx_password || '');
+          setHasCredentials3CX(true);
+        } else {
+          setApp3CXUsername('');
+          setApp3CXPassword('');
+          setHasCredentials3CX(false);
+        }
+      } else {
+        setApp3CXUsername('');
+        setApp3CXPassword('');
+        setHasCredentials3CX(false);
+      }
+    } catch (error) {
+      console.error('Error cargando credenciales 3CX:', error);
+      setApp3CXUsername('');
+      setApp3CXPassword('');
+      setHasCredentials3CX(false);
+    } finally {
+      setLoading3CX(false);
     }
   };
 
@@ -649,6 +715,59 @@ export default function PortafolioModelos() {
     } catch (error) {
       console.error('Error guardando credenciales:', error);
       setError('Error al guardar credenciales');
+    } finally {
+      setProcessingAction(false);
+    }
+  };
+
+  // Guardar credenciales de 3CX
+  const saveCredentials3CX = async () => {
+    if (!selectedPlatformForAction || !userId) return;
+    
+    if (!app3CXUsername.trim() || !app3CXPassword.trim()) {
+      setError('Por favor completa usuario y contraseña de 3CX');
+      return;
+    }
+
+    try {
+      setProcessingAction(true);
+      setError('');
+
+      const token = await getValidToken();
+      if (!token) {
+        setError('Error de autenticación');
+        return;
+      }
+
+      const response = await fetch('/api/modelo-plataformas/credentials-3cx', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          model_id: selectedPlatformForAction.model_id,
+          platform_id: selectedPlatformForAction.platform_id,
+          app_3cx_username: app3CXUsername.trim(),
+          app_3cx_password: app3CXPassword
+        })
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success) {
+          setSuccess('Credenciales de 3CX guardadas correctamente');
+          setHasCredentials3CX(true);
+        } else {
+          setError(data.error || 'Error al guardar credenciales de 3CX');
+        }
+      } else {
+        const errorData = await response.json();
+        setError(errorData.error || 'Error al guardar credenciales de 3CX');
+      }
+    } catch (error) {
+      console.error('Error guardando credenciales 3CX:', error);
+      setError('Error al guardar credenciales de 3CX');
     } finally {
       setProcessingAction(false);
     }
@@ -1230,6 +1349,89 @@ export default function PortafolioModelos() {
                     </>
                   )}
                 </div>
+
+                {/* Sección de Credenciales 3CX (solo para Superfoon) */}
+                {selectedPlatformForAction && (
+                  (selectedPlatformForAction.platform_id?.toLowerCase() === 'superfoon' || 
+                   selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon')) && (
+                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center justify-between mb-3">
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                          Credenciales App 3CX
+                        </label>
+                        {hasCredentials3CX && (
+                          <span className="text-xs text-purple-600 dark:text-purple-400 flex items-center gap-1">
+                            <span className="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+                            Guardadas
+                          </span>
+                        )}
+                      </div>
+                      
+                      {loading3CX ? (
+                        <div className="text-sm text-gray-500 dark:text-gray-400 text-center py-2">
+                          Cargando credenciales 3CX...
+                        </div>
+                      ) : (
+                        <>
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                              Usuario 3CX <span className="text-red-500">*</span>
+                            </label>
+                            <input
+                              type="text"
+                              value={app3CXUsername}
+                              onChange={(e) => setApp3CXUsername(e.target.value)}
+                              className="w-full px-3 py-2 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                              placeholder="usuario@ejemplo.com"
+                            />
+                          </div>
+
+                          <div className="mb-3">
+                            <label className="block text-xs font-medium text-gray-600 dark:text-gray-300 mb-1">
+                              Contraseña 3CX <span className="text-red-500">*</span>
+                            </label>
+                            <div className="relative">
+                              <input
+                                type={showPassword3CX ? 'text' : 'password'}
+                                value={app3CXPassword}
+                                onChange={(e) => setApp3CXPassword(e.target.value)}
+                                className="w-full px-3 py-2 pr-10 text-sm border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
+                                placeholder="••••••••"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => setShowPassword3CX(!showPassword3CX)}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+                                title={showPassword3CX ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                              >
+                                {showPassword3CX ? <Eye className="w-4 h-4" /> : <Lock className="w-4 h-4" />}
+                              </button>
+                            </div>
+                          </div>
+
+                          <button
+                            type="button"
+                            onClick={saveCredentials3CX}
+                            disabled={processingAction || !app3CXUsername.trim() || !app3CXPassword.trim()}
+                            className="w-full px-3 py-2 text-xs font-medium bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 transition-all duration-200 shadow-md disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                          >
+                            {hasCredentials3CX ? (
+                              <>
+                                <CheckCircle className="w-4 h-4" />
+                                {processingAction ? 'Guardando...' : 'Actualizar Credenciales 3CX'}
+                              </>
+                            ) : (
+                              <>
+                                <Lock className="w-4 h-4" />
+                                {processingAction ? 'Guardando...' : 'Guardar Credenciales 3CX'}
+                              </>
+                            )}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  )
+                )}
               )}
 
               <div className="flex space-x-3">

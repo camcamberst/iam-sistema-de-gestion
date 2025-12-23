@@ -97,7 +97,6 @@ export default function MiPortafolio() {
     hasCredentials: false
   });
   const [loading3CX, setLoading3CX] = useState(false);
-  const [saving3CX, setSaving3CX] = useState(false);
   const [showPassword3CX, setShowPassword3CX] = useState(false);
 
   // Cargar usuario autenticado
@@ -330,60 +329,6 @@ export default function MiPortafolio() {
     }
   };
 
-  const saveCredentials3CX = async () => {
-    if (!selectedPlatform || !user?.id) return;
-
-    if (!credentials3CX.app_3cx_username || !credentials3CX.app_3cx_password) {
-      alert('Por favor completa usuario y contraseña');
-      return;
-    }
-
-    try {
-      setSaving3CX(true);
-      const { data: { session } } = await supabase.auth.getSession();
-      const token = session?.access_token;
-
-      if (!token) {
-        console.error('No se pudo obtener token de autenticación');
-        return;
-      }
-
-      const response = await fetch('/api/modelo-plataformas/credentials-3cx', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          platform_id: selectedPlatform.platform_id,
-          model_id: user.id,
-          app_3cx_username: credentials3CX.app_3cx_username,
-          app_3cx_password: credentials3CX.app_3cx_password
-        })
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.success) {
-          alert('Credenciales de 3CX guardadas correctamente');
-          setCredentials3CX({
-            ...credentials3CX,
-            hasCredentials: true
-          });
-        } else {
-          alert(result.error || 'Error al guardar credenciales');
-        }
-      } else {
-        const error = await response.json();
-        alert(error.error || 'Error al guardar credenciales');
-      }
-    } catch (err: any) {
-      console.error('Error guardando credenciales 3CX:', err);
-      alert('Error al guardar credenciales');
-    } finally {
-      setSaving3CX(false);
-    }
-  };
 
   // Función para obtener estilos de etiquetas (igual que Portafolio Modelo)
   const getTagClasses = (status: string) => {
@@ -806,7 +751,7 @@ export default function MiPortafolio() {
                                       <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                     </div>
 
-                                    {/* Credenciales 3CX */}
+                                    {/* Credenciales 3CX - Solo lectura para modelos */}
                                     <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4 space-y-3 border border-purple-200 dark:border-purple-800 mb-3">
                                       <div className="flex items-center space-x-2 mb-3">
                                         <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
@@ -818,24 +763,32 @@ export default function MiPortafolio() {
                                           <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-purple-600"></div>
                                           <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Cargando...</span>
                                         </div>
-                                      ) : (
+                                      ) : credentials3CX.hasCredentials ? (
                                         <>
-                                          {/* Usuario 3CX */}
+                                          {/* Usuario 3CX - Solo lectura */}
                                           <div className="space-y-1">
                                             <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
                                               <User className="w-3 h-3" />
                                               <span>Usuario 3CX</span>
                                             </label>
-                                            <input
-                                              type="text"
-                                              value={credentials3CX.app_3cx_username || ''}
-                                              onChange={(e) => setCredentials3CX({ ...credentials3CX, app_3cx_username: e.target.value })}
-                                              placeholder="Ingresa tu usuario de 3CX"
-                                              className="w-full px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                            />
+                                            <div className="flex items-center space-x-2">
+                                              <input
+                                                type="text"
+                                                value={credentials3CX.app_3cx_username || ''}
+                                                readOnly
+                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none"
+                                              />
+                                              <button
+                                                onClick={() => copyToClipboard(credentials3CX.app_3cx_username || '')}
+                                                className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                                                title="Copiar usuario"
+                                              >
+                                                <Copy className="w-4 h-4" />
+                                              </button>
+                                            </div>
                                           </div>
 
-                                          {/* Contraseña 3CX */}
+                                          {/* Contraseña 3CX - Solo lectura */}
                                           <div className="space-y-1">
                                             <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
                                               <Lock className="w-3 h-3" />
@@ -845,9 +798,8 @@ export default function MiPortafolio() {
                                               <input
                                                 type={showPassword3CX ? 'text' : 'password'}
                                                 value={credentials3CX.app_3cx_password || ''}
-                                                onChange={(e) => setCredentials3CX({ ...credentials3CX, app_3cx_password: e.target.value })}
-                                                placeholder="Ingresa tu contraseña de 3CX"
-                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 font-mono"
+                                                readOnly
+                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none font-mono"
                                               />
                                               <button
                                                 onClick={() => setShowPassword3CX(!showPassword3CX)}
@@ -856,28 +808,25 @@ export default function MiPortafolio() {
                                               >
                                                 {showPassword3CX ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                               </button>
+                                              <button
+                                                onClick={() => copyToClipboard(credentials3CX.app_3cx_password || '')}
+                                                className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                                                title="Copiar contraseña"
+                                              >
+                                                <Copy className="w-4 h-4" />
+                                              </button>
                                             </div>
                                           </div>
-
-                                          {/* Botón Guardar */}
-                                          <button
-                                            onClick={saveCredentials3CX}
-                                            disabled={saving3CX || !credentials3CX.app_3cx_username || !credentials3CX.app_3cx_password}
-                                            className="w-full px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-600 text-white rounded-lg hover:from-purple-600 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium flex items-center justify-center space-x-2"
-                                          >
-                                            {saving3CX ? (
-                                              <>
-                                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                                                <span>Guardando...</span>
-                                              </>
-                                            ) : (
-                                              <>
-                                                <CheckCircle className="w-4 h-4" />
-                                                <span>Guardar Credenciales 3CX</span>
-                                              </>
-                                            )}
-                                          </button>
                                         </>
+                                      ) : (
+                                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                          <div className="flex items-center space-x-2">
+                                            <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                            <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                                              Las credenciales de 3CX aún no han sido configuradas por el administrador.
+                                            </p>
+                                          </div>
+                                        </div>
                                       )}
                                     </div>
                                     
