@@ -83,6 +83,7 @@ export default function MiPortafolio() {
   const [credentials, setCredentials] = useState<Credentials | null>(null);
   const [loadingCredentials, setLoadingCredentials] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [platformTab, setPlatformTab] = useState<'details' | 'metrics'>('details');
 
   const supabase = require('@/lib/supabase').supabase;
 
@@ -114,6 +115,7 @@ export default function MiPortafolio() {
   useEffect(() => {
     if (selectedPlatform && user?.id) {
       loadCredentials(selectedPlatform.platform_id);
+      setPlatformTab('details'); // Resetear a pestaña de detalles al cambiar de plataforma
     } else {
       setCredentials(null);
       setShowPassword(false);
@@ -498,48 +500,36 @@ export default function MiPortafolio() {
                           </div>
                         </div>
 
-                        {/* Estadísticas de la plataforma */}
-                        <div className="bg-gray-50 dark:bg-gray-600/80 rounded-lg p-4 mb-4">
-                          <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Estadísticas de Rendimiento</h4>
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Conexión</p>
-                              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{selectedPlatform.stats.connectionPercentage}%</p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Quincenal</p>
-                              <div className="flex items-center justify-center space-x-1">
-                                <p className="text-lg font-bold text-green-600 dark:text-green-400">
-                                  ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
-                                </p>
-                                <span className={`text-sm font-medium ${
-                                  selectedPlatform.stats.trend === '↑' ? 'text-green-500 dark:text-green-400' :
-                                  selectedPlatform.stats.trend === '↓' ? 'text-red-500 dark:text-red-400' :
-                                  'text-gray-400 dark:text-gray-500'
-                                }`}>
-                                  {selectedPlatform.stats.trend}
-                                </span>
-                              </div>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total (30 días)</p>
-                              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                                ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
-                              </p>
-                            </div>
-                            <div className="text-center">
-                              <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Última Actividad</p>
-                              <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                                {selectedPlatform.stats.lastActivity ? 
-                                  new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
-                                  'N/A'
-                                }
-                              </p>
-                            </div>
+                        {/* Pestañas internas del modal */}
+                        <div className="mb-4 border-b border-gray-200 dark:border-gray-600">
+                          <div className="flex space-x-1">
+                            <button
+                              onClick={() => setPlatformTab('details')}
+                              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                                platformTab === 'details'
+                                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                              }`}
+                            >
+                              Detalles
+                            </button>
+                            <button
+                              onClick={() => setPlatformTab('metrics')}
+                              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                                platformTab === 'metrics'
+                                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                              }`}
+                            >
+                              Métricas
+                            </button>
                           </div>
                         </div>
 
-                        {/* Credenciales de acceso */}
+                        {/* Contenido de pestaña: Detalles */}
+                        {platformTab === 'details' && (
+                          <div className="space-y-4">
+                            {/* Credenciales de acceso */}
                         {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && (
                           <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-4">
                             {loadingCredentials ? (
@@ -692,6 +682,49 @@ export default function MiPortafolio() {
                                 </p>
                               </div>
                             )}
+                          </div>
+                        )}
+
+                        {/* Contenido de pestaña: Métricas */}
+                        {platformTab === 'metrics' && (
+                          <div className="bg-gray-50 dark:bg-gray-600/80 rounded-lg p-4">
+                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Estadísticas de Rendimiento</h4>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                              <div className="text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Conexión</p>
+                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{selectedPlatform.stats.connectionPercentage}%</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Quincenal</p>
+                                <div className="flex items-center justify-center space-x-1">
+                                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                    ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
+                                  </p>
+                                  <span className={`text-sm font-medium ${
+                                    selectedPlatform.stats.trend === '↑' ? 'text-green-500 dark:text-green-400' :
+                                    selectedPlatform.stats.trend === '↓' ? 'text-red-500 dark:text-red-400' :
+                                    'text-gray-400 dark:text-gray-500'
+                                  }`}>
+                                    {selectedPlatform.stats.trend}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total (30 días)</p>
+                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                                  ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
+                                </p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Última Actividad</p>
+                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  {selectedPlatform.stats.lastActivity ? 
+                                    new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
+                                    'N/A'
+                                  }
+                                </p>
+                              </div>
+                            </div>
                           </div>
                         )}
 
