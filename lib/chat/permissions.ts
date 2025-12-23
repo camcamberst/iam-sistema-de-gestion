@@ -57,6 +57,11 @@ export async function validateConversationPermission(
       return { allowed: true };
     }
 
+    // Admin puede conversar con otros administradores
+    if (sender.role === 'admin' && receiver.role === 'admin') {
+      return { allowed: true };
+    }
+
     // Verificar si pertenecen al mismo grupo (para modelo-admin)
     if ((sender.role === 'modelo' && receiver.role === 'admin') || 
         (sender.role === 'admin' && receiver.role === 'modelo')) {
@@ -121,7 +126,7 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
 
       availableUsers = allUsers || [];
     } else if (currentUser.role === 'admin') {
-      // Admin puede ver super admin y usuarios de su mismo grupo
+      // Admin puede ver super admin, otros administradores y usuarios de su mismo grupo
       const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
@@ -129,13 +134,13 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
 
       const groupIds = userGroups?.map((g: any) => g.group_id) || [];
 
-      // Obtener super admin
-      const { data: superAdmin } = await supabase
+      // Obtener todos los administradores (incluyendo super_admin)
+      const { data: allAdmins } = await supabase
         .from('users')
         .select('id, role')
-        .eq('role', 'super_admin')
+        .in('role', ['admin', 'super_admin'])
         .eq('is_active', true)
-        .single();
+        .neq('id', currentUserId);
 
       // Obtener usuarios del mismo grupo
       let groupUsers: UserInfo[] = [];
@@ -152,10 +157,18 @@ export async function getAvailableUsers(currentUserId: string): Promise<UserInfo
         groupUsers = usersInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
 
-      availableUsers = [
-        ...(superAdmin ? [superAdmin] : []),
-        ...groupUsers
-      ];
+      // Combinar administradores y usuarios del grupo, evitando duplicados
+      const allUsersMap = new Map<string, UserInfo>();
+      
+      allAdmins?.forEach((admin: any) => {
+        allUsersMap.set(admin.id, admin);
+      });
+      
+      groupUsers.forEach((groupUser: any) => {
+        allUsersMap.set(groupUser.id, groupUser);
+      });
+
+      availableUsers = Array.from(allUsersMap.values());
     } else if (currentUser.role === 'modelo') {
       // Modelo puede ver admin de su mismo grupo
       const { data: userGroups } = await supabase

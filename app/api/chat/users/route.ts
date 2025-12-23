@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
 
       availableUsers = allUsers || [];
     } else if (currentUser.role === 'admin') {
-      // Admin puede ver super admin y usuarios de su mismo grupo
+      // Admin puede ver super admin, otros administradores y usuarios de su mismo grupo
       const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
@@ -87,7 +87,22 @@ export async function GET(request: NextRequest) {
         .eq('is_active', true)
         .single();
 
-      // Obtener usuarios del mismo grupo
+      // Obtener todos los administradores (incluyendo super_admin)
+      const { data: allAdmins } = await supabase
+        .from('users')
+        .select(`
+          id,
+          name,
+          email,
+          role,
+          is_active,
+          last_login
+        `)
+        .in('role', ['admin', 'super_admin'])
+        .eq('is_active', true)
+        .neq('id', user.id);
+
+      // Obtener usuarios del mismo grupo (modelos y otros)
       let groupUsers: any[] = [];
       if (groupIds.length > 0) {
         const { data: usersInGroups } = await supabase
@@ -102,15 +117,26 @@ export async function GET(request: NextRequest) {
         groupUsers = usersInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
       }
 
-      // 🔧 CORREGIDO: Evitar duplicados del super_admin
-      // Si el super_admin está en algún grupo, ya estará en groupUsers
-      // Solo agregarlo manualmente si no está ya en la lista
-      const superAdminInGroup = groupUsers.some((u: any) => u.id === superAdmin?.id);
+      // Combinar: super_admin, todos los admins, y usuarios del grupo
+      // Evitar duplicados
+      const allUsersMap = new Map<string, any>();
       
-      availableUsers = [
-        ...(superAdmin && !superAdminInGroup ? [superAdmin] : []),
-        ...groupUsers
-      ];
+      // Agregar super admin primero
+      if (superAdmin) {
+        allUsersMap.set(superAdmin.id, superAdmin);
+      }
+      
+      // Agregar todos los administradores
+      allAdmins?.forEach((admin: any) => {
+        allUsersMap.set(admin.id, admin);
+      });
+      
+      // Agregar usuarios del grupo (pueden sobrescribir si ya están como admin)
+      groupUsers.forEach((groupUser: any) => {
+        allUsersMap.set(groupUser.id, groupUser);
+      });
+      
+      availableUsers = Array.from(allUsersMap.values());
     } else if (currentUser.role === 'modelo') {
       // Modelo puede ver admin de su mismo grupo
       const { data: userGroups } = await supabase
