@@ -231,8 +231,8 @@ export default function PortafolioModelos() {
       if (groupsResponse.ok) {
         const groupsData = await groupsResponse.json();
         if (groupsData.success) {
-          const clean = groupsData.groups.filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites');
-          setGroups(clean);
+          // Incluir todos los grupos sin filtrar
+          setGroups(groupsData.groups);
         }
       }
 
