@@ -1418,14 +1418,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             if (isParticipant) {
               console.log('✅ [ChatWidget] Usuario es participante de la conversación');
               
-              // Verificar si el mensaje es para Botty (cuando un usuario envía mensaje a Botty)
-              const isMessageToBotty = conversation.participant_1_id === AIM_BOTTY_ID || conversation.participant_2_id === AIM_BOTTY_ID;
-              const isUserSendingToBotty = newMessage.sender_id === userId && isMessageToBotty;
-              
               // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
-              // PERO NO si el usuario está enviando un mensaje a Botty (Botty no debe notificar)
               // Esto debe hacerse antes de cualquier otra lógica para asegurar que el chat se abra
-              if (newMessage.sender_id !== userId && !isUserSendingToBotty) {
+              if (newMessage.sender_id !== userId) {
                 console.log('🔔 [ChatWidget] ¡MENSAJE DE OTRO USUARIO DETECTADO!');
                 
                 // Intentar reproducir sonido INMEDIATAMENTE
@@ -1480,8 +1475,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   playNotificationSound(0.6);
                   lastSoundTimeRef.current = now;
                 }
-              } else if (isUserSendingToBotty) {
-                console.log('🤖 [ChatWidget] Usuario enviando mensaje a Botty - No mostrar notificaciones (redundante)');
               }
               
               // Si es la conversación activa, agregar el mensaje directamente
