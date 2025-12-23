@@ -92,10 +92,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const lastProcessedMessageIdRef = useRef<string | null>(null);
   // 🔧 NUEVO: Ref para rastrear mensajes ya procesados (para evitar toasts duplicados)
   const processedMessageIdsRef = useRef<Set<string>>(new Set());
+  // 🔧 NUEVO: Ref para el título original de la pestaña y notificaciones
+  const originalTitleRef = useRef<string>('');
+  const titleBlinkIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const unreadCountForTitleRef = useRef<number>(0);
   
   // 🔧 FIX: Cargar valores desde localStorage solo después del mount (en useEffect)
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      // Guardar título original de la pestaña
+      originalTitleRef.current = document.title;
+      
       // Cargar lastUnreadCount desde localStorage
       const savedUnreadCount = localStorage.getItem('chat_last_unread_count');
       if (savedUnreadCount) {
@@ -380,6 +387,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
         heartbeatIntervalRef.current = setInterval(sendHeartbeat, 30000); // 30 segundos
         sendHeartbeat(); // Enviar inmediatamente
+        
+        // 🔔 NUEVO: Restaurar título original cuando el usuario vuelve a la pestaña
+        if (titleBlinkIntervalRef.current) {
+          clearInterval(titleBlinkIntervalRef.current);
+          titleBlinkIntervalRef.current = null;
+        }
+        unreadCountForTitleRef.current = 0;
+        document.title = originalTitleRef.current;
+        console.log('📢 [ChatWidget] Título de pestaña restaurado');
       }
     };
 
@@ -1422,6 +1438,82 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               // Esto debe hacerse antes de cualquier otra lógica para asegurar que el chat se abra
               if (newMessage.sender_id !== userId) {
                 console.log('🔔 [ChatWidget] ¡MENSAJE DE OTRO USUARIO DETECTADO!');
+                
+                // 🔔 NUEVO: Notificar en la pestaña si el usuario está en otra pestaña
+                if (document.hidden) {
+                  console.log('📢 [ChatWidget] Usuario en otra pestaña, notificando...');
+                  
+                  // Obtener nombre del remitente
+                  const sender = availableUsers.find(u => u.id === newMessage.sender_id);
+                  const senderName = sender?.name || 'Alguien';
+                  
+                  // Incrementar contador de no leídos para el título
+                  unreadCountForTitleRef.current += 1;
+                  
+                  // Actualizar título de la pestaña con indicador
+                  const updateTitle = () => {
+                    if (unreadCountForTitleRef.current > 0) {
+                      document.title = `(${unreadCountForTitleRef.current}) Nuevo mensaje - ${originalTitleRef.current}`;
+                    } else {
+                      document.title = originalTitleRef.current;
+                    }
+                  };
+                  
+                  // Parpadear el título
+                  if (titleBlinkIntervalRef.current) {
+                    clearInterval(titleBlinkIntervalRef.current);
+                  }
+                  
+                  let isBlinking = false;
+                  titleBlinkIntervalRef.current = setInterval(() => {
+                    isBlinking = !isBlinking;
+                    if (isBlinking && unreadCountForTitleRef.current > 0) {
+                      document.title = `🔔 (${unreadCountForTitleRef.current}) Nuevo mensaje - ${originalTitleRef.current}`;
+                    } else if (unreadCountForTitleRef.current > 0) {
+                      document.title = `(${unreadCountForTitleRef.current}) Nuevo mensaje - ${originalTitleRef.current}`;
+                    } else {
+                      document.title = originalTitleRef.current;
+                    }
+                  }, 1000);
+                  
+                  // Intentar usar la API de notificaciones del navegador
+                  if ('Notification' in window && Notification.permission === 'granted') {
+                    try {
+                      new Notification(`Nuevo mensaje de ${senderName}`, {
+                        body: newMessage.content?.substring(0, 100) || 'Tienes un nuevo mensaje',
+                        icon: '/favicon.ico',
+                        tag: `chat-${newMessage.conversation_id}`,
+                        requireInteraction: false
+                      });
+                    } catch (err) {
+                      console.warn('⚠️ [ChatWidget] Error mostrando notificación del navegador:', err);
+                    }
+                  } else if ('Notification' in window && Notification.permission === 'default') {
+                    // Solicitar permiso la primera vez
+                    Notification.requestPermission().then(permission => {
+                      if (permission === 'granted') {
+                        try {
+                          new Notification(`Nuevo mensaje de ${senderName}`, {
+                            body: newMessage.content?.substring(0, 100) || 'Tienes un nuevo mensaje',
+                            icon: '/favicon.ico',
+                            tag: `chat-${newMessage.conversation_id}`
+                          });
+                        } catch (err) {
+                          console.warn('⚠️ [ChatWidget] Error mostrando notificación del navegador:', err);
+                        }
+                      }
+                    });
+                  }
+                  
+                  // Intentar vibrar si está disponible (dispositivos móviles)
+                  if ('vibrate' in navigator) {
+                    try {
+                      navigator.vibrate([200, 100, 200]);
+                    } catch (err) {
+                      console.warn('⚠️ [ChatWidget] Error en vibración:', err);
+                    }
+                  }
+                }
                 
                 // Intentar reproducir sonido INMEDIATAMENTE
                 console.log('🔊 [ChatWidget] Intentando reproducir sonido...');
