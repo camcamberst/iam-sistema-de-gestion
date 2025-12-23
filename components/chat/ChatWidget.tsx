@@ -100,8 +100,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // 🔧 FIX: Cargar valores desde localStorage solo después del mount (en useEffect)
   useEffect(() => {
     if (typeof window !== 'undefined') {
-      // Guardar título original de la pestaña
-      originalTitleRef.current = document.title;
+      // Guardar título original de la pestaña (solo si no está ya guardado)
+      if (!originalTitleRef.current) {
+        originalTitleRef.current = document.title || 'AIM Sistema';
+        console.log('📝 [ChatWidget] Título original guardado:', originalTitleRef.current);
+      }
       
       // Cargar lastUnreadCount desde localStorage
       const savedUnreadCount = localStorage.getItem('chat_last_unread_count');
@@ -1434,14 +1437,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             if (isParticipant) {
               console.log('✅ [ChatWidget] Usuario es participante de la conversación');
               
-              // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
-              // Esto debe hacerse antes de cualquier otra lógica para asegurar que el chat se abra
+              // 🔔 CRÍTICO: Verificar si el mensaje es de otro usuario
               if (newMessage.sender_id !== userId) {
                 console.log('🔔 [ChatWidget] ¡MENSAJE DE OTRO USUARIO DETECTADO!');
                 
                 // 🔔 NUEVO: Notificar en la pestaña si el usuario está en otra pestaña
-                if (document.hidden) {
+                // IMPORTANTE: Verificar ANTES de abrir el chat para no interferir
+                const isTabHidden = document.hidden;
+                console.log('📊 [ChatWidget] Estado de pestaña - document.hidden:', isTabHidden, 'originalTitle:', originalTitleRef.current);
+                
+                if (isTabHidden) {
                   console.log('📢 [ChatWidget] Usuario en otra pestaña, notificando...');
+                  
+                  // Asegurar que tenemos el título original
+                  if (!originalTitleRef.current) {
+                    originalTitleRef.current = document.title || 'AIM Sistema';
+                  }
                   
                   // Obtener nombre del remitente
                   const sender = availableUsers.find(u => u.id === newMessage.sender_id);
@@ -1449,15 +1460,6 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   
                   // Incrementar contador de no leídos para el título
                   unreadCountForTitleRef.current += 1;
-                  
-                  // Actualizar título de la pestaña con indicador
-                  const updateTitle = () => {
-                    if (unreadCountForTitleRef.current > 0) {
-                      document.title = `(${unreadCountForTitleRef.current}) Nuevo mensaje - ${originalTitleRef.current}`;
-                    } else {
-                      document.title = originalTitleRef.current;
-                    }
-                  };
                   
                   // Parpadear el título
                   if (titleBlinkIntervalRef.current) {
@@ -1485,6 +1487,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         tag: `chat-${newMessage.conversation_id}`,
                         requireInteraction: false
                       });
+                      console.log('✅ [ChatWidget] Notificación del navegador mostrada');
                     } catch (err) {
                       console.warn('⚠️ [ChatWidget] Error mostrando notificación del navegador:', err);
                     }
@@ -1498,6 +1501,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                             icon: '/favicon.ico',
                             tag: `chat-${newMessage.conversation_id}`
                           });
+                          console.log('✅ [ChatWidget] Notificación del navegador mostrada (después de permiso)');
                         } catch (err) {
                           console.warn('⚠️ [ChatWidget] Error mostrando notificación del navegador:', err);
                         }
@@ -1509,11 +1513,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   if ('vibrate' in navigator) {
                     try {
                       navigator.vibrate([200, 100, 200]);
+                      console.log('✅ [ChatWidget] Vibración activada');
                     } catch (err) {
                       console.warn('⚠️ [ChatWidget] Error en vibración:', err);
                     }
                   }
+                } else {
+                  console.log('👁️ [ChatWidget] Usuario está viendo la pestaña, no se notifica');
                 }
+                
+                // 🔔 CRÍTICO: Abrir chat automáticamente DESPUÉS de verificar notificaciones
+                // Esto debe hacerse después para no interferir con la detección de visibilidad
                 
                 // Intentar reproducir sonido INMEDIATAMENTE
                 console.log('🔊 [ChatWidget] Intentando reproducir sonido...');
