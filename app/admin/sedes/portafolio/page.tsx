@@ -1349,12 +1349,24 @@ export default function PortafolioModelos() {
                     </>
                   )}
                 </div>
+              )}
 
-                {/* Sección de Credenciales 3CX (solo para Superfoon) */}
-                {selectedPlatformForAction && 
+              {/* Sección de Credenciales 3CX (solo para Superfoon) */}
+              {(() => {
+                const visualStatus =
+                  (selectedPlatformForAction?.is_initial_config && selectedPlatformForAction.status !== 'desactivada')
+                    ? 'entregada'
+                    : selectedPlatformForAction?.status;
+                const isDeliveredVisual =
+                  modalStatus === 'entregada' ||
+                  visualStatus === 'entregada';
+                const isSuperfoon = selectedPlatformForAction && 
                   (selectedPlatformForAction.platform_id?.toLowerCase() === 'superfoon' || 
-                   selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon')) ? (
-                    <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
+                   selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon'));
+                
+                return isDeliveredVisual && (userRole === 'admin' || userRole === 'super_admin') && isSuperfoon;
+              })() && (
+                <div className="mb-4 pt-4 border-t border-gray-200 dark:border-gray-600">
                       <div className="flex items-center justify-between mb-3">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                           Credenciales App 3CX
@@ -1430,7 +1442,6 @@ export default function PortafolioModelos() {
                         </>
                       )}
                     </div>
-                  ) : null}
               )}
 
               <div className="flex space-x-3">
