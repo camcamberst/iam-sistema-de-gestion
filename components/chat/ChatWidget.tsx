@@ -1418,9 +1418,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             if (isParticipant) {
               console.log('✅ [ChatWidget] Usuario es participante de la conversación');
               
+              // Verificar si el mensaje es para Botty (cuando un usuario envía mensaje a Botty)
+              const isMessageToBotty = conversation.participant_1_id === AIM_BOTTY_ID || conversation.participant_2_id === AIM_BOTTY_ID;
+              const isUserSendingToBotty = newMessage.sender_id === userId && isMessageToBotty;
+              
               // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
+              // PERO NO si el usuario está enviando un mensaje a Botty (Botty no debe notificar)
               // Esto debe hacerse antes de cualquier otra lógica para asegurar que el chat se abra
-              if (newMessage.sender_id !== userId) {
+              if (newMessage.sender_id !== userId && !isUserSendingToBotty) {
                 console.log('🔔 [ChatWidget] ¡MENSAJE DE OTRO USUARIO DETECTADO!');
                 
                 // Intentar reproducir sonido INMEDIATAMENTE
@@ -1467,52 +1472,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   
                   return currentIsOpen; // Mantener estado actual
                 });
-              }
-              
-              // 🔔 CRÍTICO: Abrir chat automáticamente PRIMERO si el mensaje es de otro usuario
-              // Esto debe hacerse ANTES de cualquier otra lógica
-              if (newMessage.sender_id !== userId) {
-                console.log('🔔 [ChatWidget] Mensaje de otro usuario detectado, verificando si abrir chat...');
                 
-                // Usar función de estado para obtener el valor más reciente
-                setIsOpen(currentIsOpen => {
-                  console.log('📂 [ChatWidget] Estado isOpen actual:', currentIsOpen);
-                  
-                  // Si el chat está cerrado, abrirlo automáticamente
-                  if (!currentIsOpen) {
-                    console.log('📂 [ChatWidget] ⚡ ABRIENDO CHAT AUTOMÁTICAMENTE - Chat estaba cerrado');
-                    // Actualizar otros estados después de abrir el chat
-                    setTimeout(() => {
-                      setMainView('chat');
-                      setSelectedConversation(newMessage.conversation_id);
-                      loadConversations();
-                    }, 100);
-                    return true; // Abrir el chat
-                  }
-                  
-                  return currentIsOpen; // Mantener estado actual
-                });
-                
-                // Si el chat ya está abierto pero no estamos viendo esta conversación, cambiar a ella
-                setSelectedConversation(currentSelected => {
-                  if (currentSelected !== newMessage.conversation_id) {
-                    console.log('🔄 [ChatWidget] Cambiando a conversación del mensaje nuevo');
-                    setMainView('chat');
-                    setTimeout(() => {
-                      loadConversations();
-                    }, 100);
-                    return newMessage.conversation_id;
-                  }
-                  return currentSelected;
-                });
-                
-                // Reproducir sonido
+                // Reproducir sonido (con throttling)
                 const now = Date.now();
                 if (now - lastSoundTimeRef.current > 2000) {
                   console.log('🔔 [ChatWidget] Reproduciendo sonido para mensaje nuevo');
                   playNotificationSound(0.6);
                   lastSoundTimeRef.current = now;
                 }
+              } else if (isUserSendingToBotty) {
+                console.log('🤖 [ChatWidget] Usuario enviando mensaje a Botty - No mostrar notificaciones (redundante)');
               }
               
               // Si es la conversación activa, agregar el mensaje directamente
