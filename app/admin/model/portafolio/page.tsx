@@ -530,156 +530,158 @@ export default function MiPortafolio() {
                         {platformTab === 'details' && (
                           <div className="space-y-4">
                             {/* Credenciales de acceso */}
-                        {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && (
-                          <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-4">
-                            {loadingCredentials ? (
-                              <div className="flex items-center justify-center py-4">
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                                <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Cargando credenciales...</span>
-                              </div>
-                            ) : credentials?.hasCredentials ? (
-                              <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 space-y-3 border border-blue-200 dark:border-blue-800">
-                                <div className="flex items-center space-x-2 mb-3">
-                                  <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                  <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
-                                </div>
-                                
-                                {/* Usuario */}
-                                {credentials.login_username && (
-                                  <div className="space-y-1">
-                                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                                      <User className="w-3 h-3" />
-                                      <span>Usuario</span>
-                                    </label>
-                                    <div className="flex items-center space-x-2">
-                                      <input
-                                        type="text"
-                                        value={credentials.login_username}
-                                        readOnly
-                                        className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      />
-                                      <button
-                                        onClick={() => copyToClipboard(credentials.login_username!)}
-                                        className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                                        title="Copiar usuario"
-                                      >
-                                        <Copy className="w-4 h-4" />
-                                      </button>
+                            {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && (
+                              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-4">
+                                {loadingCredentials ? (
+                                  <div className="flex items-center justify-center py-4">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Cargando credenciales...</span>
+                                  </div>
+                                ) : credentials?.hasCredentials ? (
+                                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 space-y-3 border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-center space-x-2 mb-3">
+                                      <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
                                     </div>
+                                    
+                                    {/* Usuario */}
+                                    {credentials.login_username && (
+                                      <div className="space-y-1">
+                                        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
+                                          <User className="w-3 h-3" />
+                                          <span>Usuario</span>
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="text"
+                                            value={credentials.login_username}
+                                            readOnly
+                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                          />
+                                          <button
+                                            onClick={() => copyToClipboard(credentials.login_username!)}
+                                            className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                            title="Copiar usuario"
+                                          >
+                                            <Copy className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Contraseña */}
+                                    {credentials.login_password && (
+                                      <div className="space-y-1">
+                                        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
+                                          <Lock className="w-3 h-3" />
+                                          <span>Contraseña</span>
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={credentials.login_password}
+                                            readOnly
+                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                                          />
+                                          <button
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                          >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                          </button>
+                                          <button
+                                            onClick={() => copyToClipboard(credentials.login_password!)}
+                                            className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                            title="Copiar contraseña"
+                                          >
+                                            <Copy className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Enlace de login - Siempre visible al final */}
+                                    {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
+                                      <div className="pt-3 mt-3 border-t border-blue-200 dark:border-blue-800">
+                                        <a
+                                          href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                        >
+                                          <ExternalLink className="w-4 h-4" />
+                                          <span>Abrir plataforma</span>
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="space-y-3">
+                                    {/* Mensaje de advertencia si no hay credenciales */}
+                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                      <div className="flex items-center space-x-2">
+                                        <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                        <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                                          Las credenciales aún no han sido configuradas por el administrador.
+                                        </p>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Enlace de login (siempre mostrar si existe, incluso sin credenciales) */}
+                                    {(credentials?.login_url || selectedPlatform.calculator_platforms.login_url) && (
+                                      <div className="pt-2">
+                                        <a
+                                          href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                        >
+                                          <ExternalLink className="w-4 h-4" />
+                                          <span>Abrir plataforma</span>
+                                        </a>
+                                        <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 text-center font-medium">
+                                          Haz clic para acceder a la plataforma
+                                        </p>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
 
-                                {/* Contraseña */}
-                                {credentials.login_password && (
-                                  <div className="space-y-1">
-                                    <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                                      <Lock className="w-3 h-3" />
-                                      <span>Contraseña</span>
-                                    </label>
-                                    <div className="flex items-center space-x-2">
-                                      <input
-                                        type={showPassword ? 'text' : 'password'}
-                                        value={credentials.login_password}
-                                        readOnly
-                                        className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
-                                      />
-                                      <button
-                                        onClick={() => setShowPassword(!showPassword)}
-                                        className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                                        title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                                      >
-                                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                                      </button>
-                                      <button
-                                        onClick={() => copyToClipboard(credentials.login_password!)}
-                                        className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
-                                        title="Copiar contraseña"
-                                      >
-                                        <Copy className="w-4 h-4" />
-                                      </button>
+                                {/* Enlace especial solo para Superfoon */}
+                                {isSelectedPlatformSuperfoon && (
+                                  <div className="pt-4 mt-4 border-t border-dashed border-gray-300 dark:border-gray-600">
+                                    <div className="flex items-center space-x-2 mb-3">
+                                      <div className="relative">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
+                                      </div>
+                                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        📞 App de llamadas 3CX
+                                      </p>
+                                      <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                                     </div>
-                                  </div>
-                                )}
-
-                                {/* Enlace de login - Siempre visible al final */}
-                                {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                  <div className="pt-3 mt-3 border-t border-blue-200 dark:border-blue-800">
+                                    
+                                    {/* Botón "Abrir app" */}
                                     <a
-                                      href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
+                                      href="https://superfoon.synergy4.com/#/login"
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium mb-3"
                                     >
                                       <ExternalLink className="w-4 h-4" />
-                                      <span>Abrir plataforma</span>
+                                      <span>Abrir app</span>
                                     </a>
-                                  </div>
-                                )}
-                              </div>
-                            ) : (
-                              <div className="space-y-3">
-                                {/* Mensaje de advertencia si no hay credenciales */}
-                                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                                  <div className="flex items-center space-x-2">
-                                    <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
-                                    <p className="text-sm text-yellow-800 dark:text-yellow-300">
-                                      Las credenciales aún no han sido configuradas por el administrador.
+                                    
+                                    {/* URL como texto secundario */}
+                                    <p className="text-xs text-gray-600 dark:text-gray-400 text-center font-medium">
+                                      https://superfoon.synergy4.com/#/login
                                     </p>
-                                  </div>
-                                </div>
-                                
-                                {/* Enlace de login (siempre mostrar si existe, incluso sin credenciales) */}
-                                {(credentials?.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                  <div className="pt-2">
-                                    <a
-                                      href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
-                                      target="_blank"
-                                      rel="noopener noreferrer"
-                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
-                                    >
-                                      <ExternalLink className="w-4 h-4" />
-                                      <span>Abrir plataforma</span>
-                                    </a>
-                                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-2 text-center font-medium">
-                                      Haz clic para acceder a la plataforma
+                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 text-center">
+                                      ⚡ Acceso directo a la aplicación de llamadas
                                     </p>
                                   </div>
                                 )}
-                              </div>
-                            )}
-
-                            {/* Enlace especial solo para Superfoon */}
-                            {isSelectedPlatformSuperfoon && (
-                              <div className="pt-4 mt-4 border-t border-dashed border-gray-300 dark:border-gray-600">
-                                <div className="flex items-center space-x-2 mb-3">
-                                  <div className="relative">
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
-                                    <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
-                                  </div>
-                                  <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                                    📞 App de llamadas 3CX
-                                  </p>
-                                  <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                </div>
-                                
-                                {/* Botón "Abrir app" */}
-                                <a
-                                  href="https://superfoon.synergy4.com/#/login"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium mb-3"
-                                >
-                                  <ExternalLink className="w-4 h-4" />
-                                  <span>Abrir app</span>
-                                </a>
-                                
-                                {/* URL como texto secundario */}
-                                <p className="text-xs text-gray-600 dark:text-gray-400 text-center font-medium">
-                                  https://superfoon.synergy4.com/#/login
-                                </p>
-                                <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 text-center">
-                                  ⚡ Acceso directo a la aplicación de llamadas
-                                </p>
                               </div>
                             )}
                           </div>
