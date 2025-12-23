@@ -1351,9 +1351,9 @@ export default function PortafolioModelos() {
                 </div>
 
                 {/* Sección de Credenciales 3CX (solo para Superfoon) */}
-                {selectedPlatformForAction && (
+                {selectedPlatformForAction && 
                   (selectedPlatformForAction.platform_id?.toLowerCase() === 'superfoon' || 
-                   selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon')) && (
+                   selectedPlatformForAction.platform_name?.toLowerCase().includes('superfoon')) ? (
                     <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-600">
                       <div className="flex items-center justify-between mb-3">
                         <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -1430,8 +1430,7 @@ export default function PortafolioModelos() {
                         </>
                       )}
                     </div>
-                  )
-                )}
+                  ) : null}
               )}
 
               <div className="flex space-x-3">
