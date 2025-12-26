@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getColombiaDate } from '@/utils/calculator-dates';
+import { getColombiaDate, normalizeToPeriodStartDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,31 +14,45 @@ const supabase = createClient(
 export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelId = searchParams.get('modelId');
-  const periodDate = searchParams.get('periodDate') || getColombiaDate();
+  const rawPeriodDate = searchParams.get('periodDate') || getColombiaPeriodStartDate();
+  // Normalizar periodDate para buscar en el bucket correcto
+  const periodDate = normalizeToPeriodStartDate(rawPeriodDate);
 
   if (!modelId) {
     return NextResponse.json({ success: false, error: 'modelId es requerido' }, { status: 400 });
   }
 
   try {
-    console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales:', { modelId, periodDate });
+    console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales:', { modelId, periodDate, rawPeriodDate });
 
+    // 🔧 IMPORTANTE: Buscar en el rango del período completo para capturar totales guardados en cualquier día
+    const [year, month, day] = periodDate.split('-').map(Number);
+    const isP2 = day >= 16;
+    const periodStart = periodDate; // Ya está normalizado (1 o 16)
+    const periodEndObj = new Date(year, month - 1, isP2 ? new Date(year, month, 0).getDate() : 15);
+    const periodEnd = periodEndObj.toISOString().split('T')[0];
+    
     const { data: totals, error } = await supabase
       .from('calculator_totals')
       .select('*')
       .eq('model_id', modelId)
-      .eq('period_date', periodDate)
-      .single();
+      .gte('period_date', periodStart)
+      .lte('period_date', periodEnd)
+      .order('updated_at', { ascending: false })
+      .limit(1);
 
     if (error && error.code !== 'PGRST116') {
       console.error('❌ [CALCULATOR-TOTALS] Error al obtener totales:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    console.log('✅ [CALCULATOR-TOTALS] Totales obtenidos:', totals);
+    // Si hay múltiples totales, tomar el más reciente
+    const latestTotal = totals && totals.length > 0 ? totals[0] : null;
+    
+    console.log('✅ [CALCULATOR-TOTALS] Totales obtenidos:', latestTotal);
     return NextResponse.json({ 
       success: true, 
-      data: totals || null,
+      data: latestTotal,
       modelId,
       periodDate
     });
@@ -73,8 +87,16 @@ export async function POST(request: NextRequest) {
       totalCopModelo 
     });
 
-    // Normalizar la fecha al día actual en Colombia (evita desajustes por zona horaria)
-    const periodDateCo = getColombiaDate();
+    // 🔧 CRÍTICO: Normalizar periodDate a la fecha de inicio del período (1 o 16)
+    // Esto asegura que todos los totales se guarden en el mismo "bucket" del período
+    // independientemente del día específico en que se guarde
+    const rawPeriodDate = periodDate || getColombiaPeriodStartDate();
+    const periodDateCo = normalizeToPeriodStartDate(rawPeriodDate);
+    
+    console.log('🔍 [CALCULATOR-TOTALS] Fecha normalizada:', { 
+      original: periodDate, 
+      normalized: periodDateCo 
+    });
 
     const { data, error } = await supabase
       .from('calculator_totals')
@@ -116,15 +138,24 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const modelIds = searchParams.get('modelIds')?.split(',') || [];
-  const periodDate = searchParams.get('periodDate') || getColombiaDate();
+  const rawPeriodDate = searchParams.get('periodDate') || getColombiaPeriodStartDate();
+  // Normalizar periodDate para buscar en el bucket correcto
+  const periodDate = normalizeToPeriodStartDate(rawPeriodDate);
 
   if (modelIds.length === 0) {
     return NextResponse.json({ success: false, error: 'modelIds es requerido' }, { status: 400 });
   }
 
   try {
-    console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales múltiples:', { modelIds, periodDate });
+    console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales múltiples:', { modelIds, periodDate, rawPeriodDate });
 
+    // 🔧 IMPORTANTE: Buscar en el rango del período completo para capturar totales guardados en cualquier día
+    const [year, month, day] = periodDate.split('-').map(Number);
+    const isP2 = day >= 16;
+    const periodStart = periodDate; // Ya está normalizado (1 o 16)
+    const periodEndObj = new Date(year, month - 1, isP2 ? new Date(year, month, 0).getDate() : 15);
+    const periodEnd = periodEndObj.toISOString().split('T')[0];
+    
     const { data: totals, error } = await supabase
       .from('calculator_totals')
       .select(`
@@ -132,18 +163,32 @@ export async function PUT(request: NextRequest) {
         users!inner(email, name)
       `)
       .in('model_id', modelIds)
-      .eq('period_date', periodDate);
+      .gte('period_date', periodStart)
+      .lte('period_date', periodEnd)
+      .order('updated_at', { ascending: false });
 
     if (error) {
       console.error('❌ [CALCULATOR-TOTALS] Error al obtener totales múltiples:', error);
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    console.log('✅ [CALCULATOR-TOTALS] Totales múltiples obtenidos:', totals?.length || 0);
+    // Agrupar por model_id y tomar el más reciente si hay múltiples
+    const totalsByModel = new Map();
+    if (totals && totals.length > 0) {
+      totals.forEach(t => {
+        const existing = totalsByModel.get(t.model_id);
+        if (!existing || new Date(t.updated_at) > new Date(existing.updated_at)) {
+          totalsByModel.set(t.model_id, t);
+        }
+      });
+    }
+    
+    const uniqueTotals = Array.from(totalsByModel.values());
+    console.log('✅ [CALCULATOR-TOTALS] Totales múltiples obtenidos:', uniqueTotals.length, 'de', totals?.length || 0, 'registros');
     return NextResponse.json({ 
       success: true, 
-      data: totals || [],
-      count: totals?.length || 0,
+      data: uniqueTotals,
+      count: uniqueTotals.length,
       periodDate
     });
 
