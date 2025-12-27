@@ -15,20 +15,23 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Cerrar dropdown al hacer click fuera
+  // Cerrar dropdown al hacer click fuera (soporte para móvil y escritorio)
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
         onToggle(); // Cerrar usando el estado del layout
       }
     };
 
     if (isOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
+      // Agregar ambos eventos para soportar móvil y escritorio
+    document.addEventListener('mousedown', handleClickOutside);
+      document.addEventListener('touchstart', handleClickOutside);
     }
 
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, [isOpen, onToggle]);
 
@@ -56,7 +59,11 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
       {/* Botón del dropdown */}
       <button
         onClick={handleToggle}
-        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
+        onTouchEnd={(e) => {
+          e.preventDefault();
+          handleToggle();
+        }}
+        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm active:bg-white/80 dark:active:bg-gray-800/80 flex items-center space-x-2 touch-manipulation ${
           isActive 
             ? 'text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 shadow-sm' 
             : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
@@ -87,8 +94,15 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => onToggle()}
-                  className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onToggle();
+                  }}
+                  onTouchEnd={(e) => {
+                    e.stopPropagation();
+                    onToggle();
+                  }}
+                  className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group touch-manipulation active:bg-gray-100 dark:active:bg-gray-200 ${
                     isCurrentPage
                       ? 'bg-blue-50 dark:bg-blue-50 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200 dark:border-blue-200'
                       : 'text-gray-900 dark:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-50 hover:text-gray-900 dark:hover:text-gray-900 hover:shadow-sm'

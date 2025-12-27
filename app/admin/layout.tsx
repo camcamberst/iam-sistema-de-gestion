@@ -820,8 +820,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     return (
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
-                          onClick={() => setCalculatorDropdownOpen(!calculatorDropdownOpen)}
-                          className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCalculatorDropdownOpen(!calculatorDropdownOpen);
+                          }}
+                          onTouchEnd={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setCalculatorDropdownOpen(!calculatorDropdownOpen);
+                          }}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                             isActive(item.href) || calculatorDropdownOpen
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -843,12 +852,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                               <Link
                                 key={subItem.href}
                                 href={subItem.href}
-                                className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMobileMenuOpen(false);
+                                  setCalculatorDropdownOpen(false);
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.stopPropagation();
+                                  setMobileMenuOpen(false);
+                                  setCalculatorDropdownOpen(false);
+                                }}
+                                className={`block px-4 py-2 text-sm rounded-lg transition-all touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                                   isActive(subItem.href)
                                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
-                                onClick={() => setMobileMenuOpen(false)}
                               >
                                 {subItem.label}
                               </Link>
