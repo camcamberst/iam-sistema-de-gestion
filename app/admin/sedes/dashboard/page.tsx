@@ -125,6 +125,28 @@ export default function DashboardSedesPage() {
     window.scrollTo(0, 0);
     
     loadUserInfo();
+
+    // Manejar errores de extensiones del navegador (inofensivos)
+    const handleUnhandledRejection = (event: PromiseRejectionEvent) => {
+      const errorMessage = event.reason?.message || '';
+      // Silenciar errores conocidos de extensiones del navegador
+      if (
+        errorMessage.includes('message channel closed') ||
+        errorMessage.includes('listener indicated an asynchronous response') ||
+        errorMessage.includes('Extension context invalidated')
+      ) {
+        event.preventDefault(); // Prevenir que se muestre en la consola
+        console.debug('Error de extensión del navegador silenciado:', errorMessage);
+        return;
+      }
+      // Permitir que otros errores se muestren normalmente
+    };
+
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
   }, []);
 
   useEffect(() => {
@@ -151,16 +173,24 @@ export default function DashboardSedesPage() {
 
   // Cerrar dropdown al hacer clic fuera
   useEffect(() => {
+    if (!dropdownOpen) return;
+    
     const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element;
-      if (dropdownOpen && !target.closest('.dropdown-container')) {
-        setDropdownOpen(null);
+      try {
+        const target = event.target as Element;
+        if (dropdownOpen && !target.closest('.dropdown-container')) {
+          setDropdownOpen(null);
+        }
+      } catch (error) {
+        // Silenciar errores de extensiones del navegador
+        console.debug('Error en handleClickOutside (probablemente extensión del navegador):', error);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
+    // Usar capture phase para mejor compatibilidad
+    document.addEventListener('mousedown', handleClickOutside, { capture: true });
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('mousedown', handleClickOutside, { capture: true });
     };
   }, [dropdownOpen]);
 
