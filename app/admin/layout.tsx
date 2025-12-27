@@ -46,10 +46,15 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // Cerrar todos los dropdowns al cambiar de página
   useEffect(() => {
-    setPortfolioDropdownOpen(false);
-    setCalculatorDropdownOpen(false);
-    setAnticiposDropdownOpen(false);
-    setMobileMenuOpen(false); // Cerrar menú móvil al navegar
+    // Agregar un pequeño delay para asegurar que la navegación se complete
+    const timer = setTimeout(() => {
+      setPortfolioDropdownOpen(false);
+      setCalculatorDropdownOpen(false);
+      setAnticiposDropdownOpen(false);
+      setMobileMenuOpen(false); // Cerrar menú móvil al navegar
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [pathname]);
 
   // Prevenir scroll del body cuando el menú móvil está abierto
@@ -767,21 +772,22 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <>
-          {/* Backdrop - Solo cierra cuando se hace clic directamente en él */}
+          {/* Backdrop - Deshabilitado cuando hay un dropdown abierto */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999998] md:hidden"
             onClick={(e) => {
-              // Solo cerrar si el clic fue directamente en el backdrop, no en el drawer
-              if (e.target === e.currentTarget) {
+              // Solo cerrar si el clic fue directamente en el backdrop Y no hay dropdowns abiertos
+              if (e.target === e.currentTarget && !calculatorDropdownOpen && !anticiposDropdownOpen && !portfolioDropdownOpen) {
                 setMobileMenuOpen(false);
               }
             }}
-            style={{ pointerEvents: 'auto' }}
+            style={{ 
+              pointerEvents: (calculatorDropdownOpen || anticiposDropdownOpen || portfolioDropdownOpen) ? 'none' : 'auto' 
+            }}
           />
           {/* Mobile Menu Drawer */}
           <div 
             className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300"
-            style={{ pointerEvents: 'auto' }}
             onClick={(e) => {
               // Prevenir que los clics dentro del drawer cierren el menú
               e.stopPropagation();
@@ -840,20 +846,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <Link
                               href="/admin/model/portafolio"
                               onClick={(e) => {
-                                // NO prevenir el comportamiento por defecto del Link
-                                // Solo detener la propagación para que no cierre el dropdown prematuramente
+                                // Detener TODA la propagación
                                 e.stopPropagation();
+                                e.preventDefault();
                                 console.log('🔍 [MENU] Click en sub opción (Link): Mi Portafolio');
-                                // NO cerrar los dropdowns aquí - dejar que el useEffect lo haga cuando cambie el pathname
+                                
+                                // Navegar manualmente después de un pequeño delay para asegurar que el evento se procese
+                                setTimeout(() => {
+                                  router.push('/admin/model/portafolio');
+                                }, 10);
                               }}
                               onMouseDown={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
                               }}
                               onTouchStart={(e) => {
                                 e.stopPropagation();
                               }}
                               onTouchEnd={(e) => {
                                 e.stopPropagation();
+                                e.preventDefault();
+                                // Navegar en touch también
+                                setTimeout(() => {
+                                  router.push('/admin/model/portafolio');
+                                }, 10);
                               }}
                               className="sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
                             >
@@ -915,20 +931,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 key={subItem.href}
                                 href={subItem.href}
                                 onClick={(e) => {
-                                  // NO prevenir el comportamiento por defecto del Link
-                                  // Solo detener la propagación para que no cierre el dropdown prematuramente
+                                  // Detener TODA la propagación
                                   e.stopPropagation();
+                                  e.preventDefault();
                                   console.log('🔍 [MENU] Click en sub opción (Link):', subItem.label, subItem.href);
-                                  // NO cerrar los dropdowns aquí - dejar que el useEffect lo haga cuando cambie el pathname
+                                  
+                                  // Navegar manualmente después de un pequeño delay para asegurar que el evento se procese
+                                  setTimeout(() => {
+                                    router.push(subItem.href);
+                                  }, 10);
                                 }}
                                 onMouseDown={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
                                 }}
                                 onTouchStart={(e) => {
                                   e.stopPropagation();
                                 }}
                                 onTouchEnd={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
+                                  // Navegar en touch también
+                                  setTimeout(() => {
+                                    router.push(subItem.href);
+                                  }, 10);
                                 }}
                                 className={`sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer touch-manipulation ${
                                   isActive(subItem.href)
@@ -995,20 +1021,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 key={subItem.href}
                                 href={subItem.href}
                                 onClick={(e) => {
-                                  // NO prevenir el comportamiento por defecto del Link
-                                  // Solo detener la propagación para que no cierre el dropdown prematuramente
+                                  // Detener TODA la propagación
                                   e.stopPropagation();
+                                  e.preventDefault();
                                   console.log('🔍 [MENU] Click en sub opción (Link):', subItem.label, subItem.href);
-                                  // NO cerrar los dropdowns aquí - dejar que el useEffect lo haga cuando cambie el pathname
+                                  
+                                  // Navegar manualmente después de un pequeño delay para asegurar que el evento se procese
+                                  setTimeout(() => {
+                                    router.push(subItem.href);
+                                  }, 10);
                                 }}
                                 onMouseDown={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
                                 }}
                                 onTouchStart={(e) => {
                                   e.stopPropagation();
                                 }}
                                 onTouchEnd={(e) => {
                                   e.stopPropagation();
+                                  e.preventDefault();
+                                  // Navegar en touch también
+                                  setTimeout(() => {
+                                    router.push(subItem.href);
+                                  }, 10);
                                 }}
                                 className={`sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer touch-manipulation ${
                                   isActive(subItem.href)
