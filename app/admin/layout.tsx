@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import PortfolioDropdown from "@/components/PortfolioDropdown";
 import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
@@ -17,6 +17,7 @@ import ThemeToggle from '@/components/ThemeToggle';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [activeMenu, setActiveMenu] = useState<string | null>(null);
   const [showUserPanel, setShowUserPanel] = useState(false);
   const [loadingUser, setLoadingUser] = useState(false);
@@ -766,17 +767,25 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       {/* Mobile Menu Overlay */}
       {mobileMenuOpen && (
         <>
-          {/* Backdrop */}
+          {/* Backdrop - Solo cierra cuando se hace clic directamente en él */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999998] md:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-            onTouchEnd={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              // Solo cerrar si el clic fue directamente en el backdrop, no en el drawer
+              if (e.target === e.currentTarget) {
+                setMobileMenuOpen(false);
+              }
+            }}
           />
           {/* Mobile Menu Drawer */}
           <div 
             className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300"
+            onClick={(e) => {
+              // Prevenir que los clics dentro del drawer cierren el menú
+              e.stopPropagation();
+            }}
           >
-            <div className="p-4 space-y-2">
+            <div className="p-4 space-y-2" onClick={(e) => e.stopPropagation()}>
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
                   const isExpanded = expandedMobileItems.has(item.id);
@@ -807,16 +816,24 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </svg>
                         </button>
                         {portfolioDropdownOpen && (
-                          <div className="mt-2 ml-4 space-y-1">
-                            <Link
-                              href="/admin/model/portafolio"
+                          <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
+                            <button
+                              type="button"
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
+                                // Cerrar todos los dropdowns
+                                setPortfolioDropdownOpen(false);
+                                setCalculatorDropdownOpen(false);
+                                setAnticiposDropdownOpen(false);
+                                // Navegar usando router
+                                router.push('/admin/model/portafolio');
+                                // El useEffect detectará el cambio de pathname y cerrará el menú
                               }}
-                              className="block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
+                              className="w-full text-left block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
                             >
                               Mi Portafolio
-                            </Link>
+                            </button>
                           </div>
                         )}
                       </div>
@@ -849,22 +866,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </svg>
                         </button>
                         {calculatorDropdownOpen && (
-                          <div className="mt-2 ml-4 space-y-1">
+                          <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
                             {item.subItems.map((subItem) => (
-                              <Link
+                              <button
                                 key={subItem.href}
-                                href={subItem.href}
+                                type="button"
                                 onClick={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
+                                  // Cerrar todos los dropdowns
+                                  setCalculatorDropdownOpen(false);
+                                  setAnticiposDropdownOpen(false);
+                                  setPortfolioDropdownOpen(false);
+                                  // Navegar usando router
+                                  router.push(subItem.href);
+                                  // El useEffect detectará el cambio de pathname y cerrará el menú
                                 }}
-                                className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                className={`w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer ${
                                   isActive(subItem.href)
                                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
                               >
                                 {subItem.label}
-                              </Link>
+                              </button>
                             ))}
                           </div>
                         )}
@@ -898,22 +923,30 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </svg>
                         </button>
                         {anticiposDropdownOpen && (
-                          <div className="mt-2 ml-4 space-y-1">
+                          <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
                             {item.subItems.map((subItem) => (
-                              <Link
+                              <button
                                 key={subItem.href}
-                                href={subItem.href}
+                                type="button"
                                 onClick={(e) => {
+                                  e.preventDefault();
                                   e.stopPropagation();
+                                  // Cerrar todos los dropdowns
+                                  setAnticiposDropdownOpen(false);
+                                  setCalculatorDropdownOpen(false);
+                                  setPortfolioDropdownOpen(false);
+                                  // Navegar usando router
+                                  router.push(subItem.href);
+                                  // El useEffect detectará el cambio de pathname y cerrará el menú
                                 }}
-                                className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                className={`w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer ${
                                   isActive(subItem.href)
                                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
                               >
                                 {subItem.label}
-                              </Link>
+                              </button>
                             ))}
                           </div>
                         )}
@@ -958,15 +991,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             )}
                           </button>
                           {isExpanded && item.subItems && item.subItems.length > 0 && (
-                            <div className="mt-2 ml-4 space-y-1">
+                            <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
                               {item.subItems.map((subItem) => (
-                                <Link
+                                <button
                                   key={subItem.href}
-                                  href={subItem.href}
+                                  type="button"
                                   onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
+                                    // Cerrar todos los dropdowns
+                                    setCalculatorDropdownOpen(false);
+                                    setAnticiposDropdownOpen(false);
+                                    setPortfolioDropdownOpen(false);
+                                    // Navegar usando router
+                                    router.push(subItem.href);
+                                    // El useEffect detectará el cambio de pathname y cerrará el menú
                                   }}
-                                  className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                  className={`w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer ${
                                     isActive(subItem.href)
                                       ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -983,7 +1024,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                       )}
                                     </div>
                                   </div>
-                                </Link>
+                                </button>
                               ))}
                             </div>
                           )}
