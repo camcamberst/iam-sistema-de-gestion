@@ -812,10 +812,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                               href="/admin/model/portafolio"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                setMobileMenuOpen(false);
-                                setPortfolioDropdownOpen(false);
-                                setCalculatorDropdownOpen(false);
-                                setAnticiposDropdownOpen(false);
                               }}
                               className="block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
                             >
@@ -860,10 +856,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 href={subItem.href}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setMobileMenuOpen(false);
-                                  setCalculatorDropdownOpen(false);
-                                  setAnticiposDropdownOpen(false);
-                                  setPortfolioDropdownOpen(false);
                                 }}
                                 className={`block px-4 py-2 text-sm rounded-lg transition-all ${
                                   isActive(subItem.href)
@@ -913,10 +905,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 href={subItem.href}
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  setMobileMenuOpen(false);
-                                  setAnticiposDropdownOpen(false);
-                                  setCalculatorDropdownOpen(false);
-                                  setPortfolioDropdownOpen(false);
                                 }}
                                 className={`block px-4 py-2 text-sm rounded-lg transition-all ${
                                   isActive(subItem.href)
@@ -977,10 +965,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                   href={subItem.href}
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    setMobileMenuOpen(false);
-                                    setCalculatorDropdownOpen(false);
-                                    setAnticiposDropdownOpen(false);
-                                    setPortfolioDropdownOpen(false);
                                   }}
                                   className={`block px-4 py-2 text-sm rounded-lg transition-all ${
                                     isActive(subItem.href)
