@@ -305,19 +305,21 @@ export default function RatesPage() {
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
 			<div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-				{/* Header */}
-				<div className="mb-12">
-					<div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-						<div className="flex items-center justify-between">
-							<div className="flex items-center space-x-3">
-								<div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-									<svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+			{/* Header */}
+			<div className="mb-8 sm:mb-12">
+				<div className="relative">
+					<div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+					<div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+						<div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
+							<div className="flex items-center space-x-3 min-w-0 flex-1">
+								<div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
+									<svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
 									</svg>
 								</div>
-								<div>
-									<h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">Definir RATES</h1>
-									<p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+								<div className="min-w-0 flex-1">
+									<h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight">Definir RATES</h1>
+									<p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
 										{userInfo.role === 'super_admin' 
 											? 'Puedes gestionar RATES globales y por grupo'
 											: 'Solo puedes gestionar RATES de tus grupos asignados'
@@ -325,7 +327,7 @@ export default function RatesPage() {
 									</p>
 								</div>
 							</div>
-							<div className="text-sm text-gray-500 dark:text-gray-400">
+							<div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
 								Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">
 									{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
 								</span>
