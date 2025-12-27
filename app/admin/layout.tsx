@@ -769,10 +769,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           {/* Backdrop */}
           <div
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999998] md:hidden"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setMobileMenuOpen(false);
+            }}
+            onTouchEnd={(e) => {
+              e.stopPropagation();
+              setMobileMenuOpen(false);
+            }}
           />
           {/* Mobile Menu Drawer */}
-          <div className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300">
+          <div 
+            className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300"
+            onClick={(e) => e.stopPropagation()}
+            onTouchEnd={(e) => e.stopPropagation()}
+          >
             <div className="p-4 space-y-2">
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
@@ -783,8 +794,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     return (
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
-                          onClick={() => setPortfolioDropdownOpen(!portfolioDropdownOpen)}
-                          className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPortfolioDropdownOpen(!portfolioDropdownOpen);
+                          }}
+                          onTouchEnd={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setPortfolioDropdownOpen(!portfolioDropdownOpen);
+                          }}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                             isActive(item.href) || portfolioDropdownOpen
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -804,8 +824,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           <div className="mt-2 ml-4 space-y-1">
                             <Link
                               href="/admin/model/portafolio"
-                              className="block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
-                              onClick={() => setMobileMenuOpen(false)}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(false);
+                                setPortfolioDropdownOpen(false);
+                              }}
+                              onTouchEnd={(e) => {
+                                e.stopPropagation();
+                                setMobileMenuOpen(false);
+                                setPortfolioDropdownOpen(false);
+                              }}
+                              className="block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 touch-manipulation active:bg-gray-100 dark:active:bg-gray-800"
                             >
                               Mi Portafolio
                             </Link>
@@ -882,8 +911,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     return (
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
-                          onClick={() => setAnticiposDropdownOpen(!anticiposDropdownOpen)}
-                          className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setAnticiposDropdownOpen(!anticiposDropdownOpen);
+                          }}
+                          onTouchEnd={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setAnticiposDropdownOpen(!anticiposDropdownOpen);
+                          }}
+                          className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                             isActive(item.href) || anticiposDropdownOpen
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -905,12 +943,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                               <Link
                                 key={subItem.href}
                                 href={subItem.href}
-                                className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setMobileMenuOpen(false);
+                                  setAnticiposDropdownOpen(false);
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.stopPropagation();
+                                  setMobileMenuOpen(false);
+                                  setAnticiposDropdownOpen(false);
+                                }}
+                                className={`block px-4 py-2 text-sm rounded-lg transition-all touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                                   isActive(subItem.href)
                                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
-                                onClick={() => setMobileMenuOpen(false)}
                               >
                                 {subItem.label}
                               </Link>
@@ -927,7 +974,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       {item.href === '#' ? (
                         <>
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
                               if (item.subItems && item.subItems.length > 0) {
                                 const newExpanded = new Set(expandedMobileItems);
                                 if (newExpanded.has(item.id)) {
@@ -938,7 +987,20 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 setExpandedMobileItems(newExpanded);
                               }
                             }}
-                            className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                            onTouchEnd={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (item.subItems && item.subItems.length > 0) {
+                                const newExpanded = new Set(expandedMobileItems);
+                                if (newExpanded.has(item.id)) {
+                                  newExpanded.delete(item.id);
+                                } else {
+                                  newExpanded.add(item.id);
+                                }
+                                setExpandedMobileItems(newExpanded);
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                               isParentActive(item)
                                 ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                                 : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -962,12 +1024,19 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 <Link
                                   key={subItem.href}
                                   href={subItem.href}
-                                  className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setMobileMenuOpen(false);
+                                  }}
+                                  onTouchEnd={(e) => {
+                                    e.stopPropagation();
+                                    setMobileMenuOpen(false);
+                                  }}
+                                  className={`block px-4 py-2 text-sm rounded-lg transition-all touch-manipulation active:bg-gray-100 dark:active:bg-gray-800 ${
                                     isActive(subItem.href)
                                       ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                       : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                   }`}
-                                  onClick={() => setMobileMenuOpen(false)}
                                 >
                                   <div className="flex items-center space-x-2">
                                     {subItem.icon && <span className="flex-shrink-0">{subItem.icon}</span>}
