@@ -27,6 +27,8 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const userPanelRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [expandedMobileItems, setExpandedMobileItems] = useState<Set<string>>(new Set());
 
   // Cliente centralizado de Supabase
 
@@ -68,6 +70,11 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Cerrar menú móvil al cambiar de página
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (!userInfo && !loadingUser) {
@@ -226,19 +233,19 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             {/* Logo */}
-            <div className="flex items-center">
-              <Link href="/superadmin/dashboard" className="flex items-center space-x-3 group">
-                <div className="w-9 h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300">
-                  <span className="text-white dark:text-gray-900 font-bold text-sm tracking-wider">AIM</span>
+            <div className="flex items-center flex-1 min-w-0">
+              <Link href="/superadmin/dashboard" className="flex items-center space-x-2 sm:space-x-3 group">
+                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                  <span className="text-white dark:text-gray-900 font-bold text-xs sm:text-sm tracking-wider">AIM</span>
                 </div>
-                <div className="flex flex-col">
-                  <span className="text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent whitespace-nowrap">Sistema de Gestión</span>
-                  <span className="text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Agencia Innova</span>
+                <div className="flex flex-col min-w-0">
+                  <span className="text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent truncate">Sistema de Gestión</span>
+                  <span className="hidden sm:block text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Agencia Innova</span>
                 </div>
               </Link>
             </div>
 
-            {/* Main Navigation - Apple Style 2 */}
+            {/* Main Navigation - Apple Style 2 (Oculto en móvil) */}
             <nav className="hidden md:flex items-center space-x-6">
               {menuItems.map((item) => (
                 <div
@@ -273,7 +280,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   {/* Dropdown Menu */}
                   {activeMenu === item.id && (
                     <div 
-                      className="absolute top-full left-0 mt-2 w-72 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9999999] animate-in slide-in-from-top-2 duration-200"
+                      className="absolute top-full left-0 mt-2 w-72 sm:w-80 bg-white/95 backdrop-blur-md border border-white/30 rounded-xl shadow-xl z-[9999999] animate-in slide-in-from-top-2 duration-200"
                       onMouseEnter={handleDropdownEnter}
                       onMouseLeave={handleDropdownLeave}
                     >
@@ -298,8 +305,8 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
               ))}
             </nav>
 
-            {/* User Actions */}
-            <div className="flex items-center space-x-3">
+            {/* User Actions (Oculto en móvil cuando el menú está abierto) */}
+            <div className={`flex items-center space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
               <button className="p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-lg transition-all duration-200 hover:shadow-sm">
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
@@ -329,7 +336,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-64 sm:w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-3 sm:p-4 z-50 animate-in slide-in-from-top-2 duration-200">
                     {loadingUser ? (
                       <div className="text-center py-4">
                         <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>
@@ -409,18 +416,153 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
             </div>
 
             {/* Mobile Menu Button */}
-            <div className="md:hidden text-gray-600 hover:text-gray-900 p-2 cursor-default">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-            </div>
+            <button
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 transition-all duration-200"
+              aria-label="Toggle mobile menu"
+            >
+              {mobileMenuOpen ? (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              ) : (
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              )}
+            </button>
           </div>
         </div>
       </header>
 
+      {/* Mobile Menu Overlay */}
+      {mobileMenuOpen && (
+        <>
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999998] md:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+          {/* Mobile Menu Drawer */}
+          <div className="fixed top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto">
+            <div className="p-4 space-y-2">
+              {menuItems.length > 0 ? (
+                menuItems.map((item) => {
+                  const isExpanded = expandedMobileItems.has(item.id);
+                  
+                  return (
+                    <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+                      {item.href === '#' ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              if (item.subItems && item.subItems.length > 0) {
+                                const newExpanded = new Set(expandedMobileItems);
+                                if (newExpanded.has(item.id)) {
+                                  newExpanded.delete(item.id);
+                                } else {
+                                  newExpanded.add(item.id);
+                                }
+                                setExpandedMobileItems(newExpanded);
+                              }
+                            }}
+                            className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
+                              isParentActive(item)
+                                ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
+                                : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                            }`}
+                          >
+                            <span className="font-medium">{item.label}</span>
+                            {item.subItems && item.subItems.length > 0 && (
+                              <svg
+                                className={`w-5 h-5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                              </svg>
+                            )}
+                          </button>
+                          {isExpanded && item.subItems && item.subItems.length > 0 && (
+                            <div className="mt-2 ml-4 space-y-1">
+                              {item.subItems.map((subItem) => (
+                                <Link
+                                  key={subItem.href}
+                                  href={subItem.href}
+                                  className={`block px-4 py-2 text-sm rounded-lg transition-all ${
+                                    isActive(subItem.href)
+                                      ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
+                                      : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                  }`}
+                                  onClick={() => setMobileMenuOpen(false)}
+                                >
+                                  {subItem.label}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </>
+                      ) : (
+                        <Link
+                          href={item.href}
+                          className={`block px-4 py-3 rounded-lg transition-all duration-200 ${
+                            isActive(item.href)
+                              ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 font-medium'
+                              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                          }`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          {item.label}
+                        </Link>
+                      )}
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-gray-500 dark:text-gray-400 text-sm px-4 py-3">Cargando menú...</div>
+              )}
+              
+              {/* User Info en móvil */}
+              {userInfo && (
+                <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">
+                  <div className="px-4 py-3">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center">
+                        <span className="text-sm font-semibold">{userInfo.name.charAt(0).toUpperCase()}</span>
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
+                          {userInfo.name}
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-400 truncate">{userInfo.email}</div>
+                      </div>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        await modernLogout();
+                        setUserInfo(null);
+                        setMobileMenuOpen(false);
+                        location.href = '/';
+                      }}
+                      className="w-full px-4 py-2 text-sm rounded-lg bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-300 hover:bg-red-100 dark:hover:bg-red-900/30 transition-all duration-200 font-medium flex items-center justify-center space-x-2"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                      </svg>
+                      <span>Cerrar sesión</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </>
+      )}
+
       {/* Main Content */}
       <main className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
           {children}
         </div>
       </main>

@@ -553,10 +553,10 @@ export default function UsersListPage() {
         )}
 
         {/* Users Table */}
-        <div className={`relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-x-auto overflow-y-auto max-h-[70vh] p-0 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${(isDropdownOpen || showEditModal) ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}
+        <div className={`relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-y-auto max-h-[70vh] p-0 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${(isDropdownOpen || showEditModal) ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100 blur-none pointer-events-auto'}`}
              aria-hidden={showEditModal}
         >
-          <div className="pt-6 px-6 pb-0">
+          <div className="pt-4 sm:pt-6 px-3 sm:px-6 pb-0">
             <div className="flex items-center space-x-2 mb-4">
               <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
                 <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -599,34 +599,36 @@ export default function UsersListPage() {
                 </div>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-left text-xs table-fixed">
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden">
+                    <table className="min-w-full text-left text-xs md:table-fixed">
                   <thead className="border-b border-white/20 dark:border-gray-600/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 dark:from-gray-700/80 dark:to-gray-600/60 backdrop-blur-sm">
                     <tr>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[28%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                         Usuario
                       </th>
-                      <th className="px-4 py-4 w-[28%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[150px] sm:w-[28%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                         Email
                       </th>
-                      <th className="px-4 py-4 w-[10%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[80px] sm:w-[10%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                         Rol
                       </th>
-                      <th className="px-4 py-4 w-[20%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[20%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                         Grupos
                       </th>
-                      <th className="px-4 py-4 w-[8%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[70px] sm:w-[8%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                         Estado
                       </th>
-                      <th className="px-4 py-4 w-[6%] text-gray-700 dark:text-white font-medium text-sm uppercase tracking-wide text-center">
+                      <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[6%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                         Acciones
                       </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white/30 backdrop-blur-sm divide-y divide-white/20">
                     {filteredUsers.map((user) => (
-                      <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-12 group">
-                        <td className="px-4 py-2">
+                      <tr key={user.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-auto sm:h-12 group">
+                        <td className="px-2 sm:px-4 py-2">
                           <div className="flex items-center space-x-2">
                             {(() => {
                               // Avatar simbólico homogéneo por rol
@@ -728,8 +730,8 @@ export default function UsersListPage() {
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 py-2 text-gray-800 truncate max-w-[220px] text-xs text-center" title={user.email}>{user.email}</td>
-                        <td className="px-4 py-2 text-center">
+                        <td className="px-2 sm:px-4 py-2 text-gray-800 truncate max-w-[220px] text-xs text-center" title={user.email}>{user.email}</td>
+                        <td className="px-2 sm:px-4 py-2 text-center">
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap border shadow-sm backdrop-blur-sm ${
                             user.role === 'super_admin'
                               ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white border-gray-600/30'
@@ -740,7 +742,7 @@ export default function UsersListPage() {
                             {user.role.replace('_', ' ').toUpperCase()}
                           </span>
                         </td>
-                        <td className="px-4 py-2 text-center">
+                        <td className="px-2 sm:px-4 py-2 text-center">
                           {user.groups.length > 0 ? (
                             <div className="flex items-center justify-center gap-1 overflow-hidden">
                               {user.groups.slice(0,2).map((group) => (
@@ -761,12 +763,12 @@ export default function UsersListPage() {
                             <span className="text-gray-400 text-xs">Sin grupos</span>
                           )}
                         </td>
-                        <td className="px-4 py-2 text-center">
+                        <td className="px-2 sm:px-4 py-2 text-center">
                           <span className={`px-2.5 py-1 rounded-lg text-xs font-semibold border shadow-sm backdrop-blur-sm ${user.is_active ? 'bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 text-green-700 dark:text-green-300 border-green-200/50 dark:border-green-700/50' : 'bg-gradient-to-r from-gray-50 to-slate-50 dark:from-gray-700 dark:to-gray-600 text-gray-600 dark:text-gray-300 border-gray-200/50 dark:border-gray-600/50'}`}>
                             {user.is_active ? 'Activo' : 'Inactivo'}
                           </span>
                         </td>
-                         <td className="px-4 py-2 text-center">
+                         <td className="px-2 sm:px-4 py-2 text-center">
                            <div className="flex justify-center space-x-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
                             <button
                               onClick={() => handleEditUser(user)}
@@ -797,7 +799,9 @@ export default function UsersListPage() {
                       </tr>
                     ))}
                   </tbody>
-                </table>
+                    </table>
+                  </div>
+                </div>
               </div>
             )}
           </div>
