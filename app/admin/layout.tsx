@@ -776,10 +776,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 setMobileMenuOpen(false);
               }
             }}
+            style={{ pointerEvents: 'auto' }}
           />
           {/* Mobile Menu Drawer */}
           <div 
             className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300"
+            style={{ pointerEvents: 'auto' }}
             onClick={(e) => {
               // Prevenir que los clics dentro del drawer cierren el menú
               e.stopPropagation();
@@ -796,8 +798,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            setPortfolioDropdownOpen(!portfolioDropdownOpen);
+                            // Solo toggle si el clic NO fue en una sub opción
+                            const target = e.target as HTMLElement;
+                            if (!target.closest('.sub-menu-item')) {
+                              e.stopPropagation();
+                              setPortfolioDropdownOpen(!portfolioDropdownOpen);
+                            }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
                             isActive(item.href) || portfolioDropdownOpen
@@ -816,24 +822,43 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </svg>
                         </button>
                         {portfolioDropdownOpen && (
-                          <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
-                            <button
-                              type="button"
+                          <div 
+                            className="mt-2 ml-4 space-y-1 sub-menu-container" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onTouchEnd={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
+                            <Link
+                              href="/admin/model/portafolio"
                               onClick={(e) => {
-                                e.preventDefault();
+                                // NO prevenir el comportamiento por defecto del Link
+                                // Solo detener la propagación para que no cierre el dropdown prematuramente
                                 e.stopPropagation();
-                                // Cerrar todos los dropdowns
-                                setPortfolioDropdownOpen(false);
-                                setCalculatorDropdownOpen(false);
-                                setAnticiposDropdownOpen(false);
-                                // Navegar usando router
-                                router.push('/admin/model/portafolio');
-                                // El useEffect detectará el cambio de pathname y cerrará el menú
+                                console.log('🔍 [MENU] Click en sub opción (Link): Mi Portafolio');
+                                // NO cerrar los dropdowns aquí - dejar que el useEffect lo haga cuando cambie el pathname
                               }}
-                              className="w-full text-left block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onTouchStart={(e) => {
+                                e.stopPropagation();
+                              }}
+                              onTouchEnd={(e) => {
+                                e.stopPropagation();
+                              }}
+                              className="sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
                             >
                               Mi Portafolio
-                            </button>
+                            </Link>
                           </div>
                         )}
                       </div>
@@ -846,8 +871,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            setCalculatorDropdownOpen(!calculatorDropdownOpen);
+                            // Solo toggle si el clic NO fue en una sub opción
+                            const target = e.target as HTMLElement;
+                            if (!target.closest('.sub-menu-item')) {
+                              e.stopPropagation();
+                              setCalculatorDropdownOpen(!calculatorDropdownOpen);
+                            }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
                             isActive(item.href) || calculatorDropdownOpen
@@ -866,30 +895,49 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </svg>
                         </button>
                         {calculatorDropdownOpen && (
-                          <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
+                          <div 
+                            className="mt-2 ml-4 space-y-1 sub-menu-container" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onTouchEnd={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
                             {item.subItems.map((subItem) => (
-                              <button
+                              <Link
                                 key={subItem.href}
-                                type="button"
+                                href={subItem.href}
                                 onClick={(e) => {
-                                  e.preventDefault();
+                                  // NO prevenir el comportamiento por defecto del Link
+                                  // Solo detener la propagación para que no cierre el dropdown prematuramente
                                   e.stopPropagation();
-                                  // Cerrar todos los dropdowns
-                                  setCalculatorDropdownOpen(false);
-                                  setAnticiposDropdownOpen(false);
-                                  setPortfolioDropdownOpen(false);
-                                  // Navegar usando router
-                                  router.push(subItem.href);
-                                  // El useEffect detectará el cambio de pathname y cerrará el menú
+                                  console.log('🔍 [MENU] Click en sub opción (Link):', subItem.label, subItem.href);
+                                  // NO cerrar los dropdowns aquí - dejar que el useEffect lo haga cuando cambie el pathname
                                 }}
-                                className={`w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer ${
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onTouchStart={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className={`sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer touch-manipulation ${
                                   isActive(subItem.href)
                                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
                               >
                                 {subItem.label}
-                              </button>
+                              </Link>
                             ))}
                           </div>
                         )}
@@ -903,8 +951,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
                           onClick={(e) => {
-                            e.stopPropagation();
-                            setAnticiposDropdownOpen(!anticiposDropdownOpen);
+                            // Solo toggle si el clic NO fue en una sub opción
+                            const target = e.target as HTMLElement;
+                            if (!target.closest('.sub-menu-item')) {
+                              e.stopPropagation();
+                              setAnticiposDropdownOpen(!anticiposDropdownOpen);
+                            }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
                             isActive(item.href) || anticiposDropdownOpen
@@ -923,30 +975,49 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                           </svg>
                         </button>
                         {anticiposDropdownOpen && (
-                          <div className="mt-2 ml-4 space-y-1" onClick={(e) => e.stopPropagation()}>
+                          <div 
+                            className="mt-2 ml-4 space-y-1 sub-menu-container" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onTouchStart={(e) => {
+                              e.stopPropagation();
+                            }}
+                            onTouchEnd={(e) => {
+                              e.stopPropagation();
+                            }}
+                          >
                             {item.subItems.map((subItem) => (
-                              <button
+                              <Link
                                 key={subItem.href}
-                                type="button"
+                                href={subItem.href}
                                 onClick={(e) => {
-                                  e.preventDefault();
+                                  // NO prevenir el comportamiento por defecto del Link
+                                  // Solo detener la propagación para que no cierre el dropdown prematuramente
                                   e.stopPropagation();
-                                  // Cerrar todos los dropdowns
-                                  setAnticiposDropdownOpen(false);
-                                  setCalculatorDropdownOpen(false);
-                                  setPortfolioDropdownOpen(false);
-                                  // Navegar usando router
-                                  router.push(subItem.href);
-                                  // El useEffect detectará el cambio de pathname y cerrará el menú
+                                  console.log('🔍 [MENU] Click en sub opción (Link):', subItem.label, subItem.href);
+                                  // NO cerrar los dropdowns aquí - dejar que el useEffect lo haga cuando cambie el pathname
                                 }}
-                                className={`w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer ${
+                                onMouseDown={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onTouchStart={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                onTouchEnd={(e) => {
+                                  e.stopPropagation();
+                                }}
+                                className={`sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer touch-manipulation ${
                                   isActive(subItem.href)
                                     ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 font-medium'
                                     : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800'
                                 }`}
                               >
                                 {subItem.label}
-                              </button>
+                              </Link>
                             ))}
                           </div>
                         )}
