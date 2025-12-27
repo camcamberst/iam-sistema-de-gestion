@@ -72,11 +72,11 @@ export default function GestorDashboard() {
                     </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight truncate">
                       Dashboard Gestor
                     </h1>
                     {user && (
-                      <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+                      <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
                         Bienvenido, {user.name} · Rol: Gestor
                         {user.groups.length > 0 && ` · Grupos: ${user.groups.join(', ')}`}
                       </p>

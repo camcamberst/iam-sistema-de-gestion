@@ -318,19 +318,14 @@ export default function RatesPage() {
 									</svg>
 								</div>
 								<div className="min-w-0 flex-1">
-									<h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight">Definir RATES</h1>
-									<p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">
+									<h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight truncate">Definir RATES</h1>
+									<p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
 										{userInfo.role === 'super_admin' 
 											? 'Puedes gestionar RATES globales y por grupo'
 											: 'Solo puedes gestionar RATES de tus grupos asignados'
 										}
 									</p>
 								</div>
-							</div>
-							<div className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-								Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">
-									{userInfo.role === 'super_admin' ? 'Super Admin' : 'Admin'}
-								</span>
 							</div>
 						</div>
 					</div>

@@ -119,10 +119,10 @@ export default function GestionAnticiposPage() {
                     </svg>
                   </div>
                   <div className="min-w-0 flex-1">
-                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight">
+                    <h1 className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight truncate">
                       Gestión de Anticipos
                     </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300">Administra las solicitudes de anticipo del sistema</p>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Administra las solicitudes de anticipo del sistema</p>
                   </div>
                 </div>
               </div>
