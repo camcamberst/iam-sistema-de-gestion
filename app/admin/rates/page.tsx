@@ -335,8 +335,9 @@ export default function RatesPage() {
 						</div>
 					</div>
 				</div>
+			</div>
 
-				{/* Formulario Establecer rates manual */}
+			{/* Formulario Establecer rates manual */}
 				<div className="mb-8 relative z-[9997]">
 					<div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 relative z-[9997]">
 						<div className="flex items-center space-x-2 mb-4">
