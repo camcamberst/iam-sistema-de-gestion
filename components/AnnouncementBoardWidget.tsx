@@ -209,9 +209,9 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
 
   if (loading) {
     return (
-      <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6">
-        <div className="flex items-center justify-center py-8">
-          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+      <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6">
+        <div className="flex items-center justify-center py-6 sm:py-8">
+          <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600"></div>
         </div>
       </div>
     );
@@ -223,22 +223,22 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
   return (
     <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-gray-200/50 dark:border-gray-600/50">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
+      <div className="px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200/50 dark:border-gray-600/50">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
             {/* 🔧 INDICADOR BALANCEADO - PUBLICACIONES NUEVAS */}
-            <div className="relative">
-              <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-                <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative flex-shrink-0">
+              <div className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
+                <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
                 </svg>
               </div>
               {/* Badge sutil - Punto rojo pequeño con animación suave */}
               {hasNewAnnouncements && (
                 <div className="absolute -top-0.5 -right-0.5">
-                  <div className="relative w-3.5 h-3.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-700 shadow-sm">
+                  <div className="relative w-3 h-3 sm:w-3.5 sm:h-3.5 bg-red-500 rounded-full border-2 border-white dark:border-gray-700 shadow-sm">
                     {newCount > 1 && (
-                      <span className="absolute inset-0 flex items-center justify-center text-[8px] font-semibold text-white leading-none">
+                      <span className="absolute inset-0 flex items-center justify-center text-[7px] sm:text-[8px] font-semibold text-white leading-none">
                         {newCount > 9 ? '9+' : newCount}
                       </span>
                     )}
@@ -247,17 +247,17 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 </div>
               )}
             </div>
-            <div>
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white leading-tight">
                 Corcho Informativo
               </h2>
-              <p className="text-xs text-gray-600 dark:text-gray-300">Información relevante para ti</p>
+              <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-300 hidden sm:block">Información relevante para ti</p>
             </div>
           </div>
           {announcements.length > 3 && (
             <button
               onClick={() => setShowAll(!showAll)}
-              className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+              className="text-[10px] sm:text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors flex-shrink-0 whitespace-nowrap"
             >
               {showAll ? 'Ver menos' : `Ver todas (${announcements.length})`}
             </button>
@@ -267,21 +267,21 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
 
       {/* Lista de anuncios o mensaje vacío */}
       {announcements.length === 0 ? (
-        <div className="p-6 text-center">
+        <div className="p-4 sm:p-6 text-center">
           <div className="text-gray-400 dark:text-gray-500 mb-2">
-            <svg className="w-12 h-12 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
             No hay publicaciones disponibles en este momento
           </p>
-          <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
+          <p className="text-[10px] sm:text-xs text-gray-400 dark:text-gray-500 mt-1">
             Las publicaciones aparecerán aquí cuando los administradores las creen
           </p>
         </div>
       ) : (
-        <div className="p-6 space-y-4">
+        <div className="p-4 sm:p-6 space-y-3 sm:space-y-4">
           {displayAnnouncements.map((announcement) => {
             const isNew = !readAnnouncements.has(announcement.id);
             return (
@@ -294,7 +294,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 const url = `/announcements/${announcement.id}`;
                 window.open(url, '_blank', 'width=800,height=900,scrollbars=yes,resizable=yes');
               }}
-              className={`relative cursor-pointer group rounded-lg p-4 border transition-all duration-200 hover:shadow-md ${
+              className={`relative cursor-pointer group rounded-lg p-3 sm:p-4 border transition-all duration-200 hover:shadow-md ${
                 isNew 
                   ? 'bg-blue-50/60 dark:bg-blue-900/10 border-blue-200/60 dark:border-blue-500/30' 
                   : 'bg-gray-50/50 dark:bg-gray-600/30 border-gray-200/50 dark:border-gray-500/30 hover:border-blue-300 dark:hover:border-blue-500/50'
@@ -313,12 +313,12 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     }
                   `}</style>
                   <span 
-                    className="badge-nuevo-blink absolute top-4 right-4 inline-flex items-center gap-1 px-1.5 py-0.5 text-xs font-medium text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-sm shadow-red-500/30 hover:shadow-md hover:shadow-red-500/50 transition-all duration-200 z-10"
+                    className="badge-nuevo-blink absolute top-2 right-2 sm:top-4 sm:right-4 inline-flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 text-[10px] sm:text-xs font-medium text-white bg-gradient-to-r from-red-500 via-pink-500 to-red-500 rounded-full shadow-sm shadow-red-500/30 hover:shadow-md hover:shadow-red-500/50 transition-all duration-200 z-10"
                   >
                     {/* Punto parpadeante dinámico - más pequeño */}
-                    <span className="relative flex h-1 w-1">
+                    <span className="relative flex h-0.5 w-0.5 sm:h-1 sm:w-1">
                       <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-70"></span>
-                      <span className="relative inline-flex rounded-full h-1 w-1 bg-white"></span>
+                      <span className="relative inline-flex rounded-full h-0.5 w-0.5 sm:h-1 sm:w-1 bg-white"></span>
                     </span>
                     {/* Texto */}
                     <span className="relative">Nuevo</span>
@@ -328,7 +328,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 </>
               )}
               
-              <div className="flex items-start space-x-3">
+              <div className="flex items-start space-x-2 sm:space-x-3">
                 {/* Avatar: Imagen destacada, primera imagen de image_urls, o icono de categoría */}
                 {(() => {
                   // Obtener la imagen a usar: featured_image_url tiene prioridad, luego primera de image_urls
@@ -342,7 +342,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                       <img
                         src={imageUrl}
                         alt={announcement.title}
-                        className="w-16 h-16 object-cover rounded-lg flex-shrink-0"
+                        className="w-12 h-12 sm:w-16 sm:h-16 object-cover rounded-lg flex-shrink-0"
                       />
                     );
                   }
@@ -350,7 +350,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                   // Si no hay imagen, mostrar ícono de categoría
                   return (
                     <div
-                      className="w-16 h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-2xl"
+                      className="w-12 h-12 sm:w-16 sm:h-16 rounded-lg flex items-center justify-center flex-shrink-0 text-lg sm:text-2xl"
                       style={{
                         backgroundColor: announcement.category?.color ? `${announcement.category.color}20` : '#3B82F620',
                         color: announcement.category?.color || '#3B82F6'
@@ -364,12 +364,12 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                 {/* Contenido */}
                 <div className="flex-1 min-w-0">
                   {/* Badges y etiquetas - con mejor espaciado */}
-                  <div className="flex items-center flex-wrap gap-2 mb-3">
+                  <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-2 sm:mb-3">
                     {announcement.is_pinned && (
-                      <span className="text-xs text-blue-600 dark:text-blue-400">📌</span>
+                      <span className="text-[10px] sm:text-xs text-blue-600 dark:text-blue-400">📌</span>
                     )}
                     {announcement.priority > 0 && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded ${
                         announcement.priority === 2 
                           ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' 
                           : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
@@ -379,7 +379,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                     )}
                     {announcement.category && (
                       <span
-                        className="text-xs px-2 py-0.5 rounded font-medium"
+                        className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded font-medium"
                         style={{
                           backgroundColor: `${announcement.category.color}20`,
                           color: announcement.category.color
@@ -391,21 +391,21 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
                   </div>
                   
                   {/* Título - con mejor separación */}
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-2.5 leading-snug">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors mb-1.5 sm:mb-2.5 leading-snug">
                     {announcement.title}
                   </h3>
                   
                   {/* Excerpt - con mejor separación */}
-                  <p className="text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mb-3 leading-relaxed">
+                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-300 line-clamp-2 mb-2 sm:mb-3 leading-relaxed">
                     {announcement.excerpt}
                   </p>
                   
                   {/* Footer con fecha y acción - mejor separado */}
-                  <div className="flex items-center justify-between pt-2 border-t border-gray-200/30 dark:border-gray-600/30">
-                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center justify-between pt-1.5 sm:pt-2 border-t border-gray-200/30 dark:border-gray-600/30">
+                    <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                       {formatDate(announcement.published_at || announcement.created_at)}
                     </span>
-                    <span className="text-xs text-blue-600 dark:text-blue-400 font-medium group-hover:underline">
+                    <span className="text-[10px] sm:text-xs text-blue-600 dark:text-blue-400 font-medium group-hover:underline">
                       Leer más →
                     </span>
                   </div>
