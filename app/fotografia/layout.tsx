@@ -172,12 +172,12 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 md:h-16">
             {/* Logo */}
-            <div className="flex items-center flex-1 min-w-0">
-              <Link href="/fotografia/dashboard" className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 group">
-                <div className="w-7 h-7 sm:w-8 md:w-9 sm:h-8 md:h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
-                  <span className="text-white dark:text-gray-900 font-bold text-[10px] sm:text-xs md:text-sm tracking-wider">AIM</span>
+            <div className="flex items-center flex-1 min-w-0 pr-1 sm:pr-0">
+              <Link href="/fotografia/dashboard" className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-3 group">
+                <div className="w-6 h-6 sm:w-7 md:w-9 sm:h-7 md:h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-md sm:rounded-lg md:rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                  <span className="text-white dark:text-gray-900 font-bold text-[9px] sm:text-[10px] md:text-sm tracking-wider">AIM</span>
                 </div>
-                <div className="flex flex-col min-w-0">
+                <div className="flex flex-col min-w-0 hidden sm:flex">
                   <span className="text-xs sm:text-sm md:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent truncate leading-tight">Sistema de Gestión</span>
                   <span className="hidden md:block text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Panel Fotografía</span>
                 </div>
@@ -245,28 +245,28 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
             </nav>
 
             {/* User Actions (Oculto en móvil cuando el menú está abierto) */}
-            <div className={`flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
+            <div className={`flex items-center space-x-1 sm:space-x-1.5 md:space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
               {/* Theme Toggle */}
-              <div className="scale-90 md:scale-100">
+              <div className="scale-75 sm:scale-90 md:scale-100">
                 <ThemeToggle />
               </div>
 
-              {/* User Button */}
+              {/* User Button - Solo icono en móvil */}
               <div className="relative" ref={userPanelRef}>
                 <button
                   onClick={() => {
                     setShowUserPanel((v) => !v);
                     if (!userInfo && !loadingUser) loadUser();
                   }}
-                  className="flex items-center space-x-1 sm:space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                  className="flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1 sm:p-1.5 md:px-3 md:py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                 >
-                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
-                    <svg className="w-3 h-3 sm:w-4 sm:h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="w-5 h-5 sm:w-6 md:w-7 sm:h-6 md:h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
+                    <svg className="w-2.5 h-2.5 sm:w-3 md:w-4 sm:h-3 md:h-4" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" />
                     </svg>
                   </div>
-                  <span className="hidden md:block text-sm font-medium">Cuenta</span>
-                  <svg className="hidden sm:block w-3 h-3 md:w-4 md:h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="hidden md:block text-sm font-medium ml-2">Cuenta</span>
+                  <svg className="hidden md:block w-4 h-4 text-gray-400 dark:text-gray-500 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -350,15 +350,15 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1.5 sm:p-2 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 transition-all duration-200 flex-shrink-0 ml-1"
+              className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1.5 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 transition-all duration-200 flex-shrink-0"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? (
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
-                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               )}
