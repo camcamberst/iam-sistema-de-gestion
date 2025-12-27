@@ -170,17 +170,17 @@ export default function GestorLayout({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Apple Style 2 Header */}
       <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-[99999] shadow-lg dark:shadow-lg dark:shadow-purple-900/15 dark:ring-0.5 dark:ring-purple-400/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
+        <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-14 md:h-16">
             {/* Logo */}
             <div className="flex items-center flex-1 min-w-0">
-              <Link href="/gestor/dashboard" className="flex items-center space-x-2 sm:space-x-3 group">
-                <div className="w-8 h-8 sm:w-9 sm:h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
-                  <span className="text-white dark:text-gray-900 font-bold text-xs sm:text-sm tracking-wider">AIM</span>
+              <Link href="/gestor/dashboard" className="flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 group">
+                <div className="w-7 h-7 sm:w-8 md:w-9 sm:h-8 md:h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-lg sm:rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
+                  <span className="text-white dark:text-gray-900 font-bold text-[10px] sm:text-xs md:text-sm tracking-wider">AIM</span>
                 </div>
                 <div className="flex flex-col min-w-0">
-                  <span className="text-sm sm:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent truncate">Sistema de Gestión</span>
-                  <span className="hidden sm:block text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Panel Gestor</span>
+                  <span className="text-xs sm:text-sm md:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent truncate leading-tight">Sistema de Gestión</span>
+                  <span className="hidden md:block text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Panel Gestor</span>
                 </div>
               </Link>
             </div>
@@ -246,8 +246,11 @@ export default function GestorLayout({ children }: { children: ReactNode }) {
             </nav>
 
             {/* User Actions (Oculto en móvil cuando el menú está abierto) */}
-            <div className={`flex items-center space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
-              <ThemeToggle />
+            <div className={`flex items-center space-x-1.5 sm:space-x-2 md:space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
+              {/* Theme Toggle */}
+              <div className="scale-90 md:scale-100">
+                <ThemeToggle />
+              </div>
 
               {/* User Button */}
               <div className="relative" ref={userPanelRef}>
@@ -256,15 +259,15 @@ export default function GestorLayout({ children }: { children: ReactNode }) {
                     setShowUserPanel((v) => !v);
                     if (!userInfo && !loadingUser) loadUser();
                   }}
-                  className="flex items-center space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
+                  className="flex items-center space-x-1 sm:space-x-2 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                 >
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
-                    <svg className="w-4 h-4" viewBox="0 0 20 20" fill="currentColor">
+                  <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
+                    <svg className="w-3 h-3 sm:w-4 sm:h-4" viewBox="0 0 20 20" fill="currentColor">
                       <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" />
                     </svg>
                   </div>
-                  <span className="hidden sm:block text-sm font-medium">Cuenta</span>
-                  <svg className="w-4 h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <span className="hidden md:block text-sm font-medium">Cuenta</span>
+                  <svg className="hidden sm:block w-3 h-3 md:w-4 md:h-4 text-gray-400 dark:text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -348,15 +351,15 @@ export default function GestorLayout({ children }: { children: ReactNode }) {
             {/* Mobile Menu Button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 transition-all duration-200"
+              className="md:hidden text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1.5 sm:p-2 rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 transition-all duration-200 flex-shrink-0 ml-1"
               aria-label="Toggle mobile menu"
             >
               {mobileMenuOpen ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                 </svg>
               ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                 </svg>
               )}
@@ -374,7 +377,7 @@ export default function GestorLayout({ children }: { children: ReactNode }) {
             onClick={() => setMobileMenuOpen(false)}
           />
           {/* Mobile Menu Drawer */}
-          <div className="fixed top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300">
+          <div className="fixed top-14 md:top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300">
             <div className="p-4 space-y-2">
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
