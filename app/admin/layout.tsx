@@ -51,6 +51,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setMobileMenuOpen(false); // Cerrar menú móvil al navegar
   }, [pathname]);
 
+  // Prevenir scroll del body cuando el menú móvil está abierto
+  useEffect(() => {
+    if (mobileMenuOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [mobileMenuOpen]);
+
   // Cleanup timeout al desmontar el componente
   useEffect(() => {
     return () => {
@@ -757,7 +769,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             onClick={() => setMobileMenuOpen(false)}
           />
           {/* Mobile Menu Drawer */}
-          <div className="fixed top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto">
+          <div className="fixed top-16 left-0 right-0 bottom-0 bg-white dark:bg-gray-900 z-[9999999] md:hidden overflow-y-auto animate-in slide-in-from-top-2 duration-300">
             <div className="p-4 space-y-2">
               {menuItems.length > 0 ? (
                 menuItems.map((item) => {
