@@ -884,14 +884,27 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                   // Renderizar Mi Calculadora
                   if (item.id === 'calculator' && item.label === 'Mi Calculadora') {
                     return (
-                      <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+                      <div 
+                        key={item.id} 
+                        className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2"
+                        onClick={(e) => {
+                          // Prevenir que clics en el contenedor cierren el dropdown
+                          e.stopPropagation();
+                        }}
+                      >
                         <button
                           onClick={(e) => {
                             // Solo toggle si el clic NO fue en una sub opción
                             const target = e.target as HTMLElement;
-                            if (!target.closest('.sub-menu-item')) {
+                            if (!target.closest('.sub-menu-item') && !target.closest('.sub-menu-container')) {
                               e.stopPropagation();
                               setCalculatorDropdownOpen(!calculatorDropdownOpen);
+                            }
+                          }}
+                          onMouseDown={(e) => {
+                            const target = e.target as HTMLElement;
+                            if (!target.closest('.sub-menu-item') && !target.closest('.sub-menu-container')) {
+                              e.stopPropagation();
                             }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
@@ -915,9 +928,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             className="mt-2 ml-4 space-y-1 sub-menu-container" 
                             onClick={(e) => {
                               e.stopPropagation();
+                              e.preventDefault();
                             }}
                             onMouseDown={(e) => {
                               e.stopPropagation();
+                              e.preventDefault();
                             }}
                             onTouchStart={(e) => {
                               e.stopPropagation();
