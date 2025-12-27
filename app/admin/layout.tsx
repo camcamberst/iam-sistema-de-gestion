@@ -25,6 +25,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const [portfolioDropdownOpen, setPortfolioDropdownOpen] = useState(false);
   const [calculatorDropdownOpen, setCalculatorDropdownOpen] = useState(false);
   const [anticiposDropdownOpen, setAnticiposDropdownOpen] = useState(false);
+  // Estado separado para el menú móvil para evitar conflictos con los componentes de escritorio
+  const [mobileCalculatorDropdownOpen, setMobileCalculatorDropdownOpen] = useState(false);
+  const [mobileAnticiposDropdownOpen, setMobileAnticiposDropdownOpen] = useState(false);
+  const [mobilePortfolioDropdownOpen, setMobilePortfolioDropdownOpen] = useState(false);
   const [userInfo, setUserInfo] = useState<{
     id: string;
     name: string;
@@ -51,6 +55,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       setPortfolioDropdownOpen(false);
       setCalculatorDropdownOpen(false);
       setAnticiposDropdownOpen(false);
+      // Cerrar también los dropdowns del menú móvil
+      setMobilePortfolioDropdownOpen(false);
+      setMobileCalculatorDropdownOpen(false);
+      setMobileAnticiposDropdownOpen(false);
       setMobileMenuOpen(false); // Cerrar menú móvil al navegar
     }, 100);
     
@@ -777,12 +785,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999998] md:hidden"
             onClick={(e) => {
               // Solo cerrar si el clic fue directamente en el backdrop Y no hay dropdowns abiertos
-              if (e.target === e.currentTarget && !calculatorDropdownOpen && !anticiposDropdownOpen && !portfolioDropdownOpen) {
+              if (e.target === e.currentTarget && !mobileCalculatorDropdownOpen && !mobileAnticiposDropdownOpen && !mobilePortfolioDropdownOpen && !calculatorDropdownOpen && !anticiposDropdownOpen && !portfolioDropdownOpen) {
                 setMobileMenuOpen(false);
               }
             }}
             style={{ 
-              pointerEvents: (calculatorDropdownOpen || anticiposDropdownOpen || portfolioDropdownOpen) ? 'none' : 'auto' 
+              pointerEvents: (mobileCalculatorDropdownOpen || mobileAnticiposDropdownOpen || mobilePortfolioDropdownOpen || calculatorDropdownOpen || anticiposDropdownOpen || portfolioDropdownOpen) ? 'none' : 'auto' 
             }}
           />
           {/* Mobile Menu Drawer */}
@@ -808,18 +816,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             const target = e.target as HTMLElement;
                             if (!target.closest('.sub-menu-item')) {
                               e.stopPropagation();
-                              setPortfolioDropdownOpen(!portfolioDropdownOpen);
+                              setMobilePortfolioDropdownOpen(!mobilePortfolioDropdownOpen);
                             }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
-                            isActive(item.href) || portfolioDropdownOpen
+                            isActive(item.href) || mobilePortfolioDropdownOpen
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
                           <svg
-                            className={`w-5 h-5 transition-transform ${portfolioDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`w-5 h-5 transition-transform ${mobilePortfolioDropdownOpen ? 'rotate-180' : ''}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -827,7 +835,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
-                        {portfolioDropdownOpen && (
+                        {mobilePortfolioDropdownOpen && (
                           <div 
                             className="mt-2 ml-4 space-y-1 sub-menu-container" 
                             onClick={(e) => {
@@ -898,7 +906,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             const target = e.target as HTMLElement;
                             if (!target.closest('.sub-menu-item') && !target.closest('.sub-menu-container')) {
                               e.stopPropagation();
-                              setCalculatorDropdownOpen(!calculatorDropdownOpen);
+                              setMobileCalculatorDropdownOpen(!mobileCalculatorDropdownOpen);
                             }
                           }}
                           onMouseDown={(e) => {
@@ -908,14 +916,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
-                            isActive(item.href) || calculatorDropdownOpen
+                            isActive(item.href) || mobileCalculatorDropdownOpen
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
                           <svg
-                            className={`w-5 h-5 transition-transform ${calculatorDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`w-5 h-5 transition-transform ${mobileCalculatorDropdownOpen ? 'rotate-180' : ''}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -923,7 +931,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
-                        {calculatorDropdownOpen && (
+                        {mobileCalculatorDropdownOpen && (
                           <div 
                             className="mt-2 ml-4 space-y-1 sub-menu-container" 
                             onClick={(e) => {
@@ -996,18 +1004,18 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             const target = e.target as HTMLElement;
                             if (!target.closest('.sub-menu-item')) {
                               e.stopPropagation();
-                              setAnticiposDropdownOpen(!anticiposDropdownOpen);
+                              setMobileAnticiposDropdownOpen(!mobileAnticiposDropdownOpen);
                             }
                           }}
                           className={`w-full flex items-center justify-between px-4 py-3 text-left rounded-lg transition-all duration-200 ${
-                            isActive(item.href) || anticiposDropdownOpen
+                            isActive(item.href) || mobileAnticiposDropdownOpen
                               ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300'
                               : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
                           }`}
                         >
                           <span className="font-medium">{item.label}</span>
                           <svg
-                            className={`w-5 h-5 transition-transform ${anticiposDropdownOpen ? 'rotate-180' : ''}`}
+                            className={`w-5 h-5 transition-transform ${mobileAnticiposDropdownOpen ? 'rotate-180' : ''}`}
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
@@ -1015,7 +1023,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                           </svg>
                         </button>
-                        {anticiposDropdownOpen && (
+                        {mobileAnticiposDropdownOpen && (
                           <div 
                             className="mt-2 ml-4 space-y-1 sub-menu-container" 
                             onClick={(e) => {
