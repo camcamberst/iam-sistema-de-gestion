@@ -522,7 +522,7 @@ export default function UsersListPage() {
               <span className="text-base font-semibold text-gray-900 dark:text-gray-100">Búsqueda y Filtros</span>
             </div>
             {filteredUsers.length > 0 && (
-              <div className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
+              <div className="hidden sm:flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300">
                 <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
                 <span>{filteredUsers.length} resultado(s) encontrado(s)</span>
               </div>

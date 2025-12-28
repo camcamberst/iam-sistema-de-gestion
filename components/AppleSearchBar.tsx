@@ -299,9 +299,9 @@ export default function AppleSearchBar({
         <div className="mt-3 relative bg-blue-50 dark:bg-blue-900/20 backdrop-blur-sm rounded-lg border border-blue-200 dark:border-blue-700/50 p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3 flex-wrap">
-              {/* Información de resultados */}
+              {/* Información de resultados - Oculto en móvil */}
               {showResultsInfo && totalUsers > 0 && (
-                <div className="flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
+                <div className="hidden sm:flex items-center space-x-2 text-sm text-blue-700 dark:text-blue-300">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
