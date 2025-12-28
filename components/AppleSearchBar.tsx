@@ -104,15 +104,20 @@ export default function AppleSearchBar({
 
   const handleFilterFocus = (filterId: string) => {
     // Cerrar otros dropdowns activos antes de abrir el nuevo
-    setActiveDropdown(filterId);
+    if (isMobile) {
+      setMobileActiveDropdown(filterId);
+    } else {
+      setActiveDropdown(filterId);
+    }
   };
 
   const handleFilterBlur = (filterId: string) => {
-    // Solo cerrar si este es el dropdown activo
-    // Delay más largo para evitar cierre accidental en móvil
-    if (activeDropdown === filterId) {
+    // Solo cerrar si este es el dropdown activo - usar estado correcto
+    if (currentActiveDropdown === filterId) {
       setTimeout(() => {
+        setCurrentActiveDropdown(null);
         setActiveDropdown(null);
+        setMobileActiveDropdown(null);
       }, 200);
     }
   };
