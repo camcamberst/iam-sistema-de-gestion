@@ -271,7 +271,7 @@ export default function AppleSearchBar({
           </div>
           
           <div className="flex items-center justify-between mt-4 pt-3 border-t border-gray-200 dark:border-gray-600">
-            <div className="text-xs text-gray-500 dark:text-gray-400">
+            <div className="hidden sm:block text-xs text-gray-500 dark:text-gray-400">
               {hasActiveFilters ? `${Object.values(selectedFilters).filter(v => v).length} filtro(s) activo(s)` : 'Sin filtros aplicados'}
             </div>
             <div className="flex items-center space-x-2">
@@ -317,7 +317,7 @@ export default function AppleSearchBar({
               {/* Filtros activos */}
               {hasActiveFilters && (
                 <div className="flex items-center space-x-2 flex-wrap">
-                  <div className="flex items-center space-x-1">
+                  <div className="hidden sm:flex items-center space-x-1">
                     <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                     <span className="text-blue-700 dark:text-blue-300 text-xs font-medium">Filtros activos:</span>
                   </div>
