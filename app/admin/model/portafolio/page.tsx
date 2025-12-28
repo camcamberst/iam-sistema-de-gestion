@@ -528,17 +528,19 @@ export default function MiPortafolio() {
               ) : (
                 <>
                   {/* Etiquetas de plataformas */}
-                  <div className="flex flex-wrap gap-2 sm:gap-2 mb-4 sm:mb-6">
+                  <div className="flex flex-wrap gap-2.5 sm:gap-2 mb-4 sm:mb-6">
                     {portfolioData?.platforms.map((platform) => (
                       <button
                         key={platform.id}
                         type="button"
-                        className={`px-3 sm:px-2.5 py-1.5 sm:py-1 rounded-full text-xs sm:text-[11px] leading-5 font-medium transition-colors inline-flex items-center active:scale-95 touch-manipulation ${getTagClasses(platform.status)} ${
-                          selectedPlatform?.id === platform.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''
+                        className={`px-4 sm:px-2.5 py-2.5 sm:py-1 rounded-full text-sm sm:text-[11px] leading-5 font-medium transition-all duration-200 inline-flex items-center justify-center min-h-[44px] sm:min-h-0 active:scale-95 touch-manipulation shadow-sm sm:shadow-none ${getTagClasses(platform.status)} ${
+                          selectedPlatform?.id === platform.id 
+                            ? 'ring-2 ring-blue-500 ring-offset-2 sm:ring-offset-2 ring-offset-1 scale-105 sm:scale-100' 
+                            : 'hover:scale-105 sm:hover:scale-100'
                         }`}
                         onClick={() => handlePlatformClick(platform)}
                       >
-                        {platform.calculator_platforms.name}
+                        <span className="truncate max-w-[140px] sm:max-w-none">{platform.calculator_platforms.name}</span>
                       </button>
                     ))}
                   </div>
@@ -550,40 +552,52 @@ export default function MiPortafolio() {
                       : 'max-h-0 opacity-0 translate-y-0 scale-100 overflow-hidden'
                   }`}>
                     {selectedPlatform && (
-                      <div className="border border-gray-200 dark:border-gray-600/20 rounded-lg p-3 sm:p-4 bg-white dark:bg-gray-700/80 hover:shadow-lg transition-shadow duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                      <div className="border-2 sm:border border-gray-200 dark:border-gray-600/20 rounded-xl sm:rounded-lg p-4 sm:p-4 bg-white dark:bg-gray-700/80 hover:shadow-lg transition-shadow duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 shadow-md sm:shadow-none">
+                        {/* Botón cerrar solo en móvil */}
+                        <div className="flex justify-end mb-3 sm:hidden">
+                          <button
+                            onClick={() => setSelectedPlatform(null)}
+                            className="p-2 rounded-full bg-gray-100 dark:bg-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500 active:scale-95 transition-all touch-manipulation"
+                            aria-label="Cerrar"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
                         {/* Header con información principal */}
-                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 mb-5 sm:mb-4">
                           <div className="flex items-center space-x-3 min-w-0 flex-1">
-                            <div className="flex-shrink-0">
+                            <div className="flex-shrink-0 w-10 h-10 sm:w-auto sm:h-auto flex items-center justify-center">
                               {getStatusIcon(selectedPlatform.status)}
                             </div>
                             <div className="min-w-0 flex-1">
-                              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
+                              <h3 className="text-lg sm:text-lg font-bold text-gray-900 dark:text-gray-100 break-words sm:truncate">
                                 {selectedPlatform.calculator_platforms.name}
                               </h3>
-                              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
+                              <p className="text-sm sm:text-sm text-gray-500 dark:text-gray-400 break-words sm:truncate mt-1">
                                 {selectedPlatform.calculator_platforms.id} • {selectedPlatform.calculator_platforms.currency}
                               </p>
                             </div>
                           </div>
-                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:flex-shrink-0">
-                            <span className={`px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium text-center ${getStatusColor(selectedPlatform.status)}`}>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3 sm:flex-shrink-0">
+                            <span className={`px-4 py-2 sm:px-3 sm:py-1 rounded-full text-sm sm:text-sm font-semibold text-center ${getStatusColor(selectedPlatform.status)}`}>
                               {getStatusText(selectedPlatform.status)}
                             </span>
                             {selectedPlatform.status === 'entregada' && (
                               <button
                                 onClick={() => confirmPlatform(selectedPlatform.platform_id)}
                                 disabled={confirmingPlatform === selectedPlatform.platform_id}
-                                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 text-sm shadow-md active:scale-95 touch-manipulation"
+                                className="w-full sm:w-auto px-5 py-3 sm:px-4 sm:py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 text-base sm:text-sm font-medium shadow-md hover:shadow-lg active:scale-95 touch-manipulation min-h-[48px] sm:min-h-0"
                               >
                                 {confirmingPlatform === selectedPlatform.platform_id ? (
                                   <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <div className="animate-spin rounded-full h-5 w-5 sm:h-4 sm:w-4 border-b-2 border-white"></div>
                                     <span>Confirmando...</span>
                                   </>
                                 ) : (
                                   <>
-                                    <CheckCircle className="w-4 h-4" />
+                                    <CheckCircle className="w-5 h-5 sm:w-4 sm:h-4" />
                                     <span>Confirmar Recepción</span>
                                   </>
                                 )}
@@ -593,24 +607,24 @@ export default function MiPortafolio() {
                         </div>
 
                         {/* Pestañas internas del modal */}
-                        <div className="mb-4 border-b border-gray-200 dark:border-gray-600">
-                          <div className="flex gap-1 sm:space-x-1">
+                        <div className="mb-5 sm:mb-4 border-b-2 sm:border-b border-gray-200 dark:border-gray-600">
+                          <div className="flex gap-2 sm:space-x-1">
                             <button
                               onClick={() => setPlatformTab('details')}
-                              className={`flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
+                              className={`flex-1 sm:flex-none px-5 sm:px-4 py-3 sm:py-2 text-base sm:text-sm font-semibold sm:font-medium transition-all duration-200 active:scale-95 touch-manipulation min-h-[48px] sm:min-h-0 ${
                                 platformTab === 'details'
-                                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                  ? 'border-b-[3px] sm:border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 sm:bg-transparent'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600/30 sm:hover:bg-transparent'
                               }`}
                             >
                               Detalles
                             </button>
                             <button
                               onClick={() => setPlatformTab('metrics')}
-                              className={`flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
+                              className={`flex-1 sm:flex-none px-5 sm:px-4 py-3 sm:py-2 text-base sm:text-sm font-semibold sm:font-medium transition-all duration-200 active:scale-95 touch-manipulation min-h-[48px] sm:min-h-0 ${
                                 platformTab === 'metrics'
-                                  ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
-                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                                  ? 'border-b-[3px] sm:border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50/50 dark:bg-blue-900/20 sm:bg-transparent'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-600/30 sm:hover:bg-transparent'
                               }`}
                             >
                               Métricas
@@ -620,27 +634,27 @@ export default function MiPortafolio() {
 
                         {/* Contenido de pestaña: Detalles */}
                         {platformTab === 'details' && (
-                          <div className="space-y-4">
+                          <div className="space-y-5 sm:space-y-4">
                             {/* Credenciales de acceso */}
                             {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && (
-                              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-4">
+                              <div className="mt-2 sm:mt-4 pt-5 sm:pt-4 border-t-2 sm:border-t border-gray-200 dark:border-gray-600 space-y-5 sm:space-y-4">
                                 {loadingCredentials ? (
                                   <div className="flex items-center justify-center py-4">
                                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                                     <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">Cargando credenciales...</span>
                                   </div>
                                 ) : credentials?.hasCredentials ? (
-                                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 space-y-3 border border-blue-200 dark:border-blue-800">
-                                    <div className="flex items-center space-x-2 mb-3">
-                                      <Lock className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
+                                  <div className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl sm:rounded-lg p-5 sm:p-4 space-y-4 sm:space-y-3 border-2 sm:border border-blue-200 dark:border-blue-800">
+                                    <div className="flex items-center space-x-2 mb-4 sm:mb-3">
+                                      <Lock className="w-5 h-5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
+                                      <h4 className="text-base sm:text-sm font-bold sm:font-semibold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
                                     </div>
                                     
                                     {/* Usuario */}
                                     {credentials.login_username && (
-                                      <div className="space-y-1">
-                                        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                                          <User className="w-3 h-3" />
+                                      <div className="space-y-2 sm:space-y-1">
+                                        <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+                                          <User className="w-4 h-4 sm:w-3 sm:h-3" />
                                           <span>Usuario</span>
                                         </label>
                                         <div className="flex items-center space-x-2">
@@ -663,9 +677,9 @@ export default function MiPortafolio() {
 
                                     {/* Contraseña */}
                                     {credentials.login_password && (
-                                      <div className="space-y-1">
-                                        <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                                          <Lock className="w-3 h-3" />
+                                      <div className="space-y-2 sm:space-y-1">
+                                        <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+                                          <Lock className="w-4 h-4 sm:w-3 sm:h-3" />
                                           <span>Contraseña</span>
                                         </label>
                                         <div className="flex items-center space-x-2">
@@ -695,14 +709,14 @@ export default function MiPortafolio() {
 
                                     {/* Enlace de login - Siempre visible al final */}
                                     {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
-                                      <div className="pt-3 mt-3 border-t border-blue-200 dark:border-blue-800">
+                                      <div className="pt-4 sm:pt-3 mt-4 sm:mt-3 border-t-2 sm:border-t border-blue-200 dark:border-blue-800">
                                         <a
                                           href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 sm:px-4 py-3 sm:py-2.5 h-12 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-sm font-medium touch-manipulation"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-5 sm:px-4 py-3.5 sm:py-2.5 h-14 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl sm:rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl text-base sm:text-sm font-semibold sm:font-medium touch-manipulation"
                                         >
-                                          <ExternalLink className="w-4 h-4" />
+                                          <ExternalLink className="w-5 h-5 sm:w-4 sm:h-4" />
                                           <span>Abrir plataforma</span>
                                         </a>
                                       </div>
@@ -742,23 +756,23 @@ export default function MiPortafolio() {
 
                                 {/* Enlace especial solo para Superfoon */}
                                 {isSelectedPlatformSuperfoon && (
-                                  <div className="pt-4 mt-4 border-t border-dashed border-gray-300 dark:border-gray-600">
-                                    <div className="flex items-center space-x-2 mb-3">
+                                  <div className="pt-5 sm:pt-4 mt-5 sm:mt-4 border-t-2 sm:border-t border-dashed border-gray-300 dark:border-gray-600">
+                                    <div className="flex items-center space-x-2 mb-4 sm:mb-3">
                                       <div className="relative">
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
-                                        <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
+                                        <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
+                                        <div className="w-2.5 h-2.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full relative"></div>
                                       </div>
-                                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                      <p className="text-base sm:text-sm font-bold sm:font-semibold text-gray-700 dark:text-gray-300">
                                         📞 App de llamadas 3CX
                                       </p>
-                                      <Activity className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                                      <Activity className="w-5 h-5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400" />
                                     </div>
 
                                     {/* Credenciales 3CX - Solo lectura para modelos */}
-                                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg p-4 space-y-3 border border-purple-200 dark:border-purple-800 mb-3">
-                                      <div className="flex items-center space-x-2 mb-3">
-                                        <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                                        <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Credenciales App 3CX</h4>
+                                    <div className="bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-xl sm:rounded-lg p-5 sm:p-4 space-y-4 sm:space-y-3 border-2 sm:border border-purple-200 dark:border-purple-800 mb-4 sm:mb-3">
+                                      <div className="flex items-center space-x-2 mb-4 sm:mb-3">
+                                        <Lock className="w-5 h-5 sm:w-4 sm:h-4 text-purple-600 dark:text-purple-400" />
+                                        <h4 className="text-base sm:text-sm font-bold sm:font-semibold text-gray-900 dark:text-gray-100">Credenciales App 3CX</h4>
                                       </div>
 
                                       {loading3CX ? (
@@ -769,9 +783,9 @@ export default function MiPortafolio() {
                                       ) : credentials3CX.hasCredentials ? (
                                         <>
                                           {/* Usuario 3CX - Solo lectura */}
-                                          <div className="space-y-1">
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                                              <User className="w-3 h-3" />
+                                          <div className="space-y-2 sm:space-y-1">
+                                            <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+                                              <User className="w-4 h-4 sm:w-3 sm:h-3" />
                                               <span>Usuario 3CX</span>
                                             </label>
                                             <div className="flex items-center space-x-2">
@@ -792,9 +806,9 @@ export default function MiPortafolio() {
                                           </div>
 
                                           {/* Contraseña 3CX - Solo lectura */}
-                                          <div className="space-y-1">
-                                            <label className="text-xs font-medium text-gray-600 dark:text-gray-400 flex items-center space-x-1">
-                                              <Lock className="w-3 h-3" />
+                                          <div className="space-y-2 sm:space-y-1">
+                                            <label className="text-sm sm:text-xs font-semibold sm:font-medium text-gray-700 dark:text-gray-300 flex items-center space-x-2">
+                                              <Lock className="w-4 h-4 sm:w-3 sm:h-3" />
                                               <span>Contraseña 3CX</span>
                                             </label>
                                             <div className="flex items-center space-x-2">
@@ -838,17 +852,17 @@ export default function MiPortafolio() {
                                       href="https://superfoon.synergy4.com/#/login"
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 sm:px-4 py-3 sm:py-2.5 h-12 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-sm font-medium mb-3 touch-manipulation"
+                                      className="w-full inline-flex items-center justify-center space-x-2 px-5 sm:px-4 py-3.5 sm:py-2.5 h-14 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl sm:rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl text-base sm:text-sm font-semibold sm:font-medium mb-4 sm:mb-3 touch-manipulation"
                                     >
-                                      <ExternalLink className="w-4 h-4" />
+                                      <ExternalLink className="w-5 h-5 sm:w-4 sm:h-4" />
                                       <span>Abrir app</span>
                                     </a>
                                     
                                     {/* URL como texto secundario */}
-                                    <p className="text-xs text-gray-600 dark:text-gray-400 text-center font-medium">
+                                    <p className="text-xs sm:text-xs text-gray-600 dark:text-gray-400 text-center font-medium break-all px-2">
                                       https://superfoon.synergy4.com/#/login
                                     </p>
-                                    <p className="text-xs text-gray-500 dark:text-gray-500 mt-1 text-center">
+                                    <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-500 mt-2 sm:mt-1 text-center">
                                       ⚡ Acceso directo a la aplicación de llamadas
                                     </p>
                                   </div>
@@ -902,14 +916,14 @@ export default function MiPortafolio() {
                         )}
 
                         {/* Información de estado y fechas */}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-6">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pt-4 sm:pt-0 mt-4 sm:mt-0 border-t-2 sm:border-t-0 border-gray-200 dark:border-gray-600">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:space-x-6">
                             {selectedPlatform.delivered_at && (
                               <div className="flex items-center space-x-2">
-                                <Calendar className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                                <Calendar className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
                                 <div>
-                                  <p className="text-xs text-gray-400 dark:text-gray-500">Entregada</p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  <p className="text-xs sm:text-xs text-gray-400 dark:text-gray-500 font-medium">Entregada</p>
+                                  <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400">
                                     {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES')}
                                   </p>
                                 </div>
@@ -917,10 +931,10 @@ export default function MiPortafolio() {
                             )}
                             {selectedPlatform.confirmed_at && (
                               <div className="flex items-center space-x-2">
-                                <CheckCircle className="w-3 h-3 text-gray-400 dark:text-gray-500" />
+                                <CheckCircle className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
                                 <div>
-                                  <p className="text-xs text-gray-400 dark:text-gray-500">Confirmada</p>
-                                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                                  <p className="text-xs sm:text-xs text-gray-400 dark:text-gray-500 font-medium">Confirmada</p>
+                                  <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400">
                                     {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES')}
                                   </p>
                                 </div>
@@ -928,8 +942,8 @@ export default function MiPortafolio() {
                             )}
                           </div>
                           <div className="flex items-center space-x-2">
-                            <Target className="w-3 h-3 text-gray-400 dark:text-gray-500" />
-                            <span className="text-xs text-gray-500 dark:text-gray-400">Plataforma activa</span>
+                            <Target className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
+                            <span className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Plataforma activa</span>
                           </div>
                         </div>
                       </div>
