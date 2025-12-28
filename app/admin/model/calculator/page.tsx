@@ -1720,7 +1720,7 @@ export default function ModelCalculatorPage() {
                   return sum + usdModelo; // 100% para Superfoon
                 }
                 return sum + (usdModelo * p.percentage / 100);
-              }, 0).toFixed(2)}
+              }, 0).toFixed(2)}`}
               label="USD Modelo"
               color="green"
               size="sm"
