@@ -557,11 +557,10 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
 
   return (
     <div
-      className="w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed"
+      className="w-[calc(100%-2rem)] sm:w-80 bg-gray-800 border border-gray-700 rounded-lg shadow-2xl flex flex-col z-[9996] fixed left-4 right-4 sm:left-auto sm:right-[calc(24px+40px+28px)]"
       style={{
         // Posicionar la ventana inmediatamente a la izquierda del botón,
         // dejando un pequeño espacio (gap) y alineando el borde inferior
-        right: `calc(${buttonMargin}px + ${buttonSize}px + ${gap}px)`,
         bottom: `calc(env(safe-area-inset-bottom, 0px) + ${buttonMargin}px)`,
         cursor: 'default',
         maxHeight: 'calc(100vh - 20px)', // Altura máxima respetando márgenes
