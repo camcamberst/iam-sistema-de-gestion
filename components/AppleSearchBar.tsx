@@ -39,7 +39,6 @@ export default function AppleSearchBar({
 }: AppleSearchBarProps) {
   const [query, setQuery] = useState('');
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
-  const [pendingFilters, setPendingFilters] = useState<Record<string, string>>({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
@@ -52,20 +51,13 @@ export default function AppleSearchBar({
     onSearch(query, selectedFilters);
   };
 
-  // Debounce búsqueda solo para el query (búsqueda de texto)
-  // NO para filtros - estos se aplican solo cuando se hace clic en "Aplicar"
+  // Debounce búsqueda
   useEffect(() => {
     const t = setTimeout(() => {
-      // Solo buscar por texto si hay query, no aplicar filtros pendientes
-      if (query.trim()) {
-        onSearch(query, selectedFilters);
-      } else if (!query.trim() && !Object.values(selectedFilters).some(v => v)) {
-        // Si no hay query ni filtros activos, limpiar resultados
-        onSearch('', {});
-      }
-    }, 300);
+      onSearch(query, selectedFilters);
+    }, 250);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, selectedFilters]);
 
   // Atajos: Enter (buscar), Esc (cerrar panel)
   useEffect(() => {
@@ -83,25 +75,12 @@ export default function AppleSearchBar({
   }, [query, selectedFilters, isExpanded]);
 
   const handleFilterChange = (filterId: string, value: string) => {
-    const newFilters = {
-      ...selectedFilters,
+    setSelectedFilters(prev => ({
+      ...prev,
       [filterId]: value
-    };
-    
-    // Si el valor está vacío, eliminar el filtro
-    if (!value) {
-      delete newFilters[filterId];
-    }
-    
-    setSelectedFilters(newFilters);
+    }));
     // Cerrar dropdown después de selección
     setActiveDropdown(null);
-    
-    // En móvil, disparar búsqueda inmediatamente después de seleccionar
-    // para mejor feedback del usuario
-    setTimeout(() => {
-      onSearch(query, newFilters);
-    }, 100);
   };
 
   const handleFilterFocus = (filterId: string) => {
@@ -120,30 +99,8 @@ export default function AppleSearchBar({
 
   // 🔧 FIX: Manejar clicks fuera del área de búsqueda
   useEffect(() => {
-    let touchStartTime = 0;
-    let touchTarget: Node | null = null;
-
-    function handleTouchStart(event: TouchEvent) {
-      touchStartTime = Date.now();
-      touchTarget = event.target as Node;
-    }
-
     function handleClickOutside(event: MouseEvent | TouchEvent) {
       const target = event.target as Node;
-      const isTouch = event.type === 'touchstart';
-      
-      // En móvil, ignorar clicks que vienen inmediatamente después de touchstart
-      // para evitar doble ejecución
-      if (isTouch) {
-        touchStartTime = Date.now();
-        touchTarget = target;
-        return; // Solo registrar, no procesar aún
-      }
-      
-      // Si es un click de mouse y fue precedido por un touchstart reciente, ignorar
-      if (event.type === 'click' && touchTarget && Date.now() - touchStartTime < 300) {
-        return;
-      }
       
       // Verificar si el click está dentro de algún dropdown
       const isInsideAnyDropdown = Object.values(dropdownRefs.current).some(ref => 
@@ -156,18 +113,16 @@ export default function AppleSearchBar({
       // Si el click está fuera de todo, cerrar dropdowns
       if (!isInsideSearchBar && !isInsideAnyDropdown) {
         setActiveDropdown(null);
-        // No cerrar el panel expandido en móvil al hacer click fuera
-        // Solo cerrar dropdowns individuales
+        setIsExpanded(false);
       }
     }
 
-    // Usar click en lugar de mousedown para mejor compatibilidad móvil
-    // touchstart solo para registrar, click para procesar
-    document.addEventListener('touchstart', handleTouchStart, { passive: true });
-    document.addEventListener('click', handleClickOutside, true);
+    // Usar tanto mousedown como touchstart para mejor soporte móvil
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
     return () => {
-      document.removeEventListener('touchstart', handleTouchStart);
-      document.removeEventListener('click', handleClickOutside, true);
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
     };
   }, []);
 
@@ -329,23 +284,8 @@ export default function AppleSearchBar({
                 </button>
               )}
               <button
-                onClick={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // Disparar búsqueda explícita antes de cerrar
-                  onSearch(query, selectedFilters);
-                  setIsExpanded(false);
-                  setActiveDropdown(null);
-                }}
-                onTouchEnd={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  // Disparar búsqueda explícita antes de cerrar
-                  onSearch(query, selectedFilters);
-                  setIsExpanded(false);
-                  setActiveDropdown(null);
-                }}
-                className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs rounded-md transition-all duration-200 shadow-sm hover:shadow-md active:scale-95 touch-manipulation"
+                onClick={() => setIsExpanded(false)}
+                className="px-3 py-1.5 bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white text-xs rounded-md transition-all duration-200 shadow-sm hover:shadow-md"
               >
                 Aplicar
               </button>
