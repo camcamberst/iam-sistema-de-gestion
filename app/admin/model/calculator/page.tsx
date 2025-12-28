@@ -1057,32 +1057,33 @@ export default function ModelCalculatorPage() {
         </div>
 
         {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
             Tasas Actualizadas
           </h2>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-xl font-bold text-blue-700 mb-1">
+          {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
+            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-lg sm:text-xl font-bold text-blue-700 mb-1">
                 ${rates?.usd_cop || 3900}
               </div>
-              <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
+              <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-xl font-bold text-green-700 mb-1">
+            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+              <div className="text-lg sm:text-xl font-bold text-green-700 mb-1">
                 {rates?.eur_usd || 1.01}
               </div>
-              <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
+              <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
             </div>
-            <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-xl font-bold text-purple-700 mb-1">
+            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 col-span-2 sm:col-span-1">
+              <div className="text-lg sm:text-xl font-bold text-purple-700 mb-1">
                 {rates?.gbp_usd || 1.20}
               </div>
-              <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
+              <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
             </div>
           </div>
-          <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center font-medium">
+          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
             Configuradas por tu administrador
           </p>
         </div>
@@ -1115,7 +1116,7 @@ export default function ModelCalculatorPage() {
         )}
 
         {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             Calculadora de Ingresos
@@ -1142,8 +1143,231 @@ export default function ModelCalculatorPage() {
               </p>
             </div>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full">
+            <>
+              {/* Vista de Cards para Móvil */}
+              <div className="md:hidden space-y-3">
+                {platforms.filter(p => p.enabled).map(platform => {
+                  // Calcular dólares y COP para esta plataforma usando fórmulas específicas
+                  const usdBruto = platform.value;
+                  const isFrozen = frozenPlatforms.includes(platform.id);
+                  
+                  // Aplicar fórmula específica según la plataforma (mismo código que la tabla)
+                  let usdModelo = 0;
+                  if (platform.currency === 'EUR') {
+                    if (platform.id === 'big7') {
+                      usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (platform.id === 'mondo') {
+                      usdModelo = (platform.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (platform.id === 'superfoon') {
+                      usdModelo = platform.value * (rates?.eur_usd || 1.01);
+                    } else if (platform.id === 'modelka' || platform.id === 'xmodels' || platform.id === '777' || platform.id === 'vx' || platform.id === 'livecreator' || platform.id === 'mow') {
+                      usdModelo = platform.value * (rates?.eur_usd || 1.01);
+                    } else {
+                      usdModelo = platform.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (platform.currency === 'GBP') {
+                    if (platform.id === 'aw') {
+                      usdModelo = (platform.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = platform.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (platform.currency === 'USD') {
+                    if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                      usdModelo = platform.value * 0.75;
+                    } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                      usdModelo = platform.value * 0.05;
+                    } else if (platform.id === 'dxlive') {
+                      usdModelo = platform.value * 0.60;
+                    } else if (platform.id === 'secretfriends') {
+                      usdModelo = platform.value * 0.5;
+                    } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
+                      usdModelo = platform.value;
+                    } else {
+                      usdModelo = platform.value;
+                    }
+                  }
+                  
+                  let usdModeloFinal;
+                  if (platform.id === 'superfoon') {
+                    usdModeloFinal = usdModelo;
+                  } else {
+                    usdModeloFinal = (usdModelo * platform.percentage) / 100;
+                  }
+                  const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
+                  
+                  const p1Value = p1Values[platform.id] || 0;
+                  const showMonthlyFields = isPeriod2 && p1Value > 0;
+
+                  return (
+                    <div key={platform.id} className={`bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border ${isFrozen ? 'border-red-200 dark:border-red-900/30' : 'border-gray-200 dark:border-gray-600/50'}`}>
+                      {/* Header de la card */}
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <button 
+                              type="button"
+                              disabled={isFrozen || !isPeriod2}
+                              className={`font-semibold text-sm text-left transition-colors flex items-center gap-2 ${
+                                isFrozen 
+                                  ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                  : !isPeriod2
+                                    ? 'text-gray-900 dark:text-gray-100 cursor-default'
+                                    : 'text-gray-900 dark:text-gray-100 active:text-blue-600 dark:active:text-blue-400'
+                              }`}
+                              onClick={(e) => {
+                                if (isFrozen || !isPeriod2) return;
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setEditingP1Platform(platform.id);
+                                setP1InputValue(String(p1Values[platform.id] || ''));
+                              }}
+                            >
+                              <span>{platform.name}</span>
+                              {!isFrozen && isPeriod2 && (
+                                <span className="text-blue-500 text-xs">✎</span>
+                              )}
+                            </button>
+                            {isFrozen && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
+                                🔒 Cerrado
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                          </div>
+                          {p1Value > 0 && (
+                            <div className="mt-1 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded border border-blue-100 dark:border-blue-800/30 w-fit">
+                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">P1:</span>
+                              <span className="text-[10px] font-mono text-blue-700 dark:text-blue-300">{p1Value.toLocaleString('es-CO')}</span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Input flotante de P1 para móvil */}
+                      {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
+                        <div className="mb-3 bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-3">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
+                            <input
+                              type="text"
+                              inputMode="decimal"
+                              value={p1InputValue}
+                              onChange={(e) => {
+                                const rawValue = e.target.value;
+                                const unifiedValue = rawValue.replace(',', '.');
+                                setP1InputValue(unifiedValue);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const value = Number.parseFloat(p1InputValue) || 0;
+                                  setP1Values(prev => ({ ...prev, [platform.id]: value }));
+                                  if (monthlyTotals[platform.id]) {
+                                    const monthlyTotal = Number.parseFloat(monthlyTotals[platform.id]) || 0;
+                                    const p2Value = monthlyTotal - value;
+                                    setInputValues(prev => ({ ...prev, [platform.id]: p2Value > 0 ? String(p2Value) : '' }));
+                                    setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Value } : p));
+                                  }
+                                  setEditingP1Platform(null);
+                                } else if (e.key === 'Escape') {
+                                  setEditingP1Platform(null);
+                                }
+                              }}
+                              autoFocus
+                              className="flex-1 h-11 px-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                              placeholder="0.00"
+                            />
+                            <button
+                              onClick={() => handleSaveP1Value(platform.id)}
+                              className="h-11 px-4 bg-blue-500 text-white rounded-lg text-sm font-medium active:bg-blue-600 transition-colors touch-manipulation"
+                            >
+                              ✓
+                            </button>
+                            <button
+                              onClick={() => setEditingP1Platform(null)}
+                              className="h-11 px-4 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium active:bg-gray-300 dark:active:bg-gray-500 transition-colors touch-manipulation"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Input de valor principal */}
+                      <div className="mb-3">
+                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Valor {showMonthlyFields ? '(Total Mensual)' : '(P2)'}
+                        </label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            disabled={isFrozen}
+                            value={showMonthlyFields ? (monthlyTotals[platform.id] ?? '') : (inputValues[platform.id] ?? '')}
+                            onChange={(e) => {
+                              if (isFrozen) return;
+                              const rawValue = e.target.value;
+                              const unifiedValue = rawValue.replace(',', '.');
+                              
+                              if (showMonthlyFields) {
+                                setMonthlyTotals(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                const p1Value = p1Values[platform.id] || 0;
+                                const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
+                                const p2Calculated = monthlyTotalNum - p1Value;
+                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Calculated } : p));
+                              } else {
+                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                const numeric = Number.parseFloat(unifiedValue);
+                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
+                              }
+                            }}
+                            className={`flex-1 h-12 px-3 text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
+                              isFrozen
+                                ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
+                                : showMonthlyFields 
+                                  ? 'bg-white dark:bg-gray-800 border-blue-400 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500' 
+                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                            }`}
+                            placeholder={isFrozen ? "Locked" : "0.00"}
+                          />
+                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                            {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
+                              ? 'TKN' 
+                              : (platform.currency || 'USD')}
+                          </span>
+                        </div>
+                        {showMonthlyFields && (
+                          <div className="text-xs text-blue-500/80 dark:text-blue-400/80 mt-1 font-medium">
+                            - P1 ({(p1Values[platform.id] || 0).toFixed(0)})
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Resultados */}
+                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
+                          <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                            ${usdModeloFinal.toFixed(2)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">COP Modelo</div>
+                          <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                            ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Vista de Tabla para Escritorio */}
+              <div className="hidden md:block overflow-x-auto">
+                <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-600/50 backdrop-blur-sm">
                     <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">PLATAFORMAS</th>
@@ -1285,7 +1509,7 @@ export default function ModelCalculatorPage() {
                             {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta con z-index alto */}
                             {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
                               <div
-                                className="absolute z-[100] bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 min-w-[140px]"
+                                className="absolute z-[100] bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 sm:p-3 min-w-[160px] sm:min-w-[180px]"
                                 style={{
                                   top: '100%', 
                                   left: '0',
@@ -1293,8 +1517,8 @@ export default function ModelCalculatorPage() {
                                 }}
                                 onClick={(e) => e.stopPropagation()}
                               >
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
                                   <input
                                     type="text"
                                     inputMode="decimal"
@@ -1324,12 +1548,12 @@ export default function ModelCalculatorPage() {
                                       }
                                     }}
                                     autoFocus
-                                    className="w-16 px-1.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                    className="flex-1 h-9 sm:h-10 px-2 sm:px-3 text-sm sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 touch-manipulation"
                                     placeholder="0.00"
                                   />
                                   <button
                                     onClick={() => handleSaveP1Value(platform.id)}
-                                    className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] font-medium hover:bg-blue-600 transition-colors"
+                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-blue-500 text-white rounded-lg text-xs sm:text-sm font-medium active:bg-blue-600 transition-colors touch-manipulation"
                                     title="Guardar"
                                   >
                                     ✓
@@ -1338,7 +1562,7 @@ export default function ModelCalculatorPage() {
                                     onClick={() => {
                                       setEditingP1Platform(null);
                                     }}
-                                    className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-[10px] font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium active:bg-gray-300 dark:active:bg-gray-500 transition-colors touch-manipulation"
                                     title="Cancelar"
                                   >
                                     ✕
@@ -1381,9 +1605,9 @@ export default function ModelCalculatorPage() {
                                     setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                   }
                                 }}
-                                className={`w-20 h-8 px-2 py-1 text-sm border rounded-md transition-all duration-200 ${
+                                className={`w-20 sm:w-24 h-9 sm:h-10 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
                                   isFrozen
-                                    ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500' // Estilos para congelado
+                                    ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
                                     : showMonthlyFields 
                                       ? 'bg-white dark:bg-gray-800 border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/30 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50' 
                                       : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
@@ -1391,7 +1615,7 @@ export default function ModelCalculatorPage() {
                                 placeholder={isFrozen ? "Locked" : "0.00"}
                                 title={isFrozen ? "Cerrado por horario europeo" : (showMonthlyFields ? "Ingresa el TOTAL MENSUAL del mes (el sistema restará automáticamente lo reportado en P1)" : "Ingresa el valor generado en este periodo")}
                               />
-                              <span className="text-gray-600 dark:text-gray-300 text-xs font-medium bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded border border-gray-200 dark:border-gray-600">
+                              <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-600 whitespace-nowrap">
                                 {/* Mostrar TKN para plataformas que usan tokens, no la moneda */}
                                 {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
                                   ? 'TKN' 
@@ -1422,11 +1646,12 @@ export default function ModelCalculatorPage() {
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </div>
 
         {/* Totales y Alertas - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
@@ -1435,9 +1660,9 @@ export default function ModelCalculatorPage() {
             <button
               onClick={saveValues}
               disabled={saving || platforms.filter(p => p.enabled).length === 0}
-              className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-all duration-200 transform hover:scale-105 active:scale-95 whitespace-nowrap ${
+              className={`px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-all duration-200 transform active:scale-95 whitespace-nowrap touch-manipulation ${
                 !saving && platforms.filter(p => p.enabled).length > 0
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg'
+                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg active:shadow-md'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
               }`}
             >
