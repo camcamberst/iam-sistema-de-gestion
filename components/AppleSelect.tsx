@@ -25,6 +25,18 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const [maxHeight, setMaxHeight] = useState<string>('20rem'); // max-h-80
   const ref = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchHandled, setTouchHandled] = useState(false);
+  
+  // Detectar si estamos en móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -224,20 +236,45 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         onFocus={handleFocus}
         onBlur={handleBlur}
         onMouseDown={(e) => {
+          // En móvil, prevenir mousedown
+          if (isMobile) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
           // Prevenir que el mousedown cierre el dropdown antes del click
           e.stopPropagation();
         }}
         onTouchStart={(e) => {
-          // En móvil, solo registrar el touch, no abrir inmediatamente
           e.stopPropagation();
+          // En móvil, marcar que se está manejando un toque
+          if (isMobile) {
+            setTouchHandled(true);
+          }
+        }}
+        onTouchEnd={(e) => {
+          e.stopPropagation();
+          // En móvil, solo abrir con toque explícito
+          if (isMobile && !open) {
+            e.preventDefault();
+            handleFocus();
+            setTouchHandled(false);
+          }
         }}
         onClick={(e) => {
+          // En móvil, ignorar clicks de mouse - solo permitir toques
+          if (isMobile && !touchHandled) {
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+          }
           // Prevenir propagación para evitar conflictos
           e.stopPropagation();
-          // Solo abrir/cerrar con click explícito
-          if (!open) {
+          // Solo abrir/cerrar con click explícito (en desktop)
+          if (!isMobile && !open) {
             handleFocus();
           }
+          setTouchHandled(false);
         }}
       >
         <span className="truncate text-[0.9rem]">
@@ -298,24 +335,42 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
               <button
                 type="button"
                 onClick={(e) => { 
+                  // En móvil, ignorar clicks de mouse - solo permitir toques
+                  if (isMobile && !touchHandled) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
                   e.stopPropagation();
                   e.preventDefault();
                   onChange(opt.value); 
-                  setOpen(false); 
+                  setOpen(false);
+                  setTouchHandled(false);
                 }}
                 onMouseDown={(e) => {
+                  // En móvil, prevenir mousedown
+                  if (isMobile) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    return;
+                  }
                   e.stopPropagation();
                   e.preventDefault();
                 }}
                 onTouchStart={(e) => {
                   e.stopPropagation();
+                  // Marcar que se está manejando un toque
+                  setTouchHandled(true);
                 }}
                 onTouchEnd={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  // Solo ejecutar si no se ejecutó el onClick
-                  onChange(opt.value);
-                  setOpen(false);
+                  // En móvil, solo ejecutar con touch
+                  if (isMobile) {
+                    onChange(opt.value);
+                    setOpen(false);
+                    setTouchHandled(false);
+                  }
                 }}
                 className={`w-full px-4 py-2.5 text-[0.9rem] text-left cursor-pointer transition-colors duration-150 flex items-center justify-between touch-manipulation active:scale-[0.98] ${
                   value === opt.value 
