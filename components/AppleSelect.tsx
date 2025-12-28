@@ -27,7 +27,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    function onDoc(e: MouseEvent) {
+    function onDoc(e: MouseEvent | TouchEvent) {
       // Verificar que el clic no sea dentro del contenedor principal ni del dropdown
       const target = e.target as Node;
       const isClickInside = ref.current?.contains(target) || dropdownRef.current?.contains(target);
@@ -43,12 +43,15 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       }
     }
     // Usar 'click' en lugar de 'mousedown' para evitar cierre accidental durante scroll
+    // También manejar touchstart para móvil
     if (open) {
       // Usar capture phase para detectar clics antes de que se propaguen
       document.addEventListener('click', onDoc, true);
+      document.addEventListener('touchstart', onDoc, true);
       document.addEventListener('keydown', onKey);
       return () => {
         document.removeEventListener('click', onDoc, true);
+        document.removeEventListener('touchstart', onDoc, true);
         document.removeEventListener('keydown', onKey);
       };
     }
@@ -214,9 +217,20 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="w-full px-3 py-2.5 text-sm text-left border border-gray-200/80 dark:border-gray-600/80 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-[0_10px_30px_rgba(15,23,42,0.12)] dark:shadow-[0_16px_40px_rgba(15,23,42,0.55)] text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200"
+        className="w-full px-3 py-2.5 text-sm text-left border border-gray-200/80 dark:border-gray-600/80 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-[0_10px_30px_rgba(15,23,42,0.12)] dark:shadow-[0_16px_40px_rgba(15,23,42,0.55)] text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 touch-manipulation"
         onFocus={handleFocus}
         onBlur={handleBlur}
+        onTouchStart={(e) => {
+          // En móvil, abrir al tocar
+          e.stopPropagation();
+          if (!open) {
+            handleFocus();
+          }
+        }}
+        onClick={(e) => {
+          // Prevenir propagación para evitar conflictos
+          e.stopPropagation();
+        }}
       >
         <span className="truncate text-[0.9rem]">
           {selected ? selected.label : (value === '' ? 'Todos' : placeholder)}
@@ -262,8 +276,17 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
               )}
               <button
                 type="button"
-                onClick={() => { onChange(opt.value); setOpen(false); }}
-                className={`w-full px-4 py-2.5 text-[0.9rem] text-left cursor-pointer transition-colors duration-150 flex items-center justify-between ${
+                onClick={(e) => { 
+                  e.stopPropagation();
+                  onChange(opt.value); 
+                  setOpen(false); 
+                }}
+                onTouchEnd={(e) => {
+                  e.stopPropagation();
+                  onChange(opt.value);
+                  setOpen(false);
+                }}
+                className={`w-full px-4 py-2.5 text-[0.9rem] text-left cursor-pointer transition-colors duration-150 flex items-center justify-between touch-manipulation active:scale-[0.98] ${
                   value === opt.value 
                     ? 'bg-blue-50/90 dark:bg-blue-900/25 text-blue-900 dark:text-blue-100 font-medium'
                     : 'hover:bg-gray-50/90 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100'

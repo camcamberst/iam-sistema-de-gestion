@@ -42,6 +42,7 @@ export default function AppleSearchBar({
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
+  const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // ===========================================
   // 🔧 HELPER FUNCTIONS
@@ -83,21 +84,46 @@ export default function AppleSearchBar({
   };
 
   const handleFilterFocus = (filterId: string) => {
-    // Cerrar otros dropdowns activos
+    // Cerrar otros dropdowns activos antes de abrir el nuevo
     setActiveDropdown(filterId);
+  };
+
+  const handleFilterBlur = (filterId: string) => {
+    // Solo cerrar si este es el dropdown activo
+    if (activeDropdown === filterId) {
+      setTimeout(() => {
+        setActiveDropdown(null);
+      }, 150);
+    }
   };
 
   // 🔧 FIX: Manejar clicks fuera del área de búsqueda
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      if (searchBarRef.current && !searchBarRef.current.contains(event.target as Node)) {
+    function handleClickOutside(event: MouseEvent | TouchEvent) {
+      const target = event.target as Node;
+      
+      // Verificar si el click está dentro de algún dropdown
+      const isInsideAnyDropdown = Object.values(dropdownRefs.current).some(ref => 
+        ref && ref.contains(target)
+      );
+      
+      // Verificar si el click está dentro del contenedor principal
+      const isInsideSearchBar = searchBarRef.current?.contains(target);
+      
+      // Si el click está fuera de todo, cerrar dropdowns
+      if (!isInsideSearchBar && !isInsideAnyDropdown) {
         setActiveDropdown(null);
         setIsExpanded(false);
       }
     }
 
+    // Usar tanto mousedown como touchstart para mejor soporte móvil
     document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener('touchstart', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('touchstart', handleClickOutside);
+    };
   }, []);
 
   // Notificar cambios en el estado de dropdowns
@@ -124,7 +150,20 @@ export default function AppleSearchBar({
   // 🎨 RENDER FUNCTIONS
   // ===========================================
   const renderFilter = (filter: SearchFilter) => (
-    <div key={filter.id} className="space-y-2 min-w-0">
+    <div 
+      key={filter.id} 
+      className="space-y-2 min-w-0 relative z-0"
+      ref={(el) => {
+        if (el) {
+          dropdownRefs.current[filter.id] = el;
+        } else {
+          delete dropdownRefs.current[filter.id];
+        }
+      }}
+      style={{ 
+        zIndex: activeDropdown === filter.id ? 1000 : 'auto' 
+      }}
+    >
       <label className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-xs font-medium">
         <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
         <span>{filter.label}</span>
@@ -136,9 +175,7 @@ export default function AppleSearchBar({
           onChange={(v) => handleFilterChange(filter.id, v)}
           className="text-sm bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-md shadow-sm hover:shadow-md transition-all duration-200"
           onFocus={() => handleFilterFocus(filter.id)}
-          onBlur={() => {
-            setTimeout(() => setActiveDropdown(null), 100);
-          }}
+          onBlur={() => handleFilterBlur(filter.id)}
         />
         {selectedFilters[filter.id] && (
           <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
@@ -229,7 +266,7 @@ export default function AppleSearchBar({
             <span className="text-sm font-medium text-gray-700 dark:text-gray-200">Filtros Avanzados</span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-4">
             {filters.map(renderFilter)}
           </div>
           
