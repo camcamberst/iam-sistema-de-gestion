@@ -443,28 +443,29 @@ export default function MiPortafolio() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8 sm:mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <Building2 className="w-5 h-5 text-white" />
+            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              {/* Layout móvil: vertical, escritorio: horizontal */}
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
+                {/* Título e icono */}
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                       Mi Portafolio
                     </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
                       Gestiona tus plataformas y confirma entregas
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
-                  </div>
+
+                {/* Información de actualización - Oculto en móvil */}
+                <div className="hidden md:flex items-center space-x-4">
                   <div className="text-right">
                     <p className="text-xs text-gray-500 dark:text-gray-400">Última actualización</p>
                     <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
@@ -481,10 +482,10 @@ export default function MiPortafolio() {
         </div>
 
         {/* Tabs */}
-        <div className="flex space-x-1 mb-8">
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-1 sm:space-x-1 mb-6 sm:mb-8">
           <button
             onClick={() => setActiveTab('platforms')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 sm:px-5 py-2.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
               activeTab === 'platforms'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
                 : 'bg-white/70 dark:bg-gray-700/70 text-gray-600 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-gray-600/80'
@@ -494,7 +495,7 @@ export default function MiPortafolio() {
           </button>
           <button
             onClick={() => setActiveTab('analytics')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 ${
+            className={`px-4 sm:px-5 py-2.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
               activeTab === 'analytics'
                 ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white shadow-md'
                 : 'bg-white/70 dark:bg-gray-700/70 text-gray-600 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-gray-600/80'
@@ -507,12 +508,12 @@ export default function MiPortafolio() {
         {activeTab === 'platforms' && (
           <>
             {/* Etiquetas de Plataformas */}
-            <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Mis Plataformas</h2>
+            <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Mis Plataformas</h2>
                 <div className="flex items-center space-x-2">
-                  <Activity className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                     {portfolioData?.platforms.length || 0} plataformas
                   </span>
                 </div>
@@ -527,12 +528,12 @@ export default function MiPortafolio() {
               ) : (
                 <>
                   {/* Etiquetas de plataformas */}
-                  <div className="flex flex-wrap gap-2 mb-6">
+                  <div className="flex flex-wrap gap-2 sm:gap-2 mb-4 sm:mb-6">
                     {portfolioData?.platforms.map((platform) => (
                       <button
                         key={platform.id}
                         type="button"
-                        className={`px-2.5 py-1 rounded-full text-[11px] leading-5 font-medium transition-colors inline-flex items-center ${getTagClasses(platform.status)} ${
+                        className={`px-3 sm:px-2.5 py-1.5 sm:py-1 rounded-full text-xs sm:text-[11px] leading-5 font-medium transition-colors inline-flex items-center active:scale-95 touch-manipulation ${getTagClasses(platform.status)} ${
                           selectedPlatform?.id === platform.id ? 'ring-2 ring-blue-500 ring-offset-2' : ''
                         }`}
                         onClick={() => handlePlatformClick(platform)}
@@ -549,29 +550,31 @@ export default function MiPortafolio() {
                       : 'max-h-0 opacity-0 translate-y-0 scale-100 overflow-hidden'
                   }`}>
                     {selectedPlatform && (
-                      <div className="border border-gray-200 dark:border-gray-600/20 rounded-lg p-4 bg-white dark:bg-gray-700/80 hover:shadow-lg transition-shadow duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                      <div className="border border-gray-200 dark:border-gray-600/20 rounded-lg p-3 sm:p-4 bg-white dark:bg-gray-700/80 hover:shadow-lg transition-shadow duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
                         {/* Header con información principal */}
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center space-x-3">
-                            {getStatusIcon(selectedPlatform.status)}
-                            <div>
-                              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4">
+                          <div className="flex items-center space-x-3 min-w-0 flex-1">
+                            <div className="flex-shrink-0">
+                              {getStatusIcon(selectedPlatform.status)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
                                 {selectedPlatform.calculator_platforms.name}
                               </h3>
-                              <p className="text-sm text-gray-500 dark:text-gray-400">
+                              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                                 {selectedPlatform.calculator_platforms.id} • {selectedPlatform.calculator_platforms.currency}
                               </p>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3">
-                            <span className={`px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(selectedPlatform.status)}`}>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 sm:flex-shrink-0">
+                            <span className={`px-3 py-1.5 sm:py-1 rounded-full text-xs sm:text-sm font-medium text-center ${getStatusColor(selectedPlatform.status)}`}>
                               {getStatusText(selectedPlatform.status)}
                             </span>
                             {selectedPlatform.status === 'entregada' && (
                               <button
                                 onClick={() => confirmPlatform(selectedPlatform.platform_id)}
                                 disabled={confirmingPlatform === selectedPlatform.platform_id}
-                                className="px-4 py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 flex items-center space-x-2 text-sm shadow-md"
+                                className="w-full sm:w-auto px-4 py-2.5 sm:py-2 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 text-sm shadow-md active:scale-95 touch-manipulation"
                               >
                                 {confirmingPlatform === selectedPlatform.platform_id ? (
                                   <>
@@ -591,10 +594,10 @@ export default function MiPortafolio() {
 
                         {/* Pestañas internas del modal */}
                         <div className="mb-4 border-b border-gray-200 dark:border-gray-600">
-                          <div className="flex space-x-1">
+                          <div className="flex gap-1 sm:space-x-1">
                             <button
                               onClick={() => setPlatformTab('details')}
-                              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                              className={`flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
                                 platformTab === 'details'
                                   ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
                                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -604,7 +607,7 @@ export default function MiPortafolio() {
                             </button>
                             <button
                               onClick={() => setPlatformTab('metrics')}
-                              className={`px-4 py-2 text-sm font-medium transition-colors duration-200 ${
+                              className={`flex-1 sm:flex-none px-4 py-2.5 sm:py-2 text-sm font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
                                 platformTab === 'metrics'
                                   ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
                                   : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
@@ -645,14 +648,14 @@ export default function MiPortafolio() {
                                             type="text"
                                             value={credentials.login_username}
                                             readOnly
-                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                            className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 touch-manipulation"
                                           />
                                           <button
                                             onClick={() => copyToClipboard(credentials.login_username!)}
-                                            className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                            className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 active:scale-95 transition-all touch-manipulation"
                                             title="Copiar usuario"
                                           >
-                                            <Copy className="w-4 h-4" />
+                                            <Copy className="w-4 h-4 sm:w-4 sm:h-4" />
                                           </button>
                                         </div>
                                       </div>
@@ -670,18 +673,18 @@ export default function MiPortafolio() {
                                             type={showPassword ? 'text' : 'password'}
                                             value={credentials.login_password}
                                             readOnly
-                                            className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                                            className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono touch-manipulation"
                                           />
                                           <button
                                             onClick={() => setShowPassword(!showPassword)}
-                                            className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                            className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 active:scale-95 transition-all touch-manipulation"
                                             title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                                           >
                                             {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                           </button>
                                           <button
                                             onClick={() => copyToClipboard(credentials.login_password!)}
-                                            className="p-2 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors"
+                                            className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-200 dark:hover:bg-blue-900/50 active:scale-95 transition-all touch-manipulation"
                                             title="Copiar contraseña"
                                           >
                                             <Copy className="w-4 h-4" />
@@ -697,7 +700,7 @@ export default function MiPortafolio() {
                                           href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 sm:px-4 py-3 sm:py-2.5 h-12 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-sm font-medium touch-manipulation"
                                         >
                                           <ExternalLink className="w-4 h-4" />
                                           <span>Abrir plataforma</span>
@@ -724,7 +727,7 @@ export default function MiPortafolio() {
                                           href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
                                           target="_blank"
                                           rel="noopener noreferrer"
-                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 sm:px-4 py-3 sm:py-2.5 h-12 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-sm font-medium touch-manipulation"
                                         >
                                           <ExternalLink className="w-4 h-4" />
                                           <span>Abrir plataforma</span>
@@ -776,11 +779,11 @@ export default function MiPortafolio() {
                                                 type="text"
                                                 value={credentials3CX.app_3cx_username || ''}
                                                 readOnly
-                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none"
+                                                className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none touch-manipulation"
                                               />
                                               <button
                                                 onClick={() => copyToClipboard(credentials3CX.app_3cx_username || '')}
-                                                className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                                                className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 active:scale-95 transition-all touch-manipulation"
                                                 title="Copiar usuario"
                                               >
                                                 <Copy className="w-4 h-4" />
@@ -799,18 +802,18 @@ export default function MiPortafolio() {
                                                 type={showPassword3CX ? 'text' : 'password'}
                                                 value={credentials3CX.app_3cx_password || ''}
                                                 readOnly
-                                                className="flex-1 px-3 py-2 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none font-mono"
+                                                className="flex-1 px-3 sm:px-3 py-2.5 sm:py-2 h-12 sm:h-auto bg-white dark:bg-gray-800 border-2 border-gray-300 dark:border-gray-600 rounded-lg text-sm text-gray-900 dark:text-gray-100 focus:outline-none font-mono touch-manipulation"
                                               />
                                               <button
                                                 onClick={() => setShowPassword3CX(!showPassword3CX)}
-                                                className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                                                className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 active:scale-95 transition-all touch-manipulation"
                                                 title={showPassword3CX ? 'Ocultar contraseña' : 'Mostrar contraseña'}
                                               >
                                                 {showPassword3CX ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                                               </button>
                                               <button
                                                 onClick={() => copyToClipboard(credentials3CX.app_3cx_password || '')}
-                                                className="p-2 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+                                                className="p-2.5 sm:p-2 min-h-[48px] sm:min-h-0 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-200 dark:hover:bg-purple-900/50 active:scale-95 transition-all touch-manipulation"
                                                 title="Copiar contraseña"
                                               >
                                                 <Copy className="w-4 h-4" />
@@ -835,7 +838,7 @@ export default function MiPortafolio() {
                                       href="https://superfoon.synergy4.com/#/login"
                                       target="_blank"
                                       rel="noopener noreferrer"
-                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md hover:shadow-lg text-sm font-medium mb-3"
+                                      className="w-full inline-flex items-center justify-center space-x-2 px-4 sm:px-4 py-3 sm:py-2.5 h-12 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-md hover:shadow-lg text-sm sm:text-sm font-medium mb-3 touch-manipulation"
                                     >
                                       <ExternalLink className="w-4 h-4" />
                                       <span>Abrir app</span>
@@ -857,20 +860,20 @@ export default function MiPortafolio() {
 
                         {/* Contenido de pestaña: Métricas */}
                         {platformTab === 'metrics' && (
-                          <div className="bg-gray-50 dark:bg-gray-600/80 rounded-lg p-4">
-                            <h4 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Estadísticas de Rendimiento</h4>
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                              <div className="text-center">
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Conexión</p>
-                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{selectedPlatform.stats.connectionPercentage}%</p>
+                          <div className="bg-gray-50 dark:bg-gray-600/80 rounded-lg p-3 sm:p-4">
+                            <h4 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Estadísticas de Rendimiento</h4>
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Conexión</p>
+                                <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">{selectedPlatform.stats.connectionPercentage}%</p>
                               </div>
-                              <div className="text-center">
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Quincenal</p>
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Quincenal</p>
                                 <div className="flex items-center justify-center space-x-1">
-                                  <p className="text-lg font-bold text-green-600 dark:text-green-400">
+                                  <p className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">
                                     ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
                                   </p>
-                                  <span className={`text-sm font-medium ${
+                                  <span className={`text-xs sm:text-sm font-medium ${
                                     selectedPlatform.stats.trend === '↑' ? 'text-green-500 dark:text-green-400' :
                                     selectedPlatform.stats.trend === '↓' ? 'text-red-500 dark:text-red-400' :
                                     'text-gray-400 dark:text-gray-500'
@@ -879,15 +882,15 @@ export default function MiPortafolio() {
                                   </span>
                                 </div>
                               </div>
-                              <div className="text-center">
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Total (30 días)</p>
-                                <p className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Total (30 días)</p>
+                                <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
                                   ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
                                 </p>
                               </div>
-                              <div className="text-center">
-                                <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Última Actividad</p>
-                                <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Última Actividad</p>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">
                                   {selectedPlatform.stats.lastActivity ? 
                                     new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
                                     'N/A'
@@ -942,46 +945,46 @@ export default function MiPortafolio() {
           <div className="space-y-6">
             {/* Resumen - Tarjetas Estadísticas */}
             {portfolioData && (
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Total Plataformas</p>
-                      <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{portfolioData.summary.totalPlatforms}</p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Total Plataformas</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{portfolioData.summary.totalPlatforms}</p>
                     </div>
-                    <Building2 className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                   </div>
                 </div>
 
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Activas</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">{portfolioData.summary.activePlatforms}</p>
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Activas</p>
+                      <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{portfolioData.summary.activePlatforms}</p>
                     </div>
-                    <CheckCircle className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
                   </div>
                 </div>
 
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Pendientes</p>
-                      <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{portfolioData.summary.pendingConfirmation}</p>
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Pendientes</p>
+                      <p className="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">{portfolioData.summary.pendingConfirmation}</p>
                     </div>
-                    <Clock className="w-8 h-8 text-yellow-600 dark:text-yellow-400" />
+                    <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                   </div>
                 </div>
 
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-gray-600 dark:text-gray-300">Ganancias (30 días)</p>
-                      <p className="text-2xl font-bold text-green-600 dark:text-green-400">
+                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 col-span-2 md:col-span-1">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Ganancias (30 días)</p>
+                      <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
                         ${portfolioData.summary.totalCopModelo.toLocaleString('es-CO')} COP
                       </p>
                     </div>
-                    <DollarSign className="w-8 h-8 text-green-600 dark:text-green-400" />
+                    <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
                   </div>
                 </div>
               </div>
