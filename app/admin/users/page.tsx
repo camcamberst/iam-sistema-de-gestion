@@ -509,8 +509,13 @@ export default function UsersListPage() {
         </div>
 
         {/* Search and Filters */}
-        <div className={`mb-16 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${showEditModal ? 'opacity-30 blur-sm pointer-events-none' : ''}`}
-             aria-hidden={showEditModal}
+        <div 
+          className={`mb-16 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${showEditModal ? 'opacity-30 blur-sm pointer-events-none' : ''}`}
+          aria-hidden={showEditModal}
+          onClick={(e) => {
+            // Prevenir que los clics dentro del contenedor interfieran con dropdowns
+            e.stopPropagation();
+          }}
         >
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-2">

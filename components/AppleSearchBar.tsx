@@ -41,8 +41,25 @@ export default function AppleSearchBar({
   const [selectedFilters, setSelectedFilters] = useState<Record<string, string>>({});
   const [isExpanded, setIsExpanded] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  // Estados separados para móvil - mismo principio que el menú móvil del panel modelo
+  const [mobileActiveDropdown, setMobileActiveDropdown] = useState<string | null>(null);
   const searchBarRef = useRef<HTMLDivElement>(null);
   const dropdownRefs = useRef<Record<string, HTMLDivElement | null>>({});
+  
+  // Detectar si estamos en móvil
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+  
+  // Usar estado móvil o desktop según el tamaño de pantalla
+  const currentActiveDropdown = isMobile ? mobileActiveDropdown : activeDropdown;
+  const setCurrentActiveDropdown = isMobile ? setMobileActiveDropdown : setActiveDropdown;
 
   // ===========================================
   // 🔧 HELPER FUNCTIONS
@@ -79,8 +96,10 @@ export default function AppleSearchBar({
       ...prev,
       [filterId]: value
     }));
-    // Cerrar dropdown después de selección
+    // Cerrar dropdown después de selección - usar estado correcto según móvil/desktop
+    setCurrentActiveDropdown(null);
     setActiveDropdown(null);
+    setMobileActiveDropdown(null);
   };
 
   const handleFilterFocus = (filterId: string) => {
@@ -100,6 +119,7 @@ export default function AppleSearchBar({
 
   // 🔧 FIX: Manejar clicks fuera del área de búsqueda
   // Usar el mismo principio que el menú móvil: solo click, no touchstart
+  // Y deshabilitar backdrop cuando hay dropdowns abiertos
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
@@ -116,6 +136,7 @@ export default function AppleSearchBar({
       // Pero no cerrar el panel expandido en móvil (solo cerrar dropdowns individuales)
       if (!isInsideSearchBar && !isInsideAnyDropdown) {
         setActiveDropdown(null);
+        setMobileActiveDropdown(null);
         // No cerrar isExpanded aquí - solo cerrar dropdowns individuales
       }
     }
@@ -135,10 +156,10 @@ export default function AppleSearchBar({
   // Notificar cambios en el estado de dropdowns
   useEffect(() => {
     if (onDropdownStateChange) {
-      const hasOpenDropdown = isExpanded || activeDropdown !== null;
+      const hasOpenDropdown = isExpanded || activeDropdown !== null || mobileActiveDropdown !== null;
       onDropdownStateChange(hasOpenDropdown);
     }
-  }, [isExpanded, activeDropdown, onDropdownStateChange]);
+  }, [isExpanded, activeDropdown, mobileActiveDropdown, onDropdownStateChange]);
 
   const clearFilters = () => {
     setSelectedFilters({});
@@ -167,7 +188,7 @@ export default function AppleSearchBar({
         }
       }}
       style={{ 
-        zIndex: activeDropdown === filter.id ? 1000 : 'auto' 
+        zIndex: currentActiveDropdown === filter.id ? 1000 : 'auto' 
       }}
     >
       <label className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-xs font-medium">
@@ -226,6 +247,7 @@ export default function AppleSearchBar({
                   setIsExpanded(!isExpanded);
                   if (isExpanded) {
                     setActiveDropdown(null);
+                    setMobileActiveDropdown(null);
                   }
                 }}
                 className={`p-2 rounded-md text-xs transition-all duration-200 ${
@@ -262,7 +284,24 @@ export default function AppleSearchBar({
 
       {/* Filters Panel */}
       {filters.length > 0 && isExpanded && (
-        <div className="mt-3 relative bg-white dark:bg-gray-800 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-600 shadow-xl p-4 animate-in slide-in-from-top-2 duration-200 z-[100]">
+        <div 
+          className="mt-3 relative bg-white dark:bg-gray-800 backdrop-blur-sm rounded-lg border border-gray-200 dark:border-gray-600 shadow-xl p-4 animate-in slide-in-from-top-2 duration-200 z-[100]"
+          onClick={(e) => {
+            // Prevenir que los clics dentro del panel cierren dropdowns
+            e.stopPropagation();
+          }}
+          onMouseDown={(e) => {
+            e.stopPropagation();
+          }}
+          onTouchStart={(e) => {
+            e.stopPropagation();
+          }}
+          style={{
+            // Deshabilitar pointer events en el backdrop cuando hay dropdowns abiertos
+            // Similar al menú móvil del panel modelo
+            pointerEvents: 'auto'
+          }}
+        >
           <div className="flex items-center space-x-2 mb-4">
             <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
               <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
