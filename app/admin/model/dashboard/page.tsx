@@ -7,7 +7,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import AIDashboard from '@/components/AIDashboard';
-import { InfoCardGrid } from '@/components/ui/InfoCard';
+import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import AnnouncementBoardWidget from '@/components/AnnouncementBoardWidget';
 
 interface User {
@@ -354,8 +354,8 @@ export default function ModelDashboard() {
 
         {/* Resumen de productividad y progreso de meta (solo para modelos) */}
         {user.role === 'modelo' && (
-        <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+        <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="flex items-center space-x-2 mb-2.5 sm:mb-4">
             <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
               <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
@@ -365,39 +365,38 @@ export default function ModelDashboard() {
           </div>
           
           {productivityLoading ? (
-            <div className="text-center py-4">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600 dark:text-gray-300">Cargando datos de productividad...</p>
+            <div className="text-center py-3 sm:py-4">
+              <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Cargando datos de productividad...</p>
             </div>
           ) : (
             <>
-              <InfoCardGrid
-                cards={[
-                  {
-                    value: productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—',
-                    label: 'Ganancias Hoy',
-                    color: 'blue',
-                    size: 'sm'
-                  },
-                  {
-                    value: productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—',
-                    label: 'USD Modelo (hoy)',
-                    color: 'green',
-                    size: 'sm'
-                  },
-                  {
-                    value: productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—',
-                    label: 'COP Modelo (hoy)',
-                    color: 'purple',
-                    size: 'sm'
-                  }
-                ]}
-                columns={3}
-                className="mb-3 sm:mb-4"
-              />
+              {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-2.5 sm:mb-4">
+                <InfoCard
+                  value={productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
+                  label="Ganancias Hoy"
+                  color="blue"
+                  size="sm"
+                />
+                <InfoCard
+                  value={productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
+                  label="USD Modelo"
+                  color="green"
+                  size="sm"
+                />
+                {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
+                <InfoCard
+                  value={productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
+                  label="COP Modelo"
+                  color="purple"
+                  size="sm"
+                  className="col-span-2 md:col-span-1"
+                />
+              </div>
 
               {/* Barra de alcance de meta - Copia exacta de Mi Calculadora */}
-              <div className="mt-3 sm:mt-4">
+              <div className="mt-2.5 sm:mt-4">
                 {(() => {
                   if (!productivityData) return null;
                   
@@ -456,31 +455,31 @@ export default function ModelDashboard() {
                         style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
                       ></div>
 
-                      <div className="relative p-3 sm:p-4">
+                      <div className="relative p-2.5 sm:p-4">
                         <div className="flex items-center space-x-2 sm:space-x-3">
                           {/* Icono animado */}
                           <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
                             <div
-                              className={`w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md`}
+                              className={`w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md`}
                               style={{
                                 background: `linear-gradient(135deg, ${iconStart}, ${iconEnd})`
                               }}
                             >
-                              <span className="text-white text-xs sm:text-sm">✓</span>
+                              <span className="text-white text-[10px] sm:text-sm">✓</span>
                             </div>
                           </div>
                           
                           {/* Contenido compacto */}
                           <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
-                              <div className={`font-bold text-xs sm:text-sm leading-tight`} style={{ color: headingColor }}>
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
+                              <div className={`font-bold text-[11px] sm:text-sm leading-tight`} style={{ color: headingColor }}>
                                 {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                               </div>
                               {(() => {
                                 const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
                                 const remainingPct = Math.max(0, 100 - roundedProgress);
                                 return (
-                                  <div className={`text-[10px] sm:text-xs font-medium leading-tight`} style={{ color: subTextColor }}>
+                                  <div className={`text-[9px] sm:text-xs font-medium leading-tight`} style={{ color: subTextColor }}>
                                     {estaPorDebajo
                                       ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
                                       : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
@@ -496,8 +495,8 @@ export default function ModelDashboard() {
                             })()}
                             
                             {/* Barra de progreso compacta */}
-                            <div className="mt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                            <div className="mt-1.5 sm:mt-2">
+                              <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
                                 <div 
                                   className={`h-full transition-all duration-1000 ease-out`}
                                   style={{ 
@@ -515,7 +514,7 @@ export default function ModelDashboard() {
                 })()}
               </div>
 
-              <div className="mt-3 sm:mt-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-300">
+              <div className="mt-2 sm:mt-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-300">
                 Para actualizar tus valores usa el menú <a href="/admin/model/calculator" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
               </div>
             </>

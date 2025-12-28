@@ -72,9 +72,9 @@ export default function InfoCard({
   size = 'md'
 }: InfoCardProps) {
   const colors = colorVariants[color];
-  const paddingClass = size === 'sm' ? 'p-3 sm:p-4' : (size === 'lg' ? 'p-6' : 'p-5');
-  const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-lg' : 'text-xl');
-  const labelTextClass = size === 'sm' ? 'text-[11px]' : 'text-xs';
+  const paddingClass = size === 'sm' ? 'p-2 sm:p-4' : (size === 'lg' ? 'p-6' : 'p-5');
+  const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-base sm:text-lg' : 'text-xl');
+  const labelTextClass = size === 'sm' ? 'text-[10px] sm:text-[11px]' : 'text-xs';
   
   const formatValue = (val: string | number): string => {
     if (typeof val === 'number') {
