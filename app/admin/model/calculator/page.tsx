@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { getColombiaPeriodStartDate } from '@/utils/calculator-dates';
-import { InfoCardGrid } from '@/components/ui/InfoCard';
+import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 
 interface User {
@@ -1651,8 +1651,8 @@ export default function ModelCalculatorPage() {
         </div>
 
         {/* Totales y Alertas - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="flex items-center justify-between mb-2.5 sm:mb-4">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
               Totales y Alertas
@@ -1660,7 +1660,7 @@ export default function ModelCalculatorPage() {
             <button
               onClick={saveValues}
               disabled={saving || platforms.filter(p => p.enabled).length === 0}
-              className={`px-4 sm:px-5 py-2.5 sm:py-3 text-sm sm:text-base font-medium rounded-lg transition-all duration-200 transform active:scale-95 whitespace-nowrap touch-manipulation ${
+              className={`px-3 sm:px-5 py-2 sm:py-3 text-xs sm:text-base font-medium rounded-lg transition-all duration-200 transform active:scale-95 whitespace-nowrap touch-manipulation ${
                 !saving && platforms.filter(p => p.enabled).length > 0
                   ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg active:shadow-md'
                   : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -1670,114 +1670,115 @@ export default function ModelCalculatorPage() {
             </button>
           </div>
           
-          {/* Totales principales - ESTILO UNIFICADO */}
-          <InfoCardGrid
-            cards={[
-              {
-                value: `$${Math.max(0, todayEarnings - earningsOffset).toFixed(2)}`,
-                label: 'Ganancias Hoy ↺',
-                color: 'blue',
-                onClick: handleResetTodayEarnings,
-                clickable: true
-              },
-              {
-                value: `$${platforms.reduce((sum, p) => {
-                  // Calcular USD modelo usando fórmulas específicas + porcentaje
-                  let usdModelo = 0;
-                  if (p.currency === 'EUR') {
-                    if (p.id === 'big7') {
-                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
-                      usdModelo = p.value * (rates?.eur_usd || 1.01);
-                    } else {
-                      usdModelo = p.value * (rates?.eur_usd || 1.01);
-                    }
-                  } else if (p.currency === 'GBP') {
-                    if (p.id === 'aw') {
-                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                    } else {
-                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
-                    }
-                  } else if (p.currency === 'USD') {
-                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                      usdModelo = p.value * 0.75;
-                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                      usdModelo = p.value * 0.05;
-                    } else if (p.id === 'dxlive') {
-                      usdModelo = p.value * 0.60;
-                    } else if (p.id === 'secretfriends') {
-                      usdModelo = p.value * 0.5;
-                    } else if (p.id === 'superfoon') {
-                      usdModelo = p.value;
-                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
-                      usdModelo = p.value;
-                    } else {
-                      usdModelo = p.value;
-                    }
+          {/* Totales principales - Móvil: 2 columnas, Escritorio: 3 columnas */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-2.5 sm:mb-4">
+            <InfoCard
+              value={`$${Math.max(0, todayEarnings - earningsOffset).toFixed(2)}`}
+              label="Ganancias Hoy ↺"
+              color="blue"
+              size="sm"
+              onClick={handleResetTodayEarnings}
+              clickable={true}
+            />
+            <InfoCard
+              value={`$${platforms.reduce((sum, p) => {
+                // Calcular USD modelo usando fórmulas específicas + porcentaje
+                let usdModelo = 0;
+                if (p.currency === 'EUR') {
+                  if (p.id === 'big7') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                  } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  } else {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01);
                   }
-                  const norm = String(p.id || '').toLowerCase();
-                  if (norm === 'superfoon') {
-                    return sum + usdModelo; // 100% para Superfoon
+                } else if (p.currency === 'GBP') {
+                  if (p.id === 'aw') {
+                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                  } else {
+                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
                   }
-                  return sum + (usdModelo * p.percentage / 100);
-                }, 0).toFixed(2)}`,
-                label: 'USD Modelo',
-                color: 'green'
-              },
-              {
-                value: `$${(platforms.reduce((sum, p) => {
-                  // Calcular USD modelo usando fórmulas específicas + porcentaje
-                  let usdModelo = 0;
-                  if (p.currency === 'EUR') {
-                    if (p.id === 'big7') {
-                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                    } else if (p.id === 'mondo') {
-                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
-                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
-                      usdModelo = p.value * (rates?.eur_usd || 1.01);
-                    } else {
-                      usdModelo = p.value * (rates?.eur_usd || 1.01);
-                    }
-                  } else if (p.currency === 'GBP') {
-                    if (p.id === 'aw') {
-                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                    } else {
-                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
-                    }
-                  } else if (p.currency === 'USD') {
-                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                      usdModelo = p.value * 0.75;
-                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                      usdModelo = p.value * 0.05;
-                    } else if (p.id === 'dxlive') {
-                      usdModelo = p.value * 0.60;
-                    } else if (p.id === 'secretfriends') {
-                      usdModelo = p.value * 0.5;
-                    } else if (p.id === 'superfoon') {
-                      usdModelo = p.value;
-                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
-                      usdModelo = p.value;
-                    } else {
-                      usdModelo = p.value;
-                    }
+                } else if (p.currency === 'USD') {
+                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                    usdModelo = p.value * 0.75;
+                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                    usdModelo = p.value * 0.05;
+                  } else if (p.id === 'dxlive') {
+                    usdModelo = p.value * 0.60;
+                  } else if (p.id === 'secretfriends') {
+                    usdModelo = p.value * 0.5;
+                  } else if (p.id === 'superfoon') {
+                    usdModelo = p.value;
+                  } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                    usdModelo = p.value;
+                  } else {
+                    usdModelo = p.value;
                   }
-                  const norm = String(p.id || '').toLowerCase();
-                  if (norm === 'superfoon') {
-                    return sum + usdModelo; // 100% para Superfoon
+                }
+                const norm = String(p.id || '').toLowerCase();
+                if (norm === 'superfoon') {
+                  return sum + usdModelo; // 100% para Superfoon
+                }
+                return sum + (usdModelo * p.percentage / 100);
+              }, 0).toFixed(2)}
+              label="USD Modelo"
+              color="green"
+              size="sm"
+            />
+            {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
+            <InfoCard
+              value={`$${(platforms.reduce((sum, p) => {
+                // Calcular USD modelo usando fórmulas específicas + porcentaje
+                let usdModelo = 0;
+                if (p.currency === 'EUR') {
+                  if (p.id === 'big7') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                  } else if (p.id === 'mondo') {
+                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                  } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  } else {
+                    usdModelo = p.value * (rates?.eur_usd || 1.01);
                   }
-                  return sum + (usdModelo * p.percentage / 100);
-                }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                label: 'COP Modelo',
-                color: 'purple'
-              }
-            ]}
-            columns={3}
-            className="mb-4"
-          />
+                } else if (p.currency === 'GBP') {
+                  if (p.id === 'aw') {
+                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                  } else {
+                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                  }
+                } else if (p.currency === 'USD') {
+                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                    usdModelo = p.value * 0.75;
+                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                    usdModelo = p.value * 0.05;
+                  } else if (p.id === 'dxlive') {
+                    usdModelo = p.value * 0.60;
+                  } else if (p.id === 'secretfriends') {
+                    usdModelo = p.value * 0.5;
+                  } else if (p.id === 'superfoon') {
+                    usdModelo = p.value;
+                  } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                    usdModelo = p.value;
+                  } else {
+                    usdModelo = p.value;
+                  }
+                }
+                const norm = String(p.id || '').toLowerCase();
+                if (norm === 'superfoon') {
+                  return sum + usdModelo; // 100% para Superfoon
+                }
+                return sum + (usdModelo * p.percentage / 100);
+              }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              label="COP Modelo"
+              color="purple"
+              size="sm"
+              className="col-span-2 md:col-span-1"
+            />
+          </div>
           
           {/* 90% de anticipo - estilo sutil */}
-          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
-            <div className="text-sm text-gray-600 dark:text-gray-300">
+          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
+            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
               <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
                 // Calcular USD modelo usando fórmulas específicas + porcentaje
                 let usdModelo = 0;
@@ -1938,32 +1939,32 @@ export default function ModelCalculatorPage() {
                   <div className="cta-100" />
                 </div>
                 
-                <div className="relative p-4">
-                  <div className="flex items-center space-x-3">
+                <div className="relative p-2.5 sm:p-4">
+                  <div className="flex items-center space-x-2 sm:space-x-3">
                     {/* Icono animado */}
                     <div className={`relative flex-shrink-0 milestone-icon ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
                       <div
-                        className={`w-8 h-8 rounded-full flex items-center justify-center shadow-md`}
+                        className={`w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md`}
                         style={{
                           background: `linear-gradient(90deg, ${iconStart}, ${iconEnd})`,
                           boxShadow: `0 4px 10px ${iconStart}33`
                         }}
                       >
-                        <span className="text-white text-sm">✓</span>
+                        <span className="text-white text-[10px] sm:text-sm">✓</span>
                       </div>
                     </div>
                     
                     {/* Contenido compacto */}
                     <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div className={`font-bold text-sm milestone-title`} style={{ color: headingColor }}>
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
+                        <div className={`font-bold text-[11px] sm:text-sm milestone-title`} style={{ color: headingColor }}>
                           {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                         </div>
                         {(() => {
                           const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
                           const remainingPct = Math.max(0, 100 - roundedProgress);
                           return (
-                            <div className={`text-xs font-medium`} style={{ color: subTextColor }}>
+                            <div className={`text-[9px] sm:text-xs font-medium`} style={{ color: subTextColor }}>
                               {estaPorDebajo
                                 ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
                                 : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
@@ -1978,8 +1979,8 @@ export default function ModelCalculatorPage() {
                         return <ProgressMilestone progress={roundedProgress} />;
                       })()}
                       {/* Barra de progreso compacta */}
-                      <div className="mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                      <div className="mt-1.5 sm:mt-2">
+                        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
                           <div 
                             className={`h-full transition-all duration-1000 ease-out progress-inner`}
                             style={{ 
