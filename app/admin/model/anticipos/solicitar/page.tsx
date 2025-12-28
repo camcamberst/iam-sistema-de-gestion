@@ -490,40 +490,39 @@ export default function SolicitarAnticipoPage() {
         }
       `}</style>
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8 sm:mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              {/* Layout móvil: vertical, escritorio: horizontal */}
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
+                {/* Título e icono */}
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
                     </svg>
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                       Solicitar Anticipo
                     </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
                       Solicita un anticipo de hasta el 90% de tu productividad
                     </p>
                   </div>
                 </div>
-                <div className="text-sm text-gray-500 dark:text-gray-400">
-                  Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
-                </div>
               </div>
 
               {/* Indicador de política activa integrado */}
-              <div className="mt-4 p-3 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
-                <div className="flex items-center">
-                  <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="mt-4 p-3 sm:p-4 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
+                <div className="flex items-start sm:items-center">
+                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
                   </svg>
                   <div>
-                    <p className="text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
-                    <p className="text-xs text-blue-700 dark:text-blue-400">No disponible del fin de mes al 5 y del 15 al 20</p>
+                    <p className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
+                    <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400 mt-0.5">No disponible del fin de mes al 5 y del 15 al 20</p>
                   </div>
                 </div>
               </div>
@@ -532,7 +531,7 @@ export default function SolicitarAnticipoPage() {
         </div>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
@@ -589,8 +588,8 @@ export default function SolicitarAnticipoPage() {
         </div>
 
         {/* Formulario */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-6">Datos del Anticipo</h2>
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Datos del Anticipo</h2>
           
           {success && (
             <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
@@ -616,9 +615,9 @@ export default function SolicitarAnticipoPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
             {/* Monto Solicitado y Medio de Pago - Layout Horizontal */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
               {/* Monto Solicitado */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
@@ -631,7 +630,7 @@ export default function SolicitarAnticipoPage() {
                     onChange={(e) => handleMontoChange(e.target.value)}
                     onBlur={handleMontoBlur}
                     placeholder=""
-                    className={`apple-input w-full pr-20 ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500 focus:ring-red-500' : ''}`}
+                    className={`apple-input w-full pr-20 h-12 sm:h-10 text-base sm:text-sm ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500 focus:ring-red-500' : ''} touch-manipulation`}
                     style={{ paddingLeft: '2rem' }}
                   />
                   <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">
@@ -654,18 +653,18 @@ export default function SolicitarAnticipoPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
                   Medio de Pago
                 </label>
-                <div className="space-y-3">
+                <div className="space-y-2 sm:space-y-3">
                   {['nequi', 'daviplata', 'cuenta_bancaria'].map((medio) => (
-                    <label key={medio} className="flex items-center p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors">
+                    <label key={medio} className="flex items-center p-3 sm:p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 cursor-pointer transition-colors touch-manipulation min-h-[48px]">
                       <input
                         type="radio"
                         name="medio_pago"
                         value={medio}
                         checked={anticipoData.medio_pago === medio}
                         onChange={(e) => handleInputChange('medio_pago', e.target.value)}
-                        className="mr-3 text-blue-600 focus:ring-blue-500"
+                        className="mr-3 sm:mr-4 w-5 h-5 sm:w-4 sm:h-4 text-blue-600 focus:ring-blue-500"
                       />
-                      <span className="text-sm font-medium text-gray-700 dark:text-gray-200">
+                      <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200">
                         {medio === 'cuenta_bancaria' ? 'CUENTA BANCARIA' : medio.toUpperCase()}
                       </span>
                     </label>
@@ -676,9 +675,9 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos NEQUI/DAVIPLATA */}
             {(anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') && (
-              <div className="bg-blue-50 dark:bg-blue-50/90 rounded-xl p-6 border border-blue-200 dark:border-blue-200/50 shadow-sm">
-                <h3 className="text-lg font-semibold text-blue-900 dark:text-blue-600 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="bg-blue-50 dark:bg-blue-50/90 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-200/50 shadow-sm">
+                <h3 className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-600 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Nombre del Beneficiario
@@ -688,7 +687,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.nombre_beneficiario || ''}
                       onChange={(e) => handleInputChange('nombre_beneficiario', e.target.value)}
                       placeholder="Nombre completo"
-                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
                       required
                     />
                   </div>
@@ -701,7 +700,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.numero_telefono || ''}
                       onChange={(e) => handleTelefonoChange(e.target.value)}
                       placeholder="Número de teléfono (10 dígitos)"
-                      className={`w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 ${telefonoError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      className={`w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation ${telefonoError ? 'border-red-500 focus:ring-red-500' : ''}`}
                       maxLength={10}
                       required
                     />
@@ -715,11 +714,11 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos Cuenta Bancaria */}
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
-              <div className="bg-green-50 dark:bg-green-50/90 rounded-xl p-6 border border-green-200 dark:border-green-200/50 shadow-sm">
-                <h3 className="text-lg font-semibold text-green-900 dark:text-green-600 mb-6">Datos de CUENTA BANCARIA</h3>
+              <div className="bg-green-50 dark:bg-green-50/90 rounded-xl p-4 sm:p-6 border border-green-200 dark:border-green-200/50 shadow-sm">
+                <h3 className="text-base sm:text-lg font-semibold text-green-900 dark:text-green-600 mb-4 sm:mb-6">Datos de CUENTA BANCARIA</h3>
                 
                 {/* Primera fila: Nombre del Titular y Banco */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Nombre del Titular
@@ -729,7 +728,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.nombre_titular || ''}
                       onChange={(e) => handleInputChange('nombre_titular', e.target.value)}
                       placeholder="Nombre completo del titular"
-                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
                       required
                     />
                   </div>
@@ -754,8 +753,8 @@ export default function SolicitarAnticipoPage() {
 
                 {/* Banco Otros */}
                 {anticipoData.banco === 'Otros' && (
-                  <div className="mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                  <div className="mb-4 sm:mb-6">
+                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2 sm:mb-3">
                       Nombre del Banco
                     </label>
                     <input
@@ -763,14 +762,14 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.banco_otro || ''}
                       onChange={(e) => handleInputChange('banco_otro', e.target.value)}
                       placeholder="Escribe el nombre del banco"
-                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
                       required
                     />
                   </div>
                 )}
 
                 {/* Segunda fila: Tipo de Cuenta y Número de Cuenta */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
                       Tipo de Cuenta
@@ -796,7 +795,7 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.numero_cuenta || ''}
                       onChange={(e) => handleInputChange('numero_cuenta', e.target.value)}
                       placeholder="Número de cuenta"
-                      className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
                       required
                     />
                   </div>
@@ -812,7 +811,7 @@ export default function SolicitarAnticipoPage() {
                     value={anticipoData.documento_titular || ''}
                     onChange={(e) => handleInputChange('documento_titular', e.target.value)}
                     placeholder="Cédula o documento de identidad"
-                    className="w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200"
+                    className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
                     required
                   />
                 </div>
@@ -820,19 +819,19 @@ export default function SolicitarAnticipoPage() {
             )}
 
             {/* Botones */}
-            <div className="flex justify-center pt-8 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex gap-4">
+            <div className="flex justify-center pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-700">
+              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="px-6 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200"
+                  className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all duration-200 touch-manipulation"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || productivityData.anticipoDisponible <= 0 || !isFormValid()}
-                  className="px-6 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                  className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all duration-200 shadow-md touch-manipulation"
                 >
                   {submitting ? 'Enviando...' : 'Enviar Solicitud'}
                 </button>
