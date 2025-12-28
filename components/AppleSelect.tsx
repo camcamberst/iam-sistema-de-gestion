@@ -27,7 +27,20 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    function onDoc(e: MouseEvent | TouchEvent) {
+    let touchStartTime = 0;
+    let touchTarget: Node | null = null;
+
+    function handleTouchStart(event: TouchEvent) {
+      touchStartTime = Date.now();
+      touchTarget = event.target as Node;
+    }
+
+    function onDoc(e: MouseEvent) {
+      // Ignorar clicks que vienen inmediatamente después de touchstart (ghost clicks)
+      if (touchTarget && Date.now() - touchStartTime < 300) {
+        return;
+      }
+      
       // Verificar que el clic no sea dentro del contenedor principal ni del dropdown
       const target = e.target as Node;
       const isClickInside = ref.current?.contains(target) || dropdownRef.current?.contains(target);
@@ -36,22 +49,24 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         setIsHovering(false);
       }
     }
+    
     function onKey(e: KeyboardEvent) {
       if (e.key === 'Escape') {
         setOpen(false);
         setIsHovering(false);
       }
     }
+    
     // Usar 'click' en lugar de 'mousedown' para evitar cierre accidental durante scroll
-    // También manejar touchstart para móvil
+    // touchstart solo para registrar, click para procesar
     if (open) {
       // Usar capture phase para detectar clics antes de que se propaguen
+      document.addEventListener('touchstart', handleTouchStart, { passive: true });
       document.addEventListener('click', onDoc, true);
-      document.addEventListener('touchstart', onDoc, true);
       document.addEventListener('keydown', onKey);
       return () => {
+        document.removeEventListener('touchstart', handleTouchStart);
         document.removeEventListener('click', onDoc, true);
-        document.removeEventListener('touchstart', onDoc, true);
         document.removeEventListener('keydown', onKey);
       };
     }
@@ -277,14 +292,23 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
               <button
                 type="button"
                 onClick={(e) => { 
+                  e.preventDefault();
                   e.stopPropagation();
                   onChange(opt.value); 
                   setOpen(false); 
                 }}
                 onTouchEnd={(e) => {
+                  e.preventDefault();
                   e.stopPropagation();
-                  onChange(opt.value);
-                  setOpen(false);
+                  // Solo ejecutar si no se ejecutó el onClick
+                  if (!e.defaultPrevented) {
+                    onChange(opt.value);
+                    setOpen(false);
+                  }
+                }}
+                onMouseDown={(e) => {
+                  // Prevenir que el mousedown cierre el dropdown antes del click
+                  e.preventDefault();
                 }}
                 className={`w-full px-4 py-2.5 text-[0.9rem] text-left cursor-pointer transition-colors duration-150 flex items-center justify-between touch-manipulation active:scale-[0.98] ${
                   value === opt.value 
