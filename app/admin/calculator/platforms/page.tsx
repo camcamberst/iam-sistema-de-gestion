@@ -227,17 +227,17 @@ export default function PlatformsListPage() {
                          </span>
                       </td>
                       <td className="px-6 py-4">
-                        <div className="flex flex-col sm:flex-row sm:justify-end gap-2 sm:gap-3 sm:space-x-3">
+                        <div className="flex items-center justify-end gap-3 sm:gap-3">
                           <Link
                             href={`/admin/calculator/platforms/${platform.id}/edit`}
-                            className="w-full sm:w-auto px-4 py-2.5 sm:px-0 sm:py-0 text-center sm:text-right text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm transition-colors rounded-lg sm:rounded-none bg-blue-50 dark:bg-blue-900/20 sm:bg-transparent hover:bg-blue-100 dark:hover:bg-blue-900/30 sm:hover:bg-transparent active:scale-95 touch-manipulation"
+                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm transition-colors touch-manipulation"
                           >
                             Editar
                           </Link>
                           <button
                             onClick={() => handleDelete(platform.id, platform.name)}
                             disabled={deletingId === platform.id}
-                            className="w-full sm:w-auto px-4 py-2.5 sm:px-0 sm:py-0 text-center sm:text-right text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm disabled:opacity-50 transition-colors rounded-lg sm:rounded-none bg-red-50 dark:bg-red-900/20 sm:bg-transparent hover:bg-red-100 dark:hover:bg-red-900/30 sm:hover:bg-transparent active:scale-95 touch-manipulation"
+                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm disabled:opacity-50 transition-colors touch-manipulation"
                           >
                             {deletingId === platform.id ? '...' : 'Eliminar'}
                           </button>
