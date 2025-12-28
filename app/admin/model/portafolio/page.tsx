@@ -528,12 +528,12 @@ export default function MiPortafolio() {
               ) : (
                 <>
                   {/* Etiquetas de plataformas */}
-                  <div className="flex flex-wrap gap-2.5 sm:gap-2 mb-4 sm:mb-6">
+                  <div className="flex flex-wrap gap-2 sm:gap-2 mb-4 sm:mb-6">
                     {portfolioData?.platforms.map((platform) => (
                       <button
                         key={platform.id}
                         type="button"
-                        className={`px-4 sm:px-2.5 py-2.5 sm:py-1 rounded-full text-sm sm:text-[11px] leading-5 font-medium transition-all duration-200 inline-flex items-center justify-center min-h-[44px] sm:min-h-0 active:scale-95 touch-manipulation shadow-sm sm:shadow-none ${getTagClasses(platform.status)} ${
+                        className={`px-3 sm:px-2.5 py-2 sm:py-1 rounded-full text-xs sm:text-[11px] leading-4 sm:leading-5 font-medium transition-all duration-200 inline-flex items-center justify-center min-h-[40px] sm:min-h-0 active:scale-95 touch-manipulation shadow-sm sm:shadow-none ${getTagClasses(platform.status)} ${
                           selectedPlatform?.id === platform.id 
                             ? 'ring-2 ring-blue-500 ring-offset-2 sm:ring-offset-2 ring-offset-1 scale-105 sm:scale-100' 
                             : 'hover:scale-105 sm:hover:scale-100'
