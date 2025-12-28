@@ -27,7 +27,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const dropdownRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    function onDoc(e: MouseEvent | TouchEvent) {
+    function onDoc(e: MouseEvent) {
       // Verificar que el clic no sea dentro del contenedor principal ni del dropdown
       const target = e.target as Node;
       const isClickInside = ref.current?.contains(target) || dropdownRef.current?.contains(target);
@@ -42,16 +42,19 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         setIsHovering(false);
       }
     }
-    // Usar 'click' en lugar de 'mousedown' para evitar cierre accidental durante scroll
-    // También manejar touchstart para móvil
+    // Usar solo 'click' para evitar cierre accidental durante scroll o touch
+    // No usar touchstart para evitar conflictos con eventos táctiles
     if (open) {
       // Usar capture phase para detectar clics antes de que se propaguen
-      document.addEventListener('click', onDoc, true);
-      document.addEventListener('touchstart', onDoc, true);
-      document.addEventListener('keydown', onKey);
+      // Delay para permitir que los eventos táctiles se procesen primero
+      const timeoutId = setTimeout(() => {
+        document.addEventListener('click', onDoc, true);
+        document.addEventListener('keydown', onKey);
+      }, 100);
+      
       return () => {
+        clearTimeout(timeoutId);
         document.removeEventListener('click', onDoc, true);
-        document.removeEventListener('touchstart', onDoc, true);
         document.removeEventListener('keydown', onKey);
       };
     }
@@ -220,16 +223,21 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         className="w-full px-3 py-2.5 text-sm text-left border border-gray-200/80 dark:border-gray-600/80 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-[0_10px_30px_rgba(15,23,42,0.12)] dark:shadow-[0_16px_40px_rgba(15,23,42,0.55)] text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 touch-manipulation"
         onFocus={handleFocus}
         onBlur={handleBlur}
-        onTouchStart={(e) => {
-          // En móvil, abrir al tocar
+        onMouseDown={(e) => {
+          // Prevenir que el mousedown cierre el dropdown antes del click
           e.stopPropagation();
-          if (!open) {
-            handleFocus();
-          }
+        }}
+        onTouchStart={(e) => {
+          // En móvil, solo registrar el touch, no abrir inmediatamente
+          e.stopPropagation();
         }}
         onClick={(e) => {
           // Prevenir propagación para evitar conflictos
           e.stopPropagation();
+          // Solo abrir/cerrar con click explícito
+          if (!open) {
+            handleFocus();
+          }
         }}
       >
         <span className="truncate text-[0.9rem]">
@@ -263,9 +271,22 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           onMouseDown={(e) => {
             // Prevenir que el clic dentro del dropdown lo cierre
             e.stopPropagation();
+            e.preventDefault();
+          }}
+          onTouchStart={(e) => {
+            // Prevenir que el touch dentro del dropdown lo cierre
+            e.stopPropagation();
+          }}
+          onTouchEnd={(e) => {
+            // Prevenir que el touch end cierre el dropdown
+            e.stopPropagation();
           }}
           onWheel={(e) => {
             // Prevenir que el scroll cierre el dropdown
+            e.stopPropagation();
+          }}
+          onClick={(e) => {
+            // Prevenir que clicks dentro del dropdown lo cierren
             e.stopPropagation();
           }}
         >
@@ -278,11 +299,21 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
                 type="button"
                 onClick={(e) => { 
                   e.stopPropagation();
+                  e.preventDefault();
                   onChange(opt.value); 
                   setOpen(false); 
                 }}
+                onMouseDown={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                }}
+                onTouchStart={(e) => {
+                  e.stopPropagation();
+                }}
                 onTouchEnd={(e) => {
                   e.stopPropagation();
+                  e.preventDefault();
+                  // Solo ejecutar si no se ejecutó el onClick
                   onChange(opt.value);
                   setOpen(false);
                 }}

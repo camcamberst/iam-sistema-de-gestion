@@ -90,16 +90,18 @@ export default function AppleSearchBar({
 
   const handleFilterBlur = (filterId: string) => {
     // Solo cerrar si este es el dropdown activo
+    // Delay más largo para evitar cierre accidental en móvil
     if (activeDropdown === filterId) {
       setTimeout(() => {
         setActiveDropdown(null);
-      }, 150);
+      }, 200);
     }
   };
 
   // 🔧 FIX: Manejar clicks fuera del área de búsqueda
+  // Usar el mismo principio que el menú móvil: solo click, no touchstart
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent | TouchEvent) {
+    function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
       
       // Verificar si el click está dentro de algún dropdown
@@ -111,18 +113,22 @@ export default function AppleSearchBar({
       const isInsideSearchBar = searchBarRef.current?.contains(target);
       
       // Si el click está fuera de todo, cerrar dropdowns
+      // Pero no cerrar el panel expandido en móvil (solo cerrar dropdowns individuales)
       if (!isInsideSearchBar && !isInsideAnyDropdown) {
         setActiveDropdown(null);
-        setIsExpanded(false);
+        // No cerrar isExpanded aquí - solo cerrar dropdowns individuales
       }
     }
 
-    // Usar tanto mousedown como touchstart para mejor soporte móvil
-    document.addEventListener('mousedown', handleClickOutside);
-    document.addEventListener('touchstart', handleClickOutside);
+    // Usar solo click para evitar conflictos con eventos táctiles
+    // Delay para permitir que los eventos táctiles se procesen primero
+    const timeoutId = setTimeout(() => {
+      document.addEventListener('click', handleClickOutside, true);
+    }, 100);
+    
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-      document.removeEventListener('touchstart', handleClickOutside);
+      clearTimeout(timeoutId);
+      document.removeEventListener('click', handleClickOutside, true);
     };
   }, []);
 
