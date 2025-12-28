@@ -362,16 +362,55 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
                 }}
                 onTouchStart={(e) => {
                   e.stopPropagation();
+                  // Registrar posición inicial del toque y tiempo
+                  const touch = e.touches[0];
+                  touchStartRef.current = {
+                    x: touch.clientX,
+                    y: touch.clientY,
+                    time: Date.now()
+                  };
+                  touchMoveRef.current = false;
                   // Marcar que se está manejando un toque
                   setTouchHandled(true);
+                }}
+                onTouchMove={(e) => {
+                  e.stopPropagation();
+                  // Si hay movimiento, es un scroll, no una selección
+                  if (touchStartRef.current) {
+                    const touch = e.touches[0];
+                    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+                    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+                    // Si el movimiento es mayor a 10px, es un scroll
+                    if (deltaX > 10 || deltaY > 10) {
+                      touchMoveRef.current = true;
+                    }
+                  }
                 }}
                 onTouchEnd={(e) => {
                   e.stopPropagation();
                   e.preventDefault();
-                  // En móvil, solo ejecutar con touch
-                  if (isMobile) {
-                    onChange(opt.value);
-                    setOpen(false);
+                  
+                  // En móvil, solo ejecutar si:
+                  // 1. No hubo movimiento significativo (no es scroll)
+                  // 2. El toque fue rápido (menos de 500ms)
+                  if (isMobile && touchStartRef.current) {
+                    const touch = e.changedTouches[0];
+                    const deltaX = Math.abs(touch.clientX - touchStartRef.current.x);
+                    const deltaY = Math.abs(touch.clientY - touchStartRef.current.y);
+                    const deltaTime = Date.now() - touchStartRef.current.time;
+                    
+                    // Solo seleccionar si:
+                    // - No hubo movimiento significativo (menos de 10px)
+                    // - El toque fue rápido (menos de 500ms)
+                    // - No se detectó movimiento durante el touch
+                    if (!touchMoveRef.current && deltaX < 10 && deltaY < 10 && deltaTime < 500) {
+                      onChange(opt.value);
+                      setOpen(false);
+                    }
+                    
+                    // Resetear referencias
+                    touchStartRef.current = null;
+                    touchMoveRef.current = false;
                     setTouchHandled(false);
                   }
                 }}
