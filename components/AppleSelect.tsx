@@ -27,6 +27,9 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
   const [touchHandled, setTouchHandled] = useState(false);
+  // Refs para detectar si es scroll vs toque intencional
+  const touchStartRef = useRef<{ x: number; y: number; time: number } | null>(null);
+  const touchMoveRef = useRef<boolean>(false);
   
   // Detectar si estamos en móvil
   useEffect(() => {
