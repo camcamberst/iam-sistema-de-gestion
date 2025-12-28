@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate } from '@/utils/calculator-dates';
 import AppleDropdown from '@/components/ui/AppleDropdown';
-import { InfoCardGrid } from '@/components/ui/InfoCard';
+import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface User {
   id: string;
@@ -384,32 +384,31 @@ export default function MiHistorialPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
-        <div className="mb-12">
+        <div className="mb-8 sm:mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-3">
-                  <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              {/* Layout móvil: vertical, escritorio: horizontal */}
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
+                {/* Título e icono */}
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
                       Mi Historial
                     </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
                       Anticipos realizados y pagados
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-4">
-                  <div className="text-sm text-gray-500 dark:text-gray-400">
-                    Acceso: <span className="font-medium text-blue-600 dark:text-blue-400">Modelo</span>
-                  </div>
-                  
-                  {/* Filtro por Período - AppleDropdown */}
+
+                {/* Filtro por Período - Ancho completo en móvil */}
+                <div className="w-full md:w-auto">
                   <AppleDropdown
                     options={availablePeriods.map(period => ({
                       value: period.key,
@@ -418,7 +417,7 @@ export default function MiHistorialPage() {
                     value={selectedPeriod}
                     onChange={handlePeriodChange}
                     placeholder="Selecciona período"
-                    className="min-w-[200px] text-sm"
+                    className="w-full md:min-w-[200px] text-sm"
                     maxHeight="max-h-48"
                   />
                 </div>
@@ -441,122 +440,128 @@ export default function MiHistorialPage() {
         )}
 
         {/* Resumen */}
-        <div className="relative z-0">
-          <InfoCardGrid 
-            cards={[
-            {
-              value: `$${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-              label: 'Total Realizado',
-              color: 'green'
-            },
-            {
-              value: anticipos.length.toString(),
-              label: 'Anticipos Pagados',
-              color: 'blue'
-            },
-            {
-              value: anticipos.length > 0 ? (totalRealizado / anticipos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0',
-              label: 'Promedio por Anticipo',
-              color: 'purple'
-            }
-          ]}
-          columns={3}
-          className="mb-6"
-        />
+        <div className="relative z-0 mb-4 sm:mb-6">
+          {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+            <InfoCard
+              value={`$${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+              label="Total Realizado"
+              color="green"
+              size="sm"
+            />
+            <InfoCard
+              value={anticipos.length.toString()}
+              label="Anticipos Pagados"
+              color="blue"
+              size="sm"
+            />
+            {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
+            <InfoCard
+              value={anticipos.length > 0 ? (totalRealizado / anticipos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
+              label="Promedio por Anticipo"
+              color="purple"
+              size="sm"
+              className="col-span-2 md:col-span-1"
+            />
+          </div>
         </div>
 
         {/* Lista de Anticipos por Período (Realizados y Confirmados) */}
         <div className="relative z-0">
         {anticipos.length === 0 ? (
-          <div className="relative z-0 bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 text-center py-8 px-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <svg className="w-10 h-10 text-gray-400 dark:text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="relative z-0 bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 text-center py-6 sm:py-8 px-4 sm:px-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <svg className="w-10 h-10 sm:w-12 sm:h-12 text-gray-400 dark:text-gray-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay anticipos realizados</h3>
-            <p className="text-gray-500 dark:text-gray-400">Aún no tienes anticipos que hayan sido pagados</p>
+            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay anticipos realizados</h3>
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">Aún no tienes anticipos que hayan sido pagados</p>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="space-y-3 sm:space-y-4">
             {groupedByPeriod.map(([periodKey, items]) => (
               <div key={periodKey} className="bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                <div className="px-3 py-2 border-b border-gray-100 dark:border-gray-600/20 flex items-center justify-between">
-                  <div className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                <div className="px-3 sm:px-4 py-2 sm:py-3 border-b border-gray-100 dark:border-gray-600/20 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 sm:gap-0">
+                  <div className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">
                     {items.length > 0 && items[0].period ? 
                       formatPeriod(items[0].period.start_date, items[0].period.end_date) : 
                       'Período no disponible'
                     }
                   </div>
-                  <div className="text-xs text-gray-500 dark:text-gray-400">
+                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                     {items.length} {items.length === 1 ? 'solicitud' : 'solicitudes'}
                   </div>
                 </div>
-                <div className="p-3 space-y-3">
+                <div className="p-3 sm:p-4 space-y-2 sm:space-y-3">
                   {items.map((anticipo) => (
-                    <div key={anticipo.id} className="bg-gray-50 dark:bg-gray-600/80 rounded-lg border border-gray-200 dark:border-gray-500/50 p-3">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
+                    <div key={anticipo.id} className="bg-gray-50 dark:bg-gray-600/80 rounded-lg border border-gray-200 dark:border-gray-500/50 p-3 sm:p-4">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                        <div className="flex-1 min-w-0">
                           {/* Primera línea: Monto y Estado */}
-                          <div className="flex items-center space-x-3 mb-1">
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3 mb-2">
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
                               ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                             </h3>
                             {anticipo.estado === 'confirmado' ? (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300">Confirmado</span>
+                              <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 w-fit">Confirmado</span>
                             ) : (
-                              <span className="px-2 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300">Realizado</span>
+                              <span className="inline-flex items-center justify-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 w-fit">Realizado</span>
                             )}
                           </div>
                           
-                          {/* Segunda línea: Información ultra compacta en una sola línea */}
-                          <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                            <div className="flex items-center space-x-2 overflow-hidden">
-                              {anticipo.nombre_beneficiario && (
-                                <span className="whitespace-nowrap truncate max-w-[120px]">
-                                  <span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}
-                                </span>
-                              )}
-                              <span className="whitespace-nowrap">
+                          {/* Información - Layout vertical en móvil para mejor legibilidad */}
+                          <div className="space-y-1.5 sm:space-y-1">
+                            {anticipo.nombre_beneficiario && (
+                              <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                                <span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}
+                              </div>
+                            )}
+                            <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm text-gray-600 dark:text-gray-400">
+                              <span>
                                 <span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}
                               </span>
                               {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
                                 anticipo.numero_telefono && (
-                                  <span className="whitespace-nowrap">
+                                  <span>
                                     <span className="font-medium">Tel:</span> {anticipo.numero_telefono}
                                   </span>
                                 )
                               ) : (
-                                anticipo.banco && anticipo.numero_cuenta && (
-                                  <>
-                                    <span className="whitespace-nowrap truncate max-w-[80px]">
+                                <>
+                                  {anticipo.banco && (
+                                    <span>
                                       <span className="font-medium">Banco:</span> {anticipo.banco}
                                     </span>
-                                    <span className="whitespace-nowrap truncate max-w-[100px]">
+                                  )}
+                                  {anticipo.numero_cuenta && (
+                                    <span>
                                       <span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}
                                     </span>
-                                  </>
-                                )
+                                  )}
+                                </>
                               )}
+                              <span className="text-gray-500 dark:text-gray-400">
+                                {new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO', { 
+                                  day: '2-digit', 
+                                  month: '2-digit', 
+                                  year: '2-digit' 
+                                })}
+                              </span>
                             </div>
-                            <span className="text-gray-500 dark:text-gray-400 whitespace-nowrap text-xs">
-                              {new Date(anticipo.realized_at || anticipo.created_at).toLocaleDateString('es-CO', { 
-                                day: '2-digit', 
-                                month: '2-digit', 
-                                year: '2-digit' 
-                              })}
-                            </span>
                           </div>
 
                           {/* Comentarios del admin - solo si existen */}
                           {anticipo.comentarios_admin && (
-                            <div className="mt-1 p-1 bg-green-50 dark:bg-green-900/20 rounded text-xs text-green-800 dark:text-green-300">
-                              <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
+                            <div className="mt-2 sm:mt-3 p-2 sm:p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
+                              <p className="text-xs sm:text-sm text-green-800 dark:text-green-300">
+                                <span className="font-semibold">Admin:</span> {anticipo.comentarios_admin}
+                              </p>
                             </div>
                           )}
                         </div>
 
                         {/* Icono de realizado compacto */}
-                        <div className="ml-2 flex items-center">
-                          <svg className="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                        <div className="flex items-center justify-end sm:justify-start sm:ml-2">
+                          <svg className="w-5 h-5 sm:w-6 sm:h-6 text-green-600 dark:text-green-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                             <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                           </svg>
                         </div>
@@ -570,16 +575,16 @@ export default function MiHistorialPage() {
         )}
 
         {/* Botones de navegación */}
-        <div className="mt-6 flex justify-center space-x-3">
+        <div className="mt-4 sm:mt-6 flex flex-col sm:flex-row justify-center gap-3 sm:space-x-3 sm:space-y-0">
           <button
-            onClick={() => router.push('/model/anticipos/solicitudes')}
-            className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-all duration-200 text-sm font-medium"
+            onClick={() => router.push('/admin/model/anticipos/solicitudes')}
+            className="w-full sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all duration-200 text-sm sm:text-base font-medium touch-manipulation"
           >
             Mis Solicitudes
           </button>
           <button
-            onClick={() => router.push('/model/anticipos/solicitar')}
-            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 text-sm font-medium shadow-md"
+            onClick={() => router.push('/admin/model/anticipos/solicitar')}
+            className="w-full sm:w-auto px-4 sm:px-5 py-2.5 sm:py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 text-sm sm:text-base font-medium shadow-md hover:shadow-lg touch-manipulation"
           >
             Nueva Solicitud
           </button>
