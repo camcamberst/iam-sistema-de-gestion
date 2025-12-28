@@ -1727,7 +1727,7 @@ export default function ModelCalculatorPage() {
             />
             {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
             <InfoCard
-              value={`$${(platforms.reduce((sum, p) => {
+              value={`$${((platforms.reduce((sum, p) => {
                 // Calcular USD modelo usando fórmulas específicas + porcentaje
                 let usdModelo = 0;
                 if (p.currency === 'EUR') {
@@ -1768,7 +1768,7 @@ export default function ModelCalculatorPage() {
                   return sum + usdModelo; // 100% para Superfoon
                 }
                 return sum + (usdModelo * p.percentage / 100);
-              }, 0) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+              }, 0)) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
               label="COP Modelo"
               color="purple"
               size="sm"
