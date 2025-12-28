@@ -6,7 +6,7 @@ import { createClient } from "@supabase/supabase-js";
 import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 import AppleDropdown from '@/components/ui/AppleDropdown';
-import { InfoCardGrid } from '@/components/ui/InfoCard';
+import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 
 interface User {
   id: string;
@@ -531,42 +531,45 @@ export default function SolicitarAnticipoPage() {
         </div>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <span className="w-2 h-2 bg-green-500 rounded-full mr-2"></span>
+        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></span>
               Resumen de Productividad
             </h2>
           </div>
           
-          <InfoCardGrid
-            cards={[
-              {
-                value: loadingProductivity 
-                  ? '...' 
-                  : `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                label: 'COP Modelo',
-                color: 'blue'
-              },
-              {
-                value: loadingProductivity
-                  ? '...'
-                  : `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                label: 'Anticipo Disponible',
-                color: 'green',
-                onClick: !loadingProductivity ? handleAnticipoDisponibleClick : undefined,
-                clickable: !loadingProductivity
-              },
-              {
-                value: loadingProductivity
-                  ? '...'
-                  : `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                label: 'Ya Pagados',
-                color: 'orange'
-              }
-            ]}
-            columns={3}
-          />
+          {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
+            <InfoCard
+              value={loadingProductivity 
+                ? '...' 
+                : `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+              label="COP Modelo"
+              color="blue"
+              size="sm"
+            />
+            <InfoCard
+              value={loadingProductivity
+                ? '...'
+                : `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+              label="Anticipo Disponible"
+              color="green"
+              onClick={!loadingProductivity ? handleAnticipoDisponibleClick : undefined}
+              clickable={!loadingProductivity}
+              size="sm"
+            />
+            {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
+            <InfoCard
+              value={loadingProductivity
+                ? '...'
+                : `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
+              label="Ya Pagados"
+              color="orange"
+              size="sm"
+              className="col-span-2 md:col-span-1"
+            />
+          </div>
           
           {productivityData.copModelo === 0 && !loadingProductivity && (
             <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg">
