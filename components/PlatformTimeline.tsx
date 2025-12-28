@@ -143,72 +143,76 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
   }
 
   return (
-    <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-purple-900/10 dark:ring-0.5 dark:ring-purple-500/15 border border-white/20 dark:border-gray-600/20 p-4" style={{ overflow: 'visible' }}>
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-          <Clock className="w-4 h-4 mr-2" />
+    <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-purple-900/10 dark:ring-0.5 dark:ring-purple-500/15 border border-white/20 dark:border-gray-600/20 p-3 sm:p-4" style={{ overflow: 'visible' }}>
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-3 sm:mb-4">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+          <Clock className="w-4 h-4 sm:w-4 sm:h-4 mr-2" />
           Timeline Portafolio Modelos
         </h3>
-        <span className="text-sm text-gray-500 dark:text-gray-300">
+        <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-300">
           {requests.length} solicitud{requests.length !== 1 ? 'es' : ''}
         </span>
       </div>
 
       {requests.length === 0 ? (
-        <div className="text-center py-4">
-          <Clock className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-          <p className="text-gray-500 dark:text-gray-300 text-sm">No hay solicitudes de plataformas activas</p>
+        <div className="text-center py-4 sm:py-4">
+          <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-gray-400 mx-auto mb-2" />
+          <p className="text-gray-500 dark:text-gray-300 text-xs sm:text-sm">No hay solicitudes de plataformas activas</p>
         </div>
       ) : (
-        <div className="max-h-80 overflow-y-auto space-y-3 relative" style={{ overflowX: 'visible' }}>
+        <div className="max-h-96 sm:max-h-80 overflow-y-auto space-y-2.5 sm:space-y-3 relative" style={{ overflowX: 'visible' }}>
           {requests.slice(0, 5).map((request) => (
             <div
               key={request.id}
-              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg border border-white/30 dark:border-gray-600/30 p-3"
+              className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-lg border border-white/30 dark:border-gray-600/30 p-3 sm:p-3"
             >
               {/* Línea 1: Información del modelo y plataforma */}
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center space-x-2">
-                  <div
-                    className="w-2 h-2 rounded-full"
-                    style={{ backgroundColor: getStatusColor(request.status) }}
-                  />
-                  <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                    {getModelDisplayName(request.model_email)}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-300">•</span>
-                  <span 
-                    className="text-xs font-medium px-2 py-1 rounded-full text-white"
-                    style={{ 
-                      backgroundColor: getStatusColor(request.status),
-                      textShadow: '0 1px 2px rgba(0,0,0,0.3)',
-                      display: 'inline-block'
-                    }}
-                  >
-                    {request.platform_name}
-                  </span>
-                  <span className="text-xs text-gray-500 dark:text-gray-300">•</span>
-                  <span className="text-xs text-gray-600 dark:text-gray-300">{request.group_name}</span>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 mb-2.5 sm:mb-2">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:space-x-2 min-w-0 flex-1">
+                  <div className="flex items-center space-x-2">
+                    <div
+                      className="w-2.5 h-2.5 sm:w-2 sm:h-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: getStatusColor(request.status) }}
+                    />
+                    <span className="text-sm sm:text-sm font-semibold sm:font-medium text-gray-900 dark:text-gray-100 truncate">
+                      {getModelDisplayName(request.model_email)}
+                    </span>
+                  </div>
+                  <div className="flex items-center flex-wrap gap-1.5 sm:gap-0 sm:space-x-2">
+                    <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-300">•</span>
+                    <span 
+                      className="text-xs sm:text-xs font-semibold sm:font-medium px-2.5 sm:px-2 py-1 sm:py-1 rounded-full text-white"
+                      style={{ 
+                        backgroundColor: getStatusColor(request.status),
+                        textShadow: '0 1px 2px rgba(0,0,0,0.3)',
+                        display: 'inline-block'
+                      }}
+                    >
+                      {request.platform_name}
+                    </span>
+                    <span className="hidden sm:inline text-xs text-gray-500 dark:text-gray-300">•</span>
+                    <span className="text-xs text-gray-600 dark:text-gray-300">{request.group_name}</span>
+                  </div>
                 </div>
                 
                 {canClose(request.status) && (
                   <button
                     onClick={() => handleCloseRequest(request.id)}
-                    className="p-1 text-gray-400 hover:text-gray-600 transition-colors"
+                    className="p-2 sm:p-1 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors active:scale-95 touch-manipulation self-start sm:self-auto"
                     title="Cerrar solicitud"
                   >
-                    <X className="w-3 h-3" />
+                    <X className="w-4 h-4 sm:w-3 sm:h-3" />
                   </button>
                 )}
               </div>
 
-              {/* Línea 2: Timeline visual compacto - un espacio adelante de la 'P' de 'Sede MP' */}
-              <div className="flex items-center space-x-3" style={{ marginLeft: 'calc(2rem + 1.5rem + 0.5rem + 1.5rem + 0.5rem + 3.5rem)' }}>
+              {/* Línea 2: Timeline visual compacto */}
+              <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-0 sm:space-x-3 sm:ml-[calc(2rem+1.5rem+0.5rem+1.5rem+0.5rem+3.5rem)]">
                 {/* Solicitada - siempre visible */}
-                <div className="flex items-center space-x-1">
+                <div className="flex items-center space-x-1.5 sm:space-x-1">
                   <div className="relative group">
                     <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help"
+                      className="w-6 h-6 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help active:scale-95 touch-manipulation"
                       style={{ backgroundColor: getStatusColor('solicitada') }}
                     >
                       {getStatusIcon('solicitada')}
@@ -219,17 +223,17 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                   </div>
-                  <span className="text-xs text-gray-600 dark:text-gray-300">Solicitada</span>
+                  <span className="text-xs sm:text-xs font-medium text-gray-600 dark:text-gray-300">Solicitada</span>
                 </div>
 
                 {/* Mostrar Pendiente solo si el estado es pendiente, entregada o inviable */}
                 {['pendiente', 'entregada', 'inviable'].includes(request.status) && (
                   <>
-                    <div className="w-6 h-0.5 bg-gray-300"></div>
-                    <div className="flex items-center space-x-1">
+                    <div className="w-8 sm:w-6 h-0.5 bg-gray-300"></div>
+                    <div className="flex items-center space-x-1.5 sm:space-x-1">
                       <div className="relative group">
                         <div
-                          className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help"
+                          className="w-6 h-6 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help active:scale-95 touch-manipulation"
                           style={{ backgroundColor: getStatusColor('pendiente') }}
                         >
                           {getStatusIcon('pendiente')}
@@ -240,7 +244,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
-                      <span className="text-xs text-gray-600 dark:text-gray-300">Pendiente</span>
+                      <span className="text-xs sm:text-xs font-medium text-gray-600 dark:text-gray-300">Pendiente</span>
                     </div>
                   </>
                 )}
@@ -248,11 +252,11 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                 {/* Mostrar estado final solo si es entregada o inviable */}
                 {['entregada', 'inviable'].includes(request.status) && (
                   <>
-                    <div className="w-6 h-0.5 bg-gray-300"></div>
-                    <div className="flex items-center space-x-1">
+                    <div className="w-8 sm:w-6 h-0.5 bg-gray-300"></div>
+                    <div className="flex items-center space-x-1.5 sm:space-x-1">
                       <div className="relative group">
                         <div
-                          className="w-5 h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help"
+                          className="w-6 h-6 sm:w-5 sm:h-5 rounded-full flex items-center justify-center text-white text-xs cursor-help active:scale-95 touch-manipulation"
                           style={{ backgroundColor: getStatusColor(request.status) }}
                         >
                           {getStatusIcon(request.status)}
@@ -268,7 +272,7 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
                           <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-3 border-r-3 border-t-3 border-transparent border-t-gray-900"></div>
                         </div>
                       </div>
-                      <span className="text-xs text-gray-600 dark:text-gray-300 capitalize">
+                      <span className="text-xs sm:text-xs font-medium text-gray-600 dark:text-gray-300 capitalize">
                         {request.status === 'entregada' ? 'Entregada' : 'Inviable'}
                       </span>
                     </div>
@@ -280,8 +284,8 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
           
           {/* Indicador si hay más de 5 registros */}
           {requests.length > 5 && (
-            <div className="text-center py-2">
-              <span className="text-xs text-gray-500 dark:text-gray-300">
+            <div className="text-center py-2 sm:py-2">
+              <span className="text-xs sm:text-xs text-gray-500 dark:text-gray-300">
                 Y {requests.length - 5} solicitud{requests.length - 5 !== 1 ? 'es' : ''} más...
               </span>
             </div>
