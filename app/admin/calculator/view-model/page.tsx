@@ -581,27 +581,27 @@ export default function AdminViewModelPage() {
   if (selectedModel) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6 pt-16">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pt-16">
           {/* Header */}
-          <div className="mb-6">
-            <div className="flex items-center justify-between mb-4">
+          <div className="mb-4 sm:mb-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
               <button
                 onClick={handleBackToModels}
-                className="flex items-center space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors"
+                className="flex items-center space-x-1.5 sm:space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors active:scale-95 touch-manipulation"
               >
-                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
                 </svg>
-                <span className="font-medium">Volver a la lista</span>
+                <span className="font-medium text-sm sm:text-base">Volver</span>
               </button>
             </div>
             
-            <div className="flex items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
             <div className="flex-1 min-w-0">
-              <h1 className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap truncate">
+              <h1 className="text-base sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
                 Calculadora de {selectedModel.name}
               </h1>
-              <p className="text-gray-500 dark:text-gray-400 text-sm truncate">
+              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm truncate">
                 {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
               </p>
             </div>
@@ -611,15 +611,15 @@ export default function AdminViewModelPage() {
                 {/* Ver Historial - Estándar visual */}
                 <button
                   onClick={() => router.push(`/admin/model/calculator/historial?modelId=${selectedModel.id}`)}
-                  className="px-3 py-2 text-xs font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5"
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 touch-manipulation"
                 >
-                  Ver Historial
+                  Historial
                 </button>
                 {/* Guardar - Estándar visual; quitar 'Sincronizar Totales' */}
                 <button
                   onClick={handleSave}
                   disabled={saving || !hasChanges}
-                  className={`px-3 py-2 text-xs font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 shadow-md transform hover:-translate-y-0.5 whitespace-nowrap ${
+                  className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 shadow-md transform hover:-translate-y-0.5 whitespace-nowrap active:scale-95 touch-manipulation ${
                     hasChanges && !saving
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg'
                       : 'bg-gray-100 text-gray-400 cursor-not-allowed'
@@ -633,59 +633,172 @@ export default function AdminViewModelPage() {
 
           {/* Datos de la calculadora */}
           {selectedModel.calculatorData ? (
-            <div className="space-y-4">
+            <div className="space-y-3 sm:space-y-4">
               {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
-              <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                <h2 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+              <div className="bg-white dark:bg-gray-700/80 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-1.5 sm:mr-2"></div>
                   Tasas Actualizadas
                 </h2>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    <div className="text-xl font-bold text-blue-700 mb-1">
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    <div className="text-base sm:text-xl font-bold text-blue-700 mb-0.5 sm:mb-1">
                       ${selectedModel.calculatorData.rates?.usd_cop || 3900}
                     </div>
-                    <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
+                    <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD→COP</div>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    <div className="text-xl font-bold text-green-700 mb-1">
+                  <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    <div className="text-base sm:text-xl font-bold text-green-700 mb-0.5 sm:mb-1">
                       {selectedModel.calculatorData.rates?.eur_usd || 1.01}
                     </div>
-                    <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
+                    <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">EUR→USD</div>
                   </div>
-                  <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    <div className="text-xl font-bold text-purple-700 mb-1">
+                  <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                    <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
                       {selectedModel.calculatorData.rates?.gbp_usd || 1.20}
                     </div>
-                    <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
+                    <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">GBP→USD</div>
                   </div>
                 </div>
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-3 text-center font-medium">
+                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
                   Configuradas por tu administrador
                 </p>
               </div>
 
 
               {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
-              <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-6 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-                  <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+              <div className="bg-white dark:bg-gray-700/80 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-6 mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></div>
                   Calculadora de Ingresos
                 </h2>
                 
                 {!selectedModel.calculatorData.isConfigured || !selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"></div>
-                    <h4 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
-                    <p className="text-gray-500 dark:text-gray-400 mb-4">
+                  <div className="text-center py-6 sm:py-8">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4"></div>
+                    <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
                       Esta modelo no tiene configuración de calculadora o plataformas habilitadas.
                     </p>
-                    <p className="text-sm text-gray-400 dark:text-gray-500">
+                    <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
                       Contacta al administrador para que configure las plataformas.
                     </p>
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <>
+                  {/* Vista de Cards para Móvil */}
+                  <div className="md:hidden space-y-3">
+                    {selectedModel.calculatorData.platforms.map((platform: any) => {
+                      const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                        v.platform_id === platform.id || v.platform === platform.name
+                      )?.value || 0;
+                      const rates = selectedModel.calculatorData.rates;
+                      
+                      let usdBruto = 0;
+                      if (platform.currency === 'EUR') {
+                        if (platform.id === 'big7') {
+                          usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                        } else if (platform.id === 'mondo') {
+                          usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                        } else if (platform.id === 'superfoon') {
+                          usdBruto = currentValue * (rates?.eur_usd || 1.01);
+                        } else {
+                          usdBruto = currentValue * (rates?.eur_usd || 1.01);
+                        }
+                      } else if (platform.currency === 'GBP') {
+                        if (platform.id === 'aw') {
+                          usdBruto = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                        } else {
+                          usdBruto = currentValue * (rates?.gbp_usd || 1.20);
+                        }
+                      } else if (platform.currency === 'USD') {
+                        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                          usdBruto = currentValue * 0.75;
+                        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                          usdBruto = currentValue * 0.05;
+                        } else if (platform.id === 'dxlive') {
+                          usdBruto = currentValue * 0.60;
+                        } else if (platform.id === 'secretfriends') {
+                          usdBruto = currentValue * 0.5;
+                        } else {
+                          usdBruto = currentValue;
+                        }
+                      }
+                      
+                      const usdModeloFinal = (platform.id === 'superfoon') 
+                        ? usdBruto
+                        : (usdBruto * platform.percentage) / 100;
+                      const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
+                      const isFrozen = frozenPlatforms.includes(platform.id);
+                      const p1Value = p1Values[platform.id] || 0;
+
+                      return (
+                        <div key={platform.id} className={`p-3 bg-gray-50 dark:bg-gray-600/50 rounded-lg border ${isFrozen ? 'border-gray-200 dark:border-gray-500' : 'border-gray-200 dark:border-gray-600'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex-1">
+                              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{platform.name}</h3>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}</p>
+                            </div>
+                            {isFrozen && (
+                              <span className="text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 px-1.5 py-0.5 rounded">
+                                🔒 Cerrado
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div>
+                              <label className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 block">Valor</label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  disabled={isFrozen}
+                                  value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
+                                  onChange={(e) => {
+                                    if (isFrozen) return;
+                                    const raw = e.target.value;
+                                    const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                    const normalized = cleaned.replace(',', '.');
+                                    const parts = normalized.split('.');
+                                    const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                    handleValueChange(platform.id, safeNormalized);
+                                  }}
+                                  className={`flex-1 px-2 py-1.5 text-sm font-medium rounded-lg border transition-all ${
+                                    isFrozen
+                                      ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 cursor-not-allowed'
+                                      : 'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                  }`}
+                                  placeholder={isFrozen ? "Locked" : "0.00"}
+                                />
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 px-2 py-1 rounded-md">
+                                  {platform.currency || 'USD'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Bruto</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${usdBruto.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Modelo</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${usdModeloFinal.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">COP Modelo</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Vista de Tabla para Desktop */}
+                  <div className="hidden md:block overflow-x-auto">
                     <table className="w-full">
                       <thead>
                         <tr className="border-b border-gray-200 dark:border-gray-600">
@@ -919,38 +1032,39 @@ export default function AdminViewModelPage() {
                       </tbody>
                     </table>
                   </div>
+                  </>
                 )}
               </div>
 
               {/* Totales y Alertas - USANDO TOTALES DEL SERVIDOR */}
               {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
-                <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 mb-3 flex items-center">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+                <div className="bg-white dark:bg-gray-700/80 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></div>
                     Totales y Alertas
                   </h3>
                   
                   {calculatedTotals ? (
                     <>
                       {/* Totales principales - DESDE SERVIDOR */}
-                      <div className="grid grid-cols-3 gap-3 mb-4">
-                        <div className="text-center p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                          <div className="text-xl font-bold text-blue-700 mb-1">
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-base sm:text-xl font-bold text-blue-700 mb-0.5 sm:mb-1">
                             ${calculatedTotals.usdBruto.toFixed(2)}
                           </div>
-                          <div className="text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD Bruto</div>
+                          <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD Bruto</div>
                         </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                          <div className="text-xl font-bold text-green-700 mb-1">
+                        <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-base sm:text-xl font-bold text-green-700 mb-0.5 sm:mb-1">
                             ${calculatedTotals.usdModelo.toFixed(2)}
                           </div>
-                          <div className="text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">USD Modelo</div>
+                          <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD Modelo</div>
                         </div>
-                        <div className="text-center p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                          <div className="text-xl font-bold text-purple-700 mb-1">
+                        <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
                             ${calculatedTotals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </div>
-                          <div className="text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">COP Modelo</div>
+                          <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">COP Modelo</div>
                         </div>
                       </div>
                       
@@ -976,33 +1090,33 @@ export default function AdminViewModelPage() {
                           const progressStart = rgbToHex(tint(muted, 0.10));
                           const progressEnd = rgbToHex(shade(muted, 0.05));
                           return (
-                            <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-xl p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
-                              <div className="flex items-center justify-between mb-3">
-                                <div className="flex items-center gap-2">
-                                  <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.2))})` }}>
-                                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
+                              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.2))})` }}>
+                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                                     </svg>
                                   </div>
                                   <div>
-                                    <div className="text-sm font-semibold text-gray-900 dark:text-gray-100">Objetivo Básico {calculatedTotals.estaPorDebajo ? 'en Progreso' : 'Alcanzado'}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-400">Meta: ${calculatedTotals.cuotaMinima} USD</div>
+                                    <div className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">Objetivo Básico {calculatedTotals.estaPorDebajo ? 'en Progreso' : 'Alcanzado'}</div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Meta: ${calculatedTotals.cuotaMinima} USD</div>
                                   </div>
                                 </div>
-                                <div className="text-xs font-bold px-3 py-1 rounded-lg text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(muted, 0.05))}, ${rgbToHex(shade(muted, 0.12))})`, border: `1px solid ${rgbToHex(shade(muted, 0.25))}` }}>
+                                <div className="text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(muted, 0.05))}, ${rgbToHex(shade(muted, 0.12))})`, border: `1px solid ${rgbToHex(shade(muted, 0.25))}` }}>
                                   {pct.toFixed(1)}%
                                 </div>
                               </div>
-                              <div className="w-full bg-gray-200/80 dark:bg-gray-700/80 rounded-full h-4 overflow-hidden shadow-inner mb-2">
+                              <div className="w-full bg-gray-200/80 dark:bg-gray-700/80 rounded-full h-3 sm:h-4 overflow-hidden shadow-inner mb-1.5 sm:mb-2">
                                 <div className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}>
                                   <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
                                 </div>
                               </div>
-                              <div className="grid grid-cols-2 gap-3 pt-2 border-t border-gray-200/50 dark:border-gray-600/30">
+                              <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1.5 sm:pt-2 border-t border-gray-200/50 dark:border-gray-600/30">
                                 <div>
-                                  <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Alcanzado</div>
+                                  <div className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5 sm:mb-1">Alcanzado</div>
                                   <div
-                                    className="inline-block px-2.5 py-1 rounded-md text-xs sm:text-sm font-bold text-white shadow-sm"
+                                    className="inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold text-white shadow-sm"
                                     style={{
                                       background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.15))}, ${rgbToHex(shade(base, 0.30))})`,
                                       border: `1px solid ${rgbToHex(shade(base, 0.45))}`
