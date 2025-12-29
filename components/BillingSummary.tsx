@@ -312,32 +312,32 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   }
 
   return (
-    <div className="mb-6">
+    <div className="mb-4 sm:mb-6">
       {/* Card Header - Versión compacta */}
-      <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-              <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 mb-4 sm:mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+          <div className="flex items-center space-x-2 sm:space-x-3">
+            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-lg font-semibold text-gray-900 dark:text-white">Resumen de Facturación</h1>
-              <p className="text-xs text-gray-600 dark:text-white">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">Resumen de Facturación</h1>
+              <p className="text-[10px] sm:text-xs text-gray-600 dark:text-white hidden sm:block">
                 {userRole === 'super_admin' ? 'Vista consolidada de todas las sedes' : 'Vista de tus sedes asignadas'}
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center justify-between sm:justify-end space-x-2">
             {/* Botón de refresh manual con estado de polling */}
-            <div className="flex items-center space-x-2">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
               {/* Indicador de polling */}
               <div className="flex items-center space-x-1">
                 <div className={`w-1.5 h-1.5 rounded-full ${
                   isPolling ? 'bg-green-500' : 'bg-gray-400'
                 } ${isSilentUpdating ? 'animate-pulse' : ''}`}></div>
-                <span className="text-xs text-gray-500 dark:text-white">
+                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-white hidden sm:inline">
                   {isSilentUpdating ? 'Actualizando...' : 
                    isPolling ? 'Actualización automática' : 'Manual'}
                 </span>
@@ -346,11 +346,11 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               <button
                 onClick={manualRefresh}
                 disabled={loading}
-                className="flex items-center justify-center w-8 h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200"
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation"
                 title={loading ? 'Actualizando...' : 'Actualizar'}
               >
                 <svg 
-                  className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} 
+                  className={`w-3 h-3 sm:w-3.5 sm:h-3.5 ${loading ? 'animate-spin' : ''}`} 
                   fill="none" 
                   stroke="currentColor" 
                   viewBox="0 0 24 24"
@@ -362,26 +362,26 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
           </div>
         </div>
 
-        <div className="px-4 pb-4">
+        <div className="px-2 sm:px-4 pb-3 sm:pb-4">
           {/* Resumen general - Versión compacta */}
           {summary && (
-            <div className="grid grid-cols-3 gap-4 mb-6 mt-6">
-              <div className="bg-blue-50/80 dark:bg-blue-50/90 backdrop-blur-sm rounded-lg p-4 hover:shadow-md transition-all duration-300 border border-blue-200/50 dark:border-blue-200/50">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 mt-4 sm:mt-6">
+              <div className="bg-blue-50/80 dark:bg-blue-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-blue-200/50 dark:border-blue-200/50">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-blue-600 dark:text-blue-600 mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
-                  <div className="inline-block bg-blue-100/80 dark:bg-blue-200/80 text-blue-700 dark:text-blue-700 px-2 py-1 rounded-full text-xs font-medium">USD Bruto</div>
+                  <div className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
+                  <div className="inline-block bg-blue-100/80 dark:bg-blue-200/80 text-blue-700 dark:text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">USD Bruto</div>
                 </div>
               </div>
-              <div className="bg-green-50/80 dark:bg-green-50/90 backdrop-blur-sm rounded-lg p-4 hover:shadow-md transition-all duration-300 border border-green-200/50 dark:border-green-200/50">
+              <div className="bg-green-50/80 dark:bg-green-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-green-200/50 dark:border-green-200/50">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-green-600 dark:text-green-600 mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
-                  <div className="inline-block bg-green-100/80 dark:bg-green-200/80 text-green-700 dark:text-green-700 px-2 py-1 rounded-full text-xs font-medium">USD Modelos</div>
+                  <div className="text-base sm:text-xl font-bold text-green-600 dark:text-green-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
+                  <div className="inline-block bg-green-100/80 dark:bg-green-200/80 text-green-700 dark:text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs">USD Modelos</div>
                 </div>
               </div>
-              <div className="bg-purple-50/80 dark:bg-purple-50/90 backdrop-blur-sm rounded-lg p-4 hover:shadow-md transition-all duration-300 border border-purple-200/50 dark:border-purple-200/50">
+              <div className="bg-purple-50/80 dark:bg-purple-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-purple-200/50 dark:border-purple-200/50">
                 <div className="text-center">
-                  <div className="text-xl font-bold text-purple-600 dark:text-purple-600 mb-2">${formatCurrency(summary.totalUsdSede)}</div>
-                  <div className="inline-block bg-purple-100/80 dark:bg-purple-200/80 text-purple-700 dark:text-purple-700 px-2 py-1 rounded-full text-xs font-medium">USD Agencia</div>
+                  <div className="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdSede)}</div>
+                  <div className="inline-block bg-purple-100/80 dark:bg-purple-200/80 text-purple-700 dark:text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">USD Agencia</div>
                 </div>
               </div>
             </div>
@@ -424,14 +424,14 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                         <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
                           {/* Header de Grupo - Aplicando políticas estéticas */}
                           <div 
-                            className="px-6 py-4 cursor-pointer hover:bg-white/50 transition-all duration-200"
+                            className="px-3 sm:px-6 py-2.5 sm:py-4 cursor-pointer hover:bg-white/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
                             onClick={() => toggleGroupExpansion(group.groupId)}
                           >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-4">
-                                <div className="w-6 h-6 bg-gray-100 rounded-md flex items-center justify-center">
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                              <div className="flex items-center space-x-2 sm:space-x-4">
+                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
                                   <svg 
-                                    className={`w-3 h-3 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
                                     fill="none" 
                                     stroke="currentColor" 
                                     viewBox="0 0 24 24"
@@ -439,23 +439,23 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                                   </svg>
                                 </div>
-                                <div>
-                                  <h4 className="text-base font-semibold text-gray-900 dark:text-gray-900">{group.groupName}</h4>
-                                  <p className="text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{group.totalModels} modelos</p>
+                                <div className="min-w-0 flex-1">
+                                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-900 truncate">{group.groupName}</h4>
+                                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{group.totalModels} modelos</p>
                                 </div>
                               </div>
-                              <div className="flex items-center space-x-6 text-sm">
+                              <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
                                 <div className="text-right">
-                                  <div className="font-semibold text-blue-600 dark:text-blue-400">${formatCurrency(group.totalUsdBruto)}</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                  <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-semibold text-green-600 dark:text-green-400">${formatCurrency(group.totalUsdModelo)}</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                                  <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
-                                  <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                  <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
                                 </div>
                               </div>
                             </div>
@@ -467,29 +467,29 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               <div className="px-6 py-4">
                                 <div className="space-y-3">
                                   {group.models.map((model) => (
-                                    <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
-                                      <div className="flex items-center space-x-3">
-                                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                                          <span className="text-sm font-medium text-gray-600 dark:text-gray-600 dark:text-gray-500">
+                                    <div key={model.modelId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                                      <div className="flex items-center space-x-2 sm:space-x-3">
+                                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                          <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-600 dark:text-gray-500">
                                             {model.email.charAt(0).toUpperCase()}
                                           </span>
                                         </div>
-                                        <div>
-                                          <div className="font-medium text-gray-800 dark:text-gray-800">{model.email}</div>
+                                        <div className="min-w-0 flex-1">
+                                          <div className="font-medium text-gray-800 dark:text-gray-800 text-xs sm:text-sm truncate">{model.email}</div>
                                         </div>
                                       </div>
-                                      <div className="flex items-center space-x-6 text-sm">
+                                      <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
                                         <div className="text-right">
-                                          <div className="font-semibold text-blue-600 dark:text-blue-400">${formatCurrency(model.usdBruto)}</div>
-                                          <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                          <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
                                         </div>
                                         <div className="text-right">
-                                          <div className="font-semibold text-green-600 dark:text-green-400">${formatCurrency(model.usdModelo)}</div>
-                                          <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                          <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
                                         </div>
                                         <div className="text-right">
-                                          <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(model.usdSede)}</div>
-                                          <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                          <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
                                         </div>
                                       </div>
                                     </div>
@@ -513,44 +513,44 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                 <div className="space-y-3">
                   {groupedData.map((sede) => (
                     <div key={sede.sedeId} className="bg-white/70 dark:bg-white backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-200/50 overflow-hidden hover:shadow-lg transition-all duration-300">
-                      {/* Header de Sede - Aplicando políticas estéticas */}
-                      <div 
-                        className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-600/50 transition-all duration-200"
-                        onClick={() => toggleSedeExpansion(sede.sedeId)}
-                      >
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                              <svg 
-                                className={`w-4 h-4 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
-                                fill="none" 
-                                stroke="currentColor" 
-                                viewBox="0 0 24 24"
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                              </svg>
-                            </div>
-                            <div>
-                              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900">{sede.sedeName}</h3>
-                              <p className="text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-6 text-sm">
-                            <div className="text-right">
-                              <div className="font-semibold text-blue-600 dark:text-blue-400">${formatCurrency(sede.totalUsdBruto)}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-green-600 dark:text-green-400">${formatCurrency(sede.totalUsdModelo)}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
-                            </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(sede.totalUsdBruto - sede.totalUsdModelo)}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
-                            </div>
-                          </div>
+                  {/* Header de Sede - Aplicando políticas estéticas */}
+                  <div 
+                    className="px-3 sm:px-4 py-2 sm:py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-600/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
+                    onClick={() => toggleSedeExpansion(sede.sedeId)}
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                      <div className="flex items-center space-x-2 sm:space-x-4">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                          <svg 
+                            className={`w-3 h-3 sm:w-4 sm:h-4 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                            fill="none" 
+                            stroke="currentColor" 
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                          </svg>
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-900 truncate">{sede.sedeName}</h3>
+                          <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
                         </div>
                       </div>
+                      <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
+                        <div className="text-right">
+                          <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(sede.totalUsdBruto)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(sede.totalUsdModelo)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(sede.totalUsdBruto - sede.totalUsdModelo)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
 
                       {/* Modelos de la Sede (expandible) */}
                       {expandedSedes.has(sede.sedeId) && (
@@ -592,15 +592,15 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                 </div>
               ) : (
                 /* Fallback: Vista de modelos individuales si no hay groupedData */
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-4 bg-white/70 rounded-xl border border-gray-200/50">
-                    <div className="flex items-center space-x-3">
+                <div className="space-y-2 sm:space-y-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl border border-gray-200/50">
+                    <div className="flex items-center space-x-2 sm:space-x-3">
                       <button
                         onClick={() => setShowAllModels(!showAllModels)}
-                        className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-all duration-200"
+                        className="w-7 h-7 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center hover:bg-blue-500/20 transition-all duration-200 active:scale-95 touch-manipulation flex-shrink-0"
                       >
                         <svg 
-                          className={`w-4 h-4 text-blue-600 dark:text-blue-400 transition-transform duration-200 ${showAllModels ? 'rotate-90' : ''}`}
+                          className={`w-3.5 h-3.5 sm:w-4 sm:h-4 text-blue-600 dark:text-blue-400 transition-transform duration-200 ${showAllModels ? 'rotate-90' : ''}`}
                           fill="none" 
                           stroke="currentColor" 
                           viewBox="0 0 24 24"
@@ -608,28 +608,28 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5l7 7-7 7" />
                         </svg>
                       </button>
-                      <div>
-                        <div className="font-medium text-gray-800 dark:text-gray-800">
+                      <div className="min-w-0 flex-1">
+                        <div className="font-medium text-gray-800 dark:text-gray-800 text-sm sm:text-base">
                           {userRole === 'admin' ? `Mis Modelos (${billingData.length})` : `Todos los Modelos (${billingData.length})`}
                         </div>
-                        <div className="text-sm text-gray-500 dark:text-gray-600 dark:text-gray-500">Haz clic para {showAllModels ? 'ocultar' : 'mostrar'} detalles</div>
+                        <div className="text-xs sm:text-sm text-gray-500 dark:text-gray-600 dark:text-gray-500">Haz clic para {showAllModels ? 'ocultar' : 'mostrar'} detalles</div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-6 text-sm">
+                    <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
                       <div className="text-right">
-                        <div className="font-semibold text-blue-600 dark:text-blue-400">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                        <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-green-600 dark:text-green-400">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                        <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(
+                        <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(
                           billingData.reduce((sum, model) => sum + model.usdBruto, 0) - 
                           billingData.reduce((sum, model) => sum + model.usdModelo, 0)
                         )}</div>
-                        <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
                       </div>
                     </div>
                   </div>
@@ -638,29 +638,29 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                   {showAllModels && (
                     <div className="space-y-2">
                       {billingData.map((model) => (
-                        <div key={model.modelId} className="flex items-center justify-between p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                        <div key={model.modelId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/60 rounded-xl border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                          <div className="flex items-center space-x-2 sm:space-x-3">
+                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center flex-shrink-0">
                               <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
                                 {model.email.charAt(0).toUpperCase()}
                               </span>
                             </div>
-                            <div>
-                              <div className="font-medium text-gray-800 dark:text-gray-800">{model.email}</div>
+                            <div className="min-w-0 flex-1">
+                              <div className="font-medium text-gray-800 dark:text-gray-800 text-xs sm:text-sm truncate">{model.email}</div>
                             </div>
                           </div>
-                          <div className="flex items-center space-x-6 text-sm">
+                          <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
                             <div className="text-right">
-                              <div className="font-semibold text-gray-700 dark:text-gray-700">${formatCurrency(model.usdBruto)}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                              <div className="font-semibold text-gray-700 dark:text-gray-700 text-xs">${formatCurrency(model.usdBruto)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-green-600 dark:text-green-400">${formatCurrency(model.usdModelo)}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                              <div className="font-semibold text-green-600 dark:text-green-400 text-xs">${formatCurrency(model.usdModelo)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-orange-600 dark:text-orange-400">${formatCurrency(model.usdSede)}</div>
-                              <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Sede</div>
+                              <div className="font-semibold text-orange-600 dark:text-orange-400 text-xs">${formatCurrency(model.usdSede)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Sede</div>
                             </div>
                           </div>
                         </div>

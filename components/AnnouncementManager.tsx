@@ -175,18 +175,18 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
   });
 
   return (
-    <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+    <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
       {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="flex items-center space-x-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md">
-            <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+            <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
             </svg>
           </div>
-          <div>
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">Corcho Informativo</h2>
-            <p className="text-sm text-gray-600 dark:text-gray-300">Gestiona publicaciones e información para modelos</p>
+          <div className="min-w-0 flex-1">
+            <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">Corcho Informativo</h2>
+            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Gestiona publicaciones e información para modelos</p>
           </div>
         </div>
         <button
@@ -194,21 +194,22 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
             setEditingAnnouncement(null);
             setShowEditor(true);
           }}
-          className="px-4 py-2 text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2"
+          className="w-full sm:w-auto px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation"
         >
-          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
           </svg>
-          Nueva Publicación
+          <span className="hidden sm:inline">Nueva Publicación</span>
+          <span className="sm:hidden">Nueva</span>
         </button>
       </div>
 
       {/* Filtros */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
+        <div className="flex gap-1.5 sm:gap-2">
           <button
             onClick={() => setFilter('all')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-colors active:scale-95 touch-manipulation ${
               filter === 'all'
                 ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300'
                 : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
@@ -218,7 +219,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
           </button>
           <button
             onClick={() => setFilter('published')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-colors active:scale-95 touch-manipulation ${
               filter === 'published'
                 ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300'
                 : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
@@ -228,7 +229,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
           </button>
           <button
             onClick={() => setFilter('draft')}
-            className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors ${
+            className={`px-2 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-xs font-medium rounded-lg transition-colors active:scale-95 touch-manipulation ${
               filter === 'draft'
                 ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300'
                 : 'bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-500'
@@ -254,28 +255,28 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
 
       {/* Lista de publicaciones */}
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+        <div className="flex items-center justify-center py-8 sm:py-12">
+          <div className="animate-spin rounded-full h-6 w-6 sm:h-8 sm:w-8 border-b-2 border-purple-600"></div>
         </div>
       ) : filteredAnnouncements.length === 0 ? (
-        <div className="text-center py-12 text-gray-500 dark:text-gray-400">
-          <p>No hay publicaciones {filter !== 'all' ? `(${filter === 'published' ? 'publicadas' : 'borradores'})` : ''}</p>
+        <div className="text-center py-8 sm:py-12 text-gray-500 dark:text-gray-400">
+          <p className="text-xs sm:text-sm">No hay publicaciones {filter !== 'all' ? `(${filter === 'published' ? 'publicadas' : 'borradores'})` : ''}</p>
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {filteredAnnouncements.map(announcement => (
             <div
               key={announcement.id}
-              className="bg-gray-50/50 dark:bg-gray-600/30 rounded-lg p-4 border border-gray-200/50 dark:border-gray-500/30 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all"
+              className="bg-gray-50/50 dark:bg-gray-600/30 rounded-lg p-3 sm:p-4 border border-gray-200/50 dark:border-gray-500/30 hover:border-purple-300 dark:hover:border-purple-500/50 transition-all"
             >
-              <div className="flex items-start justify-between gap-4">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-4">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center flex-wrap gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
                     {announcement.is_pinned && (
-                      <span className="text-xs text-purple-600 dark:text-purple-400">📌</span>
+                      <span className="text-[10px] sm:text-xs text-purple-600 dark:text-purple-400">📌</span>
                     )}
                     {announcement.priority > 0 && (
-                      <span className={`text-xs px-1.5 py-0.5 rounded ${
+                      <span className={`text-[10px] sm:text-xs px-1 sm:px-1.5 py-0.5 rounded ${
                         announcement.priority === 2
                           ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300'
                           : 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300'
@@ -285,7 +286,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
                     )}
                     {announcement.category && (
                       <span
-                        className="text-xs px-2 py-0.5 rounded font-medium"
+                        className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded font-medium"
                         style={{
                           backgroundColor: `${announcement.category.color}20`,
                           color: announcement.category.color
@@ -295,24 +296,24 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
                       </span>
                     )}
                     {!announcement.is_published && (
-                      <span className="text-xs px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
+                      <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 rounded bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-300">
                         Borrador
                       </span>
                     )}
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-white mb-1">
+                  <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white mb-1">
                     {announcement.title}
                   </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
                     {announcement.excerpt}
                   </p>
-                  <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                  <div className="flex items-center flex-wrap gap-2 sm:gap-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">
                     <span>Por: {announcement.author?.name || 'Desconocido'}</span>
-                    <span>•</span>
+                    <span className="hidden sm:inline">•</span>
                     <span>{new Date(announcement.created_at).toLocaleDateString('es-CO')}</span>
                     {announcement.is_published && (
                       <>
-                        <span>•</span>
+                        <span className="hidden sm:inline">•</span>
                         <span>{announcement.views_count} vistas</span>
                       </>
                     )}
@@ -323,29 +324,29 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
                     )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2 flex-shrink-0">
+                <div className="flex items-center justify-end sm:justify-start gap-1.5 sm:gap-2 flex-shrink-0">
                   <button
                     onClick={() => {
                       setEditingAnnouncement(announcement);
                       setShowEditor(true);
                     }}
-                    className="p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-gray-600 dark:text-gray-400 hover:text-purple-600 dark:hover:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded-lg transition-colors active:scale-95 touch-manipulation"
                     title="Editar"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                     </svg>
                   </button>
                   <button
                     onClick={() => handleTogglePublish(announcement)}
-                    className={`p-2 rounded-lg transition-colors ${
+                    className={`p-1.5 sm:p-2 rounded-lg transition-colors active:scale-95 touch-manipulation ${
                       announcement.is_published
                         ? 'text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
                         : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-600'
                     }`}
                     title={announcement.is_published ? 'Despublicar' : 'Publicar'}
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       {announcement.is_published ? (
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                       ) : (
@@ -355,10 +356,10 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
                   </button>
                   <button
                     onClick={() => handleDelete(announcement.id)}
-                    className="p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    className="p-1.5 sm:p-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors active:scale-95 touch-manipulation"
                     title="Eliminar"
                   >
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
                     </svg>
                   </button>
