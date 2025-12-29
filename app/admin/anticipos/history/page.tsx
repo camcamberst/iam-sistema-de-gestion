@@ -686,32 +686,36 @@ export default function HistorialAnticiposPage() {
               label: selectedCardType === 'all' ? 'Total Solicitudes (Activo)' : 'Total Solicitudes',
               color: 'blue',
               onClick: () => handleCardClick('all'),
-              clickable: true
+              clickable: true,
+              size: 'sm'
             },
             {
               value: stats.realizados,
               label: selectedCardType === 'realizados' ? 'Realizados (Activo)' : 'Realizados',
               color: 'green',
               onClick: () => handleCardClick('realizados'),
-              clickable: true
+              clickable: true,
+              size: 'sm'
             },
             {
               value: stats.pendientes,
               label: selectedCardType === 'pendientes' ? 'Ver Pendientes (Activo)' : 'Ver Pendientes',
               color: 'yellow',
               onClick: () => handleCardClick('pendientes'),
-              clickable: true
+              clickable: true,
+              size: 'sm'
             },
             {
               value: `$${stats.totalPagado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
               label: selectedCardType === 'pagados' ? 'Total Pagado (Activo)' : 'Total Pagado (COP)',
               color: 'purple',
               onClick: () => handleCardClick('pagados'),
-              clickable: true
+              clickable: true,
+              size: 'sm'
             }
           ]}
           columns={4}
-          className="mb-8"
+          className="mb-6 sm:mb-8"
         />
 
         {/* Filtros */}
