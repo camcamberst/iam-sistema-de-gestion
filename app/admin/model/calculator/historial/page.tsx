@@ -351,29 +351,39 @@ export default function CalculatorHistorialPage() {
 
   return (
     <>
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <button onClick={() => window.history.back()} className="flex items-center space-x-2 text-blue-600 hover:text-blue-700">
-            <ArrowLeft className="w-5 h-5" /><span className="font-medium">Volver</span>
-          </button>
-        </div>
-        <div className="flex items-center justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold text-gray-900 dark:text-white">Mi Historial</h1>
-            <p className="text-gray-500 dark:text-gray-400 text-sm">Historial de períodos archivados</p>
-          </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <div className="flex-shrink-0">
-              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
-              <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[100px] text-sm" />
-            </div>
-            <div className="flex-shrink-0">
-              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Mes</label>
-              <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[120px] text-sm" />
-            </div>
-            <div className="flex-shrink-0">
-              <label className="block text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Período</label>
-              <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[100px] text-sm" />
+      {/* Header estándar */}
+      <div className="mb-8 sm:mb-12">
+        <div className="relative">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+          <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-3">
+              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
+                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                  <History className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                    Mi Historial
+                  </h1>
+                  <p className="hidden sm:block text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
+                    Historial de períodos archivados
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                <div className="flex-shrink-0">
+                  <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
+                  <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
+                </div>
+                <div className="flex-shrink-0">
+                  <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Mes</label>
+                  <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm" />
+                </div>
+                <div className="flex-shrink-0">
+                  <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Período</label>
+                  <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -394,106 +404,159 @@ export default function CalculatorHistorialPage() {
           {filteredPeriods.map((period) => {
             const periodKey = `${period.period_date}-${period.period_type}`;
             return (
-            <div key={periodKey} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6">
-              <div className="flex justify-between mb-4 pb-4 border-b border-gray-200 dark:border-gray-700">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center"><Calendar className="w-5 h-5 text-white" /></div>
-                  <div>
-                    <h3 className="font-semibold text-gray-900 dark:text-white">{formatPeriodMonth(period.period_date, period.period_type)}</h3>
-                    <p className="text-xs text-gray-500">{formatArchivedDate(period.archived_at)}</p>
+            <div key={periodKey} className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:justify-between mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 gap-3 sm:gap-0">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0"><Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" /></div>
+                  <div className="min-w-0 flex-1">
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">{formatPeriodMonth(period.period_date, period.period_type)}</h3>
+                    <p className="text-[10px] sm:text-xs text-gray-500">{formatArchivedDate(period.archived_at)}</p>
                     {period.is_synthetic && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
+                      <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
-                        {period.synthetic_note || 'Período reconstruido desde totales (sin desglose por plataforma)'}
+                        <span className="truncate">{period.synthetic_note || 'Período reconstruido desde totales (sin desglose por plataforma)'}</span>
                       </p>
                     )}
                   </div>
                 </div>
-                <div className="ml-4">
-                  <div className="flex items-center justify-end gap-2 mb-2">
-                    <div className="text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">RATES de cierre</div>
+                <div className="ml-0 sm:ml-4">
+                  <div className="flex items-center justify-start sm:justify-end gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
+                    <div className="text-[10px] sm:text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">RATES</div>
                     {isAdmin && editingRates !== periodKey && (
-                      <button onClick={() => startEditRates(period)} className="text-xs text-blue-600 flex items-center gap-1"><Edit2 className="w-3 h-3" />Editar</button>
+                      <button onClick={() => startEditRates(period)} className="text-[10px] sm:text-xs text-blue-600 flex items-center gap-1 active:scale-95 touch-manipulation"><Edit2 className="w-3 h-3" />Editar</button>
                     )}
                   </div>
                   {editingRates === periodKey ? (
-                    <div className="flex gap-2">
-                      <input type="number" value={editRates.eur_usd} onChange={e=>setEditRates({...editRates, eur_usd:e.target.value})} placeholder="EUR" className="w-16 text-xs border rounded px-1" />
-                      <input type="number" value={editRates.gbp_usd} onChange={e=>setEditRates({...editRates, gbp_usd:e.target.value})} placeholder="GBP" className="w-16 text-xs border rounded px-1" />
-                      <input type="number" value={editRates.usd_cop} onChange={e=>setEditRates({...editRates, usd_cop:e.target.value})} placeholder="COP" className="w-16 text-xs border rounded px-1" />
-                      <button onClick={() => saveRates(period)} className="text-green-600"><Save className="w-4 h-4"/></button>
-                      <button onClick={cancelEdit} className="text-red-600"><X className="w-4 h-4"/></button>
+                    <div className="flex flex-wrap gap-1.5 sm:gap-2">
+                      <input type="number" value={editRates.eur_usd} onChange={e=>setEditRates({...editRates, eur_usd:e.target.value})} placeholder="EUR" className="w-14 sm:w-16 text-[10px] sm:text-xs border rounded px-1" />
+                      <input type="number" value={editRates.gbp_usd} onChange={e=>setEditRates({...editRates, gbp_usd:e.target.value})} placeholder="GBP" className="w-14 sm:w-16 text-[10px] sm:text-xs border rounded px-1" />
+                      <input type="number" value={editRates.usd_cop} onChange={e=>setEditRates({...editRates, usd_cop:e.target.value})} placeholder="COP" className="w-14 sm:w-16 text-[10px] sm:text-xs border rounded px-1" />
+                      <button onClick={() => saveRates(period)} className="text-green-600 active:scale-95 touch-manipulation"><Save className="w-3.5 h-3.5 sm:w-4 sm:h-4"/></button>
+                      <button onClick={cancelEdit} className="text-red-600 active:scale-95 touch-manipulation"><X className="w-3.5 h-3.5 sm:w-4 sm:h-4"/></button>
                     </div>
                   ) : (
-                    <div className="flex gap-2 text-xs">
-                      <span className="bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">EUR→USD: {period.rates?.eur_usd?.toFixed(4)}</span>
-                      <span className="bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">GBP→USD: {period.rates?.gbp_usd?.toFixed(4)}</span>
-                      <span className="bg-blue-50 dark:bg-blue-900/30 px-2 py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">USD→COP: {period.rates?.usd_cop?.toFixed(0)}</span>
+                    <div className="flex flex-wrap gap-1 sm:gap-2 text-[10px] sm:text-xs">
+                      <span className="bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">EUR→USD: {period.rates?.eur_usd?.toFixed(4)}</span>
+                      <span className="bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">GBP→USD: {period.rates?.gbp_usd?.toFixed(4)}</span>
+                      <span className="bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">USD→COP: {period.rates?.usd_cop?.toFixed(0)}</span>
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="overflow-x-auto mb-4">
+              <div className="mb-4">
                 {period.is_synthetic ? (
-                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-center">
-                    <Info className="w-5 h-5 text-amber-600 dark:text-amber-400 mx-auto mb-2" />
-                    <p className="text-sm text-amber-800 dark:text-amber-300 font-medium">
+                  <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-3 sm:p-4 text-center">
+                    <Info className="w-4 h-4 sm:w-5 sm:h-5 text-amber-600 dark:text-amber-400 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-300 font-medium">
                       Este período fue reconstruido desde totales consolidados
                     </p>
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                    <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1">
                       No hay desglose por plataforma disponible. Solo se muestran los totales.
                     </p>
                   </div>
                 ) : (
-                  <table className="w-full text-sm text-gray-900 dark:text-gray-100">
-                    <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400">
-                      <tr>
-                        <th className="px-3 py-2 text-left">Plataforma</th>
-                        <th className="px-3 py-2 text-left">Valor</th>
-                        <th className="px-3 py-2 text-left">USD</th>
-                        <th className="px-3 py-2 text-left">COP</th>
-                        {isAdmin && <th></th>}
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {period.platforms.filter(p=>p.value>0).map(p => (
-                      <tr key={p.platform_id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
-                        <td className="px-3 py-2 font-medium">{p.platform_name} <span className="text-xs text-gray-400 dark:text-gray-500 block">{p.platform_percentage}%</span></td>
-                        <td className="px-3 py-2 font-medium">
-                          {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                            <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-20 border rounded px-1 text-xs text-gray-900" />
-                          ) : formatNumberOnly(p.value)} <span className="text-gray-500 dark:text-gray-400 text-xs">{p.platform_currency}</span>
-                        </td>
-                        <td className="px-3 py-2">{formatCurrency(p.value_usd_modelo||0, 'USD')}</td>
-                        <td className="px-3 py-2">{formatCurrency(p.value_cop_modelo||0, 'COP')}</td>
-                        {isAdmin && (
-                          <td className="px-3 py-2">
+                  <>
+                  {/* Vista de Cards para Móvil */}
+                  <div className="md:hidden space-y-2">
+                    {period.platforms.filter(p=>p.value>0).map(p => (
+                      <div key={p.platform_id} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.platform_name}</h4>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400">Reparto: {p.platform_percentage}%</p>
+                          </div>
+                          {isAdmin && (
+                            <div className="flex-shrink-0 ml-2">
+                              {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
+                                <div className="flex gap-1">
+                                  <button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600 active:scale-95 touch-manipulation"><Save className="w-4 h-4"/></button>
+                                  <button onClick={cancelEdit} className="text-red-600 active:scale-95 touch-manipulation"><X className="w-4 h-4"/></button>
+                                </div>
+                              ) : (
+                                <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-600 hover:text-blue-500 active:scale-95 touch-manipulation"><Edit2 className="w-4 h-4"/></button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        <div className="space-y-1.5">
+                          <div>
+                            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Valor</p>
                             {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                              <div className="flex gap-1"><button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600"><Save className="w-3 h-3"/></button><button onClick={cancelEdit} className="text-red-600"><X className="w-3 h-3"/></button></div>
+                              <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800" />
                             ) : (
-                              <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-600 hover:text-blue-500"><Edit2 className="w-3 h-3"/></button>
+                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                                {formatNumberOnly(p.value)} <span className="text-xs text-gray-500 dark:text-gray-400">{p.platform_currency}</span>
+                              </p>
                             )}
+                          </div>
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Modelo</p>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">{formatCurrency(p.value_usd_modelo||0, 'USD')}</p>
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">COP Modelo</p>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">{formatCurrency(p.value_cop_modelo||0, 'COP')}</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Vista de Tabla para Desktop */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm text-gray-900 dark:text-gray-100">
+                      <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400">
+                        <tr>
+                          <th className="px-3 py-2 text-left">Plataforma</th>
+                          <th className="px-3 py-2 text-left">Valor</th>
+                          <th className="px-3 py-2 text-left">USD</th>
+                          <th className="px-3 py-2 text-left">COP</th>
+                          {isAdmin && <th></th>}
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {period.platforms.filter(p=>p.value>0).map(p => (
+                        <tr key={p.platform_id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
+                          <td className="px-3 py-2 font-medium">{p.platform_name} <span className="text-xs text-gray-400 dark:text-gray-500 block">{p.platform_percentage}%</span></td>
+                          <td className="px-3 py-2 font-medium">
+                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
+                              <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-20 border rounded px-1 text-xs text-gray-900" />
+                            ) : formatNumberOnly(p.value)} <span className="text-gray-500 dark:text-gray-400 text-xs">{p.platform_currency}</span>
                           </td>
-                        )}
-                      </tr>
-                      ))}
-                    </tbody>
-                  </table>
+                          <td className="px-3 py-2">{formatCurrency(p.value_usd_modelo||0, 'USD')}</td>
+                          <td className="px-3 py-2">{formatCurrency(p.value_cop_modelo||0, 'COP')}</td>
+                          {isAdmin && (
+                            <td className="px-3 py-2">
+                              {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
+                                <div className="flex gap-1"><button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600"><Save className="w-3 h-3"/></button><button onClick={cancelEdit} className="text-red-600"><X className="w-3 h-3"/></button></div>
+                              ) : (
+                                <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-600 hover:text-blue-500"><Edit2 className="w-3 h-3"/></button>
+                              )}
+                            </td>
+                          )}
+                        </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                  </>
                 )}
               </div>
 
-              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                  <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl border border-gray-100 dark:border-gray-700">
-                    <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
-                    <div className="text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(period.total_usd_modelo || 0, 'USD')}</div>
+              <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
+                  <div className="bg-gray-50 dark:bg-gray-700/50 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-gray-100 dark:border-gray-700">
+                    <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">USD Modelo</div>
+                    <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(period.total_usd_modelo || 0, 'USD')}</div>
                   </div>
 
-                  <div className="bg-blue-50 dark:bg-blue-900/40 p-3 rounded-xl border border-blue-100 dark:border-blue-800/50">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
-                      <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(period.total_cop_modelo || 0, 'COP')}</span>
+                  <div className="bg-blue-50 dark:bg-blue-900/40 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800/50">
+                    <div className="flex justify-between items-center mb-0.5 sm:mb-1">
+                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(period.total_cop_modelo || 0, 'COP')}</span>
                     </div>
 
                     {(period.total_anticipos || 0) > 0 && (
