@@ -201,7 +201,7 @@ export default function PlatformsListPage() {
                           <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[18%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                             Tipo / Moneda
                           </th>
-                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-left">
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                             Configuración
                           </th>
                           <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[15%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
@@ -239,7 +239,7 @@ export default function PlatformsListPage() {
                                 </div>
                               </td>
                               <td className="px-2 sm:px-4 py-2">
-                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-200 space-y-0.5 sm:space-y-1 text-left">
+                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-200 space-y-0.5 sm:space-y-1 text-center">
                                   {platform.token_rate && (
                                     <div>Token: <span className="font-mono">{platform.token_rate}</span></div>
                                   )}
