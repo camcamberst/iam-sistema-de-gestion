@@ -601,11 +601,14 @@ export default function SolicitudesPendientesPage() {
           </div>
         )}
 
-        {/* Elemento decorativo para historial */}
+        {/* Botón para ver historial */}
         <div className="mt-6 text-center">
-          <div className="px-6 py-3 bg-gray-600 dark:bg-gray-700 text-white rounded-xl hover:bg-gray-700 dark:hover:bg-gray-600 transition-all duration-200 font-medium shadow-sm cursor-default inline-block">
+          <button
+            onClick={() => router.push('/admin/anticipos/history')}
+            className="px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-gray-600 to-gray-700 dark:from-gray-700 dark:to-gray-600 text-white rounded-xl hover:from-gray-700 hover:to-gray-800 dark:hover:from-gray-600 dark:hover:to-gray-500 transition-all duration-200 font-medium shadow-sm hover:shadow-md active:scale-95 touch-manipulation text-sm sm:text-base"
+          >
             Ver Historial
-          </div>
+          </button>
         </div>
       </div>
     </div>
