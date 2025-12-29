@@ -96,7 +96,6 @@ export default function PortafolioModelos() {
   const [actionNotes, setActionNotes] = useState('');
   const [processingAction, setProcessingAction] = useState(false);
   const [modalStatus, setModalStatus] = useState<'disponible' | 'solicitada' | 'pendiente' | 'entregada' | 'desactivada' | 'inviable'>('disponible');
-  const [openFiltersCount, setOpenFiltersCount] = useState(0);
   
   // Estados para credenciales de plataforma
   const [loginUrl, setLoginUrl] = useState(''); // URL de la plataforma (obtenido desde calculator_platforms)
