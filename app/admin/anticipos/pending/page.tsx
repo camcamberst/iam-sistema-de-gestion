@@ -414,64 +414,61 @@ export default function SolicitudesPendientesPage() {
               const medioPagoInfo = getMedioPagoInfo(anticipo);
               
               return (
-                <div key={anticipo.id} className="bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 p-3 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      {/* Primera línea: Modelo y monto */}
-                      <div className="flex items-center justify-between mb-1">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                              {anticipo.model.name}
-                            </h3>
-                            {/* Mostrar grupos del modelo de forma discreta */}
-                            {anticipo.model.groups && anticipo.model.groups.length > 0 && (
-                              <div className="flex gap-1">
-                                {anticipo.model.groups.map((group) => (
-                                  <span
-                                    key={group.id}
-                                    className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded"
-                                  >
-                                    {group.name}
-                                  </span>
-                                ))}
-                              </div>
-                            )}
+                <div key={anticipo.id} className="bg-white dark:bg-gray-700/80 rounded-xl shadow-sm border border-gray-200 dark:border-gray-600/20 p-3 sm:p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <div className="space-y-2 sm:space-y-3">
+                    {/* Primera línea: Modelo y monto */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 truncate mb-1 sm:mb-0">
+                          {anticipo.model.name}
+                        </h3>
+                        {/* Mostrar grupos del modelo de forma discreta */}
+                        {anticipo.model.groups && anticipo.model.groups.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {anticipo.model.groups.map((group) => (
+                              <span
+                                key={group.id}
+                                className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-gray-600 px-1.5 py-0.5 rounded"
+                              >
+                                {group.name}
+                              </span>
+                            ))}
                           </div>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-base font-bold text-gray-900 dark:text-gray-100">
-                            ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
-                          </div>
+                        )}
+                      </div>
+                      <div className="text-left sm:text-right">
+                        <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100">
+                          ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
                         </div>
                       </div>
+                    </div>
 
-                      {/* Segunda línea: Información compacta */}
-                      <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
-                        <div className="flex items-center space-x-3">
-                          <span><span className="font-medium">Medio:</span> {medioPagoInfo.tipo}</span>
-                          {anticipo.nombre_beneficiario && (
-                            <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>
-                          )}
-                          {anticipo.numero_telefono && (
-                            <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
-                          )}
-                        </div>
-                        <div className="text-xs text-gray-500 dark:text-gray-400">
-                          {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
-                        </div>
+                    {/* Segunda línea: Información compacta - Reorganizada para móvil */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0">
+                      <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-1 sm:gap-0 text-[11px] sm:text-xs text-gray-600 dark:text-gray-400">
+                        <span><span className="font-medium">Medio:</span> {medioPagoInfo.tipo}</span>
+                        {anticipo.nombre_beneficiario && (
+                          <span className="truncate"><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>
+                        )}
+                        {anticipo.numero_telefono && (
+                          <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
+                        )}
                       </div>
+                      <div className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
+                        {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
+                      </div>
+                    </div>
 
-                      {/* Tercera línea: Detalles plegables para transferencia */}
-                      <div className="mt-2">
-                        <button
-                          onClick={() => setExpandedId(expandedId === anticipo.id ? null : anticipo.id)}
-                          className="text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline"
-                        >
-                          {expandedId === anticipo.id ? 'Ocultar detalles' : 'Ver detalles de transferencia'}
-                        </button>
-                        {expandedId === anticipo.id && (
-                          <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1 text-[11px] text-gray-700 dark:text-gray-300">
+                    {/* Tercera línea: Detalles plegables para transferencia */}
+                    <div className="mt-1 sm:mt-2">
+                      <button
+                        onClick={() => setExpandedId(expandedId === anticipo.id ? null : anticipo.id)}
+                        className="text-[10px] sm:text-[11px] font-medium text-blue-600 dark:text-blue-400 hover:underline active:scale-95 touch-manipulation"
+                      >
+                        {expandedId === anticipo.id ? 'Ocultar detalles' : 'Ver detalles de transferencia'}
+                      </button>
+                      {expandedId === anticipo.id && (
+                        <div className="mt-2 grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 sm:gap-y-1 text-[10px] sm:text-[11px] text-gray-700 dark:text-gray-300">
                             <div>
                               <span className="font-semibold">Método:</span> {medioPagoInfo.tipo}
                             </div>
@@ -518,32 +515,30 @@ export default function SolicitudesPendientesPage() {
                                 <span className="font-semibold">Grupo/Sede:</span> {anticipo.model.groups.map((g: any) => g.name).join(', ')}
                               </div>
                             )}
-                            <div className="sm:col-span-2 mt-1">
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const text = buildClipboardInfo(anticipo);
-                                    await navigator.clipboard.writeText(text);
-                                    setSuccess('Información copiada al portapapeles');
-                                    setTimeout(() => setSuccess(null), 2000);
-                                  } catch (e) {
-                                    setError('No se pudo copiar. Intenta de nuevo.');
-                                    setTimeout(() => setError(null), 2000);
-                                  }
-                                }}
-                                className="px-2 py-1 text-[11px] font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-colors"
-                              >
-                                Copiar información
-                              </button>
-                            </div>
+                          <div className="sm:col-span-2 mt-1.5 sm:mt-1">
+                            <button
+                              onClick={async () => {
+                                try {
+                                  const text = buildClipboardInfo(anticipo);
+                                  await navigator.clipboard.writeText(text);
+                                  setSuccess('Información copiada al portapapeles');
+                                  setTimeout(() => setSuccess(null), 2000);
+                                } catch (e) {
+                                  setError('No se pudo copiar. Intenta de nuevo.');
+                                  setTimeout(() => setError(null), 2000);
+                                }
+                              }}
+                              className="w-full sm:w-auto px-2.5 sm:px-2 py-1.5 sm:py-1 text-[10px] sm:text-[11px] font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-md hover:from-blue-700 hover:to-indigo-700 transition-colors active:scale-95 touch-manipulation"
+                            >
+                              Copiar información
+                            </button>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      )}
                     </div>
 
-
                     {/* Botones de acción compactos */}
-                    <div className="ml-2 flex space-x-1">
+                    <div className="flex flex-col sm:flex-row gap-2 sm:gap-1 sm:space-x-1 pt-2 sm:pt-0 border-t sm:border-t-0 border-gray-200 dark:border-gray-600">
                       {anticipo.estado === 'pendiente' && (
                         <>
                           <button
@@ -552,7 +547,7 @@ export default function SolicitudesPendientesPage() {
                               handleAction(anticipo.id, 'aprobado', comentarios || undefined);
                             }}
                             disabled={processing === anticipo.id}
-                            className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                            className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-95 touch-manipulation"
                           >
                             {processing === anticipo.id ? '...' : 'Aprobar'}
                           </button>
@@ -565,7 +560,7 @@ export default function SolicitudesPendientesPage() {
                               }
                             }}
                             disabled={processing === anticipo.id}
-                            className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                            className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-xs font-medium bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-95 touch-manipulation"
                           >
                             Rechazar
                           </button>
@@ -581,20 +576,20 @@ export default function SolicitudesPendientesPage() {
                             }
                           }}
                           disabled={processing === anticipo.id}
-                          className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md"
+                          className="w-full sm:w-auto px-3 py-2 sm:py-1.5 text-xs font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-95 touch-manipulation"
                         >
                           {processing === anticipo.id ? '...' : 'Realizado'}
                         </button>
                       )}
 
                       {anticipo.estado === 'realizado' && (
-                        <div className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-medium">
+                        <div className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-medium text-center sm:text-left">
                           Esperando confirmación de la modelo
                         </div>
                       )}
 
                       {anticipo.estado === 'confirmado' && (
-                        <div className="px-3 py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-medium">
+                        <div className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-medium text-center sm:text-left">
                           Confirmado por la modelo
                         </div>
                       )}
