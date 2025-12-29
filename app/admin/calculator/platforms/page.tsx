@@ -233,13 +233,13 @@ export default function PlatformsListPage() {
                                 </div>
                               </td>
                               <td className="px-2 sm:px-4 py-2">
-                                <div className="flex flex-col">
+                                <div className="flex flex-col items-center text-center">
                                   <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{platform.currency}</span>
                                   <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-300">{type}</span>
                                 </div>
                               </td>
                               <td className="px-2 sm:px-4 py-2">
-                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-200 space-y-0.5 sm:space-y-1">
+                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-200 space-y-0.5 sm:space-y-1 text-center">
                                   {platform.token_rate && (
                                     <div>Token: <span className="font-mono">{platform.token_rate}</span></div>
                                   )}
