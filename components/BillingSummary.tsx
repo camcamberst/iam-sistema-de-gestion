@@ -311,10 +311,13 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
     );
   }
 
+  // Detectar si es una consulta histórica
+  const isHistorical = propSelectedDate && propSelectedPeriod && propSelectedPeriod !== 'current';
+
   return (
-    <div className="mb-4 sm:mb-6">
+    <div className={`mb-4 sm:mb-6 ${isHistorical ? 'px-3 sm:px-0' : ''}`}>
       {/* Card Header - Versión compacta */}
-      <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 mb-4 sm:mb-8">
+      <div className={`bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 ${isHistorical ? 'mb-3 sm:mb-6' : 'mb-4 sm:mb-8'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
@@ -362,10 +365,10 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
           </div>
         </div>
 
-        <div className="px-2 sm:px-4 pb-3 sm:pb-4">
+        <div className={`px-2 sm:px-4 pb-3 sm:pb-4 ${isHistorical ? 'px-2 sm:px-4' : ''}`}>
           {/* Resumen general - Versión compacta */}
           {summary && (
-            <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-6 mt-4 sm:mt-6">
+            <div className={`grid grid-cols-3 gap-2 sm:gap-4 ${isHistorical ? 'mb-3 sm:mb-5 mt-3 sm:mt-5' : 'mb-4 sm:mb-6 mt-4 sm:mt-6'}`}>
               <div className="bg-blue-50/80 dark:bg-blue-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-blue-200/50 dark:border-blue-200/50">
                 <div className="text-center">
                   <div className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
@@ -506,7 +509,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               ))}
             </div>
           ) : billingData.length > 0 ? (
-            <div className="space-y-3">
+            <div className={`space-y-2 sm:space-y-3 ${isHistorical ? 'space-y-2' : ''}`}>
               {/* Vista unificada: Sedes individuales para todos los usuarios */}
               {/* Forzar renderizado de sedes individuales cuando hay groupedData */}
               {groupedData && groupedData.length > 0 ? (

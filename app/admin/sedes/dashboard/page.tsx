@@ -841,7 +841,7 @@ export default function DashboardSedesPage() {
             
             {/* Resumen Histórico - Se muestra cuando hay un período seleccionado */}
             {showHistoricalQuery && selectedMonth && selectedYear && selectedPeriod && targetDate && (
-              <div className="mt-4 sm:mt-6">
+              <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 sm:mx-0">
                 <BillingSummary 
                   userRole={userRole as 'admin' | 'super_admin'} 
                   userId={userId}
