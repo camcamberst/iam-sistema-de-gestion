@@ -817,66 +817,74 @@ export default function HistorialAnticiposPage() {
         ) : (
           <div className="space-y-4">
             {filteredAnticipos.map((anticipo) => (
-              <div key={anticipo.id} className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                <div className="flex items-center justify-between">
-                  <div className="flex-1">
-                    {/* Primera línea: Modelo, monto y estado */}
-                    <div className="flex items-center justify-between mb-1">
-                      <div>
-                        <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                          {anticipo.model.name}
-                        </h3>
-                        <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                          <span className="font-medium">Email:</span> {anticipo.model.email} | 
-                          <span className="font-medium ml-1">Grupo:</span> {anticipo.model.group?.name || 'Sin grupo'}
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <div className="text-right">
-                          <div className="text-base font-bold text-gray-900 dark:text-gray-100">
-                            ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
-                          </div>
-                        </div>
-                        <span className={`px-2 py-1 rounded-full text-xs font-medium ${getEstadoColor(anticipo.estado)}`}>
-                          {getEstadoLabel(anticipo.estado)}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    {/* Segunda línea: Información compacta con datos de transferencia */}
-                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
-                      <div className="flex items-center space-x-3">
-                        {anticipo.nombre_beneficiario && <span><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>}
-                        <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
-                        {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
-                          anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
-                        ) : (
-                          anticipo.banco && anticipo.numero_cuenta && (
-                            <>
-                              <span><span className="font-medium">Banco:</span> {anticipo.banco}</span>
-                              <span><span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}</span>
-                            </>
-                          )
+              <div key={anticipo.id} className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 p-3 sm:p-4 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <div className="space-y-2 sm:space-y-3">
+                  {/* Primera línea: Modelo, monto y estado */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 truncate mb-1 sm:mb-0">
+                        {anticipo.model.name}
+                      </h3>
+                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-0.5 sm:mt-1">
+                        <span className="font-medium">Email:</span> <span className="truncate block sm:inline">{anticipo.model.email}</span>
+                        {anticipo.model.group?.name && (
+                          <>
+                            <span className="hidden sm:inline"> | </span>
+                            <span className="block sm:inline"><span className="font-medium ml-1 sm:ml-0">Grupo:</span> {anticipo.model.group.name}</span>
+                          </>
+                        )}
+                        {!anticipo.model.group?.name && (
+                          <span className="hidden sm:inline"> | <span className="font-medium ml-1">Grupo:</span> Sin grupo</span>
                         )}
                       </div>
-                      <div className="text-xs text-gray-500 dark:text-gray-400">
-                        {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
-                      </div>
                     </div>
-
-                    {/* Comentarios - solo si existen */}
-                    {anticipo.comentarios_admin && (
-                      <div className="mt-1 p-1 bg-blue-50 dark:bg-blue-900/20 rounded text-xs text-blue-800 dark:text-blue-300">
-                        <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
+                    <div className="flex items-center justify-between sm:justify-end gap-2 sm:gap-2">
+                      <div className="text-left sm:text-right">
+                        <div className="text-sm sm:text-base font-bold text-gray-900 dark:text-gray-100">
+                          ${anticipo.monto_solicitado.toLocaleString('es-CO')} COP
+                        </div>
                       </div>
-                    )}
-
-                    {anticipo.comentarios_rechazo && (
-                      <div className="mt-1 p-1 bg-red-50 dark:bg-red-900/20 rounded text-xs text-red-800 dark:text-red-300">
-                        <span className="font-medium">Rechazo:</span> {anticipo.comentarios_rechazo}
-                      </div>
-                    )}
+                      <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium flex-shrink-0 ${getEstadoColor(anticipo.estado)}`}>
+                        {getEstadoLabel(anticipo.estado)}
+                      </span>
+                    </div>
                   </div>
+                  
+                  {/* Segunda línea: Información compacta con datos de transferencia */}
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:space-x-3 gap-1 sm:gap-0 text-[11px] sm:text-xs text-gray-600 dark:text-gray-300">
+                      {anticipo.nombre_beneficiario && (
+                        <span className="truncate"><span className="font-medium">Beneficiario:</span> {anticipo.nombre_beneficiario}</span>
+                      )}
+                      <span><span className="font-medium">Medio:</span> {anticipo.medio_pago.toUpperCase()}</span>
+                      {anticipo.medio_pago === 'nequi' || anticipo.medio_pago === 'daviplata' ? (
+                        anticipo.numero_telefono && <span><span className="font-medium">Tel:</span> {anticipo.numero_telefono}</span>
+                      ) : (
+                        anticipo.banco && anticipo.numero_cuenta && (
+                          <>
+                            <span className="truncate"><span className="font-medium">Banco:</span> {anticipo.banco}</span>
+                            <span className="truncate"><span className="font-medium">Cuenta:</span> {anticipo.numero_cuenta}</span>
+                          </>
+                        )
+                      )}
+                    </div>
+                    <div className="text-[11px] sm:text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(anticipo.created_at).toLocaleDateString('es-CO')}
+                    </div>
+                  </div>
+
+                  {/* Comentarios - solo si existen */}
+                  {anticipo.comentarios_admin && (
+                    <div className="mt-1 p-1.5 sm:p-1 bg-blue-50 dark:bg-blue-900/20 rounded text-[10px] sm:text-xs text-blue-800 dark:text-blue-300">
+                      <span className="font-medium">Admin:</span> {anticipo.comentarios_admin}
+                    </div>
+                  )}
+
+                  {anticipo.comentarios_rechazo && (
+                    <div className="mt-1 p-1.5 sm:p-1 bg-red-50 dark:bg-red-900/20 rounded text-[10px] sm:text-xs text-red-800 dark:text-red-300">
+                      <span className="font-medium">Rechazo:</span> {anticipo.comentarios_rechazo}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
