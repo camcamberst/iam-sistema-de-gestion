@@ -1235,7 +1235,7 @@ export default function AdminViewModelPage() {
         </div>
 
         {/* Panel derecho: Información adicional o vacío */}
-        <div className="lg:col-span-2">
+        <div className="hidden lg:block lg:col-span-2">
           <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Información</h2>
             
