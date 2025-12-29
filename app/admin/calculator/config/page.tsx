@@ -547,7 +547,7 @@ export default function ConfigCalculatorPage() {
                     {platforms.length}
                   </span>
                 </div>
-                <div className="border border-gray-200/50 dark:border-gray-500/50 rounded-lg p-2 sm:p-4 max-h-[60vh] sm:max-h-80 overflow-y-auto bg-gray-50/30 dark:bg-gray-600/30 backdrop-blur-sm">
+                <div className="border border-gray-200/50 dark:border-gray-500/50 rounded-lg p-2 sm:p-4 max-h-[280px] sm:max-h-80 overflow-y-auto bg-gray-50/30 dark:bg-gray-600/30 backdrop-blur-sm">
                   <div className="space-y-2 sm:space-y-3">
                     {platforms.length === 0 ? (
                       <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
