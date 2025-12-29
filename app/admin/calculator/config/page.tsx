@@ -481,7 +481,7 @@ export default function ConfigCalculatorPage() {
               
               {/* Información del grupo del modelo seleccionado */}
               {selectedModel && selectedModel.groups.length > 0 && (
-                <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-gray-50/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-500/50">
+                <div className="hidden sm:block mt-3 sm:mt-4 p-2 sm:p-3 bg-gray-50/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-500/50">
                   <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-300 mb-1.5 sm:mb-2 font-medium">Grupos:</p>
                   <div className="flex flex-wrap gap-1">
                     {selectedModel.groups.map((group) => (
