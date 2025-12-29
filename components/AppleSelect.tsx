@@ -235,7 +235,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
     >
       {label && <div className="text-gray-500 dark:text-gray-400 text-xs font-medium mb-1">{label}</div>}
       <div
-        className="w-full px-3 py-2.5 text-sm text-left border border-gray-200/80 dark:border-gray-600/80 rounded-xl bg-white/90 dark:bg-gray-800/90 backdrop-blur-sm shadow-[0_10px_30px_rgba(15,23,42,0.12)] dark:shadow-[0_16px_40px_rgba(15,23,42,0.55)] text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-300 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/25 focus:border-blue-500/60 transition-all duration-200 touch-manipulation"
+        className="w-full px-3 py-2.5 text-sm text-left border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
         onFocus={handleFocus}
         onBlur={handleBlur}
         onMouseDown={(e) => {
@@ -297,7 +297,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
       {open && (
         <div 
           ref={dropdownRef}
-          className="absolute z-[9999] w-full mt-1 top-full rounded-2xl border border-gray-200/90 dark:border-gray-700/80 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md shadow-[0_18px_45px_rgba(15,23,42,0.18)] dark:shadow-[0_22px_55px_rgba(15,23,42,0.85)] ring-1 ring-black/5 overflow-auto apple-scroll"
+          className="absolute z-[9999] w-full mt-1 top-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg dark:shadow-lg dark:shadow-cyan-900/10 dark:ring-0.5 dark:ring-cyan-500/15 overflow-auto apple-scroll"
           style={{ 
             maxHeight,
             // Altura mínima suficiente para mostrar al menos 3 opciones completas
@@ -333,7 +333,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           {options.map((opt, index) => (
             <div key={opt.value}>
               {index > 0 && (
-                <div className="w-full h-px bg-gray-100/70 dark:bg-gray-700/70"></div>
+                <div className="w-full h-px bg-gray-100 dark:bg-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10"></div>
               )}
               <button
                 type="button"
@@ -414,10 +414,10 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
                     setTouchHandled(false);
                   }
                 }}
-                className={`w-full px-4 py-2.5 text-[0.9rem] text-left cursor-pointer transition-colors duration-150 flex items-center justify-between touch-manipulation active:scale-[0.98] ${
+                className={`w-full px-4 py-3 text-sm text-left cursor-pointer transition-colors duration-150 flex items-center justify-between touch-manipulation active:scale-[0.98] ${
                   value === opt.value 
-                    ? 'bg-blue-50/90 dark:bg-blue-900/25 text-blue-900 dark:text-blue-100 font-medium'
-                    : 'hover:bg-gray-50/90 dark:hover:bg-gray-800 text-gray-900 dark:text-gray-100'
+                    ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100 font-medium'
+                    : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
                 }`}
               >
                 <span className="truncate">{opt.label}</span>

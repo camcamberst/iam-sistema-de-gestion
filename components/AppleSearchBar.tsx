@@ -205,7 +205,7 @@ export default function AppleSearchBar({
           value={selectedFilters[filter.id] || ''}
           options={filter.options}
           onChange={(v) => handleFilterChange(filter.id, v)}
-          className="text-sm bg-white dark:bg-gray-700 backdrop-blur-sm border border-gray-200 dark:border-gray-600 rounded-md shadow-sm hover:shadow-md transition-all duration-200"
+          className=""
           onFocus={() => handleFilterFocus(filter.id)}
           onBlur={() => handleFilterBlur(filter.id)}
         />
