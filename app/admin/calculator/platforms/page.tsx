@@ -239,7 +239,7 @@ export default function PlatformsListPage() {
                                 </div>
                               </td>
                               <td className="px-2 sm:px-4 py-2">
-                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-200 space-y-0.5 sm:space-y-1 text-center">
+                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-200 space-y-0.5 sm:space-y-1 text-left">
                                   {platform.token_rate && (
                                     <div>Token: <span className="font-mono">{platform.token_rate}</span></div>
                                   )}
