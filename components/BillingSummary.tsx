@@ -392,7 +392,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
 
           {/* Vista jerárquica para Super Admin - Aplicando políticas estéticas */}
           {userRole === 'super_admin' && groupedData && groupedData.length > 0 ? (
-            <div className="space-y-4">
+            <div className={`space-y-3 sm:space-y-4 ${isHistorical ? 'space-y-2 sm:space-y-3' : ''}`}>
               {groupedData.map((sede) => (
                 <div key={sede.sedeId} className="bg-white/70 dark:bg-white backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-200/50 overflow-hidden hover:shadow-lg transition-all duration-300">
                   {/* Header de Sede - Aplicando políticas estéticas */}
