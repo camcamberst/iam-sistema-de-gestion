@@ -79,10 +79,38 @@ export default function ConfigCalculatorPage() {
   const [groupPercentage, setGroupPercentage] = useState<string>('');
   const [groupMinQuota, setGroupMinQuota] = useState<string>('');
   const [portfolioData, setPortfolioData] = useState<Record<string, any>>({});
+  
+  // Estados para secciones colapsables (móvil)
+  const [expandedSections, setExpandedSections] = useState({
+    platforms: true,
+    reparto: false
+  });
+  const [isMobile, setIsMobile] = useState(false);
+  const [expandedPlatformDescriptions, setExpandedPlatformDescriptions] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     loadData();
   }, []);
+
+  // Detectar si estamos en móvil
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Expandir sección de configuración automáticamente cuando se selecciona un modelo
+  useEffect(() => {
+    if (selectedModel && isMobile) {
+      setExpandedSections(prev => ({
+        ...prev,
+        platforms: true
+      }));
+    }
+  }, [selectedModel, isMobile]);
 
 
   const loadData = async () => {
@@ -397,20 +425,20 @@ export default function ConfigCalculatorPage() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-6">
         {/* Panel izquierdo: Filtros y Selección de modelo */}
         <div className="md:col-span-1">
-          <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 space-y-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
+          <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 space-y-4 sm:space-y-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
             {/* Filtro por Grupo */}
             {availableGroups.length > 0 && (
               <div>
-                <div className="flex items-center space-x-2 mb-4">
-                  <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                    <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
                     </svg>
                   </div>
-                  <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Filtrar por Grupo</h2>
+                  <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">Filtrar por Grupo</h2>
                 </div>
                 <AppleDropdown
                   options={availableGroups.map(group => ({
@@ -427,13 +455,13 @@ export default function ConfigCalculatorPage() {
             
             {/* Selección de Modelo */}
             <div>
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+                  <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">Seleccionar Modelo</h2>
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">Seleccionar Modelo</h2>
               </div>
               <AppleDropdown
                 options={[
@@ -453,13 +481,13 @@ export default function ConfigCalculatorPage() {
               
               {/* Información del grupo del modelo seleccionado */}
               {selectedModel && selectedModel.groups.length > 0 && (
-                <div className="mt-4 p-3 bg-gray-50/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-500/50">
-                  <p className="text-xs text-gray-600 dark:text-gray-300 mb-2 font-medium">Grupos:</p>
+                <div className="mt-3 sm:mt-4 p-2 sm:p-3 bg-gray-50/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-500/50">
+                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-300 mb-1.5 sm:mb-2 font-medium">Grupos:</p>
                   <div className="flex flex-wrap gap-1">
                     {selectedModel.groups.map((group) => (
                       <span 
                         key={group.id}
-                        className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full border border-blue-200/50 dark:border-blue-700/50"
+                        className="inline-block px-1.5 sm:px-2 py-0.5 sm:py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-[10px] sm:text-xs rounded-full border border-blue-200/50 dark:border-blue-700/50"
                       >
                         {group.name}
                       </span>
@@ -473,77 +501,109 @@ export default function ConfigCalculatorPage() {
 
         {/* Panel derecho: Configuración */}
         {selectedModel && (
-          <div className="md:col-span-2 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <div className="flex items-center space-x-2 mb-6">
-              <div className="w-5 h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
-                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                </svg>
+          <div className="md:col-span-2 relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            {/* Header colapsable en móvil */}
+            <button
+              type="button"
+              onClick={() => isMobile && setExpandedSections(prev => ({ ...prev, platforms: !prev.platforms }))}
+              className={`w-full flex items-center justify-between ${isMobile ? 'cursor-pointer mb-3 sm:mb-6' : 'mb-3 sm:mb-6 cursor-default'}`}
+            >
+              <div className="flex items-center space-x-2">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-purple-500 to-violet-600 rounded-md flex items-center justify-center">
+                  <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                </div>
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 truncate">
+                  {selectedModel.name || selectedModel.email}
+                </h2>
               </div>
-              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                Configurar: {selectedModel.name || selectedModel.email}
-              </h2>
-            </div>
+              {isMobile && (
+                <svg 
+                  className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${expandedSections.platforms ? 'rotate-180' : ''}`}
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              )}
+            </button>
 
-            <div className="space-y-6">
+            <div className={`space-y-3 sm:space-y-6 ${isMobile && !expandedSections.platforms ? 'hidden' : ''} transition-all duration-200`}>
               {/* Plataformas habilitadas */}
               <div>
-                <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
-                      <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
+                      <svg className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Seleccionar Páginas</h3>
+                    <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">Seleccionar Páginas</h3>
                   </div>
-                  <span className="text-xs text-gray-500 dark:text-gray-400 bg-gray-100/80 dark:bg-gray-600/80 px-2 py-1 rounded-full border border-gray-200/50 dark:border-gray-500/50">
-                    {platforms.length} plataformas disponibles
+                  <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 bg-gray-100/80 dark:bg-gray-600/80 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border border-gray-200/50 dark:border-gray-500/50">
+                    {platforms.length}
                   </span>
                 </div>
-                <div className="border border-gray-200/50 dark:border-gray-500/50 rounded-lg p-4 max-h-80 overflow-y-auto bg-gray-50/30 dark:bg-gray-600/30 backdrop-blur-sm">
-                  <div className="space-y-3">
+                <div className="border border-gray-200/50 dark:border-gray-500/50 rounded-lg p-2 sm:p-4 max-h-[60vh] sm:max-h-80 overflow-y-auto bg-gray-50/30 dark:bg-gray-600/30 backdrop-blur-sm">
+                  <div className="space-y-2 sm:space-y-3">
                     {platforms.length === 0 ? (
-                      <div className="text-center py-8 text-gray-500 dark:text-gray-400">
-                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
-                          <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <div className="text-center py-6 sm:py-8 text-gray-500 dark:text-gray-400">
+                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-lg flex items-center justify-center mx-auto mb-2">
+                          <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                           </svg>
                         </div>
-                        <p className="text-sm font-medium">No hay plataformas disponibles</p>
-                        <p className="text-xs">Cargando datos...</p>
+                        <p className="text-xs sm:text-sm font-medium">No hay plataformas disponibles</p>
+                        <p className="text-[10px] sm:text-xs">Cargando datos...</p>
                       </div>
                     ) : (
                       platforms.map(platform => (
-                        <div key={platform.id} className="flex items-center justify-between p-3 bg-white/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-500/50">
-                          <div className="flex-1">
-                            <div className="flex items-center space-x-2 mb-1">
-                              <span className="text-sm font-medium text-gray-900 dark:text-gray-100">{platform.name}</span>
+                        <div key={platform.id} className="flex items-center justify-between p-2 sm:p-3 bg-white/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg border border-gray-200/50 dark:border-gray-500/50">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-1.5 sm:space-x-2 mb-0.5 sm:mb-1">
+                              <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{platform.name}</span>
                               {portfolioData[platform.id] && selectedModel?.hasConfig && (
-                                <span className={`text-xs px-2 py-1 rounded-full border ${getPortfolioStatusColor(portfolioData[platform.id].status)}`}>
+                                <span className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border flex-shrink-0 ${getPortfolioStatusColor(portfolioData[platform.id].status)}`}>
                                   {portfolioData[platform.id].status}
                                 </span>
                               )}
                               {!selectedModel?.hasConfig && (
-                                <span className="text-xs px-2 py-1 rounded-full border bg-green-100 text-green-800 border-green-200">
+                                <span className="text-[10px] sm:text-xs px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full border bg-green-100 text-green-800 border-green-200 flex-shrink-0">
                                   Disponible
                                 </span>
                               )}
                             </div>
-                            <p className="text-xs text-gray-500 dark:text-gray-400">{platform.description}</p>
+                            {isMobile ? (
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setExpandedPlatformDescriptions(prev => ({ ...prev, [platform.id]: !prev[platform.id] }));
+                                }}
+                                className="text-[10px] text-gray-500 dark:text-gray-400 text-left w-full mt-0.5"
+                              >
+                                <span className={expandedPlatformDescriptions[platform.id] ? '' : 'line-clamp-1'}>
+                                  {platform.description}
+                                </span>
+                              </button>
+                            ) : (
+                              <p className="text-xs text-gray-500 dark:text-gray-400">{platform.description}</p>
+                            )}
                           </div>
                           <button
                             type="button"
                             onClick={() => handlePlatformToggle(platform.id)}
-                            className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${
-                              enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gray-200'
+                            className={`relative inline-flex h-4 w-7 sm:h-5 sm:w-9 items-center rounded-full transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 flex-shrink-0 ml-2 ${
+                              enabledPlatforms.includes(platform.id) ? 'bg-gradient-to-r from-blue-500 to-indigo-600' : 'bg-gray-200 dark:bg-gray-500'
                             }`}
                           >
                             <span className="sr-only">Enable platform</span>
                             <span
-                              className={`inline-block h-3 w-3 transform rounded-full bg-white transition-transform shadow-sm ${
-                                enabledPlatforms.includes(platform.id) ? 'translate-x-5' : 'translate-x-1'
+                              className={`inline-block h-2.5 w-2.5 sm:h-3 sm:w-3 transform rounded-full bg-white transition-transform shadow-sm ${
+                                enabledPlatforms.includes(platform.id) ? 'translate-x-3.5 sm:translate-x-5' : 'translate-x-0.5 sm:translate-x-1'
                               }`}
                             />
                           </button>
@@ -555,67 +615,83 @@ export default function ConfigCalculatorPage() {
               </div>
 
               {/* Configuración de reparto */}
-              <div className="relative bg-white/50 dark:bg-gray-600/50 backdrop-blur-sm rounded-xl shadow-sm border border-white/30 dark:border-gray-500/30 p-6">
-                <div className="flex items-center space-x-2 mb-6">
-                  <div className="w-5 h-5 bg-gradient-to-br from-orange-500 to-amber-600 rounded-md flex items-center justify-center">
-                    <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
+              <div className="relative bg-white/50 dark:bg-gray-600/50 backdrop-blur-sm rounded-xl shadow-sm border border-white/30 dark:border-gray-500/30 p-3 sm:p-6">
+                <button
+                  type="button"
+                  onClick={() => isMobile && setExpandedSections(prev => ({ ...prev, reparto: !prev.reparto }))}
+                  className={`w-full flex items-center justify-between ${isMobile ? 'cursor-pointer mb-3 sm:mb-6' : 'mb-3 sm:mb-6 cursor-default'}`}
+                >
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-orange-500 to-amber-600 rounded-md flex items-center justify-center">
+                      <svg className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+                      </svg>
+                    </div>
+                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">Configuración de Reparto</h3>
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Configuración de Reparto</h3>
-                </div>
+                  {isMobile && (
+                    <svg 
+                      className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${expandedSections.reparto ? 'rotate-180' : ''}`}
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                    </svg>
+                  )}
+                </button>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className={`grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 ${isMobile && !expandedSections.reparto ? 'hidden' : ''} transition-all duration-200`}>
                   {/* Columna Grupo */}
-                  <div className="bg-white/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-500/50 p-6 h-full">
-                    <div className="flex items-center space-x-2 mb-6">
-                      <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
-                        <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="bg-white/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-xl shadow-sm border border-gray-200/50 dark:border-gray-500/50 p-3 sm:p-6 h-full">
+                    <div className="flex items-center space-x-2 mb-4 sm:mb-6">
+                      <div className="w-3.5 h-3.5 sm:w-4 sm:h-4 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-sm flex items-center justify-center">
+                        <svg className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                         </svg>
                       </div>
-                      <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Configuración Grupo</h4>
+                      <h4 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">Configuración Grupo</h4>
                     </div>
                     
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                       <div>
-                        <label htmlFor="groupPercentage" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label htmlFor="groupPercentage" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 sm:mb-2">
                           Porcentaje Grupo
                         </label>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
                           <input
                             type="number"
                             id="groupPercentage"
-                            className="apple-input flex-1"
+                            className="apple-input flex-1 h-10 sm:h-auto"
                             value={groupPercentage}
                             onChange={(e) => setGroupPercentage(e.target.value)}
                             placeholder="60"
                           />
-                          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">%</span>
+                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">%</span>
                         </div>
                         {selectedModel?.groups?.[0] && (
-                          <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">
                             Valor por defecto: {getStandardPercentageByGroup(selectedModel.groups[0].name)}%
                           </p>
                         )}
                       </div>
                       
                       <div>
-                        <label htmlFor="groupMinQuota" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label htmlFor="groupMinQuota" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 sm:mb-2">
                           Objetivo Grupo
                         </label>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
                           <input
                             type="number"
                             id="groupMinQuota"
-                            className="apple-input flex-1"
+                            className="apple-input flex-1 h-10 sm:h-auto"
                             value={groupMinQuota}
                             onChange={(e) => setGroupMinQuota(e.target.value)}
                             placeholder="500000"
                           />
-                          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">USD</span>
+                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">USD</span>
                         </div>
-                        <p className="text-xs text-gray-500 mt-2">
+                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1.5 sm:mt-2">
                           &nbsp;
                         </p>
                       </div>
@@ -623,46 +699,46 @@ export default function ConfigCalculatorPage() {
                   </div>
                   
                   {/* Columna Modelo */}
-                  <div className="bg-white dark:bg-gray-600 rounded-xl shadow-sm border border-gray-200 dark:border-gray-500 p-6 h-full">
-                    <h4 className="text-base font-medium text-gray-900 dark:text-gray-100 mb-6">Configuración Modelo</h4>
+                  <div className="bg-white dark:bg-gray-600 rounded-xl shadow-sm border border-gray-200 dark:border-gray-500 p-3 sm:p-6 h-full">
+                    <h4 className="text-xs sm:text-base font-medium text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Configuración Modelo</h4>
                     
-                    <div className="space-y-6">
+                    <div className="space-y-4 sm:space-y-6">
                       <div>
-                        <label htmlFor="percentageOverride" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label htmlFor="percentageOverride" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 sm:mb-2">
                           Porcentaje Modelo
                         </label>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
                           <input
                             type="number"
                             id="percentageOverride"
-                            className="apple-input flex-1"
+                            className="apple-input flex-1 h-10 sm:h-auto"
                             value={percentageOverride}
                             onChange={(e) => setPercentageOverride(e.target.value)}
                             placeholder="70"
                           />
-                          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">%</span>
+                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">%</span>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">
                           Dejar vacío para usar el porcentaje del grupo
                         </p>
                       </div>
                       
                       <div>
-                        <label htmlFor="minQuotaOverride" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
+                        <label htmlFor="minQuotaOverride" className="block text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5 sm:mb-2">
                           Objetivo Modelo
                         </label>
-                        <div className="flex items-center space-x-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3">
                           <input
                             type="number"
                             id="minQuotaOverride"
-                            className="apple-input flex-1"
+                            className="apple-input flex-1 h-10 sm:h-auto"
                             value={minQuotaOverride}
                             onChange={(e) => setMinQuotaOverride(e.target.value)}
                             placeholder="300000"
                           />
-                          <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">USD</span>
+                          <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">USD</span>
                         </div>
-                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                        <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">
                           Dejar vacío para usar el objetivo del grupo
                         </p>
                       </div>
@@ -671,7 +747,8 @@ export default function ConfigCalculatorPage() {
                 </div>
               </div>
 
-              <div className="flex justify-center">
+              {/* Botón guardar - Desktop */}
+              <div className="hidden sm:flex justify-center">
                 <button
                   type="button"
                   onClick={handleSave}
@@ -683,6 +760,25 @@ export default function ConfigCalculatorPage() {
               </div>
             </div>
           </div>
+        )}
+
+        {/* Botón flotante de guardar - Móvil */}
+        {selectedModel && isMobile && (
+          <div className="fixed bottom-4 left-4 right-4 z-50 sm:hidden pb-safe">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="w-full px-4 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200 shadow-lg active:scale-95 touch-manipulation disabled:opacity-50"
+            >
+              {saving ? 'Guardando...' : 'Guardar Configuración'}
+            </button>
+          </div>
+        )}
+
+        {/* Espaciado inferior para el botón flotante en móvil */}
+        {selectedModel && isMobile && (
+          <div className="h-20 sm:h-0"></div>
         )}
         </div>
       </div>
