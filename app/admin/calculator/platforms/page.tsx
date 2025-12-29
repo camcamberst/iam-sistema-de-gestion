@@ -166,88 +166,128 @@ export default function PlatformsListPage() {
         )}
 
         {/* Tabla de Plataformas */}
-        <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 overflow-hidden dark:shadow-blue-900/15">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="bg-gray-50/50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-600">
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Plataforma</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Tipo / Moneda</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Configuración</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Frecuencia</th>
-                  <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider sm:text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-gray-600">
-                {platforms.map((platform) => {
-                  // Determinar tipo
-                  let type = 'Estándar';
-                  if (platform.token_rate) type = 'Tokens';
-                  else if (platform.direct_payout) type = 'Pago Directo';
-                  
-                  return (
-                    <tr key={platform.id} className="hover:bg-gray-50 dark:hover:bg-gray-600/30 transition-colors">
-                      <td className="px-6 py-4">
-                        <div className="flex items-center">
-                          <div className="h-10 w-10 flex-shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-lg border border-blue-200 dark:border-blue-800">
-                            {platform.name.charAt(0)}
-                          </div>
-                          <div className="ml-4">
-                            <div className="font-medium text-gray-900 dark:text-white">{platform.name}</div>
-                            <div className="text-sm text-gray-500 dark:text-gray-400 font-mono text-xs">{platform.id}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex flex-col">
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">{platform.currency}</span>
-                          <span className="text-xs text-gray-500 dark:text-gray-400">{type}</span>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="text-sm text-gray-600 dark:text-gray-300 space-y-1">
-                          {platform.token_rate && (
-                            <div>Token: <span className="font-mono">{platform.token_rate}</span></div>
-                          )}
-                          {platform.discount_factor && (
-                            <div>Desc: <span className="font-mono">{(platform.discount_factor * 100).toFixed(1)}%</span></div>
-                          )}
-                          {platform.tax_rate && (
-                            <div>Imp: <span className="font-mono">{(platform.tax_rate * 100).toFixed(1)}%</span></div>
-                          )}
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                         <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                           platform.payment_frequency === 'quincenal' 
-                             ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800'
-                             : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800'
-                         }`}>
-                           {platform.payment_frequency}
-                         </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-3 sm:gap-3">
-                          <Link
-                            href={`/admin/calculator/platforms/${platform.id}/edit`}
-                            className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-sm transition-colors touch-manipulation"
-                          >
-                            Editar
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(platform.id, platform.name)}
-                            disabled={deletingId === platform.id}
-                            className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium text-sm disabled:opacity-50 transition-colors touch-manipulation"
-                          >
-                            {deletingId === platform.id ? '...' : 'Eliminar'}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+        <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm border border-white/20 dark:border-gray-600/20 rounded-xl shadow-md transition-all duration-300 apple-scroll overflow-y-auto max-h-[70vh] p-0 z-10 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="pt-4 sm:pt-6 px-3 sm:px-6 pb-0">
+            <div className="flex items-center space-x-2 mb-4">
+              <div className="w-5 h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
+                <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100">
+                Plataformas ({platforms.length})
+              </h2>
+            </div>
+            
+            {platforms.length === 0 && !loading ? (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <svg className="w-6 h-6 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                  </svg>
+                </div>
+                <p className="text-gray-500 dark:text-gray-400">No hay plataformas activas.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto -mx-3 sm:mx-0">
+                <div className="inline-block min-w-full align-middle">
+                  <div className="overflow-hidden">
+                    <table className="min-w-full text-left text-xs md:table-fixed">
+                      <thead className="border-b border-white/20 dark:border-gray-600/20 bg-gradient-to-r from-gray-50/80 to-blue-50/60 dark:from-gray-700/80 dark:to-gray-600/60 backdrop-blur-sm">
+                        <tr>
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[140px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                            Plataforma
+                          </th>
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[18%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                            Tipo / Moneda
+                          </th>
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                            Configuración
+                          </th>
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[15%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                            Frecuencia
+                          </th>
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[17%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center sm:text-right">
+                            Acciones
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white/30 backdrop-blur-sm divide-y divide-white/20">
+                        {platforms.map((platform) => {
+                          // Determinar tipo
+                          let type = 'Estándar';
+                          if (platform.token_rate) type = 'Tokens';
+                          else if (platform.direct_payout) type = 'Pago Directo';
+                          
+                          return (
+                            <tr key={platform.id} className="border-b border-white/10 hover:bg-white/60 hover:shadow-sm transition-all duration-200 h-auto sm:h-12 group">
+                              <td className="px-2 sm:px-4 py-2">
+                                <div className="flex items-center space-x-2">
+                                  <div className="h-6 w-6 sm:h-8 sm:w-8 flex-shrink-0 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 font-bold text-sm sm:text-lg border border-blue-200 dark:border-blue-800">
+                                    {platform.name.charAt(0)}
+                                  </div>
+                                  <div className="ml-2 sm:ml-4 min-w-0">
+                                    <div className="font-medium text-gray-900 dark:text-white text-xs sm:text-sm truncate">{platform.name}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-400 font-mono text-[10px] sm:text-xs truncate">{platform.id}</div>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-2 sm:px-4 py-2">
+                                <div className="flex flex-col">
+                                  <span className="text-xs sm:text-sm font-medium text-gray-900 dark:text-white">{platform.currency}</span>
+                                  <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">{type}</span>
+                                </div>
+                              </td>
+                              <td className="px-2 sm:px-4 py-2">
+                                <div className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-300 space-y-0.5 sm:space-y-1">
+                                  {platform.token_rate && (
+                                    <div>Token: <span className="font-mono">{platform.token_rate}</span></div>
+                                  )}
+                                  {platform.discount_factor && (
+                                    <div>Desc: <span className="font-mono">{(platform.discount_factor * 100).toFixed(1)}%</span></div>
+                                  )}
+                                  {platform.tax_rate && (
+                                    <div>Imp: <span className="font-mono">{(platform.tax_rate * 100).toFixed(1)}%</span></div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="px-2 sm:px-4 py-2">
+                                <span className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium border ${
+                                  platform.payment_frequency === 'quincenal' 
+                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800'
+                                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400 border-purple-200 dark:border-purple-800'
+                                }`}>
+                                  {platform.payment_frequency}
+                                </span>
+                              </td>
+                              <td className="px-2 sm:px-4 py-2">
+                                <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3">
+                                  <Link
+                                    href={`/admin/calculator/platforms/${platform.id}/edit`}
+                                    className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 font-medium text-xs sm:text-sm transition-colors touch-manipulation"
+                                  >
+                                    Editar
+                                  </Link>
+                                  <button
+                                    onClick={() => handleDelete(platform.id, platform.name)}
+                                    disabled={deletingId === platform.id}
+                                    className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300 font-medium text-xs sm:text-sm disabled:opacity-50 transition-colors touch-manipulation"
+                                  >
+                                    {deletingId === platform.id ? '...' : 'Eliminar'}
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
             
             {platforms.length === 0 && !loading && (
               <div className="text-center py-12">
