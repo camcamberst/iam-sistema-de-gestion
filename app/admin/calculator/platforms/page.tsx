@@ -195,13 +195,13 @@ export default function PlatformsListPage() {
                     <table className="min-w-full text-left text-xs md:table-fixed">
                       <thead className="border-b border-white/20 dark:border-gray-600/40 bg-gradient-to-r from-gray-50/80 to-blue-50/60 dark:from-gray-700/90 dark:to-gray-600/70 backdrop-blur-sm">
                         <tr>
-                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[140px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[140px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-left">
                             Plataforma
                           </th>
                           <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[18%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
                             Tipo / Moneda
                           </th>
-                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
+                          <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[120px] sm:w-[25%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-left">
                             Configuración
                           </th>
                           <th className="px-2 sm:px-4 py-3 sm:py-4 min-w-[100px] sm:w-[15%] text-gray-700 dark:text-white font-medium text-xs sm:text-sm uppercase tracking-wide text-center">
@@ -252,13 +252,15 @@ export default function PlatformsListPage() {
                                 </div>
                               </td>
                               <td className="px-2 sm:px-4 py-2">
-                                <span className={`inline-flex items-center px-1.5 sm:px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-medium border ${
-                                  platform.payment_frequency === 'quincenal' 
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-700/50'
-                                    : 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-700/50'
-                                }`}>
-                                  {platform.payment_frequency}
-                                </span>
+                                <div className="flex items-center justify-center">
+                                  <span className={`inline-flex items-center justify-center min-w-[70px] sm:min-w-[80px] px-2 sm:px-3 py-1 rounded-full text-[10px] sm:text-xs font-medium border ${
+                                    platform.payment_frequency === 'quincenal' 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 border-green-200 dark:border-green-700/50'
+                                      : 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300 border-purple-200 dark:border-purple-700/50'
+                                  }`}>
+                                    {platform.payment_frequency}
+                                  </span>
+                                </div>
                               </td>
                               <td className="px-2 sm:px-4 py-2">
                                 <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3">
