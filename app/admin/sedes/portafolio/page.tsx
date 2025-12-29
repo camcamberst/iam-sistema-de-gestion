@@ -912,58 +912,50 @@ export default function PortafolioModelos() {
         )}
 
         {/* Filters */}
-        <div className="mb-8 z-50 relative">
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-                <Filter className="w-5 h-5 mr-2" />
+        <div className="mb-4 sm:mb-8 z-40 relative">
+          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
+                <Filter className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
                 Filtros
               </h3>
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors"
+                className="text-xs sm:text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 transition-colors active:scale-95 touch-manipulation"
               >
                 {showFilters ? 'Ocultar' : 'Mostrar'}
               </button>
             </div>
 
             {showFilters && (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
                 <AppleSelect
                   label="Grupo"
                   value={selectedGroup}
                   options={[{ label: 'Todos los grupos', value: '' }, ...groups.map(g => ({ label: g.name, value: g.id }))]}
                   onChange={(val) => handleGroupChange(val)}
-                  onFocus={() => setOpenFiltersCount(c => c + 1)}
-                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
-                  className="text-sm"
+                  className="text-xs sm:text-sm"
                 />
                 <AppleSelect
                   label="Modelo"
                   value={selectedModel}
                   options={[{ label: 'Todas las modelos', value: '' }, ...models.map(m => ({ label: getModelDisplayName(m.email), value: m.id }))]}
                   onChange={(val) => setSelectedModel(val)}
-                  onFocus={() => setOpenFiltersCount(c => c + 1)}
-                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
-                  className="text-sm"
+                  className="text-xs sm:text-sm"
                 />
                 <AppleSelect
                   label="Jornada"
                   value={selectedJornada}
                   options={[{ label: 'Todas las jornadas', value: '' }, ...jornadas.map(j => ({ label: j, value: j }))]}
                   onChange={(val) => setSelectedJornada(val)}
-                  onFocus={() => setOpenFiltersCount(c => c + 1)}
-                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
-                  className="text-sm"
+                  className="text-xs sm:text-sm"
                 />
                 <AppleSelect
                   label="Plataforma"
                   value={selectedPlatform}
                   options={[{ label: 'Todas las plataformas', value: '' }, ...allPlatforms.map(p => ({ label: p.name, value: p.id }))]}
                   onChange={(val) => setSelectedPlatform(val)}
-                  onFocus={() => setOpenFiltersCount(c => c + 1)}
-                  onBlur={() => setOpenFiltersCount(c => Math.max(0, c - 1))}
-                  className="text-sm"
+                  className="text-xs sm:text-sm"
                 />
               </div>
             )}
@@ -971,9 +963,9 @@ export default function PortafolioModelos() {
         </div>
 
         {/* Results */}
-        <div className={`bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 transition-all dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 ${openFiltersCount > 0 ? 'opacity-30 blur-sm pointer-events-none' : 'opacity-100'}`}>
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+        <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 transition-all dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="flex items-center justify-between mb-3 sm:mb-6">
+            <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
               Modelos ({modelsList.length})
             </h3>
           </div>
@@ -984,29 +976,29 @@ export default function PortafolioModelos() {
               <p className="text-gray-500 dark:text-gray-400">Aplica un filtro de Grupo, Modelo, Room, Jornada o Plataforma para ver resultados.</p>
             </div>
           ) : (
-            <div className="space-y-6">
+            <div className="space-y-3 sm:space-y-6">
               {modelsList.map((model) => (
                 <div
                   key={model.model_id}
-                  className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/30 dark:border-gray-600/30 shadow-lg p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"
+                  className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl border border-white/30 dark:border-gray-600/30 shadow-lg p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"
                 >
                   {/* Header del Modelo */}
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
-                        <User className="w-6 h-6 text-white" />
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-6">
+                    <div className="flex items-center space-x-2 sm:space-x-4">
+                      <div className="w-8 h-8 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md flex-shrink-0">
+                        <User className="w-4 h-4 sm:w-6 sm:h-6 text-white" />
                       </div>
-                      <div>
+                      <div className="min-w-0 flex-1">
                         <h4 
-                          className="text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-700 dark:hover:text-blue-400 transition-colors"
+                          className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 cursor-pointer hover:text-blue-700 dark:hover:text-blue-400 transition-colors truncate"
                           onClick={() => handleModelNameClick(model.model_id, model.model_email)}
                           title="Ver calculadora de la modelo"
                         >
                           {getModelDisplayName(model.model_email)}
                         </h4>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center">
-                          <Building2 className="w-4 h-4 mr-1" />
-                          {model.group_name}
+                        <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 flex items-center">
+                          <Building2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
+                          <span className="truncate">{model.group_name}</span>
                         </p>
                       </div>
                     </div>
@@ -1021,16 +1013,16 @@ export default function PortafolioModelos() {
                         });
                         setShowBoostPagesModal(true);
                       }}
-                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center gap-2 text-sm font-medium"
+                      className="w-full sm:w-auto px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all duration-200 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-2 text-xs sm:text-sm font-medium active:scale-95 touch-manipulation"
                       title="Abrir Boost Pages para subir fotos a las plataformas"
                     >
-                      <Upload className="w-4 h-4" />
+                      <Upload className="w-3 h-3 sm:w-4 sm:h-4" />
                       Boost Pages
                     </button>
                   </div>
 
                   {/* Grid de Plataformas como etiquetas (todas las plataformas del catálogo) */}
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2">
                     {(allPlatforms || []).map((p) => {
                       const found = model.platforms.find(mp => mp.platform_id === p.id);
                       const tag = found || {
@@ -1070,16 +1062,16 @@ export default function PortafolioModelos() {
                         <button
                           key={`${model.model_id}-${p.id}`}
                           type="button"
-                          className={`px-2.5 py-1 rounded-full text-[11px] leading-5 font-medium transition-colors inline-flex items-center relative ${getTagClasses(finalStatus)}`}
+                          className={`px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-[11px] leading-4 sm:leading-5 font-medium transition-colors inline-flex items-center relative active:scale-95 touch-manipulation ${getTagClasses(finalStatus)}`}
                           onClick={() => handlePlatformAction(tag, 'request')}
                         >
-                          <span className="inline-flex items-center gap-1 align-middle">
+                          <span className="inline-flex items-center gap-0.5 sm:gap-1 align-middle">
                             {getStatusIcon(tag.status, tag.is_initial_config)}
                             {tag.platform_name}
                             {/* Indicador sutil de credenciales guardadas */}
                             {hasCreds && finalStatus === 'entregada' && (userRole === 'admin' || userRole === 'super_admin') && (
                               <span 
-                                className="ml-1 w-1.5 h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" 
+                                className="ml-0.5 sm:ml-1 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-blue-500 dark:bg-blue-400" 
                                 title="Credenciales guardadas"
                                 aria-label="Credenciales guardadas"
                               />
@@ -1091,10 +1083,10 @@ export default function PortafolioModelos() {
                   </div>
 
                   {/* Estadísticas del Modelo */}
-                  <div className="mt-4 pt-4 border-t border-gray-200/50 dark:border-gray-600/50">
-                    <div className="flex items-center justify-between text-xs text-gray-600 dark:text-gray-400">
+                  <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-200/50 dark:border-gray-600/50">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 sm:gap-0 text-[10px] sm:text-xs text-gray-600 dark:text-gray-400">
                       <span>Total: {allPlatforms.length} plataformas</span>
-                      <div className="flex space-x-4">
+                      <div className="flex flex-wrap gap-x-2 sm:gap-x-4 gap-y-1">
                         <span className="text-green-600 dark:text-green-400">
                           {(() => {
                             // Contar como entregadas: 'entregada' o 'confirmada' o inicial activa
