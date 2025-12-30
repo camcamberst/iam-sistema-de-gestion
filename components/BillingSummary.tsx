@@ -369,21 +369,21 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
           {/* Resumen general - Versión compacta */}
           {summary && (
             <div className={`grid grid-cols-3 gap-2 sm:gap-4 ${isHistorical ? 'mb-3 sm:mb-5 mt-3 sm:mt-5' : 'mb-4 sm:mb-6 mt-4 sm:mt-6'}`}>
-              <div className="bg-blue-50/80 dark:bg-blue-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-blue-200/50 dark:border-blue-200/50">
-                <div className="text-center">
-                  <div className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdBruto)}</div>
+              <div className="bg-blue-50/80 dark:bg-blue-50/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-4 hover:shadow-md transition-all duration-300 border border-blue-200/50 dark:border-blue-200/50">
+                <div className="text-center flex flex-col justify-center items-center min-h-[60px] sm:min-h-[80px]">
+                  <div className="text-base sm:text-xl font-bold text-blue-600 dark:text-blue-600 mb-1.5 sm:mb-2.5">${formatCurrency(summary.totalUsdBruto)}</div>
                   <div className="inline-block bg-blue-100/80 dark:bg-blue-200/80 text-blue-700 dark:text-blue-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">USD Bruto</div>
                 </div>
               </div>
-              <div className="bg-green-50/80 dark:bg-green-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-green-200/50 dark:border-green-200/50">
-                <div className="text-center">
-                  <div className="text-base sm:text-xl font-bold text-green-600 dark:text-green-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdModelo)}</div>
+              <div className="bg-green-50/80 dark:bg-green-50/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-4 hover:shadow-md transition-all duration-300 border border-green-200/50 dark:border-green-200/50">
+                <div className="text-center flex flex-col justify-center items-center min-h-[60px] sm:min-h-[80px]">
+                  <div className="text-base sm:text-xl font-bold text-green-600 dark:text-green-600 mb-1.5 sm:mb-2.5">${formatCurrency(summary.totalUsdModelo)}</div>
                   <div className="inline-block bg-green-100/80 dark:bg-green-200/80 text-green-700 dark:text-green-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs">USD Modelos</div>
                 </div>
               </div>
-              <div className="bg-purple-50/80 dark:bg-purple-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-purple-200/50 dark:border-purple-200/50">
-                <div className="text-center">
-                  <div className="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-600 mb-1 sm:mb-2">${formatCurrency(summary.totalUsdSede)}</div>
+              <div className="bg-purple-50/80 dark:bg-purple-50/90 backdrop-blur-sm rounded-lg p-2.5 sm:p-4 hover:shadow-md transition-all duration-300 border border-purple-200/50 dark:border-purple-200/50">
+                <div className="text-center flex flex-col justify-center items-center min-h-[60px] sm:min-h-[80px]">
+                  <div className="text-base sm:text-xl font-bold text-purple-600 dark:text-purple-600 mb-1.5 sm:mb-2.5">${formatCurrency(summary.totalUsdSede)}</div>
                   <div className="inline-block bg-purple-100/80 dark:bg-purple-200/80 text-purple-700 dark:text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium">USD Agencia</div>
                 </div>
               </div>
