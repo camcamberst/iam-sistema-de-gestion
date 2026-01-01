@@ -5,9 +5,32 @@ import { useRouter } from 'next/navigation';
 
 export default function EmergencyArchiveP2Page() {
   const [loading, setLoading] = useState(false);
+  const [verifying, setVerifying] = useState(false);
   const [result, setResult] = useState<any>(null);
+  const [verification, setVerification] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
+
+  const handleVerify = async () => {
+    setVerifying(true);
+    setError(null);
+    setVerification(null);
+
+    try {
+      const response = await fetch('/api/admin/emergency-archive-p2/verify');
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al verificar');
+      }
+
+      setVerification(data);
+    } catch (err: any) {
+      setError(err.message || 'Error desconocido');
+    } finally {
+      setVerifying(false);
+    }
+  };
 
   const handleArchive = async () => {
     if (!confirm('¿Estás seguro de que quieres archivar el período 16-31 de diciembre?\n\nEsto archivará los valores en calculator_history pero NO eliminará los valores de model_values.')) {
@@ -33,6 +56,8 @@ export default function EmergencyArchiveP2Page() {
       }
 
       setResult(data);
+      // Refrescar verificación después de archivar
+      handleVerify();
     } catch (err: any) {
       setError(err.message || 'Error desconocido');
     } finally {
@@ -63,15 +88,70 @@ export default function EmergencyArchiveP2Page() {
             </ul>
           </div>
 
-          <div className="mb-6">
+          <div className="mb-6 flex flex-col sm:flex-row gap-3">
+            <button
+              onClick={handleVerify}
+              disabled={verifying || loading}
+              className="px-6 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+            >
+              {verifying ? '⏳ Verificando...' : '🔍 Verificar Estado'}
+            </button>
             <button
               onClick={handleArchive}
-              disabled={loading}
-              className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+              disabled={loading || verifying}
+              className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {loading ? '⏳ Archivando...' : '🚀 Archivar P2 de Diciembre'}
             </button>
           </div>
+
+          {verification && (
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-3">📊 Estado Actual:</h3>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-blue-700 dark:text-blue-300">
+                    <strong>Registros en calculator_history:</strong> {verification.resumen?.registros_en_history || 0}
+                  </p>
+                  <p className="text-blue-700 dark:text-blue-300">
+                    <strong>Modelos archivados:</strong> {verification.resumen?.modelos_en_history || 0}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-blue-700 dark:text-blue-300">
+                    <strong>Valores en model_values:</strong> {verification.resumen?.registros_en_model_values || 0}
+                  </p>
+                  <p className="text-blue-700 dark:text-blue-300">
+                    <strong>Modelos con valores:</strong> {verification.resumen?.modelos_en_model_values || 0}
+                  </p>
+                </div>
+              </div>
+              {verification.resumen?.modelos_solo_en_model_values > 0 && (
+                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                  <p className="text-amber-700 dark:text-amber-300 font-semibold">
+                    ⚠️ {verification.resumen.modelos_solo_en_model_values} modelo(s) necesitan archivado
+                  </p>
+                  {verification.detalles && verification.detalles.filter((d: any) => d.necesita_archivado).length > 0 && (
+                    <ul className="mt-2 text-xs text-blue-600 dark:text-blue-400 space-y-1 max-h-40 overflow-y-auto">
+                      {verification.detalles.filter((d: any) => d.necesita_archivado).slice(0, 10).map((d: any, idx: number) => (
+                        <li key={idx}>• {d.email}: {d.plataformas_en_model_values} plataforma(s)</li>
+                      ))}
+                      {verification.detalles.filter((d: any) => d.necesita_archivado).length > 10 && (
+                        <li>... y {verification.detalles.filter((d: any) => d.necesita_archivado).length - 10} más</li>
+                      )}
+                    </ul>
+                  )}
+                </div>
+              )}
+              {verification.resumen?.registros_en_history === 0 && (
+                <div className="mt-3 pt-3 border-t border-blue-200 dark:border-blue-700">
+                  <p className="text-amber-700 dark:text-amber-300 font-semibold">
+                    ⚠️ No hay registros archivados. Ejecuta el archivado para crear el historial.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
 
           {error && (
             <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
