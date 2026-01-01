@@ -122,7 +122,7 @@ export default function EmergencyArchiveP2Page() {
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📋 Próximos pasos:</h3>
                 <ol className="list-decimal list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
-                  <li>Verificar en "Mi Historial" que los datos se muestran correctamente</li>
+                  <li>Verificar en &quot;Mi Historial&quot; que los datos se muestran correctamente</li>
                   <li>Verificar en calculator_history que los registros están completos</li>
                   <li>Una vez verificado, puedes eliminar los valores residuales de model_values si lo deseas</li>
                 </ol>
