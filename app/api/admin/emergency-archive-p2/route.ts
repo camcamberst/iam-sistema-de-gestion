@@ -216,6 +216,22 @@ export async function POST(request: NextRequest) {
     });
 
     console.log(`📦 [EMERGENCY-ARCHIVE] Modelos a procesar: ${valoresPorModelo.size}`);
+    
+    // Log de modelos que tienen valores pero no pasaron el filtro
+    const modelosConValores = new Set(todosLosValores.map(v => v.model_id));
+    const modelosFiltrados = new Set(valoresVigentes.map(v => v.model_id));
+    const modelosExcluidos = Array.from(modelosConValores).filter(id => !modelosFiltrados.has(id));
+    if (modelosExcluidos.length > 0) {
+      console.log(`⚠️ [EMERGENCY-ARCHIVE] Modelos con valores pero excluidos por filtro de fecha: ${modelosExcluidos.length}`);
+      modelosExcluidos.forEach(modelId => {
+        const valoresDelModelo = todosLosValores.filter(v => v.model_id === modelId);
+        const maxUpdatedAt = valoresDelModelo.reduce((max, v) => {
+          const updatedAt = new Date(v.updated_at);
+          return updatedAt > max ? updatedAt : max;
+        }, new Date(0));
+        console.log(`   - Modelo ${modelId}: máximo updated_at = ${maxUpdatedAt.toISOString()} (límite: ${fechaLimiteISO})`);
+      });
+    }
 
     // 4. Obtener emails
     const modelIds = Array.from(valoresPorModelo.keys());
@@ -453,6 +469,7 @@ export async function POST(request: NextRequest) {
         console.error(`❌ [ARCHIVE] Error procesando ${email}:`, errorMsg);
         console.error(`❌ [ARCHIVE] Stack trace:`, error.stack);
         resultado.error = errorMsg;
+        resultado.detalle_error = error.stack || error.toString();
         errores++;
         resultados.push(resultado);
       }
