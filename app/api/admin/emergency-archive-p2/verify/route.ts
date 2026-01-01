@@ -6,13 +6,95 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+
+// Helper para verificar autenticación y rol de admin
+async function authenticateAdmin(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  
+  console.log('🔐 [VERIFY-AUTH] Verificando autenticación...');
+  console.log('🔐 [VERIFY-AUTH] Header authorization:', authHeader ? 'Presente' : 'Ausente');
+  
+  if (!authHeader) {
+    console.error('❌ [VERIFY-AUTH] No hay header de autorización');
+    return { error: 'Token de autorización requerido', user: null };
+  }
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    console.error('❌ [VERIFY-AUTH] Header no tiene formato Bearer');
+    return { error: 'Token de autorización requerido', user: null };
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    console.error('❌ [VERIFY-AUTH] Token vacío');
+    return { error: 'Token de autorización requerido', user: null };
+  }
+  
+  console.log('🔐 [VERIFY-AUTH] Token obtenido, verificando con Supabase...');
+  
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  
+  if (error) {
+    console.error('❌ [VERIFY-AUTH] Error verificando token:', error.message);
+    return { error: `Token inválido: ${error.message}`, user: null };
+  }
+  
+  if (!user) {
+    console.error('❌ [VERIFY-AUTH] Usuario no encontrado');
+    return { error: 'Token inválido', user: null };
+  }
+  
+  console.log('✅ [VERIFY-AUTH] Usuario autenticado:', user.id);
+
+  // Verificar rol del usuario
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (userError) {
+    console.error('❌ [VERIFY-AUTH] Error obteniendo datos de usuario:', userError.message);
+    return { error: `Error obteniendo datos de usuario: ${userError.message}`, user: null };
+  }
+  
+  if (!userData) {
+    console.error('❌ [VERIFY-AUTH] Datos de usuario no encontrados');
+    return { error: 'Error obteniendo datos de usuario', user: null };
+  }
+  
+  console.log('🔐 [VERIFY-AUTH] Rol del usuario:', userData.role);
+
+  // Solo permitir admin y super_admin
+  if (userData.role !== 'admin' && userData.role !== 'super_admin') {
+    console.error('❌ [VERIFY-AUTH] Rol no autorizado:', userData.role);
+    return { error: 'No autorizado. Se requiere rol de admin o super_admin', user: null };
+  }
+  
+  console.log('✅ [VERIFY-AUTH] Autenticación exitosa para:', userData.role);
+
+  return { error: null, user: { id: user.id, role: userData.role } };
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export async function GET(request: NextRequest) {
   try {
+    // Verificar autenticación y rol de admin
+    const auth = await authenticateAdmin(request);
+    if (auth.error || !auth.user) {
+      return NextResponse.json(
+        { success: false, error: auth.error || 'No autorizado' },
+        { status: 401 }
+      );
+    }
+
     const startDate = '2025-12-16';
     const endDate = '2025-12-31';
     const periodType = '16-31';
@@ -116,4 +198,6 @@ export async function GET(request: NextRequest) {
     }, { status: 500 });
   }
 }
+
+
 

@@ -14,10 +14,83 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL as string,
-  process.env.SUPABASE_SERVICE_ROLE_KEY as string
-);
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL as string;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY as string;
+
+// Helper para verificar autenticación y rol de admin
+async function authenticateAdmin(request: NextRequest) {
+  const authHeader = request.headers.get('authorization');
+  
+  console.log('🔐 [AUTH] Verificando autenticación...');
+  console.log('🔐 [AUTH] Header authorization:', authHeader ? 'Presente' : 'Ausente');
+  
+  if (!authHeader) {
+    console.error('❌ [AUTH] No hay header de autorización');
+    return { error: 'Token de autorización requerido', user: null };
+  }
+  
+  if (!authHeader.startsWith('Bearer ')) {
+    console.error('❌ [AUTH] Header no tiene formato Bearer');
+    return { error: 'Token de autorización requerido', user: null };
+  }
+
+  const token = authHeader.split(' ')[1];
+  if (!token) {
+    console.error('❌ [AUTH] Token vacío');
+    return { error: 'Token de autorización requerido', user: null };
+  }
+  
+  console.log('🔐 [AUTH] Token obtenido, verificando con Supabase...');
+  
+  const supabase = createClient(supabaseUrl, supabaseKey, {
+    auth: { autoRefreshToken: false, persistSession: false }
+  });
+
+  const { data: { user }, error } = await supabase.auth.getUser(token);
+  
+  if (error) {
+    console.error('❌ [AUTH] Error verificando token:', error.message);
+    return { error: `Token inválido: ${error.message}`, user: null };
+  }
+  
+  if (!user) {
+    console.error('❌ [AUTH] Usuario no encontrado');
+    return { error: 'Token inválido', user: null };
+  }
+  
+  console.log('✅ [AUTH] Usuario autenticado:', user.id);
+
+  // Verificar rol del usuario
+  const { data: userData, error: userError } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (userError) {
+    console.error('❌ [AUTH] Error obteniendo datos de usuario:', userError.message);
+    return { error: `Error obteniendo datos de usuario: ${userError.message}`, user: null };
+  }
+  
+  if (!userData) {
+    console.error('❌ [AUTH] Datos de usuario no encontrados');
+    return { error: 'Error obteniendo datos de usuario', user: null };
+  }
+  
+  console.log('🔐 [AUTH] Rol del usuario:', userData.role);
+
+  // Solo permitir admin y super_admin
+  if (userData.role !== 'admin' && userData.role !== 'super_admin') {
+    console.error('❌ [AUTH] Rol no autorizado:', userData.role);
+    return { error: 'No autorizado. Se requiere rol de admin o super_admin', user: null };
+  }
+  
+  console.log('✅ [AUTH] Autenticación exitosa para:', userData.role);
+
+  return { error: null, user: { id: user.id, role: userData.role } };
+}
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 function calculateUsdBruto(value: number, platformId: string, currency: string, rates: any): number {
   const normalizedId = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -42,23 +115,11 @@ function calculateUsdBruto(value: number, platformId: string, currency: string, 
 
 export async function POST(request: NextRequest) {
   try {
-    // Verificar autenticación - Permitir ejecución desde producción
-    // En producción, puedes usar el service role key o un token de admin
-    const authHeader = request.headers.get('authorization');
-    const serviceKey = request.headers.get('x-service-key');
-    
-    // Permitir si tiene authorization bearer O service key
-    if (!authHeader && !serviceKey) {
+    // Verificar autenticación y rol de admin
+    const auth = await authenticateAdmin(request);
+    if (auth.error || !auth.user) {
       return NextResponse.json(
-        { success: false, error: 'No autorizado. Requiere Authorization Bearer o x-service-key' },
-        { status: 401 }
-      );
-    }
-    
-    // Si usa service key, verificar que coincida
-    if (serviceKey && serviceKey !== process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      return NextResponse.json(
-        { success: false, error: 'Service key inválida' },
+        { success: false, error: auth.error || 'No autorizado' },
         { status: 401 }
       );
     }

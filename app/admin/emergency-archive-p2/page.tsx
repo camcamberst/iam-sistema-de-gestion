@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 
 export default function EmergencyArchiveP2Page() {
   const [loading, setLoading] = useState(false);
@@ -11,21 +12,88 @@ export default function EmergencyArchiveP2Page() {
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
 
+  const getAuthToken = async (): Promise<string | null> => {
+    try {
+      // Primero intentar obtener la sesión actual
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError) {
+        console.error('Error obteniendo sesión:', sessionError);
+        return null;
+      }
+
+      if (!session) {
+        console.error('No hay sesión activa');
+        return null;
+      }
+
+      // Verificar si el token está cerca de expirar (menos de 60 segundos)
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const now = Math.floor(Date.now() / 1000);
+        const expiresIn = expiresAt - now;
+        
+        if (expiresIn < 60) {
+          // Refrescar el token si está cerca de expirar
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error('Error refrescando sesión:', refreshError);
+            return session.access_token; // Usar el token actual aunque esté cerca de expirar
+          }
+          
+          if (refreshedSession) {
+            return refreshedSession.access_token;
+          }
+        }
+      }
+      
+      return session.access_token;
+    } catch (error) {
+      console.error('Error obteniendo token:', error);
+      return null;
+    }
+  };
+
   const handleVerify = async () => {
     setVerifying(true);
     setError(null);
     setVerification(null);
 
     try {
-      const response = await fetch('/api/admin/emergency-archive-p2/verify');
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Error al verificar');
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('No hay sesión activa. Por favor, inicia sesión.');
       }
 
+      console.log('🔍 Verificando estado...');
+      const response = await fetch('/api/admin/emergency-archive-p2/verify', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      console.log('📡 Respuesta status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `Error ${response.status}: ${response.statusText}` };
+        }
+        console.error('❌ Error en respuesta:', errorData);
+        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Verificación exitosa:', data);
       setVerification(data);
     } catch (err: any) {
+      console.error('❌ Error en handleVerify:', err);
       setError(err.message || 'Error desconocido');
     } finally {
       setVerifying(false);
@@ -42,23 +110,44 @@ export default function EmergencyArchiveP2Page() {
     setResult(null);
 
     try {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('No hay sesión activa. Por favor, inicia sesión.');
+      }
+
+      console.log('🚀 Iniciando archivado...');
       const response = await fetch('/api/admin/emergency-archive-p2', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json'
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
       });
 
-      const data = await response.json();
+      console.log('📡 Respuesta status:', response.status);
 
       if (!response.ok) {
-        throw new Error(data.error || 'Error al archivar');
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `Error ${response.status}: ${response.statusText}` };
+        }
+        console.error('❌ Error en respuesta:', errorData);
+        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
       }
 
+      const data = await response.json();
+      console.log('✅ Archivado exitoso:', data);
       setResult(data);
+      
       // Refrescar verificación después de archivar
-      handleVerify();
+      setTimeout(() => {
+        handleVerify();
+      }, 1000);
     } catch (err: any) {
+      console.error('❌ Error en handleArchive:', err);
       setError(err.message || 'Error desconocido');
     } finally {
       setLoading(false);
