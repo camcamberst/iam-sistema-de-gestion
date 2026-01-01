@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
     let exitosos = 0;
     let errores = 0;
 
-    for (const [modelId, valoresPorPlataforma] of valoresPorModelo.entries()) {
+    for (const [modelId, valoresPorPlataforma] of Array.from(valoresPorModelo.entries())) {
       const email = emailMap.get(modelId) || modelId;
       const resultado: any = {
         model_id: modelId,
