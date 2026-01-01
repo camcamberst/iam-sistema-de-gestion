@@ -257,22 +257,37 @@ export async function POST(request: NextRequest) {
           const valueUsdModelo = valueUsdBruto * (modelPercentage / 100);
           const valueCopModelo = valueUsdModelo * rates.usd_cop;
 
-          historyInserts.push({
+          // Validar que todos los campos requeridos estén presentes
+          if (!modelId || !platformId || !startDate || !periodType) {
+            console.error(`   ❌ Campos requeridos faltantes: modelId=${modelId}, platformId=${platformId}, startDate=${startDate}, periodType=${periodType}`);
+            continue;
+          }
+
+          const historyRecord = {
             model_id: modelId,
             platform_id: platformId,
             period_date: startDate,
             period_type: periodType,
             value: parseFloat(valueNum.toFixed(2)),
-            rate_eur_usd: rates.eur_usd,
-            rate_gbp_usd: rates.gbp_usd,
-            rate_usd_cop: rates.usd_cop,
+            rate_eur_usd: rates.eur_usd || null,
+            rate_gbp_usd: rates.gbp_usd || null,
+            rate_usd_cop: rates.usd_cop || null,
             platform_percentage: modelPercentage,
             value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
             value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
             value_cop_modelo: parseFloat(valueCopModelo.toFixed(2)),
             archived_at: new Date().toISOString(),
-            original_updated_at: valor.updated_at
-          });
+            original_updated_at: valor.updated_at || null
+          };
+
+          // Validar que los valores numéricos sean válidos
+          if (isNaN(historyRecord.value) || isNaN(historyRecord.value_usd_bruto) || 
+              isNaN(historyRecord.value_usd_modelo) || isNaN(historyRecord.value_cop_modelo)) {
+            console.error(`   ❌ Valores numéricos inválidos para plataforma ${platformId}:`, historyRecord);
+            continue;
+          }
+
+          historyInserts.push(historyRecord);
         }
 
         console.log(`📦 [ARCHIVE] Registros preparados: ${historyInserts.length}`);
