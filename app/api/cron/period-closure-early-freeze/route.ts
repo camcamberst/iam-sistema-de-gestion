@@ -3,20 +3,26 @@ import { isEarlyFreezeTime, isEarlyFreezeRelevantDay } from '@/utils/period-clos
 
 /**
  * GET: Cron job para congelación anticipada (medianoche Europa Central)
- * Se ejecuta los días 1, 15, 16 y 31 para congelar las 10 plataformas especiales
+ * 
+ * IMPORTANTE: Se ejecuta SOLO el último día de cada período:
+ * - Día 15: último día del período 1-15 (P1)
+ * - Día 31: último día del período 16-31 (P2)
+ * 
+ * El congelamiento se ejecuta a medianoche Europa Central (aproximadamente 18:00-19:00 Colombia)
+ * del último día de cada período, antes del cierre completo que ocurre a medianoche Colombia.
  */
 export async function GET(request: NextRequest) {
   try {
     console.log('🕐 [CRON-EARLY-FREEZE] Verificando congelación anticipada...');
 
-    // Verificar que es día relevante para early freeze (15, 31 para congelar antes del cierre, 1 y 16 por si acaso)
+    // Verificar que es el último día de un período (15 o 31)
     if (!isEarlyFreezeRelevantDay()) {
       const currentDate = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
       const day = parseInt(currentDate.split('-')[2]);
       
       return NextResponse.json({
         success: true,
-        message: 'No es día relevante para early freeze (1, 15, 16 o 31)',
+        message: 'No es el último día de un período (debe ser día 15 o 31)',
         current_day: day
       });
     }

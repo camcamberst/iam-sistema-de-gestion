@@ -27,6 +27,10 @@ export const getColombiaDateTime = (): string => {
 
 /**
  * Calcula la medianoche de Europa Central (Europe/Berlin) en hora Colombia
+ * 
+ * IMPORTANTE: Esta función calcula qué hora es en Colombia cuando es medianoche (00:00:00)
+ * en Europa Central. Esto es aproximadamente 18:00-19:00 Colombia dependiendo del horario de verano.
+ * 
  * @param date - Fecha de referencia (opcional, usa fecha actual si no se proporciona)
  * @returns Objeto con fecha/hora en Colombia y timestamp
  */
@@ -38,7 +42,7 @@ export const getEuropeanCentralMidnightInColombia = (date?: Date): {
 } => {
   const now = date || new Date();
   
-  // Obtener fecha de hoy en Europa Central
+  // Obtener fecha actual en Europa Central
   const europeDateFormatter = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Europe/Berlin',
     year: 'numeric',
@@ -48,17 +52,12 @@ export const getEuropeanCentralMidnightInColombia = (date?: Date): {
   
   const europeDateStr = europeDateFormatter.format(now); // YYYY-MM-DD
   
-  // Crear Date object que representa medianoche en Europa Central
-  // Necesitamos crear un string ISO que JavaScript interprete correctamente
-  // Usamos el formato: YYYY-MM-DDTHH:mm:ss+offset
-  // Pero primero necesitamos saber qué hora es medianoche Europa Central en UTC
+  // Método simplificado y confiable:
+  // 1. Crear un Date que represente medianoche en Europa Central
+  // 2. Formatearlo en hora Colombia
   
-  // Método más simple: crear Date con string ISO usando timezone
-  // JavaScript Date no soporta timezone en constructor, así que usamos otro enfoque
-  
-  // Calcular qué hora UTC corresponde a medianoche en Europa Central
-  // Para esto, creamos una fecha "test" en medianoche Europa Central
-  const testFormatter = new Intl.DateTimeFormat('en-US', {
+  // Obtener componentes de fecha en Europa Central
+  const europePartsFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'Europe/Berlin',
     year: 'numeric',
     month: '2-digit',
@@ -69,55 +68,76 @@ export const getEuropeanCentralMidnightInColombia = (date?: Date): {
     hour12: false
   });
   
-  // Obtener hora actual en Europa Central
-  const parts = testFormatter.formatToParts(now);
-  const europeParts: Record<string, string> = {};
-  parts.forEach(part => {
+  const europeParts = europePartsFormatter.formatToParts(now);
+  const partsMap: Record<string, string> = {};
+  europeParts.forEach(part => {
     if (part.type !== 'literal') {
-      europeParts[part.type] = part.value;
+      partsMap[part.type] = part.value;
     }
   });
   
-  // Crear fecha ISO string para medianoche Europa Central
-  const europeMidnightISO = `${europeParts.year}-${europeParts.month}-${europeParts.day}T00:00:00`;
+  // Crear un Date que represente medianoche en Europa Central
+  // Usamos el método de encontrar el timestamp UTC que, cuando se formatea en Europa,
+  // da medianoche (00:00:00)
   
-  // Ahora necesitamos convertir esto a hora Colombia
-  // Para esto, usamos el hecho de que JavaScript Date trabaja en UTC
-  // Pero podemos usar una fecha "falsa" y luego calcular la diferencia
+  // Empezar con una estimación: medianoche UTC del día en Europa
+  const testDate = new Date(`${partsMap.year}-${partsMap.month}-${partsMap.day}T00:00:00Z`);
   
-  // Método más directo: usar la API de tiempo para obtener offset
-  // Crear un Date para medianoche en Europa Central
-  const europeYear = parseInt(europeParts.year);
-  const europeMonth = parseInt(europeParts.month) - 1; // 0-based
-  const europeDay = parseInt(europeParts.day);
+  // Ajustar para encontrar el momento exacto de medianoche en Europa Central
+  // Europa Central está a UTC+1 (invierno) o UTC+2 (verano)
+  // Probamos ambos offsets
+  let europeMidnightUTC: Date | null = null;
   
-  // Crear Date en UTC que represente medianoche en Europa Central
-  // Necesitamos saber el offset de Europa Central en ese momento
-  const testDateUTC = new Date(Date.UTC(europeYear, europeMonth, europeDay, 0, 0, 0));
+  for (const offset of [1, 2]) {
+    // UTC+offset significa que medianoche Europa = (24-offset):00 UTC del día anterior
+    const candidate = new Date(testDate.getTime() - (offset * 3600000));
+    const europeTime = new Intl.DateTimeFormat('en-US', {
+      timeZone: 'Europe/Berlin',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(candidate);
+    
+    if (europeTime === '00:00:00') {
+      europeMidnightUTC = candidate;
+      break;
+    }
+  }
   
-  // Calcular offset de Europa Central en ese momento
-  const europeOffset = getEuropeCentralOffset(testDateUTC); // Horas desde UTC
-  const europeMidnightUTC = new Date(Date.UTC(europeYear, europeMonth, europeDay, -europeOffset, 0, 0));
+  // Si no encontramos, usar estimación basada en offset promedio
+  if (!europeMidnightUTC) {
+    // Offset promedio: 1.5 horas (entre UTC+1 y UTC+2)
+    europeMidnightUTC = new Date(testDate.getTime() - (1.5 * 3600000));
+  }
   
-  // Colombia es UTC-5, así que restamos 5 horas
-  const colombiaMidnight = new Date(europeMidnightUTC.getTime() - (5 * 3600000));
-  
-  // Formatear resultado
-  const colombiaDate = colombiaMidnight.toLocaleDateString('en-CA', {
-    timeZone: 'America/Bogota'
-  });
-  const colombiaTime = colombiaMidnight.toLocaleTimeString('en-US', {
+  // Formatear en hora Colombia
+  const colombiaFormatter = new Intl.DateTimeFormat('en-US', {
     timeZone: 'America/Bogota',
-    hour12: false,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
     hour: '2-digit',
     minute: '2-digit',
-    second: '2-digit'
+    second: '2-digit',
+    hour12: false
   });
+  
+  const colombiaParts = colombiaFormatter.formatToParts(europeMidnightUTC);
+  const colombiaPartsMap: Record<string, string> = {};
+  colombiaParts.forEach(part => {
+    if (part.type !== 'literal') {
+      colombiaPartsMap[part.type] = part.value;
+    }
+  });
+  
+  const colombiaTime = `${colombiaPartsMap.hour}:${colombiaPartsMap.minute}:${colombiaPartsMap.second}`;
+  const colombiaDate = `${colombiaPartsMap.year}-${colombiaPartsMap.month}-${colombiaPartsMap.day}`;
   
   return {
     colombiaTime: colombiaTime || '00:00:00',
     colombiaDate,
-    colombiaDateTime: colombiaMidnight,
+    colombiaDateTime: europeMidnightUTC,
     europeDate: europeDateStr
   };
 };
@@ -328,14 +348,21 @@ export const isClosureDay = (): boolean => {
 };
 
 /**
- * Verifica si es día relevante para early freeze (día 1, 16, 31, o 15)
- * Esto incluye tanto los días de cierre como los días previos cuando puede activarse el early freeze
- * @returns true si es día relevante para early freeze
+ * Verifica si es día relevante para early freeze
+ * IMPORTANTE: Solo se ejecuta el ÚLTIMO día de cada período:
+ * - Día 15: último día del período 1-15 (P1)
+ * - Día 31: último día del período 16-31 (P2)
+ * 
+ * El early freeze se ejecuta a medianoche Europa Central (aproximadamente 18:00-19:00 Colombia)
+ * del último día de cada período, antes del cierre completo que ocurre a medianoche Colombia.
+ * 
+ * @returns true si es el último día de un período (15 o 31)
  */
 export const isEarlyFreezeRelevantDay = (): boolean => {
   const colombiaDate = getColombiaDate();
   const day = parseInt(colombiaDate.split('-')[2]);
   
-  return day === 1 || day === 16 || day === 31 || day === 15;
+  // Solo días 15 y 31 (último día de cada período)
+  return day === 15 || day === 31;
 };
 
