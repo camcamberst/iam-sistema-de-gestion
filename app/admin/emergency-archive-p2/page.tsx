@@ -8,6 +8,7 @@ export default function EmergencyArchiveP2Page() {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
   const [cleaning, setCleaning] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -98,6 +99,59 @@ export default function EmergencyArchiveP2Page() {
       setError(err.message || 'Error desconocido');
     } finally {
       setVerifying(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar los valores de P2 de diciembre de "Mi Calculadora"?\n\nEsto eliminará los valores de model_values SOLO si están archivados en calculator_history.\n\nLos valores archivados en "Mi Historial" NO se verán afectados.')) {
+      return;
+    }
+
+    setDeleting(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('No hay sesión activa. Por favor, inicia sesión.');
+      }
+
+      console.log('🗑️ Eliminando valores...');
+      const response = await fetch('/api/admin/emergency-archive-p2/delete', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('📡 Respuesta status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `Error ${response.status}: ${response.statusText}` };
+        }
+        console.error('❌ Error en respuesta:', errorData);
+        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Eliminación exitosa:', data);
+      setResult(data);
+      
+      // Refrescar verificación después de eliminar
+      setTimeout(() => {
+        handleVerify();
+      }, 1000);
+    } catch (err: any) {
+      console.error('❌ Error en handleDelete:', err);
+      setError(err.message || 'Error desconocido');
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -234,24 +288,31 @@ export default function EmergencyArchiveP2Page() {
           <div className="mb-6 flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleVerify}
-              disabled={verifying || loading || cleaning}
+              disabled={verifying || loading || cleaning || deleting}
               className="px-6 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {verifying ? '⏳ Verificando...' : '🔍 Verificar Estado'}
             </button>
             <button
               onClick={handleClean}
-              disabled={loading || verifying || cleaning}
+              disabled={loading || verifying || cleaning || deleting}
               className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {cleaning ? '⏳ Limpiando...' : '🧹 Limpiar Registros Incorrectos'}
             </button>
             <button
               onClick={handleArchive}
-              disabled={loading || verifying || cleaning}
+              disabled={loading || verifying || cleaning || deleting}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {loading ? '⏳ Archivando...' : '🚀 Archivar P2 de Diciembre'}
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={loading || verifying || cleaning || deleting}
+              className="px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+            >
+              {deleting ? '⏳ Eliminando...' : '🗑️ Eliminar Valores de Mi Calculadora'}
             </button>
           </div>
 
