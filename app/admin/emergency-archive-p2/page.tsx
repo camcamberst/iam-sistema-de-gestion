@@ -118,28 +118,53 @@ export default function EmergencyArchiveP2Page() {
       }
 
       console.log('🗑️ Eliminando valores...');
-      const response = await fetch('/api/admin/emergency-archive-p2/delete', {
+      console.log('🔐 Token obtenido:', token.substring(0, 20) + '...');
+      
+      // Intentar primero con DELETE, si falla intentar con POST
+      let response = await fetch('/api/admin/emergency-archive-p2/delete', {
         method: 'DELETE',
         headers: {
-          'Authorization': `Bearer ${token}`
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
         }
       });
 
-      console.log('📡 Respuesta status:', response.status);
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        let errorData;
-        try {
-          errorData = JSON.parse(errorText);
-        } catch {
-          errorData = { error: errorText || `Error ${response.status}: ${response.statusText}` };
-        }
-        console.error('❌ Error en respuesta:', errorData);
-        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+      // Si DELETE falla con 405 (Method Not Allowed), intentar con POST
+      if (response.status === 405) {
+        console.log('⚠️ DELETE no permitido, intentando con POST...');
+        response = await fetch('/api/admin/emergency-archive-p2/delete', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        });
       }
 
-      const data = await response.json();
+      console.log('📡 Respuesta status:', response.status);
+      console.log('📡 Respuesta headers:', Object.fromEntries(response.headers.entries()));
+
+      const responseText = await response.text();
+      console.log('📡 Respuesta body (raw):', responseText.substring(0, 500));
+
+      if (!response.ok) {
+        let errorData;
+        try {
+          errorData = JSON.parse(responseText);
+        } catch {
+          errorData = { error: responseText || `Error ${response.status}: ${response.statusText}` };
+        }
+        console.error('❌ Error en respuesta:', errorData);
+        throw new Error(errorData.error || errorData.message || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      let data;
+      try {
+        data = JSON.parse(responseText);
+      } catch {
+        throw new Error('Respuesta no válida del servidor');
+      }
+      
       console.log('✅ Eliminación exitosa:', data);
       setResult(data);
       
@@ -149,7 +174,9 @@ export default function EmergencyArchiveP2Page() {
       }, 1000);
     } catch (err: any) {
       console.error('❌ Error en handleDelete:', err);
-      setError(err.message || 'Error desconocido');
+      const errorMessage = err.message || err.toString() || 'Error desconocido';
+      setError(errorMessage);
+      console.error('❌ Stack trace:', err.stack);
     } finally {
       setDeleting(false);
     }
