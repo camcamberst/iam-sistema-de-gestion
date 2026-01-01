@@ -158,41 +158,64 @@ export async function POST(request: NextRequest) {
     const platformMap = new Map(platforms.map(p => [p.id, p]));
 
     // 3. Obtener valores
-    // IMPORTANTE: Solo valores registrados hasta las 23:59:59 del último día del período
+    // IMPORTANTE: Obtener TODOS los valores del período, luego filtrar por updated_at
+    // para tomar solo los que estaban vigentes al final del período (31 dic 23:59:59)
     const fechaLimite = new Date(`${endDate}T23:59:59.999Z`);
     const fechaLimiteISO = fechaLimite.toISOString();
     
     console.log(`📅 [EMERGENCY-ARCHIVE] Rango: ${startDate} a ${endDate}`);
     console.log(`⏰ [EMERGENCY-ARCHIVE] Solo valores hasta: ${fechaLimiteISO}`);
     
-    const { data: valores, error: valoresError } = await supabase
+    // Obtener TODOS los valores del período (sin filtrar por updated_at en la consulta)
+    const { data: todosLosValores, error: valoresError } = await supabase
       .from('model_values')
       .select('model_id, platform_id, value, updated_at, period_date')
       .gte('period_date', startDate)
       .lte('period_date', endDate)
-      .lte('updated_at', fechaLimiteISO);
+      .order('updated_at', { ascending: false });
 
     if (valoresError) throw valoresError;
 
-    if (!valores || valores.length === 0) {
+    if (!todosLosValores || todosLosValores.length === 0) {
       return NextResponse.json({
         success: false,
         error: 'No hay valores para archivar en el período especificado'
       }, { status: 404 });
     }
 
+    console.log(`📦 [EMERGENCY-ARCHIVE] Total valores encontrados: ${todosLosValores.length}`);
+
+    // Filtrar valores que estaban vigentes al final del período
+    const valoresVigentes = todosLosValores.filter(v => {
+      const updatedAt = new Date(v.updated_at);
+      return updatedAt <= fechaLimite;
+    });
+
+    console.log(`📦 [EMERGENCY-ARCHIVE] Valores vigentes hasta ${fechaLimiteISO}: ${valoresVigentes.length}`);
+
+    if (valoresVigentes.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: `No hay valores vigentes hasta ${fechaLimiteISO} en el período especificado`
+      }, { status: 404 });
+    }
+
     // Agrupar por modelo y plataforma
+    // Para cada plataforma, tomar el valor más reciente que esté dentro del límite
     const valoresPorModelo = new Map<string, Map<string, any>>();
-    valores.forEach(v => {
+    valoresVigentes.forEach(v => {
       if (!valoresPorModelo.has(v.model_id)) {
         valoresPorModelo.set(v.model_id, new Map());
       }
       const porPlataforma = valoresPorModelo.get(v.model_id)!;
       const existente = porPlataforma.get(v.platform_id);
+      // Tomar el valor más reciente (ya están ordenados por updated_at DESC)
       if (!existente || new Date(v.updated_at) > new Date(existente.updated_at)) {
         porPlataforma.set(v.platform_id, v);
       }
     });
+
+    console.log(`📦 [EMERGENCY-ARCHIVE] Modelos a procesar: ${valoresPorModelo.size}`);
 
     // 4. Obtener emails
     const modelIds = Array.from(valoresPorModelo.keys());
@@ -222,6 +245,12 @@ export async function POST(request: NextRequest) {
       try {
         console.log(`\n📦 [ARCHIVE] Procesando modelo: ${email} (${modelId})`);
         console.log(`📦 [ARCHIVE] Plataformas a archivar: ${valoresPorPlataforma.size}`);
+        
+        // Log de valores que se van a archivar
+        console.log(`📦 [ARCHIVE] Valores a archivar:`);
+        for (const [platformId, valor] of Array.from(valoresPorPlataforma.entries())) {
+          console.log(`   - Plataforma ${platformId}: ${valor.value} (updated_at: ${valor.updated_at}, period_date: ${valor.period_date})`);
+        }
         
         // Obtener configuración
         console.log(`📦 [ARCHIVE] Obteniendo configuración...`);
