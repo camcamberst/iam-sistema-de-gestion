@@ -171,7 +171,7 @@ export async function POST(request: NextRequest) {
 
         // Preparar registros
         const historyInserts = [];
-        for (const [platformId, valor] of valoresPorPlataforma.entries()) {
+        for (const [platformId, valor] of Array.from(valoresPorPlataforma.entries())) {
           const platform = platformMap.get(platformId);
           const currency = platform?.currency || 'USD';
           const valueNum = Number(valor.value) || 0;
