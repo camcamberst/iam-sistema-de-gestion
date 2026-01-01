@@ -7,6 +7,7 @@ import { supabase } from '@/lib/supabase';
 export default function EmergencyArchiveP2Page() {
   const [loading, setLoading] = useState(false);
   const [verifying, setVerifying] = useState(false);
+  const [cleaning, setCleaning] = useState(false);
   const [result, setResult] = useState<any>(null);
   const [verification, setVerification] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +101,59 @@ export default function EmergencyArchiveP2Page() {
     }
   };
 
+  const handleClean = async () => {
+    if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar los registros archivados del período P2 de diciembre?\n\nEsto permitirá volver a archivar con los valores correctos.')) {
+      return;
+    }
+
+    setCleaning(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const token = await getAuthToken();
+      if (!token) {
+        throw new Error('No hay sesión activa. Por favor, inicia sesión.');
+      }
+
+      console.log('🧹 Limpiando registros incorrectos...');
+      const response = await fetch('/api/admin/emergency-archive-p2/clean', {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      console.log('📡 Respuesta status:', response.status);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorData;
+        try {
+          errorData = JSON.parse(errorText);
+        } catch {
+          errorData = { error: errorText || `Error ${response.status}: ${response.statusText}` };
+        }
+        console.error('❌ Error en respuesta:', errorData);
+        throw new Error(errorData.error || `Error ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      console.log('✅ Limpieza exitosa:', data);
+      setResult(data);
+      
+      // Refrescar verificación después de limpiar
+      setTimeout(() => {
+        handleVerify();
+      }, 1000);
+    } catch (err: any) {
+      console.error('❌ Error en handleClean:', err);
+      setError(err.message || 'Error desconocido');
+    } finally {
+      setCleaning(false);
+    }
+  };
+
   const handleArchive = async () => {
     if (!confirm('¿Estás seguro de que quieres archivar el período 16-31 de diciembre?\n\nEsto archivará los valores en calculator_history pero NO eliminará los valores de model_values.')) {
       return;
@@ -180,14 +234,21 @@ export default function EmergencyArchiveP2Page() {
           <div className="mb-6 flex flex-col sm:flex-row gap-3">
             <button
               onClick={handleVerify}
-              disabled={verifying || loading}
+              disabled={verifying || loading || cleaning}
               className="px-6 py-3 bg-gray-600 hover:bg-gray-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {verifying ? '⏳ Verificando...' : '🔍 Verificar Estado'}
             </button>
             <button
+              onClick={handleClean}
+              disabled={loading || verifying || cleaning}
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+            >
+              {cleaning ? '⏳ Limpiando...' : '🧹 Limpiar Registros Incorrectos'}
+            </button>
+            <button
               onClick={handleArchive}
-              disabled={loading || verifying}
+              disabled={loading || verifying || cleaning}
               className="px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {loading ? '⏳ Archivando...' : '🚀 Archivar P2 de Diciembre'}
