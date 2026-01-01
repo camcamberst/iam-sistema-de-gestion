@@ -1,0 +1,137 @@
+'use client';
+
+import { useState } from 'react';
+import { useRouter } from 'next/navigation';
+
+export default function EmergencyArchiveP2Page() {
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  const handleArchive = async () => {
+    if (!confirm('¿Estás seguro de que quieres archivar el período 16-31 de diciembre?\n\nEsto archivará los valores en calculator_history pero NO eliminará los valores de model_values.')) {
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    setResult(null);
+
+    try {
+      const response = await fetch('/api/admin/emergency-archive-p2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Error al archivar');
+      }
+
+      setResult(data);
+    } catch (err: any) {
+      setError(err.message || 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 sm:p-6 lg:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 sm:p-8">
+          <div className="mb-6">
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white mb-2">
+              🚨 Archivado de Emergencia: P2 de Diciembre 2025
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Archiva los valores por plataforma del período 16-31 de diciembre en calculator_history
+            </p>
+          </div>
+
+          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4 mb-6">
+            <h2 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">⚠️ IMPORTANTE:</h2>
+            <ul className="list-disc list-inside text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+              <li>Este proceso SOLO archiva, NO elimina valores de model_values</li>
+              <li>Los valores se mantienen en model_values para verificación</li>
+              <li>Solo archiva valores hasta las 23:59:59 del 31 de diciembre</li>
+              <li>Una vez verificado, puedes eliminar los valores residuales manualmente</li>
+            </ul>
+          </div>
+
+          <div className="mb-6">
+            <button
+              onClick={handleArchive}
+              disabled={loading}
+              className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+            >
+              {loading ? '⏳ Archivando...' : '🚀 Archivar P2 de Diciembre'}
+            </button>
+          </div>
+
+          {error && (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
+              <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Error:</h3>
+              <p className="text-red-700 dark:text-red-300">{error}</p>
+            </div>
+          )}
+
+          {result && (
+            <div className="space-y-4">
+              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ Resultado:</h3>
+                <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
+                  <p><strong>Total modelos:</strong> {result.resumen?.total_modelos || 0}</p>
+                  <p><strong>Exitosos:</strong> {result.resumen?.exitosos || 0}</p>
+                  <p><strong>Errores:</strong> {result.resumen?.errores || 0}</p>
+                  <p><strong>Registros archivados:</strong> {result.resumen?.total_archivados || 0}</p>
+                  <p><strong>Valores en model_values:</strong> {result.resumen?.valores_en_model_values || 0} (se mantienen)</p>
+                  <p><strong>Registros en calculator_history:</strong> {result.resumen?.registros_en_history || 0}</p>
+                </div>
+              </div>
+
+              {result.resumen?.errores > 0 && (
+                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">⚠️ Modelos con errores:</h3>
+                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                    {result.resultados?.filter((r: any) => r.error).map((r: any, idx: number) => (
+                      <li key={idx}>{r.email}: {r.error}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              {result.resumen?.exitosos > 0 && (
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                  <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">✅ Modelos archivados exitosamente:</h3>
+                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 max-h-60 overflow-y-auto">
+                    {result.resultados?.filter((r: any) => !r.error).slice(0, 20).map((r: any, idx: number) => (
+                      <li key={idx}>{r.email}: {r.archivados} registros archivados</li>
+                    ))}
+                    {result.resultados?.filter((r: any) => !r.error).length > 20 && (
+                      <li>... y {result.resultados.filter((r: any) => !r.error).length - 20} más</li>
+                    )}
+                  </ul>
+                </div>
+              )}
+
+              <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📋 Próximos pasos:</h3>
+                <ol className="list-decimal list-inside text-sm text-gray-700 dark:text-gray-300 space-y-1">
+                  <li>Verificar en "Mi Historial" que los datos se muestran correctamente</li>
+                  <li>Verificar en calculator_history que los registros están completos</li>
+                  <li>Una vez verificado, puedes eliminar los valores residuales de model_values si lo deseas</li>
+                </ol>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
