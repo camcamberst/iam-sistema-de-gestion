@@ -250,8 +250,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Verificación final
-    const fechaLimite = new Date(`${endDate}T23:59:59.999Z`);
-    const fechaLimiteISO = fechaLimite.toISOString();
+    // Reutilizar fechaLimite y fechaLimiteISO ya declaradas arriba
     
     // Verificar que los valores aún están en model_values (no se eliminaron)
     const { data: valoresEnModelValues } = await supabase
