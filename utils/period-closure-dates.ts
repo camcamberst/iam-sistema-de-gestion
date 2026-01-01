@@ -351,18 +351,27 @@ export const isClosureDay = (): boolean => {
  * Verifica si es día relevante para early freeze
  * IMPORTANTE: Solo se ejecuta el ÚLTIMO día de cada período:
  * - Día 15: último día del período 1-15 (P1)
- * - Día 31: último día del período 16-31 (P2)
+ * - Último día del mes: último día del período 16-31 (P2)
+ *   Puede ser día 28, 29, 30 o 31 dependiendo del mes
  * 
  * El early freeze se ejecuta a medianoche Europa Central (aproximadamente 18:00-19:00 Colombia)
  * del último día de cada período, antes del cierre completo que ocurre a medianoche Colombia.
  * 
- * @returns true si es el último día de un período (15 o 31)
+ * @returns true si es el último día de un período (15 o último día del mes)
  */
 export const isEarlyFreezeRelevantDay = (): boolean => {
   const colombiaDate = getColombiaDate();
-  const day = parseInt(colombiaDate.split('-')[2]);
+  const [year, month, day] = colombiaDate.split('-').map(Number);
   
-  // Solo días 15 y 31 (último día de cada período)
-  return day === 15 || day === 31;
+  // Día 15: último día del período 1-15
+  if (day === 15) {
+    return true;
+  }
+  
+  // Verificar si es el último día del mes (período 16-31)
+  // Calcular el último día del mes actual
+  const lastDayOfMonth = new Date(year, month, 0).getDate(); // día 0 del mes siguiente = último día del mes actual
+  
+  return day === lastDayOfMonth;
 };
 

@@ -6,7 +6,8 @@ import { isEarlyFreezeTime, isEarlyFreezeRelevantDay } from '@/utils/period-clos
  * 
  * IMPORTANTE: Se ejecuta SOLO el último día de cada período:
  * - Día 15: último día del período 1-15 (P1)
- * - Día 31: último día del período 16-31 (P2)
+ * - Último día del mes: último día del período 16-31 (P2)
+ *   Puede ser día 28, 29, 30 o 31 dependiendo del mes
  * 
  * El congelamiento se ejecuta a medianoche Europa Central (aproximadamente 18:00-19:00 Colombia)
  * del último día de cada período, antes del cierre completo que ocurre a medianoche Colombia.
@@ -22,7 +23,7 @@ export async function GET(request: NextRequest) {
       
       return NextResponse.json({
         success: true,
-        message: 'No es el último día de un período (debe ser día 15 o 31)',
+        message: 'No es el último día de un período (debe ser día 15 o el último día del mes)',
         current_day: day
       });
     }
