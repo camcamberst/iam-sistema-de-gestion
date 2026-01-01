@@ -220,24 +220,38 @@ export async function POST(request: NextRequest) {
       };
 
       try {
+        console.log(`\n📦 [ARCHIVE] Procesando modelo: ${email} (${modelId})`);
+        console.log(`📦 [ARCHIVE] Plataformas a archivar: ${valoresPorPlataforma.size}`);
+        
         // Obtener configuración
-        const { data: config } = await supabase
+        console.log(`📦 [ARCHIVE] Obteniendo configuración...`);
+        const { data: config, error: configError } = await supabase
           .from('calculator_config')
           .select('percentage_override, group_percentage')
           .eq('model_id', modelId)
           .eq('active', true)
           .single();
 
+        if (configError && configError.code !== 'PGRST116') {
+          console.error(`❌ [ARCHIVE] Error obteniendo config:`, configError);
+          throw new Error(`Error obteniendo configuración: ${configError.message}`);
+        }
+
         const modelPercentage = config?.percentage_override || config?.group_percentage || 80;
+        console.log(`📦 [ARCHIVE] Porcentaje del modelo: ${modelPercentage}%`);
 
         // Preparar registros
+        console.log(`📦 [ARCHIVE] Preparando registros históricos...`);
         const historyInserts = [];
         for (const [platformId, valor] of Array.from(valoresPorPlataforma.entries())) {
           const platform = platformMap.get(platformId);
           const currency = platform?.currency || 'USD';
           const valueNum = Number(valor.value) || 0;
 
-          if (valueNum <= 0) continue;
+          if (valueNum <= 0) {
+            console.log(`   ⚠️ Saltando plataforma ${platformId}: valor ${valueNum} <= 0`);
+            continue;
+          }
 
           const valueUsdBruto = calculateUsdBruto(valueNum, platformId, currency, rates);
           const valueUsdModelo = valueUsdBruto * (modelPercentage / 100);
@@ -261,7 +275,10 @@ export async function POST(request: NextRequest) {
           });
         }
 
+        console.log(`📦 [ARCHIVE] Registros preparados: ${historyInserts.length}`);
+
         if (historyInserts.length === 0) {
+          console.error(`❌ [ARCHIVE] No hay valores válidos para ${email}`);
           resultado.error = 'No hay valores válidos';
           errores++;
           resultados.push(resultado);
@@ -269,16 +286,25 @@ export async function POST(request: NextRequest) {
         }
 
         // Insertar en calculator_history
-        const { error: insertError } = await supabase
+        console.log(`📦 [ARCHIVE] Insertando ${historyInserts.length} registros en calculator_history...`);
+        const { error: insertError, data: insertData } = await supabase
           .from('calculator_history')
           .upsert(historyInserts, {
             onConflict: 'model_id,platform_id,period_date,period_type',
             ignoreDuplicates: false
-          });
+          })
+          .select();
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error(`❌ [ARCHIVE] Error insertando en calculator_history:`, insertError);
+          console.error(`❌ [ARCHIVE] Detalles del error:`, JSON.stringify(insertError, null, 2));
+          throw insertError;
+        }
+        
+        console.log(`✅ [ARCHIVE] Insertados ${insertData?.length || historyInserts.length} registros`);
 
         // VALIDACIÓN: Verificar inserción
+        console.log(`📦 [ARCHIVE] Verificando inserción...`);
         const { data: verificationData, error: verificationError } = await supabase
           .from('calculator_history')
           .select('id, platform_id')
@@ -287,12 +313,17 @@ export async function POST(request: NextRequest) {
           .eq('period_type', periodType);
 
         if (verificationError) {
+          console.error(`❌ [ARCHIVE] Error verificando inserción:`, verificationError);
           throw new Error(`Error verificando: ${verificationError.message}`);
         }
 
         const verifiedCount = verificationData?.length || 0;
+        console.log(`📦 [ARCHIVE] Verificados: ${verifiedCount} de ${historyInserts.length} esperados`);
+        
         if (verifiedCount < historyInserts.length) {
-          throw new Error(`Validación fallida: Se intentaron insertar ${historyInserts.length} pero solo se verificaron ${verifiedCount}`);
+          const errorMsg = `Validación fallida: Se intentaron insertar ${historyInserts.length} pero solo se verificaron ${verifiedCount}`;
+          console.error(`❌ [ARCHIVE] ${errorMsg}`);
+          throw new Error(errorMsg);
         }
 
         // NO ELIMINAR valores de model_values - Solo archivar
@@ -302,9 +333,13 @@ export async function POST(request: NextRequest) {
         resultado.eliminados = 0; // No se eliminan valores
         exitosos++;
         resultados.push(resultado);
+        console.log(`✅ [ARCHIVE] Modelo ${email} archivado exitosamente: ${verifiedCount} registros`);
 
       } catch (error: any) {
-        resultado.error = error.message || 'Error desconocido';
+        const errorMsg = error.message || 'Error desconocido';
+        console.error(`❌ [ARCHIVE] Error procesando ${email}:`, errorMsg);
+        console.error(`❌ [ARCHIVE] Stack trace:`, error.stack);
+        resultado.error = errorMsg;
         errores++;
         resultados.push(resultado);
       }

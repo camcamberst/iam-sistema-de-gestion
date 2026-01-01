@@ -264,13 +264,19 @@ export default function EmergencyArchiveP2Page() {
               </div>
 
               {result.resumen?.errores > 0 && (
-                <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-                  <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">⚠️ Modelos con errores:</h3>
-                  <ul className="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                  <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Modelos con errores ({result.resumen.errores}):</h3>
+                  <div className="text-sm text-red-700 dark:text-red-300 space-y-2 max-h-60 overflow-y-auto">
                     {result.resultados?.filter((r: any) => r.error).map((r: any, idx: number) => (
-                      <li key={idx}>{r.email}: {r.error}</li>
+                      <div key={idx} className="border-b border-red-200 dark:border-red-700 pb-2 last:border-0">
+                        <p className="font-semibold">{r.email}</p>
+                        <p className="text-xs opacity-90 mt-1 break-words">{r.error}</p>
+                        {r.plataformas > 0 && (
+                          <p className="text-xs opacity-75 mt-1">Plataformas: {r.plataformas}</p>
+                        )}
+                      </div>
                     ))}
-                  </ul>
+                  </div>
                 </div>
               )}
 
