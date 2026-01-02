@@ -362,6 +362,90 @@ export default function EmergencyArchiveP2Page() {
             </button>
           </div>
 
+          <div className="mb-6 bg-red-50 dark:bg-red-900/20 border-2 border-red-300 dark:border-red-700 rounded-lg p-4">
+            <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">🔄 Reset Completo de Calculadora:</h3>
+            <p className="text-sm text-red-700 dark:text-red-300 mb-3">
+              <strong>⚠️ PELIGRO:</strong> Esto eliminará TODOS los valores y totales de la calculadora, sin importar el período. 
+              Úsalo solo si necesitas resetear completamente una calculadora a "0".
+            </p>
+            <div className="space-y-3">
+              <div>
+                <input
+                  type="text"
+                  placeholder="ID del modelo (UUID) - Dejar vacío para resetear TODOS"
+                  id="reset-model-id"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+                <button
+                  onClick={async () => {
+                    const modelId = (document.getElementById('reset-model-id') as HTMLInputElement)?.value.trim();
+                    const resetAll = !modelId;
+                    
+                    const mensaje = resetAll
+                      ? '🔥 ¿Estás seguro de que quieres RESETEAR COMPLETAMENTE TODAS las calculadoras?\n\n⚠️ PELIGRO EXTREMO: Esto eliminará TODOS los valores y totales de TODAS las calculadoras, sin importar el período.\n\nEsta acción NO se puede deshacer.'
+                      : `🔥 ¿Estás seguro de que quieres RESETEAR COMPLETAMENTE esta calculadora?\n\n⚠️ PELIGRO: Esto eliminará TODOS los valores y totales de esta calculadora, sin importar el período.\n\nEsta acción NO se puede deshacer.`;
+                    
+                    if (!confirm(mensaje)) {
+                      return;
+                    }
+
+                    setDeleting(true);
+                    setError(null);
+                    setResult(null);
+
+                    try {
+                      const token = await getAuthToken();
+                      if (!token) {
+                        throw new Error('No hay sesión activa. Por favor, inicia sesión.');
+                      }
+
+                      console.log('🔄 Reseteando calculadora(s)...');
+                      const response = await fetch('/api/admin/emergency-archive-p2/reset-calculator', {
+                        method: 'POST',
+                        headers: {
+                          'Authorization': `Bearer ${token}`,
+                          'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                          modelId: modelId || null,
+                          resetAll: resetAll
+                        })
+                      });
+
+                      if (!response.ok) {
+                        const errorText = await response.text();
+                        let errorData;
+                        try {
+                          errorData = JSON.parse(errorText);
+                        } catch {
+                          errorData = { error: errorText || `Error ${response.status}` };
+                        }
+                        throw new Error(errorData.error || `Error ${response.status}`);
+                      }
+
+                      const data = await response.json();
+                      setResult(data);
+                      console.log('✅ Reset completado:', data);
+                      
+                      // Refrescar verificación después de resetear
+                      setTimeout(() => {
+                        handleVerify();
+                      }, 1000);
+                    } catch (err: any) {
+                      setError(err.message || 'Error desconocido');
+                    } finally {
+                      setDeleting(false);
+                    }
+                  }}
+                  disabled={loading || verifying || cleaning || deleting}
+                  className="w-full px-4 py-2 bg-red-700 hover:bg-red-800 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed"
+                >
+                  {deleting ? '⏳ Reseteando...' : '🔄 Resetear Calculadora(s) a Cero'}
+                </button>
+              </div>
+            </div>
+          </div>
+
           <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
             <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">🔍 Diagnóstico:</h3>
             <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
