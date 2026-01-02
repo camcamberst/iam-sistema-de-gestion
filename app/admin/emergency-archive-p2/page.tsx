@@ -403,45 +403,75 @@ export default function EmergencyArchiveP2Page() {
               <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
                 <h3 className="font-semibold text-green-800 dark:text-green-200 mb-2">✅ Resultado:</h3>
                 <div className="text-sm text-green-700 dark:text-green-300 space-y-1">
-                  <p><strong>Total modelos:</strong> {result.resumen?.total_modelos || 0}</p>
-                  <p><strong>Exitosos:</strong> {result.resumen?.exitosos || 0}</p>
-                  <p><strong>Errores:</strong> {result.resumen?.errores || 0}</p>
-                  <p><strong>Registros archivados:</strong> {result.resumen?.total_archivados || 0}</p>
-                  <p><strong>Valores en model_values:</strong> {result.resumen?.valores_en_model_values || 0} (se mantienen)</p>
-                  <p><strong>Registros en calculator_history:</strong> {result.resumen?.registros_en_history || 0}</p>
+                  {result.mensaje && (
+                    <p className="font-semibold text-base mb-2">{result.mensaje}</p>
+                  )}
+                  {result.resumen && (
+                    <>
+                      <p><strong>Total modelos procesados:</strong> {result.resumen.total_modelos || 0}</p>
+                      <p><strong>✅ Exitosos:</strong> {result.resumen.exitosos || 0}</p>
+                      <p><strong>❌ Errores:</strong> {result.resumen.errores || 0}</p>
+                      {result.resumen.total_eliminados !== undefined && (
+                        <p><strong>🗑️ Valores eliminados:</strong> {result.resumen.total_eliminados || 0}</p>
+                      )}
+                      {result.resumen.total_archivados !== undefined && (
+                        <p><strong>📦 Registros archivados:</strong> {result.resumen.total_archivados || 0}</p>
+                      )}
+                      {result.resumen.modelos_sin_archivo !== undefined && (
+                        <p><strong>⚠️ Modelos sin archivo (no eliminados):</strong> {result.resumen.modelos_sin_archivo || 0}</p>
+                      )}
+                      {result.resumen.residuales_restantes !== undefined && (
+                        <p><strong>🔍 Valores residuales restantes:</strong> {result.resumen.residuales_restantes || 0}</p>
+                      )}
+                    </>
+                  )}
+                  {result.eliminados !== undefined && (
+                    <p><strong>🗑️ Total eliminados:</strong> {result.eliminados}</p>
+                  )}
                 </div>
               </div>
 
-              {result.resumen?.errores > 0 && (
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                  <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Modelos con errores ({result.resumen.errores}):</h3>
-                  <div className="text-sm text-red-700 dark:text-red-300 space-y-2 max-h-60 overflow-y-auto">
-                    {result.resultados?.filter((r: any) => r.error).map((r: any, idx: number) => (
-                      <div key={idx} className="border-b border-red-200 dark:border-red-700 pb-2 last:border-0">
-                        <p className="font-semibold">{r.email}</p>
-                        <p className="text-xs opacity-90 mt-1 break-words">{r.error}</p>
-                        {r.plataformas > 0 && (
-                          <p className="text-xs opacity-75 mt-1">Plataformas: {r.plataformas}</p>
-                        )}
+              {result.resultados && result.resultados.length > 0 && (
+                <>
+                  {result.resultados.filter((r: any) => r.error).length > 0 && (
+                    <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                      <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Modelos con errores ({result.resultados.filter((r: any) => r.error).length}):</h3>
+                      <div className="text-sm text-red-700 dark:text-red-300 space-y-2 max-h-60 overflow-y-auto">
+                        {result.resultados.filter((r: any) => r.error).map((r: any, idx: number) => (
+                          <div key={idx} className="border-b border-red-200 dark:border-red-700 pb-2 last:border-0">
+                            <p className="font-semibold">{r.email}</p>
+                            <p className="text-xs opacity-90 mt-1 break-words">{r.error}</p>
+                            {r.plataformas > 0 && (
+                              <p className="text-xs opacity-75 mt-1">Plataformas: {r.plataformas}</p>
+                            )}
+                            {r.registros_archivados !== undefined && (
+                              <p className="text-xs opacity-75 mt-1">Registros archivados: {r.registros_archivados}</p>
+                            )}
+                          </div>
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                </div>
+                    </div>
+                  )}
+
+                  {result.resultados.filter((r: any) => !r.error && r.valores_eliminados > 0).length > 0 && (
+                    <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                      <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">✅ Modelos con valores eliminados exitosamente:</h3>
+                      <div className="text-sm text-blue-700 dark:text-blue-300 space-y-2 max-h-60 overflow-y-auto">
+                        {result.resultados.filter((r: any) => !r.error && r.valores_eliminados > 0).map((r: any, idx: number) => (
+                          <div key={idx} className="border-b border-blue-200 dark:border-blue-700 pb-2 last:border-0">
+                            <p className="font-semibold">{r.email}</p>
+                            <p className="text-xs opacity-90 mt-1">
+                              ✅ {r.valores_eliminados} valor(es) eliminado(s)
+                              {r.registros_archivados > 0 && ` • ${r.registros_archivados} registro(s) archivado(s)`}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
               )}
 
-              {result.resumen?.exitosos > 0 && (
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
-                  <h3 className="font-semibold text-blue-800 dark:text-blue-200 mb-2">✅ Modelos archivados exitosamente:</h3>
-                  <ul className="text-sm text-blue-700 dark:text-blue-300 space-y-1 max-h-60 overflow-y-auto">
-                    {result.resultados?.filter((r: any) => !r.error).slice(0, 20).map((r: any, idx: number) => (
-                      <li key={idx}>{r.email}: {r.archivados} registros archivados</li>
-                    ))}
-                    {result.resultados?.filter((r: any) => !r.error).length > 20 && (
-                      <li>... y {result.resultados.filter((r: any) => !r.error).length - 20} más</li>
-                    )}
-                  </ul>
-                </div>
-              )}
 
               <div className="bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
                 <h3 className="font-semibold text-gray-800 dark:text-gray-200 mb-2">📋 Próximos pasos:</h3>
