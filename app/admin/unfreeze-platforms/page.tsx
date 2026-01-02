@@ -70,7 +70,7 @@ export default function UnfreezePlatformsPage() {
   };
 
   const handleUnfreezeAll = async () => {
-    if (!confirm('⚠️ ¿Estás seguro de que quieres descongelar TODAS las plataformas especiales de TODOS los modelos?\n\nEsto eliminará todos los registros de congelamiento.')) {
+    if (!confirm('⚠️ ¿Estás seguro de que quieres descongelar TODAS las plataformas especiales de TODOS los modelos?\n\nEsto eliminará todos los registros de congelamiento y forzará el descongelamiento inmediato.')) {
       return;
     }
 
@@ -84,7 +84,8 @@ export default function UnfreezePlatformsPage() {
         throw new Error('No hay sesión activa. Por favor, inicia sesión.');
       }
 
-      const response = await fetch('/api/admin/unfreeze-platforms?all=true', {
+      // Paso 1: Eliminar registros de la BD
+      const deleteResponse = await fetch('/api/admin/unfreeze-platforms?all=true', {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -92,19 +93,58 @@ export default function UnfreezePlatformsPage() {
         }
       });
 
-      if (!response.ok) {
-        const errorText = await response.text();
+      if (!deleteResponse.ok) {
+        const errorText = await deleteResponse.text();
         let errorData;
         try {
           errorData = JSON.parse(errorText);
         } catch {
-          errorData = { error: errorText || `Error ${response.status}` };
+          errorData = { error: errorText || `Error ${deleteResponse.status}` };
         }
-        throw new Error(errorData.error || `Error ${response.status}`);
+        throw new Error(errorData.error || `Error ${deleteResponse.status}`);
       }
 
-      const data = await response.json();
-      setResult(data);
+      const deleteData = await deleteResponse.json();
+      
+      // Paso 2: Obtener todos los modelos activos y forzar descongelamiento en el endpoint de status
+      // Esto asegura que la detección automática no vuelva a congelar las plataformas
+      const modelsResponse = await fetch('/api/users?role=modelo&is_active=true', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+
+      if (modelsResponse.ok) {
+        const modelsData = await modelsResponse.json();
+        const models = modelsData.users || [];
+        
+        // Forzar descongelamiento para cada modelo llamando al endpoint con forceUnfreeze=true
+        // Esto actualiza la lógica de detección automática
+        let forcedCount = 0;
+        for (const model of models.slice(0, 50)) { // Limitar a 50 para no sobrecargar
+          try {
+            await fetch(`/api/calculator/period-closure/platform-freeze-status?modelId=${model.id}&forceUnfreeze=true`, {
+              headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json'
+              }
+            });
+            forcedCount++;
+          } catch (err) {
+            // Continuar con el siguiente modelo si hay error
+            console.error(`Error forzando descongelamiento para modelo ${model.id}:`, err);
+          }
+        }
+        
+        setResult({
+          ...deleteData,
+          forced_unfreeze_count: forcedCount,
+          message: `Se descongelaron ${deleteData.deleted_count || 0} registro(s) y se forzó el descongelamiento para ${forcedCount} modelo(s)`
+        });
+      } else {
+        setResult(deleteData);
+      }
       
       // Refrescar estado después de descongelar
       setTimeout(() => {

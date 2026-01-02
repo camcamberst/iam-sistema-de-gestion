@@ -28,6 +28,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const modelId = searchParams.get('modelId');
     const periodDate = searchParams.get('periodDate') || getColombiaDate();
+    const forceUnfreeze = searchParams.get('forceUnfreeze') === 'true'; // Nuevo parámetro para forzar descongelamiento
 
     if (!modelId) {
       return NextResponse.json({
@@ -197,7 +198,8 @@ export async function GET(request: NextRequest) {
     // 1. Es día de cierre O día previo al cierre
     // 2. Y el período NO ha sido cerrado aún
     // 3. Y NO estamos en un período nuevo (después del cierre)
-    if ((isClosure || isDayBeforeClosure) && !periodAlreadyClosed) {
+    // 4. Y NO se está forzando el descongelamiento
+    if ((isClosure || isDayBeforeClosure) && !periodAlreadyClosed && !forceUnfreeze) {
       const now = new Date();
       const europeMidnight = getEuropeanCentralMidnightInColombia(now);
       const colombiaTimeStr = getColombiaDateTime();
@@ -257,12 +259,13 @@ export async function GET(request: NextRequest) {
 
     const frozenPlatforms = Array.from(allFrozenPlatforms);
 
-    // 🔒 CRÍTICO: Si el período ya fue cerrado, FORZAR lista vacía
+    // 🔒 CRÍTICO: Si el período ya fue cerrado O se está forzando el descongelamiento, FORZAR lista vacía
     // Esto asegura que las plataformas se desbloqueen inmediatamente
-    const finalFrozenPlatforms = periodAlreadyClosed ? [] : frozenPlatforms;
+    const finalFrozenPlatforms = (periodAlreadyClosed || forceUnfreeze) ? [] : frozenPlatforms;
     
-    if (periodAlreadyClosed && frozenPlatforms.length > 0) {
-      console.warn(`⚠️ [PLATFORM-FREEZE-STATUS] Período cerrado pero había ${frozenPlatforms.length} plataformas congeladas. Forzando desbloqueo.`);
+    if ((periodAlreadyClosed || forceUnfreeze) && frozenPlatforms.length > 0) {
+      const reason = periodAlreadyClosed ? 'período cerrado' : 'descongelamiento forzado';
+      console.warn(`⚠️ [PLATFORM-FREEZE-STATUS] ${reason} pero había ${frozenPlatforms.length} plataformas congeladas. Forzando desbloqueo.`);
     }
 
     console.log(`✅ [PLATFORM-FREEZE-STATUS] Respuesta final:`, {
@@ -279,10 +282,11 @@ export async function GET(request: NextRequest) {
       success: true,
       model_id: modelId,
       period_date: currentPeriodDate, // Usar período actual, no el del parámetro
-      frozen_platforms: finalFrozenPlatforms, // Usar lista vacía si período cerrado
+      frozen_platforms: finalFrozenPlatforms, // Usar lista vacía si período cerrado o forzado
       is_frozen: finalFrozenPlatforms.length > 0,
       auto_detected: frozenPlatforms.length > frozenPlatformsFromDB.length,
       period_closed: periodAlreadyClosed, // Indicar si período está cerrado
+      force_unfreeze: forceUnfreeze, // Indicar si se forzó el descongelamiento
       // 🔍 DEBUG: Información adicional para diagnóstico
       debug: {
         isClosureDay: isClosure,
