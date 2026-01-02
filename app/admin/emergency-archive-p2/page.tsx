@@ -102,8 +102,12 @@ export default function EmergencyArchiveP2Page() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('⚠️ ¿Estás seguro de que quieres eliminar los valores de P2 de diciembre de "Mi Calculadora"?\n\nEsto eliminará los valores de model_values SOLO si están archivados en calculator_history.\n\nLos valores archivados en "Mi Historial" NO se verán afectados.')) {
+  const handleDelete = async (force: boolean = false) => {
+    const mensaje = force 
+      ? '🔥 ¿Estás seguro de que quieres FORZAR la eliminación de TODOS los valores de P2 de diciembre?\n\n⚠️ PELIGRO: Esto eliminará valores INCLUSO si NO están archivados.\n\nSolo usa esto si estás seguro de que los valores ya fueron archivados o si necesitas resetear las calculadoras a "0".'
+      : '⚠️ ¿Estás seguro de que quieres eliminar los valores de P2 de diciembre de "Mi Calculadora"?\n\nEsto eliminará los valores de model_values SOLO si están archivados en calculator_history.\n\nLos valores archivados en "Mi Historial" NO se verán afectados.';
+    
+    if (!confirm(mensaje)) {
       return;
     }
 
@@ -120,8 +124,13 @@ export default function EmergencyArchiveP2Page() {
       console.log('🗑️ Eliminando valores...');
       console.log('🔐 Token obtenido:', token.substring(0, 20) + '...');
       
+      // Construir URL con parámetro force si es necesario
+      const url = force 
+        ? '/api/admin/emergency-archive-p2/delete?force=true'
+        : '/api/admin/emergency-archive-p2/delete';
+      
       // Intentar primero con DELETE, si falla intentar con POST
-      let response = await fetch('/api/admin/emergency-archive-p2/delete', {
+      let response = await fetch(url, {
         method: 'DELETE',
         headers: {
           'Authorization': `Bearer ${token}`,
@@ -132,12 +141,15 @@ export default function EmergencyArchiveP2Page() {
       // Si DELETE falla con 405 (Method Not Allowed), intentar con POST
       if (response.status === 405) {
         console.log('⚠️ DELETE no permitido, intentando con POST...');
-        response = await fetch('/api/admin/emergency-archive-p2/delete', {
+        response = await fetch(force 
+          ? '/api/admin/emergency-archive-p2/delete?force=true'
+          : '/api/admin/emergency-archive-p2/delete', {
           method: 'POST',
           headers: {
             'Authorization': `Bearer ${token}`,
             'Content-Type': 'application/json'
-          }
+          },
+          body: force ? JSON.stringify({ force: true }) : undefined
         });
       }
 
@@ -340,6 +352,13 @@ export default function EmergencyArchiveP2Page() {
               className="px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
               {deleting ? '⏳ Eliminando...' : '🗑️ Eliminar Valores de Mi Calculadora'}
+            </button>
+            <button
+              onClick={() => handleDelete(true)}
+              disabled={loading || verifying || cleaning || deleting}
+              className="px-6 py-3 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
+            >
+              {deleting ? '⏳ Eliminando...' : '🔥 Forzar Eliminación (Sin Verificar Archivo)'}
             </button>
           </div>
 

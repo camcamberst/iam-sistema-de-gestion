@@ -87,12 +87,16 @@ async function authenticateAdmin(request: NextRequest) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Función compartida para la lógica de eliminación
-async function deleteValuesLogic() {
+async function deleteValuesLogic(forceDelete: boolean = false) {
   const startDate = '2025-12-16';
   const endDate = '2025-12-31';
   const periodType = '16-31';
   const fechaLimite = new Date(`${endDate}T23:59:59.999Z`);
   const fechaLimiteISO = fechaLimite.toISOString();
+  
+  if (forceDelete) {
+    console.log('⚠️ [DELETE-VALUES] MODO FORZADO: Se eliminarán valores incluso sin archivo');
+  }
 
   console.log('🗑️ [DELETE-VALUES] Iniciando eliminación de valores de P2 de diciembre...');
   console.log(`📅 [DELETE-VALUES] Rango: ${startDate} a ${endDate}`);
@@ -200,7 +204,7 @@ async function deleteValuesLogic() {
   console.log(`✅ [DELETE-VALUES] Modelos con archivo: ${modelosConArchivo}`);
   console.log(`⚠️ [DELETE-VALUES] Modelos sin archivo (se omitirán): ${modelosSinArchivo}`);
 
-  if (modelosConArchivo === 0) {
+  if (modelosConArchivo === 0 && !forceDelete) {
     console.log('⚠️ [DELETE-VALUES] No hay modelos con archivo. No se eliminará ningún valor.');
     return {
       success: true,
@@ -217,18 +221,28 @@ async function deleteValuesLogic() {
       resultados: resultados
     };
   }
+  
+  if (forceDelete && modelosConArchivo === 0) {
+    console.log('⚠️ [DELETE-VALUES] MODO FORZADO: Eliminando valores de modelos sin archivo...');
+  }
 
-  // 4. Eliminar valores SOLO de modelos con archivo
-  console.log(`🗑️ [DELETE-VALUES] Eliminando valores de ${modelosConArchivo} modelo(s) con archivo (omitidos ${modelosSinArchivo} sin archivo)...`);
+  // 4. Eliminar valores
+  const modelosAEliminar = forceDelete ? resultados.length : modelosConArchivo;
+  const modelosAOmitir = forceDelete ? 0 : modelosSinArchivo;
+  console.log(`🗑️ [DELETE-VALUES] Eliminando valores de ${modelosAEliminar} modelo(s) ${forceDelete ? '(MODO FORZADO - incluyendo sin archivo)' : '(solo con archivo)'} (omitidos ${modelosAOmitir} sin archivo)...`);
   let exitosos = 0;
   let errores = 0;
   let totalEliminados = 0;
 
   for (const resultado of resultados) {
-    if (!resultado.tiene_archivo) {
+    if (!resultado.tiene_archivo && !forceDelete) {
       console.log(`⏭️ [DELETE-VALUES] ${resultado.email}: Omitido (no tiene archivo, ${resultado.valores_en_model_values} valores no eliminados)`);
       // No contar como error, solo como omitido
       continue;
+    }
+    
+    if (!resultado.tiene_archivo && forceDelete) {
+      console.log(`⚠️ [DELETE-VALUES] ${resultado.email}: MODO FORZADO - Eliminando sin archivo (${resultado.valores_en_model_values} valores)`);
     }
 
     console.log(`🗑️ [DELETE-VALUES] Eliminando valores de ${resultado.email}...`);
@@ -264,12 +278,18 @@ async function deleteValuesLogic() {
 
   // 5. Verificación final
   console.log('🔍 [DELETE-VALUES] Verificación final...');
-  const { data: finalValores } = await supabase
+  let finalQuery = supabase
     .from('model_values')
     .select('model_id')
     .gte('period_date', startDate)
-    .lte('period_date', endDate)
-    .lte('updated_at', fechaLimiteISO);
+    .lte('period_date', endDate);
+  
+  // Solo aplicar filtro de updated_at si NO es modo forzado
+  if (!forceDelete) {
+    finalQuery = finalQuery.lte('updated_at', fechaLimiteISO);
+  }
+  
+  const { data: finalValores } = await finalQuery;
 
   const residuales = finalValores?.length || 0;
 
@@ -319,7 +339,11 @@ export async function DELETE(request: NextRequest) {
 
     console.log('✅ [DELETE-VALUES] Autenticación exitosa, usuario:', auth.user.id);
 
-    const result = await deleteValuesLogic();
+    // Verificar si se solicita eliminación forzada
+    const { searchParams } = new URL(request.url);
+    const forceDelete = searchParams.get('force') === 'true';
+
+    const result = await deleteValuesLogic(forceDelete);
     return NextResponse.json(result);
 
   } catch (error: any) {
@@ -348,7 +372,18 @@ export async function POST(request: NextRequest) {
 
     console.log('✅ [DELETE-VALUES] Autenticación exitosa, usuario:', auth.user.id);
 
-    const result = await deleteValuesLogic();
+    // Verificar si se solicita eliminación forzada desde el body
+    let forceDelete = false;
+    try {
+      const body = await request.json();
+      forceDelete = body.force === true;
+    } catch {
+      // Si no hay body, verificar query params
+      const { searchParams } = new URL(request.url);
+      forceDelete = searchParams.get('force') === 'true';
+    }
+
+    const result = await deleteValuesLogic(forceDelete);
     return NextResponse.json(result);
   } catch (error: any) {
     console.error('❌ [DELETE-VALUES] Error:', error);
