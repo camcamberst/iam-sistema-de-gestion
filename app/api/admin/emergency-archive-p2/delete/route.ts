@@ -100,15 +100,25 @@ async function deleteValuesLogic(forceDelete: boolean = false) {
 
   console.log('🗑️ [DELETE-VALUES] Iniciando eliminación de valores de P2 de diciembre...');
   console.log(`📅 [DELETE-VALUES] Rango: ${startDate} a ${endDate}`);
-  console.log(`⏰ [DELETE-VALUES] Solo valores hasta: ${fechaLimiteISO}`);
+  if (forceDelete) {
+    console.log(`⚠️ [DELETE-VALUES] MODO FORZADO: Eliminando TODOS los valores del período (sin filtro de updated_at)`);
+  } else {
+    console.log(`⏰ [DELETE-VALUES] Solo valores hasta: ${fechaLimiteISO}`);
+  }
 
   // 1. Obtener modelos con valores en el período
-  const { data: valores, error: valoresError } = await supabase
+  let valoresQuery = supabase
     .from('model_values')
     .select('model_id')
     .gte('period_date', startDate)
-    .lte('period_date', endDate)
-    .lte('updated_at', fechaLimiteISO);
+    .lte('period_date', endDate);
+  
+  // Solo aplicar filtro de updated_at si NO es modo forzado
+  if (!forceDelete) {
+    valoresQuery = valoresQuery.lte('updated_at', fechaLimiteISO);
+  }
+  
+  const { data: valores, error: valoresError } = await valoresQuery;
 
   if (valoresError) {
     console.error('❌ [DELETE-VALUES] Error obteniendo valores:', valoresError);
@@ -163,14 +173,19 @@ async function deleteValuesLogic(forceDelete: boolean = false) {
       };
 
       // Contar valores en model_values para este modelo
-      const { count: valoresCount } = await supabase
+      let countQuery = supabase
         .from('model_values')
         .select('*', { count: 'exact', head: true })
         .eq('model_id', modelId)
         .gte('period_date', startDate)
-        .lte('period_date', endDate)
-        .lte('updated_at', fechaLimiteISO);
+        .lte('period_date', endDate);
       
+      // Solo aplicar filtro de updated_at si NO es modo forzado
+      if (!forceDelete) {
+        countQuery = countQuery.lte('updated_at', fechaLimiteISO);
+      }
+      
+      const { count: valoresCount } = await countQuery;
       resultado.valores_en_model_values = valoresCount || 0;
 
       // Verificar archivo - buscar en diferentes posibles period_date
