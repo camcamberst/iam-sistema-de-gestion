@@ -365,40 +365,71 @@ export default function EmergencyArchiveP2Page() {
           <div className="mb-6 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4">
             <h3 className="font-semibold text-amber-800 dark:text-amber-200 mb-2">🔍 Diagnóstico:</h3>
             <p className="text-sm text-amber-700 dark:text-amber-300 mb-3">
-              Si las calculadoras no quedan en cero después de eliminar, usa el diagnóstico para ver qué valores están mostrando.
+              Si las calculadoras no quedan en cero después de eliminar, usa estas herramientas para diagnosticar el problema.
             </p>
-            <input
-              type="text"
-              placeholder="ID del modelo (UUID)"
-              id="diagnose-model-id"
-              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-            />
-            <button
-              onClick={async () => {
-                const modelId = (document.getElementById('diagnose-model-id') as HTMLInputElement)?.value;
-                if (!modelId) {
-                  alert('Por favor ingresa un ID de modelo');
-                  return;
-                }
-                try {
-                  const token = await getAuthToken();
-                  if (!token) {
-                    throw new Error('No hay sesión activa');
-                  }
-                  const response = await fetch(`/api/admin/emergency-archive-p2/diagnose?modelId=${modelId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                  });
-                  const data = await response.json();
-                  console.log('🔍 Diagnóstico:', data);
-                  alert(`Diagnóstico completado. Revisa la consola del navegador para ver los detalles.\n\nResumen:\n- Total valores (todos períodos): ${data.diagnostic?.summary?.total_values_all_periods || 0}\n- Valores P2 (todos): ${data.diagnostic?.summary?.p2_values_total || 0}\n- Valores P2 después del límite: ${data.diagnostic?.summary?.p2_values_after_limit || 0}`);
-                } catch (err: any) {
-                  alert(`Error: ${err.message}`);
-                }
-              }}
-              className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg"
-            >
-              🔍 Diagnosticar Modelo
-            </button>
+            <div className="space-y-3">
+              <div>
+                <button
+                  onClick={async () => {
+                    try {
+                      const token = await getAuthToken();
+                      if (!token) {
+                        throw new Error('No hay sesión activa');
+                      }
+                      const response = await fetch('/api/admin/emergency-archive-p2/list-models-with-values?period=p2-december', {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      const data = await response.json();
+                      console.log('📋 Modelos con valores P2:', data);
+                      if (data.success && data.models) {
+                        alert(`Se encontraron ${data.models.length} modelo(s) con valores en P2 de diciembre.\n\nRevisa la consola del navegador para ver los detalles completos.`);
+                      } else {
+                        alert('No se encontraron modelos con valores o hubo un error.');
+                      }
+                    } catch (err: any) {
+                      alert(`Error: ${err.message}`);
+                    }
+                  }}
+                  className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg mb-2"
+                >
+                  📋 Listar Modelos con Valores (P2 Diciembre)
+                </button>
+              </div>
+              <div>
+                <input
+                  type="text"
+                  placeholder="ID del modelo (UUID) para diagnóstico detallado"
+                  id="diagnose-model-id"
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg mb-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                />
+                <button
+                  onClick={async () => {
+                    const modelId = (document.getElementById('diagnose-model-id') as HTMLInputElement)?.value;
+                    if (!modelId) {
+                      alert('Por favor ingresa un ID de modelo');
+                      return;
+                    }
+                    try {
+                      const token = await getAuthToken();
+                      if (!token) {
+                        throw new Error('No hay sesión activa');
+                      }
+                      const response = await fetch(`/api/admin/emergency-archive-p2/diagnose?modelId=${modelId}`, {
+                        headers: { 'Authorization': `Bearer ${token}` }
+                      });
+                      const data = await response.json();
+                      console.log('🔍 Diagnóstico detallado:', data);
+                      alert(`Diagnóstico completado. Revisa la consola del navegador para ver los detalles.\n\nResumen:\n- Total valores (todos períodos): ${data.diagnostic?.summary?.total_values_all_periods || 0}\n- Valores P2 (todos): ${data.diagnostic?.summary?.p2_values_total || 0}\n- Valores P2 después del límite: ${data.diagnostic?.summary?.p2_values_after_limit || 0}\n- Total totales: ${data.diagnostic?.all_totals?.total || 0}`);
+                    } catch (err: any) {
+                      alert(`Error: ${err.message}`);
+                    }
+                  }}
+                  className="w-full px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-semibold rounded-lg"
+                >
+                  🔍 Diagnosticar Modelo Específico
+                </button>
+              </div>
+            </div>
           </div>
 
           {verification && (
