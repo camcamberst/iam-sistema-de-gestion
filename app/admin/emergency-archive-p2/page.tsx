@@ -441,14 +441,22 @@ export default function EmergencyArchiveP2Page() {
                           <div key={idx} className="border-b border-red-200 dark:border-red-700 pb-2 last:border-0">
                             <p className="font-semibold">{r.email}</p>
                             <p className="text-xs opacity-90 mt-1 break-words">{r.error}</p>
+                            {r.valores_en_model_values !== undefined && r.valores_en_model_values > 0 && (
+                              <p className="text-xs opacity-75 mt-1">⚠️ Valores en model_values: {r.valores_en_model_values} (no se eliminaron por falta de archivo)</p>
+                            )}
                             {r.plataformas > 0 && (
                               <p className="text-xs opacity-75 mt-1">Plataformas: {r.plataformas}</p>
                             )}
-                            {r.registros_archivados !== undefined && (
+                            {r.registros_archivados !== undefined && r.registros_archivados > 0 && (
                               <p className="text-xs opacity-75 mt-1">Registros archivados: {r.registros_archivados}</p>
                             )}
                           </div>
                         ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-700">
+                        <p className="text-xs text-red-600 dark:text-red-400">
+                          💡 <strong>Solución:</strong> Estos modelos necesitan ser archivados primero. Ejecuta &quot;🚀 Archivar P2 de Diciembre&quot; para crear el archivo antes de eliminar.
+                        </p>
                       </div>
                     </div>
                   )}
