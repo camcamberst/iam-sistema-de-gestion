@@ -198,18 +198,36 @@ async function deleteValuesLogic() {
     }
 
   console.log(`✅ [DELETE-VALUES] Modelos con archivo: ${modelosConArchivo}`);
-  console.log(`⚠️ [DELETE-VALUES] Modelos sin archivo: ${modelosSinArchivo}`);
+  console.log(`⚠️ [DELETE-VALUES] Modelos sin archivo (se omitirán): ${modelosSinArchivo}`);
+
+  if (modelosConArchivo === 0) {
+    console.log('⚠️ [DELETE-VALUES] No hay modelos con archivo. No se eliminará ningún valor.');
+    return {
+      success: true,
+      mensaje: `No se eliminaron valores. ${modelosSinArchivo} modelo(s) no tienen archivo y fueron omitidos por seguridad.`,
+      eliminados: 0,
+      resumen: {
+        total_modelos: resultados.length,
+        exitosos: 0,
+        errores: modelosSinArchivo,
+        modelos_sin_archivo: modelosSinArchivo,
+        total_eliminados: 0,
+        residuales_restantes: valores.length
+      },
+      resultados: resultados
+    };
+  }
 
   // 4. Eliminar valores SOLO de modelos con archivo
-  console.log('🗑️ [DELETE-VALUES] Eliminando valores (solo modelos con archivo)...');
+  console.log(`🗑️ [DELETE-VALUES] Eliminando valores de ${modelosConArchivo} modelo(s) con archivo (omitidos ${modelosSinArchivo} sin archivo)...`);
   let exitosos = 0;
   let errores = 0;
   let totalEliminados = 0;
 
   for (const resultado of resultados) {
     if (!resultado.tiene_archivo) {
-      console.log(`⚠️ [DELETE-VALUES] ${resultado.email}: NO tiene archivo, se omite`);
-      errores++;
+      console.log(`⏭️ [DELETE-VALUES] ${resultado.email}: Omitido (no tiene archivo, ${resultado.valores_en_model_values} valores no eliminados)`);
+      // No contar como error, solo como omitido
       continue;
     }
 
@@ -235,6 +253,7 @@ async function deleteValuesLogic() {
         totalEliminados += deletedCount;
         console.log(`✅ [DELETE-VALUES] ${resultado.email}: ${deletedCount} valores eliminados`);
         exitosos++;
+        // No contar como error si se eliminó exitosamente
       }
     } catch (error: any) {
       resultado.error = error.message || 'Error desconocido';
@@ -256,13 +275,26 @@ async function deleteValuesLogic() {
 
   console.log(`✅ [DELETE-VALUES] Proceso completado: ${exitosos} exitosos, ${errores} errores, ${totalEliminados} valores eliminados`);
 
+  // Separar modelos omitidos (sin archivo) de errores reales
+  const modelosOmitidos = resultados.filter(r => !r.tiene_archivo);
+  const modelosConErrores = resultados.filter(r => r.tiene_archivo && r.error);
+  
+  let mensaje = `Eliminación completada. ${totalEliminados} valores eliminados de ${exitosos} modelo(s).`;
+  if (modelosOmitidos.length > 0) {
+    mensaje += ` ${modelosOmitidos.length} modelo(s) omitido(s) por no tener archivo.`;
+  }
+  if (modelosConErrores.length > 0) {
+    mensaje += ` ${modelosConErrores.length} modelo(s) con errores.`;
+  }
+
   return {
     success: true,
-    mensaje: `Eliminación completada. ${totalEliminados} valores eliminados de ${exitosos} modelos.`,
+    mensaje,
     resumen: {
       total_modelos: resultados.length,
       exitosos,
-      errores,
+      errores: modelosConErrores.length, // Solo errores reales, no omitidos
+      modelos_omitidos: modelosOmitidos.length, // Modelos sin archivo (no son errores)
       modelos_sin_archivo: modelosSinArchivo,
       total_eliminados: totalEliminados,
       residuales_restantes: residuales

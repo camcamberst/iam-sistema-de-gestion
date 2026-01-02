@@ -417,8 +417,11 @@ export default function EmergencyArchiveP2Page() {
                       {result.resumen.total_archivados !== undefined && (
                         <p><strong>📦 Registros archivados:</strong> {result.resumen.total_archivados || 0}</p>
                       )}
+                      {result.resumen.modelos_omitidos !== undefined && result.resumen.modelos_omitidos > 0 && (
+                        <p><strong>⏭️ Modelos omitidos (sin archivo):</strong> {result.resumen.modelos_omitidos || 0}</p>
+                      )}
                       {result.resumen.modelos_sin_archivo !== undefined && (
-                        <p><strong>⚠️ Modelos sin archivo (no eliminados):</strong> {result.resumen.modelos_sin_archivo || 0}</p>
+                        <p><strong>⚠️ Modelos sin archivo:</strong> {result.resumen.modelos_sin_archivo || 0}</p>
                       )}
                       {result.resumen.residuales_restantes !== undefined && (
                         <p><strong>🔍 Valores residuales restantes:</strong> {result.resumen.residuales_restantes || 0}</p>
@@ -433,17 +436,36 @@ export default function EmergencyArchiveP2Page() {
 
               {result.resultados && result.resultados.length > 0 && (
                 <>
-                  {result.resultados.filter((r: any) => r.error).length > 0 && (
+                  {result.resultados.filter((r: any) => !r.tiene_archivo).length > 0 && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                      <h3 className="font-semibold text-yellow-800 dark:text-yellow-200 mb-2">⏭️ Modelos omitidos (sin archivo) ({result.resultados.filter((r: any) => !r.tiene_archivo).length}):</h3>
+                      <div className="text-sm text-yellow-700 dark:text-yellow-300 space-y-2 max-h-60 overflow-y-auto">
+                        {result.resultados.filter((r: any) => !r.tiene_archivo).map((r: any, idx: number) => (
+                          <div key={idx} className="border-b border-yellow-200 dark:border-yellow-700 pb-2 last:border-0">
+                            <p className="font-semibold">{r.email}</p>
+                            <p className="text-xs opacity-90 mt-1">⏭️ Omitido: No tiene archivo en calculator_history</p>
+                            {r.valores_en_model_values !== undefined && r.valores_en_model_values > 0 && (
+                              <p className="text-xs opacity-75 mt-1">📊 Valores en model_values: {r.valores_en_model_values} (no eliminados por seguridad)</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      <div className="mt-3 pt-3 border-t border-yellow-200 dark:border-yellow-700">
+                        <p className="text-xs text-yellow-600 dark:text-yellow-400">
+                          💡 Estos modelos fueron omitidos por seguridad. Si necesitas eliminar sus valores, primero archívalos con &quot;🚀 Archivar P2 de Diciembre&quot;.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  {result.resultados.filter((r: any) => r.tiene_archivo && r.error).length > 0 && (
                     <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                      <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Modelos con errores ({result.resultados.filter((r: any) => r.error).length}):</h3>
+                      <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">❌ Modelos con errores ({result.resultados.filter((r: any) => r.tiene_archivo && r.error).length}):</h3>
                       <div className="text-sm text-red-700 dark:text-red-300 space-y-2 max-h-60 overflow-y-auto">
-                        {result.resultados.filter((r: any) => r.error).map((r: any, idx: number) => (
+                        {result.resultados.filter((r: any) => r.tiene_archivo && r.error).map((r: any, idx: number) => (
                           <div key={idx} className="border-b border-red-200 dark:border-red-700 pb-2 last:border-0">
                             <p className="font-semibold">{r.email}</p>
                             <p className="text-xs opacity-90 mt-1 break-words">{r.error}</p>
-                            {r.valores_en_model_values !== undefined && r.valores_en_model_values > 0 && (
-                              <p className="text-xs opacity-75 mt-1">⚠️ Valores en model_values: {r.valores_en_model_values} (no se eliminaron por falta de archivo)</p>
-                            )}
                             {r.plataformas > 0 && (
                               <p className="text-xs opacity-75 mt-1">Plataformas: {r.plataformas}</p>
                             )}
@@ -452,11 +474,6 @@ export default function EmergencyArchiveP2Page() {
                             )}
                           </div>
                         ))}
-                      </div>
-                      <div className="mt-3 pt-3 border-t border-red-200 dark:border-red-700">
-                        <p className="text-xs text-red-600 dark:text-red-400">
-                          💡 <strong>Solución:</strong> Estos modelos necesitan ser archivados primero. Ejecuta &quot;🚀 Archivar P2 de Diciembre&quot; para crear el archivo antes de eliminar.
-                        </p>
                       </div>
                     </div>
                   )}
