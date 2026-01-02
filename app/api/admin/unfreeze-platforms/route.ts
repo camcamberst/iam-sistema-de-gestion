@@ -150,6 +150,37 @@ export async function DELETE(request: NextRequest) {
       all
     });
 
+    // PASO 0: Verificar y marcar el período P2 de diciembre como cerrado si no lo está
+    // Esto asegura que la detección automática no vuelva a congelar las plataformas
+    const p2DecemberDate = '2025-12-16';
+    const p2DecemberType = '16-31';
+    
+    const { data: p2Status } = await supabase
+      .from('calculator_period_closure_status')
+      .select('status')
+      .eq('period_date', p2DecemberDate)
+      .eq('period_type', p2DecemberType)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!p2Status || p2Status.status !== 'completed') {
+      console.log('🔓 [UNFREEZE] Marcando período P2 de diciembre como cerrado para desactivar detección automática...');
+      await supabase
+        .from('calculator_period_closure_status')
+        .upsert({
+          period_date: p2DecemberDate,
+          period_type: p2DecemberType,
+          status: 'completed',
+          closed_at: new Date().toISOString()
+        }, {
+          onConflict: 'period_date,period_type'
+        });
+      console.log('✅ [UNFREEZE] Período P2 de diciembre marcado como cerrado');
+    } else {
+      console.log('✅ [UNFREEZE] Período P2 de diciembre ya estaba marcado como cerrado');
+    }
+
     let query = supabase
       .from('calculator_early_frozen_platforms')
       .delete();
