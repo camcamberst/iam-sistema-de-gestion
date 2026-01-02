@@ -140,42 +140,62 @@ async function deleteValuesLogic() {
 
   const emailMap = new Map(users?.map(u => [u.id, u.email]) || []);
 
-  // 3. Verificar que cada modelo tiene archivo
-  console.log('🔍 [DELETE-VALUES] Verificando que los modelos tienen archivo...');
-  const resultados = [];
-  let modelosConArchivo = 0;
-  let modelosSinArchivo = 0;
+    // 3. Verificar que cada modelo tiene archivo
+    console.log('🔍 [DELETE-VALUES] Verificando que los modelos tienen archivo...');
+    const resultados = [];
+    let modelosConArchivo = 0;
+    let modelosSinArchivo = 0;
 
-  for (const modelId of modelosConValores) {
-    const email = emailMap.get(modelId) || modelId;
-    const resultado: any = {
-      model_id: modelId,
-      email,
-      tiene_archivo: false,
-      registros_archivados: 0,
-      valores_eliminados: 0,
-      error: null
-    };
+    for (const modelId of modelosConValores) {
+      const email = emailMap.get(modelId) || modelId;
+      const resultado: any = {
+        model_id: modelId,
+        email,
+        tiene_archivo: false,
+        registros_archivados: 0,
+        valores_eliminados: 0,
+        error: null,
+        valores_en_model_values: 0
+      };
 
-    // Verificar archivo
-    const { data: archivo, error: archivoError } = await supabase
-      .from('calculator_history')
-      .select('platform_id')
-      .eq('model_id', modelId)
-      .eq('period_date', startDate)
-      .eq('period_type', periodType);
+      // Contar valores en model_values para este modelo
+      const { count: valoresCount } = await supabase
+        .from('model_values')
+        .select('*', { count: 'exact', head: true })
+        .eq('model_id', modelId)
+        .gte('period_date', startDate)
+        .lte('period_date', endDate)
+        .lte('updated_at', fechaLimiteISO);
+      
+      resultado.valores_en_model_values = valoresCount || 0;
 
-    if (!archivoError && archivo && archivo.length > 0) {
-      resultado.tiene_archivo = true;
-      resultado.registros_archivados = archivo.length;
-      modelosConArchivo++;
-    } else {
-      modelosSinArchivo++;
-      resultado.error = 'No tiene archivo en calculator_history';
+      // Verificar archivo - buscar en diferentes posibles period_date
+      // A veces el period_date puede ser diferente (ej: 2025-12-31 en lugar de 2025-12-16)
+      const { data: archivo, error: archivoError } = await supabase
+        .from('calculator_history')
+        .select('platform_id, period_date')
+        .eq('model_id', modelId)
+        .eq('period_type', periodType)
+        .gte('period_date', startDate)
+        .lte('period_date', endDate);
+
+      if (!archivoError && archivo && archivo.length > 0) {
+        resultado.tiene_archivo = true;
+        resultado.registros_archivados = archivo.length;
+        resultado.period_date_encontrado = archivo[0].period_date; // Mostrar qué period_date se encontró
+        modelosConArchivo++;
+        console.log(`✅ [DELETE-VALUES] ${email}: Tiene ${archivo.length} registros archivados (period_date: ${archivo[0].period_date})`);
+      } else {
+        modelosSinArchivo++;
+        resultado.error = `No tiene archivo en calculator_history para period_date=${startDate}, period_type=${periodType}`;
+        if (archivoError) {
+          resultado.error += ` (Error: ${archivoError.message})`;
+        }
+        console.log(`⚠️ [DELETE-VALUES] ${email}: NO tiene archivo. Valores en model_values: ${resultado.valores_en_model_values}`);
+      }
+
+      resultados.push(resultado);
     }
-
-    resultados.push(resultado);
-  }
 
   console.log(`✅ [DELETE-VALUES] Modelos con archivo: ${modelosConArchivo}`);
   console.log(`⚠️ [DELETE-VALUES] Modelos sin archivo: ${modelosSinArchivo}`);
