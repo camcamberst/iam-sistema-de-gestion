@@ -248,14 +248,22 @@ async function deleteValuesLogic(forceDelete: boolean = false) {
     console.log(`🗑️ [DELETE-VALUES] Eliminando valores de ${resultado.email}...`);
 
     try {
-      const { data: deletedData, error: deleteError } = await supabase
+      // Si es modo forzado, eliminar sin filtro de updated_at para asegurar que se eliminen todos
+      let deleteQuery = supabase
         .from('model_values')
         .delete()
         .eq('model_id', resultado.model_id)
         .gte('period_date', startDate)
-        .lte('period_date', endDate)
-        .lte('updated_at', fechaLimiteISO)
-        .select();
+        .lte('period_date', endDate);
+      
+      // Solo aplicar filtro de updated_at si NO es modo forzado
+      if (!forceDelete) {
+        deleteQuery = deleteQuery.lte('updated_at', fechaLimiteISO);
+      } else {
+        console.log(`   ⚠️ [DELETE-VALUES] MODO FORZADO: Eliminando TODOS los valores del período (sin filtro de updated_at)`);
+      }
+      
+      const { data: deletedData, error: deleteError } = await deleteQuery.select();
 
       if (deleteError) {
         resultado.error = `Error eliminando: ${deleteError.message}`;
