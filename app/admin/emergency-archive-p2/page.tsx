@@ -347,7 +347,7 @@ export default function EmergencyArchiveP2Page() {
               {loading ? '⏳ Archivando...' : '🚀 Archivar P2 de Diciembre'}
             </button>
             <button
-              onClick={handleDelete}
+              onClick={() => handleDelete(false)}
               disabled={loading || verifying || cleaning || deleting}
               className="px-6 py-3 bg-orange-600 hover:bg-orange-700 disabled:bg-gray-400 text-white font-semibold rounded-lg shadow-md transition-colors duration-200 disabled:cursor-not-allowed active:scale-95 touch-manipulation"
             >
