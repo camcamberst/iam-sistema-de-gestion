@@ -106,6 +106,7 @@ export async function GET(request: NextRequest) {
       periods: string[];
       values_by_period: Record<string, number>;
       latest_update: string;
+      totals?: any[];
     }>();
 
     valores?.forEach((v: any) => {
