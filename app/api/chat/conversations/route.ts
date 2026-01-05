@@ -272,6 +272,11 @@ async function validateConversationPermission(
     return { allowed: true };
   }
 
+  // Admin puede conversar con otro admin
+  if (sender.role === 'admin' && receiver.role === 'admin') {
+    return { allowed: true };
+  }
+
   // Verificar si pertenecen al mismo grupo (para modelo-admin)
   if ((sender.role === 'modelo' && receiver.role === 'admin') || 
       (sender.role === 'admin' && receiver.role === 'modelo')) {
