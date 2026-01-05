@@ -366,7 +366,7 @@ export default function EmergencyArchiveP2Page() {
             <h3 className="font-semibold text-red-800 dark:text-red-200 mb-2">🔄 Reset Completo de Calculadora:</h3>
             <p className="text-sm text-red-700 dark:text-red-300 mb-3">
               <strong>⚠️ PELIGRO:</strong> Esto eliminará TODOS los valores y totales de la calculadora, sin importar el período. 
-              Úsalo solo si necesitas resetear completamente una calculadora a "0".
+              Úsalo solo si necesitas resetear completamente una calculadora a &quot;0&quot;.
             </p>
             <div className="space-y-3">
               <div>
