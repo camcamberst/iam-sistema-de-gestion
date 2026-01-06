@@ -55,7 +55,7 @@ export type Permission =
   | 'modelo.sessions.create'
   
 
-export type Role = 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
+export type Role = 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' | 'superadmin_aff';
 
 export interface PermissionMatrix {
   [key: string]: Permission[];
@@ -151,6 +151,35 @@ export const PERMISSION_MATRIX: PermissionMatrix = {
     'admin.reports.read',
     'modelo.profile.read',
     'modelo.sessions.read'
+  ],
+  
+  superadmin_aff: [
+    // Superadmin de estudio afiliado - Permisos dentro de su burbuja
+    // Usuarios (solo su entorno)
+    'admin.users.read',
+    'admin.users.create',
+    'admin.users.update',
+    'admin.users.activate',
+    'admin.users.deactivate',
+    // Grupos/Sedes (solo su entorno)
+    'admin.groups.read',
+    'admin.groups.create',
+    'admin.groups.update',
+    'admin.groups.assign',
+    'admin.groups.remove',
+    // Organización (solo lectura de su entorno)
+    'admin.organization.read',
+    // Reportes (solo su entorno)
+    'admin.reports.read',
+    'admin.reports.export',
+    // Auditoría (solo su entorno)
+    'admin.audit.read',
+    // Modelos (solo su entorno)
+    'modelo.profile.read',
+    'modelo.profile.update',
+    'modelo.sessions.read',
+    'modelo.sessions.create'
+    // NO tiene: admin.roles, admin.system, admin.organization.settings, admin.reports.analytics
   ]
 };
 
@@ -296,7 +325,8 @@ export function createPermissionAudit(
 
 export function getRoleHierarchy(): Record<Role, number> {
   return {
-    super_admin: 5,
+    super_admin: 6,
+    superadmin_aff: 5, // Superadmin afiliado (mismo nivel que admin pero con restricciones)
     admin: 4,
     gestor: 3,
     fotografia: 2,
