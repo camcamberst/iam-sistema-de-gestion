@@ -41,6 +41,9 @@ interface SedeData {
   totalUsdSede: number;
   totalCopModelo: number;
   totalCopSede: number;
+  isAffiliate?: boolean;
+  commission_percentage?: number;
+  sedes_count?: number;
 }
 
 interface BillingSummary {
@@ -420,10 +423,118 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     </div>
                   </div>
 
-                  {/* Grupos de la Sede */}
+                  {/* Grupos de la Sede o Resumen de Afiliado */}
                   {expandedSedes.has(sede.sedeId) && (
                     <div className="bg-gray-50/30 dark:bg-gray-600/30 border-t border-gray-200/50 dark:border-gray-500/50">
-                      {sede.groups?.map((group) => (
+                      {sede.isAffiliate ? (
+                        // Vista para afiliados: mostrar grupos y modelos (igual que Agencia Innova)
+                        <div>
+                          {/* Resumen de comisión del afiliado */}
+                          <div className="px-6 py-4 border-b border-gray-200/50">
+                            <div className="bg-white/70 rounded-xl shadow-sm border border-white/20 p-4">
+                              <div className="grid grid-cols-3 gap-4 mb-3">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-blue-600 dark:text-blue-400">${formatCurrency(sede.totalUsdBruto)}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Bruto Total</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-green-600 dark:text-green-400">${formatCurrency(sede.totalUsdModelo)}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Afiliado</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-purple-600 dark:text-purple-400">${formatCurrency(sede.totalUsdSede)}</div>
+                                  <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Comisión Innova</div>
+                                </div>
+                              </div>
+                              <div className="text-xs text-gray-600 dark:text-gray-500 text-center pt-3 border-t border-gray-200/50">
+                                Comisión: {sede.commission_percentage || 10}% • Total COP: ${formatCurrency(sede.totalCopSede)}
+                              </div>
+                            </div>
+                          </div>
+                          {/* Grupos del afiliado */}
+                          {sede.groups?.map((group) => (
+                            <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
+                              {/* Header de Grupo */}
+                              <div 
+                                className="px-3 sm:px-6 py-2.5 sm:py-4 cursor-pointer hover:bg-white/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
+                                onClick={() => toggleGroupExpansion(group.groupId)}
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                                  <div className="flex items-center space-x-2 sm:space-x-4">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                      <svg 
+                                        className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-900 truncate">{group.groupName}</h4>
+                                      <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{group.totalModels} modelos</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
+                                    <div className="text-right">
+                                      <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* Modelos del Grupo */}
+                              {expandedGroups.has(group.groupId) && (
+                                <div className="bg-white/40 border-t border-gray-200/30">
+                                  <div className="px-6 py-4">
+                                    <div className="space-y-3">
+                                      {group.models.map((model) => (
+                                        <div key={model.modelId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                                          <div className="flex items-center space-x-2 sm:space-x-3">
+                                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                              <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-600 dark:text-gray-500">
+                                                {model.email.charAt(0).toUpperCase()}
+                                              </span>
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <div className="font-medium text-gray-800 dark:text-gray-800 text-xs sm:text-sm truncate">{model.email}</div>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
+                                            <div className="text-right">
+                                              <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
+                                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
+                                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
+                                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        sede.groups?.map((group) => (
                         <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
                           {/* Header de Grupo - Aplicando políticas estéticas */}
                           <div 
@@ -534,8 +645,20 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           </svg>
                         </div>
                         <div className="min-w-0 flex-1">
-                          <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-900 truncate">{sede.sedeName}</h3>
-                          <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{sede.totalModels} modelos • {sede.groups?.length || 0} grupos</p>
+                          <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-900 truncate">
+                            {sede.sedeName}
+                            {sede.isAffiliate && (
+                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                Afiliado
+                              </span>
+                            )}
+                          </h3>
+                          <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">
+                            {sede.isAffiliate 
+                              ? `${sede.totalModels} modelos • ${sede.sedes_count || 0} sedes • ${sede.commission_percentage || 10}% comisión`
+                              : `${sede.totalModels} modelos • ${sede.groups?.length || 0} grupos`
+                            }
+                          </p>
                         </div>
                       </div>
                       <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
@@ -555,11 +678,119 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     </div>
                   </div>
 
-                      {/* Modelos de la Sede (expandible) */}
+                      {/* Modelos de la Sede o Resumen de Afiliado (expandible) */}
                       {expandedSedes.has(sede.sedeId) && (
                         <div className="bg-gray-50/30 dark:bg-gray-600/30 border-t border-gray-200/50 dark:border-gray-500/50">
-                          <div className="space-y-2 p-4">
-                            {sede.models.map((model) => (
+                          {sede.isAffiliate ? (
+                            // Vista para afiliados: mostrar grupos y modelos
+                            <div>
+                              {/* Resumen de comisión del afiliado */}
+                              <div className="px-4 py-4 border-b border-gray-200/50">
+                                <div className="bg-white/70 rounded-xl shadow-sm border border-white/20 p-4">
+                                  <div className="grid grid-cols-3 gap-4 mb-3">
+                                    <div className="text-center">
+                                      <div className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">${formatCurrency(sede.totalUsdBruto)}</div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Bruto Total</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">${formatCurrency(sede.totalUsdModelo)}</div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Afiliado</div>
+                                    </div>
+                                    <div className="text-center">
+                                      <div className="text-base sm:text-lg font-bold text-purple-600 dark:text-purple-400">${formatCurrency(sede.totalUsdSede)}</div>
+                                      <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Comisión Innova</div>
+                                    </div>
+                                  </div>
+                                  <div className="text-xs text-gray-600 dark:text-gray-500 text-center pt-3 border-t border-gray-200/50">
+                                    Comisión: {sede.commission_percentage || 10}% • Total COP: ${formatCurrency(sede.totalCopSede)}
+                                  </div>
+                                </div>
+                              </div>
+                              {/* Grupos del afiliado */}
+                              {sede.groups?.map((group) => (
+                                <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
+                                  {/* Header de Grupo */}
+                                  <div 
+                                    className="px-3 sm:px-4 py-2 sm:py-3 cursor-pointer hover:bg-white/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
+                                    onClick={() => toggleGroupExpansion(group.groupId)}
+                                  >
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                                      <div className="flex items-center space-x-2 sm:space-x-3">
+                                        <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                          <svg 
+                                            className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                            fill="none" 
+                                            stroke="currentColor" 
+                                            viewBox="0 0 24 24"
+                                          >
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                          </svg>
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                          <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-900 truncate">{group.groupName}</h4>
+                                          <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{group.totalModels} modelos</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
+                                        <div className="text-right">
+                                          <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                                        </div>
+                                        <div className="text-right">
+                                          <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                        </div>
+                                      </div>
+                                    </div>
+                                  </div>
+
+                                  {/* Modelos del Grupo */}
+                                  {expandedGroups.has(group.groupId) && (
+                                    <div className="bg-white/40 border-t border-gray-200/30">
+                                      <div className="px-4 py-3">
+                                        <div className="space-y-2">
+                                          {group.models.map((model) => (
+                                            <div key={model.modelId} className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
+                                              <div className="flex items-center space-x-3">
+                                                <div className="w-6 h-6 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">
+                                                  <span className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                                    {model.email.charAt(0).toUpperCase()}
+                                                  </span>
+                                                </div>
+                                                <div>
+                                                  <div className="font-medium text-gray-800 dark:text-gray-800 text-sm">{model.email}</div>
+                                                </div>
+                                              </div>
+                                              <div className="flex items-center space-x-4 text-xs">
+                                                <div className="text-right">
+                                                  <div className="font-semibold text-gray-700 dark:text-gray-700">${formatCurrency(model.usdBruto)}</div>
+                                                  <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                                </div>
+                                                <div className="text-right">
+                                                  <div className="font-semibold text-green-600 dark:text-green-400">${formatCurrency(model.usdModelo)}</div>
+                                                  <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                                </div>
+                                                <div className="text-right">
+                                                  <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(model.usdSede)}</div>
+                                                  <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          ))}
+                                        </div>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <div className="space-y-2 p-4">
+                              {sede.models.map((model) => (
                               <div key={model.modelId} className="flex items-center justify-between p-3 bg-white/60 rounded-lg border border-gray-200/40 hover:bg-white/80 transition-all duration-200">
                                 <div className="flex items-center space-x-3">
                                   <div className="w-6 h-6 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded-lg flex items-center justify-center">

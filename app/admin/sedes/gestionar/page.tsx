@@ -69,6 +69,12 @@ export default function GestionarSedesPage() {
   const [newAffiliateCommission, setNewAffiliateCommission] = useState('10.00');
   const [creatingAffiliate, setCreatingAffiliate] = useState(false);
   
+  // Estados para crear superadmin AFF (opcional)
+  const [createSuperadminAff, setCreateSuperadminAff] = useState(true);
+  const [superadminAffEmail, setSuperadminAffEmail] = useState('');
+  const [superadminAffName, setSuperadminAffName] = useState('');
+  const [superadminAffPassword, setSuperadminAffPassword] = useState('');
+  
   const router = useRouter();
 
   // Función para redirigir al portafolio de la modelo
@@ -417,23 +423,36 @@ export default function GestionarSedesPage() {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
+      const requestBody: any = {
+        name: newAffiliateName.trim(),
+        description: newAffiliateDescription.trim() || null,
+        commission_percentage: parseFloat(newAffiliateCommission) || 10.00
+      };
+
+      // Si se marca para crear superadmin AFF, incluir sus datos
+      if (createSuperadminAff && superadminAffEmail.trim() && superadminAffName.trim() && superadminAffPassword.trim()) {
+        requestBody.superadmin_email = superadminAffEmail.trim();
+        requestBody.superadmin_name = superadminAffName.trim();
+        requestBody.superadmin_password = superadminAffPassword;
+      }
+
       const response = await fetch('/api/admin/affiliates', {
         method: 'POST',
         headers: headers,
-        body: JSON.stringify({
-          name: newAffiliateName.trim(),
-          description: newAffiliateDescription.trim() || null,
-          commission_percentage: parseFloat(newAffiliateCommission) || 10.00
-        })
+        body: JSON.stringify(requestBody)
       });
 
       const result = await response.json();
       
       if (result.success) {
-        setSuccess('Estudio afiliado creado exitosamente');
+        setSuccess(result.message || 'Estudio afiliado creado exitosamente');
         setNewAffiliateName('');
         setNewAffiliateDescription('');
         setNewAffiliateCommission('10.00');
+        setSuperadminAffEmail('');
+        setSuperadminAffName('');
+        setSuperadminAffPassword('');
+        setCreateSuperadminAff(true);
         setShowCreateAffiliate(false);
         // Recargar datos si es necesario
       } else {
@@ -1541,6 +1560,75 @@ export default function GestionarSedesPage() {
                 </p>
               </div>
 
+              {/* Separador */}
+              <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-4">
+                <div className="flex items-center space-x-2 mb-4">
+                  <input
+                    type="checkbox"
+                    id="createSuperadminAff"
+                    checked={createSuperadminAff}
+                    onChange={(e) => setCreateSuperadminAff(e.target.checked)}
+                    className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                  />
+                  <label htmlFor="createSuperadminAff" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                    Crear Superadmin AFF para este estudio
+                  </label>
+                </div>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mb-4">
+                  El Superadmin AFF será el administrador principal del estudio afiliado y tendrá acceso completo a su burbuja.
+                </p>
+
+                {createSuperadminAff && (
+                  <div className="space-y-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg p-4 border border-purple-200 dark:border-purple-800">
+                    <div>
+                      <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                        Email del Superadmin AFF *
+                      </label>
+                      <input
+                        type="email"
+                        value={superadminAffEmail}
+                        onChange={(e) => setSuperadminAffEmail(e.target.value)}
+                        className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                        placeholder="superadmin@estudio.com"
+                        required={createSuperadminAff}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                        Nombre del Superadmin AFF *
+                      </label>
+                      <input
+                        type="text"
+                        value={superadminAffName}
+                        onChange={(e) => setSuperadminAffName(e.target.value)}
+                        className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                        placeholder="Nombre completo"
+                        required={createSuperadminAff}
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                        Contraseña Temporal *
+                      </label>
+                      <input
+                        type="password"
+                        value={superadminAffPassword}
+                        onChange={(e) => setSuperadminAffPassword(e.target.value)}
+                        className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                        placeholder="Mínimo 6 caracteres"
+                        minLength={6}
+                        required={createSuperadminAff}
+                      />
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                        El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               <div className="flex space-x-3 pt-2 flex-nowrap">
                 <button
                   type="button"
@@ -1549,6 +1637,10 @@ export default function GestionarSedesPage() {
                     setNewAffiliateName('');
                     setNewAffiliateDescription('');
                     setNewAffiliateCommission('10.00');
+                    setSuperadminAffEmail('');
+                    setSuperadminAffName('');
+                    setSuperadminAffPassword('');
+                    setCreateSuperadminAff(true);
                     setError('');
                     setSuccess('');
                   }}

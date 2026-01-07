@@ -14,6 +14,7 @@ import {
   createBackupSnapshot
 } from '@/lib/calculator/period-closure-helpers';
 import { sendBotNotification } from '@/lib/chat/bot-notifications';
+import { calculateAndSaveAllAffiliatesBilling } from '@/lib/affiliates/billing';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -387,10 +388,35 @@ export async function POST(request: NextRequest) {
     
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'closing_summary');
 
-    // FASE 4: (ELIMINADA - YA SE HIZO EN FASE 1 ATÓMICA)
+    // FASE 4: Calcular y guardar facturación de afiliados
+    console.log('💰 [CLOSE-PERIOD] Calculando facturación de afiliados...');
+    const periodTypeForAffiliates = periodToCloseType === '1-15' ? 'P1' : 'P2';
+    
+    // Obtener tasa USD_COP actual
+    const { data: rate } = await supabase
+      .from('rates')
+      .select('value')
+      .eq('kind', 'USD→COP')
+      .eq('active', true)
+      .is('valid_to', null)
+      .order('valid_from', { ascending: false })
+      .limit(1)
+      .single();
+    
+    const usdCopRate = rate?.value ? parseFloat(rate.value) : undefined;
+    
+    const affiliateBillingResult = await calculateAndSaveAllAffiliatesBilling(
+      periodToCloseDate,
+      periodTypeForAffiliates,
+      usdCopRate
+    );
+    
+    console.log(`✅ [CLOSE-PERIOD] Facturación de afiliados calculada: ${affiliateBillingResult.success} exitosos, ${affiliateBillingResult.errors} errores`);
+
+    // FASE 5: (ELIMINADA - YA SE HIZO EN FASE 1 ATÓMICA)
     // El borrado ya ocurrió de forma segura dentro de atomicArchiveAndReset
 
-    // FASE 5: Notificar a modelos
+    // FASE 6: Notificar a modelos
     for (const model of models || []) {
       try {
         await sendBotNotification(
@@ -422,7 +448,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // FASE 7: Limpiar registros de early freeze del período cerrado
+    // FASE 8: Limpiar registros de early freeze del período cerrado
     // IMPORTANTE: Limpiar TODOS los registros de este período, no solo los del período actual
     // porque el early freeze puede haberse ejecutado con diferentes period_date
     console.log('🧹 [CLOSE-PERIOD] Limpiando registros de early freeze del período cerrado...');
@@ -469,7 +495,7 @@ export async function POST(request: NextRequest) {
       console.log(`✅ [CLOSE-PERIOD] Registros de early freeze limpiados: ${totalDeleted} registros eliminados`);
     }
 
-    // FASE 8: Marcar como completado
+    // FASE 9: Marcar como completado
     await updateClosureStatus(periodToCloseDate, periodToCloseType, 'completed', {
       backup_summary: {
         total: models?.length || 0,

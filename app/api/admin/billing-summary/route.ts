@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer } from '@/lib/supabase-server';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
+import { calculateAffiliateBilling } from '@/lib/affiliates/billing';
 
 // Usar service role key para bypass RLS
 const supabase = supabaseServer;
@@ -885,8 +886,241 @@ export async function GET(request: NextRequest) {
         // Agregar todos los grupos a Agencia Innova
         agenciaInnova.groups = Array.from(groupMap.values());
 
-        // Retornar solo Agencia Innova como sede principal
-        groupedData = [agenciaInnova];
+        // Calcular facturación de afiliados (solo para super_admin)
+        const affiliateBillingData: any[] = [];
+        const { data: affiliateStudios } = await supabase
+          .from('affiliate_studios')
+          .select('id, name, commission_percentage')
+          .eq('is_active', true);
+
+        if (affiliateStudios && affiliateStudios.length > 0) {
+          // Determinar período (P1 o P2)
+          const periodType = day <= 15 ? 'P1' : 'P2';
+          
+          // Obtener tasa USD_COP actual
+          const { data: rate } = await supabase
+            .from('rates')
+            .select('value')
+            .eq('kind', 'USD→COP')
+            .eq('active', true)
+            .is('valid_to', null)
+            .order('valid_from', { ascending: false })
+            .limit(1)
+            .single();
+
+          const usdCopRate = rate?.value ? parseFloat(rate.value) : 3900;
+
+          // Calcular facturación para cada afiliado
+          for (const studio of affiliateStudios) {
+            // Obtener modelos del afiliado
+            const { data: affiliateModels, error: modelsError } = await supabase
+              .from('users')
+              .select('id, email, name')
+              .eq('affiliate_studio_id', studio.id)
+              .eq('role', 'modelo')
+              .eq('is_active', true);
+
+            if (modelsError || !affiliateModels || affiliateModels.length === 0) {
+              continue;
+            }
+
+            const affiliateModelIds = affiliateModels.map(m => m.id);
+
+            // Obtener grupos de los modelos del afiliado
+            const { data: affiliateUserGroups, error: groupsError } = await supabase
+              .from('user_groups')
+              .select(`
+                user_id,
+                groups!inner(
+                  id,
+                  name
+                )
+              `)
+              .in('user_id', affiliateModelIds);
+
+            if (groupsError) {
+              console.error('❌ [BILLING-SUMMARY] Error obteniendo grupos de afiliado:', groupsError);
+            }
+
+            // Crear mapa de grupos por modelo
+            const affiliateModelGroupsMap = new Map();
+            affiliateUserGroups?.forEach(ug => {
+              if (ug.groups) {
+                affiliateModelGroupsMap.set(ug.user_id, ug.groups);
+              }
+            });
+
+            // Obtener datos de facturación de los modelos del afiliado (similar a billingData)
+            let affiliateModelsBillingData: any[] = [];
+            
+            if (isActivePeriod) {
+              // Período activo: usar calculator_totals
+              const { data: affiliateTotals, error: totalsError } = await supabase
+                .from('calculator_totals')
+                .select('*')
+                .in('model_id', affiliateModelIds)
+                .eq('affiliate_studio_id', studio.id)
+                .gte('period_date', startStr)
+                .lte('period_date', endStr)
+                .order('period_date', { ascending: false });
+
+              if (!totalsError && affiliateTotals && affiliateTotals.length > 0) {
+                // Agrupar totales por modelo_id, tomando el más reciente
+                const totalsByModel = new Map();
+                affiliateTotals.forEach(t => {
+                  const existing = totalsByModel.get(t.model_id);
+                  if (!existing || new Date(t.updated_at) > new Date(existing.updated_at)) {
+                    totalsByModel.set(t.model_id, t);
+                  }
+                });
+
+                affiliateModelsBillingData = affiliateModels.map(model => {
+                  const modelTotal = totalsByModel.get(model.id);
+                  const modelGroup = affiliateModelGroupsMap.get(model.id);
+                  
+                  const usdBruto = parseFloat(modelTotal?.total_usd_bruto || 0);
+                  const usdModelo = parseFloat(modelTotal?.total_usd_modelo || 0);
+                  const usdSede = usdBruto - usdModelo;
+                  const copModelo = usdModelo * usdCopRate;
+                  const copSede = usdSede * usdCopRate;
+
+                  return {
+                    modelId: model.id,
+                    email: model.email.split('@')[0],
+                    name: model.name,
+                    groupId: modelGroup?.id,
+                    groupName: modelGroup?.name,
+                    usdBruto,
+                    usdModelo,
+                    usdSede,
+                    copModelo,
+                    copSede
+                  };
+                });
+              }
+            } else {
+              // Período cerrado: usar calculator_history
+              const { data: affiliateHistory, error: historyError } = await supabase
+                .from('calculator_history')
+                .select('model_id, value_usd_bruto, value_usd_modelo')
+                .in('model_id', affiliateModelIds)
+                .eq('affiliate_studio_id', studio.id)
+                .eq('period_date', periodDate)
+                .eq('period_type', periodType === 'P1' ? '1-15' : '16-31');
+
+              if (!historyError && affiliateHistory && affiliateHistory.length > 0) {
+                // Agrupar por modelo y sumar
+                const historyByModel = new Map<string, { usd_bruto: number; usd_modelo: number }>();
+                
+                affiliateHistory.forEach(h => {
+                  const existing = historyByModel.get(h.model_id);
+                  if (existing) {
+                    existing.usd_bruto += parseFloat(h.value_usd_bruto || 0);
+                    existing.usd_modelo += parseFloat(h.value_usd_modelo || 0);
+                  } else {
+                    historyByModel.set(h.model_id, {
+                      usd_bruto: parseFloat(h.value_usd_bruto || 0),
+                      usd_modelo: parseFloat(h.value_usd_modelo || 0)
+                    });
+                  }
+                });
+
+                affiliateModelsBillingData = affiliateModels.map(model => {
+                  const modelHistory = historyByModel.get(model.id) || { usd_bruto: 0, usd_modelo: 0 };
+                  const modelGroup = affiliateModelGroupsMap.get(model.id);
+                  
+                  const usdBruto = modelHistory.usd_bruto;
+                  const usdModelo = modelHistory.usd_modelo;
+                  const usdSede = usdBruto - usdModelo;
+                  const copModelo = usdModelo * usdCopRate;
+                  const copSede = usdSede * usdCopRate;
+
+                  return {
+                    modelId: model.id,
+                    email: model.email.split('@')[0],
+                    name: model.name,
+                    groupId: modelGroup?.id,
+                    groupName: modelGroup?.name,
+                    usdBruto,
+                    usdModelo,
+                    usdSede,
+                    copModelo,
+                    copSede
+                  };
+                });
+              }
+            }
+
+            // Calcular totales del afiliado
+            const affiliateTotalUsdBruto = affiliateModelsBillingData.reduce((acc, m) => acc + m.usdBruto, 0);
+            const affiliateTotalUsdModelo = affiliateModelsBillingData.reduce((acc, m) => acc + m.usdModelo, 0);
+            const affiliateTotalUsdSede = affiliateTotalUsdBruto - affiliateTotalUsdModelo;
+            const affiliateTotalCopModelo = affiliateModelsBillingData.reduce((acc, m) => acc + m.copModelo, 0);
+            const affiliateTotalCopSede = affiliateModelsBillingData.reduce((acc, m) => acc + m.copSede, 0);
+
+            // Calcular comisión para Innova
+            const commissionPercentage = parseFloat(studio.commission_percentage) || 10;
+            const commissionUsd = affiliateTotalUsdBruto * (commissionPercentage / 100);
+            const commissionCop = Math.round(commissionUsd * usdCopRate);
+
+            // Agrupar modelos por grupos dentro del afiliado
+            const affiliateGroupMap = new Map();
+            affiliateModelsBillingData.forEach(model => {
+              const groupId = model.groupId;
+              
+              if (!affiliateGroupMap.has(groupId)) {
+                affiliateGroupMap.set(groupId, {
+                  groupId: groupId,
+                  groupName: model.groupName || 'Sin Grupo',
+                  models: [],
+                  totalModels: 0,
+                  totalUsdBruto: 0,
+                  totalUsdModelo: 0,
+                  totalUsdSede: 0,
+                  totalCopModelo: 0,
+                  totalCopSede: 0
+                });
+              }
+
+              const group = affiliateGroupMap.get(groupId);
+              group.models.push(model);
+              group.totalModels += 1;
+              group.totalUsdBruto += model.usdBruto;
+              group.totalUsdModelo += model.usdModelo;
+              group.totalUsdSede += model.usdSede;
+              group.totalCopModelo += model.copModelo;
+              group.totalCopSede += model.copSede;
+            });
+
+            // Crear entrada de afiliado con grupos y modelos
+            affiliateBillingData.push({
+              sedeId: `affiliate-${studio.id}`,
+              sedeName: `${studio.name} - Afiliado`,
+              isAffiliate: true,
+              affiliate_studio_id: studio.id,
+              groups: Array.from(affiliateGroupMap.values()),
+              models: affiliateModelsBillingData,
+              totalModels: affiliateModelsBillingData.length,
+              totalUsdBruto: affiliateTotalUsdBruto,
+              totalUsdModelo: affiliateTotalUsdModelo - commissionUsd, // Monto para el afiliado (sin comisión)
+              totalUsdSede: commissionUsd, // Comisión para Innova
+              totalCopModelo: affiliateTotalCopModelo - commissionCop,
+              totalCopSede: commissionCop,
+              commission_percentage: commissionPercentage,
+              sedes_count: affiliateGroupMap.size
+            });
+          }
+        }
+
+        // Actualizar summary para incluir comisiones de afiliados
+        const totalAffiliateCommissions = affiliateBillingData.reduce((acc, aff) => acc + aff.totalUsdSede, 0);
+        const totalAffiliateCommissionsCop = affiliateBillingData.reduce((acc, aff) => acc + aff.totalCopSede, 0);
+        
+        summary.totalUsdSede += totalAffiliateCommissions;
+        summary.totalCopSede += totalAffiliateCommissionsCop;
+
+        // Retornar Agencia Innova + Afiliados
+        groupedData = [agenciaInnova, ...affiliateBillingData];
       } else if (isAdmin && adminGroups.length > 0) {
         // Para Admin: Crear sedes individuales solo para las asignadas
         console.log('🔍 [BILLING-SUMMARY] Creando sedes individuales para admin');

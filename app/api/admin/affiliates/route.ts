@@ -145,7 +145,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { name, description, commission_percentage } = body;
+    const { 
+      name, 
+      description, 
+      commission_percentage,
+      // Datos del superadmin AFF (opcional - puede crearse después)
+      superadmin_email,
+      superadmin_name,
+      superadmin_password
+    } = body;
 
     // Validaciones
     if (!name || name.trim() === '') {
@@ -199,10 +207,70 @@ export async function POST(request: NextRequest) {
       }, { status: 500 });
     }
 
+    // Si se proporcionaron datos del superadmin AFF, crearlo automáticamente
+    let superadminCreated = null;
+    if (superadmin_email && superadmin_name && superadmin_password) {
+      try {
+        console.log('👤 [AFFILIATES] Creando superadmin AFF para el estudio:', newStudio.id);
+        
+        // 1. Crear usuario en Auth
+        const { data: authData, error: authError } = await supabase.auth.admin.createUser({
+          email: superadmin_email.trim(),
+          password: superadmin_password,
+          email_confirm: true,
+          user_metadata: {
+            name: superadmin_name.trim(),
+            role: 'superadmin_aff'
+          }
+        });
+
+        if (authError || !authData.user) {
+          console.error('❌ [AFFILIATES] Error creando usuario en Auth:', authError);
+          // No fallar la creación del estudio si falla el superadmin
+          // Solo loguear el error
+        } else {
+          // 2. Crear perfil en users con affiliate_studio_id
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .insert({
+              id: authData.user.id,
+              name: superadmin_name.trim(),
+              email: superadmin_email.trim(),
+              role: 'superadmin_aff',
+              affiliate_studio_id: newStudio.id, // 🔑 ASOCIACIÓN CRÍTICA
+              is_active: true
+            })
+            .select()
+            .single();
+
+          if (userError) {
+            console.error('❌ [AFFILIATES] Error creando perfil de usuario:', userError);
+            // Intentar eliminar el usuario de Auth si falla
+            await supabase.auth.admin.deleteUser(authData.user.id);
+          } else {
+            superadminCreated = {
+              id: userData.id,
+              email: userData.email,
+              name: userData.name
+            };
+            console.log('✅ [AFFILIATES] Superadmin AFF creado exitosamente:', superadminCreated);
+          }
+        }
+      } catch (superadminError: any) {
+        console.error('❌ [AFFILIATES] Error inesperado creando superadmin AFF:', superadminError);
+        // No fallar la creación del estudio
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      data: newStudio,
-      message: 'Estudio afiliado creado exitosamente'
+      data: {
+        ...newStudio,
+        superadmin_aff: superadminCreated
+      },
+      message: superadminCreated 
+        ? 'Estudio afiliado y superadmin AFF creados exitosamente'
+        : 'Estudio afiliado creado exitosamente. Recuerda crear el superadmin AFF después.'
     }, { status: 201 });
 
   } catch (error: any) {
