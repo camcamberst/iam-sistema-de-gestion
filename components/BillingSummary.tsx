@@ -829,9 +829,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                 </div>
               ))}
             </div>
-              )}
-            </div>
-          ) : billingData.length > 0 ? (
+              ) : (
                 /* Fallback: Vista de modelos individuales si no hay groupedData */
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl border border-gray-200/50">
@@ -909,8 +907,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     </div>
                   )}
                 </div>
-              )}
+              ))}
             </div>
+              )}
           ) : (
             <div className="text-center py-12 text-gray-400 dark:text-gray-500">
               <div className="w-16 h-16 bg-gray-100/60 rounded-2xl flex items-center justify-center mx-auto mb-4">
