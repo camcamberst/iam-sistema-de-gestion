@@ -910,6 +910,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               ))}
             </div>
               )}
+            </div>
           ) : (
             <div className="text-center py-12 text-gray-400 dark:text-gray-500">
               <div className="w-16 h-16 bg-gray-100/60 rounded-2xl flex items-center justify-center mx-auto mb-4">
