@@ -822,7 +822,6 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               </div>
                             ))}
                           </div>
-                          )
                         </div>
                       )}
                     </div>
