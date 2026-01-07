@@ -534,87 +534,89 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           ))}
                         </div>
                       ) : (
-                        sede.groups?.map((group) => (
-                          <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
-                          {/* Header de Grupo - Aplicando políticas estéticas */}
-                          <div 
-                            className="px-3 sm:px-6 py-2.5 sm:py-4 cursor-pointer hover:bg-white/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
-                            onClick={() => toggleGroupExpansion(group.groupId)}
-                          >
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
-                              <div className="flex items-center space-x-2 sm:space-x-4">
-                                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
-                                  <svg 
-                                    className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
-                                    fill="none" 
-                                    stroke="currentColor" 
-                                    viewBox="0 0 24 24"
-                                  >
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                  </svg>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                  <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-900 truncate">{group.groupName}</h4>
-                                  <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{group.totalModels} modelos</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                                <div className="text-right">
-                                  <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
-                                </div>
-                                <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Modelos del Grupo */}
-                          {expandedGroups.has(group.groupId) && (
-                            <div className="bg-white/40 border-t border-gray-200/30">
-                              <div className="px-6 py-4">
-                                <div className="space-y-3">
-                                  {group.models.map((model) => (
-                                    <div key={model.modelId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
-                                      <div className="flex items-center space-x-2 sm:space-x-3">
-                                        <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                          <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-600 dark:text-gray-500">
-                                            {model.email.charAt(0).toUpperCase()}
-                                          </span>
-                                        </div>
-                                        <div className="min-w-0 flex-1">
-                                          <div className="font-medium text-gray-800 dark:text-gray-800 text-xs sm:text-sm truncate">{model.email}</div>
-                                        </div>
-                                      </div>
-                                      <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                                        <div className="text-right">
-                                          <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
-                                        </div>
-                                        <div className="text-right">
-                                          <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
-                                        </div>
-                                        <div className="text-right">
-                                          <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
-                                        </div>
-                                      </div>
+                        <>
+                          {sede.groups?.map((group) => (
+                            <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
+                              {/* Header de Grupo - Aplicando políticas estéticas */}
+                              <div 
+                                className="px-3 sm:px-6 py-2.5 sm:py-4 cursor-pointer hover:bg-white/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
+                                onClick={() => toggleGroupExpansion(group.groupId)}
+                              >
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                                  <div className="flex items-center space-x-2 sm:space-x-4">
+                                    <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gray-100 rounded-md flex items-center justify-center flex-shrink-0">
+                                      <svg 
+                                        className={`w-2.5 h-2.5 sm:w-3 sm:h-3 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedGroups.has(group.groupId) ? 'rotate-90' : ''}`}
+                                        fill="none" 
+                                        stroke="currentColor" 
+                                        viewBox="0 0 24 24"
+                                      >
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                      </svg>
                                     </div>
-                                  ))}
+                                    <div className="min-w-0 flex-1">
+                                      <h4 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-900 truncate">{group.groupName}</h4>
+                                      <p className="text-[10px] sm:text-xs text-gray-600 dark:text-gray-600 dark:text-gray-500">{group.totalModels} modelos</p>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
+                                    <div className="text-right">
+                                      <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                                    </div>
+                                    <div className="text-right">
+                                      <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
+                                      <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                    </div>
+                                  </div>
                                 </div>
                               </div>
+
+                              {/* Modelos del Grupo */}
+                              {expandedGroups.has(group.groupId) && (
+                                <div className="bg-white/40 border-t border-gray-200/30">
+                                  <div className="px-6 py-4">
+                                    <div className="space-y-3">
+                                      {group.models.map((model) => (
+                                        <div key={model.modelId} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl shadow-sm border border-white/20 hover:shadow-md hover:bg-white/80 transition-all duration-300">
+                                          <div className="flex items-center space-x-2 sm:space-x-3">
+                                            <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gray-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                              <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-600 dark:text-gray-500">
+                                                {model.email.charAt(0).toUpperCase()}
+                                              </span>
+                                            </div>
+                                            <div className="min-w-0 flex-1">
+                                              <div className="font-medium text-gray-800 dark:text-gray-800 text-xs sm:text-sm truncate">{model.email}</div>
+                                            </div>
+                                          </div>
+                                          <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
+                                            <div className="text-right">
+                                              <div className="font-semibold text-blue-600 dark:text-blue-400 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
+                                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="font-semibold text-green-600 dark:text-green-400 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
+                                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                            </div>
+                                            <div className="text-right">
+                                              <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
+                                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                            </div>
+                                          </div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
                             </div>
-                          )}
-                        </div>
-                      ))
-                  )}
+                          ))}
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -820,12 +822,15 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                               </div>
                             ))}
                           </div>
+                          )
                         </div>
                       )}
                     </div>
-                  ))}
+                  )}
                 </div>
-              ) : (
+              ))}
+            </div>
+          ) : billingData.length > 0 ? (
                 /* Fallback: Vista de modelos individuales si no hay groupedData */
                 <div className="space-y-2 sm:space-y-3">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0 p-3 sm:p-4 bg-white/70 rounded-xl border border-gray-200/50">
