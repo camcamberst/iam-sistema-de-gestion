@@ -535,7 +535,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                         </div>
                       ) : (
                         sede.groups?.map((group) => (
-                        <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
+                          <div key={group.groupId} className="border-b border-gray-200/30 last:border-b-0">
                           {/* Header de Grupo - Aplicando políticas estéticas */}
                           <div 
                             className="px-3 sm:px-6 py-2.5 sm:py-4 cursor-pointer hover:bg-white/50 transition-all duration-200 active:scale-[0.98] touch-manipulation"
@@ -613,7 +613,8 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                             </div>
                           )}
                         </div>
-                      ))}
+                      ))
+                  )}
                     </div>
                   )}
                 </div>
