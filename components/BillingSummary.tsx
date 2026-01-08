@@ -41,6 +41,9 @@ interface SedeData {
   totalUsdSede: number;
   totalCopModelo: number;
   totalCopSede: number;
+  isAffiliate?: boolean;
+  commission_percentage?: number;
+  sedes_count?: number;
 }
 
 interface BillingSummary {
