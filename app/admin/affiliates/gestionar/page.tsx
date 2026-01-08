@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase';
 import StandardModal from '@/components/ui/StandardModal';
 
 export default function GestionarAfiliadosPage() {
@@ -8,6 +10,7 @@ export default function GestionarAfiliadosPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [userRole, setUserRole] = useState<string>('');
+  const router = useRouter();
   
   // Estados para crear afiliado
   const [showCreateAffiliate, setShowCreateAffiliate] = useState(false);
@@ -29,13 +32,47 @@ export default function GestionarAfiliadosPage() {
 
   const loadUserInfo = async () => {
     try {
-      const userDataStr = localStorage.getItem('userData');
-      if (userDataStr) {
-        const userData = JSON.parse(userDataStr);
+      setLoading(true);
+      
+      // Primero intentar obtener desde Supabase
+      const { data: auth } = await supabase.auth.getUser();
+      if (!auth?.user) {
+        setLoading(false);
+        return;
+      }
+
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id, name, email, role')
+        .eq('id', auth.user.id)
+        .single();
+
+      if (userData) {
         setUserRole(userData.role || '');
+      } else {
+        // Fallback a localStorage si no hay datos en Supabase
+        const userDataStr = localStorage.getItem('user');
+        if (userDataStr) {
+          try {
+            const parsed = JSON.parse(userDataStr);
+            setUserRole(parsed.role || '');
+          } catch (err) {
+            console.error('Error parsing user data from localStorage:', err);
+          }
+        }
       }
     } catch (err) {
       console.error('Error cargando información del usuario:', err);
+      // Fallback a localStorage en caso de error
+      try {
+        const userDataStr = localStorage.getItem('user');
+        if (userDataStr) {
+          const parsed = JSON.parse(userDataStr);
+          setUserRole(parsed.role || '');
+        }
+      } catch (localErr) {
+        console.error('Error parsing user data from localStorage:', localErr);
+      }
     } finally {
       setLoading(false);
     }
