@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useState, useRef } from "react";
+import { ReactNode, useEffect, useState, useRef, useMemo } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { supabase } from '@/lib/supabase';
@@ -170,10 +170,21 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
   // ===========================================
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
   // ===========================================
-  const getMenuItems = () => {
-    // Obtener el rol del usuario desde localStorage
-    const userData = typeof window !== 'undefined' ? localStorage.getItem('user') : null;
-    const userRole = userData ? JSON.parse(userData).role : 'modelo';
+  const menuItems = useMemo(() => {
+    // Usar userInfo si está disponible, sino intentar desde localStorage
+    let userRole = 'modelo';
+    if (userInfo?.role) {
+      userRole = userInfo.role;
+    } else if (isClient) {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        try {
+          userRole = JSON.parse(userData).role || 'modelo';
+        } catch (e) {
+          console.error('Error parsing user data:', e);
+        }
+      }
+    }
 
     // Menú base para todos los roles
     const baseItems = [
@@ -232,9 +243,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
     }
 
     return baseItems;
-  };
-
-  const menuItems = getMenuItems();
+  }, [userInfo, isClient]);
 
   const isActive = (href: string) => pathname === href;
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
