@@ -78,6 +78,44 @@ export default function GestionarAfiliadosPage() {
     }
   };
 
+  // Helper para obtener token válido
+  const getValidToken = async (): Promise<string | null> => {
+    try {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      
+      if (sessionError || !session) {
+        console.error('Error obteniendo sesión:', sessionError);
+        return null;
+      }
+
+      // Verificar si el token está cerca de expirar (menos de 60 segundos)
+      const expiresAt = session.expires_at;
+      if (expiresAt) {
+        const now = Math.floor(Date.now() / 1000);
+        const expiresIn = expiresAt - now;
+        
+        if (expiresIn < 60) {
+          // Refrescar el token si está cerca de expirar
+          const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
+          
+          if (refreshError) {
+            console.error('Error refrescando sesión:', refreshError);
+            return session.access_token; // Usar el token actual aunque esté cerca de expirar
+          }
+          
+          if (refreshedSession) {
+            return refreshedSession.access_token;
+          }
+        }
+      }
+      
+      return session.access_token;
+    } catch (error) {
+      console.error('Error obteniendo token:', error);
+      return null;
+    }
+  };
+
   const handleCreateAffiliate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newAffiliateName.trim()) return;
@@ -87,13 +125,18 @@ export default function GestionarAfiliadosPage() {
     setSuccess('');
     
     try {
-      // Obtener token de autorización
-      const token = localStorage.getItem('supabase.auth.token');
-      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      // Obtener token de autorización desde Supabase
+      const token = await getValidToken();
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización. Por favor, inicia sesión nuevamente.');
+        return;
       }
+
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      };
 
       const requestBody: any = {
         name: newAffiliateName.trim(),
