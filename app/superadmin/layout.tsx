@@ -209,12 +209,13 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
 
       baseItems.push({
         id: 'sedes',
-        label: 'Gestión Sedes',
+        label: 'Gestión Agencia',
         href: '#', // Sin navegación directa
         subItems: [
           { label: 'Gestionar Sedes', href: '/admin/sedes/gestionar' },
           { label: 'Portafolio Modelos', href: '/admin/sedes/portafolio' },
-          { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard' }
+          { label: 'Dashboard Sedes', href: '/admin/sedes/dashboard' },
+          { label: 'Gestionar Afiliados', href: '/admin/affiliates/gestionar' }
         ]
       });
 
