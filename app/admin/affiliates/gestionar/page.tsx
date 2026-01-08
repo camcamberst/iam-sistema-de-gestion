@@ -5,12 +5,37 @@ import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import StandardModal from '@/components/ui/StandardModal';
 
+interface AffiliateStudio {
+  id: string;
+  name: string;
+  description: string | null;
+  commission_percentage: number;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+  created_by: string;
+  created_by_user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
+  stats: {
+    users: number;
+    sedes: number;
+    models: number;
+  };
+}
+
 export default function GestionarAfiliadosPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [userRole, setUserRole] = useState<string>('');
   const router = useRouter();
+  
+  // Estados para lista de afiliados
+  const [affiliates, setAffiliates] = useState<AffiliateStudio[]>([]);
+  const [loadingAffiliates, setLoadingAffiliates] = useState(false);
   
   // Estados para crear afiliado
   const [showCreateAffiliate, setShowCreateAffiliate] = useState(false);
@@ -25,10 +50,16 @@ export default function GestionarAfiliadosPage() {
   const [superadminAffName, setSuperadminAffName] = useState('');
   const [superadminAffPassword, setSuperadminAffPassword] = useState('');
 
-  // Cargar información del usuario
+  // Cargar información del usuario y afiliados
   useEffect(() => {
     loadUserInfo();
   }, []);
+
+  useEffect(() => {
+    if (userRole === 'super_admin') {
+      loadAffiliates();
+    }
+  }, [userRole]);
 
   const loadUserInfo = async () => {
     try {
@@ -75,6 +106,39 @@ export default function GestionarAfiliadosPage() {
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Cargar lista de afiliados
+  const loadAffiliates = async () => {
+    try {
+      setLoadingAffiliates(true);
+      const token = await getValidToken();
+      
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización.');
+        return;
+      }
+
+      const response = await fetch('/api/admin/affiliates', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAffiliates(result.data || []);
+      } else {
+        setError('Error cargando afiliados: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error cargando afiliados:', err);
+      setError('Error de conexión al cargar afiliados');
+    } finally {
+      setLoadingAffiliates(false);
     }
   };
 
@@ -169,7 +233,8 @@ export default function GestionarAfiliadosPage() {
         setSuperadminAffPassword('');
         setCreateSuperadminAff(true);
         setShowCreateAffiliate(false);
-        // Recargar datos si es necesario
+        // Recargar lista de afiliados
+        await loadAffiliates();
       } else {
         setError('Error creando afiliado: ' + (result.error || 'Error desconocido'));
       }
@@ -254,29 +319,153 @@ export default function GestionarAfiliadosPage() {
           </div>
         </div>
 
-        {/* Contenido principal */}
+        {/* Mensajes de error/success */}
+        {error && (
+          <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <p className="text-sm text-red-700 font-medium">{error}</p>
+            </div>
+          </div>
+        )}
+        
+        {success && (
+          <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
+            <div className="flex items-center space-x-3">
+              <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <p className="text-sm text-green-700 font-medium">{success}</p>
+            </div>
+          </div>
+        )}
+
+        {/* Lista de Afiliados */}
         <div className="relative">
           <div className="absolute inset-0 bg-gradient-to-r from-purple-600/5 to-pink-600/5 rounded-xl blur-xl"></div>
           <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 sm:p-8 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-purple-900/15 dark:ring-0.5 dark:ring-purple-400/20">
-            <div className="text-center py-12">
-              <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
-                <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-                </svg>
-              </div>
-              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
-                Gestión de Afiliados
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">
+                Estudios Afiliados
               </h2>
-              <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 max-w-md mx-auto">
-                Aquí podrás gestionar todos los estudios afiliados. Las funcionalidades adicionales se irán agregando próximamente.
-              </p>
-              <button
-                onClick={() => setShowCreateAffiliate(true)}
-                className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base"
-              >
-                Crear Nuevo Afiliado
-              </button>
+              {loadingAffiliates && (
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-600"></div>
+              )}
             </div>
+
+            {loadingAffiliates ? (
+              <div className="text-center py-12">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-400">Cargando afiliados...</p>
+              </div>
+            ) : affiliates.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-16 h-16 sm:w-20 sm:h-20 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-md">
+                  <svg className="w-8 h-8 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                  No hay afiliados registrados
+                </h3>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">
+                  Crea tu primer estudio afiliado para comenzar
+                </p>
+                <button
+                  onClick={() => setShowCreateAffiliate(true)}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm sm:text-base"
+                >
+                  Crear Nuevo Afiliado
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {affiliates.map((affiliate) => (
+                  <div
+                    key={affiliate.id}
+                    className="bg-white/60 dark:bg-gray-800/60 backdrop-blur-sm rounded-lg p-4 sm:p-6 border border-gray-200/50 dark:border-gray-600/50 hover:border-purple-300 dark:hover:border-purple-600 transition-all duration-200 hover:shadow-md"
+                  >
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center shadow-md">
+                            <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">
+                              {affiliate.name}
+                            </h3>
+                            {affiliate.description && (
+                              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                                {affiliate.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div className="flex flex-wrap gap-4 mt-3">
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Comisión:</span>
+                            <span className="text-sm font-semibold text-purple-600 dark:text-purple-400">
+                              {affiliate.commission_percentage}%
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Usuarios:</span>
+                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {affiliate.stats.users}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Sedes:</span>
+                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {affiliate.stats.sedes}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <span className="text-xs text-gray-500 dark:text-gray-400">Modelos:</span>
+                            <span className="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                              {affiliate.stats.models}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center space-x-2">
+                        <div className={`px-3 py-1 rounded-full text-xs font-medium ${
+                          affiliate.is_active
+                            ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                            : 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                        }`}>
+                          {affiliate.is_active ? 'Activo' : 'Inactivo'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {affiliate.created_by_user && (
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                          Creado por: <span className="font-medium">{affiliate.created_by_user.name}</span> • 
+                          {' '}{new Date(affiliate.created_at).toLocaleDateString('es-ES', {
+                            year: 'numeric',
+                            month: 'long',
+                            day: 'numeric'
+                          })}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
