@@ -108,7 +108,7 @@ export async function calculateAffiliateBilling(
       // Período activo: usar calculator_totals
       const { data: totals, error: totalsError } = await supabase
         .from('calculator_totals')
-        .select('total_usd_bruto, total_usd_modelo')
+        .select('model_id, total_usd_bruto, total_usd_modelo, updated_at')
         .in('model_id', modelIds)
         .eq('affiliate_studio_id', affiliateStudioId)
         .gte('period_date', startDate)
@@ -135,7 +135,7 @@ export async function calculateAffiliateBilling(
       // Período cerrado: usar calculator_history
       const { data: history, error: historyError } = await supabase
         .from('calculator_history')
-        .select('value_usd_bruto, value_usd_modelo')
+        .select('model_id, value_usd_bruto, value_usd_modelo')
         .in('model_id', modelIds)
         .eq('affiliate_studio_id', affiliateStudioId)
         .eq('period_date', periodDate)
