@@ -109,39 +109,6 @@ export default function GestionarAfiliadosPage() {
     }
   };
 
-  // Cargar lista de afiliados
-  const loadAffiliates = async () => {
-    try {
-      setLoadingAffiliates(true);
-      const token = await getValidToken();
-      
-      if (!token) {
-        setError('Error: No se pudo obtener el token de autorización.');
-        return;
-      }
-
-      const response = await fetch('/api/admin/affiliates', {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-
-      const result = await response.json();
-      
-      if (result.success) {
-        setAffiliates(result.data || []);
-      } else {
-        setError('Error cargando afiliados: ' + (result.error || 'Error desconocido'));
-      }
-    } catch (err) {
-      console.error('Error cargando afiliados:', err);
-      setError('Error de conexión al cargar afiliados');
-    } finally {
-      setLoadingAffiliates(false);
-    }
-  };
-
   // Helper para obtener token válido
   const getValidToken = async (): Promise<string | null> => {
     try {
@@ -177,6 +144,39 @@ export default function GestionarAfiliadosPage() {
     } catch (error) {
       console.error('Error obteniendo token:', error);
       return null;
+    }
+  };
+
+  // Cargar lista de afiliados
+  const loadAffiliates = async () => {
+    try {
+      setLoadingAffiliates(true);
+      const token = await getValidToken();
+      
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización.');
+        return;
+      }
+
+      const response = await fetch('/api/admin/affiliates', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setAffiliates(result.data || []);
+      } else {
+        setError('Error cargando afiliados: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error cargando afiliados:', err);
+      setError('Error de conexión al cargar afiliados');
+    } finally {
+      setLoadingAffiliates(false);
     }
   };
 
