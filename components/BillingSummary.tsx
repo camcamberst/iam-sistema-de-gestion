@@ -828,7 +828,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                   )}
                 </div>
               ))}
-            </div>
+                </div>
               ) : (
                 /* Fallback: Vista de modelos individuales si no hay groupedData */
                 <div className="space-y-2 sm:space-y-3">
