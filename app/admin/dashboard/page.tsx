@@ -264,6 +264,7 @@ export default function AdminDashboard() {
             <PlatformTimeline 
               userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'} 
               userGroups={user.groups}
+              userId={user.id}
             />
           </div>
         )}

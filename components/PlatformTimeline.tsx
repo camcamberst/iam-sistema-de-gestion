@@ -23,16 +23,17 @@ interface PlatformRequest {
 interface PlatformTimelineProps {
   userRole: 'admin' | 'super_admin' | 'superadmin_aff';
   userGroups?: string[];
+  userId?: string;
 }
 
-export default function PlatformTimeline({ userRole, userGroups }: PlatformTimelineProps) {
+export default function PlatformTimeline({ userRole, userGroups, userId }: PlatformTimelineProps) {
   const [requests, setRequests] = useState<PlatformRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     loadTimelineData();
-  }, [userRole, userGroups]);
+  }, [userRole, userGroups, userId]);
 
   // Debug temporal: verificar fechas
   useEffect(() => {
@@ -61,7 +62,8 @@ export default function PlatformTimeline({ userRole, userGroups }: PlatformTimel
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           userRole,
-          userGroups: userGroups || []
+          userGroups: userGroups || [],
+          userId: userId || ''
         })
       });
 
