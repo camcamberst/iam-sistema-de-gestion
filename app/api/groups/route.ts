@@ -220,11 +220,12 @@ export async function POST(request: NextRequest) {
 
       userRole = userData.role;
       affiliateStudioId = userData.affiliate_studio_id;
+      userOrganizationId = userData.organization_id;
       
       console.log('🔍 [API] Datos del usuario:', {
         role: userRole,
         affiliate_studio_id: affiliateStudioId,
-        organization_id: userData.organization_id
+        organization_id: userOrganizationId
       });
     } catch (authError) {
       console.error('❌ [API] Error en autenticación:', authError);
