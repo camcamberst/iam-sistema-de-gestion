@@ -282,6 +282,13 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Obtener affiliate_studio_id del modelo para asignarlo al anticipo
+    const { data: modelUser } = await supabase
+      .from('users')
+      .select('affiliate_studio_id')
+      .eq('id', model_id)
+      .single();
+
     // Crear anticipo
     const anticipoData: any = {
       model_id,
@@ -290,7 +297,8 @@ export async function POST(request: NextRequest) {
       porcentaje_solicitado,
       monto_disponible,
       medio_pago,
-      estado: 'pendiente'
+      estado: 'pendiente',
+      affiliate_studio_id: modelUser?.affiliate_studio_id || null
     };
 
     // Agregar datos según el medio de pago
