@@ -80,7 +80,7 @@ export default function SolicitudesPendientesPage() {
         .eq('id', auth.user.id)
         .single();
 
-      if (!userData || (userData.role !== 'admin' && userData.role !== 'super_admin')) {
+      if (!userData || (userData.role !== 'admin' && userData.role !== 'super_admin' && userData.role !== 'superadmin_aff')) {
         router.push('/login');
         return;
       }

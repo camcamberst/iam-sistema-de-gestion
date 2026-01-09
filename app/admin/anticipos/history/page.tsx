@@ -129,7 +129,7 @@ export default function HistorialAnticiposPage() {
 
       console.log('🔍 [LOAD USER] User data:', userData);
 
-      if (!userData || (userData.role !== 'admin' && userData.role !== 'super_admin')) {
+      if (!userData || (userData.role !== 'admin' && userData.role !== 'super_admin' && userData.role !== 'superadmin_aff')) {
         console.log('🔍 [LOAD USER] Usuario no autorizado, redirigiendo a login');
         router.push('/login');
         return;
