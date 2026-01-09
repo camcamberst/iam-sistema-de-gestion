@@ -63,13 +63,14 @@ export async function GET(request: NextRequest) {
     // Verificar el rol del usuario para aplicar reglas específicas
     const { data: userData } = await supabase
       .from('users')
-      .select('role')
+      .select('role, affiliate_studio_id')
       .eq('id', authenticatedUserId)
       .single();
 
     const userRole = userData?.role || 'modelo';
     const isModel = userRole === 'modelo';
     const isAdmin = userRole === 'admin' || userRole === 'super_admin';
+    const isSuperAdminAff = userRole === 'superadmin_aff';
 
     // 🔒 REGLA ESTRICTA: Si es modelo, DEBE coincidir con el modelId solicitado
     if (isModel && authenticatedUserId !== modelId) {
@@ -80,9 +81,35 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // Admins y super_admins pueden ver cualquier historial (para soporte administrativo)
+    // Si es superadmin_aff o admin de afiliado, verificar que el modelo pertenezca al mismo estudio afiliado
+    if (isSuperAdminAff || (userRole === 'admin' && userData?.affiliate_studio_id)) {
+      // Obtener información del modelo
+      const { data: modelData, error: modelError } = await supabase
+        .from('users')
+        .select('affiliate_studio_id')
+        .eq('id', modelId)
+        .single();
+
+      if (modelError || !modelData) {
+        return NextResponse.json({
+          success: false,
+          error: 'Modelo no encontrado'
+        }, { status: 404 });
+      }
+
+      // Verificar que el modelo pertenezca al mismo estudio afiliado
+      if (modelData.affiliate_studio_id !== userData?.affiliate_studio_id) {
+        console.warn(`🚫 [CALCULATOR-HISTORIAL] Intento de acceso no autorizado: Usuario ${authenticatedUserId} (affiliate: ${userData?.affiliate_studio_id}) intentó acceder a datos de ${modelId} (affiliate: ${modelData.affiliate_studio_id})`);
+        return NextResponse.json({
+          success: false,
+          error: 'No autorizado para consultar este historial'
+        }, { status: 403 });
+      }
+    }
+
+    // Admins y super_admins de Innova pueden ver cualquier historial (para soporte administrativo)
     // Pero si el usuario autenticado no es admin y no coincide con modelId, denegar
-    if (!isAdmin && authenticatedUserId !== modelId) {
+    if (!isAdmin && !isSuperAdminAff && authenticatedUserId !== modelId) {
       console.warn(`🚫 [CALCULATOR-HISTORIAL] Intento de acceso no autorizado: Usuario ${authenticatedUserId} intentó acceder a datos de ${modelId}`);
       return NextResponse.json({
         success: false,
