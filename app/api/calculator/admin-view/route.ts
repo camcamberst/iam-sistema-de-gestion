@@ -26,11 +26,10 @@ export async function GET(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // 1. Verificar permisos (Omitido por brevedad, asumimos validación de middleware/cliente o existente)
-    // ... (Mismo código de validación de roles que antes)
+    // 1. Verificar permisos
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
-      .select('role, groups:user_groups(group_id)')
+      .select('role, affiliate_studio_id, groups:user_groups(group_id)')
       .eq('id', adminId)
       .single();
 
@@ -40,15 +39,16 @@ export async function GET(request: NextRequest) {
 
     const isSuperAdmin = adminUser.role === 'super_admin';
     const isAdmin = adminUser.role === 'admin';
+    const isSuperAdminAff = adminUser.role === 'superadmin_aff';
 
-    if (!isSuperAdmin && !isAdmin) {
+    if (!isSuperAdmin && !isAdmin && !isSuperAdminAff) {
       return NextResponse.json({ success: false, error: 'No tienes permisos' }, { status: 403 });
     }
 
     // 2. Obtener modelo
     const { data: model, error: modelError } = await supabase
       .from('users')
-      .select('id, name, email, role, groups:user_groups(group_id, group:groups(id, name))')
+      .select('id, name, email, role, affiliate_studio_id, groups:user_groups(group_id, group:groups(id, name))')
       .eq('id', modelId)
       .eq('role', 'modelo')
       .single();
@@ -57,8 +57,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Modelo no encontrado' }, { status: 404 });
     }
 
-    // 3. Verificar acceso a grupo (Mismo código que antes)
-    if (isAdmin && !isSuperAdmin) {
+    // 3. Verificar acceso según el rol
+    if (isSuperAdminAff || (isAdmin && adminUser.affiliate_studio_id)) {
+      // Superadmin_aff y admin de afiliado solo pueden ver modelos de su estudio afiliado
+      if (model.affiliate_studio_id !== adminUser.affiliate_studio_id) {
+        return NextResponse.json({ success: false, error: 'Sin acceso al modelo' }, { status: 403 });
+      }
+    } else if (isAdmin && !isSuperAdmin) {
+      // Admin de Innova solo puede ver modelos de sus grupos
       const adminGroupIds = adminUser.groups?.map((g: any) => g.group_id) || [];
       const modelGroupIds = model.groups?.map((g: any) => g.group_id) || [];
       const hasAccess = modelGroupIds.some((groupId: string) => adminGroupIds.includes(groupId));
