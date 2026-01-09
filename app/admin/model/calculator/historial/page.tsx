@@ -172,6 +172,10 @@ export default function CalculatorHistorialPage() {
           }
         });
         
+        // Asegurar que siempre haya al menos el año actual
+        const currentYear = new Date().getFullYear();
+        uniqueYears.add(currentYear);
+        
         setAvailableYears(Array.from(uniqueYears).sort((a, b) => b - a).map(y => ({ value: y.toString(), label: y.toString() })));
         setAvailableMonths([
           { value: '1', label: 'Enero' }, { value: '2', label: 'Febrero' }, { value: '3', label: 'Marzo' },
