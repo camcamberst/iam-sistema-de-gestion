@@ -216,12 +216,19 @@ export default function GestionarSedesPage() {
         
         // Buscar TODOS los admins asignados a esta sede específica
         const adminsAsignados = admins.filter((user: any) => {
-          const tieneEstaSede = user.user_groups?.some((ug: any) => ug.id === sedeId);
+          // user_groups tiene estructura anidada: [{ groups: { id, name } }]
+          // o estructura plana: [{ id, name }] dependiendo de cómo se procese
+          const tieneEstaSede = user.user_groups?.some((ug: any) => {
+            // Verificar ambas estructuras posibles
+            const groupId = ug.groups?.id || ug.id;
+            return groupId === sedeId;
+          });
           console.log(`🔍 [DEBUG] Admin ${user.name}:`, {
             user_groups: user.user_groups,
             tieneEstaSede,
             sedeId,
-            sedesAsignadas: user.user_groups?.length || 0
+            sedesAsignadas: user.user_groups?.length || 0,
+            estructura: user.user_groups?.[0] ? Object.keys(user.user_groups[0]) : 'sin grupos'
           });
           return tieneEstaSede;
         });
@@ -243,6 +250,17 @@ export default function GestionarSedesPage() {
               return sedesActual < sedesMenor ? actual : menor;
             });
             console.log('🔍 [DEBUG] Admin seleccionado (menos sedes):', adminAsignado.name, `(${adminAsignado.user_groups?.length || 0} sedes)`);
+          }
+        }
+        
+        // Si no se encontró admin, limpiar el estado
+        if (!adminAsignado) {
+          console.log('⚠️ [DEBUG] No se encontró admin asignado a esta sede');
+          setSedeAdminInfo(null);
+        } else {
+          console.log('✅ [DEBUG] Admin encontrado y asignado:', adminAsignado.name);
+          setSedeAdminInfo(adminAsignado);
+        }
           }
         }
         
