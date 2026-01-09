@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import StandardModal from '@/components/ui/StandardModal';
 import { getModelDisplayName } from '@/utils/model-display';
+import { supabase } from '@/lib/supabase';
 
 interface Group {
   id: string;
@@ -125,14 +126,15 @@ export default function GestionarSedesPage() {
         userGroups
       });
       
-      // Obtener sedes disponibles según jerarquía del usuario
+      // Obtener token de autenticación para que el filtro de afiliado funcione
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Usar GET con autenticación para que el filtro de afiliado funcione correctamente
       const groupsResponse = await fetch('/api/groups', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userRole: userRole, 
-          userGroups: userGroups 
-        })
+        method: 'GET',
+        headers: session?.access_token ? {
+          'Authorization': `Bearer ${session.access_token}`
+        } : {}
       });
       const groupsData = await groupsResponse.json();
       
@@ -257,14 +259,15 @@ export default function GestionarSedesPage() {
       setLoading(true);
       setError(''); // Limpiar errores previos
       
-      // Cargar grupos (sedes) según jerarquía del usuario
+      // Obtener token de autenticación para que el filtro de afiliado funcione
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      // Cargar grupos (sedes) usando GET con autenticación para que el filtro de afiliado funcione
       const groupsResponse = await fetch('/api/groups', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          userRole: userRole,
-          userGroups: userGroups
-        })
+        method: 'GET',
+        headers: session?.access_token ? {
+          'Authorization': `Bearer ${session.access_token}`
+        } : {}
       });
       
       if (!groupsResponse.ok) {
@@ -318,12 +321,12 @@ export default function GestionarSedesPage() {
 
     setSubmitting(true);
     try {
-      // Obtener token de autorización
-      const token = localStorage.getItem('supabase.auth.token');
+      // Obtener token de autorización desde Supabase
+      const { data: { session } } = await supabase.auth.getSession();
       const headers: HeadersInit = { 'Content-Type': 'application/json' };
       
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
       }
 
       const response = await fetch('/api/groups', {
@@ -818,8 +821,8 @@ export default function GestionarSedesPage() {
 
           {/* Columna Derecha: Crear Sede y Crear Room */}
           <div className="flex flex-col space-y-6 h-full">
-            {/* Crear Nueva Sede - Solo para Super Admin */}
-            {userRole === 'super_admin' && (
+            {/* Crear Nueva Sede - Para Super Admin y Superadmin AFF */}
+            {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
               <div className="relative flex-1">
                 <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 to-indigo-500/5 rounded-2xl blur-sm"></div>
                 <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 h-full flex flex-col dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
@@ -1026,8 +1029,8 @@ export default function GestionarSedesPage() {
         </div>
         */}
 
-        {/* Modal Crear Sede - Solo para Super Admin */}
-        {showCreateGroup && userRole === 'super_admin' && (
+        {/* Modal Crear Sede - Para Super Admin y Superadmin AFF */}
+        {showCreateGroup && (userRole === 'super_admin' || userRole === 'superadmin_aff') && (
           <StandardModal
             isOpen={showCreateGroup}
             onClose={() => setShowCreateGroup(false)}
