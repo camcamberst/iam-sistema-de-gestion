@@ -9,7 +9,7 @@ interface User {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'admin' | 'modelo';
+  role: 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff';
   groups: string[];
   organization_id: string;
   is_active: boolean;
