@@ -24,7 +24,7 @@ export default function CreateUserPage() {
   const [availableRooms, setAvailableRooms] = useState<Array<{id: string, room_name: string}>>([]);
   const [loadingRooms, setLoadingRooms] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{role: string, groups: string[]} | null>(null);
+  const [currentUser, setCurrentUser] = useState<{role: string, groups: string[], affiliate_studio_id?: string | null} | null>(null);
 
   // Formatear el nombre con mayúscula inicial en cada palabra
   const titleCaseWords = (input: string) => {
@@ -67,13 +67,14 @@ export default function CreateUserPage() {
         setLoadingGroups(true);
         
         // Cargar usuario actual
-        const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
           try {
             const { data: userData, error } = await supabase
               .from('users')
               .select(`
                 role,
+                affiliate_studio_id,
                 user_groups(
                   groups!inner(
                     id,
@@ -81,7 +82,7 @@ export default function CreateUserPage() {
                   )
                 )
               `)
-              .eq('id', user.id)
+              .eq('id', session.user.id)
               .single();
             
             if (error) {
@@ -89,13 +90,15 @@ export default function CreateUserPage() {
               // Fallback: usar datos básicos
               setCurrentUser({
                 role: 'admin', // Asumir admin por defecto
-                groups: []
+                groups: [],
+                affiliate_studio_id: null
               });
             } else if (userData) {
               const userGroups = userData.user_groups?.map((ug: any) => ug.groups.id) || [];
               setCurrentUser({
                 role: userData.role,
-                groups: userGroups
+                groups: userGroups,
+                affiliate_studio_id: userData.affiliate_studio_id
               });
             }
           } catch (err) {
@@ -103,15 +106,21 @@ export default function CreateUserPage() {
             // Fallback: usar datos básicos
             setCurrentUser({
               role: 'admin', // Asumir admin por defecto
-              groups: []
+              groups: [],
+              affiliate_studio_id: null
             });
           }
         }
 
-        // Cargar grupos
-        const res = await fetch('/api/groups');
-        const data = await res.json();
-        if (data.success) setGroups(data.groups);
+        // Cargar grupos con autenticación para que el filtro de afiliado funcione
+        const { data: { session: groupsSession } } = await supabase.auth.getSession();
+        const groupsRes = await fetch('/api/groups', {
+          headers: groupsSession?.access_token ? {
+            'Authorization': `Bearer ${groupsSession.access_token}`
+          } : {}
+        });
+        const groupsData = await groupsRes.json();
+        if (groupsData.success) setGroups(groupsData.groups);
       } finally {
         setLoadingGroups(false);
       }
@@ -174,9 +183,15 @@ export default function CreateUserPage() {
       
       console.log('🔍 [FRONTEND] Enviando datos a la API:', apiData);
       
+      // Obtener token de autenticación para que la API pueda identificar al creador
+      const { data: { session } } = await supabase.auth.getSession();
+      
       const res = await fetch("/api/users", { 
         method: "POST", 
-        headers: { "Content-Type": "application/json" }, 
+        headers: { 
+          "Content-Type": "application/json",
+          ...(session?.access_token ? { "Authorization": `Bearer ${session.access_token}` } : {})
+        }, 
         body: JSON.stringify(apiData) 
       });
       
@@ -347,6 +362,13 @@ export default function CreateUserPage() {
                   return allRoles.filter(role => role.value === 'modelo');
                 }
                 
+                // Superadmin_aff solo puede crear 'modelo' y 'admin' para su estudio
+                if (currentUser?.role === 'superadmin_aff') {
+                  return allRoles.filter(role => 
+                    role.value === 'modelo' || role.value === 'admin'
+                  );
+                }
+                
                 // Super admin puede crear todos los roles
                 return allRoles;
               })()}
@@ -400,7 +422,11 @@ export default function CreateUserPage() {
                         const isDisabled = isSingleRole && form.groups.length > 0 && !isSelected;
                         
                         // Aplicar límites de jerarquía para grupos
+                        // Superadmin_aff puede asignar cualquier grupo de su estudio (ya filtrados por la API)
+                        // Super_admin puede asignar cualquier grupo
+                        // Admin solo puede asignar grupos a los que pertenece
                         const canAssignGroup = currentUser?.role === 'super_admin' || 
+                          currentUser?.role === 'superadmin_aff' ||
                           (currentUser?.role === 'admin' && currentUser?.groups.includes(g.id));
                         
                         return (

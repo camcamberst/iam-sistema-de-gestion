@@ -176,6 +176,7 @@ export async function POST(request: NextRequest) {
     // Obtener información del usuario para verificar permisos
     const authHeader = request.headers.get('authorization');
     let userRole = 'admin'; // Por defecto
+    let affiliateStudioId: string | null = null;
 
     if (authHeader) {
       try {
@@ -186,12 +187,13 @@ export async function POST(request: NextRequest) {
         if (!userError && user) {
           const { data: userData, error: userDataError } = await supabaseServer
             .from('users')
-            .select('role')
+            .select('role, affiliate_studio_id')
             .eq('id', user.id)
             .single();
 
           if (!userDataError && userData) {
             userRole = userData.role;
+            affiliateStudioId = userData.affiliate_studio_id;
           }
         }
       } catch (authError) {
@@ -199,22 +201,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Solo super_admin puede crear grupos
-    if (userRole !== 'super_admin') {
+    // Solo super_admin o superadmin_aff pueden crear grupos
+    if (userRole !== 'super_admin' && userRole !== 'superadmin_aff') {
       return NextResponse.json(
         { success: false, error: 'Solo los super administradores pueden crear grupos' },
         { status: 403 }
       );
     }
 
+    // Preparar datos del grupo
+    const groupData: any = {
+      name: name.trim(),
+      organization_id: '00000000-0000-0000-0000-000000000000', // UUID por defecto
+      is_active: true
+    };
+
+    // Si es superadmin_aff, asignar su affiliate_studio_id
+    if (userRole === 'superadmin_aff' && affiliateStudioId) {
+      groupData.affiliate_studio_id = affiliateStudioId;
+      console.log('🔍 [API] Superadmin_aff creando grupo, asignando affiliate_studio_id:', affiliateStudioId);
+    }
+
     const { data: group, error } = await supabase
       .from('groups')
-      .insert({
-        name: name.trim(),
-        organization_id: '00000000-0000-0000-0000-000000000000', // UUID por defecto
-        is_active: true
-      })
-      .select('id, name, is_active, description, created_at')
+      .insert(groupData)
+      .select('id, name, is_active, description, created_at, affiliate_studio_id')
       .single();
 
     if (error) {
