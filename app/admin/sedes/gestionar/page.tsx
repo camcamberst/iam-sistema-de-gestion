@@ -337,17 +337,25 @@ export default function GestionarSedesPage() {
 
       const result = await response.json();
       
+      console.log('🔍 [FRONTEND] Respuesta de creación de grupo:', result);
+      
       if (result.success) {
         setSuccess('Sede creada exitosamente');
         setNewGroupName('');
         setShowCreateGroup(false);
-        loadData(); // Recargar datos
+        setError(''); // Limpiar errores previos
+        // Recargar datos y sedes disponibles
+        await Promise.all([
+          loadData(),
+          loadAvailableSedes()
+        ]);
       } else {
-        setError('Error creando sede: ' + result.error);
+        console.error('❌ [FRONTEND] Error creando sede:', result.error);
+        setError('Error creando sede: ' + (result.error || 'Error desconocido'));
       }
     } catch (err) {
-      console.error('Error:', err);
-      setError('Error de conexión');
+      console.error('❌ [FRONTEND] Error en handleCreateGroup:', err);
+      setError('Error de conexión: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
       setSubmitting(false);
     }

@@ -230,6 +230,12 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('❌ [API] Error creando grupo:', error);
+      console.error('❌ [API] Detalles del error:', {
+        code: error.code,
+        message: error.message,
+        details: error.details,
+        hint: error.hint
+      });
       
       // Manejar error de duplicado
       if (error.code === '23505') {
@@ -239,8 +245,10 @@ export async function POST(request: NextRequest) {
         );
       }
       
+      // Retornar mensaje de error más descriptivo
+      const errorMessage = error.message || 'Error creando grupo';
       return NextResponse.json(
-        { success: false, error: 'Error creando grupo' },
+        { success: false, error: errorMessage },
         { status: 500 }
       );
     }
