@@ -270,11 +270,9 @@ export default function GestionarSedesPage() {
           console.log('✅ [DEBUG] Admin encontrado y asignado:', adminAsignado.name);
           setSedeAdminInfo(adminAsignado);
         }
-          }
-        }
-        
-        console.log('🔍 [DEBUG] Admin final seleccionado:', adminAsignado);
-        setSedeAdminInfo(adminAsignado);
+      } else {
+        // Si no hay usuarios, limpiar admin
+        setSedeAdminInfo(null);
       }
     } catch (error) {
       console.error('Error cargando información de la sede:', error);
