@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer, supabaseAuth } from '@/lib/supabase-server';
+import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
 
 export async function GET(request: NextRequest) {
   try {
@@ -38,17 +39,49 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    // Obtener usuario completo con affiliate_studio_id para aplicar filtros
+    let currentUser: AuthUser | null = null;
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+        
+        if (!userError && user) {
+          const { data: userData } = await supabaseServer
+            .from('users')
+            .select('role, affiliate_studio_id')
+            .eq('id', user.id)
+            .single();
+
+          if (userData) {
+            currentUser = {
+              id: user.id,
+              role: userData.role,
+              affiliate_studio_id: userData.affiliate_studio_id
+            };
+          }
+        }
+      } catch (authError) {
+        console.log('⚠️ [API] No se pudo obtener usuario completo');
+      }
+    }
+
     // Construir query según el rol
     let query = supabase
       .from('groups')
-      .select('id, name, is_active, description, created_at');
+      .select('id, name, is_active, description, created_at, affiliate_studio_id');
 
-    // Si es admin (no super_admin), filtrar por sus grupos
-    if (userRole !== 'super_admin' && userGroups.length > 0) {
+    // Aplicar filtro de afiliado primero
+    query = addAffiliateFilter(query, currentUser);
+
+    // Si es admin (no super_admin) y no es de afiliado, filtrar por sus grupos
+    if (userRole !== 'super_admin' && !currentUser?.affiliate_studio_id && userGroups.length > 0) {
       query = query.in('id', userGroups);
       console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
-    } else if (userRole === 'super_admin') {
+    } else if (userRole === 'super_admin' && !currentUser?.affiliate_studio_id) {
       console.log('👑 [API] Super admin - mostrando todos los grupos');
+    } else if (currentUser?.affiliate_studio_id) {
+      console.log('🏢 [API] Usuario afiliado - mostrando solo grupos de su estudio');
     }
 
     const { data: groups, error } = await query.order('name', { ascending: true });

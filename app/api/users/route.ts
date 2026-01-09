@@ -9,19 +9,59 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer, supabaseAuth } from '@/lib/supabase-server';
+import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
 
 // =====================================================
 // 📋 GET - Obtener usuarios (SOLO DATOS VITALES)
 // =====================================================
+
+// Helper para obtener usuario autenticado con affiliate_studio_id
+async function getAuthenticatedUser(request: NextRequest): Promise<AuthUser | null> {
+  try {
+    const authHeader = request.headers.get('authorization');
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return null;
+    }
+
+    const token = authHeader.substring(7);
+    const { data: { user }, error } = await supabaseAuth.auth.getUser(token);
+    
+    if (error || !user) {
+      return null;
+    }
+
+    const { data: userData } = await supabaseServer
+      .from('users')
+      .select('role, affiliate_studio_id')
+      .eq('id', user.id)
+      .single();
+
+    if (!userData) {
+      return null;
+    }
+
+    return {
+      id: user.id,
+      role: userData.role,
+      affiliate_studio_id: userData.affiliate_studio_id
+    };
+  } catch (error) {
+    console.error('❌ [API] Error obteniendo usuario autenticado:', error);
+    return null;
+  }
+}
 
 export async function GET(request: NextRequest) {
   try {
     console.log('👥 [API] Obteniendo usuarios (SOLO DATOS VITALES)');
     
     const supabase = supabaseServer;
+    
+    // Obtener usuario autenticado para aplicar filtros de afiliado
+    const currentUser = await getAuthenticatedUser(request);
 
-    // Obtener usuarios con datos vitales (SIN JOIN problemático)
-    const { data: users, error } = await supabase
+    // Construir query base
+    let query = supabase
       .from('users')
       .select(`
         id,
@@ -30,14 +70,20 @@ export async function GET(request: NextRequest) {
         role,
         is_active,
         created_at,
+        affiliate_studio_id,
         user_groups(
           groups!inner(
             id,
             name
           )
         )
-      `)
-      .order('created_at', { ascending: false });
+      `);
+
+    // Aplicar filtro de afiliado si es necesario
+    query = addAffiliateFilter(query, currentUser);
+
+    // Ejecutar query con ordenamiento
+    const { data: users, error } = await query.order('created_at', { ascending: false });
 
     if (error) {
       console.error('❌ [API] Error:', error);
@@ -143,6 +189,9 @@ export async function POST(request: NextRequest) {
     
     const supabase = supabaseServer;
 
+    // Obtener usuario autenticado para asignar affiliate_studio_id si es necesario
+    const currentUser = await getAuthenticatedUser(request);
+
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido:', JSON.stringify(body, null, 2));
     
@@ -158,7 +207,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    console.log('📋 [API] Datos recibidos:', { name, email, role, group_ids });
+    // Si el usuario que crea es superadmin_aff, asignar automáticamente su affiliate_studio_id
+    let affiliateStudioId = null;
+    if (currentUser && (currentUser.role === 'superadmin_aff' || (currentUser.role === 'admin' && currentUser.affiliate_studio_id))) {
+      affiliateStudioId = currentUser.affiliate_studio_id;
+      console.log('🔍 [API] Usuario afiliado creando usuario, asignando affiliate_studio_id:', affiliateStudioId);
+    }
+
+    console.log('📋 [API] Datos recibidos:', { name, email, role, group_ids, affiliateStudioId });
 
     // 1. Crear usuario en Auth (solo datos básicos)
     console.log('🔍 [DEBUG] Creando usuario en Auth con:', { email, name, role });
@@ -188,16 +244,23 @@ export async function POST(request: NextRequest) {
     console.log('🔍 [DEBUG] Auth user metadata:', authData.user.user_metadata);
 
     // 2. Crear perfil en tabla users (solo datos vitales)
-    console.log('🔍 [DEBUG] Creando perfil en users con:', { id: authData.user.id, name, email, role });
+    const userData: any = {
+      id: authData.user.id,
+      name,
+      email,
+      role,
+      is_active: true
+    };
+
+    // Asignar affiliate_studio_id si corresponde
+    if (affiliateStudioId) {
+      userData.affiliate_studio_id = affiliateStudioId;
+    }
+
+    console.log('🔍 [DEBUG] Creando perfil en users con:', userData);
     const { error: profileError } = await supabase
       .from('users')
-      .insert({
-        id: authData.user.id,
-        name,
-        email,
-        role,
-        is_active: true
-      });
+      .insert(userData);
 
     if (profileError) {
       console.error('❌ [API] Error perfil:', profileError);
