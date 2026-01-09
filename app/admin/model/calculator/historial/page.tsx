@@ -144,7 +144,7 @@ export default function CalculatorHistorialPage() {
         const modelIdFromUrl = searchParams.get('modelId');
         let targetId = userRow.id;
         
-        if (modelIdFromUrl && (userRow.role === 'admin' || userRow.role === 'super_admin')) {
+        if (modelIdFromUrl && (userRow.role === 'admin' || userRow.role === 'super_admin' || userRow.role === 'superadmin_aff')) {
           targetId = modelIdFromUrl;
         }
         setTargetModelId(targetId);
