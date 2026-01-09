@@ -517,10 +517,10 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         ]
       });
 
-      // Gestión Agencia (solo de su estudio)
+      // Gestión Sedes (solo de su estudio)
       baseItems.push({
         id: 'sedes',
-        label: 'Gestión Agencia',
+        label: 'Gestión Sedes',
         href: '#',
         subItems: [
           { 
