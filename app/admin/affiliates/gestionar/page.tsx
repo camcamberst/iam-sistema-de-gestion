@@ -19,6 +19,12 @@ interface AffiliateStudio {
     name: string;
     email: string;
   };
+  superadmin_aff?: {
+    id: string;
+    name: string;
+    email: string;
+    is_active: boolean;
+  } | null;
   stats: {
     users: number;
     sedes: number;
@@ -450,8 +456,48 @@ export default function GestionarAfiliadosPage() {
                       </div>
                     </div>
                     
-                    {affiliate.created_by_user && (
+                    {/* Información del Superadmin AFF */}
+                    {affiliate.superadmin_aff ? (
                       <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                            </svg>
+                          </div>
+                          <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Superadmin AFF Encargado:</span>
+                        </div>
+                        <div className="flex items-center space-x-2 ml-8">
+                          <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                            {affiliate.superadmin_aff.name}
+                          </span>
+                          <span className="text-xs text-gray-500 dark:text-gray-400">
+                            ({affiliate.superadmin_aff.email})
+                          </span>
+                          {!affiliate.superadmin_aff.is_active && (
+                            <span className="px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400">
+                              Inactivo
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                        <div className="flex items-center space-x-2">
+                          <div className="w-5 h-5 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
+                            <svg className="w-3 h-3 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                            </svg>
+                          </div>
+                          <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium">
+                            No hay superadmin AFF asignado
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {affiliate.created_by_user && (
+                      <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
                         <p className="text-xs text-gray-500 dark:text-gray-400">
                           Creado por: <span className="font-medium">{affiliate.created_by_user.name}</span> • 
                           {' '}{new Date(affiliate.created_at).toLocaleDateString('es-ES', {

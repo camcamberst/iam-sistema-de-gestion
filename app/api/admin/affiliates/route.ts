@@ -101,6 +101,20 @@ export async function GET(request: NextRequest) {
           }
         }
 
+        // Obtener superadmin AFF encargado del estudio
+        let superadminAff = null;
+        const { data: superadminAffData } = await supabase
+          .from('users')
+          .select('id, name, email, is_active')
+          .eq('affiliate_studio_id', studio.id)
+          .eq('role', 'superadmin_aff')
+          .limit(1)
+          .maybeSingle();
+        
+        if (superadminAffData) {
+          superadminAff = superadminAffData;
+        }
+
         // Contar usuarios del afiliado
         const { count: usersCount } = await supabase
           .from('users')
@@ -123,6 +137,7 @@ export async function GET(request: NextRequest) {
         return {
           ...studio,
           created_by_user: createdByUser,
+          superadmin_aff: superadminAff,
           stats: {
             users: usersCount || 0,
             sedes: sedesCount || 0,
