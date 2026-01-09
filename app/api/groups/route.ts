@@ -177,35 +177,76 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     let userRole = 'admin'; // Por defecto
     let affiliateStudioId: string | null = null;
+    let userId: string | null = null;
 
-    if (authHeader) {
-      try {
-        const token = authHeader.replace('Bearer ', '');
-        
-        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
-        
-        if (!userError && user) {
-          const { data: userData, error: userDataError } = await supabaseServer
-            .from('users')
-            .select('role, affiliate_studio_id')
-            .eq('id', user.id)
-            .single();
+    if (!authHeader) {
+      console.error('❌ [API] No se proporcionó token de autorización');
+      return NextResponse.json(
+        { success: false, error: 'Token de autorización requerido' },
+        { status: 401 }
+      );
+    }
 
-          if (!userDataError && userData) {
-            userRole = userData.role;
-            affiliateStudioId = userData.affiliate_studio_id;
-          }
-        }
-      } catch (authError) {
-        console.log('⚠️ [API] No se pudo obtener info del usuario');
+    try {
+      const token = authHeader.replace('Bearer ', '');
+      
+      const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+      
+      if (userError || !user) {
+        console.error('❌ [API] Error autenticando usuario:', userError);
+        return NextResponse.json(
+          { success: false, error: 'Token inválido o expirado' },
+          { status: 401 }
+        );
       }
+
+      userId = user.id;
+      console.log('🔍 [API] Usuario autenticado:', userId);
+
+      const { data: userData, error: userDataError } = await supabaseServer
+        .from('users')
+        .select('role, affiliate_studio_id')
+        .eq('id', user.id)
+        .single();
+
+      if (userDataError || !userData) {
+        console.error('❌ [API] Error obteniendo datos del usuario:', userDataError);
+        return NextResponse.json(
+          { success: false, error: 'Usuario no encontrado en la base de datos' },
+          { status: 404 }
+        );
+      }
+
+      userRole = userData.role;
+      affiliateStudioId = userData.affiliate_studio_id;
+      
+      console.log('🔍 [API] Datos del usuario:', {
+        role: userRole,
+        affiliate_studio_id: affiliateStudioId
+      });
+    } catch (authError) {
+      console.error('❌ [API] Error en autenticación:', authError);
+      return NextResponse.json(
+        { success: false, error: 'Error de autenticación' },
+        { status: 401 }
+      );
     }
 
     // Solo super_admin o superadmin_aff pueden crear grupos
     if (userRole !== 'super_admin' && userRole !== 'superadmin_aff') {
+      console.error('❌ [API] Usuario sin permisos:', userRole);
       return NextResponse.json(
         { success: false, error: 'Solo los super administradores pueden crear grupos' },
         { status: 403 }
+      );
+    }
+
+    // Si es superadmin_aff, verificar que tenga affiliate_studio_id
+    if (userRole === 'superadmin_aff' && !affiliateStudioId) {
+      console.error('❌ [API] Superadmin_aff sin affiliate_studio_id');
+      return NextResponse.json(
+        { success: false, error: 'El usuario no está asociado a un estudio afiliado' },
+        { status: 400 }
       );
     }
 
@@ -221,6 +262,8 @@ export async function POST(request: NextRequest) {
       groupData.affiliate_studio_id = affiliateStudioId;
       console.log('🔍 [API] Superadmin_aff creando grupo, asignando affiliate_studio_id:', affiliateStudioId);
     }
+
+    console.log('🔍 [API] Datos del grupo a crear:', groupData);
 
     const { data: group, error } = await supabase
       .from('groups')
