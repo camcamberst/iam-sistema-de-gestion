@@ -345,12 +345,15 @@ export default function GestionarSedesPage() {
         setShowCreateGroup(false);
         setError(''); // Limpiar errores previos
         
+        // Guardar el nombre de la sede creada antes de limpiar
+        const createdSedeName = newGroupName.trim();
+        
         // Recargar datos y sedes disponibles primero
         await loadAvailableSedes();
         await loadData();
         
         // Esperar un momento para que el estado se actualice
-        await new Promise(resolve => setTimeout(resolve, 100));
+        await new Promise(resolve => setTimeout(resolve, 200));
         
         // Si se creó exitosamente, seleccionar la nueva sede automáticamente
         if (result.group && result.group.id) {
@@ -361,13 +364,27 @@ export default function GestionarSedesPage() {
           await loadSedeInfo(result.group.id);
         } else {
           // Si no viene el grupo en la respuesta, buscar la sede recién creada por nombre
-          // Esto es un fallback por si la API no retorna el grupo
-          const newSede = availableSedes.find(s => s.name === newGroupName.trim());
-          if (newSede) {
-            console.log('🔍 [FRONTEND] Encontrada nueva sede por nombre:', newSede.id);
-            setSelectedSede(newSede.id);
-            setSelectedGroup(newSede.id);
-            await loadSedeInfo(newSede.id);
+          // Necesitamos obtener las sedes actualizadas directamente de la API
+          const { data: { session: refreshSession } } = await supabase.auth.getSession();
+          const refreshResponse = await fetch('/api/groups', {
+            method: 'GET',
+            headers: refreshSession?.access_token ? {
+              'Authorization': `Bearer ${refreshSession.access_token}`
+            } : {}
+          });
+          const refreshData = await refreshResponse.json();
+          
+          if (refreshData.success) {
+            const sedesOperativas = refreshData.groups.filter((group: any) => 
+              group.name !== 'Otros' && group.name !== 'Satélites'
+            );
+            const newSede = sedesOperativas.find((s: any) => s.name === createdSedeName);
+            if (newSede) {
+              console.log('🔍 [FRONTEND] Encontrada nueva sede por nombre:', newSede.id);
+              setSelectedSede(newSede.id);
+              setSelectedGroup(newSede.id);
+              await loadSedeInfo(newSede.id);
+            }
           }
         }
       } else {
