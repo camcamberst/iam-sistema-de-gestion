@@ -205,7 +205,7 @@ export async function POST(request: NextRequest) {
 
       const { data: userData, error: userDataError } = await supabaseServer
         .from('users')
-        .select('role, affiliate_studio_id')
+        .select('role, affiliate_studio_id, organization_id')
         .eq('id', user.id)
         .single();
 
@@ -219,6 +219,7 @@ export async function POST(request: NextRequest) {
 
       userRole = userData.role;
       affiliateStudioId = userData.affiliate_studio_id;
+      const userOrganizationId = userData.organization_id;
       
       console.log('🔍 [API] Datos del usuario:', {
         role: userRole,
@@ -250,10 +251,49 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Obtener o crear organización por defecto si el usuario no tiene una
+    let organizationId = userOrganizationId;
+    
+    if (!organizationId) {
+      // Buscar organización por defecto o crear una
+      const { data: defaultOrg, error: orgError } = await supabaseServer
+        .from('organizations')
+        .select('id')
+        .eq('name', 'Organización Principal')
+        .single();
+      
+      if (orgError || !defaultOrg) {
+        // Crear organización por defecto si no existe
+        const { data: newOrg, error: createOrgError } = await supabaseServer
+          .from('organizations')
+          .insert({
+            name: 'Organización Principal',
+            description: 'Organización principal del sistema',
+            is_active: true
+          })
+          .select('id')
+          .single();
+        
+        if (createOrgError || !newOrg) {
+          console.error('❌ [API] Error creando organización por defecto:', createOrgError);
+          return NextResponse.json(
+            { success: false, error: 'Error configurando organización' },
+            { status: 500 }
+          );
+        }
+        
+        organizationId = newOrg.id;
+        console.log('✅ [API] Organización por defecto creada:', organizationId);
+      } else {
+        organizationId = defaultOrg.id;
+        console.log('🔍 [API] Usando organización por defecto existente:', organizationId);
+      }
+    }
+
     // Preparar datos del grupo
     const groupData: any = {
       name: name.trim(),
-      organization_id: '00000000-0000-0000-0000-000000000000', // UUID por defecto
+      organization_id: organizationId,
       is_active: true
     };
 
