@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate, getPeriodDetails } from '@/utils/calculator-dates';
 import { notifyNewAnticipo } from '@/lib/email-service';
+import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,7 @@ export async function GET(request: NextRequest) {
         .from('users')
         .select(`
           role,
+          affiliate_studio_id,
           user_groups(
             groups!inner(
               id,
@@ -53,8 +55,9 @@ export async function GET(request: NextRequest) {
 
       const isSuperAdmin = adminUser.role === 'super_admin';
       const isAdmin = adminUser.role === 'admin';
+      const isSuperadminAff = adminUser.role === 'superadmin_aff';
 
-      if (!isSuperAdmin && !isAdmin) {
+      if (!isSuperAdmin && !isAdmin && !isSuperadminAff) {
         return NextResponse.json({ success: false, error: 'No tienes permisos para ver anticipos' }, { status: 403 });
       }
 
@@ -136,6 +139,25 @@ export async function GET(request: NextRequest) {
     // Aplicar filtro por grupos del admin si es necesario
     if (modelIds.length > 0) {
       query = query.in('model_id', modelIds);
+    }
+
+    // Aplicar filtro de afiliado si el admin es superadmin_aff o admin de afiliado
+    if (admin_id && !model_id) {
+      const { data: adminUser } = await supabase
+        .from('users')
+        .select('role, affiliate_studio_id')
+        .eq('id', admin_id)
+        .single();
+
+      if (adminUser) {
+        const currentUser: AuthUser = {
+          id: admin_id,
+          role: adminUser.role,
+          affiliate_studio_id: adminUser.affiliate_studio_id
+        };
+        // Aplicar filtro de afiliado a la tabla anticipos (que tiene affiliate_studio_id)
+        query = addAffiliateFilter(query, currentUser);
+      }
     }
 
     const { data: anticipos, error } = await query;
