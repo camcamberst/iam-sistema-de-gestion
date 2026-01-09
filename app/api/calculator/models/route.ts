@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { addAffiliateFilter } from '@/lib/affiliates/filters';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,11 +19,12 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Obtener información del admin con sus grupos
+    // Obtener información del admin con sus grupos y affiliate_studio_id
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
       .select(`
         role,
+        affiliate_studio_id,
         groups:user_groups(
           group_id,
           group:groups(id, name)
@@ -38,8 +40,9 @@ export async function GET(request: NextRequest) {
 
     const isSuperAdmin = adminUser.role === 'super_admin';
     const isAdmin = adminUser.role === 'admin';
+    const isSuperAdminAff = adminUser.role === 'superadmin_aff';
 
-    if (!isSuperAdmin && !isAdmin) {
+    if (!isSuperAdmin && !isAdmin && !isSuperAdminAff) {
       return NextResponse.json({ success: false, error: 'No tienes permisos para acceder a esta función' }, { status: 403 });
     }
 
@@ -50,6 +53,7 @@ export async function GET(request: NextRequest) {
         email,
         name,
         role,
+        affiliate_studio_id,
         groups:user_groups(
           group_id,
           group:groups(id, name)
@@ -67,8 +71,15 @@ export async function GET(request: NextRequest) {
       `)
       .eq('role', 'modelo');
 
-    // Si es admin (no super admin), filtrar por sus grupos
-    if (isAdmin && !isSuperAdmin) {
+    // Aplicar filtro de afiliado si es necesario
+    modelsQuery = addAffiliateFilter(modelsQuery, {
+      id: adminId,
+      role: adminUser.role,
+      affiliate_studio_id: adminUser.affiliate_studio_id || null
+    });
+
+    // Si es admin (no super admin ni superadmin_aff), filtrar por sus grupos
+    if (isAdmin && !isSuperAdmin && !isSuperAdminAff) {
       const adminGroupIds = adminUser.groups?.map((g: any) => g.group_id).filter(Boolean) || [];
       
       if (adminGroupIds.length === 0) {

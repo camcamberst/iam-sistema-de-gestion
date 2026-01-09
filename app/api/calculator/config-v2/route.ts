@@ -125,7 +125,7 @@ export async function POST(request: NextRequest) {
     // 1. Verificar que el admin existe
     const { data: adminUser, error: adminError } = await supabase
       .from('users')
-      .select('role')
+      .select('role, affiliate_studio_id')
       .eq('id', adminId)
       .single();
 
@@ -137,18 +137,37 @@ export async function POST(request: NextRequest) {
     // 2. Verificar permisos
     const isSuperAdmin = adminUser.role === 'super_admin';
     const isAdmin = adminUser.role === 'admin';
+    const isSuperAdminAff = adminUser.role === 'superadmin_aff';
 
-    if (!isSuperAdmin && !isAdmin) {
+    if (!isSuperAdmin && !isAdmin && !isSuperAdminAff) {
       return NextResponse.json({ success: false, error: 'No tienes permisos para configurar esta modelo' }, { status: 403 });
     }
 
-    // 3. Desactivar configuración anterior si existe
+    // 3. Verificar que el modelo pertenece al mismo estudio afiliado (si aplica)
+    if (isSuperAdminAff || (isAdmin && adminUser.affiliate_studio_id)) {
+      const { data: modelUser, error: modelError } = await supabase
+        .from('users')
+        .select('affiliate_studio_id')
+        .eq('id', modelId)
+        .single();
+
+      if (modelError) {
+        return NextResponse.json({ success: false, error: 'Modelo no encontrado' }, { status: 404 });
+      }
+
+      // Verificar que el modelo pertenece al mismo estudio afiliado
+      if (modelUser.affiliate_studio_id !== adminUser.affiliate_studio_id) {
+        return NextResponse.json({ success: false, error: 'No tienes permisos para configurar esta modelo' }, { status: 403 });
+      }
+    }
+
+    // 4. Desactivar configuración anterior si existe
     await supabase
       .from('calculator_config')
       .update({ active: false })
       .eq('model_id', modelId);
 
-    // 4. Crear nueva configuración para la modelo seleccionada
+    // 5. Crear nueva configuración para la modelo seleccionada
     const { data, error } = await supabase
       .from('calculator_config')
       .insert({
@@ -169,10 +188,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: error.message }, { status: 500 });
     }
 
-    // 5. NO PROPAGAR configuración automáticamente - cada modelo debe configurarse individualmente
+    // 6. NO PROPAGAR configuración automáticamente - cada modelo debe configurarse individualmente
     console.log('🔍 [CONFIG-V2] Configuración aplicada solo a la modelo seleccionada. NO se propaga a otras modelos del grupo.');
 
-    // 6. CREAR PORTAFOLIO AUTOMÁTICAMENTE para configuración inicial
+    // 7. CREAR PORTAFOLIO AUTOMÁTICAMENTE para configuración inicial
     console.log('🔍 [CONFIG-V2] Creando Portafolio automáticamente para configuración inicial...');
     
     try {
