@@ -33,7 +33,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     id: string;
     name: string;
     email: string;
-    role: 'super_admin' | 'admin' | 'modelo' | string;
+    role: 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff' | string;
     groups: string[];
   } | null>(null);
   const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -195,9 +195,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   }>>([]);
 
   // Función helper para obtener el rol del usuario (desde userInfo o localStorage)
-  const getUserRole = (): 'super_admin' | 'admin' | 'modelo' => {
+  const getUserRole = (): 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff' => {
     if (userInfo?.role) {
-      return userInfo.role as 'super_admin' | 'admin' | 'modelo';
+      return userInfo.role as 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff';
     }
     
     if (!isClient) return 'modelo';
@@ -206,7 +206,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       const userData = localStorage.getItem('user');
       if (userData) {
         const parsed = JSON.parse(userData);
-        return (parsed.role || 'modelo') as 'super_admin' | 'admin' | 'modelo';
+        return (parsed.role || 'modelo') as 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff';
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);
@@ -454,6 +454,146 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         );
 
         baseItems[calculatorIndex].subItems = calculatorSubItems;
+      }
+    }
+
+    // Agregar menú completo para superadmin_aff (gestión de su estudio afiliado)
+    if (userRole === 'superadmin_aff') {
+      // Gestión Usuarios (solo de su estudio)
+      baseItems.unshift({
+        id: 'users',
+        label: 'Gestión Usuarios',
+        href: '#',
+        subItems: [
+          { 
+            label: 'Crear Usuario', 
+            href: '/admin/users/create',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+              </svg>
+            ),
+            description: 'Registra nuevos usuarios en tu estudio'
+          },
+          { 
+            label: 'Consultar Usuarios', 
+            href: '/admin/users',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+              </svg>
+            ),
+            description: 'Administra usuarios de tu estudio'
+          }
+        ]
+      });
+
+      // Gestión Anticipos (solo de su estudio)
+      baseItems.push({
+        id: 'anticipos',
+        label: 'Gestión Anticipos',
+        href: '#',
+        subItems: [
+          { 
+            label: 'Solicitudes Pendientes', 
+            href: '/admin/anticipos/pending',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            ),
+            description: 'Revisa solicitudes de tu estudio'
+          },
+          { 
+            label: 'Historial Anticipos', 
+            href: '/admin/anticipos/history',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+              </svg>
+            ),
+            description: 'Consulta el historial de tu estudio'
+          }
+        ]
+      });
+
+      // Gestión Agencia (solo de su estudio)
+      baseItems.push({
+        id: 'sedes',
+        label: 'Gestión Agencia',
+        href: '#',
+        subItems: [
+          { 
+            label: 'Gestionar Sedes', 
+            href: '/admin/sedes/gestionar',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+              </svg>
+            ),
+            description: 'Administra sedes de tu estudio'
+          },
+          { 
+            label: 'Portafolio Modelos', 
+            href: '/admin/sedes/portafolio',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            ),
+            description: 'Gestiona portafolios de tu estudio'
+          },
+          { 
+            label: 'Dashboard Sedes', 
+            href: '/admin/sedes/dashboard',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+            ),
+            description: 'Vista general de las sedes de tu estudio'
+          }
+        ]
+      });
+
+      // Gestión Calculadora (solo de su estudio)
+      const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
+      if (calculatorIndex !== -1) {
+        baseItems[calculatorIndex].label = 'Gestión Calculadora';
+        baseItems[calculatorIndex].subItems = [
+          { 
+            label: 'Definir RATES', 
+            href: '/admin/rates',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+              </svg>
+            ),
+            description: 'Configura las tasas de conversión de tu estudio'
+          },
+          { 
+            label: 'Configurar Calculadora', 
+            href: '/admin/calculator/config',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+              </svg>
+            ),
+            description: 'Configura parámetros de tu estudio'
+          },
+          { 
+            label: 'Ver Calculadora Modelo', 
+            href: '/admin/calculator/view-model',
+            icon: (
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+              </svg>
+            ),
+            description: 'Vista de la calculadora para modelos'
+          }
+        ];
       }
     }
 

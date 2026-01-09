@@ -64,6 +64,9 @@ export default function LoginPage() {
         case 'admin':
           router.push('/admin/dashboard');
           break;
+        case 'superadmin_aff':
+          router.push('/admin/dashboard');
+          break;
         case 'gestor':
           router.push('/gestor/dashboard');
           break;
