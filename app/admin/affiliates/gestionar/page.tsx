@@ -597,6 +597,7 @@ export default function GestionarAfiliadosPage() {
                             <>
                               <button
                                 onClick={() => {
+                                  if (!affiliate.superadmin_aff) return;
                                   setSelectedAffiliateId(affiliate.id);
                                   setSelectedAffiliateName(affiliate.name);
                                   setEditSuperadminAffEmail(affiliate.superadmin_aff.email);
