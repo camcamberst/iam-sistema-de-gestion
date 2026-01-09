@@ -3,6 +3,7 @@ import { supabaseServer } from '@/lib/supabase-server';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from '@/lib/chat/aim-botty';
 import { getColombiaDate, createPeriodIfNeeded } from '@/utils/calculator-dates';
 import { calculateAffiliateBilling } from '@/lib/affiliates/billing';
+import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
 
 // Usar service role key para bypass RLS
 const supabase = supabaseServer;
@@ -27,6 +28,7 @@ export async function GET(request: NextRequest) {
       .from('users')
       .select(`
         role,
+        affiliate_studio_id,
         user_groups(
           groups!inner(
             id,
@@ -44,17 +46,20 @@ export async function GET(request: NextRequest) {
 
     const isSuperAdmin = adminUser.role === 'super_admin';
     const isAdmin = adminUser.role === 'admin';
+    const isSuperadminAff = adminUser.role === 'superadmin_aff';
 
-    if (!isSuperAdmin && !isAdmin) {
+    if (!isSuperAdmin && !isAdmin && !isSuperadminAff) {
       return NextResponse.json({ success: false, error: 'No tienes permisos para ver este resumen' }, { status: 403 });
     }
 
-    // Obtener grupos del admin (solo para admin, no para super_admin)
-    const adminGroups = isSuperAdmin ? [] : (adminUser.user_groups?.map((ug: any) => ug.groups.id) || []);
+    // Obtener grupos del admin (solo para admin, no para super_admin ni superadmin_aff)
+    const adminGroups = (isSuperAdmin || isSuperadminAff) ? [] : (adminUser.user_groups?.map((ug: any) => ug.groups.id) || []);
     console.log('🔍 [BILLING-SUMMARY] Admin groups:', adminGroups);
     console.log('🔍 [BILLING-SUMMARY] User role:', adminUser.role);
+    console.log('🔍 [BILLING-SUMMARY] Affiliate Studio ID:', adminUser.affiliate_studio_id);
     console.log('🔍 [BILLING-SUMMARY] Is Super Admin:', isSuperAdmin);
     console.log('🔍 [BILLING-SUMMARY] Is Admin:', isAdmin);
+    console.log('🔍 [BILLING-SUMMARY] Is Superadmin AFF:', isSuperadminAff);
 
     // 2. Obtener modelos según permisos (solo modelos activos)
     let modelsQuery = supabase
@@ -62,13 +67,25 @@ export async function GET(request: NextRequest) {
       .select(`
         id, 
         email, 
-        name
+        name,
+        affiliate_studio_id
       `)
       .eq('role', 'modelo')
       .eq('is_active', true);
 
     // Excluir AIM Botty explícitamente
     modelsQuery = modelsQuery.neq('id', AIM_BOTTY_ID).neq('email', AIM_BOTTY_EMAIL);
+
+    // Aplicar filtro de afiliado si es superadmin_aff o admin de afiliado
+    if (isSuperadminAff || (isAdmin && adminUser.affiliate_studio_id)) {
+      const currentUser: AuthUser = {
+        id: adminId,
+        role: adminUser.role,
+        affiliate_studio_id: adminUser.affiliate_studio_id
+      };
+      modelsQuery = addAffiliateFilter(modelsQuery, currentUser);
+      console.log('🔍 [BILLING-SUMMARY] Aplicando filtro de afiliado para affiliate_studio_id:', adminUser.affiliate_studio_id);
+    }
 
     // Depuración opcional: limitar por emails especificados
     if (emailsParam) {
@@ -79,8 +96,8 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Si es admin (no super_admin), filtrar por sus grupos asignados
-    if (isAdmin && !isSuperAdmin && adminGroups.length > 0) {
+    // Si es admin (no super_admin ni superadmin_aff), filtrar por sus grupos asignados
+    if (isAdmin && !isSuperAdmin && !isSuperadminAff && adminGroups.length > 0) {
       console.log('🔍 [BILLING-SUMMARY] Aplicando filtros de admin para grupos:', adminGroups);
       // Obtener modelos que pertenecen a los grupos del admin
       const { data: modelGroups, error: modelGroupsError } = await supabase
