@@ -203,7 +203,13 @@ export default function GestionarSedesPage() {
       }
 
       // Obtener información del admin asignado a esta sede
-      const usersResponse = await fetch('/api/users');
+      // Usar autenticación para que el filtro de afiliado funcione
+      const { data: { session: usersSession } } = await supabase.auth.getSession();
+      const usersResponse = await fetch('/api/users', {
+        headers: usersSession?.access_token ? {
+          'Authorization': `Bearer ${usersSession.access_token}`
+        } : {}
+      });
       const usersData = await usersResponse.json();
       
       if (usersData.success) {
