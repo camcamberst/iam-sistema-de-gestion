@@ -26,7 +26,7 @@ interface Announcement {
 interface AnnouncementBoardWidgetProps {
   userId: string;
   userGroups: string[];
-  userRole?: 'modelo' | 'admin' | 'super_admin';
+  userRole?: 'modelo' | 'admin' | 'super_admin' | 'superadmin_aff';
 }
 
 export default function AnnouncementBoardWidget({ userId, userGroups, userRole = 'modelo' }: AnnouncementBoardWidgetProps) {

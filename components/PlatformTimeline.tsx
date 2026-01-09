@@ -21,7 +21,7 @@ interface PlatformRequest {
 }
 
 interface PlatformTimelineProps {
-  userRole: 'admin' | 'super_admin';
+  userRole: 'admin' | 'super_admin' | 'superadmin_aff';
   userGroups?: string[];
 }
 

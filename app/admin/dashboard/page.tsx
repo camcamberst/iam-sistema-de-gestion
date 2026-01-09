@@ -38,7 +38,7 @@ export default function AdminDashboard() {
         }
         const { data: userRow } = await supabase
           .from('users')
-          .select('id,name,email,role')
+          .select('id,name,email,role,affiliate_studio_id')
           .eq('id', uid)
           .single();
         let groups: string[] = [];
@@ -61,8 +61,15 @@ export default function AdminDashboard() {
         setUser(current);
         setUserGroupIds(groupIds);
 
-        // Load global stats (super admin) or filtered stats (admin)
-        const { data: all } = await supabase.from('users').select('id,role');
+        // Load global stats (super admin) or filtered stats (admin/superadmin_aff)
+        let query = supabase.from('users').select('id,role,affiliate_studio_id');
+        
+        // Aplicar filtro de afiliado si es superadmin_aff
+        if (current.role === 'superadmin_aff' && userRow?.affiliate_studio_id) {
+          query = query.eq('affiliate_studio_id', userRow.affiliate_studio_id);
+        }
+        
+        const { data: all } = await query;
         if (all) {
           let filtered = all;
           
@@ -90,6 +97,7 @@ export default function AdminDashboard() {
             filtered = all.filter((u: any) => allowedIds.has(u.id));
           }
           // Super admin ve todos los usuarios sin filtros
+          // Superadmin_aff ya está filtrado por affiliate_studio_id en la query
           
           const total = filtered.length;
           const super_admin = filtered.filter((u: any) => u.role === 'super_admin').length;
@@ -226,12 +234,12 @@ export default function AdminDashboard() {
 
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
-        {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin y Admin */}
-        {(user?.role === 'super_admin' || user?.role === 'admin') && (
+        {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin, Admin y Superadmin AFF */}
+        {(user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'superadmin_aff') && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
             <ActiveRatesPanel compact={true} />
             <BillingSummaryCompact 
-              userRole={user.role as 'admin' | 'super_admin'} 
+              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'} 
               userId={user.id}
               userGroups={user.groups}
             />
@@ -239,22 +247,22 @@ export default function AdminDashboard() {
         )}
 
         {/* Corcho Informativo - Widget de Visualización */}
-        {user && (user.role === 'super_admin' || user.role === 'admin') && (
+        {user && (user.role === 'super_admin' || user.role === 'admin' || user.role === 'superadmin_aff') && (
           <div className="mb-8">
             <AnnouncementBoardWidget 
               userId={user.id}
               userGroups={userGroupIds}
-              userRole={user.role as 'admin' | 'super_admin'}
+              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
             />
           </div>
         )}
 
 
-        {/* Timeline Portafolio Modelos de Plataformas para Super Admin y Admin */}
-        {(user?.role === 'super_admin' || user?.role === 'admin') && (
+        {/* Timeline Portafolio Modelos de Plataformas para Super Admin, Admin y Superadmin AFF */}
+        {(user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'superadmin_aff') && (
           <div className="mb-10">
             <PlatformTimeline 
-              userRole={user.role as 'admin' | 'super_admin'} 
+              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'} 
               userGroups={user.groups}
             />
           </div>

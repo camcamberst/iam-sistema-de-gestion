@@ -6,7 +6,7 @@ import { useBillingPolling } from '@/hooks/useBillingPolling';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface BillingSummaryCompactProps {
-  userRole: 'admin' | 'super_admin';
+  userRole: 'admin' | 'super_admin' | 'superadmin_aff';
   userId: string;
   userGroups?: string[];
 }
