@@ -216,19 +216,22 @@ export default function GestionarSedesPage() {
         
         // Buscar TODOS los admins asignados a esta sede específica
         const adminsAsignados = admins.filter((user: any) => {
-          // user_groups tiene estructura anidada: [{ groups: { id, name } }]
-          // o estructura plana: [{ id, name }] dependiendo de cómo se procese
-          const tieneEstaSede = user.user_groups?.some((ug: any) => {
-            // Verificar ambas estructuras posibles
+          // La API retorna tanto 'groups' como 'user_groups' con estructura plana: [{ id, name }]
+          // Verificar en ambos campos por compatibilidad
+          const userGroups = user.user_groups || user.groups || [];
+          const tieneEstaSede = userGroups.some((ug: any) => {
+            // Verificar ambas estructuras posibles (anidada o plana)
             const groupId = ug.groups?.id || ug.id;
             return groupId === sedeId;
           });
           console.log(`🔍 [DEBUG] Admin ${user.name}:`, {
             user_groups: user.user_groups,
+            groups: user.groups,
+            userGroups_processed: userGroups,
             tieneEstaSede,
             sedeId,
-            sedesAsignadas: user.user_groups?.length || 0,
-            estructura: user.user_groups?.[0] ? Object.keys(user.user_groups[0]) : 'sin grupos'
+            sedesAsignadas: userGroups.length,
+            estructura: userGroups[0] ? Object.keys(userGroups[0]) : 'sin grupos'
           });
           return tieneEstaSede;
         });
