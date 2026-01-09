@@ -178,6 +178,7 @@ export async function POST(request: NextRequest) {
     let userRole = 'admin'; // Por defecto
     let affiliateStudioId: string | null = null;
     let userId: string | null = null;
+    let userOrganizationId: string | null = null;
 
     if (!authHeader) {
       console.error('❌ [API] No se proporcionó token de autorización');
@@ -252,14 +253,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Obtener o crear organización por defecto si el usuario no tiene una
-    // Primero intentar obtener el organization_id del usuario
-    const { data: userDataForOrg } = await supabaseServer
-      .from('users')
-      .select('organization_id')
-      .eq('id', userId)
-      .single();
-    
-    let organizationId = userDataForOrg?.organization_id || null;
+    let organizationId = userOrganizationId;
     
     if (!organizationId) {
       // Buscar organización por defecto o crear una
