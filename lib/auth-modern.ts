@@ -13,7 +13,7 @@ export interface AuthUser {
   id: string;
   email: string;
   name: string;
-  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
+  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' | 'superadmin_aff';
   organization_id: string;
   groups: Array<{
     id: string;
