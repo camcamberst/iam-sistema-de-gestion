@@ -55,6 +55,19 @@ export default function GestionarAfiliadosPage() {
   const [superadminAffEmail, setSuperadminAffEmail] = useState('');
   const [superadminAffName, setSuperadminAffName] = useState('');
   const [superadminAffPassword, setSuperadminAffPassword] = useState('');
+  
+  // Estados para gestionar superadmin AFF desde la card
+  const [showManageSuperadminAff, setShowManageSuperadminAff] = useState(false);
+  const [selectedAffiliateId, setSelectedAffiliateId] = useState<string>('');
+  const [selectedAffiliateName, setSelectedAffiliateName] = useState<string>('');
+  const [managingSuperadminAff, setManagingSuperadminAff] = useState(false);
+  
+  // Estados para crear/editar superadmin AFF
+  const [editSuperadminAffEmail, setEditSuperadminAffEmail] = useState('');
+  const [editSuperadminAffName, setEditSuperadminAffName] = useState('');
+  const [editSuperadminAffPassword, setEditSuperadminAffPassword] = useState('');
+  const [editSuperadminAffIsActive, setEditSuperadminAffIsActive] = useState(true);
+  const [isEditingSuperadminAff, setIsEditingSuperadminAff] = useState(false);
 
   // Cargar información del usuario y afiliados
   useEffect(() => {
@@ -241,6 +254,7 @@ export default function GestionarAfiliadosPage() {
         setShowCreateAffiliate(false);
         // Recargar lista de afiliados
         await loadAffiliates();
+        setTimeout(() => setSuccess(''), 3000);
       } else {
         setError('Error creando afiliado: ' + (result.error || 'Error desconocido'));
       }
@@ -249,6 +263,117 @@ export default function GestionarAfiliadosPage() {
       setError('Error de conexión');
     } finally {
       setCreatingAffiliate(false);
+    }
+  };
+
+  // Gestionar superadmin AFF (crear/editar)
+  const handleManageSuperadminAff = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!editSuperadminAffEmail.trim() || !editSuperadminAffName.trim()) {
+      setError('Email y nombre son requeridos');
+      return;
+    }
+
+    if (!isEditingSuperadminAff && !editSuperadminAffPassword.trim()) {
+      setError('La contraseña es requerida para crear un nuevo superadmin AFF');
+      return;
+    }
+
+    setManagingSuperadminAff(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = await getValidToken();
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización.');
+        return;
+      }
+
+      const url = `/api/admin/affiliates/${selectedAffiliateId}/superadmin`;
+      const method = isEditingSuperadminAff ? 'PUT' : 'POST';
+      
+      const requestBody: any = {
+        email: editSuperadminAffEmail.trim(),
+        name: editSuperadminAffName.trim(),
+        is_active: editSuperadminAffIsActive
+      };
+
+      if (editSuperadminAffPassword.trim()) {
+        requestBody.password = editSuperadminAffPassword;
+      }
+
+      const response = await fetch(url, {
+        method: method,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(requestBody)
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message || (isEditingSuperadminAff ? 'Superadmin AFF actualizado exitosamente' : 'Superadmin AFF creado exitosamente'));
+        setShowManageSuperadminAff(false);
+        setEditSuperadminAffEmail('');
+        setEditSuperadminAffName('');
+        setEditSuperadminAffPassword('');
+        setEditSuperadminAffIsActive(true);
+        setIsEditingSuperadminAff(false);
+        await loadAffiliates();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError('Error: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error de conexión');
+    } finally {
+      setManagingSuperadminAff(false);
+    }
+  };
+
+  // Eliminar superadmin AFF
+  const handleDeleteSuperadminAff = async (affiliateId: string, affiliateName: string) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar el superadmin AFF del estudio "${affiliateName}"?`)) {
+      return;
+    }
+
+    setManagingSuperadminAff(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = await getValidToken();
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización.');
+        return;
+      }
+
+      const response = await fetch(`/api/admin/affiliates/${affiliateId}/superadmin`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message || 'Superadmin AFF eliminado exitosamente');
+        await loadAffiliates();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError('Error: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error de conexión');
+    } finally {
+      setManagingSuperadminAff(false);
     }
   };
 
@@ -457,9 +582,9 @@ export default function GestionarAfiliadosPage() {
                     </div>
                     
                     {/* Información del Superadmin AFF */}
-                    {affiliate.superadmin_aff ? (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div className="flex items-center space-x-2 mb-2">
+                    <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center space-x-2">
                           <div className="w-6 h-6 bg-gradient-to-br from-purple-500 to-pink-600 rounded-full flex items-center justify-center">
                             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
@@ -467,6 +592,52 @@ export default function GestionarAfiliadosPage() {
                           </div>
                           <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">Superadmin AFF Encargado:</span>
                         </div>
+                        <div className="flex items-center space-x-2">
+                          {affiliate.superadmin_aff ? (
+                            <>
+                              <button
+                                onClick={() => {
+                                  setSelectedAffiliateId(affiliate.id);
+                                  setSelectedAffiliateName(affiliate.name);
+                                  setEditSuperadminAffEmail(affiliate.superadmin_aff.email);
+                                  setEditSuperadminAffName(affiliate.superadmin_aff.name);
+                                  setEditSuperadminAffIsActive(affiliate.superadmin_aff.is_active);
+                                  setEditSuperadminAffPassword('');
+                                  setIsEditingSuperadminAff(true);
+                                  setShowManageSuperadminAff(true);
+                                }}
+                                className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                onClick={() => handleDeleteSuperadminAff(affiliate.id, affiliate.name)}
+                                className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
+                              >
+                                Eliminar
+                              </button>
+                            </>
+                          ) : (
+                            <button
+                              onClick={() => {
+                                setSelectedAffiliateId(affiliate.id);
+                                setSelectedAffiliateName(affiliate.name);
+                                setEditSuperadminAffEmail('');
+                                setEditSuperadminAffName('');
+                                setEditSuperadminAffPassword('');
+                                setEditSuperadminAffIsActive(true);
+                                setIsEditingSuperadminAff(false);
+                                setShowManageSuperadminAff(true);
+                              }}
+                              className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
+                            >
+                              Crear
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                      
+                      {affiliate.superadmin_aff ? (
                         <div className="flex items-center space-x-2 ml-8">
                           <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
                             {affiliate.superadmin_aff.name}
@@ -480,21 +651,12 @@ export default function GestionarAfiliadosPage() {
                             </span>
                           )}
                         </div>
-                      </div>
-                    ) : (
-                      <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-5 h-5 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center">
-                            <svg className="w-3 h-3 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                            </svg>
-                          </div>
-                          <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium">
-                            No hay superadmin AFF asignado
-                          </p>
-                        </div>
-                      </div>
-                    )}
+                      ) : (
+                        <p className="text-xs text-yellow-700 dark:text-yellow-400 font-medium ml-8">
+                          No hay superadmin AFF asignado
+                        </p>
+                      )}
+                    </div>
                     
                     {affiliate.created_by_user && (
                       <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-600">
@@ -713,6 +875,163 @@ export default function GestionarAfiliadosPage() {
                   className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
                 >
                   {creatingAffiliate ? 'Creando...' : 'Crear Afiliado'}
+                </button>
+              </div>
+            </form>
+          </StandardModal>
+        )}
+
+        {/* Modal Gestionar Superadmin AFF */}
+        {showManageSuperadminAff && (
+          <StandardModal
+            isOpen={showManageSuperadminAff}
+            onClose={() => {
+              setShowManageSuperadminAff(false);
+              setEditSuperadminAffEmail('');
+              setEditSuperadminAffName('');
+              setEditSuperadminAffPassword('');
+              setEditSuperadminAffIsActive(true);
+              setIsEditingSuperadminAff(false);
+              setError('');
+              setSuccess('');
+            }}
+            title={isEditingSuperadminAff ? 'Editar Superadmin AFF' : 'Crear Superadmin AFF'}
+            maxWidthClass="max-w-lg"
+            paddingClass="p-7"
+            headerMarginClass="mb-5"
+            formSpaceYClass="space-y-5"
+          >
+            <div className="flex items-center space-x-3 mb-5">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Estudio: <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedAffiliateName}</span>
+                </p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleManageSuperadminAff} className="space-y-5">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-red-700 font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-green-700 font-medium">{success}</p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Email del Superadmin AFF *
+                </label>
+                <input
+                  type="email"
+                  value={editSuperadminAffEmail}
+                  onChange={(e) => setEditSuperadminAffEmail(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="superadmin@estudio.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Nombre del Superadmin AFF *
+                </label>
+                <input
+                  type="text"
+                  value={editSuperadminAffName}
+                  onChange={(e) => setEditSuperadminAffName(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Nombre completo"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  {isEditingSuperadminAff ? 'Nueva Contraseña (Opcional)' : 'Contraseña Temporal *'}
+                </label>
+                <input
+                  type="password"
+                  value={editSuperadminAffPassword}
+                  onChange={(e) => setEditSuperadminAffPassword(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder={isEditingSuperadminAff ? 'Dejar vacío para mantener la actual' : 'Mínimo 6 caracteres'}
+                  minLength={isEditingSuperadminAff ? 0 : 6}
+                  required={!isEditingSuperadminAff}
+                />
+                {!isEditingSuperadminAff && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    El usuario deberá cambiar esta contraseña en su primer inicio de sesión.
+                  </p>
+                )}
+                {isEditingSuperadminAff && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Dejar vacío para mantener la contraseña actual.
+                  </p>
+                )}
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="editSuperadminAffIsActive"
+                  checked={editSuperadminAffIsActive}
+                  onChange={(e) => setEditSuperadminAffIsActive(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="editSuperadminAffIsActive" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Usuario activo
+                </label>
+              </div>
+
+              <div className="flex space-x-3 pt-2 flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowManageSuperadminAff(false);
+                    setEditSuperadminAffEmail('');
+                    setEditSuperadminAffName('');
+                    setEditSuperadminAffPassword('');
+                    setEditSuperadminAffIsActive(true);
+                    setIsEditingSuperadminAff(false);
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={managingSuperadminAff}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
+                >
+                  {managingSuperadminAff 
+                    ? (isEditingSuperadminAff ? 'Actualizando...' : 'Creando...') 
+                    : (isEditingSuperadminAff ? 'Actualizar' : 'Crear')}
                 </button>
               </div>
             </form>
