@@ -78,8 +78,7 @@ export async function GET(
         is_active,
         created_at,
         updated_at,
-        created_by,
-        created_by_user:users!affiliate_studios_created_by_fkey(id, name, email)
+        created_by
       `)
       .eq('id', id)
       .single();
@@ -97,6 +96,20 @@ export async function GET(
         success: false,
         error: error.message
       }, { status: 500 });
+    }
+
+    // Obtener datos del usuario creador si existe
+    let createdByUser = null;
+    if (studio.created_by) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('id, name, email')
+        .eq('id', studio.created_by)
+        .single();
+      
+      if (userData) {
+        createdByUser = userData;
+      }
     }
 
     // Obtener estadísticas
@@ -120,6 +133,7 @@ export async function GET(
       success: true,
       data: {
         ...studio,
+        created_by_user: createdByUser,
         stats: {
           users: usersCount || 0,
           sedes: sedesCount || 0,

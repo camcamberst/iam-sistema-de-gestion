@@ -72,8 +72,7 @@ export async function GET(request: NextRequest) {
         is_active,
         created_at,
         updated_at,
-        created_by,
-        created_by_user:users!affiliate_studios_created_by_fkey(id, name, email)
+        created_by
       `)
       .order('created_at', { ascending: false });
 
@@ -85,9 +84,23 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    // Obtener estadísticas de cada estudio
+    // Obtener estadísticas y datos del creador de cada estudio
     const studiosWithStats = await Promise.all(
       (studios || []).map(async (studio) => {
+        // Obtener datos del usuario creador si existe
+        let createdByUser = null;
+        if (studio.created_by) {
+          const { data: userData } = await supabase
+            .from('users')
+            .select('id, name, email')
+            .eq('id', studio.created_by)
+            .single();
+          
+          if (userData) {
+            createdByUser = userData;
+          }
+        }
+
         // Contar usuarios del afiliado
         const { count: usersCount } = await supabase
           .from('users')
@@ -109,6 +122,7 @@ export async function GET(request: NextRequest) {
 
         return {
           ...studio,
+          created_by_user: createdByUser,
           stats: {
             users: usersCount || 0,
             sedes: sedesCount || 0,
