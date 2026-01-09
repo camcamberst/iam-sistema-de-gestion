@@ -219,11 +219,11 @@ export async function POST(request: NextRequest) {
 
       userRole = userData.role;
       affiliateStudioId = userData.affiliate_studio_id;
-      const userOrganizationId = userData.organization_id;
       
       console.log('🔍 [API] Datos del usuario:', {
         role: userRole,
-        affiliate_studio_id: affiliateStudioId
+        affiliate_studio_id: affiliateStudioId,
+        organization_id: userData.organization_id
       });
     } catch (authError) {
       console.error('❌ [API] Error en autenticación:', authError);
@@ -252,7 +252,14 @@ export async function POST(request: NextRequest) {
     }
 
     // Obtener o crear organización por defecto si el usuario no tiene una
-    let organizationId = userOrganizationId;
+    // Primero intentar obtener el organization_id del usuario
+    const { data: userDataForOrg } = await supabaseServer
+      .from('users')
+      .select('organization_id')
+      .eq('id', userId)
+      .single();
+    
+    let organizationId = userDataForOrg?.organization_id || null;
     
     if (!organizationId) {
       // Buscar organización por defecto o crear una
