@@ -205,18 +205,18 @@ export async function PUT(
     // Verificar permisos
     const { data: userData } = await supabase
       .from('users')
-      .select('id, role')
+      .select('id, role, affiliate_studio_id')
       .eq('id', user.id)
       .single();
 
-    if (!userData || !['super_admin', 'admin'].includes(userData.role)) {
+    if (!userData || (!['super_admin', 'admin'].includes(userData.role) && userData.role !== 'superadmin_aff')) {
       return NextResponse.json({ error: 'No tienes permisos para editar anuncios' }, { status: 403 });
     }
 
     // Verificar que el anuncio existe y el usuario puede editarlo
     const { data: existingAnnouncement } = await supabase
       .from('announcements')
-      .select('author_id, organization_id, published_at')
+      .select('author_id, organization_id, published_at, affiliate_studio_id')
       .eq('id', id)
       .single();
 
@@ -224,8 +224,14 @@ export async function PUT(
       return NextResponse.json({ error: 'Anuncio no encontrado' }, { status: 404 });
     }
 
-    // Solo el autor o super_admin puede editar
-    if (existingAnnouncement.author_id !== user.id && userData.role !== 'super_admin') {
+    // Solo el autor, super_admin, o superadmin_aff (de su estudio) puede editar
+    const isAuthor = existingAnnouncement.author_id === user.id;
+    const isSuperAdmin = userData.role === 'super_admin';
+    const isSuperadminAff = userData.role === 'superadmin_aff' && 
+                            userData.affiliate_studio_id && 
+                            existingAnnouncement.affiliate_studio_id === userData.affiliate_studio_id;
+    
+    if (!isAuthor && !isSuperAdmin && !isSuperadminAff) {
       return NextResponse.json({ error: 'No tienes permisos para editar este anuncio' }, { status: 403 });
     }
 
@@ -247,6 +253,11 @@ export async function PUT(
     if (body.is_pinned !== undefined) updateData.is_pinned = body.is_pinned;
     if (body.priority !== undefined) updateData.priority = body.priority;
     if (body.expires_at !== undefined) updateData.expires_at = body.expires_at;
+    
+    // share_with_affiliates solo puede ser modificado por super_admin
+    if (userData.role === 'super_admin' && body.share_with_affiliates !== undefined) {
+      updateData.share_with_affiliates = body.share_with_affiliates;
+    }
     if (body.target_roles !== undefined) updateData.target_roles = body.target_roles || [];
 
     // Actualizar anuncio

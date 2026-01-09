@@ -105,13 +105,15 @@ export async function GET(request: NextRequest) {
     // Obtener rol del usuario desde la base de datos
     const { data: userData } = await supabase
       .from('users')
-      .select('id, role')
+      .select('id, role, affiliate_studio_id')
       .eq('id', user.id)
       .single();
 
     const actualUserRole = userData?.role || userRole;
     const isAdmin = actualUserRole === 'super_admin' || actualUserRole === 'admin';
     const isSuperAdmin = actualUserRole === 'super_admin';
+    const isSuperadminAff = actualUserRole === 'superadmin_aff';
+    const userAffiliateStudioId = userData?.affiliate_studio_id || null;
     
     // Construir query base
     let query = supabase
@@ -211,6 +213,22 @@ export async function GET(request: NextRequest) {
     // Si es admin, solo mostrar publicadas (para el widget de visualización)
     if (isAdmin && !isSuperAdmin && actualUserRole !== 'modelo') {
       query = query.eq('is_published', true);
+    }
+
+    // Aplicar filtro de afiliado para superadmin_aff
+    // Solo ver anuncios de su estudio O anuncios de Innova compartidos
+    if (isSuperadminAff && userAffiliateStudioId) {
+      console.log('🔍 [ANNOUNCEMENTS] Aplicando filtro de afiliado para superadmin_aff:', userAffiliateStudioId);
+      
+      // Filtrar: anuncios de su estudio O anuncios de Innova compartidos
+      query = query.or(`affiliate_studio_id.eq.${userAffiliateStudioId},and(affiliate_studio_id.is.null,share_with_affiliates.eq.true)`);
+      
+      // También aplicar filtro de publicado
+      query = query.eq('is_published', true);
+    } else if (isSuperadminAff && !userAffiliateStudioId) {
+      // Si es superadmin_aff pero no tiene affiliate_studio_id, no mostrar nada
+      console.log('⚠️ [ANNOUNCEMENTS] Superadmin_aff sin affiliate_studio_id, no se mostrarán anuncios');
+      query = query.eq('id', '00000000-0000-0000-0000-000000000000');
     }
 
     // Si es modelo, filtrar por sus grupos o generales
@@ -379,19 +397,33 @@ export async function POST(request: NextRequest) {
 
     const { data: userData } = await supabase
       .from('users')
-      .select('id, role, organization_id')
+      .select('id, role, organization_id, affiliate_studio_id')
       .eq('id', user.id)
       .single();
 
-    if (!userData || !['super_admin', 'admin'].includes(userData.role)) {
+    if (!userData || (!['super_admin', 'admin'].includes(userData.role) && userData.role !== 'superadmin_aff')) {
       return NextResponse.json({ error: 'No tienes permisos para crear anuncios' }, { status: 403 });
     }
 
     // Obtener organization_id si no se proporciona
     const organizationId = body.organization_id || userData.organization_id;
+    
+    // Si es superadmin_aff, asignar automáticamente su affiliate_studio_id
+    let affiliateStudioId = body.affiliate_studio_id || null;
+    if (userData.role === 'superadmin_aff' && userData.affiliate_studio_id) {
+      affiliateStudioId = userData.affiliate_studio_id;
+      console.log('🔍 [ANNOUNCEMENTS] Superadmin_aff creando anuncio, asignando affiliate_studio_id:', affiliateStudioId);
+    }
+    
+    // share_with_affiliates solo puede ser true si es super_admin
+    let shareWithAffiliates = false;
+    if (userData.role === 'super_admin' && body.share_with_affiliates === true) {
+      shareWithAffiliates = true;
+      console.log('🔍 [ANNOUNCEMENTS] Superadmin marcando anuncio para compartir con afiliados');
+    }
 
     // Preparar datos para insertar
-    const announcementData = {
+    const announcementData: any = {
       author_id: user.id,
       category_id: category_id || null,
       title,
@@ -408,6 +440,16 @@ export async function POST(request: NextRequest) {
       published_at: is_published ? new Date().toISOString() : null,
       expires_at: expires_at || null
     };
+    
+    // Agregar affiliate_studio_id si corresponde
+    if (affiliateStudioId) {
+      announcementData.affiliate_studio_id = affiliateStudioId;
+    }
+    
+    // Agregar share_with_affiliates solo si es super_admin
+    if (userData.role === 'super_admin') {
+      announcementData.share_with_affiliates = shareWithAffiliates;
+    }
 
     console.log('📝 [ANNOUNCEMENTS] Creando anuncio:', {
       title,

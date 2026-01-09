@@ -424,6 +424,7 @@ function AnnouncementEditor({
     is_pinned: boolean;
     priority: number;
     expires_at: string;
+    share_with_affiliates: boolean;
   }>({
     title: announcement?.title || '',
     content: announcement?.content || '',
@@ -436,7 +437,8 @@ function AnnouncementEditor({
     is_published: announcement?.is_published !== undefined ? announcement.is_published : true,
     is_pinned: announcement?.is_pinned || false,
     priority: announcement?.priority || 0,
-    expires_at: announcement?.expires_at ? announcement.expires_at.split('T')[0] : ''
+    expires_at: announcement?.expires_at ? announcement.expires_at.split('T')[0] : '',
+    share_with_affiliates: (announcement as any)?.share_with_affiliates || false
   });
   const [saving, setSaving] = useState(false);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -539,6 +541,11 @@ function AnnouncementEditor({
         priority: formData.priority,
         expires_at: formData.expires_at || null
       };
+      
+      // Agregar share_with_affiliates solo si es super_admin
+      if (userRole === 'super_admin') {
+        payload.share_with_affiliates = formData.share_with_affiliates;
+      }
 
       const url = announcement
         ? `/api/announcements/${announcement.id}`
@@ -881,6 +888,32 @@ function AnnouncementEditor({
               </div>
               <span className="text-sm text-gray-700 dark:text-gray-300">Fijar en la parte superior</span>
             </label>
+            
+            {/* Checkbox para compartir con afiliados - Solo para super_admin */}
+            {userRole === 'super_admin' && (
+              <label className="flex items-center space-x-2 cursor-pointer group">
+                <div className="relative">
+                  <input
+                    type="checkbox"
+                    checked={formData.share_with_affiliates}
+                    onChange={(e) => setFormData(prev => ({ ...prev, share_with_affiliates: e.target.checked }))}
+                    className="sr-only"
+                  />
+                  <div className={`w-7 h-4 rounded-full transition-all duration-200 ease-in-out ${
+                    formData.share_with_affiliates 
+                      ? 'bg-gradient-to-r from-green-500 to-emerald-600 dark:from-green-600 dark:to-emerald-700 shadow-inner' 
+                      : 'bg-gray-300 dark:bg-gray-600'
+                  } group-hover:shadow-md`}>
+                    <div className={`w-3.5 h-3.5 bg-white rounded-full shadow-sm transform transition-all duration-200 ease-in-out ${
+                      formData.share_with_affiliates ? 'translate-x-3' : 'translate-x-0.5'
+                    } ${formData.share_with_affiliates ? 'shadow-green-200/50' : ''}`} style={{ marginTop: '2px' }}></div>
+                  </div>
+                </div>
+                <span className="text-sm text-gray-700 dark:text-gray-300">
+                  Compartir con estudios afiliados
+                </span>
+              </label>
+            )}
           </div>
 
           {/* Fecha de expiración */}
