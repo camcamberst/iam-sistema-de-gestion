@@ -345,11 +345,12 @@ export default function GestionarSedesPage() {
         setShowCreateGroup(false);
         setError(''); // Limpiar errores previos
         
-        // Recargar datos y sedes disponibles
-        await Promise.all([
-          loadData(),
-          loadAvailableSedes()
-        ]);
+        // Recargar datos y sedes disponibles primero
+        await loadAvailableSedes();
+        await loadData();
+        
+        // Esperar un momento para que el estado se actualice
+        await new Promise(resolve => setTimeout(resolve, 100));
         
         // Si se creó exitosamente, seleccionar la nueva sede automáticamente
         if (result.group && result.group.id) {
@@ -358,6 +359,16 @@ export default function GestionarSedesPage() {
           setSelectedGroup(result.group.id);
           // Cargar información de la nueva sede
           await loadSedeInfo(result.group.id);
+        } else {
+          // Si no viene el grupo en la respuesta, buscar la sede recién creada por nombre
+          // Esto es un fallback por si la API no retorna el grupo
+          const newSede = availableSedes.find(s => s.name === newGroupName.trim());
+          if (newSede) {
+            console.log('🔍 [FRONTEND] Encontrada nueva sede por nombre:', newSede.id);
+            setSelectedSede(newSede.id);
+            setSelectedGroup(newSede.id);
+            await loadSedeInfo(newSede.id);
+          }
         }
       } else {
         console.error('❌ [FRONTEND] Error creando sede:', result.error);
