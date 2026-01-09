@@ -344,11 +344,21 @@ export default function GestionarSedesPage() {
         setNewGroupName('');
         setShowCreateGroup(false);
         setError(''); // Limpiar errores previos
+        
         // Recargar datos y sedes disponibles
         await Promise.all([
           loadData(),
           loadAvailableSedes()
         ]);
+        
+        // Si se creó exitosamente, seleccionar la nueva sede automáticamente
+        if (result.group && result.group.id) {
+          console.log('🔍 [FRONTEND] Seleccionando nueva sede creada:', result.group.id);
+          setSelectedSede(result.group.id);
+          setSelectedGroup(result.group.id);
+          // Cargar información de la nueva sede
+          await loadSedeInfo(result.group.id);
+        }
       } else {
         console.error('❌ [FRONTEND] Error creando sede:', result.error);
         setError('Error creando sede: ' + (result.error || 'Error desconocido'));
