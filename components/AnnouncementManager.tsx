@@ -407,7 +407,7 @@ function AnnouncementEditor({
   categories: Category[];
   groups: Group[];
   userId: string;
-  userRole: 'super_admin' | 'admin';
+  userRole: 'super_admin' | 'admin' | 'superadmin_aff';
   onClose: () => void;
   onSave: () => void;
 }) {
