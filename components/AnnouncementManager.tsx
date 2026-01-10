@@ -51,7 +51,7 @@ interface Group {
 
 interface AnnouncementManagerProps {
   userId: string;
-  userRole: 'super_admin' | 'admin';
+  userRole: 'super_admin' | 'admin' | 'superadmin_aff';
   userGroups: string[];
 }
 
