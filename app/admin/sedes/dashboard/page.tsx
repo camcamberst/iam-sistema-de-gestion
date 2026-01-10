@@ -474,8 +474,8 @@ export default function DashboardSedesPage() {
       let filteredRooms = roomsData.success ? roomsData.rooms || [] : [];
       let filteredAssignments = assignmentsData.success ? assignmentsData.assignments || [] : [];
 
-      // Si es admin (no super_admin), filtrar por sus grupos
-      if (userRole !== 'super_admin' && userGroups.length > 0) {
+      // Si es admin (no super_admin ni superadmin_aff), filtrar por sus grupos
+      if (userRole !== 'super_admin' && userRole !== 'superadmin_aff' && userGroups.length > 0) {
         filteredRooms = filteredRooms.filter((room: any) => userGroups.includes(room.group_id));
         filteredAssignments = filteredAssignments.filter((assignment: any) => userGroups.includes(assignment.group_id));
       }
@@ -587,6 +587,8 @@ export default function DashboardSedesPage() {
                   <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
                     {userRole === 'super_admin' 
                       ? 'Vista global del estado de todas las sedes y asignaciones' 
+                      : userRole === 'superadmin_aff'
+                      ? 'Vista del estado de las sedes de tu estudio'
                       : 'Vista del estado de tus sedes asignadas'
                     }
                   </p>
@@ -594,7 +596,7 @@ export default function DashboardSedesPage() {
               </div>
               <div className="text-sm text-gray-500 dark:text-gray-400 hidden md:block">
                 Acceso: <span className="font-medium text-blue-600 dark:text-blue-400 dark:text-blue-400">
-                  {userRole === 'super_admin' ? 'Super Admin' : 'Admin'}
+                  {userRole === 'super_admin' ? 'Super Admin' : userRole === 'superadmin_aff' ? 'Superadmin AFF' : 'Admin'}
                 </span>
               </div>
             </div>
@@ -602,9 +604,9 @@ export default function DashboardSedesPage() {
         </div>
 
         {/* Resumen de Facturación - SOLO para período actual */}
-        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
+        {userId && (userRole === 'super_admin' || userRole === 'admin' || userRole === 'superadmin_aff') && (
           <BillingSummary 
-            userRole={userRole as 'admin' | 'super_admin'} 
+            userRole={userRole as 'admin' | 'super_admin' | 'superadmin_aff'} 
             userId={userId}
             userGroups={userGroups}
           />
@@ -626,7 +628,7 @@ export default function DashboardSedesPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(userRole === 'admin' || userRole === 'super_admin') && selectedMonth && selectedYear && selectedPeriod && (
+                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'superadmin_aff') && selectedMonth && selectedYear && selectedPeriod && (
                   <button
                     onClick={async () => {
                       // Calcular period_date y period_type
@@ -843,7 +845,7 @@ export default function DashboardSedesPage() {
             {showHistoricalQuery && selectedMonth && selectedYear && selectedPeriod && targetDate && (
               <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 sm:mx-0">
                 <BillingSummary 
-                  userRole={userRole as 'admin' | 'super_admin'} 
+                  userRole={userRole as 'admin' | 'super_admin' | 'superadmin_aff'} 
                   userId={userId}
                   userGroups={userGroups}
                   selectedDate={targetDate}
@@ -871,11 +873,11 @@ export default function DashboardSedesPage() {
         )}
 
         {/* Corcho Informativo - Gestión de Publicaciones */}
-        {userId && (userRole === 'super_admin' || userRole === 'admin') && (
+        {userId && (userRole === 'super_admin' || userRole === 'admin' || userRole === 'superadmin_aff') && (
           <div className="mb-8">
             <AnnouncementManager 
               userId={userId}
-              userRole={userRole as 'super_admin' | 'admin'}
+              userRole={userRole as 'super_admin' | 'admin' | 'superadmin_aff'}
               userGroups={userGroups}
             />
           </div>
@@ -1079,6 +1081,8 @@ export default function DashboardSedesPage() {
                     // Confirmación antes de guardar
                     const scopeText = userRole === 'super_admin' 
                       ? 'todas las modelos globalmente' 
+                      : userRole === 'superadmin_aff'
+                      ? 'las modelos de tu estudio'
                       : 'las modelos de tus grupos';
                     const confirmMessage = `¿Estás seguro de actualizar las tasas históricas para ${periodInfo?.records_count || 0} registros del período ${selectedMonth && selectedYear && selectedPeriod ? `${getMonthName(selectedMonth)} ${selectedYear} - ${selectedPeriod}` : ''}?\n\n⚠️ Esta acción:\n- Reemplazará las tasas guardadas en "Mi Historial" de ${scopeText}\n- Recalculará todos los valores derivados (USD bruto, USD modelo, COP modelo)\n- Solo afecta períodos CERRADOS (archivados), NO afecta el período en curso\n\n¿Continuar?`;
                     

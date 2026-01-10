@@ -56,7 +56,7 @@ interface BillingSummary {
 }
 
 interface BillingSummaryProps {
-  userRole: 'admin' | 'super_admin';
+  userRole: 'admin' | 'super_admin' | 'superadmin_aff';
   userId: string;
   userGroups?: string[];
   selectedDate?: string;
