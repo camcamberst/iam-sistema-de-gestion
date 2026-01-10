@@ -1129,12 +1129,17 @@ export async function GET(request: NextRequest) {
           }
         }
 
-        // Actualizar summary para incluir comisiones de afiliados
+        // Actualizar summary y agenciaInnova para incluir comisiones de afiliados
         const totalAffiliateCommissions = affiliateBillingData.reduce((acc, aff) => acc + aff.totalUsdSede, 0);
         const totalAffiliateCommissionsCop = affiliateBillingData.reduce((acc, aff) => acc + aff.totalCopSede, 0);
         
+        // Agregar comisiones al summary general
         summary.totalUsdSede += totalAffiliateCommissions;
         summary.totalCopSede += totalAffiliateCommissionsCop;
+        
+        // Agregar comisiones a Agencia Innova
+        agenciaInnova.totalUsdSede += totalAffiliateCommissions;
+        agenciaInnova.totalCopSede += totalAffiliateCommissionsCop;
 
         // Retornar Agencia Innova + Afiliados
         groupedData = [agenciaInnova, ...affiliateBillingData];
