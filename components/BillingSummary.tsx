@@ -505,8 +505,10 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                  <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                    {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : 'USD Agencia'}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -540,7 +542,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                         </div>
                                         <div className="text-right">
                                           <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                            {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : 'USD Agencia'}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
