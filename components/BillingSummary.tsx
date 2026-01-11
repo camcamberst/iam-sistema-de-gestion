@@ -44,6 +44,9 @@ interface SedeData {
   isAffiliate?: boolean;
   commission_percentage?: number;
   sedes_count?: number;
+  // Campos específicos para afiliados (perspectiva Agencia Innova)
+  totalUsdAfiliado?: number; // 90% del bruto (diferencia entre bruto y comisión Innova)
+  totalCopAfiliado?: number; // 90% del bruto en COP
 }
 
 interface BillingSummary {
@@ -454,7 +457,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Bruto Total</div>
                                 </div>
                                 <div className="text-center">
-                                  <div className="text-lg font-bold text-green-600 dark:text-green-400">${formatCurrency(sede.totalUsdModelo)}</div>
+                                  <div className="text-lg font-bold text-green-600 dark:text-green-400">${formatCurrency(sede.totalUsdAfiliado ?? sede.totalUsdModelo)}</div>
                                   <div className="text-xs text-gray-500 dark:text-gray-500 mt-1">USD Afiliado</div>
                                 </div>
                                 <div className="text-center">
