@@ -773,15 +773,15 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     </div>
                     <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
+                        <div className="font-semibold text-blue-800 dark:text-blue-300 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
                         <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Bruto</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
+                        <div className="font-semibold text-green-800 dark:text-green-300 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
                         <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Modelo</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">${formatCurrency(
+                        <div className="font-semibold text-purple-800 dark:text-purple-300 text-xs sm:text-sm">${formatCurrency(
                           billingData.reduce((sum, model) => sum + model.usdSede, 0)
                         )}</div>
                         <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
@@ -819,15 +819,15 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           </div>
                           <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
                             <div className="text-right">
-                              <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
+                              <div className="font-semibold text-blue-800 dark:text-blue-300 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
                               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Bruto</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
+                              <div className="font-semibold text-green-800 dark:text-green-300 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
                               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Modelo</div>
                             </div>
                             <div className="text-right">
-                              <div className="font-semibold text-gray-900 dark:text-gray-100 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
+                              <div className="font-semibold text-purple-800 dark:text-purple-300 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
                               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
                                 {model.groupName ? `USD ${model.groupName}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Sede'}
                               </div>
