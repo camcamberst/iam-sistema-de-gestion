@@ -786,13 +786,27 @@ export async function GET(request: NextRequest) {
       const modelGroup = modelGroupsMap.get(model.id);
 
       const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
-      const usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
-      const usdSede = usdBruto - usdModelo;
+      
+      // Para afiliados: Modelo 60%, Estudio 30%, Innova 10%
+      // Para Innova: Modelo según porcentaje configurado, Agencia = Bruto - Modelo
+      let usdModelo: number;
+      let usdSede: number;
+      
+      if (isSuperadminAff || (isAdmin && adminUser.affiliate_studio_id) || model.affiliate_studio_id) {
+        // Lógica para afiliados: Modelo siempre 60%, Estudio 30%
+        usdModelo = usdBruto * 0.60; // 60% del bruto para la modelo
+        usdSede = usdBruto * 0.30; // 30% del bruto para el estudio afiliado
+      } else {
+        // Lógica para Innova: usar valores de calculator_totals
+        usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
+        usdSede = usdBruto - usdModelo; // Diferencia para Agencia Innova
+      }
+      
       const copModelo = usdModelo * usdCopRateValue;
       const copSede = usdSede * usdCopRateValue;
 
       const dataSource = totalsForModel[0]?.dataSource || 'none';
-      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, Fuente=${dataSource}`);
+      console.log(`📊 [BILLING-SUMMARY] Modelo ${model.email}: USD Bruto=${usdBruto}, USD Modelo=${usdModelo}, USD Sede=${usdSede}, Fuente=${dataSource}`);
 
       return {
         modelId: model.id,
@@ -825,7 +839,7 @@ export async function GET(request: NextRequest) {
       totalCopSede: 0
     });
 
-    // Para superadmin_aff: Ajustar summary para mostrar 90% del bruto (después de descontar comisión del 10%)
+    // Para superadmin_aff: Obtener nombre del estudio y verificar que totalUsdSede sea correcto (30% del bruto)
     let affiliateStudioName: string | null = null;
     if (isSuperadminAff && adminUser.affiliate_studio_id) {
       // Obtener nombre del estudio afiliado
@@ -852,21 +866,20 @@ export async function GET(request: NextRequest) {
 
       const usdCopRate = rate?.value ? parseFloat(rate.value) : 3900;
 
-      // Calcular comisión de Innova (10% del bruto)
-      const commissionPercentage = 10;
-      const commissionUsd = summary.totalUsdBruto * (commissionPercentage / 100);
-      const commissionCop = commissionUsd * usdCopRate;
+      // Recalcular totalCopSede con la tasa correcta
+      summary.totalCopSede = summary.totalUsdSede * usdCopRate;
 
-      // Ajustar summary: totalUsdSede = 90% del bruto (después de descontar comisión)
-      summary.totalUsdSede = summary.totalUsdBruto - commissionUsd; // 90% del bruto
-      summary.totalCopSede = summary.totalUsdSede * usdCopRate; // 90% del bruto en COP
-
-      console.log('💰 [BILLING-SUMMARY] Summary ajustado para superadmin_aff:', {
+      console.log('💰 [BILLING-SUMMARY] Summary para superadmin_aff (neto del estudio):', {
         studioName: affiliateStudioName,
         totalUsdBruto: summary.totalUsdBruto,
-        commissionUsd,
-        totalUsdSede: summary.totalUsdSede, // 90% del bruto
-        totalUsdModelo: summary.totalUsdModelo // 60% del bruto
+        totalUsdModelo: summary.totalUsdModelo, // 60% del bruto (para modelos)
+        totalUsdSede: summary.totalUsdSede, // 30% del bruto (neto para el estudio)
+        commissionInnova: summary.totalUsdBruto * 0.10, // 10% del bruto (comisión Innova)
+        verificacion: {
+          modelo: (summary.totalUsdModelo / summary.totalUsdBruto * 100).toFixed(1) + '%',
+          estudio: (summary.totalUsdSede / summary.totalUsdBruto * 100).toFixed(1) + '%',
+          innova: ((summary.totalUsdBruto * 0.10) / summary.totalUsdBruto * 100).toFixed(1) + '%'
+        }
       });
     }
 
