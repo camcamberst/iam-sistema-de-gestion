@@ -327,8 +327,8 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
                                 </div>
                               </div>
                               <div className="text-right">
-                                <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">${formatCurrency(group.totalUsdBruto)}</div>
-                                <div className="text-xs text-gray-900 dark:text-gray-900">USD Bruto</div>
+                                <div className="text-xs font-semibold text-blue-600 dark:text-blue-600">${formatCurrency(group.totalUsdBruto)}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">USD Bruto</div>
                               </div>
                             </div>
                           ))}
