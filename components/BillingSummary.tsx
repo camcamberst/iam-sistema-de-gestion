@@ -505,17 +505,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                 </div>
                               </div>
                               <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                                <div className="text-right">
-                                  <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                <div className="flex flex-col items-end min-w-[80px]">
+                                  <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(group.totalUsdBruto)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                                <div className="flex flex-col items-end min-w-[80px]">
+                                  <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(group.totalUsdModelo)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Modelos</div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(group.totalUsdSede)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                <div className="flex flex-col items-end min-w-[80px]">
+                                  <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">
                                     {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : 'USD Agencia'}
                                   </div>
                                 </div>
@@ -541,17 +541,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                         </div>
                                       </div>
                                       <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                                        <div className="text-right">
-                                          <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                          <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdBruto)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                                         </div>
-                                        <div className="text-right">
-                                          <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                          <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdModelo)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Modelo</div>
                                         </div>
-                                        <div className="text-right">
-                                          <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                          <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdSede)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">
                                             {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : 'USD Agencia'}
                                           </div>
                                         </div>
@@ -592,17 +592,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                 </div>
                               </div>
                               <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                                <div className="text-right">
-                                  <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                <div className="flex flex-col items-end min-w-[80px]">
+                                  <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(group.totalUsdBruto)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(group.totalUsdModelo)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                                <div className="flex flex-col items-end min-w-[80px]">
+                                  <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(group.totalUsdModelo)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Modelos</div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(group.totalUsdSede)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                <div className="flex flex-col items-end min-w-[80px]">
+                                  <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">
                                     {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : `USD ${group.groupName}`}
                                   </div>
                                 </div>
@@ -628,17 +628,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                         </div>
                                       </div>
                                       <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                                        <div className="text-right">
-                                          <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                          <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdBruto)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                                         </div>
-                                        <div className="text-right">
-                                          <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                          <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdModelo)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Modelo</div>
                                         </div>
-                                        <div className="text-right">
-                                          <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                        <div className="flex flex-col items-end min-w-[80px]">
+                                          <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdSede)}</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">
                                             {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : model.groupName ? `USD ${model.groupName}` : 'USD Agencia'}
                                           </div>
                                         </div>
@@ -688,17 +688,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                         </div>
                       </div>
                       <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                        <div className="text-right">
-                          <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(sede.totalUsdBruto)}</div>
-                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                        <div className="flex flex-col items-end min-w-[80px]">
+                          <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(sede.totalUsdBruto)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(sede.totalUsdModelo)}</div>
-                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
+                        <div className="flex flex-col items-end min-w-[80px]">
+                          <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(sede.totalUsdModelo)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Modelos</div>
                         </div>
-                        <div className="text-right">
-                          <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(sede.totalUsdSede)}</div>
-                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                        <div className="flex flex-col items-end min-w-[80px]">
+                          <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(sede.totalUsdSede)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">
                             {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : `USD ${sede.sedeName}`}
                           </div>
                         </div>
@@ -723,17 +723,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   </div>
                                 </div>
                                 <div className="flex items-center space-x-4 text-xs">
-                                  <div className="text-right">
-                                    <div className="font-semibold text-blue-600 dark:text-blue-600">${formatCurrency(model.usdBruto)}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Bruto</div>
+                                  <div className="flex flex-col items-end min-w-[80px]">
+                                    <div className="font-semibold text-blue-600 dark:text-blue-600 leading-tight">${formatCurrency(model.usdBruto)}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                                   </div>
-                                  <div className="text-right">
-                                    <div className="font-semibold text-green-600 dark:text-green-600">${formatCurrency(model.usdModelo)}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
+                                  <div className="flex flex-col items-end min-w-[80px]">
+                                    <div className="font-semibold text-green-600 dark:text-green-600 leading-tight">${formatCurrency(model.usdModelo)}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">USD Modelo</div>
                                   </div>
-                                  <div className="text-right">
-                                    <div className="font-semibold text-purple-600 dark:text-purple-600">${formatCurrency(model.usdSede)}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                  <div className="flex flex-col items-end min-w-[80px]">
+                                    <div className="font-semibold text-purple-600 dark:text-purple-600 leading-tight">${formatCurrency(model.usdSede)}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500 leading-tight mt-0.5">
                                       {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : model.groupName ? `USD ${model.groupName}` : 'USD Agencia'}
                                     </div>
                                   </div>
@@ -772,19 +772,19 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                       </div>
                     </div>
                     <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                      <div className="text-right">
-                        <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Bruto</div>
+                      <div className="flex flex-col items-end min-w-[80px]">
+                        <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdBruto, 0))}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Modelo</div>
+                      <div className="flex flex-col items-end min-w-[80px]">
+                        <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(billingData.reduce((sum, model) => sum + model.usdModelo, 0))}</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-tight mt-0.5">USD Modelo</div>
                       </div>
-                      <div className="text-right">
-                        <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(
+                      <div className="flex flex-col items-end min-w-[80px]">
+                        <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(
                           billingData.reduce((sum, model) => sum + model.usdSede, 0)
                         )}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-tight mt-0.5">
                           {(() => {
                             // Si todos los modelos tienen el mismo grupo, mostrar ese nombre
                             if (billingData.length > 0) {
@@ -818,17 +818,17 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                             </div>
                           </div>
                           <div className="flex items-center justify-between sm:justify-end space-x-3 sm:space-x-6 text-xs sm:text-sm">
-                            <div className="text-right">
-                              <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm">${formatCurrency(model.usdBruto)}</div>
-                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Bruto</div>
+                            <div className="flex flex-col items-end min-w-[80px]">
+                              <div className="font-semibold text-blue-600 dark:text-blue-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdBruto)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-tight mt-0.5">USD Bruto</div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm">${formatCurrency(model.usdModelo)}</div>
-                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">USD Modelo</div>
+                            <div className="flex flex-col items-end min-w-[80px]">
+                              <div className="font-semibold text-green-600 dark:text-green-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdModelo)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-tight mt-0.5">USD Modelo</div>
                             </div>
-                            <div className="text-right">
-                              <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
-                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
+                            <div className="flex flex-col items-end min-w-[80px]">
+                              <div className="font-semibold text-purple-600 dark:text-purple-600 text-xs sm:text-sm leading-tight">${formatCurrency(model.usdSede)}</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500 leading-tight mt-0.5">
                                 {model.groupName ? `USD ${model.groupName}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Sede'}
                               </div>
                             </div>
