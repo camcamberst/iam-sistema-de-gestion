@@ -603,7 +603,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                 <div className="text-right">
                                   <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdSede)}</div>
                                   <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
-                                    {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : `USD ${group.groupName}`}
+                                    {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : `USD ${group.groupName}`}
                                   </div>
                                 </div>
                               </div>
@@ -639,7 +639,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                         <div className="text-right">
                                           <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
                                           <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
-                                            {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : model.groupName ? `USD ${model.groupName}` : 'USD Agencia'}
+                                            {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : model.groupName ? `USD ${model.groupName}` : 'USD Agencia'}
                                           </div>
                                         </div>
                                       </div>
