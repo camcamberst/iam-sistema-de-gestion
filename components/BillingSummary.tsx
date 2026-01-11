@@ -785,7 +785,18 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           billingData.reduce((sum, model) => sum + model.usdSede, 0)
                         )}</div>
                         <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
-                          {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Agencia'}
+                          {(() => {
+                            // Si todos los modelos tienen el mismo grupo, mostrar ese nombre
+                            if (billingData.length > 0) {
+                              const firstGroupName = billingData[0].groupName;
+                              const allSameGroup = billingData.every(model => model.groupName === firstGroupName);
+                              if (allSameGroup && firstGroupName) {
+                                return `USD ${firstGroupName}`;
+                              }
+                            }
+                            // Si hay múltiples grupos o no hay grupo, usar nombre del estudio o fallback
+                            return userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Agencia';
+                          })()}
                         </div>
                       </div>
                     </div>
@@ -818,7 +829,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                             <div className="text-right">
                               <div className="font-semibold text-orange-600 dark:text-orange-400 text-xs">${formatCurrency(model.usdSede)}</div>
                               <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
-                                {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : model.groupName ? `USD ${model.groupName}` : 'USD Sede'}
+                                {model.groupName ? `USD ${model.groupName}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Sede'}
                               </div>
                             </div>
                           </div>
