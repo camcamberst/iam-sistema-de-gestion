@@ -230,38 +230,45 @@ Todas las consultas deben filtrar por `affiliate_studio_id`:
 6. `app/admin/layout.tsx` - Ocultar opciones según rol
 7. `app/admin/calculator/platforms/page.tsx` - Ocultar para superadmin_aff
 
-## 🚀 FASES DE IMPLEMENTACIÓN
+## 🚀 ESTADO DE IMPLEMENTACIÓN
 
-### Fase 1: Base de Datos y Roles
-- [ ] Crear tablas de afiliados
-- [ ] Agregar columna `affiliate_studio_id` a `users` y `sedes`
-- [ ] Agregar rol `superadmin_aff` al sistema
-- [ ] Crear migraciones SQL
+### ✅ Fase 1: Base de Datos y Roles - COMPLETADA
+- [x] Crear tablas de afiliados
+- [x] Agregar columna `affiliate_studio_id` a `users` y `groups`
+- [x] Agregar columna `affiliate_studio_id` a `announcements`
+- [x] Agregar rol `superadmin_aff` al sistema
+- [x] Crear migraciones SQL
 
-### Fase 2: Permisos y Filtros
-- [ ] Implementar sistema de permisos para afiliados
-- [ ] Crear helpers de filtrado por afiliado
-- [ ] Modificar consultas existentes para incluir filtros
+### ✅ Fase 2: Permisos y Filtros - COMPLETADA
+- [x] Implementar sistema de permisos para afiliados
+- [x] Crear helpers de filtrado por afiliado (`lib/affiliates/filters.ts`)
+- [x] Modificar consultas existentes para incluir filtros
+- [x] Implementar validación de permisos en APIs
 
-### Fase 3: Gestión de Afiliados (UI)
-- [ ] Crear página de gestión de afiliados (superadmin)
-- [ ] Crear formulario de creación/edición
-- [ ] Implementar asignación de usuarios a afiliados
+### ✅ Fase 3: Gestión de Afiliados (UI) - COMPLETADA
+- [x] Crear página de gestión de afiliados (`/admin/affiliates/gestionar`)
+- [x] Crear formulario de creación/edición
+- [x] Implementar creación de superadmin AFF
+- [x] Implementar asignación de usuarios a afiliados
 
-### Fase 4: Facturación
-- [ ] Implementar cálculo automático de comisión
-- [ ] Modificar resumen de facturación para incluir afiliados
-- [ ] Crear tabla `affiliate_billing_summary`
+### ✅ Fase 4: Facturación - COMPLETADA
+- [x] Implementar cálculo automático de comisión
+- [x] Modificar resumen de facturación para incluir afiliados
+- [x] Implementar distribución: 60% modelo, 30% estudio, 10% Innova
+- [x] Separar correctamente facturación de Innova y afiliados
 
-### Fase 5: Restricciones de UI
-- [ ] Ocultar opciones según rol (crear plataformas, etc.)
-- [ ] Filtrar datos en todas las vistas
-- [ ] Ajustar menús según rol
+### ✅ Fase 5: Restricciones de UI - COMPLETADA
+- [x] Ocultar opciones según rol (ej: "Definir RATES" para superadmin_aff)
+- [x] Filtrar datos en todas las vistas
+- [x] Ajustar menús según rol
+- [x] Implementar labels dinámicos (ej: "USD [Nombre del Estudio]")
 
-### Fase 6: Testing y Ajustes
-- [ ] Probar flujo completo de afiliado
-- [ ] Verificar cálculos de facturación
-- [ ] Ajustar permisos según necesidades
+### ✅ Fase 6: Testing y Ajustes - COMPLETADA
+- [x] Probar flujo completo de afiliado
+- [x] Verificar cálculos de facturación
+- [x] Ajustar permisos según necesidades
+- [x] Corregir separación de sedes entre Innova y afiliados
+- [x] Mejorar alineación visual de valores monetarios
 
 ## ⚠️ CONSIDERACIONES IMPORTANTES
 
