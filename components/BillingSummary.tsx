@@ -601,8 +601,10 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                   <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
                                 </div>
                                 <div className="text-right">
-                                  <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdBruto - group.totalUsdModelo)}</div>
-                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                  <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(group.totalUsdSede)}</div>
+                                  <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                    {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : `USD ${group.groupName}`}
+                                  </div>
                                 </div>
                               </div>
                             </div>
@@ -636,7 +638,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                         </div>
                                         <div className="text-right">
                                           <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(model.usdSede)}</div>
-                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                            {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : model.groupName ? `USD ${model.groupName}` : 'USD Agencia'}
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
@@ -693,8 +697,10 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                           <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelos</div>
                         </div>
                         <div className="text-right">
-                          <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(sede.totalUsdBruto - sede.totalUsdModelo)}</div>
-                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                          <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(sede.totalUsdSede)}</div>
+                          <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                            {sede.isAffiliate ? `USD ${sede.sedeName.replace(' - Afiliado', '')}` : userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : `USD ${sede.sedeName}`}
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -726,8 +732,10 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                                     <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Modelo</div>
                                   </div>
                                   <div className="text-right">
-                                    <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(model.usdBruto - model.usdModelo)}</div>
-                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                                    <div className="font-semibold text-purple-600 dark:text-purple-400">${formatCurrency(model.usdSede)}</div>
+                                    <div className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                      {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : model.groupName ? `USD ${model.groupName}` : 'USD Agencia'}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
@@ -774,10 +782,11 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                       </div>
                       <div className="text-right">
                         <div className="font-semibold text-purple-600 dark:text-purple-400 text-xs sm:text-sm">${formatCurrency(
-                          billingData.reduce((sum, model) => sum + model.usdBruto, 0) - 
-                          billingData.reduce((sum, model) => sum + model.usdModelo, 0)
+                          billingData.reduce((sum, model) => sum + model.usdSede, 0)
                         )}</div>
-                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Agencia</div>
+                        <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                          {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Agencia'}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -808,7 +817,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                             </div>
                             <div className="text-right">
                               <div className="font-semibold text-orange-600 dark:text-orange-400 text-xs">${formatCurrency(model.usdSede)}</div>
-                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">USD Sede</div>
+                              <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                                {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : model.groupName ? `USD ${model.groupName}` : 'USD Sede'}
+                              </div>
                             </div>
                           </div>
                         </div>
