@@ -814,6 +814,7 @@ export async function GET(request: NextRequest) {
         name: model.name,
         groupId: modelGroup?.id,
         groupName: modelGroup?.name,
+        affiliate_studio_id: model.affiliate_studio_id, // Incluir affiliate_studio_id para filtrar
         usdBruto,
         usdModelo,
         usdSede,
@@ -920,8 +921,11 @@ export async function GET(request: NextRequest) {
         };
 
         // Agrupar modelos por grupo dentro de Agencia Innova
+        // IMPORTANTE: Solo incluir modelos que NO pertenecen a un afiliado (affiliate_studio_id es null)
         const groupMap = new Map();
-        billingData.forEach(model => {
+        const innovaModels = billingData.filter(model => !model.affiliate_studio_id);
+        
+        innovaModels.forEach(model => {
           const groupId = model.groupId;
           
           // Crear o actualizar grupo dentro de Agencia Innova
