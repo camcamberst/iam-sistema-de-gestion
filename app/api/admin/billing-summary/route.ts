@@ -825,6 +825,51 @@ export async function GET(request: NextRequest) {
       totalCopSede: 0
     });
 
+    // Para superadmin_aff: Ajustar summary para mostrar 90% del bruto (después de descontar comisión del 10%)
+    let affiliateStudioName: string | null = null;
+    if (isSuperadminAff && adminUser.affiliate_studio_id) {
+      // Obtener nombre del estudio afiliado
+      const { data: affiliateStudio } = await supabase
+        .from('affiliate_studios')
+        .select('name')
+        .eq('id', adminUser.affiliate_studio_id)
+        .single();
+      
+      if (affiliateStudio) {
+        affiliateStudioName = affiliateStudio.name;
+      }
+
+      // Obtener tasa USD_COP actual
+      const { data: rate } = await supabase
+        .from('rates')
+        .select('value')
+        .eq('kind', 'USD→COP')
+        .eq('active', true)
+        .is('valid_to', null)
+        .order('valid_from', { ascending: false })
+        .limit(1)
+        .single();
+
+      const usdCopRate = rate?.value ? parseFloat(rate.value) : 3900;
+
+      // Calcular comisión de Innova (10% del bruto)
+      const commissionPercentage = 10;
+      const commissionUsd = summary.totalUsdBruto * (commissionPercentage / 100);
+      const commissionCop = commissionUsd * usdCopRate;
+
+      // Ajustar summary: totalUsdSede = 90% del bruto (después de descontar comisión)
+      summary.totalUsdSede = summary.totalUsdBruto - commissionUsd; // 90% del bruto
+      summary.totalCopSede = summary.totalUsdSede * usdCopRate; // 90% del bruto en COP
+
+      console.log('💰 [BILLING-SUMMARY] Summary ajustado para superadmin_aff:', {
+        studioName: affiliateStudioName,
+        totalUsdBruto: summary.totalUsdBruto,
+        commissionUsd,
+        totalUsdSede: summary.totalUsdSede, // 90% del bruto
+        totalUsdModelo: summary.totalUsdModelo // 60% del bruto
+      });
+    }
+
     // 7. Agrupar datos por sedes/grupos
     let groupedData = null;
     console.log('🔍 [BILLING-SUMMARY] Condiciones para groupedData:', {
@@ -1300,7 +1345,8 @@ export async function GET(request: NextRequest) {
       groupedData, // Solo para Super Admin
       periodDate,
       sedeId: sedeId || 'all',
-      adminRole: adminUser.role
+      adminRole: adminUser.role,
+      affiliateStudioName: affiliateStudioName || null // Nombre del estudio afiliado (solo para superadmin_aff)
     });
 
   } catch (error: any) {

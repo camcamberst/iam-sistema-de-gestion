@@ -74,6 +74,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   const [summary, setSummary] = useState<BillingSummary | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [affiliateStudioName, setAffiliateStudioName] = useState<string | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>(propSelectedDate || getColombiaDate());
   const [selectedSede, setSelectedSede] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>(propSelectedPeriod || 'current'); // 'current', 'period-1', 'period-2'
@@ -184,8 +185,14 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
         summary: data.summary,
         groupedDataLength: data.groupedData?.length || 0,
         groupedData: data.groupedData,
-        userGroups
+        userGroups,
+        affiliateStudioName: data.affiliateStudioName
       });
+
+      // Guardar nombre del estudio afiliado si está disponible
+      if (data.affiliateStudioName) {
+        setAffiliateStudioName(data.affiliateStudioName);
+      }
 
       // El API ya está filtrando los datos correctamente, no necesitamos filtrar en el frontend
       let filteredData = data.data || [];
@@ -394,7 +401,9 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               <div className="bg-purple-50/80 dark:bg-purple-50/90 backdrop-blur-sm rounded-lg p-2 sm:p-4 hover:shadow-md transition-all duration-300 border border-purple-200/50 dark:border-purple-200/50">
                 <div className="text-center min-w-0">
                   <div className="text-xs sm:text-xl font-bold text-purple-600 dark:text-purple-600 mb-1 sm:mb-2.5 leading-tight whitespace-nowrap overflow-hidden text-ellipsis">${formatCurrency(summary.totalUsdSede)}</div>
-                  <div className="inline-block bg-purple-100/80 dark:bg-purple-200/80 text-purple-700 dark:text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">USD Agencia</div>
+                  <div className="inline-block bg-purple-100/80 dark:bg-purple-200/80 text-purple-700 dark:text-purple-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap">
+                    {userRole === 'superadmin_aff' && affiliateStudioName ? `USD ${affiliateStudioName}` : 'USD Agencia'}
+                  </div>
                 </div>
               </div>
             </div>
