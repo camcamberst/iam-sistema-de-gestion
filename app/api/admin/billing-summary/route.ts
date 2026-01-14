@@ -780,6 +780,24 @@ export async function GET(request: NextRequest) {
       fromTotals: Array.from(totalsMap.keys()).length
     });
 
+    // 4.5. Obtener commission_percentage de estudios afiliados para cálculos individuales
+    const affiliateCommissionMap = new Map<string, number>();
+    if (models.some(m => m.affiliate_studio_id)) {
+      const affiliateStudioIds = [...new Set(models.filter(m => m.affiliate_studio_id).map(m => m.affiliate_studio_id!))];
+      const { data: affiliateStudiosForCommission } = await supabase
+        .from('affiliate_studios')
+        .select('id, commission_percentage')
+        .in('id', affiliateStudioIds)
+        .eq('is_active', true);
+      
+      if (affiliateStudiosForCommission) {
+        affiliateStudiosForCommission.forEach(studio => {
+          const commission = studio.commission_percentage ? parseFloat(studio.commission_percentage.toString()) / 100 : 0.10;
+          affiliateCommissionMap.set(studio.id, commission);
+        });
+      }
+    }
+
     // 5. Consolidar datos por modelo: incluir todas las modelos del set (cero si no hay datos en rango)
     const billingData = models.map(model => {
       const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
@@ -787,15 +805,18 @@ export async function GET(request: NextRequest) {
 
       const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
       
-      // Para afiliados: Modelo 60%, Estudio 30%, Innova 10%
+      // Para afiliados: Modelo 60%, Estudio (40% - commission_percentage%), Innova (commission_percentage%)
       // Para Innova: Modelo según porcentaje configurado, Agencia = Bruto - Modelo
       let usdModelo: number;
       let usdSede: number;
       
       if (isSuperadminAff || (isAdmin && adminUser.affiliate_studio_id) || model.affiliate_studio_id) {
-        // Lógica para afiliados: Modelo siempre 60%, Estudio 30%
+        // Lógica para afiliados: Modelo siempre 60%, Estudio (40% - commission_percentage%)
+        const commissionPercentage = model.affiliate_studio_id 
+          ? (affiliateCommissionMap.get(model.affiliate_studio_id) || 0.10)
+          : 0.10; // Default 10% si no se encuentra
         usdModelo = usdBruto * 0.60; // 60% del bruto para la modelo
-        usdSede = usdBruto * 0.30; // 30% del bruto para el estudio afiliado
+        usdSede = usdBruto * (0.40 - commissionPercentage); // (40% - commission_percentage%) del bruto para el estudio afiliado
       } else {
         // Lógica para Innova: usar valores de calculator_totals
         usdModelo = totalsForModel.reduce((s, t) => s + (t.total_usd_modelo || 0), 0);
@@ -1063,7 +1084,8 @@ export async function GET(request: NextRequest) {
               }
 
               // Crear datos de facturación para todos los modelos del afiliado (incluso si no tienen totales)
-              // LÓGICA AFILIADOS: Modelo 60%, Agencia Innova 10%, Estudio Afiliado 30%
+              // LÓGICA AFILIADOS: Modelo 60%, Agencia Innova (commission_percentage%), Estudio Afiliado (40% - commission_percentage%)
+              const commissionPercentage = studio.commission_percentage ? parseFloat(studio.commission_percentage.toString()) / 100 : 0.10; // Default 10% si no está definido
               affiliateModelsBillingData = affiliateModels.map(model => {
                 const modelTotal = totalsByModel.get(model.id);
                 const modelGroup = affiliateModelGroupsMap.get(model.id);
@@ -1071,10 +1093,10 @@ export async function GET(request: NextRequest) {
                 const usdBruto = parseFloat(modelTotal?.total_usd_bruto || 0);
                 // Modelo recibe 60% del bruto (independiente de la comisión de Innova)
                 const usdModelo = usdBruto * 0.60;
-                // Estudio afiliado recibe 30% del bruto (diferencia después de modelo e Innova)
-                const usdSede = usdBruto * 0.30;
-                // Comisión para Innova: 10% del bruto (se calcula por separado)
-                const commissionUsd = usdBruto * 0.10;
+                // Comisión para Innova: según commission_percentage del estudio
+                const commissionUsd = usdBruto * commissionPercentage;
+                // Estudio afiliado recibe el resto: 40% - commission_percentage
+                const usdSede = usdBruto * (0.40 - commissionPercentage);
                 
                 const copModelo = usdModelo * usdCopRate;
                 const copSede = usdSede * usdCopRate;
@@ -1134,7 +1156,8 @@ export async function GET(request: NextRequest) {
               }
 
               // Crear datos de facturación para todos los modelos del afiliado (incluso si no tienen historial)
-              // LÓGICA AFILIADOS: Modelo 60%, Agencia Innova 10%, Estudio Afiliado 30%
+              // LÓGICA AFILIADOS: Modelo 60%, Agencia Innova (commission_percentage%), Estudio Afiliado (40% - commission_percentage%)
+              const commissionPercentage = studio.commission_percentage ? parseFloat(studio.commission_percentage.toString()) / 100 : 0.10; // Default 10% si no está definido
               affiliateModelsBillingData = affiliateModels.map(model => {
                 const modelHistory = historyByModel.get(model.id) || { usd_bruto: 0, usd_modelo: 0 };
                 const modelGroup = affiliateModelGroupsMap.get(model.id);
@@ -1142,10 +1165,10 @@ export async function GET(request: NextRequest) {
                 const usdBruto = modelHistory.usd_bruto;
                 // Modelo recibe 60% del bruto (independiente de la comisión de Innova)
                 const usdModelo = usdBruto * 0.60;
-                // Estudio afiliado recibe 30% del bruto (diferencia después de modelo e Innova)
-                const usdSede = usdBruto * 0.30;
-                // Comisión para Innova: 10% del bruto (se calcula por separado)
-                const commissionUsd = usdBruto * 0.10;
+                // Comisión para Innova: según commission_percentage del estudio
+                const commissionUsd = usdBruto * commissionPercentage;
+                // Estudio afiliado recibe el resto: 40% - commission_percentage
+                const usdSede = usdBruto * (0.40 - commissionPercentage);
                 
                 const copModelo = usdModelo * usdCopRate;
                 const copSede = usdSede * usdCopRate;
@@ -1169,13 +1192,14 @@ export async function GET(request: NextRequest) {
               });
             }
 
-            // Calcular totales del afiliado según la lógica: Modelo 60%, Innova 10%, Estudio 30%
+            // Calcular totales del afiliado según la lógica: Modelo 60%, Innova (commission_percentage%), Estudio (40% - commission_percentage%)
+            const commissionPercentage = studio.commission_percentage ? parseFloat(studio.commission_percentage.toString()) / 100 : 0.10; // Default 10% si no está definido
             const affiliateTotalUsdBruto = affiliateModelsBillingData.reduce((acc, m) => acc + m.usdBruto, 0);
             // Suma de lo que reciben las modelos (60% del bruto)
             const affiliateTotalUsdModelo = affiliateModelsBillingData.reduce((acc, m) => acc + m.usdModelo, 0);
-            // Suma de lo que recibe el estudio afiliado (30% del bruto)
+            // Suma de lo que recibe el estudio afiliado (40% - commission_percentage del bruto)
             const affiliateTotalUsdSede = affiliateModelsBillingData.reduce((acc, m) => acc + m.usdSede, 0);
-            // Comisión total para Innova (10% del bruto)
+            // Comisión total para Innova (commission_percentage% del bruto)
             const totalCommissionUsd = affiliateModelsBillingData.reduce((acc, m) => acc + (m.commissionUsd || 0), 0);
             
             const affiliateTotalCopModelo = affiliateModelsBillingData.reduce((acc, m) => acc + m.copModelo, 0);
@@ -1184,12 +1208,13 @@ export async function GET(request: NextRequest) {
 
             console.log('💰 [BILLING-SUMMARY] Totales del afiliado:', {
               studio: studio.name,
+              commission_percentage: studio.commission_percentage,
               totalUsdBruto: affiliateTotalUsdBruto,
-              totalCommissionUsd: totalCommissionUsd, // 10% para Innova
-              totalUsdAfiliado: affiliateTotalUsdBruto - totalCommissionUsd, // 90% para afiliado
+              totalCommissionUsd: totalCommissionUsd, // commission_percentage% para Innova
+              totalUsdAfiliado: affiliateTotalUsdBruto - totalCommissionUsd, // (100% - commission_percentage%) para afiliado
               // Detalles internos:
               totalUsdModelo: affiliateTotalUsdModelo, // 60% para modelos
-              totalUsdEstudio: affiliateTotalUsdSede, // 30% para estudio afiliado
+              totalUsdEstudio: affiliateTotalUsdSede, // (40% - commission_percentage%) para estudio afiliado
               modelsCount: affiliateModelsBillingData.length
             });
 
@@ -1225,11 +1250,11 @@ export async function GET(request: NextRequest) {
             // Crear entrada de afiliado con grupos y modelos
             // PERSPECTIVA AGENCIA INNOVA (card grande):
             // - totalUsdBruto: Bruto total generado
-            // - totalUsdSede: 10% comisión para Innova
-            // - totalUsdAfiliado: 90% del bruto (diferencia entre bruto y comisión Innova)
-            // Los detalles internos (60% modelo, 30% estudio) se muestran en niveles inferiores
-            const totalUsdAfiliado = affiliateTotalUsdBruto - totalCommissionUsd; // 90% del bruto
-            const totalCopAfiliado = totalUsdAfiliado * usdCopRate; // 90% del bruto en COP
+            // - totalUsdSede: commission_percentage% comisión para Innova
+            // - totalUsdAfiliado: (100% - commission_percentage%) del bruto (diferencia entre bruto y comisión Innova)
+            // Los detalles internos (60% modelo, 40% - commission_percentage% estudio) se muestran en niveles inferiores
+            const totalUsdAfiliado = affiliateTotalUsdBruto - totalCommissionUsd; // (100% - commission_percentage%) del bruto
+            const totalCopAfiliado = totalUsdAfiliado * usdCopRate; // (100% - commission_percentage%) del bruto en COP
             
             affiliateBillingData.push({
               sedeId: `affiliate-${studio.id}`,
@@ -1240,16 +1265,16 @@ export async function GET(request: NextRequest) {
               models: affiliateModelsBillingData,
               totalModels: affiliateModelsBillingData.length,
               totalUsdBruto: affiliateTotalUsdBruto,
-              totalUsdSede: totalCommissionUsd, // 10% comisión para Innova
-              totalUsdAfiliado: totalUsdAfiliado, // 90% del bruto (diferencia entre bruto y comisión Innova)
-              totalCopSede: totalCommissionCop, // 10% comisión para Innova (COP)
-              totalCopAfiliado: totalCopAfiliado, // 90% del bruto en COP
+              totalUsdSede: totalCommissionUsd, // commission_percentage% comisión para Innova
+              totalUsdAfiliado: totalUsdAfiliado, // (100% - commission_percentage%) del bruto (diferencia entre bruto y comisión Innova)
+              totalCopSede: totalCommissionCop, // commission_percentage% comisión para Innova (COP)
+              totalCopAfiliado: totalCopAfiliado, // (100% - commission_percentage%) del bruto en COP
               // Detalles internos (para niveles inferiores):
               totalUsdModelo: affiliateTotalUsdModelo, // 60% para modelos (detalle interno)
-              totalUsdEstudio: affiliateTotalUsdSede, // 30% para estudio afiliado (detalle interno)
+              totalUsdEstudio: affiliateTotalUsdSede, // (40% - commission_percentage%) para estudio afiliado (detalle interno)
               totalCopModelo: affiliateTotalCopModelo, // 60% para modelos en COP (detalle interno)
-              totalCopEstudio: affiliateTotalCopSede, // 30% para estudio afiliado en COP (detalle interno)
-              commission_percentage: 10, // Fijo 10% para Innova
+              totalCopEstudio: affiliateTotalCopSede, // (40% - commission_percentage%) para estudio afiliado en COP (detalle interno)
+              commission_percentage: studio.commission_percentage ? parseFloat(studio.commission_percentage.toString()) : 10, // Porcentaje configurado del estudio
               sedes_count: affiliateGroupMap.size
             });
           }
