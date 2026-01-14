@@ -170,15 +170,16 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
         
         // SIEMPRE abrir hacia abajo - calcular altura máxima disponible con margen estético
+        let finalMaxHeight: number;
         if (maxHeightOverride) {
           // Si hay override, usar ese valor directamente sin cálculos adicionales
-          const overrideValue = parseFloat(maxHeightOverride);
-          setMaxHeight(`${overrideValue}px`);
+          finalMaxHeight = parseFloat(maxHeightOverride);
+          setMaxHeight(`${finalMaxHeight}px`);
         } else {
           // Solo calcular dinámicamente si no hay override
           const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
-          const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
-          setMaxHeight(`${calculatedMaxHeight}px`);
+          finalMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
+          setMaxHeight(`${finalMaxHeight}px`);
         }
         
         // Hacer scroll del modal/ventana para que el dropdown sea completamente visible hacia abajo
@@ -191,7 +192,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           const triggerBottomInContainer = triggerRect.bottom - containerRect.top + scrollContainer.scrollTop;
           
           // Calcular cuánto espacio necesitamos para el dropdown completo
-          const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
+          const spaceNeededForDropdown = finalMaxHeight + aestheticMargin + 8;
           const currentSpaceBelow = containerRect.height - (triggerBottomInContainer - scrollContainer.scrollTop);
           
           // Si no hay suficiente espacio, hacer scroll para crear más espacio
@@ -204,7 +205,7 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           }
         } else {
           // Si no hay contenedor con scroll, hacer scroll de la ventana
-          const spaceNeededForDropdown = calculatedMaxHeight + aestheticMargin + 8;
+          const spaceNeededForDropdown = finalMaxHeight + aestheticMargin + 8;
           const currentSpaceBelow = window.innerHeight - triggerRect.bottom;
           
           if (currentSpaceBelow < spaceNeededForDropdown) {
@@ -307,8 +308,8 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           className="absolute z-[9999] w-full mt-1 top-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg dark:shadow-lg dark:shadow-cyan-900/10 dark:ring-0.5 dark:ring-cyan-500/15 overflow-auto apple-scroll"
           style={{ 
             maxHeight,
-            // Altura mínima ajustada según el override
-            minHeight: maxHeightOverride ? '96px' : '144px', // Más compacto si hay override
+            // Sin altura mínima cuando hay override para permitir tamaño compacto según contenido
+            minHeight: maxHeightOverride ? 'auto' : '144px',
             // Agregar padding visual para mejor espaciado
             paddingTop: '4px',
             paddingBottom: '4px'
