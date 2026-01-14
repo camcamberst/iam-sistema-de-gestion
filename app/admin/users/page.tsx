@@ -409,7 +409,15 @@ export default function UsersListPage() {
     if (!canDeleteUser(currentUser, userToDelete)) {
       let errorMessage = 'No tienes permisos para eliminar este usuario';
       
-      if (currentUser.role === 'admin' && userToDelete.role !== 'modelo') {
+      if (currentUser.role === 'superadmin_aff') {
+        if (userToDelete.role === 'super_admin' || userToDelete.role === 'superadmin_aff') {
+          errorMessage = 'No puedes eliminar super administradores u otros superadmin afiliados';
+        } else if (userToDelete.affiliate_studio_id !== currentUser.affiliate_studio_id) {
+          errorMessage = 'Solo puedes eliminar usuarios de tu estudio afiliado';
+        } else {
+          errorMessage = 'No tienes permisos para eliminar este usuario';
+        }
+      } else if (currentUser.role === 'admin' && userToDelete.role !== 'modelo') {
         errorMessage = 'Los administradores solo pueden eliminar modelos';
       } else if (currentUser.role === 'admin' && userToDelete.role === 'modelo') {
         const userGroupIds = currentUser.groups.map(g => g.id);
