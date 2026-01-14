@@ -28,10 +28,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    // Obtener información del usuario actual
+    // Obtener información del usuario actual (incluyendo affiliate_studio_id)
     const { data: currentUser, error: userError } = await supabase
       .from('users')
-      .select('id, role')
+      .select('id, role, affiliate_studio_id')
       .eq('id', user.id)
       .single();
 
@@ -137,15 +137,40 @@ export async function GET(request: NextRequest) {
       });
       
       availableUsers = Array.from(allUsersMap.values());
+    } else if (currentUser.role === 'superadmin_aff') {
+      // Superadmin_aff puede ver modelos y admins de su mismo affiliate_studio_id
+      if (currentUser.affiliate_studio_id) {
+        const { data: affiliateUsers } = await supabase
+          .from('users')
+          .select(`
+            id,
+            name,
+            email,
+            role,
+            is_active,
+            last_login
+          `)
+          .eq('affiliate_studio_id', currentUser.affiliate_studio_id)
+          .eq('is_active', true)
+          .neq('id', user.id)
+          .in('role', ['modelo', 'admin'])
+          .order('name');
+
+        if (affiliateUsers) {
+          availableUsers = affiliateUsers;
+        }
+      }
     } else if (currentUser.role === 'modelo') {
-      // Modelo puede ver admin de su mismo grupo
+      // Modelo puede ver admin de su mismo grupo O superadmin_aff de su mismo affiliate_studio_id
       const { data: userGroups } = await supabase
         .from('user_groups')
         .select('group_id')
         .eq('user_id', user.id);
 
       const groupIds = userGroups?.map((g: any) => g.group_id) || [];
+      const allUsersMap = new Map<string, any>();
 
+      // Obtener admins de su mismo grupo
       if (groupIds.length > 0) {
         const { data: adminsInGroups } = await supabase
           .from('user_groups')
@@ -157,8 +182,35 @@ export async function GET(request: NextRequest) {
           .eq('users.role', 'admin')
           .eq('users.is_active', true);
 
-        availableUsers = adminsInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
+        const groupAdmins = adminsInGroups?.map((ug: any) => ug.users).filter(Boolean) || [];
+        groupAdmins.forEach((admin: any) => {
+          allUsersMap.set(admin.id, admin);
+        });
       }
+
+      // Si el modelo pertenece a un afiliado, también puede ver su superadmin_aff
+      if (currentUser.affiliate_studio_id) {
+        const { data: superadminAff } = await supabase
+          .from('users')
+          .select(`
+            id,
+            name,
+            email,
+            role,
+            is_active,
+            last_login
+          `)
+          .eq('affiliate_studio_id', currentUser.affiliate_studio_id)
+          .eq('role', 'superadmin_aff')
+          .eq('is_active', true)
+          .single();
+
+        if (superadminAff) {
+          allUsersMap.set(superadminAff.id, superadminAff);
+        }
+      }
+
+      availableUsers = Array.from(allUsersMap.values());
     }
 
     // Obtener estados en línea de los usuarios

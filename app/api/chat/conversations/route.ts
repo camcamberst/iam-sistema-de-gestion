@@ -235,10 +235,10 @@ async function validateConversationPermission(
   receiverId: string
 ): Promise<{ allowed: boolean; reason?: string }> {
   
-  // Obtener información de ambos usuarios
+  // Obtener información de ambos usuarios (incluyendo affiliate_studio_id)
   const { data: users, error } = await supabase
     .from('users')
-    .select('id, role')
+    .select('id, role, affiliate_studio_id')
     .in('id', [senderId, receiverId]);
 
   if (error || !users || users.length !== 2) {
@@ -264,6 +264,22 @@ async function validateConversationPermission(
 
   // Super admin puede recibir conversaciones de cualquiera
   if (receiver.role === 'super_admin') {
+    return { allowed: true };
+  }
+
+  // Superadmin_aff puede conversar con modelos y admins de su mismo affiliate_studio_id
+  if (sender.role === 'superadmin_aff' && sender.affiliate_studio_id) {
+    if (receiver.affiliate_studio_id === sender.affiliate_studio_id && 
+        (receiver.role === 'modelo' || receiver.role === 'admin')) {
+      return { allowed: true };
+    }
+  }
+
+  // Modelos y admins de afiliado pueden conversar con su superadmin_aff
+  if ((sender.role === 'modelo' || sender.role === 'admin') && 
+      sender.affiliate_studio_id && 
+      receiver.role === 'superadmin_aff' && 
+      receiver.affiliate_studio_id === sender.affiliate_studio_id) {
     return { allowed: true };
   }
 
