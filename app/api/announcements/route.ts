@@ -232,7 +232,16 @@ export async function GET(request: NextRequest) {
     }
 
     // Si es modelo, filtrar por sus grupos o generales
+    // IMPORTANTE: Si el modelo pertenece a un afiliado, aplicar filtro de afiliado
     if (actualUserRole === 'modelo') {
+      // Aplicar filtro de afiliado si el modelo pertenece a un estudio afiliado
+      if (userAffiliateStudioId) {
+        console.log('🔍 [ANNOUNCEMENTS] Aplicando filtro de afiliado para modelo de afiliado:', userAffiliateStudioId);
+        
+        // Filtrar: anuncios de su estudio O anuncios de Innova compartidos
+        query = query.or(`affiliate_studio_id.eq.${userAffiliateStudioId},and(affiliate_studio_id.is.null,share_with_affiliates.eq.true)`);
+      }
+
       // Obtener IDs de grupos del usuario
       const { data: userGroupsData } = await supabase
         .from('user_groups')
@@ -244,7 +253,8 @@ export async function GET(request: NextRequest) {
       console.log('🔍 [ANNOUNCEMENTS] Filtrado para modelo:', {
         userId,
         userGroupIds,
-        userGroupsParam: userGroups
+        userGroupsParam: userGroups,
+        userAffiliateStudioId
       });
 
       // Si el usuario tiene grupos, filtrar: generales O que tengan al menos un grupo objetivo del usuario
