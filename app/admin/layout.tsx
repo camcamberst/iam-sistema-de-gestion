@@ -1369,8 +1369,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </div>
       </main>
 
-      {/* ChatWidget para admin/super_admin/modelo */}
-      {userInfo && (userInfo.role === 'admin' || userInfo.role === 'super_admin' || userInfo.role === 'modelo') && (
+      {/* ChatWidget para admin/super_admin/modelo/superadmin_aff */}
+      {userInfo && (userInfo.role === 'admin' || userInfo.role === 'super_admin' || userInfo.role === 'modelo' || userInfo.role === 'superadmin_aff') && (
         <ClientOnly>
           <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
         </ClientOnly>
