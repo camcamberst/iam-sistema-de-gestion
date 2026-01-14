@@ -23,6 +23,7 @@ export interface CurrentUser {
     id: string;
     name: string;
   }>;
+  affiliate_studio_id?: string | null;
 }
 
 // =====================================================
@@ -234,6 +235,27 @@ export function canDeleteUser(currentUser: CurrentUser, targetUser: User): boole
   // Super Admin puede eliminar a cualquiera (activos o inactivos)
   if (currentUser.role === 'super_admin') {
     return true;
+  }
+  
+  // Superadmin_aff puede eliminar usuarios de su estudio afiliado
+  if (currentUser.role === 'superadmin_aff') {
+    // Solo puede eliminar usuarios que pertenezcan al mismo estudio afiliado
+    // No puede eliminar a otro superadmin_aff ni a super_admin
+    if (targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff') {
+      return false;
+    }
+    
+    // Verificar que ambos usuarios pertenezcan al mismo estudio afiliado
+    const currentUserAffiliateId = currentUser.affiliate_studio_id;
+    const targetUserAffiliateId = targetUser.affiliate_studio_id;
+    
+    // Si el usuario actual tiene affiliate_studio_id, solo puede eliminar usuarios del mismo estudio
+    if (currentUserAffiliateId) {
+      return currentUserAffiliateId === targetUserAffiliateId;
+    }
+    
+    // Si el usuario actual no tiene affiliate_studio_id, no puede eliminar (no debería pasar)
+    return false;
   }
   
   // Admin puede eliminar modelos de sus grupos (activos o inactivos)

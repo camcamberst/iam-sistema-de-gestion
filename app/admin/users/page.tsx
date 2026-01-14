@@ -75,6 +75,7 @@ export default function UsersListPage() {
           .from('users')
           .select(`
             role,
+            affiliate_studio_id,
             user_groups(
               groups!inner(
                 id,
@@ -100,13 +101,15 @@ export default function UsersListPage() {
         console.log('🔍 [USUARIOS] Datos del usuario actual:', {
           id: user.id,
           role: currentUserData.role,
+          affiliate_studio_id: currentUserData.affiliate_studio_id,
           groups: userGroups
         });
         
         setCurrentUser({
           id: user.id,
           role: currentUserData.role,
-          groups: userGroups
+          groups: userGroups,
+          affiliate_studio_id: currentUserData.affiliate_studio_id || null
         });
       } catch (err) {
         console.error('Error en consulta de usuario:', err);

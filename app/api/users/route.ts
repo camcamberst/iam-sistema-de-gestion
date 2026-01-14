@@ -864,6 +864,79 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // Obtener usuario autenticado para validar permisos
+    const currentUser = await getAuthenticatedUser(request);
+    
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: 'No autenticado' },
+        { status: 401 }
+      );
+    }
+
+    // Obtener información del usuario a eliminar
+    const { data: targetUser, error: targetUserError } = await supabase
+      .from('users')
+      .select('id, role, affiliate_studio_id')
+      .eq('id', userId)
+      .single();
+
+    if (targetUserError || !targetUser) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Validar permisos de eliminación
+    // Super_admin puede eliminar a cualquiera
+    if (currentUser.role === 'super_admin') {
+      // Permitir eliminación
+    } 
+    // Superadmin_aff solo puede eliminar usuarios de su estudio
+    else if (currentUser.role === 'superadmin_aff') {
+      // No puede eliminar a super_admin ni a otro superadmin_aff
+      if (targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff') {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para eliminar este usuario' },
+          { status: 403 }
+        );
+      }
+      
+      // Verificar que ambos usuarios pertenezcan al mismo estudio afiliado
+      if (currentUser.affiliate_studio_id) {
+        if (targetUser.affiliate_studio_id !== currentUser.affiliate_studio_id) {
+          return NextResponse.json(
+            { success: false, error: 'Solo puedes eliminar usuarios de tu estudio afiliado' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para eliminar usuarios' },
+          { status: 403 }
+        );
+      }
+    }
+    // Admin solo puede eliminar modelos de sus grupos (validación adicional si es necesario)
+    else if (currentUser.role === 'admin') {
+      // La validación completa se hace en el frontend con canDeleteUser
+      // Aquí solo verificamos que no sea super_admin
+      if (targetUser.role === 'super_admin') {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para eliminar este usuario' },
+          { status: 403 }
+        );
+      }
+    }
+    // Otros roles no pueden eliminar usuarios
+    else {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permisos para eliminar usuarios' },
+        { status: 403 }
+      );
+    }
+
     // Eliminar grupos primero
     await supabase
       .from('user_groups')
