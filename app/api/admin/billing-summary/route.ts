@@ -783,7 +783,11 @@ export async function GET(request: NextRequest) {
     // 4.5. Obtener commission_percentage de estudios afiliados para cálculos individuales
     const affiliateCommissionMap = new Map<string, number>();
     if (models.some(m => m.affiliate_studio_id)) {
-      const affiliateStudioIds = [...new Set(models.filter(m => m.affiliate_studio_id).map(m => m.affiliate_studio_id!))];
+      const affiliateStudioIdsSet = new Set<string>();
+      models.filter(m => m.affiliate_studio_id).forEach(m => {
+        if (m.affiliate_studio_id) affiliateStudioIdsSet.add(m.affiliate_studio_id);
+      });
+      const affiliateStudioIds = Array.from(affiliateStudioIdsSet);
       const { data: affiliateStudiosForCommission } = await supabase
         .from('affiliate_studios')
         .select('id, commission_percentage')
