@@ -63,6 +63,16 @@ export default function GestionarSedesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [assignmentToDelete, setAssignmentToDelete] = useState<any>(null);
   
+  // Estados para editar/eliminar sede
+  const [showEditSedeModal, setShowEditSedeModal] = useState(false);
+  const [showDeleteSedeModal, setShowDeleteSedeModal] = useState(false);
+  const [sedeToEdit, setSedeToEdit] = useState<any>(null);
+  const [sedeToDelete, setSedeToDelete] = useState<any>(null);
+  const [editSedeName, setEditSedeName] = useState('');
+  const [editSedeDescription, setEditSedeDescription] = useState('');
+  const [editSedeActive, setEditSedeActive] = useState(true);
+  const [userAffiliateStudioId, setUserAffiliateStudioId] = useState<string | null>(null);
+  
   const router = useRouter();
 
   // Función para redirigir al portafolio de la modelo
@@ -88,7 +98,7 @@ export default function GestionarSedesPage() {
     }
   }, [userRole, userGroups]);
 
-  const loadUserInfo = () => {
+  const loadUserInfo = async () => {
     try {
       const userData = localStorage.getItem('user');
       if (userData) {
@@ -107,6 +117,20 @@ export default function GestionarSedesPage() {
         
         setUserGroups(groupIds);
         setUserId(parsed.id || '');
+      }
+
+      // Obtener affiliate_studio_id del usuario desde la base de datos
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: userData } = await supabase
+          .from('users')
+          .select('affiliate_studio_id')
+          .eq('id', session.user.id)
+          .single();
+        
+        if (userData) {
+          setUserAffiliateStudioId(userData.affiliate_studio_id);
+        }
       }
     } catch (error) {
       console.warn('Error parsing user data from localStorage:', error);

@@ -353,3 +353,296 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// PUT: Actualizar grupo (sede)
+export async function PUT(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { id, name, description, is_active } = body;
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'ID del grupo es requerido' },
+        { status: 400 }
+      );
+    }
+
+    if (!name || !name.trim()) {
+      return NextResponse.json(
+        { success: false, error: 'El nombre del grupo es requerido' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = supabaseServer;
+    const authHeader = request.headers.get('authorization');
+
+    if (!authHeader) {
+      return NextResponse.json(
+        { success: false, error: 'Token de autorización requerido' },
+        { status: 401 }
+      );
+    }
+
+    // Obtener información del usuario
+    const token = authHeader.replace('Bearer ', ');
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Token inválido o expirado' },
+        { status: 401 }
+      );
+    }
+
+    const { data: userData, error: userDataError } = await supabaseServer
+      .from('users')
+      .select('role, affiliate_studio_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userDataError || !userData) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Solo super_admin o superadmin_aff pueden editar grupos
+    if (userData.role !== 'super_admin' && userData.role !== 'superadmin_aff') {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permisos para editar sedes' },
+        { status: 403 }
+      );
+    }
+
+    // Obtener el grupo actual para verificar permisos
+    const { data: currentGroup, error: groupError } = await supabase
+      .from('groups')
+      .select('id, name, affiliate_studio_id')
+      .eq('id', id)
+      .single();
+
+    if (groupError || !currentGroup) {
+      return NextResponse.json(
+        { success: false, error: 'Sede no encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Si es superadmin_aff, verificar que la sede pertenezca a su estudio
+    if (userData.role === 'superadmin_aff' && userData.affiliate_studio_id) {
+      if (currentGroup.affiliate_studio_id !== userData.affiliate_studio_id) {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para editar esta sede' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Preparar datos de actualización
+    const updateData: any = {
+      name: name.trim(),
+      updated_at: new Date().toISOString()
+    };
+
+    if (description !== undefined) {
+      updateData.description = description;
+    }
+
+    if (is_active !== undefined) {
+      updateData.is_active = is_active;
+    }
+
+    // Actualizar el grupo
+    const { data: updatedGroup, error: updateError } = await supabase
+      .from('groups')
+      .update(updateData)
+      .eq('id', id)
+      .select('id, name, is_active, description, created_at, affiliate_studio_id')
+      .single();
+
+    if (updateError) {
+      console.error('❌ [API] Error actualizando grupo:', updateError);
+      
+      if (updateError.code === '23505') {
+        return NextResponse.json(
+          { success: false, error: 'Ya existe una sede con ese nombre' },
+          { status: 400 }
+        );
+      }
+
+      return NextResponse.json(
+        { success: false, error: updateError.message || 'Error actualizando sede' },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ [API] Grupo actualizado:', updatedGroup);
+
+    return NextResponse.json({
+      success: true,
+      group: updatedGroup
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error general:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno' },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE: Eliminar grupo (sede)
+export async function DELETE(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json(
+        { success: false, error: 'ID del grupo es requerido' },
+        { status: 400 }
+      );
+    }
+
+    const supabase = supabaseServer;
+    const authHeader = request.headers.get('authorization');
+
+    if (!authHeader) {
+      return NextResponse.json(
+        { success: false, error: 'Token de autorización requerido' },
+        { status: 401 }
+      );
+    }
+
+    // Obtener información del usuario
+    const token = authHeader.replace('Bearer ', ');
+    const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+
+    if (userError || !user) {
+      return NextResponse.json(
+        { success: false, error: 'Token inválido o expirado' },
+        { status: 401 }
+      );
+    }
+
+    const { data: userData, error: userDataError } = await supabaseServer
+      .from('users')
+      .select('role, affiliate_studio_id')
+      .eq('id', user.id)
+      .single();
+
+    if (userDataError || !userData) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Solo super_admin o superadmin_aff pueden eliminar grupos
+    if (userData.role !== 'super_admin' && userData.role !== 'superadmin_aff') {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permisos para eliminar sedes' },
+        { status: 403 }
+      );
+    }
+
+    // Obtener el grupo actual para verificar permisos y dependencias
+    const { data: currentGroup, error: groupError } = await supabase
+      .from('groups')
+      .select('id, name, affiliate_studio_id')
+      .eq('id', id)
+      .single();
+
+    if (groupError || !currentGroup) {
+      return NextResponse.json(
+        { success: false, error: 'Sede no encontrada' },
+        { status: 404 }
+      );
+    }
+
+    // Si es superadmin_aff, verificar que la sede pertenezca a su estudio
+    if (userData.role === 'superadmin_aff' && userData.affiliate_studio_id) {
+      if (currentGroup.affiliate_studio_id !== userData.affiliate_studio_id) {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para eliminar esta sede' },
+          { status: 403 }
+        );
+      }
+    }
+
+    // Verificar si hay usuarios asignados a esta sede
+    const { data: usersInGroup, error: usersError } = await supabase
+      .from('user_groups')
+      .select('user_id')
+      .eq('group_id', id)
+      .limit(1);
+
+    if (usersError) {
+      console.error('❌ [API] Error verificando usuarios en grupo:', usersError);
+      return NextResponse.json(
+        { success: false, error: 'Error verificando dependencias' },
+        { status: 500 }
+      );
+    }
+
+    // Verificar si hay rooms en esta sede
+    const { data: roomsInGroup, error: roomsError } = await supabase
+      .from('rooms')
+      .select('id')
+      .eq('group_id', id)
+      .limit(1);
+
+    if (roomsError) {
+      console.error('❌ [API] Error verificando rooms en grupo:', roomsError);
+      return NextResponse.json(
+        { success: false, error: 'Error verificando dependencias' },
+        { status: 500 }
+      );
+    }
+
+    // Si hay usuarios o rooms, no permitir eliminación directa
+    if ((usersInGroup && usersInGroup.length > 0) || (roomsInGroup && roomsInGroup.length > 0)) {
+      return NextResponse.json(
+        { 
+          success: false, 
+          error: 'No se puede eliminar la sede porque tiene usuarios o rooms asignados. Primero elimina o reasigna los usuarios y rooms.',
+          hasDependencies: true,
+          usersCount: usersInGroup?.length || 0,
+          roomsCount: roomsInGroup?.length || 0
+        },
+        { status: 400 }
+      );
+    }
+
+    // Eliminar el grupo
+    const { error: deleteError } = await supabase
+      .from('groups')
+      .delete()
+      .eq('id', id);
+
+    if (deleteError) {
+      console.error('❌ [API] Error eliminando grupo:', deleteError);
+      return NextResponse.json(
+        { success: false, error: deleteError.message || 'Error eliminando sede' },
+        { status: 500 }
+      );
+    }
+
+    console.log('✅ [API] Grupo eliminado:', id);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Sede eliminada exitosamente'
+    });
+
+  } catch (error) {
+    console.error('❌ [API] Error general:', error);
+    return NextResponse.json(
+      { success: false, error: 'Error interno' },
+      { status: 500 }
+    );
+  }
+}
