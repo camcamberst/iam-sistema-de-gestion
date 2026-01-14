@@ -170,11 +170,16 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         const estimatedDropdownHeight = Math.min(options.length * 48 + 16, 320); // ~48px por opción + padding
         
         // SIEMPRE abrir hacia abajo - calcular altura máxima disponible con margen estético
-        const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
-        const defaultMaxHeight = maxHeightOverride ? parseFloat(maxHeightOverride) : 320; // Usar override si existe
-        const calculatedMaxHeight = Math.min(availableHeight, defaultMaxHeight);
-        
-        setMaxHeight(`${calculatedMaxHeight}px`);
+        if (maxHeightOverride) {
+          // Si hay override, usar ese valor directamente sin cálculos adicionales
+          const overrideValue = parseFloat(maxHeightOverride);
+          setMaxHeight(`${overrideValue}px`);
+        } else {
+          // Solo calcular dinámicamente si no hay override
+          const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
+          const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
+          setMaxHeight(`${calculatedMaxHeight}px`);
+        }
         
         // Hacer scroll del modal/ventana para que el dropdown sea completamente visible hacia abajo
         // Usar el mismo contenedor que usamos para calcular el espacio
