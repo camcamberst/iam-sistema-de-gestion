@@ -15,9 +15,10 @@ interface ActiveRatesPanelProps {
   compact?: boolean;
   showTitle?: boolean;
   refreshTrigger?: number; // Para forzar actualización desde el componente padre
+  userRole?: 'admin' | 'super_admin' | 'superadmin_aff' | string; // Rol del usuario para ocultar información según corresponda
 }
 
-export default function ActiveRatesPanel({ compact = false, showTitle = true, refreshTrigger }: ActiveRatesPanelProps) {
+export default function ActiveRatesPanel({ compact = false, showTitle = true, refreshTrigger, userRole }: ActiveRatesPanelProps) {
   const [rates, setRates] = useState<ActiveRate[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -138,7 +139,9 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{rate.value}</div>
-                    <div className="text-xs text-gray-800 dark:text-gray-900">{getScopeLabel(rate.scope)}</div>
+                    {userRole !== 'superadmin_aff' && (
+                      <div className="text-xs text-gray-800 dark:text-gray-900">{getScopeLabel(rate.scope)}</div>
+                    )}
                   </div>
                 </div>
               ))
@@ -206,7 +209,9 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
                   </div>
                   <div>
                     <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{getKindLabel(rate.kind)}</div>
-                    <div className="text-xs text-gray-500 dark:text-gray-900">{getScopeLabel(rate.scope)}</div>
+                    {userRole !== 'superadmin_aff' && (
+                      <div className="text-xs text-gray-500 dark:text-gray-900">{getScopeLabel(rate.scope)}</div>
+                    )}
                   </div>
                 </div>
                 <div className="text-right">

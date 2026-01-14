@@ -237,7 +237,10 @@ export default function AdminDashboard() {
         {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin, Admin y Superadmin AFF */}
         {(user?.role === 'super_admin' || user?.role === 'admin' || user?.role === 'superadmin_aff') && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
-            <ActiveRatesPanel compact={true} />
+            <ActiveRatesPanel 
+              compact={true} 
+              userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'}
+            />
             <BillingSummaryCompact 
               userRole={user.role as 'admin' | 'super_admin' | 'superadmin_aff'} 
               userId={user.id}
