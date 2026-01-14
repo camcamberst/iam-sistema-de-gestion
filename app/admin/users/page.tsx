@@ -21,7 +21,7 @@ interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
+  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' | 'superadmin_aff';
   is_active: boolean;
   last_login?: string;
   created_at: string;
@@ -29,6 +29,7 @@ interface User {
     id: string;
     name: string;
   }>;
+  affiliate_studio_id?: string | null;
 }
 
 interface Group {
