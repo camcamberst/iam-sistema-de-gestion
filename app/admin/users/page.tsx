@@ -360,7 +360,15 @@ export default function UsersListPage() {
     if (!canEditUser(currentUser, user)) {
       let errorMessage = 'No tienes permisos para editar este usuario';
       
-      if (currentUser.role === 'admin' && user.role !== 'modelo') {
+      if (currentUser.role === 'superadmin_aff') {
+        if (user.role === 'super_admin' || user.role === 'superadmin_aff') {
+          errorMessage = 'No puedes editar super administradores u otros superadmin afiliados';
+        } else if (user.affiliate_studio_id !== currentUser.affiliate_studio_id) {
+          errorMessage = 'Solo puedes editar usuarios de tu estudio afiliado';
+        } else {
+          errorMessage = 'No tienes permisos para editar este usuario';
+        }
+      } else if (currentUser.role === 'admin' && user.role !== 'modelo') {
         errorMessage = 'Los administradores solo pueden editar modelos';
       } else if (currentUser.role === 'admin' && user.role === 'modelo') {
         const userGroupIds = currentUser.groups.map(g => g.id);

@@ -195,6 +195,26 @@ export function canEditUser(currentUser: CurrentUser, targetUser: User): boolean
     return true;
   }
   
+  // Superadmin_aff puede editar usuarios de su estudio afiliado
+  if (currentUser.role === 'superadmin_aff') {
+    // No puede editar a super_admin ni a otro superadmin_aff
+    if (targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff') {
+      return false;
+    }
+    
+    // Verificar que ambos usuarios pertenezcan al mismo estudio afiliado
+    const currentUserAffiliateId = currentUser.affiliate_studio_id;
+    const targetUserAffiliateId = targetUser.affiliate_studio_id;
+    
+    // Si el usuario actual tiene affiliate_studio_id, solo puede editar usuarios del mismo estudio
+    if (currentUserAffiliateId) {
+      return currentUserAffiliateId === targetUserAffiliateId;
+    }
+    
+    // Si el usuario actual no tiene affiliate_studio_id, no puede editar (no debería pasar)
+    return false;
+  }
+  
   // Admin puede editar modelos de sus grupos (activos o inactivos)
   if (currentUser.role === 'admin') {
     const userGroupIds = currentUser.groups.map(g => g.id);

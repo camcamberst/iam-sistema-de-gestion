@@ -514,6 +514,16 @@ export async function PUT(request: NextRequest) {
     
     const supabase = supabaseServer;
 
+    // Obtener usuario autenticado para validar permisos
+    const currentUser = await getAuthenticatedUser(request);
+    
+    if (!currentUser) {
+      return NextResponse.json(
+        { success: false, error: 'No autenticado' },
+        { status: 401 }
+      );
+    }
+
     const body = await request.json();
     console.log('🔍 [DEBUG] Body completo recibido en PUT:', JSON.stringify(body, null, 2));
     
@@ -530,6 +540,69 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Datos vitales faltantes' },
         { status: 400 }
+      );
+    }
+
+    // Obtener información del usuario a editar
+    const { data: targetUser, error: targetUserError } = await supabase
+      .from('users')
+      .select('id, role, affiliate_studio_id')
+      .eq('id', id)
+      .single();
+
+    if (targetUserError || !targetUser) {
+      return NextResponse.json(
+        { success: false, error: 'Usuario no encontrado' },
+        { status: 404 }
+      );
+    }
+
+    // Validar permisos de edición
+    // Super_admin puede editar a cualquiera
+    if (currentUser.role === 'super_admin') {
+      // Permitir edición
+    } 
+    // Superadmin_aff solo puede editar usuarios de su estudio
+    else if (currentUser.role === 'superadmin_aff') {
+      // No puede editar a super_admin ni a otro superadmin_aff
+      if (targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff') {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para editar este usuario' },
+          { status: 403 }
+        );
+      }
+      
+      // Verificar que ambos usuarios pertenezcan al mismo estudio afiliado
+      if (currentUser.affiliate_studio_id) {
+        if (targetUser.affiliate_studio_id !== currentUser.affiliate_studio_id) {
+          return NextResponse.json(
+            { success: false, error: 'Solo puedes editar usuarios de tu estudio afiliado' },
+            { status: 403 }
+          );
+        }
+      } else {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para editar usuarios' },
+          { status: 403 }
+        );
+      }
+    }
+    // Admin solo puede editar modelos de sus grupos (validación adicional si es necesario)
+    else if (currentUser.role === 'admin') {
+      // La validación completa se hace en el frontend con canEditUser
+      // Aquí solo verificamos que no sea super_admin
+      if (targetUser.role === 'super_admin') {
+        return NextResponse.json(
+          { success: false, error: 'No tienes permisos para editar este usuario' },
+          { status: 403 }
+        );
+      }
+    }
+    // Otros roles no pueden editar usuarios
+    else {
+      return NextResponse.json(
+        { success: false, error: 'No tienes permisos para editar usuarios' },
+        { status: 403 }
       );
     }
 
