@@ -302,11 +302,11 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
           className="absolute z-[9999] w-full mt-1 top-full rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-700 shadow-lg dark:shadow-lg dark:shadow-cyan-900/10 dark:ring-0.5 dark:ring-cyan-500/15 overflow-auto apple-scroll"
           style={{ 
             maxHeight,
-            // Altura mínima suficiente para mostrar al menos 3 opciones completas
-            minHeight: '144px',
+            // Altura mínima ajustada según el override
+            minHeight: maxHeightOverride ? '96px' : '144px', // Más compacto si hay override
             // Agregar padding visual para mejor espaciado
-            paddingTop: '6px',
-            paddingBottom: '6px'
+            paddingTop: '4px',
+            paddingBottom: '4px'
           }}
           onMouseEnter={() => setIsHovering(true)}
           onMouseLeave={() => setIsHovering(false)}

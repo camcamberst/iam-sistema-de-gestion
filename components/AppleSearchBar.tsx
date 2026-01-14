@@ -182,8 +182,15 @@ export default function AppleSearchBar({
   // 🎨 RENDER FUNCTIONS
   // ===========================================
   const renderFilter = (filter: SearchFilter) => {
-    // Ajustar altura máxima para dropdowns "Grupos" y "Estado"
-    const maxHeightOverride = (filter.id === 'group' || filter.id === 'status') ? '200px' : undefined;
+    // Ajustar altura máxima para todos los dropdowns de filtros
+    // Grupos y Estado: más compactos (150px)
+    // Rol: tamaño medio (180px)
+    let maxHeightOverride: string | undefined;
+    if (filter.id === 'group' || filter.id === 'status') {
+      maxHeightOverride = '150px';
+    } else if (filter.id === 'role') {
+      maxHeightOverride = '180px';
+    }
     
     return (
       <div 
