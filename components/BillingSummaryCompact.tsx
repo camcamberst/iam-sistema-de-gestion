@@ -51,6 +51,8 @@ interface SedeData {
   totalUsdBruto: number;
   totalUsdModelo: number;
   totalUsdSede: number;
+  isAffiliate?: boolean;
+  affiliate_studio_id?: string;
 }
 
 export default function BillingSummaryCompact({ userRole, userId, userGroups = [] }: BillingSummaryCompactProps) {
@@ -109,74 +111,90 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         throw new Error(data.error || 'Error al cargar los datos');
       }
 
-      // Aplicar filtros de jerarquía
-      let billingData: BillingData[] = data.data || [];
-      
-      // Si es admin, filtrar solo por sus grupos
-      if (userRole === 'admin' && userGroups.length > 0) {
-        billingData = billingData.filter(model => 
-          userGroups.includes(model.groupName)
-        );
+      // Si la API retorna groupedData (para super_admin), usarlo directamente
+      if (data.groupedData && Array.isArray(data.groupedData) && data.groupedData.length > 0) {
+        // Usar datos agrupados de la API (ya incluye separación de afiliados)
+        const summaryData: Summary = data.summary || {
+          totalModels: data.groupedData.reduce((sum: number, sede: SedeData) => sum + sede.totalModels, 0),
+          totalUsdBruto: data.groupedData.reduce((sum: number, sede: SedeData) => sum + sede.totalUsdBruto, 0),
+          totalUsdModelo: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalUsdModelo || 0), 0),
+          totalUsdSede: data.groupedData.reduce((sum: number, sede: SedeData) => sum + sede.totalUsdSede, 0),
+          totalCopModelo: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalCopModelo || 0), 0),
+          totalCopSede: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalCopSede || 0), 0),
+        };
+        
+        setSummary(summaryData);
+        setGroupedData(data.groupedData);
+      } else {
+        // Fallback: procesar datos individuales (para admin o superadmin_aff)
+        let billingData: BillingData[] = data.data || [];
+        
+        // Si es admin, filtrar solo por sus grupos
+        if (userRole === 'admin' && userGroups.length > 0) {
+          billingData = billingData.filter(model => 
+            userGroups.includes(model.groupName)
+          );
+        }
+        
+        // Calcular resumen
+        const summaryData: Summary = {
+          totalModels: billingData.length,
+          totalUsdBruto: billingData.reduce((sum, model) => sum + model.usdBruto, 0),
+          totalUsdModelo: billingData.reduce((sum, model) => sum + model.usdModelo, 0),
+          totalUsdSede: billingData.reduce((sum, model) => sum + model.usdSede, 0),
+          totalCopModelo: billingData.reduce((sum, model) => sum + model.copModelo, 0),
+          totalCopSede: billingData.reduce((sum, model) => sum + model.copSede, 0),
+        };
+
+        // Procesar datos agrupados por sede y grupo
+        const sedeMap = new Map<string, SedeData>();
+        
+        billingData.forEach(model => {
+          const sedeId = model.organizationId || 'unknown';
+          const groupId = model.groupId || 'unknown';
+          
+          // Inicializar sede si no existe
+          if (!sedeMap.has(sedeId)) {
+            sedeMap.set(sedeId, {
+              sedeId,
+              sedeName: model.organizationId ? 'Agencia Innova' : 'Agencia Innova',
+              totalModels: 0,
+              groups: [],
+              totalUsdBruto: 0,
+              totalUsdModelo: 0,
+              totalUsdSede: 0,
+            });
+          }
+          
+          const sede = sedeMap.get(sedeId)!;
+          sede.totalModels++;
+          sede.totalUsdBruto += model.usdBruto;
+          sede.totalUsdModelo += model.usdModelo;
+          sede.totalUsdSede += model.usdSede;
+          
+          // Buscar o crear grupo
+          let group = sede.groups.find(g => g.groupId === groupId);
+          if (!group) {
+            group = {
+              groupId,
+              groupName: model.groupName || 'Grupo Desconocido',
+              totalModels: 0,
+              totalUsdBruto: 0,
+              totalUsdModelo: 0,
+              totalUsdSede: 0,
+            };
+            sede.groups.push(group);
+          }
+          
+          group.totalModels++;
+          group.totalUsdBruto += model.usdBruto;
+          group.totalUsdModelo += model.usdModelo;
+          group.totalUsdSede += model.usdSede;
+        });
+
+        setSummary(summaryData);
+        setGroupedData(Array.from(sedeMap.values()));
       }
-      
-      // Calcular resumen
-      const summaryData: Summary = {
-        totalModels: billingData.length,
-        totalUsdBruto: billingData.reduce((sum, model) => sum + model.usdBruto, 0),
-        totalUsdModelo: billingData.reduce((sum, model) => sum + model.usdModelo, 0),
-        totalUsdSede: billingData.reduce((sum, model) => sum + model.usdSede, 0),
-        totalCopModelo: billingData.reduce((sum, model) => sum + model.copModelo, 0),
-        totalCopSede: billingData.reduce((sum, model) => sum + model.copSede, 0),
-      };
-
-      // Procesar datos agrupados por sede y grupo
-      const sedeMap = new Map<string, SedeData>();
-      
-      billingData.forEach(model => {
-        const sedeId = model.organizationId || 'unknown';
-        const groupId = model.groupId || 'unknown';
-        
-        // Inicializar sede si no existe
-        if (!sedeMap.has(sedeId)) {
-          sedeMap.set(sedeId, {
-            sedeId,
-            sedeName: model.organizationId ? 'Agencia Innova' : 'Agencia Innova',
-            totalModels: 0,
-            groups: [],
-            totalUsdBruto: 0,
-            totalUsdModelo: 0,
-            totalUsdSede: 0,
-          });
-        }
-        
-        const sede = sedeMap.get(sedeId)!;
-        sede.totalModels++;
-        sede.totalUsdBruto += model.usdBruto;
-        sede.totalUsdModelo += model.usdModelo;
-        sede.totalUsdSede += model.usdSede;
-        
-        // Buscar o crear grupo
-        let group = sede.groups.find(g => g.groupId === groupId);
-        if (!group) {
-          group = {
-            groupId,
-            groupName: model.groupName || 'Grupo Desconocido',
-            totalModels: 0,
-            totalUsdBruto: 0,
-            totalUsdModelo: 0,
-            totalUsdSede: 0,
-          };
-          sede.groups.push(group);
-        }
-        
-        group.totalModels++;
-        group.totalUsdBruto += model.usdBruto;
-        group.totalUsdModelo += model.usdModelo;
-        group.totalUsdSede += model.usdSede;
-      });
-
-      setSummary(summaryData);
-      setGroupedData(Array.from(sedeMap.values()));
     } catch (error: any) {
       console.error('Error loading billing data:', error);
       setError(error.message || 'Error al cargar los datos');
@@ -299,13 +317,26 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
                     <div key={sede.sedeId} className="bg-white dark:bg-white rounded-lg border border-gray-200/40 dark:border-gray-600/40 p-2">
                       {/* Header de Sede */}
                       <div className="flex items-center space-x-2 mb-1">
-                        <div className="w-4 h-4 bg-gradient-to-br from-blue-500/10 to-indigo-500/10 rounded flex items-center justify-center">
-                          <svg className="w-2.5 h-2.5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className={`w-4 h-4 rounded flex items-center justify-center ${
+                          sede.isAffiliate 
+                            ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10' 
+                            : 'bg-gradient-to-br from-blue-500/10 to-indigo-500/10'
+                        }`}>
+                          <svg className={`w-2.5 h-2.5 ${
+                            sede.isAffiliate ? 'text-purple-600' : 'text-blue-600'
+                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                           </svg>
                         </div>
-                        <div>
-                          <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{sede.sedeName}</div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-1.5">
+                            <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{sede.sedeName}</div>
+                            {sede.isAffiliate && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                Afiliado
+                              </span>
+                            )}
+                          </div>
                           <div className="text-xs text-gray-900 dark:text-gray-900">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
                         </div>
                       </div>

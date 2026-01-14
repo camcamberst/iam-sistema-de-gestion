@@ -910,6 +910,7 @@ export async function GET(request: NextRequest) {
         const agenciaInnova: any = {
           sedeId: 'agencia-innova',
           sedeName: 'Agencia Innova',
+          isAffiliate: false,
           groups: [],
           models: [],
           totalModels: 0,
