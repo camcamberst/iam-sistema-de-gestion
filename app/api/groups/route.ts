@@ -103,26 +103,29 @@ export async function GET(request: NextRequest) {
 
     // Log detallado para debugging
     console.log('✅ [API] Grupos obtenidos:', groups?.length || 0, 'para rol:', userRole);
+    
+    // SIEMPRE filtrar en el servidor para superadmin master (sin affiliate_studio_id)
     if (userRole === 'super_admin' && !currentUser?.affiliate_studio_id) {
-      const gruposConAfiliado = groups?.filter((g: any) => g.affiliate_studio_id !== null) || [];
-      const gruposSinAfiliado = groups?.filter((g: any) => g.affiliate_studio_id === null) || [];
-      console.log('🔍 [API] Debug - Grupos con afiliado:', gruposConAfiliado.length);
-      console.log('🔍 [API] Debug - Grupos sin afiliado (Innova):', gruposSinAfiliado.length);
+      // Filtrar SOLO grupos sin affiliate_studio_id (sedes de Agencia Innova)
+      const gruposFiltrados = (groups || []).filter((g: any) => g.affiliate_studio_id === null || g.affiliate_studio_id === undefined);
+      const gruposConAfiliado = (groups || []).filter((g: any) => g.affiliate_studio_id !== null && g.affiliate_studio_id !== undefined);
+      
+      console.log('🔍 [API] Debug - Total grupos obtenidos:', groups?.length || 0);
+      console.log('🔍 [API] Debug - Grupos con afiliado (serán filtrados):', gruposConAfiliado.length);
+      console.log('🔍 [API] Debug - Grupos sin afiliado (Innova - se mostrarán):', gruposFiltrados.length);
+      
       if (gruposConAfiliado.length > 0) {
-        console.log('⚠️ [API] WARNING: Se encontraron grupos de afiliados que no deberían aparecer!');
+        console.log('⚠️ [API] WARNING: Se encontraron grupos de afiliados que serán filtrados!');
         console.log('🔍 [API] Grupos con afiliado:', gruposConAfiliado.map((g: any) => ({ id: g.id, name: g.name, affiliate_studio_id: g.affiliate_studio_id })));
       }
       
-      // Filtrar en el servidor como respaldo si el query no funcionó
-      const gruposFiltrados = groups?.filter((g: any) => g.affiliate_studio_id === null) || [];
-      if (gruposFiltrados.length !== groups?.length) {
-        console.log('🔧 [API] Aplicando filtro adicional en servidor (respaldo)');
-        return NextResponse.json({
-          success: true,
-          groups: gruposFiltrados,
-          userRole: userRole
-        });
-      }
+      // SIEMPRE devolver solo los grupos filtrados
+      console.log('🔧 [API] Aplicando filtro en servidor para superadmin master');
+      return NextResponse.json({
+        success: true,
+        groups: gruposFiltrados,
+        userRole: userRole
+      });
     }
 
     return NextResponse.json({
