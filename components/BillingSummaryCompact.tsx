@@ -63,6 +63,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
+  const [affiliateStudioName, setAffiliateStudioName] = useState<string | null>(null);
 
   const formatCurrency = (amount: number, currency: string = 'USD') => {
     if (currency === 'COP') {
@@ -113,6 +114,11 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         throw new Error(data.error || 'Error al cargar los datos');
       }
 
+      // Capturar nombre del estudio afiliado si está disponible
+      if (data.affiliateStudioName) {
+        setAffiliateStudioName(data.affiliateStudioName);
+      }
+
       // Si la API retorna groupedData (para super_admin), usarlo directamente
       if (data.groupedData && Array.isArray(data.groupedData) && data.groupedData.length > 0) {
         // Usar datos agrupados de la API (ya incluye separación de afiliados)
@@ -157,9 +163,14 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           
           // Inicializar sede si no existe
           if (!sedeMap.has(sedeId)) {
+            // Para superadmin_aff, usar el nombre del estudio afiliado
+            const sedeName = userRole === 'superadmin_aff' && data.affiliateStudioName 
+              ? data.affiliateStudioName 
+              : 'Agencia Innova';
+            
             sedeMap.set(sedeId, {
               sedeId,
-              sedeName: model.organizationId ? 'Agencia Innova' : 'Agencia Innova',
+              sedeName,
               totalModels: 0,
               groups: [],
               totalUsdBruto: 0,
@@ -303,7 +314,11 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
             </div>
             <div className="text-center p-2 rounded-lg bg-purple-50/80">
               <div className="text-sm font-bold text-purple-600">${formatCurrency(summary.totalUsdSede)}</div>
-              <div className="text-xs text-purple-700">USD Agencia</div>
+              <div className="text-xs text-purple-700">
+                {userRole === 'superadmin_aff' && affiliateStudioName 
+                  ? `USD ${affiliateStudioName}` 
+                  : 'USD Agencia'}
+              </div>
             </div>
           </div>
 
