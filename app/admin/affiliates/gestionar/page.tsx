@@ -686,13 +686,13 @@ export default function GestionarAfiliadosPage() {
                             setEditAffiliateIsActive(affiliate.is_active);
                             setShowEditAffiliate(true);
                           }}
-                          className="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors border border-blue-200 dark:border-blue-800"
+                          className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 rounded transition-colors"
                         >
                           Editar
                         </button>
                         <button
                           onClick={() => handleDeleteAffiliate(affiliate.id, affiliate.name)}
-                          className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors border border-red-200 dark:border-red-800"
+                          className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors"
                         >
                           Eliminar
                         </button>
