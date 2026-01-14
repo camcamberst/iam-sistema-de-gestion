@@ -17,12 +17,13 @@ interface AppleSelectProps {
   className?: string;
   onFocus?: () => void;
   onBlur?: () => void;
+  maxHeightOverride?: string; // Altura máxima personalizada para el dropdown
 }
 
-export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "", onFocus, onBlur }: AppleSelectProps) {
+export default function AppleSelect({ label, value, options, placeholder = "Selecciona", onChange, className = "", onFocus, onBlur, maxHeightOverride }: AppleSelectProps) {
   const [open, setOpen] = useState(false);
   const [isHovering, setIsHovering] = useState(false);
-  const [maxHeight, setMaxHeight] = useState<string>('20rem'); // max-h-80
+  const [maxHeight, setMaxHeight] = useState<string>(maxHeightOverride || '20rem'); // max-h-80 o personalizado
   const ref = useRef<HTMLDivElement | null>(null);
   const dropdownRef = useRef<HTMLDivElement | null>(null);
   const [isMobile, setIsMobile] = useState(false);
@@ -170,7 +171,8 @@ export default function AppleSelect({ label, value, options, placeholder = "Sele
         
         // SIEMPRE abrir hacia abajo - calcular altura máxima disponible con margen estético
         const availableHeight = Math.max(0, spaceBelow - aestheticMargin - 8); // Margen adicional de 8px
-        const calculatedMaxHeight = Math.min(availableHeight, 320); // Máximo 320px (max-h-80)
+        const defaultMaxHeight = maxHeightOverride ? parseFloat(maxHeightOverride) : 320; // Usar override si existe
+        const calculatedMaxHeight = Math.min(availableHeight, defaultMaxHeight);
         
         setMaxHeight(`${calculatedMaxHeight}px`);
         

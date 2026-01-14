@@ -181,40 +181,46 @@ export default function AppleSearchBar({
   // ===========================================
   // 🎨 RENDER FUNCTIONS
   // ===========================================
-  const renderFilter = (filter: SearchFilter) => (
-    <div 
-      key={filter.id} 
-      className="space-y-2 min-w-0 relative z-0"
-      ref={(el) => {
-        if (el) {
-          dropdownRefs.current[filter.id] = el;
-        } else {
-          delete dropdownRefs.current[filter.id];
-        }
-      }}
-      style={{ 
-        zIndex: currentActiveDropdown === filter.id ? 1000 : 'auto' 
-      }}
-    >
-      <label className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-xs font-medium">
-        <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
-        <span>{filter.label}</span>
-      </label>
-      <div className="relative">
-        <AppleSelect
-          value={selectedFilters[filter.id] || ''}
-          options={filter.options}
-          onChange={(v) => handleFilterChange(filter.id, v)}
-          className=""
-          onFocus={() => handleFilterFocus(filter.id)}
-          onBlur={() => handleFilterBlur(filter.id)}
-        />
-        {selectedFilters[filter.id] && (
-          <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
-        )}
+  const renderFilter = (filter: SearchFilter) => {
+    // Ajustar altura máxima para dropdowns "Grupos" y "Estado"
+    const maxHeightOverride = (filter.id === 'group' || filter.id === 'status') ? '200px' : undefined;
+    
+    return (
+      <div 
+        key={filter.id} 
+        className="space-y-2 min-w-0 relative z-0"
+        ref={(el) => {
+          if (el) {
+            dropdownRefs.current[filter.id] = el;
+          } else {
+            delete dropdownRefs.current[filter.id];
+          }
+        }}
+        style={{ 
+          zIndex: currentActiveDropdown === filter.id ? 1000 : 'auto' 
+        }}
+      >
+        <label className="flex items-center space-x-1 text-gray-600 dark:text-gray-400 text-xs font-medium">
+          <div className="w-2 h-2 bg-gray-400 dark:bg-gray-500 rounded-full"></div>
+          <span>{filter.label}</span>
+        </label>
+        <div className="relative">
+          <AppleSelect
+            value={selectedFilters[filter.id] || ''}
+            options={filter.options}
+            onChange={(v) => handleFilterChange(filter.id, v)}
+            className=""
+            onFocus={() => handleFilterFocus(filter.id)}
+            onBlur={() => handleFilterBlur(filter.id)}
+            maxHeightOverride={maxHeightOverride}
+          />
+          {selectedFilters[filter.id] && (
+            <div className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full"></div>
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // ===========================================
   // 🎨 MAIN RENDER

@@ -291,6 +291,13 @@ export default function UsersListPage() {
           return allRoles.filter(role => role.value !== 'super_admin');
         }
         
+        // Superadmin_aff solo puede filtrar por 'admin' y 'modelo' (roles que puede crear)
+        if (currentUser?.role === 'superadmin_aff') {
+          return allRoles.filter(role => 
+            role.value === 'admin' || role.value === 'modelo'
+          );
+        }
+        
         // Super admin puede filtrar por todos los roles
         return allRoles;
       })()
