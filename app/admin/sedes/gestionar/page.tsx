@@ -491,6 +491,108 @@ export default function GestionarSedesPage() {
     }
   };
 
+  // Función para editar sede
+  const handleEditSede = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!sedeToEdit || !editSedeName.trim()) return;
+
+    setSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = { 'Content-Type': 'application/json' };
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch('/api/groups', {
+        method: 'PUT',
+        headers: headers,
+        body: JSON.stringify({
+          id: sedeToEdit.id,
+          name: editSedeName.trim(),
+          description: editSedeDescription.trim() || null,
+          is_active: editSedeActive
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setSuccess('Sede actualizada exitosamente');
+        setShowEditSedeModal(false);
+        setSedeToEdit(null);
+        setEditSedeName('');
+        setEditSedeDescription('');
+        setError('');
+        
+        // Recargar datos
+        await loadAvailableSedes();
+        await loadData();
+        
+        // Si la sede editada está seleccionada, recargar su información
+        if (selectedSede === sedeToEdit.id) {
+          await loadSedeInfo(sedeToEdit.id);
+        }
+      } else {
+        setError('Error actualizando sede: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('❌ [FRONTEND] Error en handleEditSede:', err);
+      setError('Error actualizando sede: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  // Función para eliminar sede
+  const handleDeleteSede = async () => {
+    if (!sedeToDelete) return;
+
+    setSubmitting(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const headers: HeadersInit = {};
+      
+      if (session?.access_token) {
+        headers['Authorization'] = `Bearer ${session.access_token}`;
+      }
+
+      const response = await fetch(`/api/groups?id=${sedeToDelete.id}`, {
+        method: 'DELETE',
+        headers: headers
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        setSuccess('Sede eliminada exitosamente');
+        setShowDeleteSedeModal(false);
+        setSedeToDelete(null);
+        setError('');
+        
+        // Limpiar selección si se eliminó la sede seleccionada
+        if (selectedSede === sedeToDelete.id) {
+          setSelectedSede('');
+          setSelectedGroup('');
+          setSelectedSedeInfo(null);
+          setSedeAdminInfo(null);
+        }
+        
+        // Recargar datos
+        await loadAvailableSedes();
+        await loadData();
+      } else {
+        setError('Error eliminando sede: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('❌ [FRONTEND] Error en handleDeleteSede:', err);
+      setError('Error eliminando sede: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
 
   const getRoomsForGroup = (groupId: string) => {
     return rooms.filter(room => room.group_id === groupId);
@@ -987,9 +1089,39 @@ export default function GestionarSedesPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
-                  <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">Activa</span>
+                <div className="flex items-center space-x-2">
+                  <div className="flex items-center space-x-1.5 bg-blue-100 dark:bg-blue-900/30 px-2 py-1 rounded-full">
+                    <div className="w-1.5 h-1.5 bg-blue-500 rounded-full animate-pulse"></div>
+                    <span className="text-xs text-blue-700 dark:text-blue-300 font-medium">Activa</span>
+                  </div>
+                  {/* Botones de editar y eliminar para superadmin */}
+                  {(userRole === 'super_admin' || userRole === 'superadmin_aff') && (
+                    <div className="flex items-center space-x-1">
+                      <button
+                        onClick={() => {
+                          setSedeToEdit(selectedSedeInfo);
+                          setEditSedeName(selectedSedeInfo.name);
+                          setEditSedeDescription(selectedSedeInfo.description || '');
+                          setEditSedeActive(selectedSedeInfo.is_active !== false);
+                          setShowEditSedeModal(true);
+                        }}
+                        className="px-2 py-1 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 transition-colors"
+                        title="Editar sede"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={() => {
+                          setSedeToDelete(selectedSedeInfo);
+                          setShowDeleteSedeModal(true);
+                        }}
+                        className="px-2 py-1 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 transition-colors"
+                        title="Eliminar sede"
+                      >
+                        Eliminar
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -1689,6 +1821,155 @@ export default function GestionarSedesPage() {
                     {submitting ? 'Eliminando...' : 'Eliminar Room'}
                   </button>
                 </div>
+          </StandardModal>
+        )}
+
+        {/* Modal para editar sede */}
+        {showEditSedeModal && sedeToEdit && (
+          <StandardModal
+            isOpen={showEditSedeModal}
+            onClose={() => {
+              setShowEditSedeModal(false);
+              setSedeToEdit(null);
+              setEditSedeName('');
+              setEditSedeDescription('');
+            }}
+            title="Editar Sede"
+            maxWidthClass="max-w-md"
+          >
+            <form onSubmit={handleEditSede} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Nombre de la Sede *
+                </label>
+                <input
+                  type="text"
+                  value={editSedeName}
+                  onChange={(e) => setEditSedeName(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  required
+                  placeholder="Nombre de la sede"
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                  Descripción
+                </label>
+                <textarea
+                  value={editSedeDescription}
+                  onChange={(e) => setEditSedeDescription(e.target.value)}
+                  className="w-full px-3 py-2 text-sm border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  rows={3}
+                  placeholder="Descripción de la sede (opcional)"
+                />
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={editSedeActive}
+                    onChange={(e) => setEditSedeActive(e.target.checked)}
+                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <span className="text-sm text-gray-700 dark:text-gray-200">Sede activa</span>
+                </label>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                </div>
+              )}
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditSedeModal(false);
+                    setSedeToEdit(null);
+                    setEditSedeName('');
+                    setEditSedeDescription('');
+                    setError('');
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting || !editSedeName.trim()}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-lg transition-all duration-200 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Guardando...' : 'Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </StandardModal>
+        )}
+
+        {/* Modal para eliminar sede */}
+        {showDeleteSedeModal && sedeToDelete && (
+          <StandardModal
+            isOpen={showDeleteSedeModal}
+            onClose={() => {
+              setShowDeleteSedeModal(false);
+              setSedeToDelete(null);
+            }}
+            title="Eliminar Sede"
+            maxWidthClass="max-w-md"
+          >
+            <div className="space-y-4">
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 18.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-semibold text-red-800 dark:text-red-300 mb-1">
+                      ¿Estás seguro de eliminar esta sede?
+                    </h3>
+                    <p className="text-sm text-red-700 dark:text-red-400">
+                      Esta acción no se puede deshacer. La sede <strong>{sedeToDelete.name}</strong> será eliminada permanentemente.
+                    </p>
+                    <p className="text-xs text-red-600 dark:text-red-500 mt-2">
+                      ⚠️ Si la sede tiene usuarios o rooms asignados, no se podrá eliminar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {error && (
+                <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg">
+                  <p className="text-sm text-red-800 dark:text-red-300">{error}</p>
+                </div>
+              )}
+
+              <div className="flex space-x-3 pt-4">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowDeleteSedeModal(false);
+                    setSedeToDelete(null);
+                    setError('');
+                  }}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-gray-100 dark:bg-gray-600 hover:bg-gray-200 dark:hover:bg-gray-500 rounded-lg transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDeleteSede}
+                  disabled={submitting}
+                  className="flex-1 px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? 'Eliminando...' : 'Eliminar Sede'}
+                </button>
+              </div>
+            </div>
           </StandardModal>
         )}
       </div>
