@@ -69,6 +69,14 @@ export default function GestionarAfiliadosPage() {
   const [editSuperadminAffIsActive, setEditSuperadminAffIsActive] = useState(true);
   const [isEditingSuperadminAff, setIsEditingSuperadminAff] = useState(false);
 
+  // Estados para editar afiliado
+  const [showEditAffiliate, setShowEditAffiliate] = useState(false);
+  const [editingAffiliate, setEditingAffiliate] = useState(false);
+  const [editAffiliateName, setEditAffiliateName] = useState('');
+  const [editAffiliateDescription, setEditAffiliateDescription] = useState('');
+  const [editAffiliateCommission, setEditAffiliateCommission] = useState('');
+  const [editAffiliateIsActive, setEditAffiliateIsActive] = useState(true);
+
   // Cargar información del usuario y afiliados
   useEffect(() => {
     loadUserInfo();
@@ -336,6 +344,96 @@ export default function GestionarAfiliadosPage() {
     }
   };
 
+  // Editar afiliado
+  const handleEditAffiliate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editAffiliateName.trim()) return;
+
+    setEditingAffiliate(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = await getValidToken();
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización.');
+        return;
+      }
+
+      const response = await fetch(`/api/admin/affiliates/${selectedAffiliateId}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: editAffiliateName.trim(),
+          description: editAffiliateDescription.trim() || null,
+          commission_percentage: parseFloat(editAffiliateCommission) || 10.00,
+          is_active: editAffiliateIsActive
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message || 'Estudio afiliado actualizado exitosamente');
+        setShowEditAffiliate(false);
+        setEditAffiliateName('');
+        setEditAffiliateDescription('');
+        setEditAffiliateCommission('');
+        setEditAffiliateIsActive(true);
+        await loadAffiliates();
+        setTimeout(() => setSuccess(''), 3000);
+      } else {
+        setError('Error: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error de conexión');
+    } finally {
+      setEditingAffiliate(false);
+    }
+  };
+
+  // Eliminar afiliado
+  const handleDeleteAffiliate = async (affiliateId: string, affiliateName: string) => {
+    if (!confirm(`¿Estás seguro de que deseas eliminar el estudio afiliado "${affiliateName}"?\n\nEsta acción ${affiliateName} será desactivado si tiene usuarios asociados, o eliminado completamente si no tiene usuarios.`)) {
+      return;
+    }
+
+    setError('');
+    setSuccess('');
+
+    try {
+      const token = await getValidToken();
+      if (!token) {
+        setError('Error: No se pudo obtener el token de autorización.');
+        return;
+      }
+
+      const response = await fetch(`/api/admin/affiliates/${affiliateId}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setSuccess(result.message || 'Estudio afiliado eliminado exitosamente');
+        await loadAffiliates();
+        setTimeout(() => setSuccess(''), 5000);
+      } else {
+        setError('Error: ' + (result.error || 'Error desconocido'));
+      }
+    } catch (err) {
+      console.error('Error:', err);
+      setError('Error de conexión');
+    }
+  };
+
   // Eliminar superadmin AFF
   const handleDeleteSuperadminAff = async (affiliateId: string, affiliateName: string) => {
     if (!confirm(`¿Estás seguro de que deseas eliminar el superadmin AFF del estudio "${affiliateName}"?`)) {
@@ -578,6 +676,26 @@ export default function GestionarAfiliadosPage() {
                         }`}>
                           {affiliate.is_active ? 'Activo' : 'Inactivo'}
                         </div>
+                        <button
+                          onClick={() => {
+                            setSelectedAffiliateId(affiliate.id);
+                            setSelectedAffiliateName(affiliate.name);
+                            setEditAffiliateName(affiliate.name);
+                            setEditAffiliateDescription(affiliate.description || '');
+                            setEditAffiliateCommission(affiliate.commission_percentage.toString());
+                            setEditAffiliateIsActive(affiliate.is_active);
+                            setShowEditAffiliate(true);
+                          }}
+                          className="px-3 py-1.5 text-xs font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded transition-colors border border-blue-200 dark:border-blue-800"
+                        >
+                          Editar
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAffiliate(affiliate.id, affiliate.name)}
+                          className="px-3 py-1.5 text-xs font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors border border-red-200 dark:border-red-800"
+                        >
+                          Eliminar
+                        </button>
                       </div>
                     </div>
                     
@@ -1033,6 +1151,153 @@ export default function GestionarAfiliadosPage() {
                   {managingSuperadminAff 
                     ? (isEditingSuperadminAff ? 'Actualizando...' : 'Creando...') 
                     : (isEditingSuperadminAff ? 'Actualizar' : 'Crear')}
+                </button>
+              </div>
+            </form>
+          </StandardModal>
+        )}
+
+        {/* Modal Editar Afiliado */}
+        {showEditAffiliate && (
+          <StandardModal
+            isOpen={showEditAffiliate}
+            onClose={() => {
+              setShowEditAffiliate(false);
+              setEditAffiliateName('');
+              setEditAffiliateDescription('');
+              setEditAffiliateCommission('');
+              setEditAffiliateIsActive(true);
+              setError('');
+              setSuccess('');
+            }}
+            title="Editar Estudio Afiliado"
+            maxWidthClass="max-w-lg"
+            paddingClass="p-7"
+            headerMarginClass="mb-5"
+            formSpaceYClass="space-y-5"
+          >
+            <div className="flex items-center space-x-3 mb-5">
+              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  Estudio: <span className="font-semibold text-gray-900 dark:text-gray-100">{selectedAffiliateName}</span>
+                </p>
+              </div>
+            </div>
+            
+            <form onSubmit={handleEditAffiliate} className="space-y-5">
+              {error && (
+                <div className="bg-red-50 border border-red-200 rounded-xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-red-700 font-medium">{error}</p>
+                  </div>
+                </div>
+              )}
+              
+              {success && (
+                <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+                  <div className="flex items-center space-x-3">
+                    <div className="w-5 h-5 bg-green-500 rounded-full flex items-center justify-center flex-shrink-0">
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                    <p className="text-sm text-green-700 font-medium">{success}</p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Nombre del Estudio Afiliado *
+                </label>
+                <input
+                  type="text"
+                  value={editAffiliateName}
+                  onChange={(e) => setEditAffiliateName(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Ej: Estudio XYZ"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Descripción (Opcional)
+                </label>
+                <textarea
+                  value={editAffiliateDescription}
+                  onChange={(e) => setEditAffiliateDescription(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="Descripción del estudio afiliado..."
+                  rows={3}
+                />
+              </div>
+
+              <div>
+                <label className="block text-gray-700 dark:text-gray-200 text-sm font-semibold mb-2">
+                  Porcentaje de Comisión (%) *
+                </label>
+                <input
+                  type="number"
+                  value={editAffiliateCommission}
+                  onChange={(e) => setEditAffiliateCommission(e.target.value)}
+                  className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  placeholder="10.00"
+                  min="0"
+                  max="100"
+                  step="0.01"
+                  required
+                />
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Porcentaje que recibe Agencia Innova
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="editAffiliateIsActive"
+                  checked={editAffiliateIsActive}
+                  onChange={(e) => setEditAffiliateIsActive(e.target.checked)}
+                  className="w-4 h-4 text-purple-600 border-gray-300 rounded focus:ring-purple-500"
+                />
+                <label htmlFor="editAffiliateIsActive" className="text-sm font-semibold text-gray-700 dark:text-gray-200">
+                  Estudio activo
+                </label>
+              </div>
+
+              <div className="flex space-x-3 pt-2 flex-nowrap">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEditAffiliate(false);
+                    setEditAffiliateName('');
+                    setEditAffiliateDescription('');
+                    setEditAffiliateCommission('');
+                    setEditAffiliateIsActive(true);
+                    setError('');
+                    setSuccess('');
+                  }}
+                  className="flex-1 bg-gray-100/80 dark:bg-gray-600/80 backdrop-blur-sm text-gray-700 dark:text-gray-200 py-2 px-4 rounded-xl hover:bg-gray-200/80 dark:hover:bg-gray-500/80 transition-all duration-200 font-medium border border-gray-200/50 dark:border-gray-500/50 text-sm whitespace-nowrap"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={editingAffiliate}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white py-2 px-4 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 text-sm whitespace-nowrap"
+                >
+                  {editingAffiliate ? 'Actualizando...' : 'Actualizar'}
                 </button>
               </div>
             </form>
