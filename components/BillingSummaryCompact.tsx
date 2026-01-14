@@ -51,6 +51,8 @@ interface SedeData {
   totalUsdBruto: number;
   totalUsdModelo: number;
   totalUsdSede: number;
+  totalCopModelo?: number;
+  totalCopSede?: number;
   isAffiliate?: boolean;
   affiliate_studio_id?: string;
 }
