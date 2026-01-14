@@ -385,7 +385,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Obtener información del usuario
-    const token = authHeader.replace('Bearer ', ');
+    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
 
     if (userError || !user) {
@@ -518,7 +518,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     // Obtener información del usuario
-    const token = authHeader.replace('Bearer ', ');
+    const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
 
     if (userError || !user) {
