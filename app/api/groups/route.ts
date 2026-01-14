@@ -74,8 +74,10 @@ export async function GET(request: NextRequest) {
     // Si es super_admin master (sin affiliate_studio_id), solo mostrar sedes de Agencia Innova
     if (userRole === 'super_admin' && !currentUser?.affiliate_studio_id) {
       // Solo sedes sin affiliate_studio_id (sedes de Agencia Innova)
+      // Usar .is('affiliate_studio_id', null) para filtrar solo sedes de Innova
       query = query.is('affiliate_studio_id', null);
       console.log('👑 [API] Super admin master - mostrando solo sedes de Agencia Innova');
+      console.log('🔍 [API] Usuario:', { role: userRole, affiliate_studio_id: currentUser?.affiliate_studio_id });
     } else if (currentUser?.affiliate_studio_id) {
       // Usuario afiliado: aplicar filtro de afiliado
       query = addAffiliateFilter(query, currentUser);
