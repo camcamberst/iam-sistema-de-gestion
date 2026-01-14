@@ -8,12 +8,13 @@ export interface User {
   id: string;
   name: string;
   email: string;
-  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
+  role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' | 'superadmin_aff';
   is_active: boolean;
   groups: Array<{
     id: string;
     name: string;
   }>;
+  affiliate_studio_id?: string | null;
 }
 
 export interface CurrentUser {
