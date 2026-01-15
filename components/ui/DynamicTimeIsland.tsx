@@ -16,11 +16,11 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
   });
   
   const [countdown, setCountdown] = useState<{
-    early: { label: string; time: string; active: boolean };
-    full: { label: string; time: string; active: boolean };
+    early: { label: string; time: string; targetTime: string; active: boolean };
+    full: { label: string; time: string; targetTime: string; active: boolean };
   }>({
-    early: { label: 'Cierre Plataformas Europeas', time: '', active: false },
-    full: { label: 'Cierre de Período', time: '', active: false }
+    early: { label: 'Cierre Especial (EUR)', time: '', targetTime: '', active: false },
+    full: { label: 'Cierre de Período', time: '', targetTime: '', active: false }
   });
 
   useEffect(() => {
@@ -33,8 +33,8 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
           hour: '2-digit',
           minute: '2-digit',
           second: '2-digit',
-          hour12: false
-        }).format(now);
+          hour12: true
+        }).format(now).toUpperCase();
       };
 
       setTimes({
@@ -73,15 +73,25 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
           return `${h}h ${m}m ${s}s`;
         };
 
+        const formatTarget = (date: Date) => {
+          return new Intl.DateTimeFormat('es-CO', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          }).format(date).toUpperCase();
+        };
+
         setCountdown({
           early: { 
-            label: 'Cierre Plataformas Europeas', 
+            label: 'Cierre Especial (EUR)', 
             time: formatDiff(diffEarly), 
+            targetTime: formatTarget(earlyTarget),
             active: diffEarly > 0 
           },
           full: { 
-            label: 'Cierre de Período Total', 
+            label: 'Cierre Total (COL)', 
             time: formatDiff(diffFull), 
+            targetTime: '12:00 AM', // Siempre medianoche Colombia
             active: diffFull > 0 
           }
         });
@@ -91,10 +101,11 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const daysLeft = nextClosureDay - day;
         
         setCountdown({
-          early: { label: '', time: '', active: false },
+          early: { label: '', time: '', targetTime: '', active: false },
           full: { 
             label: 'Días para el cierre', 
             time: `${daysLeft} ${daysLeft === 1 ? 'día' : 'días'}`, 
+            targetTime: 'Próx. Quincena',
             active: true 
           }
         });
@@ -117,14 +128,19 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         </div>
 
         {/* Info de Cierre / Countdown */}
-        <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 sm:gap-6 px-4 py-2 w-full justify-center sm:justify-start">
+        <div className="flex-1 flex flex-col sm:flex-row items-center gap-3 sm:gap-8 px-4 py-2 w-full justify-center sm:justify-start">
           {countdown.early.active && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span className="flex h-2 w-2 rounded-full bg-amber-500 animate-pulse" />
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400 leading-none mb-1">
-                  {countdown.early.label}
-                </span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400 leading-none">
+                    {countdown.early.label}
+                  </span>
+                  <span className="text-[10px] font-bold text-amber-600 dark:text-amber-500 bg-amber-100 dark:bg-amber-900/30 px-1.5 py-0.5 rounded">
+                    {countdown.early.targetTime}
+                  </span>
+                </div>
                 <span className="text-sm font-mono font-bold text-amber-600 dark:text-amber-400 leading-none">
                   {countdown.early.time}
                 </span>
@@ -133,12 +149,17 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
           )}
           
           {countdown.full.active && (
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <span className={`flex h-2 w-2 rounded-full ${countdown.full.label.includes('Días') ? 'bg-blue-500' : 'bg-red-500 animate-pulse'}`} />
               <div className="flex flex-col">
-                <span className="text-[10px] uppercase tracking-wider font-bold text-gray-500 dark:text-gray-400 leading-none mb-1">
-                  {countdown.full.label}
-                </span>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] uppercase tracking-wider font-black text-gray-500 dark:text-gray-400 leading-none">
+                    {countdown.full.label}
+                  </span>
+                  <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${countdown.full.label.includes('Días') ? 'text-blue-600 dark:text-blue-500 bg-blue-100 dark:bg-blue-900/30' : 'text-red-600 dark:text-red-500 bg-red-100 dark:bg-red-900/30'}`}>
+                    {countdown.full.targetTime}
+                  </span>
+                </div>
                 <span className={`text-sm font-mono font-bold leading-none ${countdown.full.label.includes('Días') ? 'text-blue-600 dark:text-blue-400' : 'text-red-600 dark:text-red-400'}`}>
                   {countdown.full.time}
                 </span>
@@ -170,13 +191,22 @@ function ClockItem({ label, time, icon, color }: { label: string; time: string; 
     red: 'text-red-600 dark:text-red-400'
   };
 
+  // Separar la hora del AM/PM para un estilo diferente si se desea, 
+  // o simplemente mostrar todo junto
+  const timeParts = time.split(' ');
+  const displayTime = timeParts[0];
+  const ampm = timeParts[1] || '';
+
   return (
-    <div className="flex flex-col items-center min-w-[60px]">
+    <div className="flex flex-col items-center min-w-[75px]">
       <div className="flex items-center gap-1 mb-0.5">
         <span className="text-[10px]">{icon}</span>
         <span className="text-[9px] font-black text-gray-400 dark:text-gray-500 uppercase">{label}</span>
       </div>
-      <span className={`text-xs font-mono font-bold ${colorMap[color]}`}>{time || '--:--:--'}</span>
+      <div className="flex items-baseline gap-0.5">
+        <span className={`text-xs font-mono font-bold ${colorMap[color]}`}>{displayTime || '--:--:--'}</span>
+        <span className={`text-[8px] font-black ${colorMap[color]} opacity-70`}>{ampm}</span>
+      </div>
     </div>
   );
 }
