@@ -86,8 +86,8 @@ export async function GET(request: NextRequest) {
       // Admin normal: aplicar filtro de afiliado y filtrar por sus grupos
       query = addAffiliateFilter(query, currentUser);
       if (userGroups.length > 0) {
-        query = query.in('id', userGroups);
-        console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
+      query = query.in('id', userGroups);
+      console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
       }
     }
 
@@ -298,11 +298,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    try {
-      const token = authHeader.replace('Bearer ', '');
-      
-      const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
-      
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        
+        const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+        
       if (userError || !user) {
         console.error('❌ [API] Error autenticando usuario:', userError);
         return NextResponse.json(
@@ -314,11 +314,11 @@ export async function POST(request: NextRequest) {
       userId = user.id;
       console.log('🔍 [API] Usuario autenticado:', userId);
 
-      const { data: userData, error: userDataError } = await supabaseServer
-        .from('users')
+          const { data: userData, error: userDataError } = await supabaseServer
+            .from('users')
         .select('role, affiliate_studio_id, organization_id')
-        .eq('id', user.id)
-        .single();
+            .eq('id', user.id)
+            .single();
 
       if (userDataError || !userData) {
         console.error('❌ [API] Error obteniendo datos del usuario:', userDataError);
@@ -328,7 +328,7 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      userRole = userData.role;
+            userRole = userData.role;
       affiliateStudioId = userData.affiliate_studio_id;
       userOrganizationId = userData.organization_id;
       
@@ -337,7 +337,7 @@ export async function POST(request: NextRequest) {
         affiliate_studio_id: affiliateStudioId,
         organization_id: userOrganizationId
       });
-    } catch (authError) {
+      } catch (authError) {
       console.error('❌ [API] Error en autenticación:', authError);
       return NextResponse.json(
         { success: false, error: 'Error de autenticación' },

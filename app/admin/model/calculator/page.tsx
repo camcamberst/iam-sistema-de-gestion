@@ -6,6 +6,7 @@ import { supabase } from "@/lib/supabase";
 import { getColombiaPeriodStartDate } from '@/utils/calculator-dates';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
+import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
 
 interface User {
   id: string;
@@ -1040,21 +1041,24 @@ export default function ModelCalculatorPage() {
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
                     <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-                    </svg>
-                  </div>
+              </svg>
+          </div>
                   <div className="min-w-0 flex-1">
                     <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Mi Calculadora
-                    </h1>
+                Mi Calculadora
+              </h1>
                     <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                      Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
-                    </p>
+                Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
+              </p>
                   </div>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
+        <DynamicTimeIsland className="!max-w-none !px-0" />
 
         {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
         <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
@@ -1367,7 +1371,7 @@ export default function ModelCalculatorPage() {
 
               {/* Vista de Tabla para Escritorio */}
               <div className="hidden md:block overflow-x-auto">
-                <table className="w-full">
+              <table className="w-full">
                 <thead>
                   <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-600/50 backdrop-blur-sm">
                     <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">PLATAFORMAS</th>
@@ -1441,7 +1445,7 @@ export default function ModelCalculatorPage() {
                     // 🔧 FIX: Activar modo mensual automáticamente si hay un valor de P1 > 0
                     const p1Value = p1Values[platform.id] || 0;
                     const showMonthlyFields = isPeriod2 && p1Value > 0;
-
+                    
                     return (
                       <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
                         <td className="py-3 px-3">
@@ -1493,8 +1497,8 @@ export default function ModelCalculatorPage() {
                               )}
                             </div>
                             
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                          <div className="text-xs text-gray-500 dark:text-gray-400">
+                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                             </div>
                             
                             {/* 🔧 REFERENCIA PERMANENTE DE P1 */}
@@ -1575,17 +1579,17 @@ export default function ModelCalculatorPage() {
                         <td className="py-3 px-3">
                           <div className="flex flex-col">
                             <div className="flex items-center space-x-2 relative">
-                              <input
-                                type="text"
-                                inputMode="decimal"
+                            <input
+                              type="text"
+                              inputMode="decimal"
                                 disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
                                 // Si es mensual (P1>0), mostrar Total Mensual. Si no, mostrar Input Normal (P2)
                                 value={showMonthlyFields ? (monthlyTotals[platform.id] ?? '') : (inputValues[platform.id] ?? '')}
-                                onChange={(e) => {
+                              onChange={(e) => {
                                   if (isFrozen) return; // Doble check
-                                  const rawValue = e.target.value;
-                                  const unifiedValue = rawValue.replace(',', '.');
-                                  
+                                const rawValue = e.target.value;
+                                const unifiedValue = rawValue.replace(',', '.');
+                                
                                   if (showMonthlyFields) {
                                     // LÓGICA MENSUAL: Input es Total Mensual
                                     setMonthlyTotals(prev => ({ ...prev, [platform.id]: unifiedValue }));
@@ -1598,11 +1602,11 @@ export default function ModelCalculatorPage() {
                                     setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Calculated } : p));
                                   } else {
                                     // LÓGICA NORMAL: Input es P2
-                                    setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
 
-                                    const numeric = Number.parseFloat(unifiedValue);
-                                    const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                                    setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
+                                const numeric = Number.parseFloat(unifiedValue);
+                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                                   }
                                 }}
                                 className={`w-20 sm:w-24 h-9 sm:h-10 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
@@ -1620,7 +1624,7 @@ export default function ModelCalculatorPage() {
                                 {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
                                   ? 'TKN' 
                                   : (platform.currency || 'USD')}
-                              </span>
+                            </span>
                             </div>
                             {/* Indicador discreto de resta P1 */}
                             {showMonthlyFields && (
@@ -1682,44 +1686,44 @@ export default function ModelCalculatorPage() {
             />
             <InfoCard
               value={`$${platforms.reduce((sum, p) => {
-                // Calcular USD modelo usando fórmulas específicas + porcentaje
-                let usdModelo = 0;
-                if (p.currency === 'EUR') {
-                  if (p.id === 'big7') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                  } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01);
-                  } else {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  // Calcular USD modelo usando fórmulas específicas + porcentaje
+                  let usdModelo = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    } else {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdModelo = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdModelo = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdModelo = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdModelo = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value;
+                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                      usdModelo = p.value;
+                    } else {
+                      usdModelo = p.value;
+                    }
                   }
-                } else if (p.currency === 'GBP') {
-                  if (p.id === 'aw') {
-                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                  } else {
-                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
-                  }
-                } else if (p.currency === 'USD') {
-                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                    usdModelo = p.value * 0.75;
-                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                    usdModelo = p.value * 0.05;
-                  } else if (p.id === 'dxlive') {
-                    usdModelo = p.value * 0.60;
-                  } else if (p.id === 'secretfriends') {
-                    usdModelo = p.value * 0.5;
-                  } else if (p.id === 'superfoon') {
-                    usdModelo = p.value;
-                  } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
-                    usdModelo = p.value;
-                  } else {
-                    usdModelo = p.value;
-                  }
-                }
                 const norm = String(p.id || '').toLowerCase();
                 if (norm === 'superfoon') {
                   return sum + usdModelo; // 100% para Superfoon
                 }
-                return sum + (usdModelo * p.percentage / 100);
+                  return sum + (usdModelo * p.percentage / 100);
               }, 0).toFixed(2)}`}
               label="USD Modelo"
               color="green"
@@ -1728,41 +1732,41 @@ export default function ModelCalculatorPage() {
             {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
             <InfoCard
               value={`$${((platforms.reduce((sum, p) => {
-                // Calcular USD modelo usando fórmulas específicas + porcentaje
-                let usdModelo = 0;
-                if (p.currency === 'EUR') {
-                  if (p.id === 'big7') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                  } else if (p.id === 'mondo') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
-                  } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01);
-                  } else {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01);
+                  // Calcular USD modelo usando fórmulas específicas + porcentaje
+                  let usdModelo = 0;
+                  if (p.currency === 'EUR') {
+                    if (p.id === 'big7') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                    } else if (p.id === 'mondo') {
+                      usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                    } else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    } else {
+                      usdModelo = p.value * (rates?.eur_usd || 1.01);
+                    }
+                  } else if (p.currency === 'GBP') {
+                    if (p.id === 'aw') {
+                      usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                    } else {
+                      usdModelo = p.value * (rates?.gbp_usd || 1.20);
+                    }
+                  } else if (p.currency === 'USD') {
+                    if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
+                      usdModelo = p.value * 0.75;
+                    } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
+                      usdModelo = p.value * 0.05;
+                    } else if (p.id === 'dxlive') {
+                      usdModelo = p.value * 0.60;
+                    } else if (p.id === 'secretfriends') {
+                      usdModelo = p.value * 0.5;
+                    } else if (p.id === 'superfoon') {
+                      usdModelo = p.value;
+                    } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
+                      usdModelo = p.value;
+                    } else {
+                      usdModelo = p.value;
+                    }
                   }
-                } else if (p.currency === 'GBP') {
-                  if (p.id === 'aw') {
-                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                  } else {
-                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
-                  }
-                } else if (p.currency === 'USD') {
-                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                    usdModelo = p.value * 0.75;
-                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                    usdModelo = p.value * 0.05;
-                  } else if (p.id === 'dxlive') {
-                    usdModelo = p.value * 0.60;
-                  } else if (p.id === 'secretfriends') {
-                    usdModelo = p.value * 0.5;
-                  } else if (p.id === 'superfoon') {
-                    usdModelo = p.value;
-                  } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
-                    usdModelo = p.value;
-                  } else {
-                    usdModelo = p.value;
-                  }
-                }
                 const norm = String(p.id || '').toLowerCase();
                 if (norm === 'superfoon') {
                   return sum + usdModelo; // 100% para Superfoon

@@ -7,6 +7,7 @@ import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
 import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
+import DynamicTimeIsland from "../../../components/ui/DynamicTimeIsland";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -96,6 +97,9 @@ export default function SuperAdminDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
+        <DynamicTimeIsland />
 
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 

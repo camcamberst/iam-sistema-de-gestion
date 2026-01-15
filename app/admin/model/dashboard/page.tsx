@@ -9,6 +9,7 @@ import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import AIDashboard from '@/components/AIDashboard';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import AnnouncementBoardWidget from '@/components/AnnouncementBoardWidget';
+import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
 
 interface User {
   id: string;
@@ -346,6 +347,9 @@ export default function ModelDashboard() {
             </div>
           </div>
         </div>
+
+        {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
+        <DynamicTimeIsland className="!max-w-none !px-0" />
 
         {/* Corcho Informativo - Widget */}
         <div className="mb-4 sm:mb-6">
