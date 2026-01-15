@@ -283,6 +283,7 @@ export default function AdminModelCalculator({
         enabledPlatforms: enabled.length
       });
 
+      // 1. Guardar valores individuales por plataforma
       const response = await fetch('/api/calculator/model-values-v2', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -301,6 +302,39 @@ export default function AdminModelCalculator({
       }
 
       console.log('✅ [ADMIN-MODEL-CALCULATOR] Values saved successfully');
+
+      // 2. Actualizar calculator_totals si hay resultado calculado
+      // Esto es crítico para que los dashboards muestren los datos actualizados
+      if (result) {
+        console.log('💾 [ADMIN-MODEL-CALCULATOR] Updating calculator_totals:', {
+          totalUsdBruto: result.totalUsdBruto,
+          totalUsdModelo: result.totalUsdModelo,
+          totalCopModelo: result.totalCopModelo
+        });
+
+        const totalsResponse = await fetch('/api/calculator/totals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            modelId: modelId,
+            periodDate,
+            totalUsdBruto: result.totalUsdBruto,
+            totalUsdModelo: result.totalUsdModelo,
+            totalCopModelo: result.totalCopModelo
+          })
+        });
+
+        const totalsData = await totalsResponse.json();
+        if (!totalsData.success) {
+          console.error('❌ [ADMIN-MODEL-CALCULATOR] Error saving totals:', totalsData.error);
+          // No fallar la operación principal, solo loggear el error
+        } else {
+          console.log('✅ [ADMIN-MODEL-CALCULATOR] Totals saved successfully');
+        }
+      } else {
+        console.warn('⚠️ [ADMIN-MODEL-CALCULATOR] No result calculated, skipping totals update');
+      }
+
       setLastSaved(new Date());
       
       // Limpiar timeout y resetear flag de edición
