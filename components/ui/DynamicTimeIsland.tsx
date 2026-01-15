@@ -45,55 +45,43 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
       const lastDayOfMonth = new Date(year, month, 0).getDate();
       
       const isClosureDay = day === 15 || day === lastDayOfMonth;
-      const isDayOneOrSixteen = day === 1 || day === 16;
       
       const newMessages: string[] = [];
 
       const formatDiff = (diff: number) => {
-        if (diff <= 0) return 'Cerrado';
+        if (diff <= 0) return 'CERRADO';
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         return `${h}h ${m}m`;
       };
 
-      // 1. DXLive (10:00 AM Colombia) - Ocurre días 1, 15, 16 y fin de mes
-      if (isClosureDay || isDayOneOrSixteen) {
+      // DÍAS DE CIERRE (15 y fin de mes): Mostrar los 3 contadores
+      if (isClosureDay) {
+        // 1. DXLive (10:00 AM Colombia)
         const dxTarget = new Date(now);
         dxTarget.setHours(10, 0, 0, 0);
         const diffDx = dxTarget.getTime() - now.getTime();
-        if (diffDx > 0) {
-          newMessages.push(`${formatDiff(diffDx)} para cierre de periodo dxlive`);
-        }
-      }
+        const dxStatus = formatDiff(diffDx);
+        newMessages.push(`${dxStatus} para cierre de periodo dxlive`);
 
-      // 2. Páginas Eur (Medianoche Europa Central ~ 6:00 PM COL) - Ocurre días 15 y fin de mes
-      if (isClosureDay) {
+        // 2. Páginas Eur (Medianoche Europa Central ~ 6:00 PM COL)
         const europeMidnight = getEuropeanCentralMidnightInColombia(now);
         const eurTarget = europeMidnight.colombiaDateTime;
         const diffEur = eurTarget.getTime() - now.getTime();
-        if (diffEur > 0) {
-          newMessages.push(`${formatDiff(diffEur)} para cierre de periodo páginas Eur`);
-        }
+        const eurStatus = formatDiff(diffEur);
+        newMessages.push(`${eurStatus} para cierre de periodo páginas Eur`);
 
-        // 3. Cierre Total (Medianoche Colombia) - Ocurre días 15 y fin de mes (para cerrar al inicio del 16 o 1)
+        // 3. Cierre Total (Medianoche Colombia del día siguiente)
         const totalTarget = new Date(now);
-        totalTarget.setHours(24, 0, 0, 0);
+        totalTarget.setHours(24, 0, 0, 0); // 00:00 del próximo día
         const diffTotal = totalTarget.getTime() - now.getTime();
-        if (diffTotal > 0) {
-          newMessages.push(`${formatDiff(diffTotal)} para cierre total de periodo`);
-        }
-      }
-
-      // Si no hay mensajes de cierre inminente, mostrar días para el próximo cierre
-      if (newMessages.length === 0) {
+        const totalStatus = formatDiff(diffTotal);
+        newMessages.push(`${totalStatus} para cierre total de periodo`);
+      } else {
+        // DÍAS NORMALES: Mostrar cuántos días faltan
         const nextClosureDay = day < 15 ? 15 : lastDayOfMonth;
         const daysLeft = nextClosureDay - day;
-        if (day === 15 || day === lastDayOfMonth) {
-          // Ya pasaron las horas de cierre de hoy
-          newMessages.push(`Periodo cerrando...`);
-        } else {
-          newMessages.push(`${daysLeft} ${daysLeft === 1 ? 'día' : 'días'} para el próximo cierre de periodo`);
-        }
+        newMessages.push(`${daysLeft} ${daysLeft === 1 ? 'día' : 'días'} para el próximo cierre de periodo`);
       }
 
       setMessages(newMessages);
