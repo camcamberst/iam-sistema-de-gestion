@@ -162,26 +162,39 @@ export async function POST(request: NextRequest) {
       // Obtener affiliate_studio_id del usuario desde el token de autenticación
       let affiliateStudioId: string | null = null;
       const authHeader = request.headers.get('authorization');
+      console.log('🔍 [API] Authorization header presente:', !!authHeader);
+      
       if (authHeader) {
         try {
           const token = authHeader.replace('Bearer ', '');
           const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
           
-          if (!userError && user) {
-            const { data: userData } = await supabaseServer
+          if (userError) {
+            console.error('❌ [API] Error obteniendo usuario del token:', userError);
+          } else if (user) {
+            console.log('✅ [API] Usuario obtenido del token:', user.id);
+            const { data: userData, error: userDataError } = await supabaseServer
               .from('users')
-              .select('affiliate_studio_id')
+              .select('affiliate_studio_id, role')
               .eq('id', user.id)
               .single();
             
-            if (userData) {
+            if (userDataError) {
+              console.error('❌ [API] Error obteniendo datos del usuario:', userDataError);
+            } else if (userData) {
               affiliateStudioId = userData.affiliate_studio_id;
-              console.log('🔍 [API] affiliate_studio_id del usuario:', affiliateStudioId);
+              console.log('🔍 [API] Usuario:', { 
+                id: user.id, 
+                role: userData.role, 
+                affiliate_studio_id: affiliateStudioId 
+              });
             }
           }
         } catch (authError) {
-          console.log('⚠️ [API] No se pudo obtener affiliate_studio_id del usuario');
+          console.error('❌ [API] Error en autenticación:', authError);
         }
+      } else {
+        console.warn('⚠️ [API] No se proporcionó header de Authorization');
       }
       
       // Construir query según el rol
@@ -193,10 +206,16 @@ export async function POST(request: NextRequest) {
       if (userRole === 'super_admin' && !affiliateStudioId) {
         query = query.is('affiliate_studio_id', null);
         console.log('👑 [API] Super admin master - mostrando solo sedes de Agencia Innova');
-      } else if (userRole === 'superadmin_aff' && affiliateStudioId) {
-        // Superadmin_aff: solo mostrar grupos de su estudio afiliado
-        query = query.eq('affiliate_studio_id', affiliateStudioId);
-        console.log('🏢 [API] Superadmin_aff - mostrando solo grupos de su estudio:', affiliateStudioId);
+      } else if (userRole === 'superadmin_aff') {
+        // Superadmin_aff: SIEMPRE debe tener affiliate_studio_id, si no, no mostrar nada
+        if (affiliateStudioId) {
+          query = query.eq('affiliate_studio_id', affiliateStudioId);
+          console.log('🏢 [API] Superadmin_aff - mostrando solo grupos de su estudio:', affiliateStudioId);
+        } else {
+          // Si superadmin_aff no tiene affiliate_studio_id, no mostrar nada
+          query = query.eq('affiliate_studio_id', '00000000-0000-0000-0000-000000000000');
+          console.warn('⚠️ [API] Superadmin_aff sin affiliate_studio_id - no se mostrarán grupos');
+        }
       } else if (userRole === 'admin' && affiliateStudioId) {
         // Admin de afiliado: solo mostrar grupos de su estudio afiliado
         query = query.eq('affiliate_studio_id', affiliateStudioId);
@@ -221,9 +240,18 @@ export async function POST(request: NextRequest) {
       let gruposFiltrados = groups || [];
       
       // Si es superadmin_aff o admin de afiliado, asegurar que solo vean grupos de su estudio
-      if ((userRole === 'superadmin_aff' || (userRole === 'admin' && affiliateStudioId)) && affiliateStudioId) {
+      if (userRole === 'superadmin_aff') {
+        if (affiliateStudioId) {
+          gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === affiliateStudioId);
+          console.log('🔧 [API] Filtro adicional aplicado para superadmin_aff:', gruposFiltrados.length, 'grupos');
+          console.log('🔍 [API] Grupos filtrados:', gruposFiltrados.map((g: any) => ({ id: g.id, name: g.name, affiliate_studio_id: g.affiliate_studio_id })));
+        } else {
+          gruposFiltrados = [];
+          console.warn('⚠️ [API] Superadmin_aff sin affiliate_studio_id - retornando lista vacía');
+        }
+      } else if (userRole === 'admin' && affiliateStudioId) {
         gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === affiliateStudioId);
-        console.log('🔧 [API] Filtro adicional aplicado para afiliado:', gruposFiltrados.length, 'grupos');
+        console.log('🔧 [API] Filtro adicional aplicado para admin afiliado:', gruposFiltrados.length, 'grupos');
       }
       
       // Si es super_admin master, asegurar que solo vea grupos de Innova
