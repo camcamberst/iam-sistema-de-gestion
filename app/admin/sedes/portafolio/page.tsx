@@ -225,10 +225,26 @@ export default function PortafolioModelos() {
     try {
       setLoading(true);
       
+      // Obtener token de autenticación
+      const { createClient } = await import('@/lib/supabase');
+      const supabase = createClient();
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        console.error('❌ [PORTAFOLIO] No hay token de autenticación');
+        setError('No hay sesión activa');
+        setLoading(false);
+        return;
+      }
+      
       // Cargar grupos según jerarquía del usuario
       const groupsResponse = await fetch('/api/groups', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
         body: JSON.stringify({ 
           userRole: userRole,
           userGroups: userGroups
