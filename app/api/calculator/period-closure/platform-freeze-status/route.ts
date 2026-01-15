@@ -271,6 +271,31 @@ export async function GET(request: NextRequest) {
         console.log(`⏳ [PLATFORM-FREEZE-STATUS] DX Live aún no está congelado (antes de 10:00 AM Colombia)`);
         console.log(`   Falta ${dxLiveFreezeMinutes - currentTimeMinutes} minutos`);
       }
+
+      // 🔒 CIERRE TOTAL: Congelar TODAS las plataformas a partir de las 23:55 Colombia
+      // Esto da 5 minutos de margen antes de medianoche para el cierre total
+      const totalClosureHour = 23;
+      const totalClosureMinute = 55;
+      const totalClosureMinutes = totalClosureHour * 60 + totalClosureMinute;
+      const hasPassedTotalClosure = currentTimeMinutes >= totalClosureMinutes;
+      
+      if (hasPassedTotalClosure) {
+        console.log(`🔒 [PLATFORM-FREEZE-STATUS] CIERRE TOTAL - Todas las plataformas congeladas (23:55 Colombia)`);
+        // Congelar TODAS las plataformas conocidas del sistema
+        const allPlatforms = [
+          'chaturbate', 'myfreecams', 'stripchat', 'bongacams', 'cam4', 
+          'camsoda', 'flirt4free', 'streamate', 'livejasmin', 'imlive',
+          'dxlive', 'superfoon', 'livecreator', 'mdh', '777', 'xmodels',
+          'big7', 'mondo', 'vx', 'babestation', 'dirtyfans', 'skyprivate',
+          'sakuralive', 'xcams', 'jasmin', 'dreamcam'
+        ];
+        allPlatforms.forEach(p => allFrozenPlatforms.add(p.toLowerCase()));
+      } else {
+        const minutesLeft = totalClosureMinutes - currentTimeMinutes;
+        if (minutesLeft < 60) { // Solo log si falta menos de 1 hora
+          console.log(`⏳ [PLATFORM-FREEZE-STATUS] Faltan ${minutesLeft} minutos para cierre total (23:55 Colombia)`);
+        }
+      }
     } else {
       console.log(`📅 [PLATFORM-FREEZE-STATUS] No es día de cierre (días 1, 15, 16 o 31)`);
     }
