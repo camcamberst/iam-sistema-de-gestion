@@ -10,7 +10,8 @@ async function notifyAffectedUsers(
   announcementId: string,
   isGeneral: boolean,
   groupIds: string[],
-  announcementTitle: string
+  announcementTitle: string,
+  affiliateStudioId?: string | null
 ) {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
@@ -18,13 +19,24 @@ async function notifyAffectedUsers(
     let userIds: string[] = [];
 
     if (isGeneral) {
-      // Si es general, notificar a todos los modelos
-      const { data: allModels } = await supabase
+      // Si es general, notificar a modelos según el affiliate_studio_id del anuncio
+      let modelsQuery = supabase
         .from('users')
         .select('id')
         .eq('role', 'modelo')
         .eq('is_active', true);
 
+      // Si el anuncio tiene affiliate_studio_id, solo notificar a modelos de ese estudio
+      if (affiliateStudioId) {
+        modelsQuery = modelsQuery.eq('affiliate_studio_id', affiliateStudioId);
+        console.log('🔍 [ANNOUNCEMENTS] Filtrando notificaciones por affiliate_studio_id:', affiliateStudioId);
+      } else {
+        // Si no tiene affiliate_studio_id, es un anuncio de Innova, notificar a todos los modelos de Innova
+        modelsQuery = modelsQuery.is('affiliate_studio_id', null);
+        console.log('🔍 [ANNOUNCEMENTS] Anuncio de Innova, notificando solo a modelos de Innova');
+      }
+
+      const { data: allModels } = await modelsQuery;
       userIds = allModels?.map((u: any) => u.id) || [];
     } else if (groupIds.length > 0) {
       // Si es específico de grupos, obtener modelos que pertenecen a esos grupos
@@ -37,13 +49,23 @@ async function notifyAffectedUsers(
       
       // Obtener información de usuarios para filtrar solo modelos activos
       if (userIdsFromGroups.length > 0) {
-        const { data: users } = await supabase
+        let usersQuery = supabase
           .from('users')
           .select('id')
           .in('id', userIdsFromGroups)
           .eq('role', 'modelo')
           .eq('is_active', true);
 
+        // Si el anuncio tiene affiliate_studio_id, filtrar también por ese estudio
+        if (affiliateStudioId) {
+          usersQuery = usersQuery.eq('affiliate_studio_id', affiliateStudioId);
+          console.log('🔍 [ANNOUNCEMENTS] Filtrando notificaciones por grupos y affiliate_studio_id:', affiliateStudioId);
+        } else {
+          // Si no tiene affiliate_studio_id, solo modelos de Innova
+          usersQuery = usersQuery.is('affiliate_studio_id', null);
+        }
+
+        const { data: users } = await usersQuery;
         userIds = users?.map((u: any) => u.id) || [];
       }
     }
@@ -550,7 +572,13 @@ export async function POST(request: NextRequest) {
 
     // Si se publicó el anuncio, enviar notificaciones a los usuarios afectados
     if (is_published && announcement) {
-      await notifyAffectedUsers(announcement.id, is_general, group_ids || [], announcement.title);
+      await notifyAffectedUsers(
+        announcement.id, 
+        is_general, 
+        group_ids || [], 
+        announcement.title,
+        announcement.affiliate_studio_id || null
+      );
     }
 
     return NextResponse.json({
