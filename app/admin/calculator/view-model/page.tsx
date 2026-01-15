@@ -69,6 +69,82 @@ export default function AdminViewModelPage() {
   
   const supabase = require('@/lib/supabase').supabase;
 
+  // 🔧 NUEVO: Recalcular totales en tiempo real cuando cambian los valores
+  useEffect(() => {
+    if (!selectedModel || !selectedModel.calculatorData) return;
+
+    const platforms = selectedModel.calculatorData.platforms;
+    const rates = selectedModel.calculatorData.rates;
+    if (!platforms || !rates) return;
+
+    let totalUsdBruto = 0;
+    let totalUsdModelo = 0;
+
+    platforms.forEach((platform: any) => {
+      // Obtener valor actual (editado o guardado)
+      const editValue = editValues[platform.id];
+      const savedValue = selectedModel.calculatorData.values?.find((v: any) => 
+        v.platform_id === platform.id || v.platform === platform.name
+      )?.value || 0;
+      
+      const currentValue = editValue !== undefined ? parseFloat(editValue) || 0 : savedValue;
+
+      // Calcular USD bruto con la misma lógica de la tabla
+      let usdBruto = 0;
+      if (platform.currency === 'EUR') {
+        if (platform.id === 'big7') {
+          usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.84;
+        } else if (platform.id === 'mondo') {
+          usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.78;
+        } else if (platform.id === 'superfoon') {
+          usdBruto = currentValue * (rates.eur_usd || 1.01);
+        } else {
+          usdBruto = currentValue * (rates.eur_usd || 1.01);
+        }
+      } else if (platform.currency === 'GBP') {
+        if (platform.id === 'aw') {
+          usdBruto = (currentValue * (rates.gbp_usd || 1.20)) * 0.677;
+        } else {
+          usdBruto = currentValue * (rates.gbp_usd || 1.20);
+        }
+      } else if (platform.currency === 'USD') {
+        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+          usdBruto = currentValue * 0.75;
+        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+          usdBruto = currentValue * 0.05;
+        } else if (platform.id === 'dxlive') {
+          usdBruto = currentValue * 0.60;
+        } else if (platform.id === 'secretfriends') {
+          usdBruto = currentValue * 0.5;
+        } else {
+          usdBruto = currentValue;
+        }
+      }
+
+      totalUsdBruto += usdBruto;
+      
+      // Aplicar porcentaje de reparto
+      const usdModeloFinal = (platform.id === 'superfoon') 
+        ? usdBruto 
+        : (usdBruto * platform.percentage) / 100;
+      
+      totalUsdModelo += usdModeloFinal;
+    });
+
+    const totalCopModelo = totalUsdModelo * (rates.usd_cop || 3900);
+    const objetivoBasico = 470; // Hardcoded para paridad
+    const porcentajeAlcanzado = (totalUsdModelo / objetivoBasico) * 100;
+
+    setCalculatedTotals({
+      usdBruto: totalUsdBruto,
+      usdModelo: totalUsdModelo,
+      copModelo: totalCopModelo,
+      objetivoBasico,
+      porcentajeAlcanzado
+    });
+
+  }, [editValues, selectedModel]);
+
   // 🔧 NUEVO: Cerrar input flotante al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -417,6 +493,24 @@ export default function AdminViewModelPage() {
         
         if (data.success) {
           console.log('✅ [ADMIN-AUTOSAVE] Autosave completado exitosamente');
+
+          // 🔧 NUEVO: También actualizar totales en autosave
+          if (calculatedTotals) {
+            console.log('🔄 [ADMIN-AUTOSAVE] Actualizando totales también...');
+            await fetch('/api/calculator/totals', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                modelId: selectedModel.id,
+                periodDate: selectedModel.calculatorData.periodDate,
+                totalUsdBruto: calculatedTotals.usdBruto,
+                totalUsdModelo: calculatedTotals.usdModelo,
+                totalCopModelo: calculatedTotals.copModelo
+              }),
+              signal: controller.signal
+            });
+          }
+
           setHasChanges(false);
           
           // Notificación elegante
@@ -486,6 +580,29 @@ export default function AdminViewModelPage() {
 
       console.log('✅ [ADMIN-EDIT] Values saved successfully');
       
+      // 2. Actualizar calculator_totals si hay resultado calculado
+      // Esto es crítico para que los dashboards muestren los datos actualizados
+      if (calculatedTotals) {
+        console.log('💾 [ADMIN-EDIT] Updating calculator_totals:', {
+          totalUsdBruto: calculatedTotals.usdBruto,
+          totalUsdModelo: calculatedTotals.usdModelo,
+          totalCopModelo: calculatedTotals.copModelo
+        });
+
+        await fetch('/api/calculator/totals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            modelId: selectedModel.id,
+            periodDate: selectedModel.calculatorData.periodDate,
+            totalUsdBruto: calculatedTotals.usdBruto,
+            totalUsdModelo: calculatedTotals.usdModelo,
+            totalCopModelo: calculatedTotals.copModelo
+          })
+        });
+        console.log('✅ [ADMIN-EDIT] Totals updated successfully');
+      }
+
       // 🔧 FIX: Limpiar estado de edición ANTES de recargar
       setEditValues({});
       setHasChanges(false);
