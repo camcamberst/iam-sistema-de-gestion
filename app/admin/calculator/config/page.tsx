@@ -26,20 +26,48 @@ interface Platform {
 }
 
 // Porcentajes estandarizados por grupos
+// Modelos presenciales (pertenecen a una sede): 60%
+// Modelos Satélite: 80%
+// Modelos Otros: 70%
 const getStandardPercentageByGroup = (groupName: string): number => {
-  const standardPercentages: Record<string, number> = {
-    'Cabecera': 60,
-    'Diamante': 60,
-    'Sede MP': 60,
-    'Terrazas': 60,
-    'Victoria': 60,
-    'Satélites': 80,
-    'Otros': 70
-  };
+  // Normalizar nombre del grupo (case insensitive)
+  const normalizedName = groupName?.trim() || '';
   
-  const result = standardPercentages[groupName] || 80;
-  console.log(`🔍 [STANDARD PERCENTAGE] Grupo: "${groupName}" -> ${result}%`);
-  return result;
+  // Grupos Satélite
+  if (normalizedName.toLowerCase().includes('satélite') || normalizedName.toLowerCase().includes('satelite')) {
+    return 80;
+  }
+  
+  // Grupo Otros
+  if (normalizedName.toLowerCase() === 'otros') {
+    return 70;
+  }
+  
+  // Todos los demás grupos son sedes (modelos presenciales): 60%
+  // Esto incluye: Cabecera, Diamante, Sede MP, Terrazas, Victoria, y cualquier otra sede
+  return 60;
+};
+
+// Objetivos estandarizados por grupos (en USD)
+// Modelos presenciales (pertenecen a una sede): 500 USD
+// Modelos Satélite: 800 USD
+// Modelos Otros: 1000 USD
+const getStandardGoalByGroup = (groupName: string): number => {
+  // Normalizar nombre del grupo (case insensitive)
+  const normalizedName = groupName?.trim() || '';
+  
+  // Grupos Satélite
+  if (normalizedName.toLowerCase().includes('satélite') || normalizedName.toLowerCase().includes('satelite')) {
+    return 800;
+  }
+  
+  // Grupo Otros
+  if (normalizedName.toLowerCase() === 'otros') {
+    return 1000;
+  }
+  
+  // Todos los demás grupos son sedes (modelos presenciales): 500 USD
+  return 500;
 };
 
 // Función para obtener el color del estado del Portafolio
@@ -217,23 +245,34 @@ export default function ConfigCalculatorPage() {
         setGroupPercentage('');
       }
       
-      setGroupMinQuota(config.group_min_quota?.toString() || '');
+      // Si no hay group_min_quota o es 0, usar el estándar del grupo
+      if (config.group_min_quota && config.group_min_quota > 0) {
+        setGroupMinQuota(config.group_min_quota.toString());
+      } else if (groupName) {
+        const standardGoal = getStandardGoalByGroup(groupName);
+        setGroupMinQuota(standardGoal.toString());
+        console.log(`🔍 [EXISTING CONFIG] Usando objetivo estándar para ${groupName}: ${standardGoal} USD`);
+      } else {
+        setGroupMinQuota('');
+      }
     } else {
       // Resetear formulario y cargar porcentaje estándar del grupo
       setEnabledPlatforms([]);
       setPercentageOverride('');
       setMinQuotaOverride('');
       
-      // Cargar porcentaje estándar del grupo como valor por defecto
+      // Cargar porcentaje y objetivo estándar del grupo como valores por defecto
       const groupName = model.groups[0]?.name;
       if (groupName) {
         const standardPercentage = getStandardPercentageByGroup(groupName);
+        const standardGoal = getStandardGoalByGroup(groupName);
         setGroupPercentage(standardPercentage.toString());
-        console.log(`🔍 [DEFAULT PERCENTAGE] Cargando porcentaje estándar para ${groupName}: ${standardPercentage}%`);
+        setGroupMinQuota(standardGoal.toString());
+        console.log(`🔍 [DEFAULT VALUES] Cargando valores estándar para ${groupName}: ${standardPercentage}% y ${standardGoal} USD`);
       } else {
         setGroupPercentage('');
+        setGroupMinQuota('');
       }
-      setGroupMinQuota('');
     }
     
     // Cargar datos del Portafolio para este modelo
@@ -665,7 +704,7 @@ export default function ConfigCalculatorPage() {
                             className="apple-input flex-1 h-10 sm:h-auto"
                             value={groupPercentage}
                             onChange={(e) => setGroupPercentage(e.target.value)}
-                            placeholder="60"
+                            placeholder={selectedModel?.groups?.[0] ? getStandardPercentageByGroup(selectedModel.groups[0].name).toString() : "60"}
                           />
                           <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">%</span>
                         </div>
@@ -687,13 +726,15 @@ export default function ConfigCalculatorPage() {
                             className="apple-input flex-1 h-10 sm:h-auto"
                             value={groupMinQuota}
                             onChange={(e) => setGroupMinQuota(e.target.value)}
-                            placeholder="500000"
+                            placeholder={selectedModel?.groups?.[0] ? getStandardGoalByGroup(selectedModel.groups[0].name).toString() : "500"}
                           />
                           <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 font-medium">USD</span>
                         </div>
-                        <p className="text-[10px] sm:text-xs text-gray-500 mt-1.5 sm:mt-2">
-                          &nbsp;
-                        </p>
+                        {selectedModel?.groups?.[0] && (
+                          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-1.5 sm:mt-2">
+                            Valor sugerido: {getStandardGoalByGroup(selectedModel.groups[0].name)} USD
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
