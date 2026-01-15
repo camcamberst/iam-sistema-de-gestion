@@ -159,17 +159,50 @@ export async function POST(request: NextRequest) {
       
       console.log('🔍 [API] Usuario desde body:', { role: userRole, groups: userGroups });
       
+      // Obtener affiliate_studio_id del usuario desde el token de autenticación
+      let affiliateStudioId: string | null = null;
+      const authHeader = request.headers.get('authorization');
+      if (authHeader) {
+        try {
+          const token = authHeader.replace('Bearer ', '');
+          const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
+          
+          if (!userError && user) {
+            const { data: userData } = await supabaseServer
+              .from('users')
+              .select('affiliate_studio_id')
+              .eq('id', user.id)
+              .single();
+            
+            if (userData) {
+              affiliateStudioId = userData.affiliate_studio_id;
+              console.log('🔍 [API] affiliate_studio_id del usuario:', affiliateStudioId);
+            }
+          }
+        } catch (authError) {
+          console.log('⚠️ [API] No se pudo obtener affiliate_studio_id del usuario');
+        }
+      }
+      
       // Construir query según el rol
       let query = supabase
         .from('groups')
         .select('id, name, is_active, description, created_at, affiliate_studio_id');
 
-      // Si es super_admin, solo mostrar sedes de Agencia Innova (sin affiliate_studio_id)
-      if (userRole === 'super_admin') {
+      // Si es super_admin master (sin affiliate_studio_id), solo mostrar sedes de Agencia Innova
+      if (userRole === 'super_admin' && !affiliateStudioId) {
         query = query.is('affiliate_studio_id', null);
-        console.log('👑 [API] Super admin - mostrando solo sedes de Agencia Innova');
+        console.log('👑 [API] Super admin master - mostrando solo sedes de Agencia Innova');
+      } else if (userRole === 'superadmin_aff' && affiliateStudioId) {
+        // Superadmin_aff: solo mostrar grupos de su estudio afiliado
+        query = query.eq('affiliate_studio_id', affiliateStudioId);
+        console.log('🏢 [API] Superadmin_aff - mostrando solo grupos de su estudio:', affiliateStudioId);
+      } else if (userRole === 'admin' && affiliateStudioId) {
+        // Admin de afiliado: solo mostrar grupos de su estudio afiliado
+        query = query.eq('affiliate_studio_id', affiliateStudioId);
+        console.log('🏢 [API] Admin afiliado - mostrando solo grupos de su estudio:', affiliateStudioId);
       } else if (userGroups.length > 0) {
-        // Admin normal: filtrar por sus grupos
+        // Admin normal de Innova: filtrar por sus grupos
         query = query.in('id', userGroups);
         console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
       }
@@ -184,11 +217,26 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      console.log('✅ [API] Grupos obtenidos:', groups?.length || 0, 'para rol:', userRole);
+      // Filtro adicional en el servidor para asegurar que no se filtren grupos incorrectos
+      let gruposFiltrados = groups || [];
+      
+      // Si es superadmin_aff o admin de afiliado, asegurar que solo vean grupos de su estudio
+      if ((userRole === 'superadmin_aff' || (userRole === 'admin' && affiliateStudioId)) && affiliateStudioId) {
+        gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === affiliateStudioId);
+        console.log('🔧 [API] Filtro adicional aplicado para afiliado:', gruposFiltrados.length, 'grupos');
+      }
+      
+      // Si es super_admin master, asegurar que solo vea grupos de Innova
+      if (userRole === 'super_admin' && !affiliateStudioId) {
+        gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === null || g.affiliate_studio_id === undefined);
+        console.log('🔧 [API] Filtro adicional aplicado para super_admin master:', gruposFiltrados.length, 'grupos');
+      }
+
+      console.log('✅ [API] Grupos obtenidos:', gruposFiltrados.length, 'para rol:', userRole);
 
       return NextResponse.json({
         success: true,
-        groups: groups || [],
+        groups: gruposFiltrados,
         userRole: userRole
       });
     }
