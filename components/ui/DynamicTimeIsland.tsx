@@ -57,29 +57,16 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
 
       // DÍAS DE CIERRE (15 y fin de mes): Mostrar los 3 contadores
       if (isClosureDay) {
-        // 1. DXLive (10:00 AM Colombia)
+        // 1. DXLive (10:00 AM Colombia) - NO calcular para mañana si ya pasó
         const dxTarget = new Date(now);
         dxTarget.setHours(10, 0, 0, 0);
-        // Si ya pasó, calcular para mañana
-        if (dxTarget.getTime() < now.getTime()) {
-          dxTarget.setDate(dxTarget.getDate() + 1);
-        }
         const diffDx = dxTarget.getTime() - now.getTime();
         const dxStatus = formatDiff(diffDx);
         newMessages.push(`${dxStatus} para cierre de periodo dxlive`);
 
         // 2. Páginas Eur (Medianoche Europa Central ~ 6:00 PM COL)
-        let europeMidnight = getEuropeanCentralMidnightInColombia(now);
-        let eurTarget = europeMidnight.colombiaDateTime;
-        
-        // Si la medianoche europea ya pasó hoy, calcular la de mañana
-        if (eurTarget.getTime() < now.getTime()) {
-          const tomorrow = new Date(now);
-          tomorrow.setDate(tomorrow.getDate() + 1);
-          europeMidnight = getEuropeanCentralMidnightInColombia(tomorrow);
-          eurTarget = europeMidnight.colombiaDateTime;
-        }
-        
+        const europeMidnight = getEuropeanCentralMidnightInColombia(now);
+        const eurTarget = europeMidnight.colombiaDateTime;
         const diffEur = eurTarget.getTime() - now.getTime();
         const eurStatus = formatDiff(diffEur);
         newMessages.push(`${eurStatus} para cierre de periodo páginas Eur`);
