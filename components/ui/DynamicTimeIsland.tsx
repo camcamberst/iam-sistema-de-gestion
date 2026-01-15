@@ -16,7 +16,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
   });
   
   const [tickerIndex, setTickerIndex] = useState(0);
-  const [messages, setMessages] = useState<Array<{ text: string; urgent: boolean }>>([]);
+  const [messages, setMessages] = useState<Array<{ text: string; urgent: boolean; closed: boolean }>>([]);
 
   useEffect(() => {
     const updateTimes = () => {
@@ -46,7 +46,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
       
       const isClosureDay = day === 15 || day === lastDayOfMonth;
       
-      const newMessages: Array<{ text: string; urgent: boolean }> = [];
+      const newMessages: Array<{ text: string; urgent: boolean; closed: boolean }> = [];
 
       const formatDiff = (diff: number) => {
         if (diff <= 0) return 'CERRADO';
@@ -66,9 +66,11 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const diffDx = dxTarget.getTime() - now.getTime();
         const dxStatus = formatDiff(diffDx);
         const dxUrgent = diffDx > 0 && diffDx <= THIRTY_MINUTES;
+        const dxClosed = diffDx <= 0;
         newMessages.push({ 
           text: `${dxStatus} para cierre de periodo dxlive`, 
-          urgent: dxUrgent 
+          urgent: dxUrgent,
+          closed: dxClosed
         });
 
         // 2. Páginas Eur (Medianoche Europa Central del DÍA ACTUAL de cierre)
@@ -94,9 +96,11 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const diffEur = eurTarget.getTime() - now.getTime();
         const eurStatus = formatDiff(diffEur);
         const eurUrgent = diffEur > 0 && diffEur <= THIRTY_MINUTES;
+        const eurClosed = diffEur <= 0;
         newMessages.push({ 
           text: `${eurStatus} para cierre de periodo páginas Eur`, 
-          urgent: eurUrgent 
+          urgent: eurUrgent,
+          closed: eurClosed
         });
 
         // 3. Cierre Total (Medianoche Colombia del día siguiente)
@@ -105,9 +109,11 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const diffTotal = totalTarget.getTime() - now.getTime();
         const totalStatus = formatDiff(diffTotal);
         const totalUrgent = diffTotal > 0 && diffTotal <= THIRTY_MINUTES;
+        const totalClosed = diffTotal <= 0;
         newMessages.push({ 
           text: `${totalStatus} para cierre total de periodo`, 
-          urgent: totalUrgent 
+          urgent: totalUrgent,
+          closed: totalClosed
         });
       } else {
         // DÍAS NORMALES: Mostrar cuántos días faltan
@@ -115,7 +121,8 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const daysLeft = nextClosureDay - day;
         newMessages.push({ 
           text: `${daysLeft} ${daysLeft === 1 ? 'día' : 'días'} para el próximo cierre de periodo`, 
-          urgent: false 
+          urgent: false,
+          closed: false
         });
       }
 
@@ -144,16 +151,16 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 rounded-2xl blur-xl"></div>
         
-        <div className="relative overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-2xl border border-white/30 dark:border-gray-700/40 shadow-xl py-2 px-6 flex flex-row items-center justify-between gap-6 ring-1 ring-blue-500/10 dark:ring-blue-400/10 h-12 sm:h-14">
+        <div className="relative overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl border border-white/30 dark:border-gray-700/40 shadow-lg py-1.5 px-6 flex flex-row items-center justify-between gap-6 ring-1 ring-blue-500/10 dark:ring-blue-400/10 h-11">
           
           {/* Sección Relojes: Compacta y horizontal */}
           <div className="flex items-center gap-5 sm:gap-8 border-r border-gray-300/50 dark:border-gray-600/50 pr-6 h-full">
             <ClockItem label="EUR" time={times.europe} icon="🇪🇺" color="blue" />
             <ClockItem label="UK" time={times.uk} icon="🇬🇧" color="purple" />
             <ClockItem label="JPN" time={times.japan} icon="🇯🇵" color="red" />
-            <div className="hidden lg:flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700/50 dark:to-gray-700/50 rounded-lg border border-blue-200/50 dark:border-gray-600/50">
-              <span className="text-[10px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-wide">COL</span>
-              <span className="text-xs font-mono font-bold text-gray-800 dark:text-gray-200">{times.colombia}</span>
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700/50 dark:to-gray-700/50 rounded-lg border border-blue-200/50 dark:border-gray-600/50">
+              <span className="text-[9px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">COL</span>
+              <span className="text-xs font-mono font-medium text-gray-800 dark:text-gray-200">{times.colombia}</span>
             </div>
           </div>
 
@@ -164,13 +171,17 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
                 key={tickerIndex}
                 className="flex items-center gap-3 animate-fade-in-smooth whitespace-nowrap"
               >
-                <span className={`flex h-2 w-2 rounded-full flex-shrink-0 ${
-                  currentMessage.urgent 
+                <span className={`flex h-1.5 w-1.5 rounded-full flex-shrink-0 ${
+                  currentMessage.closed
+                    ? 'bg-gray-400 dark:bg-gray-500'
+                    : currentMessage.urgent 
                     ? 'bg-red-500 animate-pulse-fast' 
                     : 'bg-blue-500 animate-pulse-slow'
                 }`} />
-                <p className={`text-xs sm:text-sm font-black uppercase tracking-wide ${
-                  currentMessage.urgent 
+                <p className={`text-xs sm:text-sm font-medium uppercase tracking-wide ${
+                  currentMessage.closed
+                    ? 'text-gray-500 dark:text-gray-400'
+                    : currentMessage.urgent 
                     ? 'text-red-600 dark:text-red-400 animate-blink' 
                     : 'text-gray-700 dark:text-gray-200'
                 }`}>
@@ -227,28 +238,22 @@ function ClockItem({ label, time, icon, color }: { label: string; time: string; 
     red: 'from-red-500 to-red-600 dark:from-red-400 dark:to-red-500'
   };
 
-  const textColorMap = {
-    blue: 'text-blue-700 dark:text-blue-300',
-    purple: 'text-purple-700 dark:text-purple-300',
-    red: 'text-red-700 dark:text-red-300'
-  };
-
   // Extraer hora y AM/PM del string formateado
   const parts = time.split('\u00A0');
   const mainTime = parts[0] || time.split(' ')[0];
   const ampm = parts[1] || time.split(' ')[1] || '';
 
   return (
-    <div className="flex flex-col items-center min-w-[70px]">
-      <div className="flex items-center gap-1.5 mb-1">
-        <span className="text-xs">{icon}</span>
-        <span className="text-[10px] font-black text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</span>
-      </div>
-      <div className="flex items-baseline gap-1">
-        <span className={`text-sm sm:text-base font-mono font-black bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
+    <div className="flex items-center gap-2">
+      <span className="text-xs">{icon}</span>
+      <span className="text-[9px] font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">{label}</span>
+      <div className="flex items-baseline gap-0.5">
+        <span className={`text-sm font-mono font-semibold bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
           {mainTime}
         </span>
-        <span className={`text-[9px] font-black ${textColorMap[color]} opacity-80`}>{ampm}</span>
+        <span className={`text-[8px] font-medium bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent opacity-70`}>
+          {ampm}
+        </span>
       </div>
     </div>
   );
