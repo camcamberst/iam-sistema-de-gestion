@@ -232,19 +232,29 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
 }
 
 function ClockItem({ label, time, icon, color }: { label: string; time: string; icon: string; color: 'blue' | 'purple' | 'red' }) {
+  const colorMap = {
+    blue: 'from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500',
+    purple: 'from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500',
+    red: 'from-red-500 to-red-600 dark:from-red-400 dark:to-red-500'
+  };
+
   // Extraer hora y AM/PM del string formateado
   const parts = time.split('\u00A0');
   const mainTime = parts[0] || time.split(' ')[0];
-  const ampm = parts[1] || time.split(' ')[1] || '';
+  let ampm = parts[1] || time.split(' ')[1] || '';
+  
+  // Convertir a mayúsculas simétricas (AM o PM)
+  ampm = ampm.toUpperCase();
 
   return (
     <div className="flex items-center gap-2">
       <span className="text-xs">{icon}</span>
-      <div className="flex items-baseline gap-1">
-        <span className="text-sm font-mono font-medium text-white dark:text-white">
+      <span className="text-[9px] font-semibold text-white dark:text-white uppercase tracking-wide">{label}</span>
+      <div className="flex items-center gap-1">
+        <span className={`text-sm font-mono font-semibold bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
           {mainTime}
         </span>
-        <span className="text-[9px] font-semibold text-white/70 dark:text-white/70 uppercase tracking-wide">
+        <span className="text-[9px] font-semibold text-white/60 dark:text-white/60">
           {ampm}
         </span>
       </div>
