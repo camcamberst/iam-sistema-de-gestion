@@ -155,6 +155,7 @@ export async function GET(request: NextRequest) {
         role: user.role,
         is_active: user.is_active,
         created_at: user.created_at,
+        affiliate_studio_id: user.affiliate_studio_id || null,
         groups: userGroups,
         user_groups: userGroups, // AGREGAR ESTA LÍNEA para compatibilidad con frontend
         // Campos de asignación (solo para modelos con asignaciones)
