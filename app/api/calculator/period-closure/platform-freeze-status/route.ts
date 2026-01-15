@@ -281,15 +281,36 @@ export async function GET(request: NextRequest) {
       
       if (hasPassedTotalClosure) {
         console.log(`🔒 [PLATFORM-FREEZE-STATUS] CIERRE TOTAL - Todas las plataformas congeladas (23:59 Colombia)`);
-        // Congelar TODAS las plataformas conocidas del sistema
-        const allPlatforms = [
-          'chaturbate', 'myfreecams', 'stripchat', 'bongacams', 'cam4', 
-          'camsoda', 'flirt4free', 'streamate', 'livejasmin', 'imlive',
-          'dxlive', 'superfoon', 'livecreator', 'mdh', '777', 'xmodels',
-          'big7', 'mondo', 'vx', 'babestation', 'dirtyfans', 'skyprivate',
-          'sakuralive', 'xcams', 'jasmin', 'dreamcam'
-        ];
-        allPlatforms.forEach(p => allFrozenPlatforms.add(p.toLowerCase()));
+        
+        // 🔧 CRÍTICO: Obtener dinámicamente TODAS las plataformas habilitadas del sistema
+        // Esto garantiza que cualquier plataforma nueva se congele automáticamente
+        try {
+          const { data: activePlatforms, error: platformsError } = await supabase
+            .from('platforms')
+            .select('id')
+            .eq('enabled', true);
+          
+          if (platformsError) {
+            console.error('❌ [PLATFORM-FREEZE-STATUS] Error obteniendo plataformas activas:', platformsError);
+            // Fallback: usar lista básica conocida
+            const fallbackPlatforms = [
+              'chaturbate', 'myfreecams', 'stripchat', 'bongacams', 'cam4', 
+              'camsoda', 'flirt4free', 'streamate', 'livejasmin', 'imlive',
+              'dxlive', 'superfoon', 'livecreator', 'mdh', '777', 'xmodels',
+              'big7', 'mondo', 'vx', 'babestation', 'dirtyfans'
+            ];
+            fallbackPlatforms.forEach(p => allFrozenPlatforms.add(p.toLowerCase()));
+            console.warn(`⚠️ [PLATFORM-FREEZE-STATUS] Usando lista fallback de ${fallbackPlatforms.length} plataformas`);
+          } else {
+            const platformCount = activePlatforms?.length || 0;
+            activePlatforms?.forEach((platform: { id: string }) => {
+              allFrozenPlatforms.add(platform.id.toLowerCase());
+            });
+            console.log(`✅ [PLATFORM-FREEZE-STATUS] ${platformCount} plataformas activas congeladas dinámicamente`);
+          }
+        } catch (error) {
+          console.error('❌ [PLATFORM-FREEZE-STATUS] Error crítico obteniendo plataformas:', error);
+        }
       } else {
         const minutesLeft = totalClosureMinutes - currentTimeMinutes;
         if (minutesLeft < 60) { // Solo log si falta menos de 1 hora
