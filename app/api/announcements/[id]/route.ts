@@ -407,18 +407,18 @@ export async function DELETE(
     // Verificar permisos
     const { data: userData } = await supabase
       .from('users')
-      .select('id, role')
+      .select('id, role, affiliate_studio_id')
       .eq('id', user.id)
       .single();
 
-    if (!userData || !['super_admin', 'admin'].includes(userData.role)) {
+    if (!userData || (!['super_admin', 'admin'].includes(userData.role) && userData.role !== 'superadmin_aff')) {
       return NextResponse.json({ error: 'No tienes permisos para eliminar anuncios' }, { status: 403 });
     }
 
     // Verificar que el anuncio existe y el usuario puede eliminarlo
     const { data: existingAnnouncement } = await supabase
       .from('announcements')
-      .select('author_id')
+      .select('author_id, affiliate_studio_id')
       .eq('id', id)
       .single();
 
@@ -426,8 +426,15 @@ export async function DELETE(
       return NextResponse.json({ error: 'Anuncio no encontrado' }, { status: 404 });
     }
 
-    // Solo el autor o super_admin puede eliminar
-    if (existingAnnouncement.author_id !== user.id && userData.role !== 'super_admin') {
+    // Verificar permisos de eliminación
+    const isAuthor = existingAnnouncement.author_id === user.id;
+    const isSuperAdmin = userData.role === 'super_admin';
+    const isSuperadminAff = userData.role === 'superadmin_aff' && 
+                            userData.affiliate_studio_id && 
+                            existingAnnouncement.affiliate_studio_id === userData.affiliate_studio_id;
+    
+    // Solo el autor, super_admin, o superadmin_aff (de su estudio) puede eliminar
+    if (!isAuthor && !isSuperAdmin && !isSuperadminAff) {
       return NextResponse.json({ error: 'No tienes permisos para eliminar este anuncio' }, { status: 403 });
     }
 
