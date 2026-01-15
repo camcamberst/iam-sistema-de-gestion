@@ -254,14 +254,18 @@ export async function GET(request: NextRequest) {
     }
 
     // Si es modelo, filtrar por sus grupos o generales
-    // IMPORTANTE: Si el modelo pertenece a un afiliado, aplicar filtro de afiliado
+    // IMPORTANTE: Aplicar filtro de afiliado para mantener las burbujas separadas
     if (actualUserRole === 'modelo') {
-      // Aplicar filtro de afiliado si el modelo pertenece a un estudio afiliado
+      // Aplicar filtro de afiliado según el modelo
       if (userAffiliateStudioId) {
+        // Modelo de afiliado: solo ver anuncios de su estudio O anuncios de Innova compartidos
         console.log('🔍 [ANNOUNCEMENTS] Aplicando filtro de afiliado para modelo de afiliado:', userAffiliateStudioId);
-        
-        // Filtrar: anuncios de su estudio O anuncios de Innova compartidos
         query = query.or(`affiliate_studio_id.eq.${userAffiliateStudioId},and(affiliate_studio_id.is.null,share_with_affiliates.eq.true)`);
+      } else {
+        // Modelo de Innova: SOLO ver anuncios de Innova (sin affiliate_studio_id)
+        // NO debe ver anuncios generales de afiliados
+        console.log('🔍 [ANNOUNCEMENTS] Aplicando filtro para modelo de Innova - solo anuncios sin affiliate_studio_id');
+        query = query.is('affiliate_studio_id', null);
       }
 
       // Obtener IDs de grupos del usuario
@@ -276,10 +280,12 @@ export async function GET(request: NextRequest) {
         userId,
         userGroupIds,
         userGroupsParam: userGroups,
-        userAffiliateStudioId
+        userAffiliateStudioId,
+        isInnovaModel: !userAffiliateStudioId
       });
 
       // Si el usuario tiene grupos, filtrar: generales O que tengan al menos un grupo objetivo del usuario
+      // IMPORTANTE: El filtro de affiliate_studio_id ya está aplicado arriba
       if (userGroupIds.length > 0) {
         // Obtener IDs de anuncios que tienen al menos un grupo objetivo del usuario
         const { data: targetAnnouncements } = await supabase
@@ -295,14 +301,17 @@ export async function GET(request: NextRequest) {
         });
 
         // Filtrar: generales O que estén en la lista de anuncios con grupos objetivo
+        // El filtro de affiliate_studio_id ya está aplicado, así que los generales ya están filtrados
         if (targetAnnouncementIds.length > 0) {
           query = query.or(`is_general.eq.true,id.in.(${targetAnnouncementIds.join(',')})`);
         } else {
           // Si no hay anuncios con grupos objetivo, solo mostrar generales
+          // (el filtro de affiliate_studio_id ya está aplicado)
           query = query.eq('is_general', true);
         }
       } else {
         // Si el usuario no tiene grupos, solo mostrar generales
+        // (el filtro de affiliate_studio_id ya está aplicado)
         query = query.eq('is_general', true);
       }
     }
