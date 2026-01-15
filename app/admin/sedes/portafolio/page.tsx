@@ -226,8 +226,7 @@ export default function PortafolioModelos() {
       setLoading(true);
       
       // Obtener token de autenticación
-      const { createClient } = await import('@/lib/supabase');
-      const supabase = createClient();
+      const { supabase } = await import('@/lib/supabase');
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
       
