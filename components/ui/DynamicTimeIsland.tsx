@@ -49,7 +49,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
       const newMessages: Array<{ text: string; urgent: boolean; closed: boolean }> = [];
 
       const formatDiff = (diff: number) => {
-        if (diff <= 0) return 'CERRADO';
+        if (diff <= 0) return 'Periodo cerrado';
         const h = Math.floor(diff / 3600000);
         const m = Math.floor((diff % 3600000) / 60000);
         return `${h}h ${m}m`;
@@ -173,16 +173,16 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
               >
                 <span className={`flex h-1.5 w-1.5 rounded-full flex-shrink-0 ${
                   currentMessage.closed
-                    ? 'bg-gray-400 dark:bg-gray-500'
+                    ? 'bg-purple-500 dark:bg-purple-400'
                     : currentMessage.urgent 
-                    ? 'bg-red-500 animate-pulse-fast' 
+                    ? 'bg-orange-500 animate-pulse-fast' 
                     : 'bg-blue-500 animate-pulse-slow'
                 }`} />
                 <p className={`text-xs sm:text-sm font-medium uppercase tracking-wide ${
                   currentMessage.closed
-                    ? 'text-gray-500 dark:text-gray-400'
+                    ? 'text-purple-600 dark:text-purple-400'
                     : currentMessage.urgent 
-                    ? 'text-red-600 dark:text-red-400 animate-blink' 
+                    ? 'text-orange-600 dark:text-orange-400 animate-blink' 
                     : 'text-gray-700 dark:text-gray-200'
                 }`}>
                   {currentMessage.text}
