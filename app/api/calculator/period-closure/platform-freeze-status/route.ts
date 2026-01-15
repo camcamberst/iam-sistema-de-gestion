@@ -272,15 +272,15 @@ export async function GET(request: NextRequest) {
         console.log(`   Falta ${dxLiveFreezeMinutes - currentTimeMinutes} minutos`);
       }
 
-      // 🔒 CIERRE TOTAL: Congelar TODAS las plataformas a partir de las 23:55 Colombia
-      // Esto da 5 minutos de margen antes de medianoche para el cierre total
+      // 🔒 CIERRE TOTAL: Congelar TODAS las plataformas a partir de las 23:59 Colombia
+      // Esto da 1 minuto de margen antes de medianoche para el cierre total
       const totalClosureHour = 23;
-      const totalClosureMinute = 55;
+      const totalClosureMinute = 59;
       const totalClosureMinutes = totalClosureHour * 60 + totalClosureMinute;
       const hasPassedTotalClosure = currentTimeMinutes >= totalClosureMinutes;
       
       if (hasPassedTotalClosure) {
-        console.log(`🔒 [PLATFORM-FREEZE-STATUS] CIERRE TOTAL - Todas las plataformas congeladas (23:55 Colombia)`);
+        console.log(`🔒 [PLATFORM-FREEZE-STATUS] CIERRE TOTAL - Todas las plataformas congeladas (23:59 Colombia)`);
         // Congelar TODAS las plataformas conocidas del sistema
         const allPlatforms = [
           'chaturbate', 'myfreecams', 'stripchat', 'bongacams', 'cam4', 
@@ -293,7 +293,7 @@ export async function GET(request: NextRequest) {
       } else {
         const minutesLeft = totalClosureMinutes - currentTimeMinutes;
         if (minutesLeft < 60) { // Solo log si falta menos de 1 hora
-          console.log(`⏳ [PLATFORM-FREEZE-STATUS] Faltan ${minutesLeft} minutos para cierre total (23:55 Colombia)`);
+          console.log(`⏳ [PLATFORM-FREEZE-STATUS] Faltan ${minutesLeft} minutos para cierre total (23:59 Colombia)`);
         }
       }
     } else {
