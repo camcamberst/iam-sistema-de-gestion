@@ -243,8 +243,8 @@ function ClockItem({ label, time, icon, color }: { label: string; time: string; 
   const mainTime = parts[0] || time.split(' ')[0];
   let ampm = parts[1] || time.split(' ')[1] || '';
   
-  // Convertir a mayúsculas simétricas (AM o PM)
-  ampm = ampm.toUpperCase();
+  // Solo la primera letra (A o P)
+  ampm = ampm.charAt(0).toUpperCase();
 
   return (
     <div className="flex items-center gap-2">
