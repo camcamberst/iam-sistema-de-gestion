@@ -164,12 +164,14 @@ export async function GET(request: NextRequest) {
       
       const ownAnnouncementIds = ownAnnouncements?.map((a: any) => a.id) || [];
 
-      // Obtener publicaciones generales del super admin
+      // Obtener publicaciones generales del super admin (solo de Innova, sin affiliate_studio_id)
+      // Los admins de Innova no deben ver anuncios generales de afiliados
       const { data: generalAnnouncements } = await supabase
         .from('announcements')
         .select('id')
         .eq('is_general', true)
-        .eq('is_published', true);
+        .eq('is_published', true)
+        .is('affiliate_studio_id', null); // Solo anuncios generales de Innova
       
       const generalAnnouncementIds = generalAnnouncements?.map((a: any) => a.id) || [];
 
