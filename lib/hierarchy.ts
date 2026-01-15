@@ -199,6 +199,7 @@ export function canEditUser(currentUser: CurrentUser, targetUser: User): boolean
   if (currentUser.role === 'superadmin_aff') {
     // No puede editar a super_admin ni a otro superadmin_aff
     if (targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff') {
+      console.log('🔍 [JERARQUÍA] Superadmin_aff no puede editar super_admin o superadmin_aff');
       return false;
     }
     
@@ -206,12 +207,23 @@ export function canEditUser(currentUser: CurrentUser, targetUser: User): boolean
     const currentUserAffiliateId = currentUser.affiliate_studio_id;
     const targetUserAffiliateId = targetUser.affiliate_studio_id;
     
+    console.log('🔍 [JERARQUÍA] Verificando permisos de edición para superadmin_aff:', {
+      currentUserRole: currentUser.role,
+      currentUserAffiliateId,
+      targetUserRole: targetUser.role,
+      targetUserAffiliateId,
+      canEdit: currentUserAffiliateId && currentUserAffiliateId === targetUserAffiliateId
+    });
+    
     // Si el usuario actual tiene affiliate_studio_id, solo puede editar usuarios del mismo estudio
     if (currentUserAffiliateId) {
-      return currentUserAffiliateId === targetUserAffiliateId;
+      const canEdit = currentUserAffiliateId === targetUserAffiliateId;
+      console.log('🔍 [JERARQUÍA] Resultado de comparación:', canEdit);
+      return canEdit;
     }
     
     // Si el usuario actual no tiene affiliate_studio_id, no puede editar (no debería pasar)
+    console.log('⚠️ [JERARQUÍA] Superadmin_aff sin affiliate_studio_id');
     return false;
   }
   
@@ -263,6 +275,7 @@ export function canDeleteUser(currentUser: CurrentUser, targetUser: User): boole
     // Solo puede eliminar usuarios que pertenezcan al mismo estudio afiliado
     // No puede eliminar a otro superadmin_aff ni a super_admin
     if (targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff') {
+      console.log('🔍 [JERARQUÍA] Superadmin_aff no puede eliminar super_admin o superadmin_aff');
       return false;
     }
     
@@ -270,12 +283,23 @@ export function canDeleteUser(currentUser: CurrentUser, targetUser: User): boole
     const currentUserAffiliateId = currentUser.affiliate_studio_id;
     const targetUserAffiliateId = targetUser.affiliate_studio_id;
     
+    console.log('🔍 [JERARQUÍA] Verificando permisos de eliminación para superadmin_aff:', {
+      currentUserRole: currentUser.role,
+      currentUserAffiliateId,
+      targetUserRole: targetUser.role,
+      targetUserAffiliateId,
+      canDelete: currentUserAffiliateId && currentUserAffiliateId === targetUserAffiliateId
+    });
+    
     // Si el usuario actual tiene affiliate_studio_id, solo puede eliminar usuarios del mismo estudio
     if (currentUserAffiliateId) {
-      return currentUserAffiliateId === targetUserAffiliateId;
+      const canDelete = currentUserAffiliateId === targetUserAffiliateId;
+      console.log('🔍 [JERARQUÍA] Resultado de comparación:', canDelete);
+      return canDelete;
     }
     
     // Si el usuario actual no tiene affiliate_studio_id, no puede eliminar (no debería pasar)
+    console.log('⚠️ [JERARQUÍA] Superadmin_aff sin affiliate_studio_id');
     return false;
   }
   
