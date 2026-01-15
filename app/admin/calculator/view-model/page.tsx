@@ -135,12 +135,23 @@ export default function AdminViewModelPage() {
     const objetivoBasico = 470; // Hardcoded para paridad
     const porcentajeAlcanzado = (totalUsdModelo / objetivoBasico) * 100;
 
+    // 🔧 NORMALIZACIÓN DE FECHA PARA TOTALES (Día 1 o 16)
+    // Replicamos la lógica del backend para asegurar que caiga en el mismo bucket
+    const rawPeriodDate = selectedModel.calculatorData.periodDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+    const dateParts = rawPeriodDate.split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]);
+    const day = parseInt(dateParts[2]);
+    const normalizedDay = day <= 15 ? '01' : '16';
+    const normalizedPeriodDate = `${year}-${String(month).padStart(2, '0')}-${normalizedDay}`;
+
     setCalculatedTotals({
       usdBruto: totalUsdBruto,
       usdModelo: totalUsdModelo,
       copModelo: totalCopModelo,
       objetivoBasico,
-      porcentajeAlcanzado
+      porcentajeAlcanzado,
+      normalizedPeriodDate // Guardamos la fecha normalizada para el POST
     });
 
   }, [editValues, selectedModel]);
@@ -496,13 +507,13 @@ export default function AdminViewModelPage() {
 
           // 🔧 NUEVO: También actualizar totales en autosave
           if (calculatedTotals) {
-            console.log('🔄 [ADMIN-AUTOSAVE] Actualizando totales también...');
+            console.log('🔄 [ADMIN-AUTOSAVE] Actualizando totales también con fecha normalizada:', calculatedTotals.normalizedPeriodDate);
             await fetch('/api/calculator/totals', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 modelId: selectedModel.id,
-                periodDate: selectedModel.calculatorData.periodDate,
+                periodDate: calculatedTotals.normalizedPeriodDate,
                 totalUsdBruto: calculatedTotals.usdBruto,
                 totalUsdModelo: calculatedTotals.usdModelo,
                 totalCopModelo: calculatedTotals.copModelo
@@ -583,7 +594,8 @@ export default function AdminViewModelPage() {
       // 2. Actualizar calculator_totals si hay resultado calculado
       // Esto es crítico para que los dashboards muestren los datos actualizados
       if (calculatedTotals) {
-        console.log('💾 [ADMIN-EDIT] Updating calculator_totals:', {
+        console.log('💾 [ADMIN-EDIT] Updating calculator_totals with normalized date:', {
+          date: calculatedTotals.normalizedPeriodDate,
           totalUsdBruto: calculatedTotals.usdBruto,
           totalUsdModelo: calculatedTotals.usdModelo,
           totalCopModelo: calculatedTotals.copModelo
@@ -594,7 +606,7 @@ export default function AdminViewModelPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             modelId: selectedModel.id,
-            periodDate: selectedModel.calculatorData.periodDate,
+            periodDate: calculatedTotals.normalizedPeriodDate,
             totalUsdBruto: calculatedTotals.usdBruto,
             totalUsdModelo: calculatedTotals.usdModelo,
             totalCopModelo: calculatedTotals.copModelo
