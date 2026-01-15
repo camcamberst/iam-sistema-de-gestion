@@ -68,7 +68,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const dxUrgent = diffDx > 0 && diffDx <= THIRTY_MINUTES;
         const dxClosed = diffDx <= 0;
         newMessages.push({ 
-          text: `${dxStatus} para cierre de periodo dxlive`, 
+          text: dxClosed ? 'Periodo cerrado para dxlive' : `${dxStatus} para cierre de periodo dxlive`, 
           urgent: dxUrgent,
           closed: dxClosed
         });
@@ -98,7 +98,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const eurUrgent = diffEur > 0 && diffEur <= THIRTY_MINUTES;
         const eurClosed = diffEur <= 0;
         newMessages.push({ 
-          text: `${eurStatus} para cierre de periodo páginas Eur`, 
+          text: eurClosed ? 'Periodo cerrado para páginas Eur' : `${eurStatus} para cierre de periodo páginas Eur`, 
           urgent: eurUrgent,
           closed: eurClosed
         });
@@ -111,7 +111,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         const totalUrgent = diffTotal > 0 && diffTotal <= THIRTY_MINUTES;
         const totalClosed = diffTotal <= 0;
         newMessages.push({ 
-          text: `${totalStatus} para cierre total de periodo`, 
+          text: totalClosed ? 'Periodo cerrado (total)' : `${totalStatus} para cierre total de periodo`, 
           urgent: totalUrgent,
           closed: totalClosed
         });
