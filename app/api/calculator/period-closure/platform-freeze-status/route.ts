@@ -212,16 +212,32 @@ export async function GET(request: NextRequest) {
       const currentTimeMinutes = currentHour * 60 + currentMinute;
       const targetTimeMinutes = targetHour * 60 + targetMinute;
       
-      // Si ya pasó medianoche Europa Central (hora actual >= hora objetivo + margen de seguridad 15 min)
+      // 🔧 FIX: Verificar también la fecha del target
+      // Si el target es de mañana (porque ya pasó hoy), significa que SÍ ya pasó la hora de hoy
+      const nowColombiaDate = getColombiaDate();
+      const targetColombiaDate = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'America/Bogota',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      }).format(europeMidnight.colombiaDateTime);
+      
+      // Si la fecha objetivo es mayor que la fecha actual, significa que la hora ya pasó hoy
+      const targetIsTomorrow = targetColombiaDate > nowColombiaDate;
+      
+      // Si ya pasó medianoche Europa Central (hora actual >= hora objetivo O target es de mañana)
       // Esto asegura que funciona incluso si el cron no se ejecutó
-      const hasPassedEarlyFreeze = currentTimeMinutes >= (targetTimeMinutes + 15);
+      const hasPassedEarlyFreeze = targetIsTomorrow || currentTimeMinutes >= (targetTimeMinutes + 5);
       
       console.log(`🔍 [PLATFORM-FREEZE-STATUS] Cálculo de hora:`, {
         currentTimeColombia: `${String(currentHour).padStart(2, '0')}:${String(currentMinute).padStart(2, '0')}`,
         currentTimeMinutes,
         targetTimeColombia: `${String(targetHour).padStart(2, '0')}:${String(targetMinute).padStart(2, '0')}`,
         targetTimeMinutes,
-        margin: 15,
+        margin: 5,
+        nowColombiaDate,
+        targetColombiaDate,
+        targetIsTomorrow,
         hasPassedEarlyFreeze,
         europeMidnightDate: europeMidnight.europeDate,
         europeMidnightColombiaTime: europeMidnight.colombiaTime
@@ -237,21 +253,23 @@ export async function GET(request: NextRequest) {
         });
       } else {
         console.log(`⏳ [PLATFORM-FREEZE-STATUS] Aún no es hora de early freeze`);
-        console.log(`   Falta ${(targetTimeMinutes + 15) - currentTimeMinutes} minutos`);
+        if (!targetIsTomorrow) {
+          console.log(`   Falta ${(targetTimeMinutes + 5) - currentTimeMinutes} minutos`);
+        }
       }
 
       // 🔒 DX LIVE: Congelación especial a las 10:00 AM Colombia (en días de cierre de período)
       // DX Live sigue la misma lógica de cierre de período pero a las 10:00 AM Colombia
       const dxLiveFreezeHour = 10; // 10:00 AM Colombia
       const dxLiveFreezeMinutes = dxLiveFreezeHour * 60;
-      const hasPassedDxLiveFreeze = currentTimeMinutes >= (dxLiveFreezeMinutes + 5); // +5 minutos de margen
+      const hasPassedDxLiveFreeze = currentTimeMinutes >= dxLiveFreezeMinutes; // Sin margen adicional
       
       if (hasPassedDxLiveFreeze) {
         console.log(`🔒 [PLATFORM-FREEZE-STATUS] DX Live congelado (10:00 AM Colombia)`);
         allFrozenPlatforms.add('dxlive');
       } else {
         console.log(`⏳ [PLATFORM-FREEZE-STATUS] DX Live aún no está congelado (antes de 10:00 AM Colombia)`);
-        console.log(`   Falta ${(dxLiveFreezeMinutes + 5) - currentTimeMinutes} minutos`);
+        console.log(`   Falta ${dxLiveFreezeMinutes - currentTimeMinutes} minutos`);
       }
     } else {
       console.log(`📅 [PLATFORM-FREEZE-STATUS] No es día de cierre (días 1, 15, 16 o 31)`);
