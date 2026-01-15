@@ -57,16 +57,48 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
 
       // DÍAS DE CIERRE (15 y fin de mes): Mostrar los 3 contadores
       if (isClosureDay) {
-        // 1. DXLive (10:00 AM Colombia) - NO calcular para mañana si ya pasó
+        // 1. DXLive (10:00 AM Colombia del DÍA ACTUAL de cierre)
+        // No calcular para mañana, solo para hoy
         const dxTarget = new Date(now);
         dxTarget.setHours(10, 0, 0, 0);
         const diffDx = dxTarget.getTime() - now.getTime();
         const dxStatus = formatDiff(diffDx);
         newMessages.push(`${dxStatus} para cierre de periodo dxlive`);
 
-        // 2. Páginas Eur (Medianoche Europa Central ~ 6:00 PM COL)
+        // 2. Páginas Eur (Medianoche Europa Central del DÍA ACTUAL de cierre)
+        // Calcular la medianoche europea de HOY en Europa
+        // Si hoy es día 15 en Colombia, calculamos medianoche del 15 en Europa
+        // getEuropeanCentralMidnightInColombia calcula para el día actual en Europa
         const europeMidnight = getEuropeanCentralMidnightInColombia(now);
-        const eurTarget = europeMidnight.colombiaDateTime;
+        let eurTarget = europeMidnight.colombiaDateTime;
+        
+        // CORRECCIÓN: Si la medianoche europea ya pasó en Colombia HOY,
+        // significa que ese cierre ya ocurrió para este período.
+        // PERO, si ya pasó y todavía estamos en el mismo día de cierre en Colombia,
+        // entonces ese cierre corresponde al período que estamos cerrando.
+        
+        // El problema es que getEuropeanCentralMidnightInColombia puede darnos
+        // un timestamp del pasado si ya pasó la hora. En ese caso, debemos
+        // verificar si ese timestamp es de HOY o de AYER.
+        
+        // Obtener fecha en Colombia del eurTarget
+        const eurTargetColDate = new Intl.DateTimeFormat('en-CA', {
+          timeZone: 'America/Bogota',
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit'
+        }).format(eurTarget);
+        
+        // Si el target es de ayer, necesitamos recalcular para hoy
+        if (eurTargetColDate < colDate) {
+          // La medianoche europea calculada es de ayer, recalcular para hoy
+          // Adelantar un día
+          const tomorrow = new Date(now);
+          tomorrow.setDate(tomorrow.getDate() + 1);
+          const tomorrowMidnight = getEuropeanCentralMidnightInColombia(tomorrow);
+          eurTarget = tomorrowMidnight.colombiaDateTime;
+        }
+        
         const diffEur = eurTarget.getTime() - now.getTime();
         const eurStatus = formatDiff(diffEur);
         newMessages.push(`${eurStatus} para cierre de periodo páginas Eur`);
