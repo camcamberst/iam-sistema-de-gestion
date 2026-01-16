@@ -161,8 +161,18 @@ export default function CalculatorHistorialPage() {
         if (!data.success) { setError(data.error); return; }
 
         const loadedPeriods = data.periods || [];
-        setAllPeriods(loadedPeriods);
-        setPeriods(loadedPeriods);
+        
+        // 🔧 FILTRAR P1 ENERO 2026 (solo consolidados, genera confusión)
+        const filteredPeriods = loadedPeriods.filter((p: Period) => {
+          // Ocultar enero P1 2026 que solo tiene registros consolidados
+          if (p.period_date === '2026-01-01' && p.period_type === '1-15') {
+            return false;
+          }
+          return true;
+        });
+        
+        setAllPeriods(filteredPeriods);
+        setPeriods(filteredPeriods);
 
         const uniqueYears = new Set<number>();
         loadedPeriods.forEach((p: Period) => {

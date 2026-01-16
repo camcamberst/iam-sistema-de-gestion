@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import BillingSummary from '../../../../components/BillingSummary';
 import AnnouncementManager from '../../../../components/AnnouncementManager';
+import ManualPeriodClosure from '../../../../components/ManualPeriodClosure';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface DashboardStats {
@@ -609,6 +610,15 @@ export default function DashboardSedesPage() {
             userRole={userRole as 'admin' | 'super_admin' | 'superadmin_aff'} 
             userId={userId}
             userGroups={userGroups}
+          />
+        )}
+
+        {/* Cierre Manual de Período */}
+        {userId && (userRole === 'super_admin' || userRole === 'admin' || userRole === 'superadmin_aff' || userRole === 'admin_aff') && (
+          <ManualPeriodClosure 
+            userId={userId}
+            userRole={userRole as 'super_admin' | 'admin' | 'superadmin_aff' | 'admin_aff'}
+            groupId={userGroups[0]}
           />
         )}
 

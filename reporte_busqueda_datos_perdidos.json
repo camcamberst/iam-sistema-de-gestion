@@ -1,0 +1,192 @@
+{
+  "fecha_busqueda": "2026-01-01T06:40:46.352Z",
+  "snapshots": {
+    "encontrados": 0,
+    "datos": []
+  },
+  "closure_status": {
+    "encontrados": 3,
+    "datos": [
+      {
+        "id": "c0a713d1-6310-4ed7-b4cd-c367ed56ba05",
+        "period_date": "2025-12-15",
+        "period_type": "1-15",
+        "status": "completed",
+        "current_step": 0,
+        "total_steps": 0,
+        "started_at": "2025-12-16T00:06:35.769032+00:00",
+        "completed_at": "2025-12-16T21:50:47.925549+00:00",
+        "error_message": null,
+        "metadata": {
+          "error_count": 0,
+          "success_count": 30,
+          "models_processed": 30
+        },
+        "created_at": "2025-12-16T00:06:35.769032+00:00",
+        "updated_at": "2025-12-16T21:50:47.925549+00:00"
+      },
+      {
+        "id": "c6811a1c-85cc-49df-8d11-f04b1b9414db",
+        "period_date": "2025-11-16",
+        "period_type": "16-31",
+        "status": "completed",
+        "current_step": 0,
+        "total_steps": 0,
+        "started_at": "2025-12-04T19:07:26.241586+00:00",
+        "completed_at": null,
+        "error_message": null,
+        "metadata": {
+          "completed_at": "2025-12-04T19:07:42.899Z",
+          "reset_results": {
+            "total": 29,
+            "failed": 0,
+            "successful": 29
+          },
+          "archive_results": {
+            "total": 29,
+            "failed": 0,
+            "successful": 29
+          }
+        },
+        "created_at": "2025-12-04T19:07:26.241586+00:00",
+        "updated_at": "2025-12-04T19:07:42.964328+00:00"
+      },
+      {
+        "id": "2dba1116-cd6c-4052-a246-6e66909382ec",
+        "period_date": "2024-11-16",
+        "period_type": "16-31",
+        "status": "completed",
+        "current_step": 0,
+        "total_steps": 0,
+        "started_at": "2025-12-04T18:22:09.260023+00:00",
+        "completed_at": null,
+        "error_message": null,
+        "metadata": {
+          "completed_at": "2025-12-04T18:22:23.514Z",
+          "reset_results": {
+            "total": 29,
+            "failed": 0,
+            "successful": 29
+          },
+          "archive_results": {
+            "total": 29,
+            "failed": 0,
+            "successful": 29
+          }
+        },
+        "created_at": "2025-12-04T18:22:09.260023+00:00",
+        "updated_at": "2025-12-04T18:22:23.596486+00:00"
+      }
+    ]
+  },
+  "totals": {
+    "encontrados": 231,
+    "datos": [
+      {
+        "id": "0d7227c6-1627-40d9-9ec6-f8ee29f05e61",
+        "model_id": "9609fdda-df95-4170-ba02-16dd12ac7197",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 196.33,
+        "total_usd_modelo": 124.19,
+        "total_cop_modelo": 437886.38,
+        "created_at": "2025-12-26T06:10:39.73006+00:00",
+        "updated_at": "2025-12-26T06:20:31.545+00:00"
+      },
+      {
+        "id": "7c6e9e97-2dbb-4766-8ef4-6a2ce55af92c",
+        "model_id": "0976437e-15e6-424d-8122-afb65580239a",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 465.84,
+        "total_usd_modelo": 300.96,
+        "total_cop_modelo": 1061184.06,
+        "created_at": "2025-12-26T17:51:35.134986+00:00",
+        "updated_at": "2025-12-26T17:52:20.098+00:00"
+      },
+      {
+        "id": "4da73cdd-bec5-4311-bfe2-53cde17e1e78",
+        "model_id": "9eebc3dd-a8b4-4657-9b36-60159c075d0d",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 229.51,
+        "total_usd_modelo": 145.84,
+        "total_cop_modelo": 514237.2,
+        "created_at": "2025-12-26T17:49:40.925611+00:00",
+        "updated_at": "2025-12-26T17:50:42.479+00:00"
+      },
+      {
+        "id": "0383895a-b7be-4f88-8a96-a9c69e9683dc",
+        "model_id": "67b2a748-0926-4428-b580-346bec06ffe3",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 287.07,
+        "total_usd_modelo": 249.11,
+        "total_cop_modelo": 878359.89,
+        "created_at": "2025-12-26T17:34:13.832805+00:00",
+        "updated_at": "2025-12-26T17:34:38.019+00:00"
+      },
+      {
+        "id": "257d2702-0820-49de-9c66-33b9ef48c7ee",
+        "model_id": "741a75e8-2591-4e31-a4d9-8438f6011fbb",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 321.95,
+        "total_usd_modelo": 193.17,
+        "total_cop_modelo": 681121.23,
+        "created_at": "2025-12-26T17:22:02.99002+00:00",
+        "updated_at": "2025-12-26T17:22:02.955+00:00"
+      },
+      {
+        "id": "c3b89a3e-f0cf-4a8e-95ff-ee4ea662bcbb",
+        "model_id": "c7399ba3-d398-4961-8f93-96c1381c53ad",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 179.22,
+        "total_usd_modelo": 107.53,
+        "total_cop_modelo": 379157.83,
+        "created_at": "2025-12-26T17:12:51.289622+00:00",
+        "updated_at": "2025-12-26T17:17:51.118+00:00"
+      },
+      {
+        "id": "6808ab87-c6fc-444b-adf6-d04fc03ef51a",
+        "model_id": "4b387b66-d3e3-4ac6-86d3-bf850d3146ed",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 493.78,
+        "total_usd_modelo": 395.03,
+        "total_cop_modelo": 1392859.52,
+        "created_at": "2025-12-26T14:59:24.221375+00:00",
+        "updated_at": "2025-12-26T14:59:51.222+00:00"
+      },
+      {
+        "id": "c801b971-2646-4e5c-9595-69ad19b5de72",
+        "model_id": "b9dfa52a-5d60-4aec-8681-a5c63a1f7867",
+        "period_date": "2025-12-26",
+        "total_usd_bruto": 157.49,
+        "total_usd_modelo": 117.84,
+        "total_cop_modelo": 415499.19,
+        "created_at": "2025-12-26T14:26:24.588155+00:00",
+        "updated_at": "2025-12-26T17:17:33.371+00:00"
+      },
+      {
+        "id": "82684712-475f-43ee-9ca7-d7896a99bce1",
+        "model_id": "dac0bc99-85a5-4806-9bc1-76a7ae4ef315",
+        "period_date": "2025-12-25",
+        "total_usd_bruto": 534.02,
+        "total_usd_modelo": 320.41,
+        "total_cop_modelo": 1129776.28,
+        "created_at": "2025-12-25T22:46:19.774449+00:00",
+        "updated_at": "2025-12-25T23:59:18.495+00:00"
+      },
+      {
+        "id": "37697a6c-c832-4dc5-99bf-dd0e17f60ef0",
+        "model_id": "4b387b66-d3e3-4ac6-86d3-bf850d3146ed",
+        "period_date": "2025-12-25",
+        "total_usd_bruto": 490.29,
+        "total_usd_modelo": 392.23,
+        "total_cop_modelo": 1383014.93,
+        "created_at": "2025-12-25T22:40:24.222394+00:00",
+        "updated_at": "2025-12-25T23:51:43.15+00:00"
+      }
+    ]
+  },
+  "conclusion": {
+    "tiene_backups": false,
+    "tiene_totales": true,
+    "puede_recuperar": true
+  }
+}

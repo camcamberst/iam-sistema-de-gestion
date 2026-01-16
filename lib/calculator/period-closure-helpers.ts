@@ -397,8 +397,61 @@ export const atomicArchiveAndReset = async (
 
     console.log(`✅ [ATOMIC-CLOSE] ${historyInserts.length} registros archivados y verificados`);
 
-    // 8. ELIMINAR VALORES DE MODEL_VALUES (limpiar período cerrado)
-    console.log(`🗑️ [ATOMIC-CLOSE] Eliminando valores del rango ${startDate} a ${endDate}...`);
+    // 🛡️ PASO 1: CREAR BACKUP DE SEGURIDAD FÍSICO ANTES DE CUALQUIER DELETE
+    console.log(`🛡️ [ATOMIC-CLOSE] Creando backup de seguridad FÍSICO antes del DELETE...`);
+    
+    const { data: backupResult, error: backupError } = await supabase.rpc('create_safety_backup_before_delete', {
+      p_model_id: modelId,
+      p_period_start_date: startDate,
+      p_period_end_date: endDate,
+      p_period_type: periodType
+    });
+
+    if (backupError || !backupResult || backupResult.length === 0 || !backupResult[0].success) {
+      const errorMsg = backupError?.message || backupResult?.[0]?.error_message || 'Error desconocido';
+      console.error(`❌ [ATOMIC-CLOSE] FALLO CRÍTICO: No se pudo crear backup de seguridad: ${errorMsg}`);
+      throw new Error(`SEGURIDAD: No se puede eliminar datos sin backup. Error: ${errorMsg}`);
+    }
+
+    const backedUpCount = backupResult[0].backed_up_count || 0;
+    console.log(`🛡️ [ATOMIC-CLOSE] Backup de seguridad creado: ${backedUpCount} registros respaldados`);
+
+    // 🔒 PASO 2: VERIFICAR QUE EL BACKUP COINCIDE CON LOS DATOS A ELIMINAR
+    if (backedUpCount !== values.length) {
+      const errorMsg = `SEGURIDAD: Backup incompleto. Esperados: ${values.length}, Respaldados: ${backedUpCount}`;
+      console.error(`❌ [ATOMIC-CLOSE] ${errorMsg}`);
+      throw new Error(errorMsg);
+    }
+
+    // 🔒 PASO 3: VERIFICAR QUE CALCULATOR_HISTORY TIENE TODOS LOS REGISTROS
+    console.log(`🔍 [ATOMIC-CLOSE] Verificación FINAL antes del DELETE...`);
+    
+    const { data: finalVerification, error: finalVerificationError } = await supabase.rpc('verify_history_and_mark_backup', {
+      p_model_id: modelId,
+      p_period_start_date: startDate,
+      p_period_type: periodType
+    });
+
+    if (finalVerificationError || !finalVerification || finalVerification.length === 0 || !finalVerification[0].success) {
+      const errorMsg = finalVerificationError?.message || finalVerification?.[0]?.error_message || 'Verificación falló';
+      console.error(`❌ [ATOMIC-CLOSE] FALLO CRÍTICO: Verificación final falló: ${errorMsg}`);
+      throw new Error(`SEGURIDAD: No se puede eliminar datos. Verificación falló: ${errorMsg}`);
+    }
+
+    const historyCount = finalVerification[0].history_count || 0;
+    const backupCount = finalVerification[0].backup_count || 0;
+    
+    console.log(`✅ [ATOMIC-CLOSE] Verificación FINAL exitosa:`);
+    console.log(`   - Registros en calculator_history: ${historyCount}`);
+    console.log(`   - Plataformas en backup: ${backupCount}`);
+    console.log(`   - Backup marcado como verificado`);
+
+    // 8. SOLO AHORA, DESPUÉS DE TRIPLE VERIFICACIÓN, ELIMINAR VALORES DE MODEL_VALUES
+    console.log(`🗑️ [ATOMIC-CLOSE] INICIANDO DELETE (protegido por triple verificación)...`);
+    console.log(`   ⚠️  Este DELETE está protegido por:`);
+    console.log(`   ✅ Backup físico en model_values_safety_backup`);
+    console.log(`   ✅ Archivo completo en calculator_history`);
+    console.log(`   ✅ Verificación cruzada exitosa`);
     
     const { data: deletedData, error: deleteError } = await supabase
       .from('model_values')
@@ -410,13 +463,22 @@ export const atomicArchiveAndReset = async (
 
     if (deleteError) {
       console.error(`❌ [ATOMIC-CLOSE] Error eliminando model_values:`, deleteError);
+      console.error(`⚠️  IMPORTANTE: Los datos están PROTEGIDOS en model_values_safety_backup`);
       throw deleteError;
     }
 
     const deletedCount = deletedData?.length || 0;
     console.log(`✅ [ATOMIC-CLOSE] ${deletedCount} valores eliminados de model_values`);
 
-    console.log(`✅ [ATOMIC-CLOSE] Éxito: Archivados ${historyInserts.length}, Borrados ${deletedCount}`);
+    // 🔒 PASO 4: MARCAR EN BACKUP QUE EL DELETE SE COMPLETÓ
+    await supabase
+      .from('model_values_safety_backup')
+      .update({ deleted_from_model_values: true })
+      .eq('model_id', modelId)
+      .eq('period_start_date', startDate)
+      .eq('period_type', periodType);
+
+    console.log(`✅ [ATOMIC-CLOSE] Éxito: Archivados ${historyInserts.length}, Borrados ${deletedCount}, Respaldados ${backedUpCount}`);
     return { 
       success: true, 
       archived: historyInserts.length, 

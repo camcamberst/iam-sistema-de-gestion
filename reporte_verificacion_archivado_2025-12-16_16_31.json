@@ -1,0 +1,15 @@
+{
+  "periodo": {
+    "period_date": "2025-12-16",
+    "period_type": "16-31"
+  },
+  "fecha_verificacion": "2026-01-01T06:32:20.998Z",
+  "resumen": {
+    "total_modelos": 0,
+    "modelos_con_archivo": 0,
+    "modelos_sin_archivo": 0,
+    "modelos_con_valores_residuales": 0,
+    "modelos_con_archivo_incompleto": 0
+  },
+  "resultados": []
+}
