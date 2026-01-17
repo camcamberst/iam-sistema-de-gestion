@@ -59,13 +59,16 @@ export async function POST(request: NextRequest) {
   const startTime = Date.now();
   let lockId: string | null = null;
   let batchId: string | null = null;
+  let userId: string | null = null;
 
   try {
     // 1. OBTENER Y VALIDAR USUARIO
     const body = await request.json();
-    const { userId, groupId } = body;
+    const userIdFromBody = body.userId;
+    const groupId = body.groupId;
+    userId = userIdFromBody;
 
-    if (!userId) {
+    if (!userIdFromBody) {
       return NextResponse.json({
         success: false,
         error: 'userId es requerido'
@@ -76,7 +79,7 @@ export async function POST(request: NextRequest) {
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('id, email, name, role, affiliate_studio_id, groups:user_groups(group_id)')
-      .eq('id', userId)
+      .eq('id', userIdFromBody)
       .single();
 
     if (userError || !user) {
@@ -128,7 +131,7 @@ export async function POST(request: NextRequest) {
       p_period_date: periodToClose.periodDate,
       p_period_type: periodToClose.periodType,
       p_operation_type: 'archive',
-      p_user_id: userId,
+      p_user_id: userIdFromBody,
       p_user_email: user.email,
       p_user_name: user.name || user.email
     });
@@ -152,7 +155,7 @@ export async function POST(request: NextRequest) {
       period_date: periodToClose.periodDate,
       period_type: periodToClose.periodType,
       batch_id: batchId,
-      user_id: userId,
+      user_id: userIdFromBody,
       user_email: user.email,
       user_role: user.role,
       user_group_id: groupId,
@@ -243,7 +246,7 @@ export async function POST(request: NextRequest) {
         periodToClose.periodDate,
         periodToClose.periodType,
         batchId,
-        userId
+        userIdFromBody
       );
 
       if (archiveResult.success) {
@@ -284,7 +287,7 @@ export async function POST(request: NextRequest) {
       period_date: periodToClose.periodDate,
       period_type: periodToClose.periodType,
       batch_id: batchId,
-      user_id: userId,
+      user_id: userIdFromBody,
       user_email: user.email,
       user_role: user.role,
       user_group_id: groupId,
@@ -342,7 +345,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Registrar error en audit log
-    if (batchId) {
+    if (batchId && userId) {
       await supabase.from('period_closure_audit_log').insert({
         operation_type: 'archive_error',
         period_date: getPeriodToClose().periodDate,
