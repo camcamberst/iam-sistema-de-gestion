@@ -347,11 +347,11 @@ async function validateBeforeCleanup(
 
     // 4. VERIFICAR QUE TODAS LAS MODELOS CON VALORES ESTÁN EN EL HISTORIAL
     const missingInHistory: string[] = [];
-    for (const modelId of modelsWithValues) {
+    Array.from(modelsWithValues).forEach(modelId => {
       if (!modelsInHistory.has(modelId)) {
         missingInHistory.push(modelId);
       }
-    }
+    });
 
     if (missingInHistory.length > 0) {
       errors.push(
