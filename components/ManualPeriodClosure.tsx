@@ -218,12 +218,12 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                 ✅ Archivado
               </span>
             )}
-            {!checking && cleanupValidation?.can_cleanup && cleanupValidation?.stats?.total_records_in_values > 0 && (
+            {!checking && cleanupValidation?.can_cleanup && (cleanupValidation?.stats?.total_records_in_values ?? 0) > 0 && (
               <span className="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
                 ⚠️ Pendiente limpieza
               </span>
             )}
-            {!checking && cleanupValidation?.stats?.total_records_in_values === 0 && archiveStatus?.archived && (
+            {!checking && (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 && archiveStatus?.archived && (
               <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
                 🎉 Completado
               </span>
@@ -284,7 +284,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           </div>
         )}
 
-        {!cleanupResult && cleanupValidation?.stats?.total_records_in_values === 0 && archiveStatus?.archived && (
+        {!cleanupResult && (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 && archiveStatus?.archived && (
           <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-400 font-semibold mb-2">
               ℹ️ Período ya cerrado y limpiado
@@ -342,16 +342,16 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           {/* Botón 2: Limpiar y Resetear */}
           <button
             onClick={() => setShowCleanupModal(true)}
-            disabled={!cleanupValidation?.can_cleanup || cleaning || checking || (cleanupValidation?.stats?.total_records_in_values === 0)}
+            disabled={!cleanupValidation?.can_cleanup || cleaning || checking || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)}
             title={
-              cleanupValidation?.stats?.total_records_in_values === 0 
+              (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 
                 ? 'Limpieza ya ejecutada' 
                 : !cleanupValidation?.can_cleanup 
                 ? 'Debes ejecutar el Paso 1 primero' 
                 : ''
             }
             className={`relative group p-4 rounded-lg border-2 transition-all duration-200 ${
-              !cleanupValidation?.can_cleanup || (cleanupValidation?.stats?.total_records_in_values === 0)
+              !cleanupValidation?.can_cleanup || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)
                 ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-60'
                 : 'bg-white dark:bg-gray-900 border-purple-300 dark:border-purple-700 hover:border-purple-500 hover:shadow-lg cursor-pointer'
             }`}
@@ -379,7 +379,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                   Paso 2: Limpiar
                 </h4>
                 <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {cleanupValidation?.stats?.total_records_in_values === 0 
+                  {(cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 
                     ? 'Completado ✅' 
                     : cleanupValidation?.can_cleanup 
                     ? 'Resetear y descongelar' 
