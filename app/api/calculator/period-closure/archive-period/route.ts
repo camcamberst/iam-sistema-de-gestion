@@ -273,7 +273,7 @@ export async function POST(request: NextRequest) {
       periodToClose.periodDate,
       periodToClose.periodType,
       batchId,
-      userId
+      userIdFromBody
     );
 
     // 10. REGISTRAR RESULTADO EN AUDIT LOG
