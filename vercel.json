@@ -9,8 +9,9 @@
       "schedule": "0 17,18,19,20,21,22,23,0,1,2,3,4,5,6,7 15,28,29,30,31 * *"
     },
     {
-      "path": "/api/cron/period-closure-full-close",
-      "schedule": "0 5 1,16 * *"
+      "comment": "🔒 DESACTIVADO: Ahora se usa cierre manual desde Dashboard Sedes",
+      "path_disabled": "/api/cron/period-closure-full-close",
+      "schedule_disabled": "0 5 1,16 * *"
     },
     {
       "path": "/api/cron/period-closure-dxlive-freeze",
