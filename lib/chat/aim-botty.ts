@@ -38,6 +38,8 @@ export type NotificationType =
   | 'valores_no_ingresados'
   | 'cuota_minima_riesgo'
   | 'meta_dia_alcanzada'
+  // Sistema/Alertas críticas
+  | 'cron_failure_critical'
   // Chat
   | 'mensaje_importante_admin'
   | 'escalamiento_admin'
