@@ -453,6 +453,7 @@ async function archiveModelData(
     period_type: periodType,
     platform_id: mv.platform_id,
     value: mv.value,
+    estado: 'auditado', // Estado requerido por el constraint de calculator_history
     created_by: userId,
     batch_id: batchId,
     metadata: {
@@ -480,6 +481,7 @@ async function archiveModelData(
         period_type: periodType,
         platform_id: '__CONSOLIDATED_TOTAL__',
         value: totals.total_usd || 0,
+        estado: 'auditado', // Estado requerido por el constraint de calculator_history
         created_by: userId,
         batch_id: batchId,
         metadata: {
