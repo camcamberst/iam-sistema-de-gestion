@@ -155,7 +155,8 @@ export function generateNotificationMessage(
     nueva_funcionalidad: `✨ ${context.name}, hay una nueva funcionalidad disponible. ¡Échale un vistazo!`,
     error_critico: `🚨 ${context.name}, se detectó un error crítico en el sistema. Revisa los logs.`,
     backup_completado: `💾 ${context.name}, el backup del sistema se completó exitosamente.`,
-    actualizacion_sistema: `🔄 ${context.name}, el sistema ha sido actualizado.`
+    actualizacion_sistema: `🔄 ${context.name}, el sistema ha sido actualizado.`,
+    cron_failure_critical: `🚨 ALERTA CRÍTICA: ${context.name}, un proceso automático crítico ha fallado. Se requiere acción manual inmediata.`
   };
 
   return messages[type] || `🔔 ${context.name}, tienes una nueva notificación.`;
