@@ -51,18 +51,17 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
 
   useEffect(() => {
     checkClosureDay();
-    if (isClosureDay()) {
+    // Siempre cargar estado (incluso si no es día de cierre, para vista previa)
+    loadArchiveStatus();
+    loadCleanupValidation();
+    
+    // Polling cada 30 segundos para actualizar estado
+    const interval = setInterval(() => {
       loadArchiveStatus();
       loadCleanupValidation();
-      
-      // Polling cada 30 segundos para actualizar estado
-      const interval = setInterval(() => {
-        loadArchiveStatus();
-        loadCleanupValidation();
-      }, 30000); // 30 segundos
-      
-      return () => clearInterval(interval);
-    }
+    }, 30000); // 30 segundos
+    
+    return () => clearInterval(interval);
   }, []);
 
   const checkClosureDay = () => {
@@ -179,11 +178,6 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     }
   };
 
-  // Si no es día de cierre, no mostrar nada
-  if (!isClosureDayActive) {
-    return null;
-  }
-
   return (
     <div className="mb-8">
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-lg p-6">
@@ -200,7 +194,11 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                 🔒 Cierre Manual de Período
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-400">
-                Período a cerrar: <span className="font-semibold">{periodToClose?.periodType}</span>
+                {isClosureDayActive ? (
+                  <>Período a cerrar: <span className="font-semibold">{periodToClose?.periodType}</span></>
+                ) : (
+                  <>Vista previa - Los botones se activarán los días <span className="font-semibold">1 y 16</span> de cada mes</>
+                )}
               </p>
             </div>
           </div>
@@ -300,10 +298,16 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           {/* Botón 1: Crear Archivo Histórico */}
           <button
             onClick={() => setShowArchiveModal(true)}
-            disabled={archiveStatus?.archived || archiveStatus?.in_progress || archiving || checking}
-            title={archiveStatus?.archived ? 'Archivo ya creado por ' + (archiveStatus?.last_log?.user_email || 'otro admin') : ''}
+            disabled={!isClosureDayActive || archiveStatus?.archived || archiveStatus?.in_progress || archiving || checking}
+            title={
+              !isClosureDayActive 
+                ? 'Este botón solo está disponible los días 1 y 16 de cada mes' 
+                : archiveStatus?.archived 
+                ? 'Archivo ya creado por ' + (archiveStatus?.last_log?.user_email || 'otro admin') 
+                : ''
+            }
             className={`relative group p-4 rounded-lg border-2 transition-all duration-200 ${
-              archiveStatus?.archived
+              !isClosureDayActive || archiveStatus?.archived
                 ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-60'
                 : 'bg-white dark:bg-gray-900 border-indigo-300 dark:border-indigo-700 hover:border-indigo-500 hover:shadow-lg cursor-pointer'
             }`}
@@ -342,16 +346,18 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           {/* Botón 2: Limpiar y Resetear */}
           <button
             onClick={() => setShowCleanupModal(true)}
-            disabled={!cleanupValidation?.can_cleanup || cleaning || checking || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)}
+            disabled={!isClosureDayActive || !cleanupValidation?.can_cleanup || cleaning || checking || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)}
             title={
-              (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 
+              !isClosureDayActive
+                ? 'Este botón solo está disponible los días 1 y 16 de cada mes'
+                : (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 
                 ? 'Limpieza ya ejecutada' 
                 : !cleanupValidation?.can_cleanup 
                 ? 'Debes ejecutar el Paso 1 primero' 
                 : ''
             }
             className={`relative group p-4 rounded-lg border-2 transition-all duration-200 ${
-              !cleanupValidation?.can_cleanup || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)
+              !isClosureDayActive || !cleanupValidation?.can_cleanup || ((cleanupValidation?.stats?.total_records_in_values ?? 1) === 0)
                 ? 'bg-gray-100 dark:bg-gray-800 border-gray-300 dark:border-gray-700 cursor-not-allowed opacity-60'
                 : 'bg-white dark:bg-gray-900 border-purple-300 dark:border-purple-700 hover:border-purple-500 hover:shadow-lg cursor-pointer'
             }`}
