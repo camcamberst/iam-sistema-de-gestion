@@ -79,7 +79,7 @@ El cron job NO se ejecutó automáticamente. Se requiere ejecución manual inmed
     }
 
     // 4. Registrar alerta en tabla de logs (si existe)
-    await supabase.from('system_alerts').insert({
+    const { error: logError } = await supabase.from('system_alerts').insert({
       alert_type: 'cron_failure',
       severity: 'critical',
       cron_name: alert.cronName,
@@ -89,10 +89,12 @@ El cron job NO se ejecutó automáticamente. Se requiere ejecución manual inmed
       metadata: alert.metadata,
       notified_admins: superAdmins.map(a => a.id),
       created_at: new Date().toISOString()
-    }).catch(err => {
-      // Si la tabla no existe, solo log
-      console.warn('⚠️ [CRON-ALERT] No se pudo registrar en system_alerts:', err.message);
     });
+    
+    if (logError) {
+      // Si la tabla no existe, solo log
+      console.warn('⚠️ [CRON-ALERT] No se pudo registrar en system_alerts:', logError.message);
+    }
 
     console.log(`✅ [CRON-ALERT] Alerta enviada a ${superAdmins.length} super_admins`);
 
