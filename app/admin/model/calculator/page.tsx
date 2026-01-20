@@ -58,13 +58,6 @@ export default function ModelCalculatorPage() {
   const [periodDate, setPeriodDate] = useState<string>(getColombiaPeriodStartDate());
   // Mantener valores escritos como texto para permitir decimales con coma y punto
   const [inputValues, setInputValues] = useState<Record<string, string>>({});
-  // 🔧 NUEVO: Estados para plataformas mensuales en P2
-  const [p1Values, setP1Values] = useState<Record<string, number>>({}); // Valores de P1 para plataformas mensuales
-  const [monthlyTotals, setMonthlyTotals] = useState<Record<string, string>>({}); // Total mensual ingresado
-  const [isPeriod2, setIsPeriod2] = useState<boolean>(false); // Si estamos en P2
-  // 🔧 NUEVO: Estado para input flotante de P1
-  const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null); // ID de plataforma siendo editada
-  const [p1InputValue, setP1InputValue] = useState<string>('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<CalculatorResult | null>(null);
@@ -92,44 +85,6 @@ export default function ModelCalculatorPage() {
     console.log('🔍 [CALCULATOR] Initializing periodDate (Frontend):', start);
     setPeriodDate(start);
   }, []);
-
-  // 🔧 NUEVO: Cargar valores de P1 si estamos en P2
-  useEffect(() => {
-    const loadP1Values = async () => {
-      if (!user) return;
-      
-      // Determinar si estamos en P2 (16-fin de mes) usando parseo seguro de strings
-      // new Date('YYYY-MM-DD') usa UTC y puede devolver el día anterior en zonas horarias occidentales
-      const parts = periodDate.split('-');
-      const day = parseInt(parts[2], 10);
-      const isP2 = day >= 16;
-      console.log('🔍 [CALCULATOR] Period check:', { periodDate, day, isP2 });
-      setIsPeriod2(isP2);
-      
-      if (isP2) {
-        const p1Date = new Date(periodDate);
-        p1Date.setDate(1); // Primer día del mes
-        const p1DateStr = p1Date.toISOString().split('T')[0];
-        
-        console.log('🔍 [CALCULATOR] Fetching P1 values for monthly logic:', p1DateStr);
-        const p1Res = await fetch(`/api/calculator/model-values-v2?modelId=${user.id}&periodDate=${p1DateStr}`);
-        const p1Data = await p1Res.json();
-        
-        if (p1Data.success && p1Data.data) {
-          const p1Map: Record<string, number> = {};
-          p1Data.data.forEach((item: any) => {
-            p1Map[item.platform_id] = item.value;
-          });
-          setP1Values(p1Map);
-          console.log('🔍 [CALCULATOR] P1 Values loaded:', p1Map);
-        }
-      }
-    };
-    
-    if (user && periodDate) {
-      loadP1Values();
-    }
-  }, [user, periodDate]);
 
   // 🔧 NUEVO: Cargar offset de ganancias hoy desde localStorage
   useEffect(() => {
@@ -201,49 +156,6 @@ export default function ModelCalculatorPage() {
     }
   };
 
-  // 🔧 NUEVO: Cerrar input flotante al hacer click fuera
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (editingP1Platform) {
-        const target = e.target as HTMLElement;
-        if (!target.closest('.absolute.z-[100]') && !target.closest('.group')) {
-          setEditingP1Platform(null);
-        }
-      }
-    };
-
-    const handleEscape = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setEditingP1Platform(null);
-      }
-    };
-
-    if (editingP1Platform) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleEscape);
-      return () => {
-        document.removeEventListener('mousedown', handleClickOutside);
-        document.removeEventListener('keydown', handleEscape);
-      };
-    }
-  }, [editingP1Platform]);
-
-  // Handler para guardar P1
-  const handleSaveP1Value = (platformId: string) => {
-    const value = Number.parseFloat(p1InputValue) || 0;
-    setP1Values(prev => ({ ...prev, [platformId]: value }));
-    
-    // Si ya hay un total mensual, recalcular P2
-    if (monthlyTotals[platformId]) {
-      const monthlyTotal = Number.parseFloat(monthlyTotals[platformId]) || 0;
-      const p2Value = monthlyTotal - value;
-      
-      setInputValues(prev => ({ ...prev, [platformId]: p2Value > 0 ? String(p2Value) : '' }));
-      setPlatforms(prev => prev.map(p => p.id === platformId ? { ...p, value: p2Value } : p));
-    }
-    
-    setEditingP1Platform(null);
-  };
   // 🔧 HELPER: Funciones de sincronización bidireccional
   const syncPlatformsToInputs = (platforms: Platform[]) => {
     const newInputValues: Record<string, string> = {};
@@ -1198,9 +1110,6 @@ export default function ModelCalculatorPage() {
                     usdModeloFinal = (usdModelo * platform.percentage) / 100;
                   }
                   const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
-                  
-                  const p1Value = p1Values[platform.id] || 0;
-                  const showMonthlyFields = isPeriod2 && p1Value > 0;
 
                   return (
                     <div key={platform.id} className={`bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border ${isFrozen ? 'border-red-200 dark:border-red-900/30' : 'border-gray-200 dark:border-gray-600/50'}`}>
@@ -1208,29 +1117,9 @@ export default function ModelCalculatorPage() {
                       <div className="flex items-start justify-between mb-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <button 
-                              type="button"
-                              disabled={isFrozen || !isPeriod2}
-                              className={`font-semibold text-sm text-left transition-colors flex items-center gap-2 ${
-                                isFrozen 
-                                  ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                                  : !isPeriod2
-                                    ? 'text-gray-900 dark:text-gray-100 cursor-default'
-                                    : 'text-gray-900 dark:text-gray-100 active:text-blue-600 dark:active:text-blue-400'
-                              }`}
-                              onClick={(e) => {
-                                if (isFrozen || !isPeriod2) return;
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setEditingP1Platform(platform.id);
-                                setP1InputValue(String(p1Values[platform.id] || ''));
-                              }}
-                            >
-                              <span>{platform.name}</span>
-                              {!isFrozen && isPeriod2 && (
-                                <span className="text-blue-500 text-xs">✎</span>
-                              )}
-                            </button>
+                            <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                              {platform.name}
+                            </span>
                             {isFrozen && (
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
                                 🔒 Cerrado
@@ -1240,99 +1129,34 @@ export default function ModelCalculatorPage() {
                           <div className="text-xs text-gray-500 dark:text-gray-400">
                             Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                           </div>
-                          {p1Value > 0 && (
-                            <div className="mt-1 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-2 py-1 rounded border border-blue-100 dark:border-blue-800/30 w-fit">
-                              <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">P1:</span>
-                              <span className="text-[10px] font-mono text-blue-700 dark:text-blue-300">{p1Value.toLocaleString('es-CO')}</span>
-                            </div>
-                          )}
                         </div>
                       </div>
-
-                      {/* Input flotante de P1 para móvil */}
-                      {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
-                        <div className="mb-3 bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-3">
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              value={p1InputValue}
-                              onChange={(e) => {
-                                const rawValue = e.target.value;
-                                const unifiedValue = rawValue.replace(',', '.');
-                                setP1InputValue(unifiedValue);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const value = Number.parseFloat(p1InputValue) || 0;
-                                  setP1Values(prev => ({ ...prev, [platform.id]: value }));
-                                  if (monthlyTotals[platform.id]) {
-                                    const monthlyTotal = Number.parseFloat(monthlyTotals[platform.id]) || 0;
-                                    const p2Value = monthlyTotal - value;
-                                    setInputValues(prev => ({ ...prev, [platform.id]: p2Value > 0 ? String(p2Value) : '' }));
-                                    setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Value } : p));
-                                  }
-                                  setEditingP1Platform(null);
-                                } else if (e.key === 'Escape') {
-                                  setEditingP1Platform(null);
-                                }
-                              }}
-                              autoFocus
-                              className="flex-1 h-11 px-3 text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
-                              placeholder="0.00"
-                            />
-                            <button
-                              onClick={() => handleSaveP1Value(platform.id)}
-                              className="h-11 px-4 bg-blue-500 text-white rounded-lg text-sm font-medium active:bg-blue-600 transition-colors touch-manipulation"
-                            >
-                              ✓
-                            </button>
-                            <button
-                              onClick={() => setEditingP1Platform(null)}
-                              className="h-11 px-4 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium active:bg-gray-300 dark:active:bg-gray-500 transition-colors touch-manipulation"
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        </div>
-                      )}
 
                       {/* Input de valor principal */}
                       <div className="mb-3">
                         <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Valor {showMonthlyFields ? '(Total Mensual)' : '(P2)'}
+                          Valor
                         </label>
                         <div className="flex items-center gap-2">
                           <input
                             type="text"
                             inputMode="decimal"
                             disabled={isFrozen}
-                            value={showMonthlyFields ? (monthlyTotals[platform.id] ?? '') : (inputValues[platform.id] ?? '')}
+                            value={inputValues[platform.id] ?? ''}
                             onChange={(e) => {
                               if (isFrozen) return;
                               const rawValue = e.target.value;
                               const unifiedValue = rawValue.replace(',', '.');
                               
-                              if (showMonthlyFields) {
-                                setMonthlyTotals(prev => ({ ...prev, [platform.id]: unifiedValue }));
-                                const p1Value = p1Values[platform.id] || 0;
-                                const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
-                                const p2Calculated = monthlyTotalNum - p1Value;
-                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Calculated } : p));
-                              } else {
-                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
-                                const numeric = Number.parseFloat(unifiedValue);
-                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
-                              }
+                              setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                              const numeric = Number.parseFloat(unifiedValue);
+                              const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                              setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
                             }}
                             className={`flex-1 h-12 px-3 text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
                               isFrozen
                                 ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
-                                : showMonthlyFields 
-                                  ? 'bg-white dark:bg-gray-800 border-blue-400 dark:border-blue-500 ring-2 ring-blue-100 dark:ring-blue-900/30 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500' 
-                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                             }`}
                             placeholder={isFrozen ? "Locked" : "0.00"}
                           />
@@ -1342,11 +1166,6 @@ export default function ModelCalculatorPage() {
                               : (platform.currency || 'USD')}
                           </span>
                         </div>
-                        {showMonthlyFields && (
-                          <div className="text-xs text-blue-500/80 dark:text-blue-400/80 mt-1 font-medium">
-                            - P1 ({(p1Values[platform.id] || 0).toFixed(0)})
-                          </div>
-                        )}
                       </div>
 
                       {/* Resultados */}
@@ -1442,196 +1261,55 @@ export default function ModelCalculatorPage() {
                     }
                     const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
-                    // 🔧 FIX: Activar modo mensual automáticamente si hay un valor de P1 > 0
-                    const p1Value = p1Values[platform.id] || 0;
-                    const showMonthlyFields = isPeriod2 && p1Value > 0;
-                    
                     return (
                       <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
                         <td className="py-3 px-3">
-                          <div className="relative flex flex-col items-start gap-1">
-                            {/* 🔧 FIX: Contenedor flex para alinear nombre y etiqueta Cerrado */}
+                          <div className="flex flex-col items-start gap-1">
                             <div className="flex items-center gap-2 w-full">
-                              <button 
-                                type="button"
-                                disabled={isFrozen || !isPeriod2} // 🧊 BLOQUEAR SI ESTÁ CONGELADO O NO ES P2
-                                className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group min-w-[100px] ${
-                                  isFrozen 
-                                    ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                                    : !isPeriod2
-                                      ? 'text-gray-900 dark:text-gray-100 cursor-default' // No clickable pero visible
-                                      : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400'
-                                }`}
-                                onClick={(e) => {
-                                  if (isFrozen || !isPeriod2) return;
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  console.log('👆 [CALCULATOR] Click en plataforma:', platform.id);
-                                  setEditingP1Platform(platform.id);
-                                  setP1InputValue(String(p1Values[platform.id] || ''));
-                                }}
-                                title={
-                                  isFrozen 
-                                    ? "Plataforma cerrada por horario europeo" 
-                                    : !isPeriod2 
-                                      ? "Solo disponible en el segundo periodo (16-Fin de mes)" 
-                                      : "Click para ingresar valor de P1"
-                                }
-                              >
-                                <span className={`${!isFrozen && isPeriod2 && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
-                                  {platform.name}
-                                </span>
-                                {!isFrozen && isPeriod2 && (
-                                  <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
-                                    ✎
-                                  </span>
-                                )}
-                              </button>
-                              {/* 🔒 Etiqueta Cerrado alineada a la derecha */}
+                              <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                                {platform.name}
+                              </span>
                               {isFrozen && (
-                                <span 
-                                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap"
-                                >
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap">
                                   🔒 Cerrado
                                 </span>
                               )}
                             </div>
-                            
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                            <div className="text-xs text-gray-500 dark:text-gray-400">
+                              Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                             </div>
-                            
-                            {/* 🔧 REFERENCIA PERMANENTE DE P1 */}
-                            {/* Se muestra SIEMPRE que haya un valor de P1 > 0, independiente de si se está editando o no */}
-                            {p1Value > 0 && (
-                               <div className="mt-1 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800/30 w-fit">
-                                 <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">P1:</span>
-                                 <span className="text-[10px] font-mono text-blue-700 dark:text-blue-300">{p1Value.toLocaleString('es-CO')}</span>
-                               </div>
-                            )}
-
-                            {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta con z-index alto */}
-                            {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
-                              <div
-                                className="absolute z-[100] bg-white dark:bg-gray-800 border-2 border-blue-400 dark:border-blue-500 rounded-lg shadow-xl p-2 sm:p-3 min-w-[160px] sm:min-w-[180px]"
-                                style={{
-                                  top: '100%', 
-                                  left: '0',
-                                  marginTop: '4px'
-                                }}
-                                onClick={(e) => e.stopPropagation()}
-                              >
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
-                                  <input
-                                    type="text"
-                                    inputMode="decimal"
-                                    value={p1InputValue}
-                                    onChange={(e) => {
-                                      const rawValue = e.target.value;
-                                      const unifiedValue = rawValue.replace(',', '.');
-                                      setP1InputValue(unifiedValue);
-                                    }}
-                                    onKeyDown={(e) => {
-                                      if (e.key === 'Enter') {
-                                        const value = Number.parseFloat(p1InputValue) || 0;
-                                        setP1Values(prev => ({ ...prev, [platform.id]: value }));
-                                        
-                                        // Recalcular P2 si hay total mensual
-                                        if (monthlyTotals[platform.id]) {
-                                          const monthlyTotal = Number.parseFloat(monthlyTotals[platform.id]) || 0;
-                                          const p2Value = monthlyTotal - value;
-                                          
-                                          setInputValues(prev => ({ ...prev, [platform.id]: p2Value > 0 ? String(p2Value) : '' }));
-                                          setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Value } : p));
-                                        }
-                                        
-                                        setEditingP1Platform(null);
-                                      } else if (e.key === 'Escape') {
-                                        setEditingP1Platform(null);
-                                      }
-                                    }}
-                                    autoFocus
-                                    className="flex-1 h-9 sm:h-10 px-2 sm:px-3 text-sm sm:text-base border-2 border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 touch-manipulation"
-                                    placeholder="0.00"
-                                  />
-                                  <button
-                                    onClick={() => handleSaveP1Value(platform.id)}
-                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-blue-500 text-white rounded-lg text-xs sm:text-sm font-medium active:bg-blue-600 transition-colors touch-manipulation"
-                                    title="Guardar"
-                                  >
-                                    ✓
-                                  </button>
-                                  <button
-                                    onClick={() => {
-                                      setEditingP1Platform(null);
-                                    }}
-                                    className="h-9 sm:h-10 px-3 sm:px-4 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-xs sm:text-sm font-medium active:bg-gray-300 dark:active:bg-gray-500 transition-colors touch-manipulation"
-                                    title="Cancelar"
-                                  >
-                                    ✕
-                                  </button>
-                                </div>
-                              </div>
-                            )}
                           </div>
                         </td>
                         <td className="py-3 px-3">
-                          <div className="flex flex-col">
-                            <div className="flex items-center space-x-2 relative">
+                          <div className="flex items-center space-x-2">
                             <input
                               type="text"
                               inputMode="decimal"
-                                disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
-                                // Si es mensual (P1>0), mostrar Total Mensual. Si no, mostrar Input Normal (P2)
-                                value={showMonthlyFields ? (monthlyTotals[platform.id] ?? '') : (inputValues[platform.id] ?? '')}
+                              disabled={isFrozen}
+                              value={inputValues[platform.id] ?? ''}
                               onChange={(e) => {
-                                  if (isFrozen) return; // Doble check
+                                if (isFrozen) return;
                                 const rawValue = e.target.value;
                                 const unifiedValue = rawValue.replace(',', '.');
                                 
-                                  if (showMonthlyFields) {
-                                    // LÓGICA MENSUAL: Input es Total Mensual
-                                    setMonthlyTotals(prev => ({ ...prev, [platform.id]: unifiedValue }));
-                                    
-                                    const p1Value = p1Values[platform.id] || 0;
-                                    const monthlyTotalNum = Number.parseFloat(unifiedValue) || 0;
-                                    const p2Calculated = monthlyTotalNum - p1Value;
-                                    
-                                    // Guardar P2 calculado en platform.value (esto actualiza las columnas de resultados)
-                                    setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: p2Calculated } : p));
-                                  } else {
-                                    // LÓGICA NORMAL: Input es P2
                                 setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
-
                                 const numeric = Number.parseFloat(unifiedValue);
                                 const numericValue = Number.isFinite(numeric) ? numeric : 0;
                                 setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
-                                  }
-                                }}
-                                className={`w-20 sm:w-24 h-9 sm:h-10 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
-                                  isFrozen
-                                    ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
-                                    : showMonthlyFields 
-                                      ? 'bg-white dark:bg-gray-800 border-blue-400 dark:border-blue-500 ring-1 ring-blue-100 dark:ring-blue-900/30 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50' 
-                                      : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
-                                }`}
-                                placeholder={isFrozen ? "Locked" : "0.00"}
-                                title={isFrozen ? "Cerrado por horario europeo" : (showMonthlyFields ? "Ingresa el TOTAL MENSUAL del mes (el sistema restará automáticamente lo reportado en P1)" : "Ingresa el valor generado en este periodo")}
-                              />
-                              <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                                {/* Mostrar TKN para plataformas que usan tokens, no la moneda */}
-                                {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
-                                  ? 'TKN' 
-                                  : (platform.currency || 'USD')}
+                              }}
+                              className={`w-20 sm:w-24 h-9 sm:h-10 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
+                                isFrozen
+                                  ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
+                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
+                              }`}
+                              placeholder={isFrozen ? "Locked" : "0.00"}
+                              title={isFrozen ? "Cerrado por horario europeo" : "Ingresa el valor generado en este periodo"}
+                            />
+                            <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                              {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
+                                ? 'TKN' 
+                                : (platform.currency || 'USD')}
                             </span>
-                            </div>
-                            {/* Indicador discreto de resta P1 */}
-                            {showMonthlyFields && (
-                               <div className="text-[10px] text-blue-500/80 dark:text-blue-400/80 mt-0.5 font-medium ml-1">
-                                 - P1 ({(p1Values[platform.id] || 0).toFixed(0)})
-                               </div>
-                            )}
                           </div>
                         </td>
                         <td className="py-3 px-3">
