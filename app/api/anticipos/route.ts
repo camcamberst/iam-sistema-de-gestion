@@ -81,11 +81,11 @@ export async function GET(request: NextRequest) {
           modelIds = modelGroups?.map(mg => mg.user_id) || [];
           if (modelIds.length === 0) {
             // No hay modelos en los grupos del admin, devolver array vacío
-            return NextResponse.json({ success: true, data: [] });
+            return NextResponse.json({ success: true, data: [], anticipos: [] });
           }
         } else {
           // Admin sin grupos asignados, no puede ver anticipos
-          return NextResponse.json({ success: true, data: [] });
+          return NextResponse.json({ success: true, data: [], anticipos: [] });
         }
       }
       // Si es super_admin, no filtrar (ver todos los anticipos)
@@ -102,7 +102,8 @@ export async function GET(request: NextRequest) {
           name,
           email,
           user_groups(
-            groups!inner(
+            group_id,
+            groups(
               id,
               name
             )
@@ -168,15 +169,39 @@ export async function GET(request: NextRequest) {
     }
 
     // Procesar anticipos para formatear grupos correctamente
-    const processedAnticipos = (anticipos || []).map((anticipo: any) => ({
-      ...anticipo,
-      model: {
-        ...anticipo.model,
-        groups: anticipo.model?.user_groups?.map((ug: any) => ug.groups) || []
-      }
-    }));
+    const processedAnticipos = (anticipos || []).map((anticipo: any) => {
+      // Filtrar grupos válidos (pueden ser null si no hay relación)
+      const groups = (anticipo.model?.user_groups || [])
+        .map((ug: any) => ug.groups)
+        .filter((g: any) => g !== null && g !== undefined) || [];
+      const firstGroup = groups.length > 0 ? groups[0] : null;
+      
+      console.log('🔍 [API ANTICIPOS] Procesando anticipo:', {
+        anticipoId: anticipo.id,
+        modelId: anticipo.model?.id,
+        modelName: anticipo.model?.name,
+        userGroupsRaw: anticipo.model?.user_groups?.length || 0,
+        groupsCount: groups.length,
+        firstGroup: firstGroup ? { id: firstGroup.id, name: firstGroup.name } : null
+      });
+      
+      return {
+        ...anticipo,
+        model: {
+          ...anticipo.model,
+          group: firstGroup, // Primer grupo (singular) para compatibilidad con frontend
+          groups: groups // Array completo de grupos
+        }
+      };
+    });
+    
+    console.log('✅ [API ANTICIPOS] Anticipos procesados:', processedAnticipos.length);
 
-    return NextResponse.json({ success: true, data: processedAnticipos });
+    return NextResponse.json({ 
+      success: true, 
+      data: processedAnticipos,
+      anticipos: processedAnticipos // Alias para compatibilidad con frontend
+    });
 
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
