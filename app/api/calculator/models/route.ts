@@ -72,6 +72,14 @@ export async function GET(request: NextRequest) {
       .eq('role', 'modelo');
 
     // Aplicar filtro de afiliado si es necesario
+    console.log('🔍 [CALCULATOR-MODELS] Aplicando filtro de afiliado:', {
+      adminRole: adminUser.role,
+      affiliateStudioId: adminUser.affiliate_studio_id,
+      isInnovaAdmin: adminUser.role === 'admin' && !adminUser.affiliate_studio_id,
+      isSuperAdmin: adminUser.role === 'super_admin',
+      isAffiliateAdmin: (adminUser.role === 'admin' && !!adminUser.affiliate_studio_id) || adminUser.role === 'superadmin_aff'
+    });
+    
     modelsQuery = addAffiliateFilter(modelsQuery, {
       id: adminId,
       role: adminUser.role,
@@ -110,9 +118,19 @@ export async function GET(request: NextRequest) {
     const { data: models, error: modelsError } = await modelsQuery;
 
     if (modelsError) {
-      console.error('Error al obtener modelos:', modelsError);
+      console.error('❌ [CALCULATOR-MODELS] Error al obtener modelos:', modelsError);
       return NextResponse.json({ success: false, error: modelsError.message }, { status: 500 });
     }
+
+    console.log('✅ [CALCULATOR-MODELS] Modelos obtenidos:', {
+      totalModels: models?.length || 0,
+      innovaModels: models?.filter(m => !m.affiliate_studio_id).length || 0,
+      affiliateModels: models?.filter(m => !!m.affiliate_studio_id).length || 0,
+      sampleModels: models?.slice(0, 3).map(m => ({
+        email: m.email,
+        affiliateStudioId: m.affiliate_studio_id
+      })) || []
+    });
 
     // Procesar datos para incluir configuración actual
     const processedModels = models?.map(model => {

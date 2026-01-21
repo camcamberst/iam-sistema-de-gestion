@@ -43,8 +43,8 @@ export async function getUserAffiliateStudioId(userId: string): Promise<string |
  * Agregar filtro de afiliado a una query de Supabase
  * 
  * Reglas:
- * - super_admin: Sin filtro (ve todo)
- * - admin (de Innova): Sin filtro (ve todo)
+ * - super_admin: Sin filtro (ve todo: Innova + todos los afiliados)
+ * - admin (de Innova): SOLO modelos de Innova (affiliate_studio_id IS NULL)
  * - superadmin_aff: Solo datos de su affiliate_studio_id
  * - admin (de afiliado): Solo datos de su affiliate_studio_id
  * - modelo: Solo sus propios datos (ya implementado en otras partes)
@@ -58,9 +58,14 @@ export function addAffiliateFilter<T>(
     return query.eq('affiliate_studio_id', '00000000-0000-0000-0000-000000000000'); // UUID inválido
   }
 
-  // Superadmin y admin de Innova ven todo (sin filtro)
-  if (user.role === 'super_admin' || (user.role === 'admin' && !user.affiliate_studio_id)) {
-    return query; // Sin filtro
+  // Super admin ve TODO (Innova + todos los afiliados)
+  if (user.role === 'super_admin') {
+    return query; // Sin filtro - ve todo
+  }
+
+  // Admin de Innova SOLO ve modelos de Innova (sin affiliate_studio_id)
+  if (user.role === 'admin' && !user.affiliate_studio_id) {
+    return query.is('affiliate_studio_id', null); // Solo Innova
   }
 
   // Superadmin_aff y admin de afiliado solo ven su burbuja
@@ -88,15 +93,21 @@ export function canAccessAffiliateResource(
     return false;
   }
 
-  // Superadmin y admin de Innova pueden acceder a todo
-  if (user.role === 'super_admin' || (user.role === 'admin' && !user.affiliate_studio_id)) {
+  // Super admin puede acceder a todo (Innova + afiliados)
+  if (user.role === 'super_admin') {
     return true;
   }
 
   // Si el recurso no tiene affiliate_studio_id (pertenece a Innova)
   if (!resourceAffiliateStudioId) {
-    // Solo superadmin y admin de Innova pueden acceder
+    // Solo superadmin y admin de Innova pueden acceder a recursos de Innova
     return user.role === 'super_admin' || (user.role === 'admin' && !user.affiliate_studio_id);
+  }
+
+  // Si el recurso tiene affiliate_studio_id (pertenece a un afiliado)
+  // Admin de Innova NO puede acceder a recursos de afiliados
+  if (user.role === 'admin' && !user.affiliate_studio_id) {
+    return false;
   }
 
   // Superadmin_aff y admin de afiliado solo pueden acceder a recursos de su afiliado
@@ -112,17 +123,24 @@ export function canAccessAffiliateResource(
  * Obtener lista de affiliate_studio_ids que el usuario puede ver
  * 
  * Retorna:
- * - null: Puede ver todo (super_admin, admin de Innova)
- * - string[]: Lista de affiliate_studio_ids permitidos
+ * - null: Puede ver todo (super_admin)
+ * - ['INNOVA']: Solo modelos de Innova (admin de Innova) - representado como array vacío para filtro .is(null)
+ * - string[]: Lista de affiliate_studio_ids permitidos (afiliados)
  */
 export function getAllowedAffiliateStudioIds(user: AuthUser | null): string[] | null {
   if (!user) {
     return [];
   }
 
-  // Superadmin y admin de Innova pueden ver todo
-  if (user.role === 'super_admin' || (user.role === 'admin' && !user.affiliate_studio_id)) {
+  // Super admin puede ver todo (Innova + todos los afiliados)
+  if (user.role === 'super_admin') {
     return null; // null = sin restricción (ver todo)
+  }
+
+  // Admin de Innova solo ve modelos de Innova (sin affiliate_studio_id)
+  // Retornamos array vacío como señal especial para aplicar filtro .is(null)
+  if (user.role === 'admin' && !user.affiliate_studio_id) {
+    return []; // Array vacío = solo Innova
   }
 
   // Superadmin_aff y admin de afiliado solo ven su afiliado
@@ -144,9 +162,14 @@ export function buildAffiliateWhereClause(user: AuthUser | null, tableAlias: str
     return `${prefix}affiliate_studio_id = '00000000-0000-0000-0000-000000000000'`; // UUID inválido
   }
 
-  // Superadmin y admin de Innova ven todo
-  if (user.role === 'super_admin' || (user.role === 'admin' && !user.affiliate_studio_id)) {
+  // Super admin ve todo (Innova + afiliados)
+  if (user.role === 'super_admin') {
     return '1=1'; // Sin restricción
+  }
+
+  // Admin de Innova solo ve modelos de Innova (sin affiliate_studio_id)
+  if (user.role === 'admin' && !user.affiliate_studio_id) {
+    return `${prefix}affiliate_studio_id IS NULL`;
   }
 
   // Superadmin_aff y admin de afiliado solo ven su burbuja
