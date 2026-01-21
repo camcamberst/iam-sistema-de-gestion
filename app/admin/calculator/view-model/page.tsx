@@ -943,7 +943,7 @@ export default function AdminViewModelPage() {
                               </div>
                               <div>
                                 <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">COP Modelo</p>
-                                <p className="font-medium text-gray-700 dark:text-gray-300">${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${(copModelo || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
                               </div>
                             </div>
                           </div>
@@ -1064,13 +1064,6 @@ export default function AdminViewModelPage() {
                                   Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
                                 </div>
                                 
-                                {/* 🔧 REFERENCIA PERMANENTE DE P1 */}
-                                {p1Value > 0 && (
-                                   <div className="mt-1 flex items-center gap-1 bg-blue-50 dark:bg-blue-900/20 px-1.5 py-0.5 rounded border border-blue-100 dark:border-blue-800/30 w-fit">
-                                     <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">P1:</span>
-                                     <span className="text-[10px] font-mono text-blue-700 dark:text-blue-300">{p1Value.toLocaleString('es-CO')}</span>
-                                   </div>
-                                )}
 
                                 {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta relativa a la celda, diseño compacto */}
                                 {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
@@ -1178,7 +1171,7 @@ export default function AdminViewModelPage() {
                               </td>
                               <td className="py-3 px-3">
                                 <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                                  ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                                  ${(copModelo || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
                                 </div>
                               </td>
                             </tr>
@@ -1217,7 +1210,7 @@ export default function AdminViewModelPage() {
                         </div>
                         <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
                           <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
-                            ${calculatedTotals.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            ${(calculatedTotals?.copModelo || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                           </div>
                           <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">COP Modelo</div>
                         </div>
@@ -1293,11 +1286,13 @@ export default function AdminViewModelPage() {
                       </div>
 
                       {/* 90% de anticipo - DESDE SERVIDOR */}
-                      <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
-                        <div className="text-sm text-gray-600 dark:text-gray-300">
-                          <strong>90% de anticipo disponible:</strong> ${calculatedTotals.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                      {calculatedTotals?.anticipoDisponible !== undefined && (
+                        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <strong>90% de anticipo disponible:</strong> ${calculatedTotals.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                          </div>
                         </div>
-                      </div>
+                      )}
                     </>
                   ) : (
                     <div className="text-center py-4">
