@@ -441,11 +441,8 @@ export default function UsersListPage() {
     }
 
     try {
-      const response = await fetch(`/api/users?id=${userId}`, {
-        method: 'DELETE',
-      });
-
-      const result = await response.json();
+      // ✅ Usar función autenticada que incluye el token Bearer
+      const result = await deleteUser(userId);
       
       if (result.success) {
         // Actualizar solo la lista local sin perder filtros
