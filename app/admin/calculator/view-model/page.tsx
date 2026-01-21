@@ -222,6 +222,9 @@ export default function AdminViewModelPage() {
         console.log('🔍 [VIEW-MODEL] Usuario configurado:', userData);
         setUser(userData);
 
+        // Cargar grupos primero (con filtro de afiliado)
+        await loadGroups(userData);
+        
         // Load models according to hierarchy
         console.log('🔍 [VIEW-MODEL] Cargando modelos con adminId:', uid);
         await loadModels(uid);
@@ -262,6 +265,65 @@ export default function AdminViewModelPage() {
     }
   }, [allModels, selectedModel, user]);
 
+  const loadGroups = async (userData?: User | null) => {
+    try {
+      console.log('🔍 [LOAD-GROUPS] Cargando grupos desde API...');
+      
+      // Obtener token de autenticación
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        console.error('❌ [LOAD-GROUPS] No hay token de autenticación');
+        return;
+      }
+      
+      // Cargar grupos desde /api/groups que ya aplica el filtro de afiliado
+      const response = await fetch('/api/groups', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        console.error('❌ [LOAD-GROUPS] Error en response:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('🔍 [LOAD-GROUPS] Response data:', data);
+      
+      if (data.success && data.groups) {
+        // Filtrar grupos operativos (excluir Otros y Satélites)
+        const filteredGroups = data.groups
+          .filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites')
+          .map((g: any) => ({ id: g.id, name: g.name }));
+        
+        console.log('✅ [LOAD-GROUPS] Grupos cargados y filtrados:', filteredGroups.length);
+        console.log('🔍 [LOAD-GROUPS] Grupos:', filteredGroups.map((g: any) => g.name));
+        
+        // Usar userData pasado como parámetro o el estado user
+        const currentUser = userData || user;
+        
+        // Si es admin (no super_admin), filtrar por sus grupos asignados
+        if (currentUser && currentUser.role === 'admin' && currentUser.groups.length > 0) {
+          const adminGroups = filteredGroups.filter((group: any) => 
+            currentUser.groups.includes(group.name)
+          );
+          console.log('🔍 [LOAD-GROUPS] Grupos filtrados para admin:', adminGroups.length);
+          setAvailableGroups(adminGroups);
+        } else {
+          setAvailableGroups(filteredGroups);
+        }
+      } else {
+        console.error('❌ [LOAD-GROUPS] Error en response:', data.error);
+      }
+    } catch (err: any) {
+      console.error('❌ [LOAD-GROUPS] Error en catch:', err);
+    }
+  };
+
   const loadModels = async (adminId: string) => {
     try {
       console.log('🔍 [LOAD-MODELS] Iniciando carga con adminId:', adminId);
@@ -282,30 +344,9 @@ export default function AdminViewModelPage() {
         setAllModels(modelsData);
         setModels(modelsData);
         
-        // Extraer grupos únicos para el filtro (usando Map para evitar duplicados por ID)
-        const groupsMap = new Map<string, {id: string, name: string}>();
-        modelsData.forEach((model: Model) => {
-          model.groups.forEach(group => {
-            if (group && group.id && group.name) {
-              groupsMap.set(group.id, group);
-            }
-          });
-        });
-        
-        console.log('🔍 [LOAD-MODELS] Grupos extraídos:', Array.from(groupsMap.values()));
-        
-        // Filtrar grupos según el rol del usuario
-        let filteredGroups = Array.from(groupsMap.values());
-        if (user && user.role === 'admin') {
-          // Admin solo ve sus grupos asignados
-          filteredGroups = filteredGroups.filter(group => 
-            user.groups.includes(group.name)
-          );
-          console.log('🔍 [LOAD-MODELS] Grupos filtrados para admin:', filteredGroups);
-        }
-        
-        console.log('✅ [LOAD-MODELS] Grupos disponibles:', filteredGroups);
-        setAvailableGroups(filteredGroups);
+        // Los grupos ahora se cargan desde /api/groups con filtro de afiliado
+        // No extraer grupos de los modelos para evitar mezclar Innova con afiliados
+        console.log('✅ [LOAD-MODELS] Modelos cargados. Grupos se cargan por separado desde /api/groups');
       } else {
         console.error('❌ [LOAD-MODELS] Error en response:', data.error);
         setError(data.error || 'Error al cargar modelos');
