@@ -372,6 +372,7 @@ export async function GET(request: NextRequest) {
         email: announcement.author.email
       } : null,
       is_general: announcement.is_general,
+      is_published: announcement.is_published || false, // ✅ Incluir is_published
       is_pinned: announcement.is_pinned,
       priority: announcement.priority,
       views_count: announcement.views_count,
