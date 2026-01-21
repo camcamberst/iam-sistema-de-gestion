@@ -41,6 +41,8 @@ export async function GET(request: NextRequest) {
 
     // Obtener usuario completo con affiliate_studio_id para aplicar filtros
     let currentUser: AuthUser | null = null;
+    let affiliateStudioId: string | null = null;
+    
     if (authHeader) {
       try {
         const token = authHeader.replace('Bearer ', '');
@@ -59,6 +61,8 @@ export async function GET(request: NextRequest) {
               role: userData.role,
               affiliate_studio_id: userData.affiliate_studio_id
             };
+            affiliateStudioId = userData.affiliate_studio_id;
+            userRole = userData.role; // Actualizar userRole con el rol real del usuario
           }
         }
       } catch (authError) {
@@ -66,29 +70,40 @@ export async function GET(request: NextRequest) {
       }
     }
 
+    console.log('🔍 [API GET] Usuario:', { 
+      role: userRole, 
+      affiliate_studio_id: affiliateStudioId,
+      currentUser: !!currentUser 
+    });
+
     // Construir query según el rol
     let query = supabase
       .from('groups')
       .select('id, name, is_active, description, created_at, affiliate_studio_id');
 
-    // Si es super_admin master (sin affiliate_studio_id), solo mostrar sedes de Agencia Innova
-    if (userRole === 'super_admin' && !currentUser?.affiliate_studio_id) {
-      // Solo sedes sin affiliate_studio_id (sedes de Agencia Innova)
-      // Usar .is('affiliate_studio_id', null) para filtrar solo sedes de Innova
+    // Si es super_admin sin affiliate_studio_id (Agencia Innova), solo mostrar sedes de Innova
+    if (userRole === 'super_admin' && !affiliateStudioId) {
       query = query.is('affiliate_studio_id', null);
-      console.log('👑 [API] Super admin master - mostrando solo sedes de Agencia Innova');
-      console.log('🔍 [API] Usuario:', { role: userRole, affiliate_studio_id: currentUser?.affiliate_studio_id });
-    } else if (currentUser?.affiliate_studio_id) {
-      // Usuario afiliado: aplicar filtro de afiliado
-      query = addAffiliateFilter(query, currentUser);
-      console.log('🏢 [API] Usuario afiliado - mostrando solo grupos de su estudio');
-    } else {
-      // Admin normal: aplicar filtro de afiliado y filtrar por sus grupos
-      query = addAffiliateFilter(query, currentUser);
+      console.log('👑 [API GET] Super admin master - solo sedes de Innova');
+    } 
+    // Si es admin sin affiliate_studio_id (Admin de Innova), solo mostrar sedes de Innova
+    else if (userRole === 'admin' && !affiliateStudioId) {
+      query = query.is('affiliate_studio_id', null);
+      console.log('🔑 [API GET] Admin de Innova - solo sedes de Innova');
       if (userGroups.length > 0) {
-      query = query.in('id', userGroups);
-      console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
+        query = query.in('id', userGroups);
+        console.log('🔒 [API GET] Filtrando por grupos del admin:', userGroups);
       }
+    }
+    // Si tiene affiliate_studio_id (cualquier usuario de afiliado), solo mostrar sedes de su afiliado
+    else if (affiliateStudioId) {
+      query = query.eq('affiliate_studio_id', affiliateStudioId);
+      console.log('🏢 [API GET] Usuario afiliado - solo grupos de su estudio:', affiliateStudioId);
+    }
+    // Fallback: no mostrar nada si no se pudo determinar
+    else {
+      query = query.eq('affiliate_studio_id', '00000000-0000-0000-0000-000000000000');
+      console.log('⚠️ [API GET] No se pudo determinar filtro - no se mostrarán grupos');
     }
 
     const { data: groups, error } = await query.order('name', { ascending: true });
@@ -102,35 +117,46 @@ export async function GET(request: NextRequest) {
     }
 
     // Log detallado para debugging
-    console.log('✅ [API] Grupos obtenidos:', groups?.length || 0, 'para rol:', userRole);
+    console.log('✅ [API GET] Grupos obtenidos desde DB:', groups?.length || 0);
+    console.log('🔍 [API GET] Muestra de grupos:', groups?.slice(0, 3).map((g: any) => ({
+      name: g.name,
+      affiliate_studio_id: g.affiliate_studio_id
+    })) || []);
+
+    // Verificación de seguridad adicional en el servidor
+    let gruposFiltrados = groups || [];
     
-    // SIEMPRE filtrar en el servidor para superadmin master (sin affiliate_studio_id)
-    if (userRole === 'super_admin' && !currentUser?.affiliate_studio_id) {
-      // Filtrar SOLO grupos sin affiliate_studio_id (sedes de Agencia Innova)
-      const gruposFiltrados = (groups || []).filter((g: any) => g.affiliate_studio_id === null || g.affiliate_studio_id === undefined);
-      const gruposConAfiliado = (groups || []).filter((g: any) => g.affiliate_studio_id !== null && g.affiliate_studio_id !== undefined);
-      
-      console.log('🔍 [API] Debug - Total grupos obtenidos:', groups?.length || 0);
-      console.log('🔍 [API] Debug - Grupos con afiliado (serán filtrados):', gruposConAfiliado.length);
-      console.log('🔍 [API] Debug - Grupos sin afiliado (Innova - se mostrarán):', gruposFiltrados.length);
-      
-      if (gruposConAfiliado.length > 0) {
-        console.log('⚠️ [API] WARNING: Se encontraron grupos de afiliados que serán filtrados!');
-        console.log('🔍 [API] Grupos con afiliado:', gruposConAfiliado.map((g: any) => ({ id: g.id, name: g.name, affiliate_studio_id: g.affiliate_studio_id })));
-      }
-      
-      // SIEMPRE devolver solo los grupos filtrados
-      console.log('🔧 [API] Aplicando filtro en servidor para superadmin master');
-      return NextResponse.json({
-        success: true,
-        groups: gruposFiltrados,
-        userRole: userRole
+    // Para super_admin o admin de Innova (sin affiliate_studio_id), 
+    // asegurar que SOLO se retornen sedes de Innova
+    if ((userRole === 'super_admin' || userRole === 'admin') && !affiliateStudioId) {
+      const gruposInnovaOriginal = gruposFiltrados.length;
+      gruposFiltrados = gruposFiltrados.filter((g: any) => 
+        g.affiliate_studio_id === null || g.affiliate_studio_id === undefined
+      );
+      console.log('🔧 [API GET] Filtro de seguridad aplicado:', {
+        original: gruposInnovaOriginal,
+        filtrado: gruposFiltrados.length,
+        removidos: gruposInnovaOriginal - gruposFiltrados.length
+      });
+    }
+    
+    // Para usuarios de afiliado, asegurar que solo vean su afiliado
+    if (affiliateStudioId) {
+      const gruposAfiliadoOriginal = gruposFiltrados.length;
+      gruposFiltrados = gruposFiltrados.filter((g: any) => 
+        g.affiliate_studio_id === affiliateStudioId
+      );
+      console.log('🔧 [API GET] Filtro de seguridad afiliado aplicado:', {
+        original: gruposAfiliadoOriginal,
+        filtrado: gruposFiltrados.length
       });
     }
 
+    console.log('✅ [API GET] Grupos finales a retornar:', gruposFiltrados.length);
+
     return NextResponse.json({
       success: true,
-      groups: groups || [],
+      groups: gruposFiltrados,
       userRole: userRole
     });
 
@@ -202,28 +228,39 @@ export async function POST(request: NextRequest) {
         .from('groups')
         .select('id, name, is_active, description, created_at, affiliate_studio_id');
 
-      // Si es super_admin master (sin affiliate_studio_id), solo mostrar sedes de Agencia Innova
+      // Si es super_admin sin affiliate_studio_id (Agencia Innova)
       if (userRole === 'super_admin' && !affiliateStudioId) {
         query = query.is('affiliate_studio_id', null);
-        console.log('👑 [API] Super admin master - mostrando solo sedes de Agencia Innova');
-      } else if (userRole === 'superadmin_aff') {
-        // Superadmin_aff: SIEMPRE debe tener affiliate_studio_id, si no, no mostrar nada
+        console.log('👑 [API POST] Super admin master - solo sedes de Innova');
+      } 
+      // Si es admin sin affiliate_studio_id (Admin de Innova)
+      else if (userRole === 'admin' && !affiliateStudioId) {
+        query = query.is('affiliate_studio_id', null);
+        console.log('🔑 [API POST] Admin de Innova - solo sedes de Innova');
+        if (userGroups.length > 0) {
+          query = query.in('id', userGroups);
+          console.log('🔒 [API POST] Filtrando por grupos del admin:', userGroups);
+        }
+      }
+      // Superadmin_aff: SIEMPRE debe tener affiliate_studio_id
+      else if (userRole === 'superadmin_aff') {
         if (affiliateStudioId) {
           query = query.eq('affiliate_studio_id', affiliateStudioId);
-          console.log('🏢 [API] Superadmin_aff - mostrando solo grupos de su estudio:', affiliateStudioId);
+          console.log('🏢 [API POST] Superadmin_aff - solo grupos de su estudio:', affiliateStudioId);
         } else {
-          // Si superadmin_aff no tiene affiliate_studio_id, no mostrar nada
           query = query.eq('affiliate_studio_id', '00000000-0000-0000-0000-000000000000');
-          console.warn('⚠️ [API] Superadmin_aff sin affiliate_studio_id - no se mostrarán grupos');
+          console.warn('⚠️ [API POST] Superadmin_aff sin affiliate_studio_id - no se mostrarán grupos');
         }
-      } else if (userRole === 'admin' && affiliateStudioId) {
-        // Admin de afiliado: solo mostrar grupos de su estudio afiliado
+      } 
+      // Admin de afiliado (con affiliate_studio_id)
+      else if (userRole === 'admin' && affiliateStudioId) {
         query = query.eq('affiliate_studio_id', affiliateStudioId);
-        console.log('🏢 [API] Admin afiliado - mostrando solo grupos de su estudio:', affiliateStudioId);
-      } else if (userGroups.length > 0) {
-        // Admin normal de Innova: filtrar por sus grupos
-        query = query.in('id', userGroups);
-        console.log('🔒 [API] Filtrando grupos para admin:', userGroups);
+        console.log('🏢 [API POST] Admin afiliado - solo grupos de su estudio:', affiliateStudioId);
+      }
+      // Fallback: no mostrar nada
+      else {
+        query = query.eq('affiliate_studio_id', '00000000-0000-0000-0000-000000000000');
+        console.log('⚠️ [API POST] No se pudo determinar filtro - no se mostrarán grupos');
       }
 
       const { data: groups, error } = await query.order('name', { ascending: true });
@@ -236,31 +273,42 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      // Filtro adicional en el servidor para asegurar que no se filtren grupos incorrectos
+      console.log('✅ [API POST] Grupos obtenidos desde DB:', groups?.length || 0);
+      console.log('🔍 [API POST] Muestra de grupos:', groups?.slice(0, 3).map((g: any) => ({
+        name: g.name,
+        affiliate_studio_id: g.affiliate_studio_id
+      })) || []);
+
+      // Filtro de seguridad adicional en el servidor
       let gruposFiltrados = groups || [];
       
-      // Si es superadmin_aff o admin de afiliado, asegurar que solo vean grupos de su estudio
-      if (userRole === 'superadmin_aff') {
-        if (affiliateStudioId) {
-          gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === affiliateStudioId);
-          console.log('🔧 [API] Filtro adicional aplicado para superadmin_aff:', gruposFiltrados.length, 'grupos');
-          console.log('🔍 [API] Grupos filtrados:', gruposFiltrados.map((g: any) => ({ id: g.id, name: g.name, affiliate_studio_id: g.affiliate_studio_id })));
-        } else {
-          gruposFiltrados = [];
-          console.warn('⚠️ [API] Superadmin_aff sin affiliate_studio_id - retornando lista vacía');
-        }
-      } else if (userRole === 'admin' && affiliateStudioId) {
-        gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === affiliateStudioId);
-        console.log('🔧 [API] Filtro adicional aplicado para admin afiliado:', gruposFiltrados.length, 'grupos');
+      // Para super_admin o admin de Innova (sin affiliate_studio_id), 
+      // asegurar que SOLO se retornen sedes de Innova
+      if ((userRole === 'super_admin' || userRole === 'admin') && !affiliateStudioId) {
+        const gruposInnovaOriginal = gruposFiltrados.length;
+        gruposFiltrados = gruposFiltrados.filter((g: any) => 
+          g.affiliate_studio_id === null || g.affiliate_studio_id === undefined
+        );
+        console.log('🔧 [API POST] Filtro de seguridad aplicado:', {
+          original: gruposInnovaOriginal,
+          filtrado: gruposFiltrados.length,
+          removidos: gruposInnovaOriginal - gruposFiltrados.length
+        });
       }
       
-      // Si es super_admin master, asegurar que solo vea grupos de Innova
-      if (userRole === 'super_admin' && !affiliateStudioId) {
-        gruposFiltrados = gruposFiltrados.filter((g: any) => g.affiliate_studio_id === null || g.affiliate_studio_id === undefined);
-        console.log('🔧 [API] Filtro adicional aplicado para super_admin master:', gruposFiltrados.length, 'grupos');
+      // Para usuarios de afiliado, asegurar que solo vean su afiliado
+      if (affiliateStudioId) {
+        const gruposAfiliadoOriginal = gruposFiltrados.length;
+        gruposFiltrados = gruposFiltrados.filter((g: any) => 
+          g.affiliate_studio_id === affiliateStudioId
+        );
+        console.log('🔧 [API POST] Filtro de seguridad afiliado aplicado:', {
+          original: gruposAfiliadoOriginal,
+          filtrado: gruposFiltrados.length
+        });
       }
 
-      console.log('✅ [API] Grupos obtenidos:', gruposFiltrados.length, 'para rol:', userRole);
+      console.log('✅ [API POST] Grupos finales a retornar:', gruposFiltrados.length);
 
       return NextResponse.json({
         success: true,
