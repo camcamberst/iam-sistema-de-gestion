@@ -176,21 +176,27 @@ export default function AdminViewModelPage() {
     const load = async () => {
       try {
         setLoading(true);
+        console.log('🔍 [VIEW-MODEL] Iniciando carga de usuario y modelos...');
         
         // Load current user
         const { data: auth } = await supabase.auth.getUser();
         const uid = auth?.user?.id;
+        console.log('🔍 [VIEW-MODEL] Usuario autenticado:', uid);
+        
         if (!uid) {
+          console.error('❌ [VIEW-MODEL] No hay usuario autenticado');
           setUser(null);
           setLoading(false);
           return;
         }
         
-        const { data: userRow } = await supabase
+        const { data: userRow, error: userError } = await supabase
           .from('users')
           .select('id,name,email,role')
           .eq('id', uid)
           .single();
+        
+        console.log('🔍 [VIEW-MODEL] Datos de usuario:', { userRow, userError });
         
         let groups: string[] = [];
         if (userRow && userRow.role !== 'super_admin') {
@@ -199,9 +205,10 @@ export default function AdminViewModelPage() {
             .select('groups(name)')
             .eq('user_id', uid);
           groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
+          console.log('🔍 [VIEW-MODEL] Grupos del usuario:', groups);
         }
         
-        setUser({
+        const userData = {
           id: userRow?.id || uid,
           name: userRow?.name || auth.user?.email?.split('@')[0] || 'Usuario',
           email: userRow?.email || auth.user?.email || '',
@@ -210,13 +217,17 @@ export default function AdminViewModelPage() {
           organization_id: '',
           is_active: true,
           last_login: new Date().toISOString()
-        });
+        };
+        
+        console.log('🔍 [VIEW-MODEL] Usuario configurado:', userData);
+        setUser(userData);
 
         // Load models according to hierarchy
+        console.log('🔍 [VIEW-MODEL] Cargando modelos con adminId:', uid);
         await loadModels(uid);
         
       } catch (err: any) {
-        console.error('Error loading user:', err);
+        console.error('❌ [VIEW-MODEL] Error loading user:', err);
         setError(err.message || 'Error al cargar usuario');
       } finally {
         setLoading(false);
@@ -253,11 +264,21 @@ export default function AdminViewModelPage() {
 
   const loadModels = async (adminId: string) => {
     try {
-      const response = await fetch(`/api/calculator/models?adminId=${adminId}`);
+      console.log('🔍 [LOAD-MODELS] Iniciando carga con adminId:', adminId);
+      const url = `/api/calculator/models?adminId=${adminId}`;
+      console.log('🔍 [LOAD-MODELS] URL:', url);
+      
+      const response = await fetch(url);
+      console.log('🔍 [LOAD-MODELS] Response status:', response.status);
+      
       const data = await response.json();
+      console.log('🔍 [LOAD-MODELS] Response data:', data);
       
       if (data.success) {
         const modelsData = data.models || [];
+        console.log('✅ [LOAD-MODELS] Modelos recibidos:', modelsData.length);
+        console.log('🔍 [LOAD-MODELS] Primer modelo:', modelsData[0]);
+        
         setAllModels(modelsData);
         setModels(modelsData);
         
@@ -271,6 +292,8 @@ export default function AdminViewModelPage() {
           });
         });
         
+        console.log('🔍 [LOAD-MODELS] Grupos extraídos:', Array.from(groupsMap.values()));
+        
         // Filtrar grupos según el rol del usuario
         let filteredGroups = Array.from(groupsMap.values());
         if (user && user.role === 'admin') {
@@ -278,14 +301,17 @@ export default function AdminViewModelPage() {
           filteredGroups = filteredGroups.filter(group => 
             user.groups.includes(group.name)
           );
+          console.log('🔍 [LOAD-MODELS] Grupos filtrados para admin:', filteredGroups);
         }
         
+        console.log('✅ [LOAD-MODELS] Grupos disponibles:', filteredGroups);
         setAvailableGroups(filteredGroups);
       } else {
+        console.error('❌ [LOAD-MODELS] Error en response:', data.error);
         setError(data.error || 'Error al cargar modelos');
       }
     } catch (err: any) {
-      console.error('Error loading models:', err);
+      console.error('❌ [LOAD-MODELS] Error en catch:', err);
       setError(err.message || 'Error al cargar modelos');
     }
   };
