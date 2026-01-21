@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import { supabase } from '@/lib/supabase';
 
 interface Model {
   id: string;
@@ -140,6 +141,66 @@ export default function ConfigCalculatorPage() {
     }
   }, [selectedModel, isMobile]);
 
+  // Cargar grupos desde API con filtro de afiliado
+  const loadGroups = async (userData?: any) => {
+    try {
+      console.log('🔍 [LOAD-GROUPS] Cargando grupos desde API...');
+      
+      // Obtener token de autenticación
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        console.error('❌ [LOAD-GROUPS] No hay token de autenticación');
+        return;
+      }
+      
+      // Cargar grupos desde /api/groups que ya aplica el filtro de afiliado
+      const response = await fetch('/api/groups', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        console.error('❌ [LOAD-GROUPS] Error en response:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('🔍 [LOAD-GROUPS] Response data:', data);
+      
+      if (data.success && data.groups) {
+        // Filtrar grupos operativos (excluir Otros y Satélites)
+        const filteredGroups = data.groups
+          .filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites')
+          .map((g: any) => ({ id: g.id, name: g.name }));
+        
+        console.log('✅ [LOAD-GROUPS] Grupos cargados y filtrados:', filteredGroups.length);
+        console.log('🔍 [LOAD-GROUPS] Grupos:', filteredGroups.map((g: any) => g.name));
+        
+        // Usar userData pasado como parámetro
+        const userForFilter = userData;
+        
+        // Si es admin (no super_admin), filtrar por sus grupos asignados
+        if (userForFilter && userForFilter.role === 'admin' && userForFilter.groups?.length > 0) {
+          const userGroupIds = userForFilter.groups.map((g: any) => g.id || g);
+          const adminGroups = filteredGroups.filter((group: any) => 
+            userGroupIds.includes(group.id)
+          );
+          console.log('🔍 [LOAD-GROUPS] Grupos filtrados para admin:', adminGroups.length);
+          setAvailableGroups(adminGroups);
+        } else {
+          setAvailableGroups(filteredGroups);
+        }
+      } else {
+        console.error('❌ [LOAD-GROUPS] Error en response:', data.error);
+      }
+    } catch (err: any) {
+      console.error('❌ [LOAD-GROUPS] Error en catch:', err);
+    }
+  };
 
   const loadData = async () => {
     try {
@@ -169,29 +230,10 @@ export default function ConfigCalculatorPage() {
       setAllModels(modelsData.models);
       setModels(modelsData.models);
       
-      // Extraer grupos únicos de los modelos (usando Map para evitar duplicados por ID)
-      const groupsMap = new Map<string, {id: string, name: string}>();
-      
-      modelsData.models.forEach((model: Model) => {
-        model.groups.forEach(group => {
-          if (group && group.id && group.name) {
-            groupsMap.set(group.id, group);
-          }
-        });
-      });
-      
-      const groupsData = Array.from(groupsMap.values());
-      
-      // Filtrar grupos según permisos del usuario
-      let filteredGroups = groupsData;
-      if (user?.role === 'admin') {
-        // Admin solo ve sus grupos asignados
-        const userGroupIds = user.groups?.map((g: any) => g.id) || [];
-        filteredGroups = groupsData.filter(group => userGroupIds.includes(group.id));
-      }
-      
-      setAvailableGroups(filteredGroups);
-      console.log('🔍 [LOAD] Available groups:', filteredGroups);
+      // Los grupos ahora se cargan desde /api/groups con filtro de afiliado
+      // No extraer grupos de los modelos para evitar mezclar Innova con afiliados
+      await loadGroups(user);
+      console.log('✅ [LOAD] Modelos cargados. Grupos se cargan por separado desde /api/groups');
       console.log('🔍 [LOAD] Models set successfully');
 
       // Cargar plataformas disponibles
