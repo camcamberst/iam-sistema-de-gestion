@@ -37,13 +37,13 @@ const modeloMenu: MenuItem[] = [
     ]
   },
   {
-    id: 'anticipos',
-    label: 'Mis Anticipos',
-    href: '/admin/model/anticipos/solicitar',
+    id: 'finanzas',
+    label: 'Mis Finanzas',
+    href: '/admin/model/finanzas/anticipos/solicitar',
     subItems: [
-      { label: 'Solicitar Anticipo', href: '/admin/model/anticipos/solicitar' },
-      { label: 'Mis Solicitudes', href: '/admin/model/anticipos/solicitudes' },
-      { label: 'Mi Historial', href: '/admin/model/anticipos/historial' }
+      { label: 'Solicitar Anticipo', href: '/admin/model/finanzas/anticipos/solicitar' },
+      { label: 'Mis Solicitudes', href: '/admin/model/finanzas/anticipos/solicitudes' },
+      { label: 'Mi Ahorro', href: '/admin/model/finanzas/ahorro' }
     ]
   },
   {
@@ -132,29 +132,29 @@ const adminMenu: MenuItem[] = [
     ]
   },
   {
-    id: 'anticipos',
-    label: 'Gestión Anticipos',
+    id: 'finanzas',
+    label: 'Gestión Finanzas',
     href: '#',
     subItems: [
       { 
         label: 'Solicitudes Pendientes', 
-        href: '/admin/anticipos/pending',
+        href: '/admin/finanzas/anticipos/pending',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         ),
-        description: 'Revisa solicitudes por aprobar'
+        description: 'Revisa solicitudes de anticipos por aprobar'
       },
       { 
-        label: 'Historial Anticipos', 
-        href: '/admin/anticipos/history',
+        label: 'Gestión Ahorros', 
+        href: '/admin/finanzas/ahorros',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         ),
-        description: 'Consulta el historial completo'
+        description: 'Gestiona solicitudes de ahorro y retiros'
       }
     ]
   },

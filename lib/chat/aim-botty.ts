@@ -24,6 +24,15 @@ export type NotificationType =
   | 'anticipo_realizado'
   | 'anticipo_confirmado'
   | 'anticipo_confirmar_recordatorio'
+  // Ahorros
+  | 'savings_request'
+  | 'savings_approved'
+  | 'savings_rejected'
+  | 'withdrawal_request'
+  | 'withdrawal_approved'
+  | 'withdrawal_rejected'
+  | 'withdrawal_completed'
+  | 'savings_adjustment'
   // Portafolio/Plataformas
   | 'pagina_confirmada'
   | 'plataforma_entregada'
@@ -123,6 +132,16 @@ export function generateNotificationMessage(
     anticipo_realizado: `💰 ${context.name}, tu anticipo ha sido pagado. Por favor [LINK:confirma la recepción|/admin/model/anticipos/solicitudes].`,
     anticipo_confirmado: `✅ ${context.name}, has confirmado la recepción de tu anticipo. ¡Gracias!`,
     anticipo_confirmar_recordatorio: `⏰ ${context.name}, recuerda [LINK:confirmar la recepción de tu anticipo pagado|/admin/model/anticipos/solicitudes].`,
+    
+    // Ahorros
+    savings_request: `💰 ${context.name}, tienes una nueva solicitud de ahorro pendiente de revisión. [LINK:Revisar solicitudes|/admin/finanzas/ahorros]`,
+    savings_approved: `✅ ${context.name}, tu solicitud de ahorro ha sido aprobada. El monto se ha guardado en tu cuenta de ahorros. [LINK:Ver mis ahorros|/admin/model/finanzas/ahorro]`,
+    savings_rejected: `⚠️ ${context.name}, tu solicitud de ahorro fue rechazada. Revisa los detalles en [LINK:Mi Ahorro|/admin/model/finanzas/ahorro] o contacta a tu administrador si tienes dudas.`,
+    withdrawal_request: `💸 ${context.name}, tienes una nueva solicitud de retiro de ahorro pendiente de revisión. [LINK:Revisar solicitudes|/admin/finanzas/retiros]`,
+    withdrawal_approved: `✅ ${context.name}, tu solicitud de retiro ha sido aprobada. El pago se procesará según el tiempo estimado. [LINK:Ver mis retiros|/admin/model/finanzas/ahorro]`,
+    withdrawal_rejected: `⚠️ ${context.name}, tu solicitud de retiro fue rechazada. Revisa los detalles en [LINK:Mi Ahorro|/admin/model/finanzas/ahorro] o contacta a tu administrador si tienes dudas.`,
+    withdrawal_completed: `💰 ${context.name}, tu retiro ha sido procesado y enviado. Por favor confirma la recepción cuando lo recibas. [LINK:Ver mis retiros|/admin/model/finanzas/ahorro]`,
+    savings_adjustment: `🔧 ${context.name}, se ha realizado un ajuste en tu cuenta de ahorros. [LINK:Ver detalles|/admin/model/finanzas/ahorro]`,
     
     // Portafolio/Plataformas
     pagina_confirmada: `🎉 ¡Felicidades ${context.name}! Se ha confirmado la entrega de tu página. ¡Excelente trabajo!`,
