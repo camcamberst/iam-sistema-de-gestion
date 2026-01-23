@@ -121,7 +121,7 @@ export async function GET(request: NextRequest) {
 
     const { data: historicalSavings } = await supabase
       .from('model_savings')
-      .select('approved_at, monto_ahorrado, monto_ajustado')
+      .select('approved_at, created_at, monto_ahorrado, monto_ajustado')
       .eq('model_id', targetModelId)
       .eq('estado', 'aprobado')
       .gte('approved_at', sixMonthsAgo.toISOString())
@@ -129,7 +129,7 @@ export async function GET(request: NextRequest) {
 
     const { data: historicalWithdrawals } = await supabase
       .from('savings_withdrawals')
-      .select('realized_at, monto_solicitado')
+      .select('realized_at, created_at, monto_solicitado')
       .eq('model_id', targetModelId)
       .eq('estado', 'realizado')
       .gte('realized_at', sixMonthsAgo.toISOString())
