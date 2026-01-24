@@ -195,15 +195,15 @@ export async function GET(request: NextRequest) {
     const { data: adjustments, error: adjustmentsError } = await adjustmentsQuery;
 
     // Calcular estadísticas
-    const totalAhorrado = (savings || [])
+    const total_ahorrado = (savings || [])
       .filter(s => s.estado === 'aprobado')
       .reduce((sum, s) => sum + parseFloat(String(s.monto_ajustado || s.monto_ahorrado)), 0);
 
-    const totalRetirado = (withdrawals || [])
+    const total_retirado = (withdrawals || [])
       .filter(w => w.estado === 'realizado')
       .reduce((sum, w) => sum + parseFloat(String(w.monto_solicitado)), 0);
 
-    const saldoActual = totalAhorrado - totalRetirado + 
+    const saldo_actual = total_ahorrado - total_retirado + 
       (adjustments || []).reduce((sum, a) => sum + parseFloat(String(a.monto)), 0);
 
     // Obtener modelos únicos con ahorro
@@ -350,7 +350,7 @@ export async function GET(request: NextRequest) {
       retiros_realizados,
       total_ajustes: (adjustments || []).length,
       modelos_con_ahorro: modelosConAhorro,
-      promedio_ahorro_por_modelo: modelosConAhorro > 0 ? totalAhorrado / modelosConAhorro : 0
+      promedio_ahorro_por_modelo: modelosConAhorro > 0 ? total_ahorrado / modelosConAhorro : 0
     };
 
     return NextResponse.json({
