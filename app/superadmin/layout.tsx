@@ -209,12 +209,13 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
       });
 
       baseItems.push({
-        id: 'anticipos',
-        label: 'Gestión Anticipos',
+        id: 'finanzas',
+        label: 'Gestión Finanzas',
         href: '#', // Sin navegación directa
         subItems: [
           { label: 'Solicitudes Pendientes', href: '/admin/anticipos/pending' },
-          { label: 'Historial Anticipos', href: '/admin/anticipos/history' }
+          { label: 'Gestión Ahorros', href: '/admin/finanzas/ahorros' },
+          { label: 'Gestión Retiros', href: '/admin/finanzas/retiros' }
         ]
       });
 

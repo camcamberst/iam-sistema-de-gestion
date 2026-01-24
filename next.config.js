@@ -23,6 +23,17 @@ const nextConfig = {
         destination: '/admin/model/:path*',
         permanent: true,
       },
+      // Redirects para mantener compatibilidad con rutas antiguas de anticipos
+      {
+        source: '/admin/finanzas/anticipos/:path*',
+        destination: '/admin/anticipos/:path*',
+        permanent: false,
+      },
+      {
+        source: '/admin/model/finanzas/anticipos/:path*',
+        destination: '/admin/model/anticipos/:path*',
+        permanent: false,
+      },
     ];
   },
 };
