@@ -46,9 +46,10 @@ interface AdjustmentHistory {
   concepto: string;
   monto: number;
   created_at: string;
-  created_by: {
+  admin?: {
+    id: string;
     name: string;
-  };
+  } | null;
   comentarios?: string;
 }
 
@@ -142,7 +143,7 @@ export default function HistorialAhorrosPage() {
         });
         const data = await response.json();
         if (data.success) {
-          setAdjustments(data.adjustments || []);
+          setAdjustments((data.adjustments || []) as AdjustmentHistory[]);
         }
       }
     } catch (error) {
@@ -433,7 +434,7 @@ export default function HistorialAhorrosPage() {
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Realizado por</p>
-                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{adjustment.admin?.name || 'Admin'}</p>
+                          <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{adjustment.admin?.name ?? 'Admin'}</p>
                         </div>
                         <div>
                           <p className="text-xs text-gray-500 dark:text-gray-400 mb-1">Fecha</p>
