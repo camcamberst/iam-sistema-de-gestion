@@ -54,7 +54,10 @@ export default function MiAhorroPage() {
   const [balance, setBalance] = useState<Balance | null>(null);
   const [movements, setMovements] = useState<Movement[]>([]);
   const [chartData, setChartData] = useState<ChartData[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [showGoalModal, setShowGoalModal] = useState(false);
+  const [newGoal, setNewGoal] = useState({ nombre_meta: '', monto_meta: '', fecha_limite: '' });
 
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
