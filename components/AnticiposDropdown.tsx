@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, CreditCard, FileText, Clock } from 'lucide-react';
+import { ChevronDown, CreditCard, FileText, Clock, PiggyBank } from 'lucide-react';
 
 interface AnticiposDropdownProps {
   isActive: boolean;
@@ -39,21 +39,21 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
   const menuItems = [
     {
       label: 'Solicitar Anticipo',
-      href: '/model/anticipos/solicitar',
+      href: '/admin/model/anticipos/solicitar',
       icon: <CreditCard className="w-4 h-4" />,
       description: 'Solicita un anticipo de tus ganancias'
     },
     {
       label: 'Mis Solicitudes',
-      href: '/model/anticipos/solicitudes',
+      href: '/admin/model/anticipos/solicitudes',
       icon: <FileText className="w-4 h-4" />,
       description: 'Revisa el estado de tus solicitudes'
     },
     {
-      label: 'Mi Historial',
-      href: '/model/anticipos/historial',
-      icon: <Clock className="w-4 h-4" />,
-      description: 'Ve tu historial de anticipos'
+      label: 'Mi Ahorro',
+      href: '/admin/model/finanzas/ahorro',
+      icon: <PiggyBank className="w-4 h-4" />,
+      description: 'Gestiona tus ahorros y metas'
     }
   ];
 
@@ -82,7 +82,7 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
           <div className="p-3">
             <div className="mb-2">
               <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-800 uppercase tracking-wide mb-2">
-                Mis Anticipos
+                Mis Finanzas
               </h3>
             </div>
             

@@ -263,16 +263,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       }
     ];
 
-    // Agregar menú de anticipos para modelos
+    // Agregar menú de finanzas para modelos
     if (userRole === 'modelo') {
       baseItems.push({
-        id: 'anticipos',
-        label: 'Mis Anticipos',
+        id: 'finanzas',
+        label: 'Mis Finanzas',
         href: '/admin/model/anticipos/solicitar',
         subItems: [
           { label: 'Solicitar Anticipo', href: '/admin/model/anticipos/solicitar' },
           { label: 'Mis Solicitudes', href: '/admin/model/anticipos/solicitudes' },
-          { label: 'Mi Historial', href: '/admin/model/anticipos/historial' }
+          { label: 'Mi Ahorro', href: '/admin/model/finanzas/ahorro' }
         ]
       });
 
@@ -681,8 +681,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     );
                   }
 
-                  // Renderizar Mis Anticipos con el componente especial (solo para modelos)
-                  if (item.id === 'anticipos' && item.label === 'Mis Anticipos') {
+                  // Renderizar Mis Finanzas con el componente especial (solo para modelos)
+                  if (item.id === 'finanzas' && item.label === 'Mis Finanzas') {
                     return (
                       <AnticiposDropdown
                         key={item.id}
@@ -1140,8 +1140,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                     );
                   }
 
-                  // Renderizar Mis Anticipos
-                  if (item.id === 'anticipos' && item.label === 'Mis Anticipos') {
+                  // Renderizar Mis Finanzas
+                  if (item.id === 'finanzas' && item.label === 'Mis Finanzas') {
                     return (
                       <div key={item.id} className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
                         <button
