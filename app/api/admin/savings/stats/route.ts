@@ -207,21 +207,21 @@ export async function GET(request: NextRequest) {
       (adjustments || []).reduce((sum, a) => sum + parseFloat(String(a.monto)), 0);
 
     // Obtener modelos únicos con ahorro
-    const modelosConAhorro = new Set(
+    const modelos_con_ahorro = new Set(
       (savings || [])
         .filter(s => s.estado === 'aprobado')
         .map(s => s.model_id)
     ).size;
 
     // Estadísticas de solicitudes
-    const solicitudesPendientes = (savings || []).filter(s => s.estado === 'pendiente').length;
-    const solicitudesAprobadas = (savings || []).filter(s => s.estado === 'aprobado').length;
-    const solicitudesRechazadas = (savings || []).filter(s => s.estado === 'rechazado').length;
+    const solicitudes_pendientes = (savings || []).filter(s => s.estado === 'pendiente').length;
+    const solicitudes_aprobadas = (savings || []).filter(s => s.estado === 'aprobado').length;
+    const solicitudes_rechazadas = (savings || []).filter(s => s.estado === 'rechazado').length;
 
     // Estadísticas de retiros
-    const retirosPendientes = (withdrawals || []).filter(w => w.estado === 'pendiente').length;
-    const retirosAprobados = (withdrawals || []).filter(w => w.estado === 'aprobado').length;
-    const retirosRealizados = (withdrawals || []).filter(w => w.estado === 'realizado').length;
+    const retiros_pendientes = (withdrawals || []).filter(w => w.estado === 'pendiente').length;
+    const retiros_aprobados = (withdrawals || []).filter(w => w.estado === 'aprobado').length;
+    const retiros_realizados = (withdrawals || []).filter(w => w.estado === 'realizado').length;
 
     // Datos mensuales
     const monthlyDataMap: Record<string, { ingresos: number; retiros: number; solicitudes: number }> = {};
@@ -349,8 +349,8 @@ export async function GET(request: NextRequest) {
       retiros_aprobados,
       retiros_realizados,
       total_ajustes: (adjustments || []).length,
-      modelos_con_ahorro: modelosConAhorro,
-      promedio_ahorro_por_modelo: modelosConAhorro > 0 ? total_ahorrado / modelosConAhorro : 0
+      modelos_con_ahorro: modelos_con_ahorro,
+      promedio_ahorro_por_modelo: modelos_con_ahorro > 0 ? total_ahorrado / modelos_con_ahorro : 0
     };
 
     return NextResponse.json({
