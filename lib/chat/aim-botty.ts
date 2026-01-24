@@ -34,6 +34,7 @@ export type NotificationType =
   | 'withdrawal_completed'
   | 'savings_adjustment'
   | 'savings_goal_completed'
+  | 'savings_window_reminder'
   // Portafolio/Plataformas
   | 'pagina_confirmada'
   | 'plataforma_entregada'
@@ -144,6 +145,7 @@ export function generateNotificationMessage(
     withdrawal_completed: `💰 ${context.name}, tu retiro ha sido procesado y enviado. Por favor confirma la recepción cuando lo recibas. [LINK:Ver mis retiros|/admin/model/finanzas/ahorro]`,
     savings_adjustment: `🔧 ${context.name}, se ha realizado un ajuste en tu cuenta de ahorros. [LINK:Ver detalles|/admin/model/finanzas/ahorro]`,
     savings_goal_completed: `🎉 ¡Felicidades ${context.name}! Has alcanzado tu meta de ahorro. ¡Sigue así! [LINK:Ver mis metas|/admin/model/finanzas/ahorro]`,
+    savings_window_reminder: `💰 ${context.name}, recuerda que tienes tiempo limitado para solicitar ahorro. [LINK:Solicitar ahora|/admin/model/finanzas/ahorro/solicitar]`,
     
     // Portafolio/Plataformas
     pagina_confirmada: `🎉 ¡Felicidades ${context.name}! Se ha confirmado la entrega de tu página. ¡Excelente trabajo!`,
