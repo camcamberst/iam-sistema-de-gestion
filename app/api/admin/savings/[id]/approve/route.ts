@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendBotNotification } from '@/lib/chat/bot-notifications';
+import { updateSavingsGoalsProgress } from '@/lib/savings/savings-utils';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -126,18 +127,33 @@ export async function PUT(
       return NextResponse.json({ success: false, error: updateError.message }, { status: 500 });
     }
 
-    // Notificar a la modelo
+    // Notificar a la modelo y actualizar progreso de metas
     try {
       const modelId = updatedSavings.model_id;
       const modelName = (updatedSavings.model as any)?.name || 'Modelo';
       const montoFinal = updatedSavings.monto_ajustado || updatedSavings.monto_ahorrado;
 
       if (estado === 'aprobado') {
+        // Actualizar progreso de metas
+        const goalsUpdate = await updateSavingsGoalsProgress(modelId);
+        
+        // Notificar aprobación
         await sendBotNotification(
           modelId,
           'savings_approved',
           `✅ Tu solicitud de ahorro ha sido aprobada. Monto ahorrado: $${montoFinal.toLocaleString('es-CO')} COP`
         );
+
+        // Notificar metas completadas
+        if (goalsUpdate.completedGoals && goalsUpdate.completedGoals.length > 0) {
+          for (const goal of goalsUpdate.completedGoals) {
+            await sendBotNotification(
+              modelId,
+              'savings_goal_completed',
+              `🎉 ¡Felicidades! Has alcanzado tu meta de ahorro: "${goal.nombre_meta}"`
+            );
+          }
+        }
       } else if (estado === 'rechazado') {
         await sendBotNotification(
           modelId,

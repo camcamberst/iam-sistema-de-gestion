@@ -359,3 +359,72 @@ export function calculateProcessingTime(montoRetiro: number, saldoTotal: number)
     porcentaje
   };
 }
+
+/**
+ * Actualiza el progreso de las metas de ahorro cuando se aprueba un ahorro
+ * También verifica si alguna meta se completó y la marca como completada
+ */
+export async function updateSavingsGoalsProgress(modelId: string): Promise<{
+  success: boolean;
+  completedGoals?: Array<{ id: string; nombre_meta: string }>;
+  error?: string;
+}> {
+  try {
+    // Obtener saldo actual
+    const balance = await getTotalSavingsBalance(modelId);
+    if (!balance.success) {
+      return { success: false, error: 'Error obteniendo saldo' };
+    }
+
+    // Obtener todas las metas activas
+    const { data: activeGoals, error: goalsError } = await supabase
+      .from('savings_goals')
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('estado', 'activa');
+
+    if (goalsError) {
+      console.error('❌ [SAVINGS-UTILS] Error obteniendo metas:', goalsError);
+      return { success: false, error: 'Error obteniendo metas' };
+    }
+
+    const completedGoals: Array<{ id: string; nombre_meta: string }> = [];
+
+    // Actualizar progreso de cada meta
+    for (const goal of activeGoals || []) {
+      const montoMeta = parseFloat(String(goal.monto_meta));
+      const montoActual = balance.saldo_actual;
+      const porcentaje = montoMeta > 0 ? (montoActual / montoMeta) * 100 : 0;
+
+      // Actualizar monto_actual
+      await supabase
+        .from('savings_goals')
+        .update({ monto_actual: montoActual })
+        .eq('id', goal.id);
+
+      // Si se completó, marcar como completada
+      if (porcentaje >= 100) {
+        await supabase
+          .from('savings_goals')
+          .update({
+            estado: 'completada',
+            completed_at: new Date().toISOString()
+          })
+          .eq('id', goal.id);
+
+        completedGoals.push({
+          id: goal.id,
+          nombre_meta: goal.nombre_meta
+        });
+      }
+    }
+
+    return {
+      success: true,
+      completedGoals: completedGoals.length > 0 ? completedGoals : undefined
+    };
+  } catch (error: any) {
+    console.error('❌ [SAVINGS-UTILS] Error actualizando progreso de metas:', error);
+    return { success: false, error: error.message };
+  }
+}
