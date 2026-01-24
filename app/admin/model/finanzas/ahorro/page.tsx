@@ -58,6 +58,8 @@ export default function MiAhorroPage() {
   const [error, setError] = useState<string | null>(null);
   const [showGoalModal, setShowGoalModal] = useState(false);
   const [newGoal, setNewGoal] = useState({ nombre_meta: '', monto_meta: '', fecha_limite: '' });
+  const [editingGoal, setEditingGoal] = useState<Goal | null>(null);
+  const [showEditModal, setShowEditModal] = useState(false);
 
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
@@ -272,9 +274,17 @@ export default function MiAhorroPage() {
 
           {/* Últimos Movimientos */}
           <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
-              Últimos Movimientos
-            </h2>
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
+                Últimos Movimientos
+              </h2>
+              <Link
+                href="/admin/model/finanzas/ahorro/historial"
+                className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-medium"
+              >
+                Ver historial completo →
+              </Link>
+            </div>
             {movements.length > 0 ? (
               <div className="space-y-3 max-h-96 overflow-y-auto">
                 {movements.map((movement) => (
@@ -400,6 +410,51 @@ export default function MiAhorroPage() {
                       Faltan {formatCurrency(goal.faltante)} para alcanzar tu meta
                     </p>
                   )}
+
+                  {goal.estado === 'activa' && (
+                    <div className="flex space-x-2 mt-3">
+                      <button
+                        onClick={() => {
+                          setEditingGoal(goal);
+                          setShowEditModal(true);
+                        }}
+                        className="flex-1 px-3 py-1.5 text-xs bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900/50 transition-all font-medium"
+                      >
+                        Editar
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (!confirm('¿Estás segura de que deseas cancelar esta meta?')) return;
+                          
+                          try {
+                            const { data: { session } } = await supabase.auth.getSession();
+                            const token = session?.access_token;
+                            if (!token) return;
+
+                            const response = await fetch(`/api/model/savings/goals/${goal.id}`, {
+                              method: 'DELETE',
+                              headers: {
+                                'Authorization': `Bearer ${token}`
+                              }
+                            });
+
+                            const data = await response.json();
+                            if (data.success) {
+                              if (user) await loadDashboardData(user.id);
+                            } else {
+                              setError(data.error || 'Error al cancelar meta');
+                            }
+                          } catch (error) {
+                            console.error('Error canceling goal:', error);
+                            setError('Error al cancelar meta');
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 text-xs bg-red-50 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/50 transition-all font-medium"
+                      >
+                        Cancelar
+                      </button>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -504,6 +559,113 @@ export default function MiAhorroPage() {
                     onClick={() => {
                       setShowGoalModal(false);
                       setNewGoal({ nombre_meta: '', monto_meta: '', fecha_limite: '' });
+                    }}
+                    className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 font-medium"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Modal para editar meta */}
+        {showEditModal && editingGoal && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl max-w-md w-full p-6">
+              <h3 className="text-xl font-bold text-gray-900 dark:text-gray-100 mb-4">
+                Editar Meta de Ahorro
+              </h3>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Nombre de la Meta *
+                  </label>
+                  <input
+                    type="text"
+                    value={editingGoal.nombre_meta}
+                    onChange={(e) => setEditingGoal({ ...editingGoal, nombre_meta: e.target.value })}
+                    placeholder="Ej: Vacaciones, Emergencia, etc."
+                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Monto Meta (COP) *
+                  </label>
+                  <input
+                    type="text"
+                    value={editingGoal.monto_meta.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.')}
+                    onChange={(e) => {
+                      const value = e.target.value.replace(/[^\d]/g, '');
+                      setEditingGoal({ ...editingGoal, monto_meta: parseFloat(value) || 0 });
+                    }}
+                    placeholder="Ej: 5000000"
+                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                    Fecha Límite (Opcional)
+                  </label>
+                  <input
+                    type="date"
+                    value={editingGoal.fecha_limite ? new Date(editingGoal.fecha_limite).toISOString().split('T')[0] : ''}
+                    onChange={(e) => setEditingGoal({ ...editingGoal, fecha_limite: e.target.value || undefined })}
+                    className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                  />
+                </div>
+
+                <div className="flex space-x-3 pt-4">
+                  <button
+                    onClick={async () => {
+                      if (!editingGoal.nombre_meta || !editingGoal.monto_meta) return;
+                      
+                      try {
+                        const { data: { session } } = await supabase.auth.getSession();
+                        const token = session?.access_token;
+                        if (!token) return;
+
+                        const response = await fetch(`/api/model/savings/goals/${editingGoal.id}`, {
+                          method: 'PUT',
+                          headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                          },
+                          body: JSON.stringify({
+                            nombre_meta: editingGoal.nombre_meta,
+                            monto_meta: editingGoal.monto_meta,
+                            fecha_limite: editingGoal.fecha_limite || null
+                          })
+                        });
+
+                        const data = await response.json();
+                        if (data.success) {
+                          setShowEditModal(false);
+                          setEditingGoal(null);
+                          if (user) await loadDashboardData(user.id);
+                        } else {
+                          setError(data.error || 'Error al actualizar meta');
+                        }
+                      } catch (error) {
+                        console.error('Error updating goal:', error);
+                        setError('Error al actualizar meta');
+                      }
+                    }}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg font-medium"
+                  >
+                    Guardar Cambios
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowEditModal(false);
+                      setEditingGoal(null);
                     }}
                     className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-all duration-300 font-medium"
                   >
