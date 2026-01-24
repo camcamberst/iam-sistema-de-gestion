@@ -68,7 +68,7 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
             : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
         }`}
       >
-        <span>Mis Anticipos</span>
+        <span>Mis Finanzas</span>
         <ChevronDown 
           className={`w-4 h-4 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
