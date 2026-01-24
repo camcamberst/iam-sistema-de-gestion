@@ -116,7 +116,10 @@ export default function GestionAhorrosPage() {
   };
 
   const handleApprove = async () => {
-    if (!selectedSavings || !user) return;
+    if (!selectedSavings || !user) {
+      setError('No hay solicitud seleccionada');
+      return;
+    }
 
     setProcessing(selectedSavings.id);
     setError(null);
@@ -183,7 +186,7 @@ export default function GestionAhorrosPage() {
         return;
       }
 
-      const response = await fetch(`/api/admin/savings/${selectedSavings.id}/approve`, {
+      const response = await fetch(`/api/admin/savings/${saving.id}/approve`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
