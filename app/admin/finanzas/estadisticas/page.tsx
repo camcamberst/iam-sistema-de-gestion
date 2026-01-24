@@ -207,7 +207,7 @@ export default function EstadisticasAhorrosPage() {
                 {
                   value: stats.modelos_con_ahorro.toString(),
                   label: 'Modelos con Ahorro',
-                  color: 'indigo'
+                  color: 'purple'
                 }
               ]}
             />
