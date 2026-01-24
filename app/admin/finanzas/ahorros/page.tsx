@@ -42,6 +42,10 @@ export default function GestionAhorrosPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'rechazado'>('pendiente');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
+  const [grupos, setGrupos] = useState<Array<{id: string, name: string}>>([]);
+  const [filteredSavings, setFilteredSavings] = useState<Savings[]>([]);
   
   // Estados para aprobación/rechazo
   const [showApproveModal, setShowApproveModal] = useState(false);
@@ -59,8 +63,17 @@ export default function GestionAhorrosPage() {
   useEffect(() => {
     if (user) {
       loadSavings();
+      loadGroups();
     }
   }, [user, estadoFiltro]);
+
+  useEffect(() => {
+    if (savings.length > 0 || searchQuery || grupoFiltro !== 'todos') {
+      applyFilters(savings, searchQuery, grupoFiltro);
+    } else {
+      setFilteredSavings(savings);
+    }
+  }, [searchQuery, grupoFiltro, savings]);
 
   const loadUser = async () => {
     try {
@@ -105,7 +118,9 @@ export default function GestionAhorrosPage() {
       const data = await response.json();
 
       if (data.success) {
-        setSavings(data.savings || []);
+        const savingsData = data.savings || [];
+        setSavings(savingsData);
+        applyFilters(savingsData, searchQuery, grupoFiltro);
       } else {
         setError(data.error || 'Error al cargar solicitudes');
       }
@@ -113,6 +128,38 @@ export default function GestionAhorrosPage() {
       console.error('Error loading savings:', error);
       setError('Error de conexión');
     }
+  };
+
+  const loadGroups = async () => {
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('groups')
+        .select('id, name')
+        .order('name');
+
+      if (!groupsError && groupsData) {
+        setGrupos(groupsData);
+      }
+    } catch (error) {
+      console.error('Error loading groups:', error);
+    }
+  };
+
+  const applyFilters = (savingsList: Savings[], query: string, grupo: string) => {
+    let filtered = [...savingsList];
+
+    // Filtro por búsqueda de texto (nombre o email de modelo)
+    if (query.trim()) {
+      const searchTerm = query.toLowerCase().trim();
+      filtered = filtered.filter(s => 
+        s.model.name.toLowerCase().includes(searchTerm) ||
+        s.model.email.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    // Filtro por grupo (se aplicará cuando tengamos la información de grupos de modelos)
+    // Por ahora, solo aplicamos el filtro de texto
+    setFilteredSavings(filtered);
   };
 
   const handleApprove = async () => {
@@ -267,7 +314,14 @@ export default function GestionAhorrosPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-wrap gap-3">
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre o email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
+                  />
                   <AppleDropdown
                     options={[
                       { value: 'pendiente', label: 'Pendientes' },
@@ -329,7 +383,7 @@ export default function GestionAhorrosPage() {
               </p>
             </div>
           ) : (
-            savings.map((saving) => (
+            filteredSavings.map((saving) => (
               <div
                 key={saving.id}
                 className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15"

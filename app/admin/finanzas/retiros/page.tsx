@@ -49,6 +49,8 @@ export default function GestionRetirosPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'rechazado'>('pendiente');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [filteredWithdrawals, setFilteredWithdrawals] = useState<Withdrawal[]>([]);
 
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
@@ -62,6 +64,14 @@ export default function GestionRetirosPage() {
       loadWithdrawals();
     }
   }, [user, estadoFiltro]);
+
+  useEffect(() => {
+    if (withdrawals.length > 0 || searchQuery) {
+      applyFilters(withdrawals, searchQuery);
+    } else {
+      setFilteredWithdrawals(withdrawals);
+    }
+  }, [searchQuery, withdrawals]);
 
   const loadUser = async () => {
     try {
@@ -90,6 +100,21 @@ export default function GestionRetirosPage() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyFilters = (withdrawalsList: Withdrawal[], query: string) => {
+    let filtered = [...withdrawalsList];
+
+    // Filtro por búsqueda de texto (nombre o email de modelo)
+    if (query.trim()) {
+      const searchTerm = query.toLowerCase().trim();
+      filtered = filtered.filter(w => 
+        w.model.name.toLowerCase().includes(searchTerm) ||
+        w.model.email.toLowerCase().includes(searchTerm)
+      );
+    }
+
+    setFilteredWithdrawals(filtered);
   };
 
   const loadWithdrawals = async () => {
@@ -306,7 +331,14 @@ export default function GestionRetirosPage() {
                     </p>
                   </div>
                 </div>
-                <div className="flex items-center space-x-3">
+                <div className="flex items-center space-x-3 flex-wrap gap-3">
+                  <input
+                    type="text"
+                    placeholder="Buscar por nombre o email..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[200px]"
+                  />
                   <AppleDropdown
                     options={[
                       { value: 'pendiente', label: 'Pendientes' },
@@ -369,7 +401,7 @@ export default function GestionRetirosPage() {
               </p>
             </div>
           ) : (
-            withdrawals.map((withdrawal) => (
+            filteredWithdrawals.map((withdrawal) => (
               <div
                 key={withdrawal.id}
                 className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-purple-900/10 dark:ring-0.5 dark:ring-purple-500/15"
