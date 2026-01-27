@@ -53,6 +53,9 @@ export default function GestionAhorrosPage() {
   const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
   const [grupos, setGrupos] = useState<Array<{id: string, name: string}>>([]);
   const [filteredSavings, setFilteredSavings] = useState<Savings[]>([]);
+  const [fechaDesde, setFechaDesde] = useState<string>('');
+  const [fechaHasta, setFechaHasta] = useState<string>('');
+  const [periodoFiltro, setPeriodoFiltro] = useState<string>('todos');
   
   // Estados para aprobación/rechazo
   const [showApproveModal, setShowApproveModal] = useState(false);
