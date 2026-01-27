@@ -195,7 +195,59 @@ export default function SolicitarAhorroPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedPeriod || !user || !windowInfo?.isWithin) return;
+    if (!selectedPeriod || !user || !windowInfo?.isWithin) {
+      setError('Por favor selecciona un período válido dentro de la ventana de tiempo');
+      return;
+    }
+
+    if (!netoPagar || netoPagar <= 0) {
+      setError('No hay fondos disponibles para ahorrar en este período');
+      return;
+    }
+
+    // Validar que se haya ingresado un valor
+    if (tipoSolicitud === 'monto' && (!montoAhorrado || parseFloat(montoAhorrado.replace(/[^\d]/g, '')) <= 0)) {
+      setError('Por favor ingresa un monto válido');
+      return;
+    }
+
+    if (tipoSolicitud === 'porcentaje' && (!porcentajeAhorrado || parseFloat(porcentajeAhorrado.replace(/[^\d.]/g, '')) <= 0)) {
+      setError('Por favor ingresa un porcentaje válido');
+      return;
+    }
+
+    const monto = tipoSolicitud === 'monto' 
+      ? parseFloat(montoAhorrado.replace(/[^\d]/g, ''))
+      : (netoPagar * parseFloat(porcentajeAhorrado.replace(/[^\d.]/g, ''))) / 100;
+    
+    const porcentaje = tipoSolicitud === 'porcentaje'
+      ? parseFloat(porcentajeAhorrado.replace(/[^\d.]/g, ''))
+      : (monto / netoPagar) * 100;
+
+    // Validaciones de límites
+    const MIN_AHORRO = 50000;
+    const MAX_PORCENTAJE = 90;
+
+    if (monto < MIN_AHORRO) {
+      setError(`El monto mínimo de ahorro es ${formatCurrency(MIN_AHORRO)}`);
+      return;
+    }
+
+    if (porcentaje > MAX_PORCENTAJE) {
+      setError(`El porcentaje máximo permitido es ${MAX_PORCENTAJE}%`);
+      return;
+    }
+
+    if (monto > netoPagar) {
+      setError(`El monto a ahorrar no puede ser mayor al NETO A PAGAR (${formatCurrency(netoPagar)})`);
+      return;
+    }
+
+    // Confirmación antes de enviar
+    const confirmMessage = `¿Confirmas que deseas solicitar ahorrar ${formatCurrency(monto)} (${porcentaje.toFixed(2)}%) del período ${selectedPeriod.period_type === '1-15' ? 'P1' : 'P2'}?`;
+    if (!confirm(confirmMessage)) {
+      return;
+    }
 
     setSubmitting(true);
     setError(null);
@@ -206,16 +258,9 @@ export default function SolicitarAhorroPage() {
       const token = session?.access_token;
       if (!token) {
         setError('No se pudo obtener el token de autorización');
+        setSubmitting(false);
         return;
       }
-
-      const monto = tipoSolicitud === 'monto' 
-        ? parseFloat(montoAhorrado.replace(/[^\d]/g, ''))
-        : (netoPagar! * parseFloat(porcentajeAhorrado.replace(/[^\d.]/g, ''))) / 100;
-      
-      const porcentaje = tipoSolicitud === 'porcentaje'
-        ? parseFloat(porcentajeAhorrado.replace(/[^\d.]/g, ''))
-        : (monto / netoPagar!) * 100;
 
       const response = await fetch('/api/model/savings', {
         method: 'POST',

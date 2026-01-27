@@ -37,6 +37,13 @@ interface Withdrawal {
     id: string;
     name: string;
     email: string;
+    user_groups?: Array<{
+      group_id: string;
+      groups: {
+        id: string;
+        name: string;
+      };
+    }>;
   };
 }
 
@@ -51,6 +58,10 @@ export default function GestionRetirosPage() {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [filteredWithdrawals, setFilteredWithdrawals] = useState<Withdrawal[]>([]);
+  const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
+  const [grupos, setGrupos] = useState<Array<{id: string, name: string}>>([]);
+  const [fechaDesde, setFechaDesde] = useState<string>('');
+  const [fechaHasta, setFechaHasta] = useState<string>('');
 
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
@@ -62,16 +73,17 @@ export default function GestionRetirosPage() {
   useEffect(() => {
     if (user) {
       loadWithdrawals();
+      loadGroups();
     }
   }, [user, estadoFiltro]);
 
   useEffect(() => {
-    if (withdrawals.length > 0 || searchQuery) {
-      applyFilters(withdrawals, searchQuery);
+    if (withdrawals.length > 0 || searchQuery || grupoFiltro !== 'todos' || fechaDesde || fechaHasta) {
+      applyFilters(withdrawals, searchQuery, grupoFiltro, fechaDesde, fechaHasta);
     } else {
       setFilteredWithdrawals(withdrawals);
     }
-  }, [searchQuery, withdrawals]);
+  }, [searchQuery, withdrawals, grupoFiltro, fechaDesde, fechaHasta]);
 
   const loadUser = async () => {
     try {
@@ -102,7 +114,28 @@ export default function GestionRetirosPage() {
     }
   };
 
-  const applyFilters = (withdrawalsList: Withdrawal[], query: string) => {
+  const loadGroups = async () => {
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('groups')
+        .select('id, name')
+        .order('name');
+
+      if (!groupsError && groupsData) {
+        setGrupos(groupsData);
+      }
+    } catch (error) {
+      console.error('Error loading groups:', error);
+    }
+  };
+
+  const applyFilters = (
+    withdrawalsList: Withdrawal[], 
+    query: string, 
+    grupo: string, 
+    desde: string, 
+    hasta: string
+  ) => {
     let filtered = [...withdrawalsList];
 
     // Filtro por búsqueda de texto (nombre o email de modelo)
@@ -112,6 +145,33 @@ export default function GestionRetirosPage() {
         w.model.name.toLowerCase().includes(searchTerm) ||
         w.model.email.toLowerCase().includes(searchTerm)
       );
+    }
+
+    // Filtro por grupo
+    if (grupo !== 'todos') {
+      filtered = filtered.filter(w => {
+        const modelGroups = w.model.user_groups || [];
+        return modelGroups.some(ug => ug.groups?.id === grupo);
+      });
+    }
+
+    // Filtro por fecha desde
+    if (desde) {
+      const desdeDate = new Date(desde);
+      filtered = filtered.filter(w => {
+        const createdDate = new Date(w.created_at);
+        return createdDate >= desdeDate;
+      });
+    }
+
+    // Filtro por fecha hasta
+    if (hasta) {
+      const hastaDate = new Date(hasta);
+      hastaDate.setHours(23, 59, 59, 999);
+      filtered = filtered.filter(w => {
+        const createdDate = new Date(w.created_at);
+        return createdDate <= hastaDate;
+      });
     }
 
     setFilteredWithdrawals(filtered);
@@ -132,7 +192,9 @@ export default function GestionRetirosPage() {
       const data = await response.json();
 
       if (data.success) {
-        setWithdrawals(data.withdrawals || []);
+        const withdrawalsData = data.withdrawals || [];
+        setWithdrawals(withdrawalsData);
+        applyFilters(withdrawalsData, searchQuery, grupoFiltro, fechaDesde, fechaHasta);
       } else {
         setError(data.error || 'Error al cargar retiros');
       }
@@ -339,6 +401,16 @@ export default function GestionRetirosPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent min-w-[200px]"
                   />
+                  {user?.role === 'super_admin' && grupos.length > 0 && (
+                    <AppleDropdown
+                      options={[
+                        { value: 'todos', label: 'Todos los grupos' },
+                        ...grupos.map(g => ({ value: g.id, label: g.name }))
+                      ]}
+                      value={grupoFiltro}
+                      onChange={(value) => setGrupoFiltro(value)}
+                    />
+                  )}
                   <AppleDropdown
                     options={[
                       { value: 'pendiente', label: 'Pendientes' },
@@ -368,6 +440,34 @@ export default function GestionRetirosPage() {
             </div>
           </div>
         )}
+
+        {/* Filtros adicionales */}
+        <div className="mb-6 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Fecha desde
+              </label>
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Fecha hasta
+              </label>
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={(e) => setFechaHasta(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
 
         {success && (
           <div className="mb-6 bg-green-50 border border-green-200 rounded-xl p-4">
@@ -423,6 +523,11 @@ export default function GestionRetirosPage() {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {withdrawal.model.name}
                       </h3>
+                      {withdrawal.model.user_groups && withdrawal.model.user_groups.length > 0 && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          ({withdrawal.model.user_groups.map(ug => ug.groups?.name).filter(Boolean).join(', ')})
+                        </span>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">

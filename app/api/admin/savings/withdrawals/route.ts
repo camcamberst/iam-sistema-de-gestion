@@ -50,7 +50,15 @@ export async function GET(request: NextRequest) {
       .from('savings_withdrawals')
       .select(`
         *,
-        model:users!savings_withdrawals_model_id_fkey(id, name, email)
+        model:users!savings_withdrawals_model_id_fkey(
+          id, 
+          name, 
+          email,
+          user_groups(
+            group_id,
+            groups(id, name)
+          )
+        )
       `)
       .order('created_at', { ascending: false });
 

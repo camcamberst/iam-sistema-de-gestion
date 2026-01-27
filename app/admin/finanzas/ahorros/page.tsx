@@ -30,6 +30,13 @@ interface Savings {
     id: string;
     name: string;
     email: string;
+    user_groups?: Array<{
+      group_id: string;
+      groups: {
+        id: string;
+        name: string;
+      };
+    }>;
   };
 }
 
@@ -68,12 +75,12 @@ export default function GestionAhorrosPage() {
   }, [user, estadoFiltro]);
 
   useEffect(() => {
-    if (savings.length > 0 || searchQuery || grupoFiltro !== 'todos') {
-      applyFilters(savings, searchQuery, grupoFiltro);
+    if (savings.length > 0 || searchQuery || grupoFiltro !== 'todos' || fechaDesde || fechaHasta || periodoFiltro !== 'todos') {
+      applyFilters(savings, searchQuery, grupoFiltro, fechaDesde, fechaHasta, periodoFiltro);
     } else {
       setFilteredSavings(savings);
     }
-  }, [searchQuery, grupoFiltro, savings]);
+  }, [searchQuery, grupoFiltro, savings, fechaDesde, fechaHasta, periodoFiltro]);
 
   const loadUser = async () => {
     try {
@@ -120,7 +127,7 @@ export default function GestionAhorrosPage() {
       if (data.success) {
         const savingsData = data.savings || [];
         setSavings(savingsData);
-        applyFilters(savingsData, searchQuery, grupoFiltro);
+        applyFilters(savingsData, searchQuery, grupoFiltro, fechaDesde, fechaHasta, periodoFiltro);
       } else {
         setError(data.error || 'Error al cargar solicitudes');
       }
@@ -145,7 +152,14 @@ export default function GestionAhorrosPage() {
     }
   };
 
-  const applyFilters = (savingsList: Savings[], query: string, grupo: string) => {
+  const applyFilters = (
+    savingsList: Savings[], 
+    query: string, 
+    grupo: string, 
+    desde: string, 
+    hasta: string, 
+    periodo: string
+  ) => {
     let filtered = [...savingsList];
 
     // Filtro por búsqueda de texto (nombre o email de modelo)
@@ -157,8 +171,38 @@ export default function GestionAhorrosPage() {
       );
     }
 
-    // Filtro por grupo (se aplicará cuando tengamos la información de grupos de modelos)
-    // Por ahora, solo aplicamos el filtro de texto
+    // Filtro por grupo
+    if (grupo !== 'todos') {
+      filtered = filtered.filter(s => {
+        const modelGroups = s.model.user_groups || [];
+        return modelGroups.some(ug => ug.groups?.id === grupo);
+      });
+    }
+
+    // Filtro por fecha desde
+    if (desde) {
+      const desdeDate = new Date(desde);
+      filtered = filtered.filter(s => {
+        const createdDate = new Date(s.created_at);
+        return createdDate >= desdeDate;
+      });
+    }
+
+    // Filtro por fecha hasta
+    if (hasta) {
+      const hastaDate = new Date(hasta);
+      hastaDate.setHours(23, 59, 59, 999); // Incluir todo el día
+      filtered = filtered.filter(s => {
+        const createdDate = new Date(s.created_at);
+        return createdDate <= hastaDate;
+      });
+    }
+
+    // Filtro por período
+    if (periodo !== 'todos') {
+      filtered = filtered.filter(s => s.period_type === periodo);
+    }
+
     setFilteredSavings(filtered);
   };
 
@@ -322,6 +366,25 @@ export default function GestionAhorrosPage() {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent min-w-[200px]"
                   />
+                  {user?.role === 'super_admin' && grupos.length > 0 && (
+                    <AppleDropdown
+                      options={[
+                        { value: 'todos', label: 'Todos los grupos' },
+                        ...grupos.map(g => ({ value: g.id, label: g.name }))
+                      ]}
+                      value={grupoFiltro}
+                      onChange={(value) => setGrupoFiltro(value)}
+                    />
+                  )}
+                  <AppleDropdown
+                    options={[
+                      { value: 'todos', label: 'Todos los períodos' },
+                      { value: '1-15', label: 'P1 (1-15)' },
+                      { value: '16-31', label: 'P2 (16-31)' }
+                    ]}
+                    value={periodoFiltro}
+                    onChange={(value) => setPeriodoFiltro(value)}
+                  />
                   <AppleDropdown
                     options={[
                       { value: 'pendiente', label: 'Pendientes' },
@@ -364,6 +427,34 @@ export default function GestionAhorrosPage() {
           </div>
         )}
 
+        {/* Filtros adicionales */}
+        <div className="mb-6 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-md">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Fecha desde
+              </label>
+              <input
+                type="date"
+                value={fechaDesde}
+                onChange={(e) => setFechaDesde(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-1">
+                Fecha hasta
+              </label>
+              <input
+                type="date"
+                value={fechaHasta}
+                onChange={(e) => setFechaHasta(e.target.value)}
+                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-sm text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+        </div>
+
         {/* Lista de solicitudes */}
         <div className="space-y-4">
           {savings.length === 0 ? (
@@ -403,6 +494,11 @@ export default function GestionAhorrosPage() {
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                         {saving.model.name}
                       </h3>
+                      {saving.model.user_groups && saving.model.user_groups.length > 0 && (
+                        <span className="text-xs text-gray-500 dark:text-gray-400">
+                          ({saving.model.user_groups.map(ug => ug.groups?.name).filter(Boolean).join(', ')})
+                        </span>
+                      )}
                     </div>
                     
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">

@@ -244,26 +244,69 @@ export default function MiAhorroPage() {
               Crecimiento de Ahorros
             </h2>
             {chartData.length > 0 ? (
-              <div className="space-y-3">
-                {chartData.map((data, index) => {
-                  const maxSaldo = Math.max(...chartData.map(d => d.saldo), 1);
-                  const percentage = (data.saldo / maxSaldo) * 100;
-                  
-                  return (
-                    <div key={index} className="space-y-1">
-                      <div className="flex justify-between text-xs text-gray-600 dark:text-gray-400">
-                        <span>{data.month}</span>
-                        <span className="font-semibold">{formatCurrency(data.saldo)}</span>
+              <div className="space-y-4">
+                {/* Gráfico de barras mejorado */}
+                <div className="relative h-48 flex items-end justify-between gap-2">
+                  {chartData.map((data, index) => {
+                    const maxSaldo = Math.max(...chartData.map(d => d.saldo), 1);
+                    const height = (data.saldo / maxSaldo) * 100;
+                    const prevData = index > 0 ? chartData[index - 1] : null;
+                    const trend = prevData ? (data.saldo > prevData.saldo ? 'up' : data.saldo < prevData.saldo ? 'down' : 'stable') : 'stable';
+                    
+                    return (
+                      <div key={index} className="flex-1 flex flex-col items-center group">
+                        <div className="relative w-full flex flex-col items-center">
+                          {/* Tooltip */}
+                          <div className="absolute bottom-full mb-2 hidden group-hover:block z-10 bg-gray-900 dark:bg-gray-800 text-white text-xs rounded-lg py-2 px-3 shadow-lg whitespace-nowrap">
+                            <div className="font-semibold mb-1">{new Date(data.month + '-01').toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}</div>
+                            <div>Saldo: {formatCurrency(data.saldo)}</div>
+                            <div className="text-gray-400">Ingresos: {formatCurrency(data.ingresos)}</div>
+                            <div className="text-gray-400">Retiros: {formatCurrency(data.retiros)}</div>
+                            {trend === 'up' && <div className="text-green-400 mt-1">↑ Crecimiento</div>}
+                            {trend === 'down' && <div className="text-red-400 mt-1">↓ Disminución</div>}
+                            <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-900 dark:border-t-gray-800"></div>
+                          </div>
+                          
+                          {/* Barra */}
+                          <div className="w-full flex flex-col items-center">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-t-lg overflow-hidden" style={{ height: '180px' }}>
+                              <div
+                                className={`w-full rounded-t-lg transition-all duration-500 ${
+                                  trend === 'up' ? 'bg-gradient-to-t from-green-500 to-green-400' :
+                                  trend === 'down' ? 'bg-gradient-to-t from-red-500 to-red-400' :
+                                  'bg-gradient-to-t from-blue-500 to-blue-400'
+                                }`}
+                                style={{ height: `${height}%` }}
+                              ></div>
+                            </div>
+                            <div className="mt-2 text-xs text-gray-600 dark:text-gray-400 text-center">
+                              {new Date(data.month + '-01').toLocaleDateString('es-CO', { month: 'short' })}
+                            </div>
+                            <div className="text-xs font-semibold text-gray-900 dark:text-gray-100 mt-1">
+                              {formatCurrency(data.saldo)}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2">
-                        <div
-                          className="bg-gradient-to-r from-blue-500 to-indigo-600 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${percentage}%` }}
-                        ></div>
-                      </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
+                </div>
+                
+                {/* Leyenda */}
+                <div className="flex items-center justify-center space-x-4 text-xs text-gray-600 dark:text-gray-400 pt-2 border-t border-gray-200 dark:border-gray-600">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded bg-green-500"></div>
+                    <span>Crecimiento</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded bg-red-500"></div>
+                    <span>Disminución</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-3 h-3 rounded bg-blue-500"></div>
+                    <span>Estable</span>
+                  </div>
+                </div>
               </div>
             ) : (
               <div className="text-center py-8 text-gray-500 dark:text-gray-400">
