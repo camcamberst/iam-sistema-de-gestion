@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
 import { isWithinSavingsWindow } from '@/lib/savings/savings-utils';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard from '@/components/ui/InfoCard';
@@ -53,7 +53,6 @@ export default function SolicitarAhorroPage() {
   const [windowInfo, setWindowInfo] = useState<{ isWithin: boolean; reason?: string; windowStart?: string; windowEnd?: string } | null>(null);
 
   const router = useRouter();
-  const supabase = require('@/lib/supabase').supabase;
 
   useEffect(() => {
     loadUser();
