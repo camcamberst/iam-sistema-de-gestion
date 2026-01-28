@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from '@/lib/supabase';
 import { calculateProcessingTime } from '@/lib/savings/savings-utils';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard from '@/components/ui/InfoCard';
@@ -51,6 +50,7 @@ export default function SolicitarRetiroPage() {
   const [processingInfo, setProcessingInfo] = useState<{ tiempo: string; fechaEstimada: Date; porcentaje: number } | null>(null);
 
   const router = useRouter();
+  const supabase = require('@/lib/supabase').supabase;
 
   // Lista de bancos de Colombia
   const bancosColombia = [
