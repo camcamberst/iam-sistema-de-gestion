@@ -50,7 +50,15 @@ export default function SolicitarRetiroPage() {
   const [processingInfo, setProcessingInfo] = useState<{ tiempo: string; fechaEstimada: Date; porcentaje: number } | null>(null);
 
   const router = useRouter();
-  const supabase = require('@/lib/supabase').supabase;
+  const [supabase, setSupabase] = useState<any>(null);
+
+  useEffect(() => {
+    // Inicializar supabase solo en el cliente
+    if (typeof window !== 'undefined') {
+      const { supabase: supabaseClient } = require('@/lib/supabase');
+      setSupabase(supabaseClient);
+    }
+  }, []);
 
   // Lista de bancos de Colombia
   const bancosColombia = [
@@ -72,8 +80,10 @@ export default function SolicitarRetiroPage() {
   const tiposCuenta = ['Ahorros', 'Corriente'];
 
   useEffect(() => {
-    loadUser();
-  }, []);
+    if (supabase) {
+      loadUser();
+    }
+  }, [supabase]);
 
   useEffect(() => {
     if (withdrawalData.monto_solicitado > 0 && balance) {
@@ -85,6 +95,7 @@ export default function SolicitarRetiroPage() {
   }, [withdrawalData.monto_solicitado, balance]);
 
   const loadUser = async () => {
+    if (!supabase) return;
     try {
       setLoading(true);
       const { data: auth } = await supabase.auth.getUser();
@@ -115,6 +126,7 @@ export default function SolicitarRetiroPage() {
   };
 
   const loadBalance = async (userId: string) => {
+    if (!supabase) return;
     try {
       setLoadingBalance(true);
       const { data: { session } } = await supabase.auth.getSession();
@@ -245,6 +257,11 @@ export default function SolicitarRetiroPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!supabase) {
+      setError('Sistema no inicializado. Por favor recarga la página.');
+      return;
+    }
     
     if (!user) return;
     

@@ -52,19 +52,30 @@ export default function SolicitarAhorroPage() {
   const [windowInfo, setWindowInfo] = useState<{ isWithin: boolean; reason?: string; windowStart?: string; windowEnd?: string } | null>(null);
 
   const router = useRouter();
-  const supabase = require('@/lib/supabase').supabase;
+  const [supabase, setSupabase] = useState<any>(null);
 
   useEffect(() => {
-    loadUser();
+    // Inicializar supabase solo en el cliente
+    if (typeof window !== 'undefined') {
+      const { supabase: supabaseClient } = require('@/lib/supabase');
+      setSupabase(supabaseClient);
+    }
   }, []);
 
   useEffect(() => {
-    if (selectedPeriod) {
+    if (supabase) {
+      loadUser();
+    }
+  }, [supabase]);
+
+  useEffect(() => {
+    if (selectedPeriod && supabase) {
       checkWindowAndLoadNeto();
     }
-  }, [selectedPeriod]);
+  }, [selectedPeriod, supabase]);
 
   const loadUser = async () => {
+    if (!supabase) return;
     try {
       setLoading(true);
       const { data: auth } = await supabase.auth.getUser();
@@ -95,6 +106,7 @@ export default function SolicitarAhorroPage() {
   };
 
   const loadPeriods = async (userId: string) => {
+    if (!supabase) return;
     try {
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
@@ -120,7 +132,7 @@ export default function SolicitarAhorroPage() {
   };
 
   const checkWindowAndLoadNeto = async () => {
-    if (!selectedPeriod || !user) return;
+    if (!selectedPeriod || !user || !supabase) return;
 
     // Validar ventana de tiempo
     const windowCheck = isWithinSavingsWindow(
@@ -194,6 +206,11 @@ export default function SolicitarAhorroPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!supabase) {
+      setError('Sistema no inicializado. Por favor recarga la página.');
+      return;
+    }
+    
     if (!selectedPeriod || !user || !windowInfo?.isWithin) {
       setError('Por favor selecciona un período válido dentro de la ventana de tiempo');
       return;
