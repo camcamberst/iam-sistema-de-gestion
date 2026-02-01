@@ -126,10 +126,11 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
         body: JSON.stringify({ userId, groupId })
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      const errorMsg = data?.error || (res.ok ? null : `Error ${res.status}: ${res.statusText}`) || 'Error desconocido';
       
-      if (!data.success) {
-        throw new Error(data.error || 'Error desconocido');
+      if (!data.success || !res.ok) {
+        throw new Error(errorMsg);
       }
 
       setArchiveResult(data);

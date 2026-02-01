@@ -75,18 +75,28 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Obtener información del usuario
-    const { data: user, error: userError } = await supabase
+    // Obtener información del usuario (sin relación user_groups para evitar errores de esquema)
+    const { data: userRow, error: userError } = await supabase
       .from('users')
-      .select('id, email, name, role, affiliate_studio_id, groups:user_groups(group_id)')
+      .select('id, email, name, role, affiliate_studio_id')
       .eq('id', userIdFromBody)
       .single();
 
-    if (userError || !user) {
+    if (userError || !userRow) {
       return NextResponse.json({
         success: false,
-        error: 'Usuario no encontrado'
+        error: userError?.message ? `Usuario: ${userError.message}` : 'Usuario no encontrado'
       }, { status: 404 });
+    }
+
+    // Para admin, cargar grupos desde user_groups por separado
+    let user = { ...userRow, groups: [] as { group_id: string }[] };
+    if (userRow.role === 'admin') {
+      const { data: userGroups } = await supabase
+        .from('user_groups')
+        .select('group_id')
+        .eq('user_id', userIdFromBody);
+      user.groups = (userGroups || []).map((r: { group_id: string }) => ({ group_id: r.group_id }));
     }
 
     // Verificar rol
@@ -127,7 +137,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 5. ADQUIRIR LOCK ANTI-CONCURRENCIA
-    const { data: lockResult } = await supabase.rpc('acquire_period_closure_lock', {
+    const { data: lockResult, error: lockError } = await supabase.rpc('acquire_period_closure_lock', {
       p_period_date: periodToClose.periodDate,
       p_period_type: periodToClose.periodType,
       p_operation_type: 'archive',
@@ -136,6 +146,12 @@ export async function POST(request: NextRequest) {
       p_user_name: user.name || user.email
     });
 
+    if (lockError) {
+      return NextResponse.json({
+        success: false,
+        error: `Lock: ${lockError.message}. ¿Está creada la función acquire_period_closure_lock en Supabase?`
+      }, { status: 500 });
+    }
     if (!lockResult || !lockResult.success) {
       return NextResponse.json({
         success: false,
@@ -166,45 +182,55 @@ export async function POST(request: NextRequest) {
       }
     });
 
-    // 7. OBTENER MODELOS A ARCHIVAR
+    // 7. OBTENER MODELOS A ARCHIVAR (sin relación user_groups para evitar errores de esquema)
     let modelsQuery = supabase
       .from('users')
-      .select('id, name, email, affiliate_studio_id, groups:user_groups(group_id)')
+      .select('id, name, email, affiliate_studio_id')
       .eq('role', 'modelo')
-      .eq('active', true);
+      .eq('is_active', true);
 
-    // Filtrar por permisos según el rol
     if (user.role === 'superadmin_aff' || user.role === 'admin_aff') {
-      // Afiliados solo ven sus modelos
       modelsQuery = modelsQuery.eq('affiliate_studio_id', user.affiliate_studio_id);
     } else if (user.role === 'admin') {
-      // Admin de Innova solo ve modelos de sus grupos
-      const userGroupIds = user.groups?.map((g: any) => g.group_id) || [];
+      const userGroupIds = user.groups?.map((g: { group_id: string }) => g.group_id) || [];
       if (userGroupIds.length === 0) {
         return NextResponse.json({
           success: false,
           error: 'Admin sin grupos asignados'
         }, { status: 403 });
       }
-      
-      // Esta consulta es compleja, vamos a filtrar después
-      // modelsQuery = modelsQuery.in('groups.group_id', userGroupIds);
     }
 
     const { data: models, error: modelsError } = await modelsQuery;
 
     if (modelsError || !models) {
-      throw new Error(`Error obteniendo modelos: ${modelsError?.message}`);
+      return NextResponse.json({
+        success: false,
+        error: modelsError?.message ? `Modelos: ${modelsError.message}` : 'Error obteniendo modelos'
+      }, { status: 500 });
     }
 
-    // Filtrar modelos por grupos si es admin
+    // Filtrar modelos por grupos si es admin (consultando user_groups por separado)
     let filteredModels = models;
-    if (user.role === 'admin') {
-      const userGroupIds = user.groups?.map((g: any) => g.group_id) || [];
-      filteredModels = models.filter(model => {
-        const modelGroupIds = (model as any).groups?.map((g: any) => g.group_id) || [];
-        return modelGroupIds.some((gid: string) => userGroupIds.includes(gid));
-      });
+    if (user.role === 'admin' && models.length > 0) {
+      const modelIds = models.map((m: { id: string }) => m.id);
+      const { data: modelGroups, error: mgError } = await supabase
+        .from('user_groups')
+        .select('user_id, group_id')
+        .in('user_id', modelIds);
+      if (mgError) {
+        return NextResponse.json({
+          success: false,
+          error: `Grupos de modelos: ${mgError.message}`
+        }, { status: 500 });
+      }
+      const userGroupIds = user.groups.map((g: { group_id: string }) => g.group_id);
+      const modelIdsInGroups = new Set(
+        (modelGroups || [])
+          .filter((r: { group_id: string }) => userGroupIds.includes(r.group_id))
+          .map((r: { user_id: string }) => r.user_id)
+      );
+      filteredModels = models.filter((m: { id: string }) => modelIdsInGroups.has(m.id));
     }
 
     console.log(`👥 [ARCHIVE-PERIOD] ${filteredModels.length} modelos a archivar`);
@@ -333,14 +359,15 @@ export async function POST(request: NextRequest) {
     return NextResponse.json(response);
 
   } catch (error: any) {
-    console.error('❌ [ARCHIVE-PERIOD] Error:', error);
+    const message = error?.message ?? String(error);
+    console.error('❌ [ARCHIVE-PERIOD] Error:', message, error);
 
     // Liberar lock si existe
     if (lockId) {
       await supabase.rpc('release_period_closure_lock', {
         p_lock_id: lockId,
         p_status: 'failed',
-        p_failure_reason: error.message
+        p_failure_reason: message
       });
     }
 
@@ -353,14 +380,14 @@ export async function POST(request: NextRequest) {
         batch_id: batchId,
         user_id: userId,
         status: 'failed',
-        error_message: error.message,
+        error_message: message,
         execution_time_ms: Date.now() - startTime
       });
     }
 
     return NextResponse.json({
       success: false,
-      error: error.message
+      error: message
     }, { status: 500 });
   }
 }
