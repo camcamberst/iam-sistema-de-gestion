@@ -117,35 +117,24 @@ export async function GET(request: NextRequest) {
       }, { status: 403 });
     }
 
-    // PASO 1: Obtener datos completos de calculator_history (incluyendo cálculos y tasas)
-    // Buscar tanto en 2025 como en 2024 (por si hubo error de año)
-    const { data: history2025, error: historyError2025 } = await supabase
+    // PASO 1: Obtener TODOS los períodos archivados (P1 y P2) con una sola consulta
+    // Usar rango de últimos 2 años desde hoy (Colombia) para incluir cualquier período cerrado
+    const now = new Date();
+    const twoYearsAgo = new Date(now.getFullYear() - 2, now.getMonth(), 1);
+    const periodDateMin = twoYearsAgo.toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const { data: historyRaw, error: historyError } = await supabase
       .from('calculator_history')
       .select('id, platform_id, value, period_date, period_type, archived_at, rate_eur_usd, rate_gbp_usd, rate_usd_cop, platform_percentage, value_usd_bruto, value_usd_modelo, value_cop_modelo')
       .eq('model_id', modelId)
-      .gte('period_date', '2025-01-01')
+      .gte('period_date', periodDateMin)
       .order('period_date', { ascending: false });
 
-    const { data: history2024Dec, error: historyError2024 } = await supabase
-      .from('calculator_history')
-      .select('id, platform_id, value, period_date, period_type, archived_at, rate_eur_usd, rate_gbp_usd, rate_usd_cop, platform_percentage, value_usd_bruto, value_usd_modelo, value_cop_modelo')
-      .eq('model_id', modelId)
-      .gte('period_date', '2024-12-01')
-      .lte('period_date', '2024-12-15')
-      .eq('period_type', '1-15')
-      .order('period_date', { ascending: false });
-
-    // Combinar y corregir años si es necesario
-    const history2024Corrected = (history2024Dec || []).map((item: any) => ({
+    // Normalizar period_date a string (por si viene como Date)
+    const history = (historyRaw || []).map((item: any) => ({
       ...item,
-      period_date: item.period_date.replace('2024-', '2025-') // Corregir año a 2025
+      period_date: typeof item.period_date === 'string' ? item.period_date : (item.period_date?.slice?.(0, 10) ?? String(item.period_date))
     }));
-
-    const history = [
-      ...(history2025 || []),
-      ...history2024Corrected
-    ];
-    const historyError = historyError2025 || historyError2024;
 
     if (historyError) {
       console.error('❌ [CALCULATOR-HISTORIAL] Error obteniendo historial:', historyError);
@@ -318,21 +307,24 @@ export async function GET(request: NextRequest) {
       const finalUsdModelo = usdModelo ?? 0;
       const finalCopModelo = copModelo ?? 0;
       
-      period.platforms.push({
-        platform_id: item.platform_id,
-        platform_name: platformInfo?.name || item.platform_id,
-        platform_currency: platformInfo?.currency || 'USD',
-        value: safeValue,
-        value_usd_bruto: finalUsdBruto,
-        value_usd_modelo: finalUsdModelo,
-        value_cop_modelo: finalCopModelo,
-        platform_percentage: modelPercentage,
-        rates: {
-          eur_usd: rates.eur_usd,
-          gbp_usd: rates.gbp_usd,
-          usd_cop: rates.usd_cop
-        }
-      } as any);
+      // No mostrar __CONSOLIDATED_TOTAL__ como fila de plataforma (solo sumar a totales)
+      if (item.platform_id !== '__CONSOLIDATED_TOTAL__') {
+        period.platforms.push({
+          platform_id: item.platform_id,
+          platform_name: platformInfo?.name || item.platform_id,
+          platform_currency: platformInfo?.currency || 'USD',
+          value: safeValue,
+          value_usd_bruto: finalUsdBruto,
+          value_usd_modelo: finalUsdModelo,
+          value_cop_modelo: finalCopModelo,
+          platform_percentage: modelPercentage,
+          rates: {
+            eur_usd: rates.eur_usd,
+            gbp_usd: rates.gbp_usd,
+            usd_cop: rates.usd_cop
+          }
+        } as any);
+      }
       
       period.total_value += safeValue;
       period.total_usd_bruto += finalUsdBruto;
