@@ -109,21 +109,26 @@ export async function POST(request: NextRequest) {
     }
 
     const batchId = crypto.randomUUID();
-
-    // 1. Obtener model_values en el rango 16-31 enero
-    const { data: values, error: valuesError } = await supabase
-      .from('model_values')
-      .select('*')
-      .gte('period_date', PERIOD_DATE_P2_ENERO)
-      .lte('period_date', PERIOD_DATE_END);
-
-    if (valuesError) {
-      return NextResponse.json({ success: false, error: `model_values: ${valuesError.message}` }, { status: 500 });
-    }
-
+    const [year, month] = PERIOD_DATE_P2_ENERO.split('-').map(Number);
+    const FETCH_BATCH = 1000; // Supabase devuelve max 1000 por defecto
+    const DELETE_BATCH = 200;
     let recordsArchived = 0;
-    if (values && values.length > 0) {
-      const [year, month] = PERIOD_DATE_P2_ENERO.split('-').map(Number);
+    let offset = 0;
+
+    // 1. model_values en el rango 16-31 enero: archivar y borrar en lotes (por límite 1000 y delete por IDs)
+    while (true) {
+      const { data: values, error: valuesError } = await supabase
+        .from('model_values')
+        .select('*')
+        .gte('period_date', PERIOD_DATE_P2_ENERO)
+        .lte('period_date', PERIOD_DATE_END)
+        .range(offset, offset + FETCH_BATCH - 1);
+
+      if (valuesError) {
+        return NextResponse.json({ success: false, error: `model_values: ${valuesError.message}` }, { status: 500 });
+      }
+      if (!values || values.length === 0) break;
+
       const archivedRecords = values.map((v: any) => ({
         id: v.id,
         model_id: v.model_id,
@@ -148,16 +153,20 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ success: false, error: `archived_model_values: ${archiveError.message}` }, { status: 500 });
       }
 
-      const { error: deleteError } = await supabase
-        .from('model_values')
-        .delete()
-        .gte('period_date', PERIOD_DATE_P2_ENERO)
-        .lte('period_date', PERIOD_DATE_END);
-
-      if (deleteError) {
-        return NextResponse.json({ success: false, error: `model_values delete: ${deleteError.message}` }, { status: 500 });
+      const idsToDelete = values.map((v: any) => v.id);
+      for (let i = 0; i < idsToDelete.length; i += DELETE_BATCH) {
+        const chunk = idsToDelete.slice(i, i + DELETE_BATCH);
+        const { error: deleteError } = await supabase
+          .from('model_values')
+          .delete()
+          .in('id', chunk);
+        if (deleteError) {
+          return NextResponse.json({ success: false, error: `model_values delete: ${deleteError.message}` }, { status: 500 });
+        }
       }
-      recordsArchived = values.length;
+      recordsArchived += values.length;
+      if (values.length < FETCH_BATCH) break;
+      offset += FETCH_BATCH;
     }
 
     // 2. Borrar calculator_totals del período (period_date 2026-01-16)
