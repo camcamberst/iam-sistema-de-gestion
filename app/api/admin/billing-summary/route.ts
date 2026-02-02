@@ -481,7 +481,8 @@ export async function GET(request: NextRequest) {
 
       historyData = [];
     } else {
-      // Período cerrado: usar calculator_history
+      // Período cerrado: usar calculator_history (misma fuente que Mi historial y ediciones de admin:
+      // valores por plataforma y RATES de cierre; las correcciones en historial se reflejan aquí)
       console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history (rango exacto quincena)');
       // Determinar period_type esperado según quincena (usar formato '1-15' o '16-31' como se guarda en BD)
       const expectedType = endStr.endsWith('-15') ? '1-15' : '16-31';

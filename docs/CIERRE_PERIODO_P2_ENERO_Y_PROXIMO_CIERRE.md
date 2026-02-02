@@ -16,10 +16,8 @@
 
 **Qué hace la acción de archivar:**
 
-- Lee todos los `model_values` con `period_date` entre **2026-01-16** y **2026-01-31**.
-- Agrupa por `(model_id, platform_id)` y suma `value`.
-- Inserta en `calculator_history` una fila por plataforma y una fila consolidada (`__CONSOLIDATED_TOTAL__`) por modelo, con `period_date = 2026-01-16` y `period_type = 16-31`.
-- Solo inserta columnas básicas: `model_id`, `period_date`, `period_type`, `platform_id`, `value`.
+- Lee todos los `model_values` con `period_date` entre **2026-01-16** y **2026-01-31**; toma el **último valor** por `(model_id, platform_id)` (por `updated_at`).
+- Inserta en `calculator_history` una fila por plataforma (con tasas, `platform_percentage`, `value_usd_bruto`, `value_usd_modelo`, `value_cop_modelo`) y una fila consolidada por modelo, con `period_date = 2026-01-16` y `period_type = 16-31`.
 - No inserta duplicados: si ya existe el período para ese modelo/plataforma, se omite.
 
 **Alternativa por SQL:** Si prefieres ejecutar en Supabase SQL Editor, usa el script `db/insertar_p2_enero_MINIMO.sql` (ejecutar la PREVIA para ver cuántas filas se insertarían y luego los dos INSERT).
@@ -42,3 +40,16 @@
    - Cuando el Paso 1 termine bien, se habilita **Paso 2: Limpiar** → mueve `model_values` a `archived_model_values`, resetea `calculator_totals` y descongela calculadoras.
 
 **Nota P2 enero:** Si el próximo cierre es el **1 de febrero** (período a cerrar = P2 enero 16-31), el Paso 2 tiene una protección: no permite limpiar P2 enero sin confirmación. Si ya archivaste P2 enero con la acción "Archivar P2 enero a historial", puedes ejecutar el Paso 2 enviando `force: "2026-01-16"` (o usar el botón correspondiente si la UI lo expone) cuando quieras limpiar ese período.
+
+---
+
+## 3. Resumen de Facturación en Consulta Histórica
+
+**Desde ahora**, cada vez que se ejecute el **cierre manual de período** (Paso 1: Crear archivo histórico):
+
+- Se escribe en `calculator_history` por cada modelo y plataforma: `value`, `rate_eur_usd`, `rate_gbp_usd`, `rate_usd_cop`, `platform_percentage`, `value_usd_bruto`, `value_usd_modelo`, `value_cop_modelo`.
+- Esos datos son la **fuente** del **"Resumen de Facturación"** en **Consulta Histórica**: al elegir un período cerrado (mes + P1 o P2), el resumen se construye a partir de `calculator_history` para ese período.
+- No hace falta ningún paso adicional: el cierre manual **construye** el resumen de facturación para ese período de forma automática.
+
+**Ediciones de admin/super_admin en Mi historial o Consulta Histórica:**  
+Cuando un admin o super_admin edita valores por plataforma o las **RATES de cierre** en "Mi historial" de una modelo (o en el flujo de Consulta Histórica), esos cambios se guardan directamente en `calculator_history`. El **Resumen de Facturación** de Consulta Histórica lee siempre de esa misma tabla, por lo que **las correcciones se reflejan automáticamente** en el resumen: no hace falta volver a archivar ni ejecutar ningún paso extra.

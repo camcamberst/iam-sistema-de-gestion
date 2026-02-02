@@ -1,6 +1,7 @@
 /**
  * 🔧 API DE EDICIÓN PARA ADMINS - HISTORIAL DE CALCULADORA
- * Permite a admins y super_admins editar valores y tasas en períodos archivados
+ * Permite a admins y super_admins editar valores y tasas en períodos archivados.
+ * Los cambios se guardan en calculator_history y se reflejan en el Resumen de Facturación de Consulta Histórica.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

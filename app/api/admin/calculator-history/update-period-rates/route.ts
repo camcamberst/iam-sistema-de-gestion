@@ -1,7 +1,8 @@
 /**
  * 🔧 API PARA EDITAR TASAS GLOBALES DE CIERRE POR PERÍODO
- * Permite a admins y super_admins editar las tasas de cierre de un período específico
- * Afecta TODAS las modelos del período seleccionado
+ * Permite a admins y super_admins editar las tasas de cierre de un período específico.
+ * Afecta TODAS las modelos del período; actualiza calculator_history y recalcula value_usd_bruto/modelo/cop.
+ * Los cambios se reflejan en Mi historial, Consulta Histórica y en el Resumen de Facturación de Consulta Histórica.
  */
 
 import { NextRequest, NextResponse } from 'next/server';

@@ -463,9 +463,10 @@ function calculateUsdBrutoArchive(
 }
 
 /**
- * Archiva los datos de una modelo específica en calculator_history.
- * Misma lógica que el cierre P2 enero: rango de fechas, último valor por plataforma,
- * tasas activas, porcentaje por plataforma (Superfoon 100%), value_usd_bruto/modelo/cop.
+ * Archiva los datos de una modelo en calculator_history.
+ * Estos registros son los que usa "Consulta Histórica" para construir el Resumen de Facturación.
+ * Misma lógica que P2 enero: rango de fechas, último valor por plataforma, tasas activas,
+ * porcentaje por plataforma (Superfoon 100%), value_usd_bruto, value_usd_modelo, value_cop_modelo.
  */
 async function archiveModelData(
   modelId: string,
