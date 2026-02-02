@@ -49,18 +49,38 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   const [cleanupResult, setCleanupResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // P2 enero: verificar y archivar explícitamente (sin depender del día)
+  const [p2EneroStatus, setP2EneroStatus] = useState<{
+    model_values: { count: number; models_with_data: number };
+    calculator_history: { count: number; models_archived: number };
+    message?: string;
+  } | null>(null);
+  const [p2EneroLoading, setP2EneroLoading] = useState(false);
+  const [p2EneroArchiving, setP2EneroArchiving] = useState(false);
+
+  const loadP2EneroStatus = async () => {
+    try {
+      setP2EneroLoading(true);
+      const res = await fetch('/api/calculator/period-closure/archive-p2-enero');
+      const data = await res.json();
+      if (data.success) setP2EneroStatus(data);
+    } catch (e) {
+      console.error('Error loading P2 enero status:', e);
+    } finally {
+      setP2EneroLoading(false);
+    }
+  };
+
   useEffect(() => {
     checkClosureDay();
-    // Siempre cargar estado (incluso si no es día de cierre, para vista previa)
     loadArchiveStatus();
     loadCleanupValidation();
-    
-    // Polling cada 30 segundos para actualizar estado
+    loadP2EneroStatus();
     const interval = setInterval(() => {
       loadArchiveStatus();
       loadCleanupValidation();
-    }, 30000); // 30 segundos
-    
+      loadP2EneroStatus();
+    }, 30000);
     return () => clearInterval(interval);
   }, []);
 
@@ -176,6 +196,29 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
       setError(err.message);
     } finally {
       setCleaning(false);
+    }
+  };
+
+  const handleArchiveP2Enero = async () => {
+    if (!confirm('¿Archivar P2 enero (16-31) a calculator_history? Esto solo COPIA datos; no borra model_values.')) return;
+    setP2EneroArchiving(true);
+    setError(null);
+    try {
+      const res = await fetch('/api/calculator/period-closure/archive-p2-enero', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data.success) throw new Error(data.error || 'Error archivando P2 enero');
+      await loadP2EneroStatus();
+      await loadCleanupValidation();
+      setArchiveResult(null);
+      setArchiveResult({ models_archived: data.models_archived, execution_time_ms: data.execution_time_ms, _p2_enero: true });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setP2EneroArchiving(false);
     }
   };
 
@@ -417,6 +460,42 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                 </p>
               </div>
             </div>
+          </button>
+        </div>
+
+        {/* P2 enero 2026: verificar y archivar explícitamente — visible junto a los pasos */}
+        <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+          <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-2">
+            🛡️ P2 enero (16-31) — Verificar y archivar a historial
+          </h4>
+          <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">
+            Los datos de P2 enero no se borran hasta que confirmes que las modelos ven el historial. Aquí puedes ver el estado y, si hace falta, copiar de model_values a calculator_history.
+          </p>
+          {p2EneroLoading && !p2EneroStatus && (
+            <p className="text-xs text-amber-700 dark:text-amber-400">Verificando...</p>
+          )}
+          {p2EneroStatus && (
+            <div className="text-xs text-amber-800 dark:text-amber-300 space-y-1 mb-3">
+              <p><strong>model_values (P2 enero):</strong> {p2EneroStatus.model_values?.count ?? 0} registros, {p2EneroStatus.model_values?.models_with_data ?? 0} modelos</p>
+              <p><strong>calculator_history (P2 enero):</strong> {p2EneroStatus.calculator_history?.count ?? 0} registros, {p2EneroStatus.calculator_history?.models_archived ?? 0} modelos archivados</p>
+              {p2EneroStatus.message && <p className="italic">{p2EneroStatus.message}</p>}
+            </div>
+          )}
+          <button
+            type="button"
+            onClick={loadP2EneroStatus}
+            disabled={p2EneroLoading}
+            className="mr-2 px-3 py-1.5 text-xs font-medium rounded border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-800/40 disabled:opacity-50"
+          >
+            {p2EneroLoading ? 'Verificando...' : 'Ver estado'}
+          </button>
+          <button
+            type="button"
+            onClick={handleArchiveP2Enero}
+            disabled={p2EneroArchiving || !p2EneroStatus?.model_values?.models_with_data}
+            className="px-3 py-1.5 text-xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {p2EneroArchiving ? 'Archivando...' : 'Archivar P2 enero a historial'}
           </button>
         </div>
 
