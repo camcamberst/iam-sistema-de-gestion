@@ -291,7 +291,8 @@ export const atomicArchiveAndReset = async (
     for (const [platformId, value] of Array.from(valuesByPlatform.entries())) {
       const platform = platformMap.get(platformId);
       const currency = platform?.currency || 'USD';
-      const platformPercentage = modelPercentage;
+      const isSuperfoon = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'superfoon';
+      const platformPercentage = isSuperfoon ? 100 : modelPercentage;
       
       const valueUsdBruto = calculateUsdBruto(Number(value.value), platformId, currency, rates);
       const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);

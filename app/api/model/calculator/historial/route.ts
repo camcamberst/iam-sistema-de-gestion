@@ -289,19 +289,20 @@ export async function GET(request: NextRequest) {
       };
       
       const isSuperfoon = String(item.platform_id || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'superfoon';
-      const modelPercentage = isSuperfoon ? 100 : defaultModelPercentage;
+      // Porcentaje: el guardado por fila (al archivar) tiene prioridad; si no, Superfoon 100% y el resto default del modelo
+      const modelPercentage = item.platform_percentage != null ? Number(item.platform_percentage) : (isSuperfoon ? 100 : defaultModelPercentage);
       
       let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
-      let usdModelo: number | null = null;
-      let copModelo: number | null = null;
+      let usdModelo: number | null = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : null;
+      let copModelo: number | null = item.value_cop_modelo != null ? Number(item.value_cop_modelo) : null;
       
       if (usdBruto === null) {
         const currency = platformInfo?.currency || 'USD';
         usdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
       }
-      
-      usdModelo = usdBruto * (modelPercentage / 100);
-      copModelo = usdModelo * rates.usd_cop;
+      // Si no están guardados, recalcular con la misma lógica que Mi Calculadora
+      if (usdModelo === null) usdModelo = usdBruto * (modelPercentage / 100);
+      if (copModelo === null) copModelo = usdModelo! * rates.usd_cop;
       
       const finalUsdBruto = usdBruto ?? 0;
       const finalUsdModelo = usdModelo ?? 0;

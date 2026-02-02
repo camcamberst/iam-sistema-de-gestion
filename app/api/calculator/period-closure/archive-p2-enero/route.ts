@@ -105,6 +105,7 @@ export async function POST(request: NextRequest) {
     const rateEurUsd = (ratesRows || []).find((r: { kind: string }) => r.kind === 'EUR→USD')?.value ?? 1.01;
     const rateGbpUsd = (ratesRows || []).find((r: { kind: string }) => r.kind === 'GBP→USD')?.value ?? 1.20;
     const rateUsdCop = (ratesRows || []).find((r: { kind: string }) => r.kind === 'USD→COP')?.value ?? 3900;
+    const rates = { eur_usd: rateEurUsd, gbp_usd: rateGbpUsd, usd_cop: rateUsdCop };
 
     // Traer todos los model_values del rango P2 enero (16-31) con updated_at para quedarnos con el último
     const { data: rows, error: valuesError } = await supabase
@@ -145,6 +146,50 @@ export async function POST(request: NextRequest) {
       byModel.set(model_id, (byModel.get(model_id) ?? 0) + (byPlatform.get(key) ?? 0));
     }
 
+    const modelIds = Array.from(new Set(Array.from(byPlatform.keys()).map((k) => k.split('|')[0])));
+    const platformIdsFromData = Array.from(new Set(Array.from(byPlatform.keys()).map((k) => k.split('|')[1]).filter((id) => id && id !== '__CONSOLIDATED_TOTAL__')));
+
+    // Plataformas: id -> currency (misma lógica que Mi Calculadora)
+    let platformCurrencyMap: Record<string, string> = {};
+    if (platformIdsFromData.length > 0) {
+      const { data: platformsData } = await supabase
+        .from('calculator_platforms')
+        .select('id, currency')
+        .in('id', platformIdsFromData);
+      (platformsData || []).forEach((p: any) => { platformCurrencyMap[p.id] = p.currency || 'USD'; });
+    }
+    function calculateUsdBruto(value: number, platformId: string, currency: string): number {
+      const n = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      if (currency === 'EUR') {
+        if (n === 'big7') return (value * rates.eur_usd) * 0.84;
+        if (n === 'mondo') return (value * rates.eur_usd) * 0.78;
+        return value * rates.eur_usd;
+      }
+      if (currency === 'GBP') {
+        if (n === 'aw') return (value * rates.gbp_usd) * 0.677;
+        return value * rates.gbp_usd;
+      }
+      if (currency === 'USD') {
+        if (n === 'cmd' || n === 'camlust' || n === 'skypvt') return value * 0.75;
+        if (n === 'chaturbate' || n === 'myfreecams' || n === 'stripchat') return value * 0.05;
+        if (n === 'dxlive') return value * 0.60;
+        if (n === 'secretfriends') return value * 0.5;
+        return value;
+      }
+      return 0;
+    }
+
+    // Config por modelo: porcentaje de reparto (Superfoon 100% se aplica por platform_id)
+    const { data: configs } = await supabase
+      .from('calculator_config')
+      .select('model_id, percentage_override, group_percentage')
+      .in('model_id', modelIds)
+      .eq('active', true);
+    const configByModel: Record<string, number> = {};
+    (configs || []).forEach((c: any) => {
+      configByModel[c.model_id] = c.percentage_override ?? c.group_percentage ?? 80;
+    });
+
     // Ya archivados en calculator_history (evitar duplicados)
     const { data: existing } = await supabase
       .from('calculator_history')
@@ -153,26 +198,50 @@ export async function POST(request: NextRequest) {
       .eq('period_type', PERIOD_TYPE_P2_ENERO);
     const existingSet = new Set((existing || []).map((e: any) => `${e.model_id}|${e.platform_id}`));
 
-    const toInsert: { model_id: string; period_date: string; period_type: string; platform_id: string; value: number; rate_eur_usd?: number; rate_gbp_usd?: number; rate_usd_cop?: number }[] = [];
+    type InsertRow = {
+      model_id: string;
+      period_date: string;
+      period_type: string;
+      platform_id: string;
+      value: number;
+      rate_eur_usd?: number;
+      rate_gbp_usd?: number;
+      rate_usd_cop?: number;
+      platform_percentage?: number;
+      value_usd_bruto?: number;
+      value_usd_modelo?: number;
+      value_cop_modelo?: number;
+    };
+    const toInsert: InsertRow[] = [];
 
     const platformKeys = Array.from(byPlatform.keys());
     for (const key of platformKeys) {
       if (existingSet.has(key)) continue;
       const [model_id, platform_id] = key.split('|');
       if (platform_id === '__CONSOLIDATED_TOTAL__') continue; // Se inserta una sola fila consolidada por modelo más abajo
+      const value = byPlatform.get(key) ?? 0;
+      const currency = platformCurrencyMap[platform_id] || 'USD';
+      const isSuperfoon = String(platform_id || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'superfoon';
+      const platformPercentage = isSuperfoon ? 100 : (configByModel[model_id] ?? 80);
+      const valueUsdBruto = calculateUsdBruto(value, platform_id, currency);
+      const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
+      const valueCopModelo = valueUsdModelo * rates.usd_cop;
       toInsert.push({
         model_id,
         period_date: PERIOD_DATE_P2_ENERO,
         period_type: PERIOD_TYPE_P2_ENERO,
         platform_id,
-        value: byPlatform.get(key) ?? 0,
+        value,
         rate_eur_usd: rateEurUsd,
         rate_gbp_usd: rateGbpUsd,
-        rate_usd_cop: rateUsdCop
+        rate_usd_cop: rateUsdCop,
+        platform_percentage: platformPercentage,
+        value_usd_bruto: Math.round(valueUsdBruto * 100) / 100,
+        value_usd_modelo: Math.round(valueUsdModelo * 100) / 100,
+        value_cop_modelo: Math.round(valueCopModelo)
       });
     }
 
-    const modelIds = Array.from(new Set(Array.from(byPlatform.keys()).map((k) => k.split('|')[0])));
     for (const modelId of modelIds) {
       const totalKey = `${modelId}|__CONSOLIDATED_TOTAL__`;
       if (existingSet.has(totalKey)) continue;

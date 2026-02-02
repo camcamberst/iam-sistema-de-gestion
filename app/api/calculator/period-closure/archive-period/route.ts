@@ -434,8 +434,38 @@ async function archiveModelWithRetry(
 }
 
 /**
- * Archiva los datos de una modelo específica
- * Crea registros en calculator_history
+ * Calcula USD bruto por plataforma (misma lógica que Mi Calculadora y archive-p2-enero)
+ */
+function calculateUsdBrutoArchive(
+  value: number,
+  platformId: string,
+  currency: string,
+  rates: { eur_usd: number; gbp_usd: number; usd_cop: number }
+): number {
+  const n = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+  if (currency === 'EUR') {
+    if (n === 'big7') return (value * rates.eur_usd) * 0.84;
+    if (n === 'mondo') return (value * rates.eur_usd) * 0.78;
+    return value * rates.eur_usd;
+  }
+  if (currency === 'GBP') {
+    if (n === 'aw') return (value * rates.gbp_usd) * 0.677;
+    return value * rates.gbp_usd;
+  }
+  if (currency === 'USD') {
+    if (n === 'cmd' || n === 'camlust' || n === 'skypvt') return value * 0.75;
+    if (n === 'chaturbate' || n === 'myfreecams' || n === 'stripchat') return value * 0.05;
+    if (n === 'dxlive') return value * 0.60;
+    if (n === 'secretfriends') return value * 0.5;
+    return value;
+  }
+  return 0;
+}
+
+/**
+ * Archiva los datos de una modelo específica en calculator_history.
+ * Misma lógica que el cierre P2 enero: rango de fechas, último valor por plataforma,
+ * tasas activas, porcentaje por plataforma (Superfoon 100%), value_usd_bruto/modelo/cop.
  */
 async function archiveModelData(
   modelId: string,
@@ -444,50 +474,105 @@ async function archiveModelData(
   batchId: string,
   userId: string
 ): Promise<void> {
-  // 1. Obtener valores de la modelo para este período
-  const { data: modelValues, error: valuesError } = await supabase
+  const [year, month] = periodDate.split('-').map(Number);
+  const startDate = periodType === '1-15'
+    ? `${year}-${String(month).padStart(2, '0')}-01`
+    : periodDate;
+  const endDate = periodType === '1-15'
+    ? `${year}-${String(month).padStart(2, '0')}-15`
+    : `${year}-${String(month).padStart(2, '0')}-${String(new Date(year, month, 0).getDate()).padStart(2, '0')}`;
+
+  // 1. Valores en el rango del período (último por plataforma)
+  const { data: rows, error: valuesError } = await supabase
     .from('model_values')
-    .select('*')
+    .select('platform_id, value, updated_at')
     .eq('model_id', modelId)
-    .eq('period_date', periodDate);
+    .gte('period_date', startDate)
+    .lte('period_date', endDate)
+    .order('updated_at', { ascending: false });
 
-  if (valuesError) {
-    throw new Error(`Error obteniendo valores: ${valuesError.message}`);
-  }
-
-  if (!modelValues || modelValues.length === 0) {
+  if (valuesError) throw new Error(`Error obteniendo valores: ${valuesError.message}`);
+  if (!rows?.length) {
     console.log(`  ℹ️ Modelo ${modelId} no tiene valores para archivar`);
     return;
   }
 
-  // 2. Obtener totales calculados
-  const { data: totals, error: totalsError } = await supabase
-    .from('calculator_totals')
-    .select('*')
-    .eq('model_id', modelId)
-    .eq('period_date', periodDate)
-    .single();
-
-  if (totalsError && totalsError.code !== 'PGRST116') {
-    throw new Error(`Error obteniendo totales: ${totalsError.message}`);
+  const byPlatform = new Map<string, number>();
+  for (const r of rows as { platform_id: string; value: number | null; updated_at: string }[]) {
+    if (r.platform_id === '__CONSOLIDATED_TOTAL__') continue;
+    if (!byPlatform.has(r.platform_id)) byPlatform.set(r.platform_id, Number(r.value) || 0);
   }
 
-  // 3. Crear registros en calculator_history (uno por plataforma)
-  const historyRecords = modelValues.map(mv => ({
-    model_id: modelId,
-    period_date: periodDate,
-    period_type: periodType,
-    platform_id: mv.platform_id,
-    value: mv.value,
-    estado: 'auditado', // Estado requerido por el constraint de calculator_history
-    created_by: userId,
-    batch_id: batchId,
-    metadata: {
-      archived_at: new Date().toISOString(),
-      original_created_at: mv.created_at,
-      original_updated_at: mv.updated_at
-    }
-  }));
+  // 2. Tasas activas
+  const { data: ratesRows } = await supabase
+    .from('rates')
+    .select('kind, value')
+    .eq('active', true)
+    .is('valid_to', null)
+    .order('valid_from', { ascending: false });
+  const rates = {
+    eur_usd: (ratesRows || []).find((r: { kind: string }) => r.kind === 'EUR→USD')?.value ?? 1.01,
+    gbp_usd: (ratesRows || []).find((r: { kind: string }) => r.kind === 'GBP→USD')?.value ?? 1.20,
+    usd_cop: (ratesRows || []).find((r: { kind: string }) => r.kind === 'USD→COP')?.value ?? 3900
+  };
+
+  // 3. Config del modelo (porcentaje) y moneda por plataforma
+  const { data: config } = await supabase
+    .from('calculator_config')
+    .select('percentage_override, group_percentage')
+    .eq('model_id', modelId)
+    .eq('active', true)
+    .single();
+  const modelPct = config?.percentage_override ?? config?.group_percentage ?? 80;
+
+  const platformIds = Array.from(byPlatform.keys());
+  const { data: platformsData } = await supabase
+    .from('calculator_platforms')
+    .select('id, currency')
+    .in('id', platformIds);
+  const currencyByPlatform: Record<string, string> = {};
+  (platformsData || []).forEach((p: { id: string; currency?: string }) => { currencyByPlatform[p.id] = p.currency || 'USD'; });
+
+  // 4. Construir registros con cálculos (igual que P2 enero)
+  const historyRecords: Array<{
+    model_id: string;
+    period_date: string;
+    period_type: string;
+    platform_id: string;
+    value: number;
+    rate_eur_usd: number;
+    rate_gbp_usd: number;
+    rate_usd_cop: number;
+    platform_percentage: number;
+    value_usd_bruto: number;
+    value_usd_modelo: number;
+    value_cop_modelo: number;
+    archived_at?: string;
+  }> = [];
+
+  for (const [platformId, value] of byPlatform.entries()) {
+    const currency = currencyByPlatform[platformId] || 'USD';
+    const isSuperfoon = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '') === 'superfoon';
+    const platformPercentage = isSuperfoon ? 100 : modelPct;
+    const valueUsdBruto = calculateUsdBrutoArchive(value, platformId, currency, rates);
+    const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
+    const valueCopModelo = valueUsdModelo * rates.usd_cop;
+    historyRecords.push({
+      model_id: modelId,
+      period_date: startDate,
+      period_type: periodType,
+      platform_id: platformId,
+      value,
+      rate_eur_usd: rates.eur_usd,
+      rate_gbp_usd: rates.gbp_usd,
+      rate_usd_cop: rates.usd_cop,
+      platform_percentage: platformPercentage,
+      value_usd_bruto: Math.round(valueUsdBruto * 100) / 100,
+      value_usd_modelo: Math.round(valueUsdModelo * 100) / 100,
+      value_cop_modelo: Math.round(valueCopModelo),
+      archived_at: new Date().toISOString()
+    });
+  }
 
   const { error: historyError } = await supabase
     .from('calculator_history')
@@ -497,32 +582,27 @@ async function archiveModelData(
     throw new Error(`Error creando historial: ${historyError.message}`);
   }
 
-  // 4. Si hay totales, crear registro consolidado
-  if (totals) {
-    const { error: consolidatedError } = await supabase
-      .from('calculator_history')
-      .insert({
-        model_id: modelId,
-        period_date: periodDate,
-        period_type: periodType,
-        platform_id: '__CONSOLIDATED_TOTAL__',
-        value: totals.total_usd || 0,
-        estado: 'auditado', // Estado requerido por el constraint de calculator_history
-        created_by: userId,
-        batch_id: batchId,
-        metadata: {
-          archived_at: new Date().toISOString(),
-          is_consolidated: true,
-          ...totals
-        }
-      });
+  // 5. Fila consolidada (valor = suma de valores por plataforma, sin mezclar monedas en totales USD/COP)
+  const totalValue = Array.from(byPlatform.values()).reduce((a, b) => a + b, 0);
+  const { error: consolidatedError } = await supabase
+    .from('calculator_history')
+    .insert({
+      model_id: modelId,
+      period_date: startDate,
+      period_type: periodType,
+      platform_id: '__CONSOLIDATED_TOTAL__',
+      value: totalValue,
+      rate_eur_usd: rates.eur_usd,
+      rate_gbp_usd: rates.gbp_usd,
+      rate_usd_cop: rates.usd_cop,
+      archived_at: new Date().toISOString()
+    });
 
-    if (consolidatedError) {
-      console.warn(`  ⚠️ Error creando total consolidado: ${consolidatedError.message}`);
-    }
+  if (consolidatedError) {
+    console.warn(`  ⚠️ Error creando total consolidado: ${consolidatedError.message}`);
   }
 
-  console.log(`  ✅ ${modelValues.length} registros archivados para modelo ${modelId}`);
+  console.log(`  ✅ ${historyRecords.length} registros archivados para modelo ${modelId}`);
 }
 
 /**
