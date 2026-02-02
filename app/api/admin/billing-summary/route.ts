@@ -485,13 +485,14 @@ export async function GET(request: NextRequest) {
       console.log('🔍 [BILLING-SUMMARY] Período cerrado - consultando calculator_history (rango exacto quincena)');
       // Determinar period_type esperado según quincena (usar formato '1-15' o '16-31' como se guarda en BD)
       const expectedType = endStr.endsWith('-15') ? '1-15' : '16-31';
-      console.log('🔍 [BILLING-SUMMARY] Buscando period_type:', expectedType, 'para rango:', { startStr, endStr });
+      console.log('🔍 [BILLING-SUMMARY] Buscando period_type:', expectedType, 'period_date exacto:', startStr);
+      // Excluir __CONSOLIDATED_TOTAL__ y usar solo period_date = startStr (fecha canónica) para evitar duplicados e inflado
       const { data: history, error: historyError } = await supabase
         .from('calculator_history')
         .select('model_id, platform_id, value, value_usd_bruto, value_usd_modelo, value_cop_modelo, period_date, period_type')
         .in('model_id', modelIds)
-        .gte('period_date', startStr)
-        .lte('period_date', endStr)
+        .neq('platform_id', '__CONSOLIDATED_TOTAL__')
+        .eq('period_date', startStr)
         .eq('period_type', expectedType);
 
       if (historyError) {
@@ -674,9 +675,13 @@ export async function GET(request: NextRequest) {
         });
       } else {
         console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history (misma lógica que Mi Historial)');
-        // Procesamiento normal: sumar por plataforma (excluir __CONSOLIDATED_TOTAL__ para no inflar totales)
+        // Una sola fila por (model_id, platform_id) para evitar doble conteo si hubiera duplicados en BD
+        const seenPlatform = new Set<string>();
         historyData.forEach(item => {
           if (item.platform_id === '__CONSOLIDATED_TOTAL__') return;
+          const key = `${item.model_id}|${item.platform_id}`;
+          if (seenPlatform.has(key)) return;
+          seenPlatform.add(key);
 
           if (!historyMap.has(item.model_id)) {
             historyMap.set(item.model_id, {
@@ -1134,8 +1139,7 @@ export async function GET(request: NextRequest) {
                 .select('model_id, value_usd_bruto, value_usd_modelo')
                 .in('model_id', affiliateModelIds)
                 .neq('platform_id', '__CONSOLIDATED_TOTAL__')
-                .gte('period_date', startStr)
-                .lte('period_date', endStr)
+                .eq('period_date', startStr)
                 .eq('period_type', expectedType);
 
               if (historyError) {
