@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       .eq('period_type', PERIOD_TYPE_P2_ENERO);
     const existingSet = new Set((existing || []).map((e: any) => `${e.model_id}|${e.platform_id}`));
 
-    const toInsert: { model_id: string; period_date: string; period_type: string; platform_id: string; value: number }[] = [];
+    const toInsert: { model_id: string; period_date: string; period_type: string; platform_id: string; value: number; rate_eur_usd?: number; rate_gbp_usd?: number; rate_usd_cop?: number }[] = [];
 
     const platformKeys = Array.from(byPlatform.keys());
     for (const key of platformKeys) {
@@ -154,7 +154,10 @@ export async function POST(request: NextRequest) {
         period_date: PERIOD_DATE_P2_ENERO,
         period_type: PERIOD_TYPE_P2_ENERO,
         platform_id,
-        value: byPlatform.get(key) ?? 0
+        value: byPlatform.get(key) ?? 0,
+        rate_eur_usd: rateEurUsd,
+        rate_gbp_usd: rateGbpUsd,
+        rate_usd_cop: rateUsdCop
       });
     }
 
@@ -168,7 +171,10 @@ export async function POST(request: NextRequest) {
         period_date: PERIOD_DATE_P2_ENERO,
         period_type: PERIOD_TYPE_P2_ENERO,
         platform_id: '__CONSOLIDATED_TOTAL__',
-        value: totalValue
+        value: totalValue,
+        rate_eur_usd: rateEurUsd,
+        rate_gbp_usd: rateGbpUsd,
+        rate_usd_cop: rateUsdCop
       });
     }
 

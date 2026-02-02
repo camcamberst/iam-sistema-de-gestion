@@ -307,7 +307,8 @@ export async function GET(request: NextRequest) {
       const finalUsdModelo = usdModelo ?? 0;
       const finalCopModelo = copModelo ?? 0;
       
-      // No mostrar __CONSOLIDATED_TOTAL__ como fila de plataforma (solo sumar a totales)
+      // No mostrar __CONSOLIDATED_TOTAL__ como fila de plataforma
+      // Tampoco sumar esa fila a totales: su "value" es suma en monedas mezcladas y corrompe USD Modelo / Neto a pagar
       if (item.platform_id !== '__CONSOLIDATED_TOTAL__') {
         period.platforms.push({
           platform_id: item.platform_id,
@@ -324,12 +325,11 @@ export async function GET(request: NextRequest) {
             usd_cop: rates.usd_cop
           }
         } as any);
+        period.total_value += safeValue;
+        period.total_usd_bruto += finalUsdBruto;
+        period.total_usd_modelo += finalUsdModelo;
+        period.total_cop_modelo += finalCopModelo;
       }
-      
-      period.total_value += safeValue;
-      period.total_usd_bruto += finalUsdBruto;
-      period.total_usd_modelo += finalUsdModelo;
-      period.total_cop_modelo += finalCopModelo;
     });
 
     // ⚠️ PASO 3.5 (RECONSTRUCCIÓN DE EMERGENCIA): Completar períodos faltantes desde calculator_totals
