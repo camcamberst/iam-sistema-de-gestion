@@ -151,7 +151,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const modelIds = [...new Set(byPlatform.keys().map((k) => k.split('|')[0]))];
+    const modelIds = Array.from(new Set(Array.from(byPlatform.keys()).map((k) => k.split('|')[0])));
     for (const modelId of modelIds) {
       const totalKey = `${modelId}|__CONSOLIDATED_TOTAL__`;
       if (existingSet.has(totalKey)) continue;
