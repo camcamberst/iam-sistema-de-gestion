@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
 
     const toInsert: { model_id: string; period_date: string; period_type: string; platform_id: string; value: number }[] = [];
 
-    for (const key of byPlatform.keys()) {
+    const platformKeys = Array.from(byPlatform.keys());
+    for (const key of platformKeys) {
       if (existingSet.has(key)) continue;
       const [model_id, platform_id] = key.split('|');
       if (platform_id === '__CONSOLIDATED_TOTAL__') continue; // Se inserta una sola fila consolidada por modelo más abajo
