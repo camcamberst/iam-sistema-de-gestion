@@ -674,8 +674,10 @@ export async function GET(request: NextRequest) {
         });
       } else {
         console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history (misma lógica que Mi Historial)');
-        // Procesamiento normal: sumar por plataforma
+        // Procesamiento normal: sumar por plataforma (excluir __CONSOLIDATED_TOTAL__ para no inflar totales)
         historyData.forEach(item => {
+          if (item.platform_id === '__CONSOLIDATED_TOTAL__') return;
+
           if (!historyMap.has(item.model_id)) {
             historyMap.set(item.model_id, {
               model_id: item.model_id,
@@ -1131,6 +1133,7 @@ export async function GET(request: NextRequest) {
                 .from('calculator_history')
                 .select('model_id, value_usd_bruto, value_usd_modelo')
                 .in('model_id', affiliateModelIds)
+                .neq('platform_id', '__CONSOLIDATED_TOTAL__')
                 .gte('period_date', startStr)
                 .lte('period_date', endStr)
                 .eq('period_type', expectedType);
