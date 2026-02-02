@@ -613,11 +613,11 @@ export default function DashboardSedesPage() {
           />
         )}
 
-        {/* Cierre Manual de Período */}
-        {userId && (userRole === 'super_admin' || userRole === 'admin' || userRole === 'superadmin_aff' || userRole === 'admin_aff') && (
+        {/* Cierre Manual de Período — solo super_admin para evitar duplicados y conflictos */}
+        {userId && userRole === 'super_admin' && (
           <ManualPeriodClosure 
             userId={userId}
-            userRole={userRole as 'super_admin' | 'admin' | 'superadmin_aff' | 'admin_aff'}
+            userRole="super_admin"
             groupId={userGroups[0]}
           />
         )}

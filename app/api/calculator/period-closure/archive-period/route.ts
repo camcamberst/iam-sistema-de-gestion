@@ -99,16 +99,15 @@ export async function POST(request: NextRequest) {
       user.groups = (userGroups || []).map((r: { group_id: string }) => ({ group_id: r.group_id }));
     }
 
-    // Verificar rol
-    const allowedRoles = ['super_admin', 'admin', 'superadmin_aff', 'admin_aff'];
-    if (!allowedRoles.includes(user.role)) {
+    // Solo super_admin puede ejecutar el cierre de período (evitar duplicados y conflictos)
+    if (user.role !== 'super_admin') {
       return NextResponse.json({
         success: false,
-        error: 'No tienes permisos para ejecutar esta operación'
+        error: 'Solo el super admin puede ejecutar el cierre de período'
       }, { status: 403 });
     }
 
-    console.log(`📦 [ARCHIVE-PERIOD] Iniciando archivado por ${user.email} (${user.role})`);
+    console.log(`📦 [ARCHIVE-PERIOD] Iniciando archivado por ${user.email} (super_admin)`);
 
     // 2. VALIDAR QUE ES DÍA DE CIERRE
     if (!isClosureDay()) {

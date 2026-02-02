@@ -75,30 +75,29 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
-    // Obtener información del usuario
+    // Obtener información del usuario (sin relación user_groups para evitar errores de esquema)
     const { data: user, error: userError } = await supabase
       .from('users')
-      .select('id, email, name, role, affiliate_studio_id, groups:user_groups(group_id)')
+      .select('id, email, name, role, affiliate_studio_id')
       .eq('id', userIdFromBody)
       .single();
 
     if (userError || !user) {
       return NextResponse.json({
         success: false,
-        error: 'Usuario no encontrado'
+        error: userError?.message ? `Usuario: ${userError.message}` : 'Usuario no encontrado'
       }, { status: 404 });
     }
 
-    // Verificar rol
-    const allowedRoles = ['super_admin', 'admin', 'superadmin_aff', 'admin_aff'];
-    if (!allowedRoles.includes(user.role)) {
+    // Solo super_admin puede ejecutar la limpieza de período (evitar conflictos)
+    if (user.role !== 'super_admin') {
       return NextResponse.json({
         success: false,
-        error: 'No tienes permisos para ejecutar esta operación'
+        error: 'Solo el super admin puede ejecutar la limpieza de período'
       }, { status: 403 });
     }
 
-    console.log(`🧹 [CLEANUP-PERIOD] Iniciando limpieza por ${user.email} (${user.role})`);
+    console.log(`🧹 [CLEANUP-PERIOD] Iniciando limpieza por ${user.email} (super_admin)`);
 
     // 2. VALIDAR QUE ES DÍA DE CIERRE
     if (!isClosureDay()) {
@@ -113,6 +112,20 @@ export async function POST(request: NextRequest) {
     const newPeriod = getNewPeriodAfterClosure();
     console.log(`📅 [CLEANUP-PERIOD] Período a limpiar:`, periodToClose);
     console.log(`🆕 [CLEANUP-PERIOD] Nuevo período:`, newPeriod);
+
+    // 🛡️ PROTECCIÓN P2 ENERO: No permitir limpieza hasta que el admin confirme que las modelos ven el historial
+    if (periodToClose.periodDate === '2026-01-16' && periodToClose.periodType === '16-31') {
+      const force = body.force === '2026-01-16' || body.force === true;
+      if (!force) {
+        return NextResponse.json({
+          success: false,
+          error: 'P2 enero (16-31) está protegido. Verifica primero que las modelos puedan consultar el historial en sus paneles. Para forzar la limpieza envía body.force: "2026-01-16".',
+          period_date: '2026-01-16',
+          period_type: '16-31'
+        }, { status: 400 });
+      }
+      console.log('⚠️ [CLEANUP-PERIOD] Limpieza P2 enero forzada por admin');
+    }
 
     // 4. VALIDACIONES CRÍTICAS ANTES DE LIMPIAR
     const validation = await validateBeforeCleanup(
