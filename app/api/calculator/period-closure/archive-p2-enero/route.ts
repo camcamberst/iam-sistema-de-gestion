@@ -44,8 +44,8 @@ export async function GET() {
     const calculator_totals_count = (ctRes.data || []).length;
     const calculator_history_count = chList.length;
 
-    const modelsWithValues = [...new Set(mvList.map((r) => r.model_id))].length;
-    const modelsInHistory = [...new Set(chList.filter((r) => r.platform_id !== '__CONSOLIDATED_TOTAL__').map((r) => r.model_id))].length;
+    const modelsWithValues = Array.from(new Set(mvList.map((r) => r.model_id))).length;
+    const modelsInHistory = Array.from(new Set(chList.filter((r) => r.platform_id !== '__CONSOLIDATED_TOTAL__').map((r) => r.model_id))).length;
 
     return NextResponse.json({
       success: true,
