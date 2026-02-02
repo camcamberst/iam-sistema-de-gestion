@@ -49,19 +49,20 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   const [cleanupResult, setCleanupResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // P2 enero: verificar y archivar explícitamente (sin depender del día)
+  // P2 enero: limpieza extraordinaria (cierre atípico; no depende del día ni del Paso 1)
   const [p2EneroStatus, setP2EneroStatus] = useState<{
     model_values: { count: number; models_with_data: number };
     calculator_history: { count: number; models_archived: number };
     message?: string;
+    safe_to_cleanup?: boolean;
   } | null>(null);
   const [p2EneroLoading, setP2EneroLoading] = useState(false);
-  const [p2EneroArchiving, setP2EneroArchiving] = useState(false);
+  const [p2EneroCleaning, setP2EneroCleaning] = useState(false);
 
   const loadP2EneroStatus = async () => {
     try {
       setP2EneroLoading(true);
-      const res = await fetch('/api/calculator/period-closure/archive-p2-enero');
+      const res = await fetch('/api/calculator/period-closure/cleanup-p2-enero');
       const data = await res.json();
       if (data.success) setP2EneroStatus(data);
     } catch (e) {
@@ -173,10 +174,14 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     setCleanupResult(null);
 
     try {
+      const isP2Enero = periodToClose?.periodDate === '2026-01-16' && periodToClose?.periodType === '16-31';
+      const body: { userId: string; groupId?: string; force?: string } = { userId, groupId };
+      if (isP2Enero) body.force = '2026-01-16';
+
       const res = await fetch('/api/calculator/period-closure/cleanup-period', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, groupId })
+        body: JSON.stringify(body)
       });
 
       const data = await res.json();
@@ -199,26 +204,25 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     }
   };
 
-  const handleArchiveP2Enero = async () => {
-    if (!confirm('¿Archivar P2 enero (16-31) a calculator_history? Esto solo COPIA datos; no borra model_values.')) return;
-    setP2EneroArchiving(true);
+  const handleCleanupP2Enero = async () => {
+    if (!confirm('¿Limpiar valores de P2 enero en Mi Calculadora? Se moverán a archivo y se borrarán de la vista. El historial (calculator_history) NO se toca.')) return;
+    setP2EneroCleaning(true);
     setError(null);
     try {
-      const res = await fetch('/api/calculator/period-closure/archive-p2-enero', {
+      const res = await fetch('/api/calculator/period-closure/cleanup-p2-enero', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId })
       });
       const data = await res.json().catch(() => ({}));
-      if (!data.success) throw new Error(data.error || 'Error archivando P2 enero');
+      if (!data.success) throw new Error(data.error || 'Error en limpieza P2 enero');
       await loadP2EneroStatus();
       await loadCleanupValidation();
-      setArchiveResult(null);
-      setArchiveResult({ models_archived: data.models_archived, execution_time_ms: data.execution_time_ms, _p2_enero: true });
+      setCleanupResult(data);
     } catch (err: any) {
       setError(err.message);
     } finally {
-      setP2EneroArchiving(false);
+      setP2EneroCleaning(false);
     }
   };
 
@@ -463,13 +467,13 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           </button>
         </div>
 
-        {/* P2 enero 2026: verificar y archivar explícitamente — visible junto a los pasos */}
+        {/* P2 enero 2026: limpieza extraordinaria (cierre atípico) — no depende del Paso 1 ni del día */}
         <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
           <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-2">
-            🛡️ P2 enero (16-31) — Verificar y archivar a historial
+            🧹 P2 enero (16-31) — Limpieza extraordinaria (Mi Calculadora)
           </h4>
           <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">
-            Los datos de P2 enero no se borran hasta que confirmes que las modelos ven el historial. Aquí puedes ver el estado y, si hace falta, copiar de model_values a calculator_history.
+            Cierre atípico: una vez que el historial de P2 enero está en Consulta Histórica, aquí puedes ejecutar la limpieza. Se moverán los datos de Mi Calculadora a archivo y se borrarán de la vista (calculator_history no se toca).
           </p>
           {p2EneroLoading && !p2EneroStatus && (
             <p className="text-xs text-amber-700 dark:text-amber-400">Verificando...</p>
@@ -491,11 +495,11 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           </button>
           <button
             type="button"
-            onClick={handleArchiveP2Enero}
-            disabled={p2EneroArchiving || !p2EneroStatus?.model_values?.models_with_data}
+            onClick={handleCleanupP2Enero}
+            disabled={p2EneroCleaning || !p2EneroStatus?.safe_to_cleanup || (p2EneroStatus?.model_values?.count ?? 0) === 0}
             className="px-3 py-1.5 text-xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {p2EneroArchiving ? 'Archivando...' : 'Archivar P2 enero a historial'}
+            {p2EneroCleaning ? 'Limpiando...' : 'Limpiar P2 enero (Mi Calculadora)'}
           </button>
         </div>
 

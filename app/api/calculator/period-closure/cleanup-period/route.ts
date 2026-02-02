@@ -47,13 +47,16 @@ interface ValidationResult {
  * 3. No hay procesos en ejecución
  * 
  * Proceso:
- * 1. VALIDAR que se puede limpiar
+ * 1. VALIDAR que se puede limpiar (existe calculator_history para el período)
  * 2. Adquirir lock anti-concurrencia
- * 3. Soft Delete: Mover model_values a archived_model_values
+ * 3. Soft Delete: Mover model_values a archived_model_values y borrar de model_values
  * 4. Resetear calculator_totals a 0.00
  * 5. Descongelar todas las calculadoras
  * 6. Crear anuncio de Botty sobre nuevo período
  * 7. Liberar lock
+ *
+ * IMPORTANTE: Este endpoint NO borra ni modifica calculator_history. Los históricos
+ * (Mi historial, Consulta Histórica, Resumen de Facturación) se conservan intactos.
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
