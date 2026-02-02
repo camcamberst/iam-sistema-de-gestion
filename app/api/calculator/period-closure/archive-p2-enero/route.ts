@@ -95,6 +95,17 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Solo el super admin puede ejecutar esta acción' }, { status: 403 });
     }
 
+    // Tasas activas: el historial usa rate_* de calculator_history para mostrar USD/COP correctos
+    const { data: ratesRows } = await supabase
+      .from('rates')
+      .select('kind, value')
+      .eq('active', true)
+      .is('valid_to', null)
+      .order('valid_from', { ascending: false });
+    const rateEurUsd = (ratesRows || []).find((r: { kind: string }) => r.kind === 'EUR→USD')?.value ?? 1.01;
+    const rateGbpUsd = (ratesRows || []).find((r: { kind: string }) => r.kind === 'GBP→USD')?.value ?? 1.20;
+    const rateUsdCop = (ratesRows || []).find((r: { kind: string }) => r.kind === 'USD→COP')?.value ?? 3900;
+
     // Traer todos los model_values del rango P2 enero (16-31) con updated_at para quedarnos con el último
     const { data: rows, error: valuesError } = await supabase
       .from('model_values')
