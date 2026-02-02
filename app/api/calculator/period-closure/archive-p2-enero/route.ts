@@ -67,8 +67,8 @@ export async function GET() {
 
 /**
  * POST: Archivar P2 enero desde model_values a calculator_history (sin tocar model_values)
- * Agrega por rango 16-31 enero (SUM por model_id + platform_id), igual que el SQL insertar_p2_enero_MINIMO.
- * Inserta solo columnas básicas: model_id, period_date, period_type, platform_id, value.
+ * Usa el ÚLTIMO valor registrado por (model_id, platform_id) en el rango 16-31 enero (updated_at más reciente),
+ * NO la suma de todos los días. El total consolidado = suma de esos últimos valores por plataforma.
  */
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
@@ -95,12 +95,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Solo el super admin puede ejecutar esta acción' }, { status: 403 });
     }
 
-    // Traer todos los model_values del rango P2 enero (16-31)
+    // Traer todos los model_values del rango P2 enero (16-31) con updated_at para quedarnos con el último
     const { data: rows, error: valuesError } = await supabase
       .from('model_values')
-      .select('model_id, platform_id, value')
+      .select('model_id, platform_id, value, updated_at')
       .gte('period_date', PERIOD_DATE_P2_ENERO)
-      .lte('period_date', PERIOD_DATE_END);
+      .lte('period_date', PERIOD_DATE_END)
+      .order('updated_at', { ascending: false });
 
     if (valuesError) {
       return NextResponse.json({ success: false, error: `model_values: ${valuesError.message}` }, { status: 500 });
@@ -116,16 +117,21 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Agregar por (model_id, platform_id): SUM(value)
+    // Por (model_id, platform_id): quedarnos solo con el ÚLTIMO valor (primera aparición = updated_at más reciente)
     const byPlatform = new Map<string, number>();
-    const byModel = new Map<string, number>();
-    for (const r of rows as { model_id: string; platform_id: string; value: number | null }[]) {
+    const typedRows = rows as { model_id: string; platform_id: string; value: number | null; updated_at: string }[];
+    for (const r of typedRows) {
       const key = `${r.model_id}|${r.platform_id}`;
-      const v = Number(r.value) || 0;
-      byPlatform.set(key, (byPlatform.get(key) ?? 0) + v);
-      if (r.platform_id !== '__CONSOLIDATED_TOTAL__') {
-        byModel.set(r.model_id, (byModel.get(r.model_id) ?? 0) + v);
-      }
+      if (byPlatform.has(key)) continue; // ya tenemos el último (ordenados por updated_at desc)
+      byPlatform.set(key, Number(r.value) || 0);
+    }
+    // Total consolidado por modelo = suma de los últimos valores por plataforma (excl. __CONSOLIDATED_TOTAL__)
+    const byModel = new Map<string, number>();
+    for (const key of Array.from(byPlatform.keys())) {
+      const [, platform_id] = key.split('|');
+      if (platform_id === '__CONSOLIDATED_TOTAL__') continue;
+      const model_id = key.split('|')[0];
+      byModel.set(model_id, (byModel.get(model_id) ?? 0) + (byPlatform.get(key) ?? 0));
     }
 
     // Ya archivados en calculator_history (evitar duplicados)
