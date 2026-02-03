@@ -320,6 +320,20 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           </div>
         )}
 
+        {forceResetResult && !error && userRole === 'super_admin' && (
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-sm text-green-800 dark:text-green-400 font-semibold mb-2">
+              ✅ Reset forzado completado
+            </p>
+            <div className="text-xs text-green-700 dark:text-green-300 space-y-1">
+              <p>• Valores borrados (model_values): {forceResetResult.deleted_model_values}</p>
+              <p>• Totales borrados (calculator_totals): {forceResetResult.deleted_calculator_totals}</p>
+              <p>• Calculadoras descongeladas: ✔</p>
+              <p>• Tiempo: {(forceResetResult.execution_time_ms / 1000).toFixed(2)}s</p>
+            </div>
+          </div>
+        )}
+
         {!cleanupResult && (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 && archiveStatus?.archived && (
           <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
             <p className="text-sm text-blue-800 dark:text-blue-400 font-semibold mb-2">
@@ -332,7 +346,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
         )}
 
         {/* Botones */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {/* Botón 1: Crear Archivo Histórico */}
           <button
             onClick={() => setShowArchiveModal(true)}
@@ -455,36 +469,34 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
               </div>
             </div>
           </button>
-        </div>
 
-        {/* Reset forzado de todas las calculadoras — solo super_admin */}
-        {userRole === 'super_admin' && (
-          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
-            <h4 className="text-sm font-bold text-red-900 dark:text-red-200 mb-2">
-              🔥 Reset forzado de todas las calculadoras
-            </h4>
-            <p className="text-xs text-red-800 dark:text-red-300 mb-3">
-              Borra todos los valores en Mi Calculadora y todos los totales del sistema. Descongela todas las calculadoras. Solo usar cuando sea necesario un reset global (no se puede deshacer).
-            </p>
-            {forceResetResult && !error && (
-              <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300">
-                <p className="font-semibold">✅ Reset completado</p>
-                <p>• Valores borrados (model_values): {forceResetResult.deleted_model_values}</p>
-                <p>• Totales borrados (calculator_totals): {forceResetResult.deleted_calculator_totals}</p>
-                <p>• Calculadoras descongeladas: ✔</p>
-                <p>• Tiempo: {(forceResetResult.execution_time_ms / 1000).toFixed(2)}s</p>
-              </div>
-            )}
+          {/* Botón 4: Reset forzado (solo super_admin) */}
+          {userRole === 'super_admin' && (
             <button
               type="button"
               onClick={handleForceResetAll}
               disabled={forceResetLoading}
-              className="px-3 py-1.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Borra todos los valores en Mi Calculadora y todos los totales. Descongela todas las calculadoras. No se puede deshacer."
+              className="relative group p-4 rounded-lg border-2 border-red-300 dark:border-red-700 bg-white dark:bg-gray-900 hover:border-red-500 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {forceResetLoading ? 'Ejecutando...' : 'Reset forzado de todas las calculadoras'}
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-red-600 to-orange-700">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 18.657A8 8 0 016.343 7.343S7 9 9 10c0-2 .5-5 2.986-7C14 5 16.09 5.777 17.656 7.343A7.975 7.975 0 0120 13a7.975 7.975 0 01-2.343 5.657z" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                    🔥 Reset forzado
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {forceResetLoading ? 'Ejecutando...' : 'Todas las calculadoras'}
+                  </p>
+                </div>
+              </div>
             </button>
-          </div>
-        )}
+          )}
+        </div>
 
         {/* Validación de limpieza */}
         {cleanupValidation && !cleanupValidation.can_cleanup && cleanupValidation.validation_errors.length > 0 && (
