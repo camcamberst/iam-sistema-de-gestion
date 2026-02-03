@@ -49,16 +49,6 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   const [cleanupResult, setCleanupResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // P2 enero: limpieza extraordinaria (cierre atípico; no depende del día ni del Paso 1)
-  const [p2EneroStatus, setP2EneroStatus] = useState<{
-    model_values: { count: number; models_with_data: number };
-    calculator_history: { count: number; models_archived: number };
-    message?: string;
-    safe_to_cleanup?: boolean;
-  } | null>(null);
-  const [p2EneroLoading, setP2EneroLoading] = useState(false);
-  const [p2EneroCleaning, setP2EneroCleaning] = useState(false);
-
   // Reset forzado global (solo super_admin)
   const [forceResetLoading, setForceResetLoading] = useState(false);
   const [forceResetResult, setForceResetResult] = useState<{
@@ -68,28 +58,13 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     execution_time_ms: number;
   } | null>(null);
 
-  const loadP2EneroStatus = async () => {
-    try {
-      setP2EneroLoading(true);
-      const res = await fetch('/api/calculator/period-closure/cleanup-p2-enero');
-      const data = await res.json();
-      if (data.success) setP2EneroStatus(data);
-    } catch (e) {
-      console.error('Error loading P2 enero status:', e);
-    } finally {
-      setP2EneroLoading(false);
-    }
-  };
-
   useEffect(() => {
     checkClosureDay();
     loadArchiveStatus();
     loadCleanupValidation();
-    loadP2EneroStatus();
     const interval = setInterval(() => {
       loadArchiveStatus();
       loadCleanupValidation();
-      loadP2EneroStatus();
     }, 30000);
     return () => clearInterval(interval);
   }, []);
@@ -213,28 +188,6 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     }
   };
 
-  const handleCleanupP2Enero = async () => {
-    if (!confirm('¿Limpiar valores de P2 enero en Mi Calculadora? Se moverán a archivo y se borrarán de la vista. El historial (calculator_history) NO se toca.')) return;
-    setP2EneroCleaning(true);
-    setError(null);
-    try {
-      const res = await fetch('/api/calculator/period-closure/cleanup-p2-enero', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId })
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!data.success) throw new Error(data.error || 'Error en limpieza P2 enero');
-      await loadP2EneroStatus();
-      await loadCleanupValidation();
-      setCleanupResult(data);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setP2EneroCleaning(false);
-    }
-  };
-
   const handleForceResetAll = async () => {
     if (!confirm('¿Reset forzado de TODAS las calculadoras del sistema? Se borrarán todos los valores en Mi Calculadora y todos los totales. Las calculadoras quedarán descongeladas. Esta acción no se puede deshacer.')) return;
     setForceResetLoading(true);
@@ -254,7 +207,6 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
         calculators_unfrozen: data.calculators_unfrozen ?? true,
         execution_time_ms: data.execution_time_ms ?? 0
       });
-      await loadP2EneroStatus();
       await loadCleanupValidation();
       await loadArchiveStatus();
     } catch (err: any) {
@@ -502,42 +454,6 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                 </p>
               </div>
             </div>
-          </button>
-        </div>
-
-        {/* P2 enero 2026: limpieza extraordinaria (cierre atípico) — no depende del Paso 1 ni del día */}
-        <div className="mt-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
-          <h4 className="text-sm font-bold text-amber-900 dark:text-amber-200 mb-2">
-            🧹 P2 enero (16-31) — Limpieza extraordinaria (Mi Calculadora)
-          </h4>
-          <p className="text-xs text-amber-800 dark:text-amber-300 mb-3">
-            Cierre atípico: una vez que el historial de P2 enero está en Consulta Histórica, aquí puedes ejecutar la limpieza. Se moverán los datos de Mi Calculadora a archivo y se borrarán de la vista (calculator_history no se toca).
-          </p>
-          {p2EneroLoading && !p2EneroStatus && (
-            <p className="text-xs text-amber-700 dark:text-amber-400">Verificando...</p>
-          )}
-          {p2EneroStatus && (
-            <div className="text-xs text-amber-800 dark:text-amber-300 space-y-1 mb-3">
-              <p><strong>model_values (P2 enero):</strong> {p2EneroStatus.model_values?.count ?? 0} registros, {p2EneroStatus.model_values?.models_with_data ?? 0} modelos</p>
-              <p><strong>calculator_history (P2 enero):</strong> {p2EneroStatus.calculator_history?.count ?? 0} registros, {p2EneroStatus.calculator_history?.models_archived ?? 0} modelos archivados</p>
-              {p2EneroStatus.message && <p className="italic">{p2EneroStatus.message}</p>}
-            </div>
-          )}
-          <button
-            type="button"
-            onClick={loadP2EneroStatus}
-            disabled={p2EneroLoading}
-            className="mr-2 px-3 py-1.5 text-xs font-medium rounded border border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-800/40 disabled:opacity-50"
-          >
-            {p2EneroLoading ? 'Verificando...' : 'Ver estado'}
-          </button>
-          <button
-            type="button"
-            onClick={handleCleanupP2Enero}
-            disabled={p2EneroCleaning || !p2EneroStatus?.safe_to_cleanup}
-            className="px-3 py-1.5 text-xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {p2EneroCleaning ? 'Limpiando...' : 'Limpiar P2 enero (Mi Calculadora)'}
           </button>
         </div>
 
