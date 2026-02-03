@@ -80,14 +80,22 @@ export async function GET(request: NextRequest) {
     // Obtener plataformas congeladas para este modelo y fecha
     const frozenPlatforms = await getFrozenPlatformsForModel(periodDate, modelId); // Usar fecha normalizada
 
-    return NextResponse.json({ 
-      success: true, 
-      data: consolidatedValues,
-      count: consolidatedValues.length,
-      modelId,
-      periodDate,
-      frozenPlatforms // <--- Nuevo campo
-    });
+    return NextResponse.json(
+      {
+        success: true,
+        data: consolidatedValues,
+        count: consolidatedValues.length,
+        modelId,
+        periodDate,
+        frozenPlatforms
+      },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+          Pragma: 'no-cache'
+        }
+      }
+    );
 
   } catch (error: any) {
     console.error('❌ [MODEL-VALUES-V2] Error:', error);

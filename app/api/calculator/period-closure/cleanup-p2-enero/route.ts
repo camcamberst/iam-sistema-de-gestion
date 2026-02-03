@@ -113,16 +113,16 @@ export async function POST(request: NextRequest) {
     const FETCH_BATCH = 1000; // Supabase devuelve max 1000 por defecto
     const DELETE_BATCH = 200;
     let recordsArchived = 0;
-    let offset = 0;
 
-    // 1. model_values en el rango 16-31 enero: archivar y borrar en lotes (por límite 1000 y delete por IDs)
+    // 1. model_values en el rango 16-31 enero: archivar y borrar en lotes
+    // Siempre pedir el primer lote (0..999); al borrar, el siguiente fetch trae los siguientes
     while (true) {
       const { data: values, error: valuesError } = await supabase
         .from('model_values')
         .select('*')
         .gte('period_date', PERIOD_DATE_P2_ENERO)
         .lte('period_date', PERIOD_DATE_END)
-        .range(offset, offset + FETCH_BATCH - 1);
+        .range(0, FETCH_BATCH - 1);
 
       if (valuesError) {
         return NextResponse.json({ success: false, error: `model_values: ${valuesError.message}` }, { status: 500 });
@@ -166,7 +166,6 @@ export async function POST(request: NextRequest) {
       }
       recordsArchived += values.length;
       if (values.length < FETCH_BATCH) break;
-      offset += FETCH_BATCH;
     }
 
     // 2. Borrar calculator_totals del período (period_date 2026-01-16)
@@ -198,8 +197,19 @@ export async function POST(request: NextRequest) {
       .update({ frozen: false })
       .eq('frozen', true);
 
+    // 4. Verificar que no queden filas en model_values (P2 enero)
+    const { count: remainingCount } = await supabase
+      .from('model_values')
+      .select('id', { count: 'exact', head: true })
+      .gte('period_date', PERIOD_DATE_P2_ENERO)
+      .lte('period_date', PERIOD_DATE_END);
+
     const executionTime = Date.now() - startTime;
-    console.log(`✅ [CLEANUP-P2-ENERO] Limpieza completada: ${recordsArchived} registros archivados, ${totalsReset} totales reseteados en ${executionTime}ms`);
+    if ((remainingCount ?? 0) > 0) {
+      console.warn(`⚠️ [CLEANUP-P2-ENERO] Quedan ${remainingCount} registros en model_values (P2 enero). Ejecutar limpieza de nuevo.`);
+    } else {
+      console.log(`✅ [CLEANUP-P2-ENERO] Limpieza completada: ${recordsArchived} registros archivados, ${totalsReset} totales reseteados en ${executionTime}ms`);
+    }
 
     return NextResponse.json({
       success: true,
@@ -209,7 +219,10 @@ export async function POST(request: NextRequest) {
       totals_reset: totalsReset,
       calculators_unfrozen: true,
       execution_time_ms: executionTime,
-      message: `Limpieza P2 enero completada. Mi Calculadora quedó lista para el nuevo período. Historial conservado.`
+      remaining_in_model_values: remainingCount ?? 0,
+      message: (remainingCount ?? 0) > 0
+        ? `Limpieza ejecutada. Quedan ${remainingCount} registros en Mi Calculadora; ejecuta "Limpiar P2 enero" de nuevo.`
+        : `Limpieza P2 enero completada. Refresca Mi Calculadora (F5) para ver los cambios. Historial conservado.`
     });
   } catch (error: any) {
     console.error('❌ [CLEANUP-P2-ENERO] POST Error:', error);
