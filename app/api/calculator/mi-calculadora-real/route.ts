@@ -118,6 +118,20 @@ export async function GET(request: NextRequest) {
     }
     const periodEnd = periodEndObj.toISOString().split('T')[0];
 
+    // P2 enero 2026: Mi Calculadora debe mostrar siempre 0 (cierre atípico ya archivado)
+    const P2_ENERO_PERIOD_DATE = '2026-01-16';
+    if (periodStartDate === P2_ENERO_PERIOD_DATE) {
+      return NextResponse.json({
+        success: true,
+        data: {
+          usdModelo: 0,
+          copModelo: 0,
+          anticipoDisponible: 0,
+          anticiposPagados: 0
+        }
+      });
+    }
+
     console.log('🔍 [MI-CALCULADORA-REAL] Buscando valores en rango:', { periodStart, periodEnd });
 
     const { data: allValues, error: valuesError } = await supabase

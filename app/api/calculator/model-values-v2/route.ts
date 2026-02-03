@@ -5,6 +5,9 @@ import { isPlatformFrozen, getFrozenPlatformsForModel } from '@/lib/calculator/p
 
 export const dynamic = 'force-dynamic';
 
+// P2 enero 2026: Mi Calculadora debe mostrar siempre 0 (cierre atípico ya archivado)
+const P2_ENERO_PERIOD_DATE = '2026-01-16';
+
 // Usar service role key para bypass RLS
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
@@ -24,6 +27,26 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // P2 enero: devolver siempre 0 para Mi Calculadora (cierre atípico)
+    if (periodDate === P2_ENERO_PERIOD_DATE) {
+      return NextResponse.json(
+        {
+          success: true,
+          data: [],
+          count: 0,
+          modelId,
+          periodDate,
+          frozenPlatforms: []
+        },
+        {
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
+            Pragma: 'no-cache'
+          }
+        }
+      );
+    }
+
     console.log('🔍 [MODEL-VALUES-V2] Loading values (Enhanced Auto-Repair):', { modelId, periodDate });
     
     // Calcular rango del periodo completo
@@ -119,6 +142,14 @@ export async function POST(request: NextRequest) {
     // 🔧 SOLUCIÓN DEFINITIVA: Usar SIEMPRE fecha de inicio de período normalizada
     const rawEffectiveDate = periodDate || getColombiaPeriodStartDate();
     const effectiveDate = normalizeToPeriodStartDate(rawEffectiveDate);
+
+    // P2 enero 2026: no permitir guardar valores (cierre atípico; Mi Calculadora en 0)
+    if (effectiveDate === P2_ENERO_PERIOD_DATE) {
+      return NextResponse.json({
+        success: false,
+        error: 'El período P2 enero (16-31) está cerrado. No se pueden guardar valores.'
+      }, { status: 400 });
+    }
     
     // 🔒 CANDADO EUROPEO INTELIGENTE: Verificar si hay cambios reales en plataformas congeladas
     const frozenPlatformsInPayload = [];

@@ -23,6 +23,17 @@ export async function GET(request: NextRequest) {
   }
 
   try {
+    // P2 enero 2026: Mi Calculadora debe mostrar siempre 0 (cierre atípico ya archivado)
+    const P2_ENERO_PERIOD_DATE = '2026-01-16';
+    if (periodDate === P2_ENERO_PERIOD_DATE) {
+      return NextResponse.json({
+        success: true,
+        data: { total_usd_bruto: 0, total_usd_modelo: 0, total_cop_modelo: 0 },
+        modelId,
+        periodDate
+      });
+    }
+
     console.log('🔍 [CALCULATOR-TOTALS] Obteniendo totales:', { modelId, periodDate, rawPeriodDate });
 
     // 🔧 IMPORTANTE: Buscar en el rango del período completo para capturar totales guardados en cualquier día

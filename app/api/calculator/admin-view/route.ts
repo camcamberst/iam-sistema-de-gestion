@@ -116,34 +116,42 @@ export async function GET(request: NextRequest) {
     const today = getColombiaDate();
     const periodDate = normalizeToPeriodStartDate(today);
 
-    console.log('🔍 [ADMIN-VIEW] Loading values for bucket:', periodDate);
+    // P2 enero 2026: Mi Calculadora debe mostrar siempre 0 (cierre atípico ya archivado)
+    const P2_ENERO_PERIOD_DATE = '2026-01-16';
+    let modelValues: any[] = [];
+    if (periodDate !== P2_ENERO_PERIOD_DATE) {
+      console.log('🔍 [ADMIN-VIEW] Loading values for bucket:', periodDate);
 
-    // Calcular rango del periodo completo
-    const isP2 = parseInt(periodDate.split('-')[2]) >= 16;
-    const periodStart = periodDate; 
-    const periodEndObj = new Date(periodDate);
-    if (isP2) { periodEndObj.setMonth(periodEndObj.getMonth() + 1); periodEndObj.setDate(0); }
-    else { periodEndObj.setDate(15); }
-    const periodEnd = periodEndObj.toISOString().split('T')[0];
+      // Calcular rango del periodo completo
+      const isP2 = parseInt(periodDate.split('-')[2]) >= 16;
+      const periodStart = periodDate; 
+      const periodEndObj = new Date(periodDate);
+      if (isP2) { periodEndObj.setMonth(periodEndObj.getMonth() + 1); periodEndObj.setDate(0); }
+      else { periodEndObj.setDate(15); }
+      const periodEnd = periodEndObj.toISOString().split('T')[0];
 
-    // 🔧 ESTRATEGIA ROBUSTA: Obtener TODOS los valores dentro del rango del periodo
-    const { data: allValues, error: valuesError } = await supabase
-      .from('model_values')
-      .select('platform_id, value, period_date, updated_at')
-      .eq('model_id', modelId)
-      .gte('period_date', periodStart)
-      .lte('period_date', periodEnd)
-      .order('updated_at', { ascending: false });
+      // 🔧 ESTRATEGIA ROBUSTA: Obtener TODOS los valores dentro del rango del periodo
+      const { data: allValues, error: valuesError } = await supabase
+        .from('model_values')
+        .select('platform_id, value, period_date, updated_at')
+        .eq('model_id', modelId)
+        .gte('period_date', periodStart)
+        .lte('period_date', periodEnd)
+        .order('updated_at', { ascending: false });
 
-    // Consolidar: Para cada plataforma, tomar el valor más reciente
-    const consolidatedMap = new Map();
-    allValues?.forEach((val: any) => {
-      if (!consolidatedMap.has(val.platform_id)) {
-        consolidatedMap.set(val.platform_id, val);
+      if (valuesError) {
+        return NextResponse.json({ success: false, error: valuesError.message }, { status: 500 });
       }
-    });
-    
-    const modelValues = Array.from(consolidatedMap.values());
+
+      // Consolidar: Para cada plataforma, tomar el valor más reciente
+      const consolidatedMap = new Map();
+      allValues?.forEach((val: any) => {
+        if (!consolidatedMap.has(val.platform_id)) {
+          consolidatedMap.set(val.platform_id, val);
+        }
+      });
+      modelValues = Array.from(consolidatedMap.values());
+    }
 
     // 8. Obtener plataformas congeladas (EARLY FREEZE)
     const frozenPlatforms = await getFrozenPlatformsForModel(periodDate, modelId);
