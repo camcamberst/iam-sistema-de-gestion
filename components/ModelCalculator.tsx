@@ -1,7 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getCalculatorDate } from '@/utils/calculator-dates';
+import { getCalculatorDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
+
+// P2 enero 2026: período cerrado; Mi Calculadora debe mostrar siempre 0
+const P2_ENERO_PERIOD_DATE = '2026-01-16';
 
 interface User {
   id: string;
@@ -167,10 +170,13 @@ export default function ModelCalculator({
           // Cargar valores guardados previamente (solo sistema V2)
       try {
         console.log('🔍 [MODEL-CALCULATOR] Loading saved values - V2 system only');
-        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}&t=${Date.now()}`);
         const savedJson = await savedResp.json();
         console.log('🔍 [MODEL-CALCULATOR] Saved values (v2):', savedJson);
-        
+
+        const normalizedPeriod = normalizeToPeriodStartDate(periodDate);
+        const isP2EneroCerrado = normalizedPeriod === P2_ENERO_PERIOD_DATE;
+
         // Actualizar lista de plataformas congeladas
         if (savedJson.success && Array.isArray(savedJson.frozenPlatforms)) {
           setFrozenPlatforms(savedJson.frozenPlatforms);
@@ -179,14 +185,17 @@ export default function ModelCalculator({
           setFrozenPlatforms([]);
         }
 
-        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+        if (isP2EneroCerrado) {
+          // P2 enero cerrado: forzar inputs y totales en 0 (no depender de API/caché)
+          setInputValues({});
+          setPlatforms(prev => prev.map(p => ({ ...p, value: 0 })));
+          setResult(null);
+        } else if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
           const savedValues: Record<string, string> = {};
           savedJson.data.forEach((item: any) => {
             savedValues[item.platform_id] = item.value.toString();
           });
           setInputValues(savedValues);
-          
-          // Actualizar plataformas con valores guardados
           setPlatforms(prev => prev.map(p => ({
             ...p,
             value: parseFloat(savedValues[p.id]) || 0

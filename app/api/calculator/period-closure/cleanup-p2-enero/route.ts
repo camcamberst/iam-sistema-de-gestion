@@ -168,18 +168,20 @@ export async function POST(request: NextRequest) {
       if (values.length < FETCH_BATCH) break;
     }
 
-    // 2. Borrar calculator_totals del período (period_date 2026-01-16)
+    // 2. Borrar calculator_totals del período (rango 16-31 enero por si hay filas con otro day)
     const { data: totalsToDelete } = await supabase
       .from('calculator_totals')
       .select('id')
-      .eq('period_date', PERIOD_DATE_P2_ENERO);
+      .gte('period_date', PERIOD_DATE_P2_ENERO)
+      .lte('period_date', PERIOD_DATE_END);
 
     let totalsReset = 0;
     if (totalsToDelete && totalsToDelete.length > 0) {
       const { error: totalsError } = await supabase
         .from('calculator_totals')
         .delete()
-        .eq('period_date', PERIOD_DATE_P2_ENERO);
+        .gte('period_date', PERIOD_DATE_P2_ENERO)
+        .lte('period_date', PERIOD_DATE_END);
       if (totalsError) {
         console.warn('⚠️ [CLEANUP-P2-ENERO] Error borrando calculator_totals:', totalsError.message);
       } else {

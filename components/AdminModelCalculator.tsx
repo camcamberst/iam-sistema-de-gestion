@@ -1,7 +1,9 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { getCalculatorDate } from '@/utils/calculator-dates';
+import { getCalculatorDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
+
+const P2_ENERO_PERIOD_DATE = '2026-01-16';
 
 interface User {
   id: string;
@@ -126,24 +128,26 @@ export default function AdminModelCalculator({
       console.log('🔄 [ADMIN-MODEL-CALCULATOR] Manual refresh - loading values for userId:', userId);
       
       // Cargar valores guardados
-      const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+      const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}&t=${Date.now()}`);
       const savedJson = await savedResp.json();
-      
-      if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+      const isP2EneroCerrado = normalizeToPeriodStartDate(periodDate) === P2_ENERO_PERIOD_DATE;
+
+      if (isP2EneroCerrado) {
+        setInputValues({});
+        setPlatforms(prev => prev.map(p => ({ ...p, value: 0 })));
+        setResult(null);
+        console.log('ℹ️ [ADMIN-MODEL-CALCULATOR] P2 enero cerrado - valores en 0');
+      } else if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
         const savedValues: Record<string, string> = {};
         savedJson.data.forEach((item: any) => {
           savedValues[item.platform_id] = item.value.toString();
         });
-        
         console.log('🔄 [ADMIN-MODEL-CALCULATOR] Values loaded from server:', savedValues);
         setInputValues(savedValues);
-        
-        // Actualizar plataformas con valores guardados
         setPlatforms(prev => prev.map(p => ({
           ...p,
           value: parseFloat(savedValues[p.id]) || 0
         })));
-        
         setLastSaved(new Date());
         console.log('✅ [ADMIN-MODEL-CALCULATOR] Values updated successfully');
       } else {
@@ -207,17 +211,20 @@ export default function AdminModelCalculator({
       // Cargar valores guardados previamente (solo sistema V2)
       try {
         console.log('🔍 [ADMIN-MODEL-CALCULATOR] Loading saved values - V2 system only');
-        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}`);
+        const savedResp = await fetch(`/api/calculator/model-values-v2?modelId=${userId}&periodDate=${periodDate}&t=${Date.now()}`);
         const savedJson = await savedResp.json();
         console.log('🔍 [ADMIN-MODEL-CALCULATOR] Saved values (v2):', savedJson);
-        if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
+        const isP2EneroCerrado = normalizeToPeriodStartDate(periodDate) === P2_ENERO_PERIOD_DATE;
+        if (isP2EneroCerrado) {
+          setInputValues({});
+          setPlatforms(prev => prev.map(p => ({ ...p, value: 0 })));
+          setResult(null);
+        } else if (savedJson.success && Array.isArray(savedJson.data) && savedJson.data.length > 0) {
           const savedValues: Record<string, string> = {};
           savedJson.data.forEach((item: any) => {
             savedValues[item.platform_id] = item.value.toString();
           });
           setInputValues(savedValues);
-          
-          // Actualizar plataformas con valores guardados
           setPlatforms(prev => prev.map(p => ({
             ...p,
             value: parseFloat(savedValues[p.id]) || 0
