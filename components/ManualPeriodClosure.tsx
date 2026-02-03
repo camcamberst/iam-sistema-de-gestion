@@ -59,6 +59,15 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   const [p2EneroLoading, setP2EneroLoading] = useState(false);
   const [p2EneroCleaning, setP2EneroCleaning] = useState(false);
 
+  // Reset forzado global (solo super_admin)
+  const [forceResetLoading, setForceResetLoading] = useState(false);
+  const [forceResetResult, setForceResetResult] = useState<{
+    deleted_model_values: number;
+    deleted_calculator_totals: number;
+    calculators_unfrozen: boolean;
+    execution_time_ms: number;
+  } | null>(null);
+
   const loadP2EneroStatus = async () => {
     try {
       setP2EneroLoading(true);
@@ -223,6 +232,35 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
       setError(err.message);
     } finally {
       setP2EneroCleaning(false);
+    }
+  };
+
+  const handleForceResetAll = async () => {
+    if (!confirm('¿Reset forzado de TODAS las calculadoras del sistema? Se borrarán todos los valores en Mi Calculadora y todos los totales. Las calculadoras quedarán descongeladas. Esta acción no se puede deshacer.')) return;
+    setForceResetLoading(true);
+    setError(null);
+    setForceResetResult(null);
+    try {
+      const res = await fetch('/api/calculator/force-reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId })
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data.success) throw new Error(data.error || 'Error en reset forzado');
+      setForceResetResult({
+        deleted_model_values: data.deleted_model_values ?? 0,
+        deleted_calculator_totals: data.deleted_calculator_totals ?? 0,
+        calculators_unfrozen: data.calculators_unfrozen ?? true,
+        execution_time_ms: data.execution_time_ms ?? 0
+      });
+      await loadP2EneroStatus();
+      await loadCleanupValidation();
+      await loadArchiveStatus();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setForceResetLoading(false);
     }
   };
 
@@ -502,6 +540,35 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
             {p2EneroCleaning ? 'Limpiando...' : 'Limpiar P2 enero (Mi Calculadora)'}
           </button>
         </div>
+
+        {/* Reset forzado de todas las calculadoras — solo super_admin */}
+        {userRole === 'super_admin' && (
+          <div className="mt-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+            <h4 className="text-sm font-bold text-red-900 dark:text-red-200 mb-2">
+              🔥 Reset forzado de todas las calculadoras
+            </h4>
+            <p className="text-xs text-red-800 dark:text-red-300 mb-3">
+              Borra todos los valores en Mi Calculadora y todos los totales del sistema. Descongela todas las calculadoras. Solo usar cuando sea necesario un reset global (no se puede deshacer).
+            </p>
+            {forceResetResult && !error && (
+              <div className="mb-3 p-3 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs text-green-800 dark:text-green-300">
+                <p className="font-semibold">✅ Reset completado</p>
+                <p>• Valores borrados (model_values): {forceResetResult.deleted_model_values}</p>
+                <p>• Totales borrados (calculator_totals): {forceResetResult.deleted_calculator_totals}</p>
+                <p>• Calculadoras descongeladas: ✔</p>
+                <p>• Tiempo: {(forceResetResult.execution_time_ms / 1000).toFixed(2)}s</p>
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={handleForceResetAll}
+              disabled={forceResetLoading}
+              className="px-3 py-1.5 text-xs font-medium rounded bg-red-600 text-white hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {forceResetLoading ? 'Ejecutando...' : 'Reset forzado de todas las calculadoras'}
+            </button>
+          </div>
+        )}
 
         {/* Validación de limpieza */}
         {cleanupValidation && !cleanupValidation.can_cleanup && cleanupValidation.validation_errors.length > 0 && (
