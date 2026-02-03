@@ -55,6 +55,9 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   const [cleanupResult, setCleanupResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Módulo desplegable (compacto por defecto)
+  const [expanded, setExpanded] = useState(false);
+
   // Aviso a modelos (Mi Calculadora restaurada) — solo super_admin
   const [avisoLoading, setAvisoLoading] = useState(false);
   const [avisoResult, setAvisoResult] = useState<{ sent: number; total: number } | null>(null);
@@ -250,55 +253,61 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
 
   return (
     <div className="mb-8">
-      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-lg p-6">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
+      <div className="bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-950/30 dark:to-purple-950/30 rounded-xl border border-indigo-200 dark:border-indigo-800 shadow-lg overflow-hidden">
+        {/* Header compacto desplegable */}
+        <button
+          type="button"
+          onClick={() => setExpanded((e) => !e)}
+          className="w-full flex items-center justify-between gap-3 p-4 text-left hover:bg-indigo-50/50 dark:hover:bg-indigo-900/20 transition-colors"
+          aria-expanded={expanded}
+        >
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 flex-shrink-0 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+            <div className="min-w-0">
+              <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white truncate">
                 🔒 Cierre Manual de Período
               </h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
                 {isClosureDayActive ? (
-                  <>Período a cerrar: <span className="font-semibold">{periodToClose?.periodType}</span></>
+                  <>Período: <span className="font-semibold">{periodToClose?.periodType}</span></>
                 ) : (
-                  <>Vista previa - Los botones se activarán los días <span className="font-semibold">1 y 16</span> de cada mes</>
+                  <>Días 1 y 16 de cada mes</>
                 )}
               </p>
             </div>
           </div>
-
-          {/* Estado Actual */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {checking && (
-              <div className="flex items-center gap-2 px-3 py-1 text-xs font-semibold rounded-full bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
-                <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-                Verificando...
-              </div>
+              <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin" title="Verificando..." />
             )}
             {!checking && archiveStatus?.archived && (
-              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                ✅ Archivado
-              </span>
-            )}
-            {!checking && cleanupValidation?.can_cleanup && (cleanupValidation?.stats?.total_records_in_values ?? 0) > 0 && (
-              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-                ⚠️ Pendiente limpieza
-              </span>
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200" title="Archivado">✅</span>
             )}
             {!checking && (cleanupValidation?.stats?.total_records_in_values ?? 1) === 0 && archiveStatus?.archived && (
-              <span className="px-3 py-1 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                🎉 Completado
-              </span>
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200" title="Completado">🎉</span>
             )}
+            {!checking && cleanupValidation?.can_cleanup && (cleanupValidation?.stats?.total_records_in_values ?? 0) > 0 && (
+              <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200" title="Pendiente limpieza">⚠️</span>
+            )}
+            <svg
+              className={`w-5 h-5 text-gray-500 dark:text-gray-400 transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+              aria-hidden
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
           </div>
-        </div>
+        </button>
 
+        {/* Contenido desplegable */}
+        {expanded && (
+          <div className="px-6 pb-6 pt-0 border-t border-indigo-200/50 dark:border-indigo-800/50">
         {/* Mensajes de error */}
         {error && (
           <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
@@ -579,6 +588,8 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                 <li key={idx}>{err}</li>
               ))}
             </ul>
+          </div>
+        )}
           </div>
         )}
       </div>
