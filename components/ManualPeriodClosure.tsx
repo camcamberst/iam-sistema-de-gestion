@@ -496,7 +496,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
           <button
             type="button"
             onClick={handleCleanupP2Enero}
-            disabled={p2EneroCleaning || !p2EneroStatus?.safe_to_cleanup || (p2EneroStatus?.model_values?.count ?? 0) === 0}
+            disabled={p2EneroCleaning || !p2EneroStatus?.safe_to_cleanup}
             className="px-3 py-1.5 text-xs font-medium rounded bg-amber-600 text-white hover:bg-amber-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {p2EneroCleaning ? 'Limpiando...' : 'Limpiar P2 enero (Mi Calculadora)'}
