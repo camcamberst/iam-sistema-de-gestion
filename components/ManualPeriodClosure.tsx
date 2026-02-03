@@ -1,7 +1,13 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { createClient } from '@supabase/supabase-js';
 import { isClosureDay, getPeriodToClose, getNewPeriodAfterClosure } from '@/utils/period-closure-dates';
+
+const supabaseAuth = typeof window !== 'undefined' ? createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+) : null;
 
 interface ManualPeriodClosureProps {
   userId: string;
@@ -48,6 +54,10 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
   const [archiveResult, setArchiveResult] = useState<any>(null);
   const [cleanupResult, setCleanupResult] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
+
+  // Aviso a modelos (Mi Calculadora restaurada) — solo super_admin
+  const [avisoLoading, setAvisoLoading] = useState(false);
+  const [avisoResult, setAvisoResult] = useState<{ sent: number; total: number } | null>(null);
 
   // Reset forzado global (solo super_admin)
   const [forceResetLoading, setForceResetLoading] = useState(false);
@@ -185,6 +195,28 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
       setError(err.message);
     } finally {
       setCleaning(false);
+    }
+  };
+
+  const handleEnviarAvisoModelos = async () => {
+    if (!confirm('¿Enviar aviso por Botty a todas las modelos? El mensaje indica que Mi Calculadora fue restaurada y que pueden consultar su facturación en Mi Historial.')) return;
+    setAvisoLoading(true);
+    setError(null);
+    setAvisoResult(null);
+    try {
+      const { data: { session } } = await supabaseAuth?.auth.getSession() ?? { data: { session: null } };
+      if (!session?.access_token) throw new Error('Sesión no disponible');
+      const res = await fetch('/api/chat/notify-calculadora-restored', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${session.access_token}` }
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!data.success) throw new Error(data.error || 'Error al enviar aviso');
+      setAvisoResult({ sent: data.sent ?? 0, total: data.total ?? 0 });
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setAvisoLoading(false);
     }
   };
 
@@ -331,6 +363,17 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
               <p>• Calculadoras descongeladas: ✔</p>
               <p>• Tiempo: {(forceResetResult.execution_time_ms / 1000).toFixed(2)}s</p>
             </div>
+          </div>
+        )}
+
+        {avisoResult && !error && userRole === 'super_admin' && (
+          <div className="mb-4 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <p className="text-sm text-green-800 dark:text-green-400 font-semibold mb-2">
+              ✅ Aviso enviado por Botty
+            </p>
+            <p className="text-xs text-green-700 dark:text-green-300">
+              Enviado a {avisoResult.sent} de {avisoResult.total} modelo(s).
+            </p>
           </div>
         )}
 
@@ -491,6 +534,33 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
                   </h4>
                   <p className="text-xs text-gray-600 dark:text-gray-400">
                     {forceResetLoading ? 'Ejecutando...' : 'Todas las calculadoras'}
+                  </p>
+                </div>
+              </div>
+            </button>
+          )}
+
+          {/* Botón 5: Enviar aviso a modelos (solo super_admin) */}
+          {userRole === 'super_admin' && (
+            <button
+              type="button"
+              onClick={handleEnviarAvisoModelos}
+              disabled={avisoLoading}
+              title="Envía por Botty un mensaje a todas las modelos: Mi Calculadora restaurada, pueden ingresar valores y consultar facturación en Mi Historial."
+              className="relative group p-4 rounded-lg border-2 border-emerald-300 dark:border-emerald-700 bg-white dark:bg-gray-900 hover:border-emerald-500 hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gradient-to-br from-emerald-500 to-teal-600">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a2.002 2.002 0 00-2-2h-1M5 17H4a2 2 0 01-2-2V5a2 2 0 012-2h2.5M9 17h.01M12 17h.01M15 13h.01M12 13h.01M9 13h.01M7 13h.01" />
+                  </svg>
+                </div>
+                <div className="flex-1 text-left">
+                  <h4 className="text-sm font-bold text-gray-900 dark:text-white">
+                    📢 Aviso a modelos
+                  </h4>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {avisoLoading ? 'Enviando...' : 'Mi Calculadora restaurada'}
                   </p>
                 </div>
               </div>
