@@ -117,10 +117,8 @@ export async function PUT(request: NextRequest) {
     const existingRecord = existingRecords[0];
     const targetHistoryId = historyId || existingRecord.id;
 
-    // Preparar campos a actualizar
-    const updateData: any = {
-      updated_at: new Date().toISOString()
-    };
+    // Preparar campos a actualizar (calculator_history puede no tener updated_at en el esquema)
+    const updateData: Record<string, unknown> = {};
 
     if (value !== undefined) {
       const num = Number(value);
@@ -128,6 +126,43 @@ export async function PUT(request: NextRequest) {
         return NextResponse.json({ success: false, error: 'El valor debe ser un número válido' }, { status: 400 });
       }
       updateData.value = num;
+
+      // Recalcular USD bruto, USD modelo y COP modelo para que los totales del período se actualicen
+      const platformId = existingRecord.platform_id as string;
+      const { data: platformRow } = await supabase
+        .from('calculator_platforms')
+        .select('currency')
+        .eq('id', platformId)
+        .maybeSingle();
+      const currency = (platformRow as any)?.currency || 'USD';
+      const rates = {
+        eur_usd: existingRecord.rate_eur_usd ?? 1.01,
+        gbp_usd: existingRecord.rate_gbp_usd ?? 1.20,
+        usd_cop: existingRecord.rate_usd_cop ?? 3900
+      };
+      const normalizedId = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      let valueUsdBruto: number;
+      if (currency === 'EUR') {
+        if (normalizedId === 'big7') valueUsdBruto = (num * rates.eur_usd) * 0.84;
+        else if (normalizedId === 'mondo') valueUsdBruto = (num * rates.eur_usd) * 0.78;
+        else valueUsdBruto = num * rates.eur_usd;
+      } else if (currency === 'GBP') {
+        if (normalizedId === 'aw') valueUsdBruto = (num * rates.gbp_usd) * 0.677;
+        else valueUsdBruto = num * rates.gbp_usd;
+      } else if (currency === 'USD') {
+        if (normalizedId === 'cmd' || normalizedId === 'camlust' || normalizedId === 'skypvt') valueUsdBruto = num * 0.75;
+        else if (normalizedId === 'chaturbate' || normalizedId === 'myfreecams' || normalizedId === 'stripchat') valueUsdBruto = num * 0.05;
+        else if (normalizedId === 'dxlive') valueUsdBruto = num * 0.60;
+        else if (normalizedId === 'secretfriends') valueUsdBruto = num * 0.5;
+        else valueUsdBruto = num;
+      } else {
+        valueUsdBruto = num;
+      }
+      const platformPercentage = existingRecord.platform_percentage != null ? Number(existingRecord.platform_percentage) : (normalizedId === 'superfoon' ? 100 : 80);
+      const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
+      updateData.value_usd_bruto = parseFloat((valueUsdBruto).toFixed(2));
+      updateData.value_usd_modelo = parseFloat((valueUsdModelo).toFixed(2));
+      updateData.value_cop_modelo = parseFloat((valueUsdModelo * rates.usd_cop).toFixed(2));
     }
 
     if (value_usd_bruto !== undefined) {
@@ -357,8 +392,7 @@ export async function POST(request: NextRequest) {
         rate_usd_cop: newRates.usd_cop,
         value_usd_bruto: parseFloat(valueUsdBruto.toFixed(2)),
         value_usd_modelo: parseFloat(valueUsdModelo.toFixed(2)),
-        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2)),
-        updated_at: new Date().toISOString()
+        value_cop_modelo: parseFloat(valueCopModelo.toFixed(2))
       };
     });
 
@@ -373,8 +407,7 @@ export async function POST(request: NextRequest) {
           rate_usd_cop: update.rate_usd_cop,
           value_usd_bruto: update.value_usd_bruto,
           value_usd_modelo: update.value_usd_modelo,
-          value_cop_modelo: update.value_cop_modelo,
-          updated_at: update.updated_at
+          value_cop_modelo: update.value_cop_modelo
         })
         .eq('id', update.id);
 
