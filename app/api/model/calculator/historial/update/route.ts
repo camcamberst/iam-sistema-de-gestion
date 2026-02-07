@@ -86,6 +86,11 @@ export async function PUT(request: NextRequest) {
       }, { status: 403 });
     }
 
+    // Normalizar period_date a YYYY-MM-DD para coincidir con el tipo DATE en BD
+    const periodDateNorm = period_date
+      ? (typeof period_date === 'string' ? period_date.slice(0, 10) : String(period_date).slice(0, 10))
+      : '';
+
     // Verificar que el registro existe
     let query = supabase.from('calculator_history').select('*');
     
@@ -93,7 +98,7 @@ export async function PUT(request: NextRequest) {
       query = query.eq('id', historyId);
     } else {
       query = query
-        .eq('period_date', period_date)
+        .eq('period_date', periodDateNorm || period_date)
         .eq('period_type', period_type)
         .eq('model_id', model_id)
         .eq('platform_id', platform_id);
@@ -118,36 +123,52 @@ export async function PUT(request: NextRequest) {
     };
 
     if (value !== undefined) {
-      updateData.value = Number(value);
+      const num = Number(value);
+      if (Number.isNaN(num)) {
+        return NextResponse.json({ success: false, error: 'El valor debe ser un número válido' }, { status: 400 });
+      }
+      updateData.value = num;
     }
 
     if (value_usd_bruto !== undefined) {
-      updateData.value_usd_bruto = Number(value_usd_bruto);
+      const num = Number(value_usd_bruto);
+      if (!Number.isNaN(num)) updateData.value_usd_bruto = num;
     }
 
     if (value_usd_modelo !== undefined) {
-      updateData.value_usd_modelo = Number(value_usd_modelo);
+      const num = Number(value_usd_modelo);
+      if (!Number.isNaN(num)) updateData.value_usd_modelo = num;
     }
 
     if (value_cop_modelo !== undefined) {
-      updateData.value_cop_modelo = Number(value_cop_modelo);
+      const num = Number(value_cop_modelo);
+      if (!Number.isNaN(num)) updateData.value_cop_modelo = num;
     }
 
-    // Actualizar registro
-    const { data: updatedRecord, error: updateError } = await supabase
+    // Actualizar registro (sin .single() para evitar error cuando 0 filas y dar mensaje claro)
+    const { data: updatedRows, error: updateError } = await supabase
       .from('calculator_history')
       .update(updateData)
       .eq('id', targetHistoryId)
-      .select()
-      .single();
+      .select();
 
     if (updateError) {
       console.error('❌ [CALCULATOR-HISTORIAL-UPDATE] Error actualizando:', updateError);
       return NextResponse.json({
         success: false,
-        error: 'Error al actualizar registro'
+        error: 'Error al actualizar registro',
+        detail: updateError.message || undefined
       }, { status: 500 });
     }
+
+    if (!updatedRows || updatedRows.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: 'No se encontró el registro para actualizar. Puede que el historial haya cambiado.'
+      }, { status: 404 });
+    }
+
+    const updatedRecord = updatedRows[0];
 
     console.log(`✅ [CALCULATOR-HISTORIAL-UPDATE] Registro ${targetHistoryId} actualizado por admin ${authenticatedUserId}`);
 

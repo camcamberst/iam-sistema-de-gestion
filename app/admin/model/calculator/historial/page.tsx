@@ -265,7 +265,7 @@ export default function CalculatorHistorialPage() {
         })
       });
       const data = await response.json();
-      if (!data.success) throw new Error(data.error);
+      if (!data.success) throw new Error(data.detail ? `${data.error}: ${data.detail}` : data.error);
       
       setEditingPlatform(null);
       await loadData();
