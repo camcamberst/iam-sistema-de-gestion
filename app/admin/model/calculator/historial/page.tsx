@@ -214,6 +214,40 @@ export default function CalculatorHistorialPage() {
     return `${d.toLocaleDateString('es-CO')} (${d.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', hour12:false})})`;
   };
   const formatCurrency = (v: number, c: string = 'USD') => new Intl.NumberFormat('es-CO', { style: 'currency', currency: c, minimumFractionDigits: 2 }).format(v);
+
+  // Recalcular USD modelo y COP desde VALOR (misma lógica que el backend) para vista previa al editar
+  const computeUsdCopFromValue = (
+    value: number,
+    platformId: string,
+    currency: string,
+    rates: { eur_usd?: number | null; gbp_usd?: number | null; usd_cop?: number | null },
+    platformPercentage: number
+  ): { usdModelo: number; copModelo: number } => {
+    if (Number.isNaN(value) || value === 0) return { usdModelo: 0, copModelo: 0 };
+    const eur = rates.eur_usd ?? 1.01;
+    const gbp = rates.gbp_usd ?? 1.2;
+    const cop = rates.usd_cop ?? 3900;
+    const n = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    let usdBruto: number;
+    if (currency === 'EUR') {
+      if (n === 'big7') usdBruto = value * eur * 0.84;
+      else if (n === 'mondo') usdBruto = value * eur * 0.78;
+      else usdBruto = value * eur;
+    } else if (currency === 'GBP') {
+      if (n === 'aw') usdBruto = value * gbp * 0.677;
+      else usdBruto = value * gbp;
+    } else {
+      if (n === 'cmd' || n === 'camlust' || n === 'skypvt') usdBruto = value * 0.75;
+      else if (n === 'chaturbate' || n === 'myfreecams' || n === 'stripchat') usdBruto = value * 0.05;
+      else if (n === 'dxlive') usdBruto = value * 0.6;
+      else if (n === 'secretfriends') usdBruto = value * 0.5;
+      else usdBruto = value;
+    }
+    const pct = (platformPercentage ?? 80) / 100;
+    const usdModelo = parseFloat((usdBruto * pct).toFixed(2));
+    const copModelo = parseFloat((usdModelo * cop).toFixed(2));
+    return { usdModelo, copModelo };
+  };
   const formatNumberOnly = (v: number) => new Intl.NumberFormat('es-CO', { minimumFractionDigits: 2 }).format(v);
 
   const filteredPeriods = useMemo(() => {
@@ -507,11 +541,19 @@ export default function CalculatorHistorialPage() {
                           <div className="grid grid-cols-2 gap-2 text-xs">
                             <div>
                               <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Modelo</p>
-                              <p className="font-medium text-gray-700 dark:text-gray-300">{formatCurrency(p.value_usd_modelo||0, 'USD')}</p>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">
+                                {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
+                                  ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).usdModelo, 'USD')
+                                  : formatCurrency(p.value_usd_modelo||0, 'USD')}
+                              </p>
                             </div>
                             <div>
                               <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">COP Modelo</p>
-                              <p className="font-medium text-gray-700 dark:text-gray-300">{formatCurrency(p.value_cop_modelo||0, 'COP')}</p>
+                              <p className="font-medium text-gray-700 dark:text-gray-300">
+                                {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
+                                  ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).copModelo, 'COP')
+                                  : formatCurrency(p.value_cop_modelo||0, 'COP')}
+                              </p>
                             </div>
                           </div>
                         </div>
@@ -540,8 +582,16 @@ export default function CalculatorHistorialPage() {
                               <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-20 border rounded px-1 text-xs text-gray-900" />
                             ) : formatNumberOnly(p.value)} <span className="text-gray-500 dark:text-gray-400 text-xs">{p.platform_currency}</span>
                           </td>
-                          <td className="px-3 py-2">{formatCurrency(p.value_usd_modelo||0, 'USD')}</td>
-                          <td className="px-3 py-2">{formatCurrency(p.value_cop_modelo||0, 'COP')}</td>
+                          <td className="px-3 py-2">
+                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
+                              ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).usdModelo, 'USD')
+                              : formatCurrency(p.value_usd_modelo||0, 'USD')}
+                          </td>
+                          <td className="px-3 py-2">
+                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
+                              ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).copModelo, 'COP')
+                              : formatCurrency(p.value_cop_modelo||0, 'COP')}
+                          </td>
                           {isAdmin && (
                             <td className="px-3 py-2">
                               {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
@@ -561,16 +611,33 @@ export default function CalculatorHistorialPage() {
               </div>
 
               <div className="mt-4 sm:mt-6 pt-3 sm:pt-4 border-t border-gray-200 dark:border-gray-700">
+                {(() => {
+                  const isEditingThisPeriod = editingPlatform?.periodKey === periodKey;
+                  const displayTotalUsdModelo = isEditingThisPeriod && editingPlatform
+                    ? period.platforms.reduce((acc, p) => acc + (p.platform_id === editingPlatform.platformId
+                        ? computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).usdModelo
+                        : (p.value_usd_modelo || 0)), 0)
+                    : (period.total_usd_modelo || 0);
+                  const displayTotalCopModelo = isEditingThisPeriod && editingPlatform
+                    ? period.platforms.reduce((acc, p) => acc + (p.platform_id === editingPlatform.platformId
+                        ? computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).copModelo
+                        : (p.value_cop_modelo || 0)), 0)
+                    : (period.total_cop_modelo || 0);
+                  const displayNetoPagar = period.neto_pagar !== undefined
+                    ? period.neto_pagar - (period.total_cop_modelo || 0) + displayTotalCopModelo
+                    : displayTotalCopModelo;
+                  return (
+                <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 sm:gap-4 mb-3 sm:mb-4">
                   <div className="bg-gray-50 dark:bg-gray-700/50 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-gray-100 dark:border-gray-700">
                     <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mb-0.5 sm:mb-1">USD Modelo</div>
-                    <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(period.total_usd_modelo || 0, 'USD')}</div>
+                    <div className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">{formatCurrency(displayTotalUsdModelo, 'USD')}</div>
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/40 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800/50">
                     <div className="flex justify-between items-center mb-0.5 sm:mb-1">
                       <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
-                      <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(period.total_cop_modelo || 0, 'COP')}</span>
+                      <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(displayTotalCopModelo, 'COP')}</span>
                     </div>
 
                     {(period.total_anticipos || 0) > 0 && (
@@ -670,7 +737,7 @@ export default function CalculatorHistorialPage() {
                     <div className="flex justify-between items-center pt-1 border-t border-blue-200/50 dark:border-blue-800/30">
                       <span className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wide">Neto a Pagar</span>
                       <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
-                        {formatCurrency(period.neto_pagar !== undefined ? period.neto_pagar : (period.total_cop_modelo || 0), 'COP')}
+                        {formatCurrency(displayNetoPagar, 'COP')}
                       </span>
                     </div>
                   </div>
@@ -685,6 +752,9 @@ export default function CalculatorHistorialPage() {
                      <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min(period.porcentaje_alcanzado||0, 100)}%` }}></div>
                    </div>
                 </div>
+                </>
+                  );
+                })()}
               </div>
             </div>
             );
