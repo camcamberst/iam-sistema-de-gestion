@@ -292,21 +292,16 @@ export async function GET(request: NextRequest) {
       // Porcentaje: el guardado por fila (al archivar) tiene prioridad; si no, Superfoon 100% y el resto default del modelo
       const modelPercentage = item.platform_percentage != null ? Number(item.platform_percentage) : (isSuperfoon ? 100 : defaultModelPercentage);
       
-      let usdBruto = item.value_usd_bruto != null ? Number(item.value_usd_bruto) : null;
-      let usdModelo: number | null = item.value_usd_modelo != null ? Number(item.value_usd_modelo) : null;
-      let copModelo: number | null = item.value_cop_modelo != null ? Number(item.value_cop_modelo) : null;
+      // Siempre recalcular USD/COP desde el VALOR actual de la fila, para que la tabla refleje el valor editado
+      // (evita que la columna USD siga mostrando el cálculo del valor inicial si el update no persistió o hubo fallo)
+      const currency = platformInfo?.currency || 'USD';
+      const usdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
+      const usdModelo = usdBruto * (modelPercentage / 100);
+      const copModelo = usdModelo * rates.usd_cop;
       
-      if (usdBruto === null) {
-        const currency = platformInfo?.currency || 'USD';
-        usdBruto = calculateUsdBruto(safeValue, item.platform_id, currency, rates);
-      }
-      // Si no están guardados, recalcular con la misma lógica que Mi Calculadora
-      if (usdModelo === null) usdModelo = usdBruto * (modelPercentage / 100);
-      if (copModelo === null) copModelo = usdModelo! * rates.usd_cop;
-      
-      const finalUsdBruto = usdBruto ?? 0;
-      const finalUsdModelo = usdModelo ?? 0;
-      const finalCopModelo = copModelo ?? 0;
+      const finalUsdBruto = usdBruto;
+      const finalUsdModelo = parseFloat(usdModelo.toFixed(2));
+      const finalCopModelo = parseFloat(copModelo.toFixed(2));
       
       // No mostrar __CONSOLIDATED_TOTAL__ como fila de plataforma
       // Tampoco sumar esa fila a totales: su "value" es suma en monedas mezcladas y corrompe USD Modelo / Neto a pagar
