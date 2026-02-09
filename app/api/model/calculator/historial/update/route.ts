@@ -158,11 +158,10 @@ export async function PUT(request: NextRequest) {
       } else {
         valueUsdBruto = num;
       }
-      // Usar porcentaje de la fila; si no tiene, el de la modelo en calculator_config (igual que en GET historial)
+      // Priorizar siempre el porcentaje actual de la modelo (calculator_config) al recalcular una edición,
+      // para que coincida con el % que se muestra en la tabla (70%). Si no hay config, usar el de la fila o 80.
       let platformPercentage: number;
-      if (existingRecord.platform_percentage != null) {
-        platformPercentage = Number(existingRecord.platform_percentage);
-      } else if (normalizedId === 'superfoon') {
+      if (normalizedId === 'superfoon') {
         platformPercentage = 100;
       } else {
         const { data: modelConfig } = await supabase
@@ -171,12 +170,14 @@ export async function PUT(request: NextRequest) {
           .eq('model_id', existingRecord.model_id)
           .eq('active', true)
           .maybeSingle();
-        platformPercentage = (modelConfig as any)?.percentage_override ?? (modelConfig as any)?.group_percentage ?? 80;
+        const configPct = (modelConfig as any)?.percentage_override ?? (modelConfig as any)?.group_percentage;
+        platformPercentage = configPct != null ? Number(configPct) : (existingRecord.platform_percentage != null ? Number(existingRecord.platform_percentage) : 80);
       }
       const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
       updateData.value_usd_bruto = parseFloat((valueUsdBruto).toFixed(2));
       updateData.value_usd_modelo = parseFloat((valueUsdModelo).toFixed(2));
       updateData.value_cop_modelo = parseFloat((valueUsdModelo * rates.usd_cop).toFixed(2));
+      updateData.platform_percentage = platformPercentage;
     }
 
     if (value_usd_bruto !== undefined) {
