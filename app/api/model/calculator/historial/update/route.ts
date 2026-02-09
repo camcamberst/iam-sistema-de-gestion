@@ -158,7 +158,21 @@ export async function PUT(request: NextRequest) {
       } else {
         valueUsdBruto = num;
       }
-      const platformPercentage = existingRecord.platform_percentage != null ? Number(existingRecord.platform_percentage) : (normalizedId === 'superfoon' ? 100 : 80);
+      // Usar porcentaje de la fila; si no tiene, el de la modelo en calculator_config (igual que en GET historial)
+      let platformPercentage: number;
+      if (existingRecord.platform_percentage != null) {
+        platformPercentage = Number(existingRecord.platform_percentage);
+      } else if (normalizedId === 'superfoon') {
+        platformPercentage = 100;
+      } else {
+        const { data: modelConfig } = await supabase
+          .from('calculator_config')
+          .select('percentage_override, group_percentage')
+          .eq('model_id', existingRecord.model_id)
+          .eq('active', true)
+          .maybeSingle();
+        platformPercentage = (modelConfig as any)?.percentage_override ?? (modelConfig as any)?.group_percentage ?? 80;
+      }
       const valueUsdModelo = valueUsdBruto * (platformPercentage / 100);
       updateData.value_usd_bruto = parseFloat((valueUsdBruto).toFixed(2));
       updateData.value_usd_modelo = parseFloat((valueUsdModelo).toFixed(2));
