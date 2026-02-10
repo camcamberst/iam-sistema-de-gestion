@@ -257,8 +257,8 @@ function ClockItem({ label, time, icon, color }: { label: string; time: string; 
 
   return (
     <div className="flex items-center gap-2">
-      <span className="text-xs">{icon}</span>
-      <span className="text-[9px] font-semibold text-white dark:text-white uppercase tracking-wide">{label}</span>
+      {/* Mostrar solo la bandera como identificador visual del país/región */}
+      <span className="text-base leading-none">{icon}</span>
       <div className="flex items-center gap-1">
         <span className={`text-sm font-mono font-semibold bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
           {mainTime}
