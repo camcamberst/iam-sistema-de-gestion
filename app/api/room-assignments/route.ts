@@ -5,30 +5,28 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 // =====================================================
-// 📋 GET - Obtener asignaciones por room
+// 📋 GET - Obtener asignaciones por room o todas (para disponibilidad)
 // =====================================================
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const roomId = searchParams.get('roomId');
     
-    if (!roomId) {
-      return NextResponse.json(
-        { success: false, error: 'roomId requerido' },
-        { status: 400 }
-      );
-    }
-
-    console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo asignaciones para room:', roomId);
-    
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Obtener asignaciones del room usando la vista detallada
-    const { data: assignments, error } = await supabase
+    let query = supabase
       .from('room_assignments_detailed')
-      .select('*')
-      .eq('room_id', roomId)
+      .select('id, model_id, room_id, jornada, assigned_at')
       .order('jornada', { ascending: true });
+
+    if (roomId) {
+      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo asignaciones para room:', roomId);
+      query = query.eq('room_id', roomId);
+    } else {
+      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo todas las asignaciones (para disponibilidad)');
+    }
+
+    const { data: assignments, error } = await query;
 
     if (error) {
       console.error('❌ [ROOM-ASSIGNMENTS] Error obteniendo asignaciones:', error);

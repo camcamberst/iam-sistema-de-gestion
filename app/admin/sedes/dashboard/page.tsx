@@ -105,6 +105,8 @@ export default function DashboardSedesPage() {
   const [loadingTodasSedes, setLoadingTodasSedes] = useState(false);
   // Asignaciones activas desde modelo_assignments (fuente de verdad para ocupación)
   const [allAssignmentsFromApi, setAllAssignmentsFromApi] = useState<{ room_id: string; group_id: string; jornada: string; model_id?: string }[]>([]);
+  // Asignaciones desde room_assignments (combinar con modelo_assignments por si los datos están en una u otra tabla)
+  const [allRoomAssignmentsFromApi, setAllRoomAssignmentsFromApi] = useState<{ room_id: string; jornada: string; model_id: string }[]>([]);
 
   // Estados para editar RATES de cierre
   const [showEditRatesModal, setShowEditRatesModal] = useState(false);
@@ -235,7 +237,7 @@ export default function DashboardSedesPage() {
     if (selectedSede && availableSedes.length > 0) {
       loadSedeDisponibilidad(selectedSede);
     }
-  }, [selectedSede, availableSedes, allAssignmentsFromApi]);
+  }, [selectedSede, availableSedes, allAssignmentsFromApi, allRoomAssignmentsFromApi]);
 
   const loadUserInfo = () => {
     try {
@@ -410,15 +412,22 @@ export default function DashboardSedesPage() {
       const sedeRooms = roomsData.rooms.filter((room: Room) => room.group_id === sedeId);
       console.log('🔍 [DASHBOARD] Rooms de la sede:', sedeRooms.length);
 
-      // Usar asignaciones de modelo_assignments (allAssignmentsFromApi) para calcular ocupación
+      // Combinar modelo_assignments + room_assignments: por (room_id, jornada) contar model_ids únicos
       const sedeRoomIds = new Set(sedeRooms.map((r: Room) => r.id));
-      const assignmentsSede = allAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
+      const getCountForRoom = (roomId: string) => {
+        const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
+        ['MAÑANA', 'TARDE', 'NOCHE'].forEach(j => {
+          const fromModelo = allAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id || a.room_id + j);
+          const fromRoom = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id);
+          const unicos = new Set([...fromModelo, ...fromRoom]);
+          count[j as keyof typeof count] = unicos.size;
+        });
+        return count;
+      };
 
       // Disponibilidad por room y jornada: máximo 2 modelos por room+jornada → disponible si count < 2
       const porRoom: RoomJornadaDisponibilidad[] = sedeRooms.map((room: Room) => {
-        const roomAssignments = assignmentsSede.filter(a => a.room_id === room.id);
-        const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
-        roomAssignments.forEach(a => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
+        const count = getCountForRoom(room.id);
         return {
           room_id: room.id,
           room_name: room.room_name,
@@ -429,19 +438,22 @@ export default function DashboardSedesPage() {
       });
       setDisponibilidadPorRoom(porRoom);
 
-      // Calcular disponibilidad por jornada (agregados)
+      // Calcular disponibilidad por jornada (agregados) con ambas fuentes
+      const assignmentsSedeModelo = allAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
+      const assignmentsSedeRoom = allRoomAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
       const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
       const jornadasDisponibles = { manana: 0, tarde: 0, noche: 0 };
       const jornadasDobladas = { manana: 0, tarde: 0, noche: 0 };
 
       jornadas.forEach((jornada, index) => {
         const jornadaKey = index === 0 ? 'manana' : index === 1 ? 'tarde' : 'noche';
-        const asignacionesJornada = assignmentsSede.filter(a => a.jornada === jornada);
-        const modelosUnicas = new Set(asignacionesJornada.map(a => a.model_id || a.room_id + a.jornada));
-        const espaciosDisponibles = Math.max(0, sedeRooms.length - modelosUnicas.size);
-        jornadasDisponibles[jornadaKey] = espaciosDisponibles;
-        const doblajes = Math.max(0, asignacionesJornada.length - modelosUnicas.size);
-        jornadasDobladas[jornadaKey] = doblajes;
+        const fromModelo = assignmentsSedeModelo.filter(a => a.jornada === jornada).map(a => a.model_id || a.room_id + a.jornada);
+        const fromRoom = assignmentsSedeRoom.filter(a => a.jornada === jornada).map(a => a.model_id);
+        const modelosUnicas = new Set([...fromModelo, ...fromRoom]);
+        const espaciosDisponibles = Math.max(0, sedeRooms.length * 2 - modelosUnicas.size);
+        jornadasDisponibles[jornadaKey] = Math.min(sedeRooms.length * 2, espaciosDisponibles);
+        const totalAsignaciones = assignmentsSedeModelo.filter(a => a.jornada === jornada).length + assignmentsSedeRoom.filter(a => a.jornada === jornada).length;
+        jornadasDobladas[jornadaKey] = Math.max(0, totalAsignaciones - modelosUnicas.size);
       });
 
       // Obtener información de la sede
@@ -478,13 +490,21 @@ export default function DashboardSedesPage() {
       if (!roomsData.success) throw new Error('Error obteniendo rooms');
       const allRooms = (roomsData.rooms || []) as Room[];
       const rows: FilaDisponibilidadSede[] = [];
+      const getCountForRoom = (roomId: string) => {
+        const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
+        ['MAÑANA', 'TARDE', 'NOCHE'].forEach(j => {
+          const fromModelo = allAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id || a.room_id + j);
+          const fromRoom = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id);
+          const unicos = new Set([...fromModelo, ...fromRoom]);
+          count[j as keyof typeof count] = unicos.size;
+        });
+        return count;
+      };
       for (const sede of availableSedes) {
         const sedeRooms = allRooms.filter((r: Room) => r.group_id === sede.id);
         if (sedeRooms.length === 0) continue;
         sedeRooms.forEach((room: Room) => {
-          const roomAssignments = allAssignmentsFromApi.filter(a => a.room_id === room.id);
-          const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
-          roomAssignments.forEach(a => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
+          const count = getCountForRoom(room.id);
           rows.push({
             sede_id: sede.id,
             sede_nombre: sede.name,
@@ -511,7 +531,7 @@ export default function DashboardSedesPage() {
       setError(null);
 
       // Cargar datos reales desde la API con filtrado por rol
-      const [groupsResponse, roomsResponse, usersResponse, assignmentsResponse] = await Promise.all([
+      const [groupsResponse, roomsResponse, usersResponse, assignmentsResponse, roomAssignmentsAllResponse] = await Promise.all([
         fetch('/api/groups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -519,14 +539,16 @@ export default function DashboardSedesPage() {
         }),
         fetch('/api/groups/rooms'),
         fetch('/api/users'),
-        fetch('/api/assignments/all')
+        fetch('/api/assignments/all'),
+        fetch('/api/room-assignments')
       ]);
 
-      const [groupsData, roomsData, usersData, assignmentsData] = await Promise.all([
+      const [groupsData, roomsData, usersData, assignmentsData, roomAssignmentsAllData] = await Promise.all([
         groupsResponse.json(),
         roomsResponse.json(),
         usersResponse.json(),
-        assignmentsResponse.json()
+        assignmentsResponse.json(),
+        roomAssignmentsAllResponse.json()
       ]);
 
       // Filtrar datos según el rol del usuario
@@ -546,13 +568,21 @@ export default function DashboardSedesPage() {
         group.name !== 'Satélites'
       );
       setAvailableSedes(sedesOperativas);
-      // Guardar asignaciones para Consultar Disponibilidad (modelo_assignments = fuente de verdad)
+      // Guardar asignaciones para Consultar Disponibilidad (modelo_assignments + room_assignments)
       setAllAssignmentsFromApi((filteredAssignments as { room_id: string; group_id: string; jornada: string; model_id?: string }[]).map(a => ({
         room_id: a.room_id,
         group_id: a.group_id,
         jornada: a.jornada,
         model_id: a.model_id
       })));
+      const roomAssignmentsAll = roomAssignmentsAllData.success && Array.isArray(roomAssignmentsAllData.assignments)
+        ? (roomAssignmentsAllData.assignments as { room_id: string; jornada: string; model_id: string }[]).map(a => ({
+            room_id: a.room_id,
+            jornada: a.jornada,
+            model_id: a.model_id
+          }))
+        : [];
+      setAllRoomAssignmentsFromApi(roomAssignmentsAll);
 
       // Calcular estadísticas reales
       const totalSedes = filteredGroups.length;
