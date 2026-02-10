@@ -103,6 +103,8 @@ export default function DashboardSedesPage() {
   const [showTodasSedes, setShowTodasSedes] = useState(false);
   const [disponibilidadTodasSedes, setDisponibilidadTodasSedes] = useState<FilaDisponibilidadSede[]>([]);
   const [loadingTodasSedes, setLoadingTodasSedes] = useState(false);
+  // Asignaciones activas desde modelo_assignments (fuente de verdad para ocupación)
+  const [allAssignmentsFromApi, setAllAssignmentsFromApi] = useState<{ room_id: string; group_id: string; jornada: string; model_id?: string }[]>([]);
 
   // Estados para editar RATES de cierre
   const [showEditRatesModal, setShowEditRatesModal] = useState(false);
@@ -228,12 +230,12 @@ export default function DashboardSedesPage() {
     }
   }, [userRole, userGroups]);
 
-  // Cargar disponibilidad cuando se seleccione una sede
+  // Cargar disponibilidad cuando se seleccione una sede (y cuando lleguen las asignaciones)
   useEffect(() => {
     if (selectedSede && availableSedes.length > 0) {
       loadSedeDisponibilidad(selectedSede);
     }
-  }, [selectedSede, availableSedes]);
+  }, [selectedSede, availableSedes, allAssignmentsFromApi]);
 
   const loadUserInfo = () => {
     try {
@@ -408,26 +410,15 @@ export default function DashboardSedesPage() {
       const sedeRooms = roomsData.rooms.filter((room: Room) => room.group_id === sedeId);
       console.log('🔍 [DASHBOARD] Rooms de la sede:', sedeRooms.length);
 
-      // Obtener asignaciones de todos los rooms de la sede
-      const assignmentsPromises = sedeRooms.map(async (room: Room) => {
-        try {
-          const response = await fetch(`/api/room-assignments?roomId=${room.id}`);
-          const data = await response.json();
-          return data.success ? data.assignments : [];
-        } catch (error) {
-          console.warn(`Error obteniendo asignaciones para room ${room.id}:`, error);
-          return [];
-        }
-      });
-
-      const allAssignments = await Promise.all(assignmentsPromises);
-      const flatAssignments = allAssignments.flat();
+      // Usar asignaciones de modelo_assignments (allAssignmentsFromApi) para calcular ocupación
+      const sedeRoomIds = new Set(sedeRooms.map((r: Room) => r.id));
+      const assignmentsSede = allAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
 
       // Disponibilidad por room y jornada: máximo 2 modelos por room+jornada → disponible si count < 2
-      const porRoom: RoomJornadaDisponibilidad[] = sedeRooms.map((room: Room, idx: number) => {
-        const assignments = allAssignments[idx] as any[];
+      const porRoom: RoomJornadaDisponibilidad[] = sedeRooms.map((room: Room) => {
+        const roomAssignments = assignmentsSede.filter(a => a.room_id === room.id);
         const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
-        assignments.forEach((a: any) => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
+        roomAssignments.forEach(a => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
         return {
           room_id: room.id,
           room_name: room.room_name,
@@ -438,27 +429,17 @@ export default function DashboardSedesPage() {
       });
       setDisponibilidadPorRoom(porRoom);
 
-      // Calcular disponibilidad por jornada
+      // Calcular disponibilidad por jornada (agregados)
       const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
       const jornadasDisponibles = { manana: 0, tarde: 0, noche: 0 };
       const jornadasDobladas = { manana: 0, tarde: 0, noche: 0 };
 
       jornadas.forEach((jornada, index) => {
         const jornadaKey = index === 0 ? 'manana' : index === 1 ? 'tarde' : 'noche';
-        
-        // Contar asignaciones por jornada
-        const asignacionesJornada = flatAssignments.filter((assignment: any) => 
-          assignment.jornada === jornada
-        );
-
-        // Contar modelos únicas (para detectar doblaje)
-        const modelosUnicas = new Set(asignacionesJornada.map((a: any) => a.model_id));
-        
-        // Espacios disponibles = total rooms - asignaciones únicas
+        const asignacionesJornada = assignmentsSede.filter(a => a.jornada === jornada);
+        const modelosUnicas = new Set(asignacionesJornada.map(a => a.model_id || a.room_id + a.jornada));
         const espaciosDisponibles = Math.max(0, sedeRooms.length - modelosUnicas.size);
         jornadasDisponibles[jornadaKey] = espaciosDisponibles;
-
-        // Contar doblajes (asignaciones adicionales de modelos que ya están en otra jornada)
         const doblajes = Math.max(0, asignacionesJornada.length - modelosUnicas.size);
         jornadasDobladas[jornadaKey] = doblajes;
       });
@@ -500,21 +481,10 @@ export default function DashboardSedesPage() {
       for (const sede of availableSedes) {
         const sedeRooms = allRooms.filter((r: Room) => r.group_id === sede.id);
         if (sedeRooms.length === 0) continue;
-        const assignmentsPerRoom = await Promise.all(
-          sedeRooms.map(async (room: Room) => {
-            try {
-              const res = await fetch(`/api/room-assignments?roomId=${room.id}`);
-              const data = await res.json();
-              return data.success ? (data.assignments as any[]) : [];
-            } catch {
-              return [];
-            }
-          })
-        );
-        sedeRooms.forEach((room: Room, idx: number) => {
-          const assignments = assignmentsPerRoom[idx] || [];
+        sedeRooms.forEach((room: Room) => {
+          const roomAssignments = allAssignmentsFromApi.filter(a => a.room_id === room.id);
           const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
-          assignments.forEach((a: any) => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
+          roomAssignments.forEach(a => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
           rows.push({
             sede_id: sede.id,
             sede_nombre: sede.name,
@@ -576,6 +546,13 @@ export default function DashboardSedesPage() {
         group.name !== 'Satélites'
       );
       setAvailableSedes(sedesOperativas);
+      // Guardar asignaciones para Consultar Disponibilidad (modelo_assignments = fuente de verdad)
+      setAllAssignmentsFromApi((filteredAssignments as { room_id: string; group_id: string; jornada: string; model_id?: string }[]).map(a => ({
+        room_id: a.room_id,
+        group_id: a.group_id,
+        jornada: a.jornada,
+        model_id: a.model_id
+      })));
 
       // Calcular estadísticas reales
       const totalSedes = filteredGroups.length;
