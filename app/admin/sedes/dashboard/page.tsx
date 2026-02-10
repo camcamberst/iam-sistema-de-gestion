@@ -33,6 +33,26 @@ interface SedeDisponibilidad {
   total_espacios: number;
 }
 
+/** Por cada room: si en esa jornada hay al menos un espacio (máx 2 modelos por room+jornada). */
+interface RoomJornadaDisponibilidad {
+  room_id: string;
+  room_name: string;
+  manana: boolean;
+  tarde: boolean;
+  noche: boolean;
+}
+
+/** Fila para la tabla "todas las sedes": sede + room + jornadas. */
+interface FilaDisponibilidadSede {
+  sede_id: string;
+  sede_nombre: string;
+  room_id: string;
+  room_name: string;
+  manana: boolean;
+  tarde: boolean;
+  noche: boolean;
+}
+
 interface Group {
   id: string;
   name: string;
@@ -75,9 +95,14 @@ export default function DashboardSedesPage() {
   // Estados para resumen de disponibilidad
   const [selectedSede, setSelectedSede] = useState<string>('');
   const [sedeDisponibilidad, setSedeDisponibilidad] = useState<SedeDisponibilidad | null>(null);
+  const [disponibilidadPorRoom, setDisponibilidadPorRoom] = useState<RoomJornadaDisponibilidad[]>([]);
   const [loadingDisponibilidad, setLoadingDisponibilidad] = useState(false);
   const [availableSedes, setAvailableSedes] = useState<Group[]>([]);
   const [dropdownOpen, setDropdownOpen] = useState<string | null>(null);
+  // Ver todas las sedes en una sola tabla
+  const [showTodasSedes, setShowTodasSedes] = useState(false);
+  const [disponibilidadTodasSedes, setDisponibilidadTodasSedes] = useState<FilaDisponibilidadSede[]>([]);
+  const [loadingTodasSedes, setLoadingTodasSedes] = useState(false);
 
   // Estados para editar RATES de cierre
   const [showEditRatesModal, setShowEditRatesModal] = useState(false);
@@ -364,6 +389,7 @@ export default function DashboardSedesPage() {
   const loadSedeDisponibilidad = async (sedeId: string) => {
     if (!sedeId) {
       setSedeDisponibilidad(null);
+      setDisponibilidadPorRoom([]);
       return;
     }
 
@@ -396,6 +422,21 @@ export default function DashboardSedesPage() {
 
       const allAssignments = await Promise.all(assignmentsPromises);
       const flatAssignments = allAssignments.flat();
+
+      // Disponibilidad por room y jornada: máximo 2 modelos por room+jornada → disponible si count < 2
+      const porRoom: RoomJornadaDisponibilidad[] = sedeRooms.map((room: Room, idx: number) => {
+        const assignments = allAssignments[idx] as any[];
+        const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
+        assignments.forEach((a: any) => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
+        return {
+          room_id: room.id,
+          room_name: room.room_name,
+          manana: count['MAÑANA'] < 2,
+          tarde: count['TARDE'] < 2,
+          noche: count['NOCHE'] < 2
+        };
+      });
+      setDisponibilidadPorRoom(porRoom);
 
       // Calcular disponibilidad por jornada
       const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
@@ -443,6 +484,54 @@ export default function DashboardSedesPage() {
       setError('Error cargando disponibilidad de la sede');
     } finally {
       setLoadingDisponibilidad(false);
+    }
+  };
+
+  const loadTodasSedesDisponibilidad = async () => {
+    if (!availableSedes.length) return;
+    try {
+      setLoadingTodasSedes(true);
+      setDisponibilidadTodasSedes([]);
+      const roomsResponse = await fetch('/api/groups/rooms');
+      const roomsData = await roomsResponse.json();
+      if (!roomsData.success) throw new Error('Error obteniendo rooms');
+      const allRooms = (roomsData.rooms || []) as Room[];
+      const rows: FilaDisponibilidadSede[] = [];
+      for (const sede of availableSedes) {
+        const sedeRooms = allRooms.filter((r: Room) => r.group_id === sede.id);
+        if (sedeRooms.length === 0) continue;
+        const assignmentsPerRoom = await Promise.all(
+          sedeRooms.map(async (room: Room) => {
+            try {
+              const res = await fetch(`/api/room-assignments?roomId=${room.id}`);
+              const data = await res.json();
+              return data.success ? (data.assignments as any[]) : [];
+            } catch {
+              return [];
+            }
+          })
+        );
+        sedeRooms.forEach((room: Room, idx: number) => {
+          const assignments = assignmentsPerRoom[idx] || [];
+          const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
+          assignments.forEach((a: any) => { if (a.jornada in count) count[a.jornada as keyof typeof count]++; });
+          rows.push({
+            sede_id: sede.id,
+            sede_nombre: sede.name,
+            room_id: room.id,
+            room_name: room.room_name,
+            manana: count['MAÑANA'] < 2,
+            tarde: count['TARDE'] < 2,
+            noche: count['NOCHE'] < 2
+          });
+        });
+      }
+      setDisponibilidadTodasSedes(rows);
+    } catch (error) {
+      console.error('Error cargando disponibilidad de todas las sedes:', error);
+      setError('Error cargando disponibilidad de todas las sedes');
+    } finally {
+      setLoadingTodasSedes(false);
     }
   };
 
@@ -1172,6 +1261,7 @@ export default function DashboardSedesPage() {
                             onClick={() => {
                               setSelectedSede(sede.id);
                               setDropdownOpen(null);
+                              setShowTodasSedes(false);
                             }}
                             className={`w-full px-4 py-3 text-left text-sm transition-colors duration-200 flex items-center ${
                               index < availableSedes.length - 1 ? 'border-b border-gray-100/50 dark:border-gray-700/50' : ''
@@ -1205,9 +1295,110 @@ export default function DashboardSedesPage() {
                   </svg>
                 </button>
               )}
+              <button
+                type="button"
+                onClick={() => {
+                  setDropdownOpen(null);
+                  setSelectedSede('');
+                  setShowTodasSedes(true);
+                  loadTodasSedesDisponibilidad();
+                }}
+                disabled={!availableSedes.length || loadingTodasSedes}
+                className="px-3 py-2 sm:px-4 sm:py-2.5 text-xs sm:text-sm font-medium text-blue-700 dark:text-blue-300 bg-blue-50 dark:bg-blue-900/30 border border-blue-200/60 dark:border-blue-700/50 rounded-xl hover:bg-blue-100 dark:hover:bg-blue-900/50 focus:ring-2 focus:ring-blue-500/20 transition-all active:scale-95 touch-manipulation disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 flex-shrink-0"
+              >
+                {loadingTodasSedes ? (
+                  <>
+                    <div className="animate-spin rounded-full h-3.5 w-3.5 border-2 border-blue-600 border-t-transparent" />
+                    <span>Cargando...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 012-2h-2a2 2 0 00-2-2H6z" />
+                    </svg>
+                    <span>Ver todas las sedes</span>
+                  </>
+                )}
+              </button>
             </div>
           </div>
         </div>
+
+        {/* Tabla de disponibilidad de todas las sedes */}
+        {showTodasSedes && (
+          <div className="mb-6 sm:mb-10 relative z-0">
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+              <div className="px-3 sm:px-6 py-3 sm:py-4 border-b border-gray-200/50 dark:border-gray-600/50">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100">Disponibilidad por sede y room</h2>
+                  <button
+                    onClick={() => setShowTodasSedes(false)}
+                    className="p-1 sm:p-1.5 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors duration-200"
+                    title="Cerrar"
+                  >
+                    <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              <div className="p-3 sm:p-6">
+                {loadingTodasSedes ? (
+                  <div className="flex items-center justify-center py-8">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                    <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">Cargando todas las sedes...</span>
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-lg border border-gray-200/50 dark:border-gray-500/50">
+                    <table className="w-full text-left text-xs sm:text-sm">
+                      <thead>
+                        <tr className="bg-gray-100/80 dark:bg-gray-600/80 border-b border-gray-200 dark:border-gray-500">
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200">Sede</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200">Room</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200 text-center">Mañana</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200 text-center">Tarde</th>
+                          <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200 text-center">Noche</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-200/50 dark:divide-gray-500/50">
+                        {disponibilidadTodasSedes.map((row) => (
+                          <tr key={`${row.sede_id}-${row.room_id}`} className="bg-white/50 dark:bg-gray-700/30 hover:bg-gray-50/80 dark:hover:bg-gray-600/30">
+                            <td className="px-3 py-2 sm:px-4 sm:py-3 text-gray-900 dark:text-gray-100 font-medium">{row.sede_nombre}</td>
+                            <td className="px-3 py-2 sm:px-4 sm:py-3 text-gray-800 dark:text-gray-200">{row.room_name}</td>
+                            <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                              {row.manana ? (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                              {row.tarde ? (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                              )}
+                            </td>
+                            <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                              {row.noche ? (
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
+                              ) : (
+                                <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    {disponibilidadTodasSedes.length === 0 && !loadingTodasSedes && (
+                      <p className="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">No hay rooms en las sedes disponibles.</p>
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Resumen de Disponibilidad - Solo se muestra cuando hay una sede seleccionada */}
         {selectedSede && (
@@ -1269,6 +1460,55 @@ export default function DashboardSedesPage() {
                             <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Doblajes Activos</p>
                           </div>
                         </div>
+                      </div>
+
+                      {/* Tabla: sedes (columna) y rooms con jornada disponible (filas) */}
+                      <div className="overflow-x-auto rounded-lg border border-gray-200/50 dark:border-gray-500/50">
+                        <table className="w-full text-left text-xs sm:text-sm">
+                          <thead>
+                            <tr className="bg-gray-100/80 dark:bg-gray-600/80 border-b border-gray-200 dark:border-gray-500">
+                              <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200">Sede</th>
+                              <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200">Room</th>
+                              <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200 text-center">Mañana</th>
+                              <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200 text-center">Tarde</th>
+                              <th className="px-3 py-2 sm:px-4 sm:py-3 font-semibold text-gray-700 dark:text-gray-200 text-center">Noche</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-gray-200/50 dark:divide-gray-500/50">
+                            {disponibilidadPorRoom.map((row) => (
+                              <tr key={row.room_id} className="bg-white/50 dark:bg-gray-700/30 hover:bg-gray-50/80 dark:hover:bg-gray-600/30">
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-gray-900 dark:text-gray-100 font-medium">
+                                  {sedeDisponibilidad.sede_nombre}
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-gray-800 dark:text-gray-200">{row.room_name}</td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                                  {row.manana ? (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
+                                  ) : (
+                                    <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                                  {row.tarde ? (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
+                                  ) : (
+                                    <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                  )}
+                                </td>
+                                <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
+                                  {row.noche ? (
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
+                                  ) : (
+                                    <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                  )}
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                        {disponibilidadPorRoom.length === 0 && (
+                          <p className="text-center py-4 text-gray-500 dark:text-gray-400 text-sm">No hay rooms en esta sede.</p>
+                        )}
                       </div>
 
                       {/* Desglose por jornadas */}
