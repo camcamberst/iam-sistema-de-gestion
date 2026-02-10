@@ -132,7 +132,7 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
           closed: false 
         });
         newMessages.push({ 
-          text: `Objetivo por día: $${formatUsd(dailyAvg)} USD`, 
+          text: `Objetivo promedio por día: $${formatUsd(dailyAvg)} USD, para lograrlo`, 
           urgent: remaining > 0, 
           closed: false 
         });
