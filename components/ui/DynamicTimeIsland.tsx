@@ -164,11 +164,11 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
         <div className="relative overflow-hidden bg-gradient-to-r from-white/90 to-white/75 dark:from-gray-800/90 dark:to-gray-800/75 backdrop-blur-xl rounded-xl border border-white/40 dark:border-gray-600/50 shadow-lg shadow-blue-500/5 dark:shadow-black/20 py-1.5 px-6 flex flex-row items-center justify-between gap-6 ring-1 ring-inset ring-white/50 dark:ring-gray-500/20 h-11">
           {/* Relojes */}
           <div className="flex items-center gap-5 sm:gap-8 border-r border-gray-200/80 dark:border-gray-600/50 pr-6 h-full">
-            <ClockItem label="EUR" time={times.europe} icon="🇪🇺" color="blue" />
-            <ClockItem label="UK" time={times.uk} icon="🇬🇧" color="purple" />
-            <ClockItem label="JPN" time={times.japan} icon="🇯🇵" color="red" />
+            <ClockItem label="EUR" time={times.europe} flagCode="eu" color="blue" />
+            <ClockItem label="UK" time={times.uk} flagCode="gb" color="purple" />
+            <ClockItem label="JPN" time={times.japan} flagCode="jp" color="red" />
             <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 dark:from-gray-700/60 dark:to-gray-700/60 rounded-lg border border-emerald-200/60 dark:border-gray-600/50">
-              <span className="text-base leading-none" aria-hidden>🇨🇴</span>
+              <img src="https://flagcdn.com/w20/co.png" alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" width={20} height={14} />
               <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">COL</span>
               <span className="text-xs font-mono font-medium text-gray-800 dark:text-gray-200">{times.colombia}</span>
             </div>
@@ -241,31 +241,34 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
   );
 }
 
-function ClockItem({ label, time, icon, color }: { label: string; time: string; icon: string; color: 'blue' | 'purple' | 'red' }) {
+function ClockItem({ label, time, flagCode, color }: { label: string; time: string; flagCode: string; color: 'blue' | 'purple' | 'red' }) {
   const colorMap = {
     blue: 'from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500',
     purple: 'from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500',
     red: 'from-red-500 to-red-600 dark:from-red-400 dark:to-red-500'
   };
 
-  // Extraer hora y AM/PM del string formateado
   const parts = time.split('\u00A0');
   const mainTime = parts[0] || time.split(' ')[0];
   let ampm = parts[1] || time.split(' ')[1] || '';
-  
-  // Solo la primera letra (A o P)
   ampm = ampm.charAt(0).toUpperCase();
 
   return (
     <div className="flex items-center gap-2">
-      {/* Banderas en lugar del texto gris/negro; código ISO en blanco */}
-      <span className="text-base leading-none" aria-hidden>{icon}</span>
-      <span className="text-[10px] font-semibold text-white dark:text-white uppercase tracking-wide">{label}</span>
+      {/* Imagen de bandera (se ve en todos los sistemas; los emojis en Windows muestran EU/GB/JP) */}
+      <img
+        src={`https://flagcdn.com/w20/${flagCode}.png`}
+        alt=""
+        className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0"
+        width={20}
+        height={14}
+      />
+      <span className="text-[10px] font-semibold text-gray-800 dark:text-white uppercase tracking-wide">{label}</span>
       <div className="flex items-center gap-1">
         <span className={`text-sm font-mono font-semibold bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
           {mainTime}
         </span>
-        <span className="text-[9px] font-semibold text-white/60 dark:text-white/60">
+        <span className="text-[9px] font-semibold text-gray-500 dark:text-white/60">
           {ampm}
         </span>
       </div>
