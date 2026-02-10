@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
-import { getColombiaPeriodStartDate } from '@/utils/calculator-dates';
+import { getColombiaPeriodStartDate, getColombiaDate } from '@/utils/calculator-dates';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
@@ -73,6 +73,7 @@ export default function ModelCalculatorPage() {
   const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
   // Resumen periodo/objetivo para la barra horaria (solo modelo)
   const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
+  const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
   
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
@@ -418,6 +419,12 @@ export default function ModelCalculatorPage() {
       }
     };
     load();
+  }, []);
+
+  // Rotar mensaje de la barra "Objetivo Básico" cada 7 s (progreso ↔ promedio diario)
+  useEffect(() => {
+    const t = setInterval(() => setObjectiveBarFlip((f) => f + 1), 7000);
+    return () => clearInterval(t);
   }, []);
 
   const loadCalculatorConfig = async (userId: string) => {
@@ -1661,10 +1668,20 @@ export default function ModelCalculatorPage() {
                         {(() => {
                           const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
                           const remainingPct = Math.max(0, 100 - roundedProgress);
+                          const colDate = getColombiaDate();
+                          const [y, m, d] = colDate.split('-').map(Number);
+                          const lastDay = new Date(y, m, 0).getDate();
+                          const nextClosure = d <= 15 ? 15 : lastDay;
+                          const daysLeft = Math.max(0, nextClosure - d);
+                          const remaining = periodGoal ? Math.max(0, periodGoal.goalUsd - periodGoal.periodBilledUsd) : 0;
+                          const dailyAvg = daysLeft > 0 ? remaining / daysLeft : 0;
+                          const showPromedio = estaPorDebajo && dailyAvg > 0 && (objectiveBarFlip % 2 === 1);
                           return (
                             <div className={`text-[9px] sm:text-xs font-medium`} style={{ color: subTextColor }}>
                               {estaPorDebajo
-                                ? `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
+                                ? showPromedio
+                                  ? `Para alcanzar tu objetivo necesitas facturar $${Math.round(dailyAvg).toLocaleString('es-CO')} en promedio`
+                                  : `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
                                 : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
                             </div>
                           );
