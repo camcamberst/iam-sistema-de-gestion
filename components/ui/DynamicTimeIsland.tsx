@@ -132,7 +132,7 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
           closed: false 
         });
         newMessages.push({ 
-          text: `Para alcanzar tu objetivo: ~$${formatUsd(dailyAvg)}/día en promedio`, 
+          text: `Objetivo por día: $${formatUsd(dailyAvg)} USD`, 
           urgent: remaining > 0, 
           closed: false 
         });
@@ -146,12 +146,12 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
     return () => clearInterval(timer);
   }, [objetivoUsd, facturadoPeriodoUsd]);
 
-  // Efecto para rotar el ticker cada 4 segundos
+  // Rotar el ticker cada 7 segundos para que el texto informativo se lea con calma
   useEffect(() => {
     if (messages.length <= 1) return;
     const tickerTimer = setInterval(() => {
       setTickerIndex((prev) => (prev + 1) % messages.length);
-    }, 4000);
+    }, 7000);
     return () => clearInterval(tickerTimer);
   }, [messages.length]);
 
