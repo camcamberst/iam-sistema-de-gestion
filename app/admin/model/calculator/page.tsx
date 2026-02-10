@@ -1680,7 +1680,7 @@ export default function ModelCalculatorPage() {
                             <div
                               className={`text-[9px] sm:text-xs leading-tight transition-all duration-300 ${
                                 showPromedio
-                                  ? 'font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 dark:bg-emerald-400/25 text-emerald-800 dark:text-emerald-200 ring-1 ring-emerald-400/40 dark:ring-emerald-300/30'
+                                  ? 'font-semibold text-gray-900 dark:text-white pl-1.5 border-l-2 border-emerald-500 dark:border-emerald-400'
                                   : 'font-medium'
                               }`}
                               style={!showPromedio ? { color: subTextColor } : undefined}
