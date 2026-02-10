@@ -168,7 +168,8 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
             <ClockItem label="UK" time={times.uk} icon="🇬🇧" color="purple" />
             <ClockItem label="JPN" time={times.japan} icon="🇯🇵" color="red" />
             <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 dark:from-gray-700/60 dark:to-gray-700/60 rounded-lg border border-emerald-200/60 dark:border-gray-600/50">
-              <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">COL</span>
+              <span className="text-base leading-none" aria-hidden>🇨🇴</span>
+              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">COL</span>
               <span className="text-xs font-mono font-medium text-gray-800 dark:text-gray-200">{times.colombia}</span>
             </div>
           </div>
@@ -257,8 +258,9 @@ function ClockItem({ label, time, icon, color }: { label: string; time: string; 
 
   return (
     <div className="flex items-center gap-2">
-      {/* Mostrar solo la bandera como identificador visual del país/región */}
-      <span className="text-base leading-none">{icon}</span>
+      {/* Banderas en lugar del texto gris/negro; código ISO en blanco */}
+      <span className="text-base leading-none" aria-hidden>{icon}</span>
+      <span className="text-[10px] font-semibold text-white dark:text-white uppercase tracking-wide">{label}</span>
       <div className="flex items-center gap-1">
         <span className={`text-sm font-mono font-semibold bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
           {mainTime}
