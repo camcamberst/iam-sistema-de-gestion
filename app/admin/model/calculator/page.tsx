@@ -1677,7 +1677,14 @@ export default function ModelCalculatorPage() {
                           const dailyAvg = daysLeft > 0 ? remaining / daysLeft : 0;
                           const showPromedio = estaPorDebajo && dailyAvg > 0 && (objectiveBarFlip % 2 === 1);
                           return (
-                            <div className={`text-[9px] sm:text-xs font-medium`} style={{ color: subTextColor }}>
+                            <div
+                              className={`text-[9px] sm:text-xs leading-tight transition-all duration-300 ${
+                                showPromedio
+                                  ? 'font-semibold px-2 py-0.5 rounded-md bg-emerald-500/20 dark:bg-emerald-400/25 text-emerald-800 dark:text-emerald-200 ring-1 ring-emerald-400/40 dark:ring-emerald-300/30'
+                                  : 'font-medium'
+                              }`}
+                              style={!showPromedio ? { color: subTextColor } : undefined}
+                            >
                               {estaPorDebajo
                                 ? showPromedio
                                   ? `Para alcanzar tu objetivo necesitas facturar $${Math.round(dailyAvg).toLocaleString('es-CO')} en promedio`
