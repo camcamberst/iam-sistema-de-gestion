@@ -36,6 +36,7 @@ export default function ModelDashboard() {
   const [loading, setLoading] = useState(true);
   const [productivityData, setProductivityData] = useState<ProductivityData | null>(null);
   const [productivityLoading, setProductivityLoading] = useState(false);
+  const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
   const router = useRouter();
   const supabase = require('@/lib/supabase').supabase;
 
@@ -76,9 +77,16 @@ export default function ModelDashboard() {
         };
         setUser(current);
         
-        // Cargar datos de productividad si es modelo
+        // Cargar datos de productividad y resumen periodo/objetivo si es modelo
         if (current.role === 'modelo') {
           await loadProductivityData(current.id);
+          try {
+            const res = await fetch(`/api/calculator/period-goal-summary?modelId=${current.id}`, { cache: 'no-store' });
+            const json = await res.json();
+            if (json?.success && typeof json.goalUsd === 'number') {
+              setPeriodGoal({ goalUsd: json.goalUsd, periodBilledUsd: json.periodBilledUsd ?? 0 });
+            }
+          } catch (_) {}
         }
       } finally {
         setLoading(false);
@@ -111,16 +119,28 @@ export default function ModelDashboard() {
     }
   }, [loading, productivityLoading, user]);
 
+  const refreshPeriodGoal = async (userId: string) => {
+    try {
+      const res = await fetch(`/api/calculator/period-goal-summary?modelId=${userId}`, { cache: 'no-store' });
+      const json = await res.json();
+      if (json?.success && typeof json.goalUsd === 'number') {
+        setPeriodGoal({ goalUsd: json.goalUsd, periodBilledUsd: json.periodBilledUsd ?? 0 });
+      }
+    } catch (_) {}
+  };
+
   // Refrescar datos al volver a la pestaña/ventana o al volver desde otra ruta
   useEffect(() => {
     const handleFocus = () => {
       if (user?.role === 'modelo') {
         loadProductivityData(user.id);
+        refreshPeriodGoal(user.id);
       }
     };
     const handleVisibility = () => {
       if (document.visibilityState === 'visible' && user?.role === 'modelo') {
         loadProductivityData(user.id);
+        refreshPeriodGoal(user.id);
       }
     };
     window.addEventListener('focus', handleFocus);
@@ -349,7 +369,11 @@ export default function ModelDashboard() {
         </div>
 
         {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
-        <DynamicTimeIsland className="!max-w-none !px-0" />
+        <DynamicTimeIsland
+          className="!max-w-none !px-0"
+          objetivoUsd={user?.role === 'modelo' ? periodGoal?.goalUsd : undefined}
+          facturadoPeriodoUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsd : undefined}
+        />
 
         {/* Corcho Informativo - Widget */}
         <div className="mb-4 sm:mb-6">

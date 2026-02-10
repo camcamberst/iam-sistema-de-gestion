@@ -71,6 +71,8 @@ export default function ModelCalculatorPage() {
   
   // 🔧 EARLY FREEZE: Estado para plataformas congeladas
   const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
+  // Resumen periodo/objetivo para la barra horaria (solo modelo)
+  const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
   
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
@@ -400,13 +402,23 @@ export default function ModelCalculatorPage() {
           await loadCalculatorConfig(current.id);
           setConfigLoaded(true);
         }
+
+        // Resumen periodo/objetivo para la barra horaria
+        if (current.role === 'modelo') {
+          try {
+            const res = await fetch(`/api/calculator/period-goal-summary?modelId=${current.id}`, { cache: 'no-store' });
+            const json = await res.json();
+            if (json?.success && typeof json.goalUsd === 'number') {
+              setPeriodGoal({ goalUsd: json.goalUsd, periodBilledUsd: json.periodBilledUsd ?? 0 });
+            }
+          } catch (_) {}
+        }
       } finally {
         setLoading(false);
       }
     };
     load();
   }, []);
-
 
   const loadCalculatorConfig = async (userId: string) => {
     // 🔧 FIX: Prevenir doble carga usando estado
@@ -970,7 +982,11 @@ export default function ModelCalculatorPage() {
         </div>
 
         {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
-        <DynamicTimeIsland className="!max-w-none !px-0" />
+        <DynamicTimeIsland
+          className="!max-w-none !px-0"
+          objetivoUsd={user?.role === 'modelo' ? periodGoal?.goalUsd : undefined}
+          facturadoPeriodoUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsd : undefined}
+        />
 
         {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
         <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">

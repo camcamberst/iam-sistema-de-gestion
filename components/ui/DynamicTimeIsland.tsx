@@ -5,9 +5,13 @@ import { getEuropeanCentralMidnightInColombia, getColombiaDate } from '@/utils/p
 
 interface DynamicTimeIslandProps {
   className?: string;
+  /** Objetivo básico en USD (cuota mínima de la modelo). Si se pasa junto con facturadoPeriodoUsd, se muestran mensajes de promedio diario. */
+  objetivoUsd?: number;
+  /** Total facturado en el periodo actual en USD modelo. */
+  facturadoPeriodoUsd?: number;
 }
 
-export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandProps) {
+export default function DynamicTimeIsland({ className = '', objetivoUsd, facturadoPeriodoUsd }: DynamicTimeIslandProps) {
   const [times, setTimes] = useState({
     europe: '',
     japan: '',
@@ -45,6 +49,8 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
       const lastDayOfMonth = new Date(year, month, 0).getDate();
       
       const isClosureDay = day === 15 || day === lastDayOfMonth;
+      const nextClosureDay = day < 15 ? 15 : lastDayOfMonth;
+      const daysLeft = Math.max(0, nextClosureDay - day);
       
       const newMessages: Array<{ text: string; urgent: boolean; closed: boolean }> = [];
 
@@ -55,12 +61,9 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
         return `${h}h ${m}m`;
       };
 
-      // 30 minutos en milisegundos
       const THIRTY_MINUTES = 30 * 60 * 1000;
 
-      // DÍAS DE CIERRE (15 y fin de mes): Mostrar los 3 contadores
       if (isClosureDay) {
-        // 1. DXLive (10:00 AM Colombia del DÍA ACTUAL de cierre)
         const dxTarget = new Date(now);
         dxTarget.setHours(10, 0, 0, 0);
         const diffDx = dxTarget.getTime() - now.getTime();
@@ -73,26 +76,20 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
           closed: dxClosed
         });
 
-        // 2. Páginas Eur (Medianoche Europa Central del DÍA ACTUAL de cierre)
         const europeMidnight = getEuropeanCentralMidnightInColombia(now);
         let eurTarget = europeMidnight.colombiaDateTime;
-        
-        // Obtener fecha en Colombia del eurTarget
         const eurTargetColDate = new Intl.DateTimeFormat('en-CA', {
           timeZone: 'America/Bogota',
           year: 'numeric',
           month: '2-digit',
           day: '2-digit'
         }).format(eurTarget);
-        
-        // Si el target es de ayer, recalcular para hoy
         if (eurTargetColDate < colDate) {
           const tomorrow = new Date(now);
           tomorrow.setDate(tomorrow.getDate() + 1);
           const tomorrowMidnight = getEuropeanCentralMidnightInColombia(tomorrow);
           eurTarget = tomorrowMidnight.colombiaDateTime;
         }
-        
         const diffEur = eurTarget.getTime() - now.getTime();
         const eurStatus = formatDiff(diffEur);
         const eurUrgent = diffEur > 0 && diffEur <= THIRTY_MINUTES;
@@ -103,7 +100,6 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
           closed: eurClosed
         });
 
-        // 3. Cierre Total (Medianoche Colombia del día siguiente)
         const totalTarget = new Date(now);
         totalTarget.setHours(24, 0, 0, 0);
         const diffTotal = totalTarget.getTime() - now.getTime();
@@ -116,13 +112,29 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
           closed: totalClosed
         });
       } else {
-        // DÍAS NORMALES: Mostrar cuántos días faltan
-        const nextClosureDay = day < 15 ? 15 : lastDayOfMonth;
-        const daysLeft = nextClosureDay - day;
         newMessages.push({ 
           text: `${daysLeft} ${daysLeft === 1 ? 'día' : 'días'} para el próximo cierre de periodo`, 
           urgent: false,
           closed: false
+        });
+      }
+
+      // Mensajes de objetivo (solo si hay datos y quedan días): rotan en el mismo espacio
+      const goal = typeof objetivoUsd === 'number' && objetivoUsd > 0;
+      const billed = typeof facturadoPeriodoUsd === 'number';
+      if (goal && billed && !isClosureDay && daysLeft > 0) {
+        const remaining = Math.max(0, objetivoUsd - facturadoPeriodoUsd);
+        const dailyAvg = remaining / daysLeft;
+        const formatUsd = (n: number) => n.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+        newMessages.push({ 
+          text: `Facturado este periodo: $${formatUsd(facturadoPeriodoUsd)} USD`, 
+          urgent: false, 
+          closed: false 
+        });
+        newMessages.push({ 
+          text: `Para alcanzar tu objetivo: ~$${formatUsd(dailyAvg)}/día en promedio`, 
+          urgent: remaining > 0, 
+          closed: false 
         });
       }
 
@@ -132,7 +144,7 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
     updateTimes();
     const timer = setInterval(updateTimes, 1000);
     return () => clearInterval(timer);
-  }, []);
+  }, [objetivoUsd, facturadoPeriodoUsd]);
 
   // Efecto para rotar el ticker cada 4 segundos
   useEffect(() => {
@@ -147,42 +159,39 @@ export default function DynamicTimeIsland({ className = '' }: DynamicTimeIslandP
 
   return (
     <div className={`w-full max-w-full mx-auto mb-6 px-2 ${className}`}>
-      {/* Efecto de fondo glassmorphism */}
       <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 rounded-2xl blur-xl"></div>
-        
-        <div className="relative overflow-hidden bg-white/70 dark:bg-gray-800/70 backdrop-blur-xl rounded-xl border border-white/30 dark:border-gray-700/40 shadow-lg py-1.5 px-6 flex flex-row items-center justify-between gap-6 ring-1 ring-blue-500/10 dark:ring-blue-400/10 h-11">
-          
-          {/* Sección Relojes: Compacta y horizontal */}
-          <div className="flex items-center gap-5 sm:gap-8 border-r border-gray-300/50 dark:border-gray-600/50 pr-6 h-full">
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 via-indigo-500/10 to-violet-500/15 rounded-2xl blur-xl" />
+        <div className="relative overflow-hidden bg-gradient-to-r from-white/90 to-white/75 dark:from-gray-800/90 dark:to-gray-800/75 backdrop-blur-xl rounded-xl border border-white/40 dark:border-gray-600/50 shadow-lg shadow-blue-500/5 dark:shadow-black/20 py-1.5 px-6 flex flex-row items-center justify-between gap-6 ring-1 ring-inset ring-white/50 dark:ring-gray-500/20 h-11">
+          {/* Relojes */}
+          <div className="flex items-center gap-5 sm:gap-8 border-r border-gray-200/80 dark:border-gray-600/50 pr-6 h-full">
             <ClockItem label="EUR" time={times.europe} icon="🇪🇺" color="blue" />
             <ClockItem label="UK" time={times.uk} icon="🇬🇧" color="purple" />
             <ClockItem label="JPN" time={times.japan} icon="🇯🇵" color="red" />
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-gray-700/50 dark:to-gray-700/50 rounded-lg border border-blue-200/50 dark:border-gray-600/50">
-              <span className="text-[9px] font-semibold text-blue-600 dark:text-blue-400 uppercase tracking-wide">COL</span>
+            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 dark:from-gray-700/60 dark:to-gray-700/60 rounded-lg border border-emerald-200/60 dark:border-gray-600/50">
+              <span className="text-[9px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">COL</span>
               <span className="text-xs font-mono font-medium text-gray-800 dark:text-gray-200">{times.colombia}</span>
             </div>
           </div>
 
-          {/* Sección Ticker: Dinámica y fluida */}
-          <div className="flex-1 flex items-center overflow-hidden h-full relative">
+          {/* Ticker: mismo espacio, mensajes rotativos */}
+          <div className="flex-1 flex items-center overflow-hidden h-full relative min-w-0">
             {currentMessage && (
               <div 
                 key={tickerIndex}
-                className="flex items-center gap-3 animate-fade-in-smooth whitespace-nowrap"
+                className="flex items-center gap-3 animate-fade-in-smooth whitespace-nowrap min-w-0"
               >
                 <span className={`flex h-1.5 w-1.5 rounded-full flex-shrink-0 ${
                   currentMessage.closed
                     ? 'bg-purple-500 dark:bg-purple-400'
                     : currentMessage.urgent 
-                    ? 'bg-orange-500 animate-pulse-fast' 
-                    : 'bg-blue-500 animate-pulse-slow'
+                    ? 'bg-amber-500 dark:bg-amber-400 animate-pulse-fast' 
+                    : 'bg-emerald-500 dark:bg-emerald-400 animate-pulse-slow'
                 }`} />
-                <p className={`text-xs sm:text-sm font-medium uppercase tracking-wide ${
+                <p className={`text-xs sm:text-sm font-medium tracking-wide truncate ${
                   currentMessage.closed
                     ? 'text-purple-600 dark:text-purple-400'
                     : currentMessage.urgent 
-                    ? 'text-orange-600 dark:text-orange-400 animate-blink' 
+                    ? 'text-amber-600 dark:text-amber-400 animate-blink' 
                     : 'text-gray-700 dark:text-gray-200'
                 }`}>
                   {currentMessage.text}
