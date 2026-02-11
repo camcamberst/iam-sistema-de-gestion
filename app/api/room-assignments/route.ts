@@ -14,8 +14,10 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
+    // Sin roomId: consultar la TABLA room_assignments (no la vista) para no perder filas por JOINs
+    const tableName = roomId ? 'room_assignments_detailed' : 'room_assignments';
     let query = supabase
-      .from('room_assignments_detailed')
+      .from(tableName)
       .select('id, model_id, room_id, jornada, assigned_at')
       .order('jornada', { ascending: true });
 
@@ -23,7 +25,7 @@ export async function GET(request: NextRequest) {
       console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo asignaciones para room:', roomId);
       query = query.eq('room_id', roomId);
     } else {
-      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo todas las asignaciones (para disponibilidad)');
+      console.log('🔍 [ROOM-ASSIGNMENTS] Obteniendo todas las asignaciones desde tabla room_assignments');
     }
 
     const { data: assignments, error } = await query;

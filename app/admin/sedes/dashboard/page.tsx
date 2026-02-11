@@ -412,15 +412,13 @@ export default function DashboardSedesPage() {
       const sedeRooms = roomsData.rooms.filter((room: Room) => room.group_id === sedeId);
       console.log('🔍 [DASHBOARD] Rooms de la sede:', sedeRooms.length);
 
-      // Combinar modelo_assignments + room_assignments: por (room_id, jornada) contar model_ids únicos
+      // Fuente única: room_assignments (donde se guarda al crear modelo y asignar room+jornada)
       const sedeRoomIds = new Set(sedeRooms.map((r: Room) => r.id));
       const getCountForRoom = (roomId: string) => {
         const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
         ['MAÑANA', 'TARDE', 'NOCHE'].forEach(j => {
-          const fromModelo = allAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id || a.room_id + j);
-          const fromRoom = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id);
-          const unicos = new Set([...fromModelo, ...fromRoom]);
-          count[j as keyof typeof count] = unicos.size;
+          const enJornada = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j);
+          count[j as keyof typeof count] = enJornada.length;
         });
         return count;
       };
@@ -438,8 +436,7 @@ export default function DashboardSedesPage() {
       });
       setDisponibilidadPorRoom(porRoom);
 
-      // Calcular disponibilidad por jornada (agregados) con ambas fuentes
-      const assignmentsSedeModelo = allAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
+      // Resumen por jornada (solo room_assignments)
       const assignmentsSedeRoom = allRoomAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
       const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
       const jornadasDisponibles = { manana: 0, tarde: 0, noche: 0 };
@@ -447,13 +444,10 @@ export default function DashboardSedesPage() {
 
       jornadas.forEach((jornada, index) => {
         const jornadaKey = index === 0 ? 'manana' : index === 1 ? 'tarde' : 'noche';
-        const fromModelo = assignmentsSedeModelo.filter(a => a.jornada === jornada).map(a => a.model_id || a.room_id + a.jornada);
-        const fromRoom = assignmentsSedeRoom.filter(a => a.jornada === jornada).map(a => a.model_id);
-        const modelosUnicas = new Set([...fromModelo, ...fromRoom]);
-        const espaciosDisponibles = Math.max(0, sedeRooms.length * 2 - modelosUnicas.size);
-        jornadasDisponibles[jornadaKey] = Math.min(sedeRooms.length * 2, espaciosDisponibles);
-        const totalAsignaciones = assignmentsSedeModelo.filter(a => a.jornada === jornada).length + assignmentsSedeRoom.filter(a => a.jornada === jornada).length;
-        jornadasDobladas[jornadaKey] = Math.max(0, totalAsignaciones - modelosUnicas.size);
+        const enJornada = assignmentsSedeRoom.filter(a => a.jornada === jornada);
+        const ocupados = Math.min(enJornada.length, sedeRooms.length * 2);
+        jornadasDisponibles[jornadaKey] = Math.max(0, sedeRooms.length * 2 - ocupados);
+        jornadasDobladas[jornadaKey] = Math.max(0, enJornada.length - sedeRooms.length);
       });
 
       // Obtener información de la sede
@@ -493,10 +487,7 @@ export default function DashboardSedesPage() {
       const getCountForRoom = (roomId: string) => {
         const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
         ['MAÑANA', 'TARDE', 'NOCHE'].forEach(j => {
-          const fromModelo = allAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id || a.room_id + j);
-          const fromRoom = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).map(a => a.model_id);
-          const unicos = new Set([...fromModelo, ...fromRoom]);
-          count[j as keyof typeof count] = unicos.size;
+          count[j as keyof typeof count] = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).length;
         });
         return count;
       };
