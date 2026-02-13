@@ -18,19 +18,9 @@ interface DashboardStats {
 interface SedeDisponibilidad {
   sede_id: string;
   sede_nombre: string;
-  rooms_disponibles: number;
   rooms_totales: number;
-  jornadas_disponibles: {
-    manana: number;
-    tarde: number;
-    noche: number;
-  };
-  jornadas_dobladas: {
-    manana: number;
-    tarde: number;
-    noche: number;
-  };
   total_espacios: number;
+  espacios_disponibles: number; // slots (room+jornada) con disponibilidad
 }
 
 /** Por cada room: si en esa jornada hay al menos un espacio (máx 2 modelos por room+jornada). */
@@ -103,10 +93,6 @@ export default function DashboardSedesPage() {
   const [showTodasSedes, setShowTodasSedes] = useState(false);
   const [disponibilidadTodasSedes, setDisponibilidadTodasSedes] = useState<FilaDisponibilidadSede[]>([]);
   const [loadingTodasSedes, setLoadingTodasSedes] = useState(false);
-  // Asignaciones activas desde modelo_assignments (fuente de verdad para ocupación)
-  const [allAssignmentsFromApi, setAllAssignmentsFromApi] = useState<{ room_id: string; group_id: string; jornada: string; model_id?: string }[]>([]);
-  // Asignaciones desde room_assignments (combinar con modelo_assignments por si los datos están en una u otra tabla)
-  const [allRoomAssignmentsFromApi, setAllRoomAssignmentsFromApi] = useState<{ room_id: string; jornada: string; model_id: string }[]>([]);
 
   // Estados para editar RATES de cierre
   const [showEditRatesModal, setShowEditRatesModal] = useState(false);
@@ -237,7 +223,7 @@ export default function DashboardSedesPage() {
     if (selectedSede && availableSedes.length > 0) {
       loadSedeDisponibilidad(selectedSede);
     }
-  }, [selectedSede, availableSedes, allAssignmentsFromApi, allRoomAssignmentsFromApi]);
+  }, [selectedSede, availableSedes]);
 
   const loadUserInfo = () => {
     try {
@@ -399,73 +385,31 @@ export default function DashboardSedesPage() {
 
     try {
       setLoadingDisponibilidad(true);
-      console.log('🔍 [DASHBOARD] Cargando disponibilidad para sede:', sedeId);
-
-      // Obtener rooms de la sede
-      const roomsResponse = await fetch('/api/groups/rooms');
-      const roomsData = await roomsResponse.json();
-      
-      if (!roomsData.success) {
-        throw new Error('Error obteniendo rooms');
-      }
-
-      const sedeRooms = roomsData.rooms.filter((room: Room) => room.group_id === sedeId);
-      console.log('🔍 [DASHBOARD] Rooms de la sede:', sedeRooms.length);
-
-      // Fuente única: room_assignments (donde se guarda al crear modelo y asignar room+jornada)
-      const sedeRoomIds = new Set(sedeRooms.map((r: Room) => r.id));
-      const getCountForRoom = (roomId: string) => {
-        const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
-        ['MAÑANA', 'TARDE', 'NOCHE'].forEach(j => {
-          const enJornada = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j);
-          count[j as keyof typeof count] = enJornada.length;
+      const res = await fetch(`/api/sedes/disponibilidad?sedeId=${encodeURIComponent(sedeId)}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Error obteniendo disponibilidad');
+      setDisponibilidadPorRoom(data.rows || []);
+      if (data.summary) {
+        setSedeDisponibilidad({
+          sede_id: sedeId,
+          sede_nombre: data.summary.sede_nombre,
+          rooms_totales: data.summary.rooms_totales,
+          total_espacios: data.summary.total_espacios,
+          espacios_disponibles: data.summary.espacios_disponibles ?? 0
         });
-        return count;
-      };
-
-      // Disponibilidad por room y jornada: máximo 2 modelos por room+jornada → disponible si count < 2
-      const porRoom: RoomJornadaDisponibilidad[] = sedeRooms.map((room: Room) => {
-        const count = getCountForRoom(room.id);
-        return {
-          room_id: room.id,
-          room_name: room.room_name,
-          manana: count['MAÑANA'] < 2,
-          tarde: count['TARDE'] < 2,
-          noche: count['NOCHE'] < 2
-        };
-      });
-      setDisponibilidadPorRoom(porRoom);
-
-      // Resumen por jornada (solo room_assignments)
-      const assignmentsSedeRoom = allRoomAssignmentsFromApi.filter(a => sedeRoomIds.has(a.room_id));
-      const jornadas = ['MAÑANA', 'TARDE', 'NOCHE'];
-      const jornadasDisponibles = { manana: 0, tarde: 0, noche: 0 };
-      const jornadasDobladas = { manana: 0, tarde: 0, noche: 0 };
-
-      jornadas.forEach((jornada, index) => {
-        const jornadaKey = index === 0 ? 'manana' : index === 1 ? 'tarde' : 'noche';
-        const enJornada = assignmentsSedeRoom.filter(a => a.jornada === jornada);
-        const ocupados = Math.min(enJornada.length, sedeRooms.length * 2);
-        jornadasDisponibles[jornadaKey] = Math.max(0, sedeRooms.length * 2 - ocupados);
-        jornadasDobladas[jornadaKey] = Math.max(0, enJornada.length - sedeRooms.length);
-      });
-
-      // Obtener información de la sede
-      const sedeInfo = availableSedes.find(sede => sede.id === sedeId);
-      
-      const disponibilidad: SedeDisponibilidad = {
-        sede_id: sedeId,
-        sede_nombre: sedeInfo?.name || 'Sede Desconocida',
-        rooms_disponibles: sedeRooms.filter((room: Room) => room.is_active).length,
-        rooms_totales: sedeRooms.length,
-        jornadas_disponibles: jornadasDisponibles,
-        jornadas_dobladas: jornadasDobladas,
-        total_espacios: sedeRooms.length * 3 // 3 jornadas por room
-      };
-
-      setSedeDisponibilidad(disponibilidad);
-      console.log('✅ [DASHBOARD] Disponibilidad calculada:', disponibilidad);
-
+      } else {
+        const rows = data.rows || [];
+        const espaciosDisponibles = rows.reduce((acc: number, r: any) =>
+          acc + (r.manana ? 1 : 0) + (r.tarde ? 1 : 0) + (r.noche ? 1 : 0), 0);
+        const sedeInfo = availableSedes.find(s => s.id === sedeId);
+        setSedeDisponibilidad({
+          sede_id: sedeId,
+          sede_nombre: sedeInfo?.name || 'Sede',
+          rooms_totales: rows.length,
+          total_espacios: rows.length * 3,
+          espacios_disponibles: espaciosDisponibles
+        });
+      }
     } catch (error) {
       console.error('❌ [DASHBOARD] Error cargando disponibilidad:', error);
       setError('Error cargando disponibilidad de la sede');
@@ -479,35 +423,11 @@ export default function DashboardSedesPage() {
     try {
       setLoadingTodasSedes(true);
       setDisponibilidadTodasSedes([]);
-      const roomsResponse = await fetch('/api/groups/rooms');
-      const roomsData = await roomsResponse.json();
-      if (!roomsData.success) throw new Error('Error obteniendo rooms');
-      const allRooms = (roomsData.rooms || []) as Room[];
-      const rows: FilaDisponibilidadSede[] = [];
-      const getCountForRoom = (roomId: string) => {
-        const count = { MAÑANA: 0, TARDE: 0, NOCHE: 0 };
-        ['MAÑANA', 'TARDE', 'NOCHE'].forEach(j => {
-          count[j as keyof typeof count] = allRoomAssignmentsFromApi.filter(a => a.room_id === roomId && a.jornada === j).length;
-        });
-        return count;
-      };
-      for (const sede of availableSedes) {
-        const sedeRooms = allRooms.filter((r: Room) => r.group_id === sede.id);
-        if (sedeRooms.length === 0) continue;
-        sedeRooms.forEach((room: Room) => {
-          const count = getCountForRoom(room.id);
-          rows.push({
-            sede_id: sede.id,
-            sede_nombre: sede.name,
-            room_id: room.id,
-            room_name: room.room_name,
-            manana: count['MAÑANA'] < 2,
-            tarde: count['TARDE'] < 2,
-            noche: count['NOCHE'] < 2
-          });
-        });
-      }
-      setDisponibilidadTodasSedes(rows);
+      const sedeIds = availableSedes.map(s => s.id).join(',');
+      const res = await fetch(`/api/sedes/disponibilidad?sedeIds=${encodeURIComponent(sedeIds)}`);
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error || 'Error obteniendo disponibilidad');
+      setDisponibilidadTodasSedes(data.rows || []);
     } catch (error) {
       console.error('Error cargando disponibilidad de todas las sedes:', error);
       setError('Error cargando disponibilidad de todas las sedes');
@@ -522,7 +442,7 @@ export default function DashboardSedesPage() {
       setError(null);
 
       // Cargar datos reales desde la API con filtrado por rol
-      const [groupsResponse, roomsResponse, usersResponse, assignmentsResponse, roomAssignmentsAllResponse] = await Promise.all([
+      const [groupsResponse, roomsResponse, usersResponse, assignmentsResponse] = await Promise.all([
         fetch('/api/groups', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -530,16 +450,14 @@ export default function DashboardSedesPage() {
         }),
         fetch('/api/groups/rooms'),
         fetch('/api/users'),
-        fetch('/api/assignments/all'),
-        fetch('/api/room-assignments')
+        fetch('/api/assignments/all')
       ]);
 
-      const [groupsData, roomsData, usersData, assignmentsData, roomAssignmentsAllData] = await Promise.all([
+      const [groupsData, roomsData, usersData, assignmentsData] = await Promise.all([
         groupsResponse.json(),
         roomsResponse.json(),
         usersResponse.json(),
-        assignmentsResponse.json(),
-        roomAssignmentsAllResponse.json()
+        assignmentsResponse.json()
       ]);
 
       // Filtrar datos según el rol del usuario
@@ -559,21 +477,6 @@ export default function DashboardSedesPage() {
         group.name !== 'Satélites'
       );
       setAvailableSedes(sedesOperativas);
-      // Guardar asignaciones para Consultar Disponibilidad (modelo_assignments + room_assignments)
-      setAllAssignmentsFromApi((filteredAssignments as { room_id: string; group_id: string; jornada: string; model_id?: string }[]).map(a => ({
-        room_id: a.room_id,
-        group_id: a.group_id,
-        jornada: a.jornada,
-        model_id: a.model_id
-      })));
-      const roomAssignmentsAll = roomAssignmentsAllData.success && Array.isArray(roomAssignmentsAllData.assignments)
-        ? (roomAssignmentsAllData.assignments as { room_id: string; jornada: string; model_id: string }[]).map(a => ({
-            room_id: a.room_id,
-            jornada: a.jornada,
-            model_id: a.model_id
-          }))
-        : [];
-      setAllRoomAssignmentsFromApi(roomAssignmentsAll);
 
       // Calcular estadísticas reales
       const totalSedes = filteredGroups.length;
@@ -1438,24 +1341,18 @@ export default function DashboardSedesPage() {
                         <h3 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-2">
                           {sedeDisponibilidad.sede_nombre}
                         </h3>
-                        <div className="grid grid-cols-3 gap-2 sm:gap-4">
+                        <div className="grid grid-cols-2 gap-2 sm:gap-4">
                           <div className="text-center">
-                            <p className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400 dark:text-blue-400">
-                              {sedeDisponibilidad.rooms_disponibles}/{sedeDisponibilidad.rooms_totales}
+                            <p className="text-lg sm:text-2xl font-bold text-blue-600 dark:text-blue-400">
+                              {sedeDisponibilidad.espacios_disponibles}/{sedeDisponibilidad.total_espacios}
                             </p>
-                            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Rooms Disponibles</p>
+                            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Espacios disponibles</p>
                           </div>
                           <div className="text-center">
                             <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400">
-                              {sedeDisponibilidad.total_espacios}
+                              {sedeDisponibilidad.rooms_totales}
                             </p>
-                            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Total Espacios</p>
-                          </div>
-                          <div className="text-center">
-                            <p className="text-lg sm:text-2xl font-bold text-purple-600 dark:text-purple-400">
-                              {Object.values(sedeDisponibilidad.jornadas_dobladas).reduce((a, b) => a + b, 0)}
-                            </p>
-                            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Doblajes Activos</p>
+                            <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Rooms en la sede</p>
                           </div>
                         </div>
                       </div>
@@ -1509,53 +1406,7 @@ export default function DashboardSedesPage() {
                         )}
                       </div>
 
-                      {/* Desglose por jornadas */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 sm:gap-4">
-                        {[
-                          { key: 'manana', label: 'Mañana', color: 'from-orange-500 to-amber-600' },
-                          { key: 'tarde', label: 'Tarde', color: 'from-blue-500 to-indigo-600' },
-                          { key: 'noche', label: 'Noche', color: 'from-purple-500 to-violet-600' }
-                        ].map((jornada) => (
-                          <div key={jornada.key} className="bg-white/80 dark:bg-gray-600/80 backdrop-blur-sm rounded-lg p-2.5 sm:p-4 border border-gray-200/50 dark:border-gray-500/50">
-                            <div className="flex items-center space-x-1.5 sm:space-x-2 mb-2 sm:mb-3">
-                              <div className={`w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gradient-to-r ${jornada.color} rounded-full flex-shrink-0`}></div>
-                              <h4 className="text-xs sm:text-sm font-medium text-gray-900 dark:text-gray-100">{jornada.label}</h4>
-                            </div>
-                            <div className="space-y-1.5 sm:space-y-2">
-                              <div className="flex justify-between items-center">
-                                <span className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Disponibles:</span>
-                                <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-400">
-                                  {sedeDisponibilidad.jornadas_disponibles[jornada.key as keyof typeof sedeDisponibilidad.jornadas_disponibles]}
-                                </span>
-                              </div>
-                              <div className="flex justify-between items-center">
-                                <span className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-400">Dobladas:</span>
-                                <span className="text-xs sm:text-sm font-semibold text-blue-600 dark:text-blue-400 dark:text-blue-400">
-                                  {sedeDisponibilidad.jornadas_dobladas[jornada.key as keyof typeof sedeDisponibilidad.jornadas_dobladas]}
-                                </span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
                       </div>
-
-                      {/* Información adicional */}
-                      <div className="bg-gray-50/80 dark:bg-gray-600/80 rounded-lg p-2.5 sm:p-4 border border-gray-200/50 dark:border-gray-500/50">
-                        <div className="flex items-start space-x-1.5 sm:space-x-2">
-                          <div className="w-3 h-3 sm:w-4 sm:h-4 bg-blue-500 rounded-full flex items-center justify-center mt-0.5 flex-shrink-0">
-                            <svg className="w-1.5 h-1.5 sm:w-2 sm:h-2 text-white" fill="currentColor" viewBox="0 0 8 8">
-                              <circle cx="4" cy="4" r="3" />
-                            </svg>
-                          </div>
-                          <div className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
-                            <p className="font-medium mb-0.5 sm:mb-1">Información para nuevas modelos:</p>
-                            <p className="leading-relaxed">• <strong>Disponibles:</strong> Espacios libres para asignar nuevas modelos</p>
-                            <p className="leading-relaxed">• <strong>Dobladas:</strong> Modelos que trabajan en múltiples jornadas</p>
-                            <p className="leading-relaxed">• <strong>Total Espacios:</strong> Capacidad máxima (rooms × 3 jornadas)</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500 dark:text-gray-400">
                       <p>No se pudo cargar la disponibilidad de esta sede</p>
