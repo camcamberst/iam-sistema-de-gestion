@@ -64,32 +64,24 @@ export async function GET(request: NextRequest) {
 
     const roomIds = rooms.map((r: any) => r.id);
 
-    // 2. Fuente A: jornada_states (state=OCUPADA = slot ocupado, usada al crear modelo)
-    const { data: jornadaStates } = await supabase
-      .from('jornada_states')
-      .select('room_id, jornada, state')
-      .in('group_id', targetSedeIds)
-      .in('room_id', roomIds);
-
-    // 3. Fuente B: room_assignments (usado por Gestión Sedes para asignar)
-    const { data: assignments } = await supabase
+    // 2. room_assignments: fuente de verdad (validada con SQL diagnóstico)
+    const { data: assignments, error: assignError } = await supabase
       .from('room_assignments')
       .select('room_id, jornada')
       .in('room_id', roomIds);
 
-    console.log('📊 [DISPONIBILIDAD] Rooms:', rooms?.length, 'jornada_states:', (jornadaStates || []).length, 'room_assignments:', (assignments || []).length);
+    if (assignError) {
+      console.error('❌ [DISPONIBILIDAD] Error room_assignments:', assignError);
+      return NextResponse.json({ success: false, error: assignError.message }, { status: 500 });
+    }
 
-    // 4. Combinar fuentes: count = max(room_assignments, jornada_states OCUPADA cuenta como 1)
+    console.log('📊 [DISPONIBILIDAD] Rooms:', rooms?.length, 'Assignments:', (assignments || []).length, 'sedeIds:', targetSedeIds);
+
+    // 3. Contar por (room_id, jornada) - misma lógica que el SQL que funciona
     const countMap: Record<string, number> = {};
     (assignments || []).forEach((a: any) => {
       const key = `${a.room_id}|${a.jornada}`;
       countMap[key] = (countMap[key] || 0) + 1;
-    });
-    (jornadaStates || []).forEach((j: any) => {
-      if (j.state === 'OCUPADA') {
-        const key = `${j.room_id}|${j.jornada}`;
-        countMap[key] = Math.max(countMap[key] || 0, 1);
-      }
     });
 
     // 5. Construir filas: disponible si count < 2 (máx 2 por slot)

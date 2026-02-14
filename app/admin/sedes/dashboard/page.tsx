@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import BillingSummary from '../../../../components/BillingSummary';
 import AnnouncementManager from '../../../../components/AnnouncementManager';
 import ManualPeriodClosure from '../../../../components/ManualPeriodClosure';
@@ -41,6 +41,14 @@ interface FilaDisponibilidadSede {
   manana: boolean;
   tarde: boolean;
   noche: boolean;
+}
+
+/** Resumen por sede: total_slots, slots_ocupados, slots_disponibles. */
+interface ResumenSede {
+  sede: string;
+  total_slots: number;
+  slots_ocupados: number;
+  slots_disponibles: number;
 }
 
 interface Group {
@@ -417,6 +425,26 @@ export default function DashboardSedesPage() {
       setLoadingDisponibilidad(false);
     }
   };
+
+  /** Resumen por sede calculado a partir de disponibilidadTodasSedes */
+  const resumenPorSede = useMemo((): ResumenSede[] => {
+    const bySede = new Map<string, { total: number; ocupados: number; disponibles: number }>();
+    for (const row of disponibilidadTodasSedes) {
+      const current = bySede.get(row.sede_nombre) ?? { total: 0, ocupados: 0, disponibles: 0 };
+      current.total += 3; // 3 jornadas por room
+      current.disponibles += (row.manana ? 1 : 0) + (row.tarde ? 1 : 0) + (row.noche ? 1 : 0);
+      current.ocupados += (row.manana ? 0 : 1) + (row.tarde ? 0 : 1) + (row.noche ? 0 : 1);
+      bySede.set(row.sede_nombre, current);
+    }
+    return Array.from(bySede.entries())
+      .map(([sede, v]) => ({
+        sede,
+        total_slots: v.total,
+        slots_ocupados: v.ocupados,
+        slots_disponibles: v.disponibles
+      }))
+      .sort((a, b) => a.sede.localeCompare(b.sede));
+  }, [disponibilidadTodasSedes]);
 
   const loadTodasSedesDisponibilidad = async () => {
     if (!availableSedes.length) return;
@@ -1250,6 +1278,30 @@ export default function DashboardSedesPage() {
                     <span className="ml-3 text-sm text-gray-600 dark:text-gray-400">Cargando todas las sedes...</span>
                   </div>
                 ) : (
+                  <>
+                    {/* Resumen por sede */}
+                    {resumenPorSede.length > 0 && (
+                      <div className="mb-4 sm:mb-6">
+                        <h3 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 sm:mb-3">Resumen por sede</h3>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
+                          {resumenPorSede.map((r) => (
+                            <div
+                              key={r.sede}
+                              className="bg-gradient-to-br from-slate-50 to-blue-50/50 dark:from-gray-700/50 dark:to-blue-900/20 rounded-lg p-3 border border-gray-200/50 dark:border-gray-600/50"
+                            >
+                              <div className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate" title={r.sede}>
+                                {r.sede}
+                              </div>
+                              <div className="mt-1 flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
+                                <span>{r.slots_disponibles}/{r.total_slots} disp.</span>
+                                <span>·</span>
+                                <span>{r.slots_ocupados} ocup.</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   <div className="overflow-x-auto rounded-lg border border-gray-200/50 dark:border-gray-500/50">
                     <table className="w-full text-left text-xs sm:text-sm">
                       <thead>
@@ -1295,6 +1347,7 @@ export default function DashboardSedesPage() {
                       <p className="text-center py-6 text-gray-500 dark:text-gray-400 text-sm">No hay rooms en las sedes disponibles.</p>
                     )}
                   </div>
+                  </>
                 )}
               </div>
             </div>
