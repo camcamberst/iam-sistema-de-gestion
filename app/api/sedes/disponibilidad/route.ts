@@ -1,10 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
+// Mismo cliente que /api/room-assignments (que lee room_assignments correctamente)
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
 /**
  * GET /api/sedes/disponibilidad
- * Calcula disponibilidad de rooms y jornadas.
- * Fuentes: jornada_states (state=OCUPADA) + room_assignments (usadas en Gestión Sedes).
+ * Calcula disponibilidad de rooms y jornadas desde room_assignments.
+ * Misma lógica que el SQL diagnóstico que funciona en Supabase.
  * Query params:
  *   - sedeId: una sede → devuelve solo esa sede
  *   - sedeIds: varias sedes separadas por coma → devuelve todas
@@ -14,11 +20,6 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const sedeId = searchParams.get('sedeId');
     const sedeIdsParam = searchParams.get('sedeIds');
-
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
 
     let targetSedeIds: string[] = [];
     if (sedeId) {
@@ -63,28 +64,32 @@ export async function GET(request: NextRequest) {
     }
 
     const roomIds = rooms.map((r: any) => r.id);
+    const roomIdSet = new Set(roomIds);
 
-    // 2. room_assignments: fuente de verdad (validada con SQL diagnóstico)
+    // 2. Obtener TODAS las asignaciones de room_assignments (sin filtrar por room)
+    // Igual que /api/room-assignments cuando no tiene roomId - evita problemas con .in()
     const { data: assignments, error: assignError } = await supabase
       .from('room_assignments')
-      .select('room_id, jornada')
-      .in('room_id', roomIds);
+      .select('room_id, jornada');
 
     if (assignError) {
       console.error('❌ [DISPONIBILIDAD] Error room_assignments:', assignError);
       return NextResponse.json({ success: false, error: assignError.message }, { status: 500 });
     }
 
-    console.log('📊 [DISPONIBILIDAD] Rooms:', rooms?.length, 'Assignments:', (assignments || []).length, 'sedeIds:', targetSedeIds);
+    // Filtrar en memoria solo los rooms de las sedes solicitadas
+    const relevantAssignments = (assignments || []).filter((a: any) => roomIdSet.has(a.room_id));
 
-    // 3. Contar por (room_id, jornada) - misma lógica que el SQL que funciona
+    console.log('📊 [DISPONIBILIDAD] Rooms:', rooms?.length, 'Assignments total:', (assignments || []).length, 'Relevantes:', relevantAssignments.length, 'sedeIds:', targetSedeIds);
+
+    // 3. Contar por (room_id, jornada) - misma lógica que el SQL diagnóstico
     const countMap: Record<string, number> = {};
-    (assignments || []).forEach((a: any) => {
+    relevantAssignments.forEach((a: any) => {
       const key = `${a.room_id}|${a.jornada}`;
       countMap[key] = (countMap[key] || 0) + 1;
     });
 
-    // 5. Construir filas: disponible si count < 2 (máx 2 por slot)
+    // 4. Construir filas: disponible si count < 2 (máx 2 modelos por slot)
     const rows = rooms.map((room: any) => {
       const manana = (countMap[`${room.id}|MAÑANA`] || 0) < 2;
       const tarde = (countMap[`${room.id}|TARDE`] || 0) < 2;
