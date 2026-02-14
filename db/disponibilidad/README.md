@@ -24,6 +24,15 @@
 - Si **room_assignments** tiene datos pero la query 6 muestra todo Disponible → revisar que `room_id` en room_assignments coincida con `group_rooms.id`.
 - Si **jornada_states** existe y tiene datos → podemos usarla como fuente adicional o principal.
 
-## Próximo paso
+## Función RPC (obligatoria para disponibilidad correcta)
 
-Con los resultados podremos ajustar la API `/api/sedes/disponibilidad` para usar la fuente correcta.
+La API `/api/sedes/disponibilidad` usa la función PostgreSQL `get_disponibilidad_por_sedes` que ejecuta el mismo SQL que el diagnóstico.
+
+**Para activarla:**
+
+1. Abre **Supabase Dashboard** → **SQL Editor**
+2. Abre el archivo `func_get_disponibilidad.sql` en este directorio
+3. Copia todo el contenido y pégalo en el SQL Editor
+4. Ejecuta (Run)
+
+Sin esta función, la API usará un fallback que puede no reflejar las asignaciones correctamente en producción.
