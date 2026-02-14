@@ -395,7 +395,7 @@ export default function DashboardSedesPage() {
       setLoadingDisponibilidad(true);
       const res = await fetch(`/api/sedes/disponibilidad?sedeId=${encodeURIComponent(sedeId)}`);
       const data = await res.json();
-      if (!data.success) throw new Error(data.error || 'Error obteniendo disponibilidad');
+      if (!data.success) throw new Error(data.error || 'Error obteniendo disponibilidad. Revisa que la función get_disponibilidad_por_sedes exista en Supabase.');
       setDisponibilidadPorRoom(data.rows || []);
       if (data.summary) {
         setSedeDisponibilidad({

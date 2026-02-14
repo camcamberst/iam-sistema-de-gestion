@@ -58,72 +58,22 @@ export async function GET(request: NextRequest) {
       p_sede_ids: targetSedeIds
     });
 
-    if (!rpcError && rpcData !== null && Array.isArray(rpcData)) {
-      const rows = rpcRowsToFrontend(rpcData);
-      let summary = null;
-      if (targetSedeIds.length === 1) {
-        const espaciosDisponibles = rows.reduce((acc: number, r) =>
-          acc + (r.manana ? 1 : 0) + (r.tarde ? 1 : 0) + (r.noche ? 1 : 0), 0);
-        summary = {
-          sede_nombre: rows[0]?.sede_nombre || 'Sede',
-          rooms_totales: rows.length,
-          total_espacios: rows.length * 3,
-          espacios_disponibles: espaciosDisponibles
-        };
-      }
-      console.log('✅ [DISPONIBILIDAD] RPC OK:', rows.length, 'rooms, sedeIds:', targetSedeIds);
-      return NextResponse.json({ success: true, rows, summary });
-    }
-
-    // 2. Fallback si la función RPC no existe: usar queries manuales
     if (rpcError) {
-      console.warn('⚠️ [DISPONIBILIDAD] RPC falló, usando fallback:', rpcError.message);
+      console.error('❌ [DISPONIBILIDAD] RPC error:', rpcError.message, 'sedeIds:', targetSedeIds);
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Ejecuta db/disponibilidad/func_get_disponibilidad.sql en Supabase SQL Editor.',
+          debug: process.env.NODE_ENV === 'development' ? rpcError.message : undefined
+        },
+        { status: 500 }
+      );
     }
 
-    const { data: rooms, error: roomsError } = await supabase
-      .from('group_rooms')
-      .select('id, room_name, group_id, groups!inner(id, name)')
-      .in('group_id', targetSedeIds)
-      .order('room_name', { ascending: true });
-
-    if (roomsError) {
-      console.error('❌ [DISPONIBILIDAD] Error fallback rooms:', roomsError);
-      return NextResponse.json({ success: false, error: roomsError.message }, { status: 500 });
-    }
-
-    if (!rooms || rooms.length === 0) {
-      return NextResponse.json({ success: true, rows: [], summary: null });
-    }
-
-    const roomIdSet = new Set(rooms.map((r: any) => r.id));
-    const { data: assignments, error: assignError } = await supabase
-      .from('room_assignments')
-      .select('room_id, jornada');
-
-    if (assignError) {
-      return NextResponse.json({ success: false, error: assignError.message }, { status: 500 });
-    }
-
-    const relevantAssignments = (assignments || []).filter((a: any) => roomIdSet.has(a.room_id));
-    const countMap: Record<string, number> = {};
-    relevantAssignments.forEach((a: any) => {
-      const key = `${a.room_id}|${a.jornada}`;
-      countMap[key] = (countMap[key] || 0) + 1;
-    });
-
-    const rows = rooms.map((room: any) => ({
-      sede_id: room.group_id,
-      sede_nombre: (room.groups as any)?.name || 'Sede',
-      room_id: room.id,
-      room_name: room.room_name,
-      manana: (countMap[`${room.id}|MAÑANA`] || 0) < 2,
-      tarde: (countMap[`${room.id}|TARDE`] || 0) < 2,
-      noche: (countMap[`${room.id}|NOCHE`] || 0) < 2
-    }));
-
+    const rows = rpcRowsToFrontend(Array.isArray(rpcData) ? rpcData : []);
     let summary = null;
     if (targetSedeIds.length === 1) {
-      const espaciosDisponibles = rows.reduce((acc: number, r: any) =>
+      const espaciosDisponibles = rows.reduce((acc: number, r) =>
         acc + (r.manana ? 1 : 0) + (r.tarde ? 1 : 0) + (r.noche ? 1 : 0), 0);
       summary = {
         sede_nombre: rows[0]?.sede_nombre || 'Sede',
@@ -132,7 +82,7 @@ export async function GET(request: NextRequest) {
         espacios_disponibles: espaciosDisponibles
       };
     }
-
+    console.log('✅ [DISPONIBILIDAD] RPC OK:', rows.length, 'rooms');
     return NextResponse.json({ success: true, rows, summary });
 
   } catch (error) {
