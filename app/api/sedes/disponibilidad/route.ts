@@ -3,7 +3,8 @@ import { createClient } from '@supabase/supabase-js';
 
 /**
  * GET /api/sedes/disponibilidad
- * Calcula disponibilidad de rooms y jornadas en el servidor (fuente: room_assignments).
+ * Calcula disponibilidad de rooms y jornadas.
+ * Fuentes: jornada_states (state=OCUPADA) + room_assignments (usadas en Gestión Sedes).
  * Query params:
  *   - sedeId: una sede → devuelve solo esa sede
  *   - sedeIds: varias sedes separadas por coma → devuelve todas
@@ -63,34 +64,39 @@ export async function GET(request: NextRequest) {
 
     const roomIds = rooms.map((r: any) => r.id);
 
-    // 2. Obtener TODAS las asignaciones de room_assignments (tabla directa, sin vista)
-    const { data: assignments, error: assignError } = await supabase
-      .from('room_assignments')
-      .select('room_id, jornada, model_id')
+    // 2. Fuente A: jornada_states (state=OCUPADA = slot ocupado, usada al crear modelo)
+    const { data: jornadaStates } = await supabase
+      .from('jornada_states')
+      .select('room_id, jornada, state')
+      .in('group_id', targetSedeIds)
       .in('room_id', roomIds);
 
-    if (assignError) {
-      console.error('❌ [DISPONIBILIDAD] Error obteniendo asignaciones:', assignError);
-      return NextResponse.json(
-        { success: false, error: 'Error obteniendo asignaciones' },
-        { status: 500 }
-      );
-    }
+    // 3. Fuente B: room_assignments (usado por Gestión Sedes para asignar)
+    const { data: assignments } = await supabase
+      .from('room_assignments')
+      .select('room_id, jornada')
+      .in('room_id', roomIds);
 
-    console.log('📊 [DISPONIBILIDAD] Rooms:', rooms?.length || 0, 'Assignments:', assignments?.length || 0);
+    console.log('📊 [DISPONIBILIDAD] Rooms:', rooms?.length, 'jornada_states:', (jornadaStates || []).length, 'room_assignments:', (assignments || []).length);
 
-    // 3. Contar por (room_id, jornada)
+    // 4. Combinar fuentes: count = max(room_assignments, jornada_states OCUPADA cuenta como 1)
     const countMap: Record<string, number> = {};
-    (assignments || []).forEach((a: { room_id: string; jornada: string }) => {
+    (assignments || []).forEach((a: any) => {
       const key = `${a.room_id}|${a.jornada}`;
       countMap[key] = (countMap[key] || 0) + 1;
     });
+    (jornadaStates || []).forEach((j: any) => {
+      if (j.state === 'OCUPADA') {
+        const key = `${j.room_id}|${j.jornada}`;
+        countMap[key] = Math.max(countMap[key] || 0, 1);
+      }
+    });
 
-    // 4. Construir filas
+    // 5. Construir filas: disponible si count < 2 (máx 2 por slot)
     const rows = rooms.map((room: any) => {
-      const manana = ((countMap[`${room.id}|MAÑANA`] || 0) < 2);
-      const tarde = ((countMap[`${room.id}|TARDE`] || 0) < 2);
-      const noche = ((countMap[`${room.id}|NOCHE`] || 0) < 2);
+      const manana = (countMap[`${room.id}|MAÑANA`] || 0) < 2;
+      const tarde = (countMap[`${room.id}|TARDE`] || 0) < 2;
+      const noche = (countMap[`${room.id}|NOCHE`] || 0) < 2;
       return {
         sede_id: room.group_id,
         sede_nombre: (room.groups as any)?.name || 'Sede',
