@@ -14,11 +14,15 @@ export async function GET(request: NextRequest) {
     
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Sin roomId: consultar la TABLA room_assignments (no la vista) para no perder filas por JOINs
+    // Con roomId: usar vista room_assignments_detailed para incluir nombre y email de la modelo
+    // Sin roomId: usar tabla base room_assignments para no perder filas por JOINs
     const tableName = roomId ? 'room_assignments_detailed' : 'room_assignments';
+    const selectFields = roomId
+      ? 'id, model_id, room_id, jornada, assigned_at, model_name, model_email'
+      : 'id, model_id, room_id, jornada, assigned_at';
     let query = supabase
       .from(tableName)
-      .select('id, model_id, room_id, jornada, assigned_at')
+      .select(selectFields)
       .order('jornada', { ascending: true });
 
     if (roomId) {
