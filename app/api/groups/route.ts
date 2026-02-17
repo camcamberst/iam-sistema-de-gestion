@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { supabaseServer, supabaseAuth } from '@/lib/supabase-server';
 import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     console.log('🏢 [API] Obteniendo grupos...');
