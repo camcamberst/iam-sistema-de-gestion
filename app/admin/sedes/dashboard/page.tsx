@@ -1322,21 +1322,21 @@ export default function DashboardSedesPage() {
                               {row.manana ? (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
                               ) : (
-                                <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40">Ocupado</span>
                               )}
                             </td>
                             <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
                               {row.tarde ? (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
                               ) : (
-                                <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40">Ocupado</span>
                               )}
                             </td>
                             <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
                               {row.noche ? (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
                               ) : (
-                                <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40">Ocupado</span>
                               )}
                             </td>
                           </tr>
@@ -1433,21 +1433,21 @@ export default function DashboardSedesPage() {
                                   {row.manana ? (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
                                   ) : (
-                                    <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40">Ocupado</span>
                                   )}
                                 </td>
                                 <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
                                   {row.tarde ? (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
                                   ) : (
-                                    <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40">Ocupado</span>
                                   )}
                                 </td>
                                 <td className="px-3 py-2 sm:px-4 sm:py-3 text-center">
                                   {row.noche ? (
                                     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-green-700 dark:text-green-300 bg-green-100 dark:bg-green-900/40">Disponible</span>
                                   ) : (
-                                    <span className="text-gray-400 dark:text-gray-500">Ocupado</span>
+                                    <span className="inline-flex items-center px-1.5 py-0.5 rounded text-red-700 dark:text-red-300 bg-red-100 dark:bg-red-900/40">Ocupado</span>
                                   )}
                                 </td>
                               </tr>

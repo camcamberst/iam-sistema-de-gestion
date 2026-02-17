@@ -1,9 +1,8 @@
 -- =====================================================
 -- FUNCIÓN: get_disponibilidad_por_sedes
 -- =====================================================
--- Ejecutar en Supabase SQL Editor (Database > SQL Editor).
--- Replica exactamente la lógica del diagnóstico que funciona.
--- SECURITY DEFINER = corre con privilegios del owner, bypass RLS.
+-- Replica la lógica del SQL que funciona. Ejecutar en Supabase SQL Editor.
+-- La API llamará a esta función para garantizar resultados correctos.
 -- =====================================================
 
 CREATE OR REPLACE FUNCTION get_disponibilidad_por_sedes(p_sede_ids UUID[])
@@ -16,6 +15,7 @@ RETURNS TABLE (
   asignaciones BIGINT,
   disponible BOOLEAN
 )
+LANGUAGE plpgsql
 LANGUAGE sql
 SECURITY DEFINER
 SET search_path = public
@@ -45,35 +45,9 @@ AS $$
     s.rname AS room_name,
     s.jname AS jornada,
     COALESCE(c.asignaciones, 0)::BIGINT AS asignaciones,
-    (COALESCE(c.asignaciones, 0) < 2) AS disponible
+    (COALESCE(c.asignaciones, 0) = 0) AS disponible
   FROM slots s
   LEFT JOIN conteo_por_slot c ON c.room_id = s.rid AND c.jornada = s.jname
   ORDER BY s.sname, s.rname, s.jname;
-$$;
-
--- Permitir llamada desde Service Role y Anon
-GRANT EXECUTE ON FUNCTION get_disponibilidad_por_sedes(UUID[]) TO service_role;
-GRANT EXECUTE ON FUNCTION get_disponibilidad_por_sedes(UUID[]) TO anon;
-
-
--- =====================================================
--- DIAGNÓSTICO: Ejecutar ANTES de probar la función
--- =====================================================
-
--- A. Ver grupos y sus rooms (para obtener IDs correctos)
-SELECT g.id, g.name, COUNT(gr.id) as num_rooms
-FROM groups g
-LEFT JOIN group_rooms gr ON gr.group_id = g.id
-WHERE g.name NOT IN ('Otros', 'Satélites')
-GROUP BY g.id, g.name
-ORDER BY g.name;
-
--- B. Probar función con TODAS las sedes operativas (debería devolver filas)
-SELECT * FROM get_disponibilidad_por_sedes(
-  (SELECT array_agg(id) FROM groups WHERE name NOT IN ('Otros', 'Satélites'))
-);
-
--- C. Probar solo Sede MP (ajusta el nombre si es diferente en tu BD)
--- SELECT * FROM get_disponibilidad_por_sedes(
---   ARRAY[(SELECT id FROM groups WHERE name ILIKE '%Sede MP%' OR name ILIKE '%MP%' LIMIT 1)]::UUID[]
--- );
+-- Probar con Sede MP (reemplaza el UUID por el de tu Sede MP):
+-- SELECT * FROM get_disponibilidad_por_sedes(ARRAY[(SELECT id FROM groups WHERE name = 'Sede MP')]::UUID[]);
