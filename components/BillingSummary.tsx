@@ -331,7 +331,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   return (
     <div className={`mb-4 sm:mb-6 ${isHistorical ? 'px-3 sm:px-0' : ''}`}>
       {/* Card Header - Versión compacta */}
-      <div className={`bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 ${isHistorical ? 'mb-3 sm:mb-6' : 'mb-4 sm:mb-8'}`}>
+      <div className={`bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20 ${isHistorical ? 'mb-3 sm:mb-6' : 'mb-4 sm:mb-8'}`}>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
           <div className="flex items-center space-x-2 sm:space-x-3">
             <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">

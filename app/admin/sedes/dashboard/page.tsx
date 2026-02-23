@@ -658,7 +658,7 @@ export default function DashboardSedesPage() {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2">
-                {(userRole === 'admin' || userRole === 'super_admin' || userRole === 'superadmin_aff') && selectedMonth && selectedYear && selectedPeriod && (
+                {!collapsedHistorica && (userRole === 'admin' || userRole === 'super_admin' || userRole === 'superadmin_aff') && selectedMonth && selectedYear && selectedPeriod && (
                   <button
                     onClick={async () => {
                       // Calcular period_date y period_type
@@ -691,7 +691,7 @@ export default function DashboardSedesPage() {
                     <span className="sm:hidden">RATES</span>
                   </button>
                 )}
-                <button
+                {!collapsedHistorica && <button
                   onClick={() => setShowHistoricalQuery(!showHistoricalQuery)}
                   className="flex-1 sm:flex-none px-2.5 sm:px-3 py-1.5 sm:py-2 text-[10px] sm:text-xs font-medium bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1 active:scale-95 touch-manipulation"
                 >
@@ -700,13 +700,13 @@ export default function DashboardSedesPage() {
                   </svg>
                   <span className="hidden sm:inline">{showHistoricalQuery ? 'Ocultar' : 'Consultar Períodos'}</span>
                   <span className="sm:hidden">{showHistoricalQuery ? 'Ocultar' : 'Consultar'}</span>
-                </button>
+                </button>}
                 <button
                   onClick={() => setCollapsedHistorica(c => !c)}
-                  className="flex-none px-2 sm:px-2.5 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                  className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation flex-shrink-0"
                   title={collapsedHistorica ? 'Expandir' : 'Contraer'}
                 >
-                  <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${collapsedHistorica ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className={`w-4 h-4 transition-transform duration-200 ${collapsedHistorica ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
                 </button>
@@ -1156,7 +1156,7 @@ export default function DashboardSedesPage() {
         <div className="mb-4 sm:mb-6 relative z-40 overflow-visible">
           <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 overflow-visible dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
             {/* Header collapsible */}
-            <div className={`flex items-center justify-between p-3 sm:p-4 ${!collapsedDisponibilidad ? 'border-b border-gray-100/60 dark:border-gray-600/40' : ''}`}>
+            <div className={`flex items-center justify-between p-3 sm:p-6 ${!collapsedDisponibilidad ? 'border-b border-gray-100/60 dark:border-gray-600/40' : ''}`}>
               <div className="flex items-center space-x-2">
                 <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
                   <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
