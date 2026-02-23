@@ -230,8 +230,8 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                           <div className="hidden sm:block w-20 h-1.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
                             <div className={`h-full rounded-full ${barCls(groupAvg)}`} style={{ width: `${Math.min(groupAvg, 100)}%` }} />
                           </div>
-                          {/* % promedio — fixed width */}
-                          <span className={`w-16 text-right text-[11px] sm:text-xs font-semibold tabular-nums ${pctColor(groupAvg)}`}>
+                          {/* % promedio — fixed width, never wraps */}
+                          <span className={`w-[5.5rem] flex-shrink-0 text-right text-[11px] sm:text-xs font-semibold tabular-nums whitespace-nowrap ${pctColor(groupAvg)}`}>
                             {fmtD(groupAvg)}% prom.
                           </span>
                           {/* sobre obj — fixed width */}
