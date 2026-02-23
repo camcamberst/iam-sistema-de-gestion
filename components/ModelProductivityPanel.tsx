@@ -248,46 +248,50 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                       {/* ── Model rows ── */}
                       {isOpen && (
                         <div>
-                          {/* Column headers */}
-                          <div className="hidden sm:grid grid-cols-[1fr_56px_96px_80px] gap-x-3 px-4 py-1.5 bg-gray-50/50 dark:bg-gray-800/30 border-b border-gray-100/60 dark:border-gray-700/40">
-                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">Modelo</span>
-                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide text-right">%</span>
-                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide text-right">USD Bruto</span>
-                            <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide text-right">Estado</span>
+                          {/* Column headers — mismos anchos fijos que las filas */}
+                          <div className="hidden sm:flex items-center px-4 py-1.5 bg-gray-50/50 dark:bg-gray-800/30 border-b border-gray-100/60 dark:border-gray-700/40 gap-3">
+                            <div className="flex-1 min-w-0">
+                              <span className="text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide">Modelo</span>
+                            </div>
+                            <span className="w-[76px] flex-shrink-0 text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide text-right">Estado</span>
+                            <span className="w-[54px] flex-shrink-0 text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide text-right">%</span>
+                            <span className="w-[118px] flex-shrink-0 text-[10px] font-medium text-gray-400 dark:text-gray-500 uppercase tracking-wide text-right">USD Bruto</span>
                           </div>
 
                           <div className="divide-y divide-gray-100/60 dark:divide-gray-700/40">
                             {gModels.map(model => {
-                              const pct  = Math.min(model.porcentaje, 100);
-                              const b    = badge(model.porcentaje);
+                              const pct = Math.min(model.porcentaje, 100);
+                              const b   = badge(model.porcentaje);
                               return (
                                 <div key={model.modelId}
                                   className="px-3 sm:px-4 py-2.5 sm:py-3 bg-white/50 dark:bg-gray-700/20 hover:bg-gray-50/70 dark:hover:bg-gray-700/40 transition-colors">
 
-                                  {/* Desktop: grid with 4 columns */}
-                                  <div className="hidden sm:grid grid-cols-[1fr_56px_96px_80px] gap-x-3 items-center mb-2">
-                                    {/* Name */}
-                                    <div className="flex items-center gap-2 min-w-0">
+                                  {/* Desktop: fila alineada con anchos fijos */}
+                                  <div className="hidden sm:flex items-center gap-3 mb-2">
+                                    {/* Name — flex-1 */}
+                                    <div className="flex items-center gap-2 flex-1 min-w-0">
                                       <div className="w-6 h-6 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 dark:from-slate-600 dark:to-slate-500 flex items-center justify-center flex-shrink-0 text-[10px] font-bold text-white">
                                         {model.name.charAt(0).toUpperCase()}
                                       </div>
                                       <span className="text-xs font-medium text-gray-800 dark:text-gray-200 truncate">{model.name}</span>
                                     </div>
-                                    {/* % */}
-                                    <span className={`text-xs font-bold tabular-nums text-right ${pctColor(model.porcentaje)}`}>
+                                    {/* Badge — w-[76px] */}
+                                    <div className="w-[76px] flex-shrink-0 flex items-center justify-end">
+                                      <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full whitespace-nowrap ${b.cls}`}>
+                                        {b.label}
+                                      </span>
+                                    </div>
+                                    {/* % — w-[54px] */}
+                                    <span className={`w-[54px] flex-shrink-0 text-xs font-bold tabular-nums text-right ${pctColor(model.porcentaje)}`}>
                                       {fmtD(model.porcentaje)}%
                                     </span>
-                                    {/* USD Bruto / cuota */}
-                                    <span className="text-xs text-gray-500 dark:text-gray-400 tabular-nums text-right">
+                                    {/* USD — w-[118px] */}
+                                    <span className="w-[118px] flex-shrink-0 text-xs tabular-nums text-right text-gray-500 dark:text-gray-400">
                                       ${fmt(model.usdBruto)}<span className="text-gray-300 dark:text-gray-600"> / ${fmt(model.cuotaMinima)}</span>
-                                    </span>
-                                    {/* Badge */}
-                                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full text-right inline-flex items-center justify-end ${b.cls}`}>
-                                      {b.label}
                                     </span>
                                   </div>
 
-                                  {/* Mobile: name + % on one line */}
+                                  {/* Mobile */}
                                   <div className="flex items-center justify-between gap-2 mb-2 sm:hidden">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                       <div className="w-5 h-5 rounded-full bg-gradient-to-br from-slate-400 to-slate-500 flex items-center justify-center flex-shrink-0 text-[9px] font-bold text-white">
@@ -301,17 +305,16 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                                     </div>
                                   </div>
 
-                                  {/* Progress bar — full width on both breakpoints */}
+                                  {/* Progress bar */}
                                   <div className="relative w-full h-2 bg-gray-100 dark:bg-gray-600/70 rounded-full overflow-hidden">
                                     <div
                                       className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ${barCls(model.porcentaje)}`}
                                       style={{ width: `${pct}%` }}
                                     />
-                                    {/* 70% marker */}
                                     <div className="absolute inset-y-0 w-px bg-white/40 dark:bg-white/20" style={{ left: '70%' }} />
                                   </div>
 
-                                  {/* Mobile: amount below bar */}
+                                  {/* Mobile: amount */}
                                   <p className="sm:hidden text-[10px] text-gray-400 dark:text-gray-500 mt-1 tabular-nums text-right">
                                     ${fmt(model.usdBruto)} / ${fmt(model.cuotaMinima)} USD
                                   </p>
