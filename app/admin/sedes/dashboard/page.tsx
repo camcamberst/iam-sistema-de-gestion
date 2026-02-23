@@ -4,6 +4,7 @@ import { useState, useEffect, useMemo } from 'react';
 import BillingSummary from '../../../../components/BillingSummary';
 import AnnouncementManager from '../../../../components/AnnouncementManager';
 import ManualPeriodClosure from '../../../../components/ManualPeriodClosure';
+import ModelProductivityPanel from '../../../../components/ModelProductivityPanel';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
 interface DashboardStats {
@@ -629,6 +630,15 @@ export default function DashboardSedesPage() {
           <BillingSummary 
             userRole={userRole as 'admin' | 'super_admin' | 'superadmin_aff'} 
             userId={userId}
+            userGroups={userGroups}
+          />
+        )}
+
+        {/* Productividad en Tiempo Real */}
+        {userId && (userRole === 'super_admin' || userRole === 'admin' || userRole === 'superadmin_aff') && (
+          <ModelProductivityPanel
+            userId={userId}
+            userRole={userRole as 'admin' | 'super_admin' | 'superadmin_aff'}
             userGroups={userGroups}
           />
         )}
