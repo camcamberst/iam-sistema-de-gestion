@@ -104,6 +104,8 @@ export default function DashboardSedesPage() {
 
   // Estados para editar RATES de cierre
   const [showEditRatesModal, setShowEditRatesModal] = useState(false);
+  const [collapsedHistorica, setCollapsedHistorica] = useState(false);
+  const [collapsedDisponibilidad, setCollapsedDisponibilidad] = useState(false);
   const [loadingPeriodInfo, setLoadingPeriodInfo] = useState(false);
   const [periodInfo, setPeriodInfo] = useState<{
     records_count: number;
@@ -643,7 +645,7 @@ export default function DashboardSedesPage() {
         {/* Consulta de Períodos Históricos */}
         <div className="mb-4 sm:mb-8 relative z-40">
           <div className="bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
+            <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 ${collapsedHistorica ? '' : 'mb-3 sm:mb-4'}`}>
               <div className="flex items-center space-x-2 sm:space-x-3">
                 <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md flex-shrink-0">
                   <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -699,10 +701,19 @@ export default function DashboardSedesPage() {
                   <span className="hidden sm:inline">{showHistoricalQuery ? 'Ocultar' : 'Consultar Períodos'}</span>
                   <span className="sm:hidden">{showHistoricalQuery ? 'Ocultar' : 'Consultar'}</span>
                 </button>
+                <button
+                  onClick={() => setCollapsedHistorica(c => !c)}
+                  className="flex-none px-2 sm:px-2.5 py-1.5 sm:py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 flex items-center justify-center active:scale-95 touch-manipulation"
+                  title={collapsedHistorica ? 'Expandir' : 'Contraer'}
+                >
+                  <svg className={`w-3.5 h-3.5 sm:w-4 sm:h-4 transition-transform duration-200 ${collapsedHistorica ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
               </div>
             </div>
             
-            {showHistoricalQuery && (
+            {!collapsedHistorica && showHistoricalQuery && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-4">
                 {/* Año */}
                 <div className="dropdown-container">
@@ -870,7 +881,7 @@ export default function DashboardSedesPage() {
             )}
             
             {/* Resumen Histórico - Se muestra cuando hay un período seleccionado */}
-            {showHistoricalQuery && selectedMonth && selectedYear && selectedPeriod && targetDate && (
+            {!collapsedHistorica && showHistoricalQuery && selectedMonth && selectedYear && selectedPeriod && targetDate && (
               <div className="mt-3 sm:mt-6 -mx-3 sm:-mx-0 sm:mx-0">
                 <BillingSummary 
                   userRole={userRole as 'admin' | 'super_admin' | 'superadmin_aff'} 
@@ -1143,15 +1154,32 @@ export default function DashboardSedesPage() {
 
         {/* Selector de Disponibilidad con Dropdown Personalizado */}
         <div className="mb-4 sm:mb-6 relative z-40 overflow-visible">
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 pb-4 sm:pb-8 overflow-visible dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 sm:space-x-4">
-              <div className="flex items-center space-x-1.5 sm:space-x-2">
-                <div className="w-4 h-4 sm:w-5 sm:h-5 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
+          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 overflow-visible dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            {/* Header collapsible */}
+            <div className={`flex items-center justify-between p-3 sm:p-4 ${!collapsedDisponibilidad ? 'border-b border-gray-100/60 dark:border-gray-600/40' : ''}`}>
+              <div className="flex items-center space-x-2">
+                <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
                   <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Consultar Disponibilidad:</span>
+                <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200">Consultar Disponibilidad</span>
+              </div>
+              <button
+                onClick={() => setCollapsedDisponibilidad(c => !c)}
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation"
+                title={collapsedDisponibilidad ? 'Expandir' : 'Contraer'}
+              >
+                <svg className={`w-4 h-4 transition-transform duration-200 ${collapsedDisponibilidad ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
+            </div>
+            {!collapsedDisponibilidad && (
+            <div className="p-3 sm:p-6 pb-4 sm:pb-8 overflow-visible">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 sm:space-x-4">
+              <div className="flex items-center space-x-1.5 sm:space-x-2">
+                <span className="text-xs sm:text-sm font-medium text-gray-700 dark:text-gray-200">Sede:</span>
               </div>
               <div className="flex-1 sm:max-w-xs relative">
                 <div className="relative dropdown-container">
@@ -1250,6 +1278,8 @@ export default function DashboardSedesPage() {
                 )}
               </button>
             </div>
+            </div>
+            )}
           </div>
         </div>
 

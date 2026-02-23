@@ -82,6 +82,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   const [expandedSedes, setExpandedSedes] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showAllModels, setShowAllModels] = useState<boolean>(false);
+  const [collapsed, setCollapsed] = useState(false);
 
   // Actualizar estado cuando cambien las props
   useEffect(() => {
@@ -378,11 +379,20 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
               </button>
+              <button
+                onClick={() => setCollapsed(c => !c)}
+                className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation"
+                title={collapsed ? 'Expandir' : 'Contraer'}
+              >
+                <svg className={`w-4 h-4 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              </button>
             </div>
           </div>
         </div>
 
-        <div className={`px-2 sm:px-4 pb-3 sm:pb-4 ${isHistorical ? 'px-2 sm:px-4' : ''}`}>
+        {!collapsed && <div className={`px-2 sm:px-4 pb-3 sm:pb-4 ${isHistorical ? 'px-2 sm:px-4' : ''}`}>
           {/* Resumen general - Versión compacta */}
           {summary && (
             <div className={`grid grid-cols-3 gap-2 sm:gap-4 ${isHistorical ? 'mb-3 sm:mb-5 mt-3 sm:mt-5' : 'mb-4 sm:mb-6 mt-4 sm:mt-6'}`}>
@@ -851,7 +861,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
               <div className="text-sm text-gray-500 dark:text-gray-600 dark:text-gray-500">No se encontraron modelos con datos para el período seleccionado</div>
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
