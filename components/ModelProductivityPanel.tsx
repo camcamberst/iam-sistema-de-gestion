@@ -99,6 +99,11 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
     return acc;
   }, {});
 
+  // Ordenar cada grupo de mayor a menor productividad
+  Object.values(grouped).forEach(g => {
+    g.models.sort((a, b) => b.porcentaje - a.porcentaje);
+  });
+
   const toggleGroup = (key: string) =>
     setExpandedGroups(prev => { const s = new Set(prev); s.has(key) ? s.delete(key) : s.add(key); return s; });
 
