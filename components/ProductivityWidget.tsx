@@ -102,7 +102,7 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Productividad en Tiempo Real</h3>
             {periodLabel && (
-              <p className="text-xs text-gray-500 dark:text-gray-300">{periodLabel}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-300">{periodLabel.split(' (')[0]}</p>
             )}
           </div>
         </div>
