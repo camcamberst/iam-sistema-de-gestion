@@ -104,8 +104,8 @@ export default function DashboardSedesPage() {
 
   // Estados para editar RATES de cierre
   const [showEditRatesModal, setShowEditRatesModal] = useState(false);
-  const [collapsedHistorica, setCollapsedHistorica] = useState(false);
-  const [collapsedDisponibilidad, setCollapsedDisponibilidad] = useState(false);
+  const [collapsedHistorica, setCollapsedHistorica] = useState(true);
+  const [collapsedDisponibilidad, setCollapsedDisponibilidad] = useState(true);
   const [loadingPeriodInfo, setLoadingPeriodInfo] = useState(false);
   const [periodInfo, setPeriodInfo] = useState<{
     records_count: number;

@@ -64,6 +64,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
   const [editingAnnouncement, setEditingAnnouncement] = useState<Announcement | null>(null);
   const [filter, setFilter] = useState<'all' | 'published' | 'draft'>('all');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [collapsed, setCollapsed] = useState(true);
 
   useEffect(() => {
     loadData();
@@ -177,7 +178,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
   return (
     <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-3 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+      <div className={`flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 ${collapsed ? '' : 'mb-4 sm:mb-6'}`}>
         <div className="flex items-center space-x-2 sm:space-x-3">
           <div className="w-6 h-6 sm:w-8 sm:h-8 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
             <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -189,21 +190,35 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
             <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Gestiona publicaciones e información para modelos</p>
           </div>
         </div>
-        <button
-          onClick={() => {
-            setEditingAnnouncement(null);
-            setShowEditor(true);
-          }}
-          className="w-full sm:w-auto px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation"
-        >
-          <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
-          <span className="hidden sm:inline">Nueva Publicación</span>
-          <span className="sm:hidden">Nueva</span>
-        </button>
+        <div className="flex items-center gap-2">
+          {!collapsed && (
+            <button
+              onClick={() => {
+                setEditingAnnouncement(null);
+                setShowEditor(true);
+              }}
+              className="w-full sm:w-auto px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-95 touch-manipulation"
+            >
+              <svg className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              <span className="hidden sm:inline">Nueva Publicación</span>
+              <span className="sm:hidden">Nueva</span>
+            </button>
+          )}
+          <button
+            onClick={() => setCollapsed(c => !c)}
+            className="flex items-center justify-center w-7 h-7 sm:w-8 sm:h-8 bg-gray-100 hover:bg-gray-200 dark:bg-gray-600 dark:hover:bg-gray-500 text-gray-500 dark:text-gray-300 rounded-lg transition-colors duration-200 active:scale-95 touch-manipulation flex-shrink-0"
+            title={collapsed ? 'Expandir' : 'Contraer'}
+          >
+            <svg className={`w-4 h-4 transition-transform duration-200 ${collapsed ? '' : 'rotate-180'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+            </svg>
+          </button>
+        </div>
       </div>
 
+      {!collapsed && <>
       {/* Filtros */}
       <div className="flex flex-wrap gap-2 sm:gap-3 mb-4 sm:mb-6">
         <div className="flex gap-1.5 sm:gap-2">
@@ -389,6 +404,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
           }}
         />
       )}
+      </>}
     </div>
   );
 }

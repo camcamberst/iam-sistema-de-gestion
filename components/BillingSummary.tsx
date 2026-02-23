@@ -82,7 +82,7 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
   const [expandedSedes, setExpandedSedes] = useState<Set<string>>(new Set());
   const [expandedGroups, setExpandedGroups] = useState<Set<string>>(new Set());
   const [showAllModels, setShowAllModels] = useState<boolean>(false);
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   // Actualizar estado cuando cambien las props
   useEffect(() => {
