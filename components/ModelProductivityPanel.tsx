@@ -79,11 +79,8 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
       setSummary(data.summary);
       setPeriodLabel(data.periodLabel || '');
       setLastRefresh(new Date());
-      // Expandir todos los grupos por defecto
-      const groups = new Set<string>(
-        (data.models || []).map((m: ProductivityModel) => m.groupId || 'sin-grupo')
-      );
-      setExpandedGroups(groups);
+      // Grupos contraídos por defecto
+      setExpandedGroups(new Set());
     } catch (e: any) {
       setError(e.message);
     } finally {
