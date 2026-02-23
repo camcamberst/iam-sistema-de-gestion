@@ -285,12 +285,15 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
     <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-green-900/10 dark:ring-0.5 dark:ring-green-500/15 border border-white/20 dark:border-gray-600/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
-          <div className="w-5 h-5 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
-            <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
             </svg>
           </div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Período actual</p>
+          </div>
         </div>
         <Link 
           href="/admin/sedes/dashboard" 
