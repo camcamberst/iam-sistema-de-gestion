@@ -7,6 +7,7 @@ import ActiveRatesPanel from "../../../components/ActiveRatesPanel";
 import ModelCalculator from "../../../components/ModelCalculator";
 import PlatformTimeline from "../../../components/PlatformTimeline";
 import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
+import ProductivityWidget from "../../../components/ProductivityWidget";
 import DynamicTimeIsland from "../../../components/ui/DynamicTimeIsland";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
@@ -103,14 +104,18 @@ export default function SuperAdminDashboard() {
 
         {/* Tarjetas de conteo eliminadas por irrelevantes en el dashboard */}
 
-        {/* Panel de Tasas Activas y Resumen de Facturación para Super Admin y Admin */}
+        {/* Tasas de calculadora + Resumen de facturación + Widget de productividad */}
         {(user?.role === 'super_admin' || user?.role === 'admin') && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-10">
             <ActiveRatesPanel compact={true} />
-            <BillingSummaryCompact 
-              userRole={user.role as 'admin' | 'super_admin'} 
+            <BillingSummaryCompact
+              userRole={user.role as 'admin' | 'super_admin'}
               userId={user.id}
               userGroups={user.groups}
+            />
+            <ProductivityWidget
+              userId={user.id}
+              userRole={user.role as 'admin' | 'super_admin'}
             />
           </div>
         )}
