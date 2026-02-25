@@ -4,6 +4,33 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 
 type Lang = 'en' | 'de';
 
+const MAX_DIGITS = 5;
+
+/**
+ * Prefijos de telefonía móvil en Colombia (primeros 3 dígitos de un número local)
+ * + 573 = código internacional de Colombia (57) seguido del inicio de móvil (3)
+ */
+const CO_MOBILE_PREFIXES = new Set([
+  // Claro
+  '300','301','302','303','304','305',
+  '310','311','312','313','314','315','316','317','318','319',
+  // Tigo / Movistar
+  '320','321','322','323','324','325',
+  // ETB Móvil
+  '330',
+  // Tigo / otros
+  '335',
+  // Avantel / Novatel
+  '350','351',
+  // Formato internacional Colombia
+  '573',
+]);
+
+function isColombianMobilePrefix(digits: string): boolean {
+  if (digits.length < 3) return false;
+  return CO_MOBILE_PREFIXES.has(digits.slice(0, 3));
+}
+
 const DIGIT_WORDS: Record<Lang, string[]> = {
   en: ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'],
   de: ['null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun'],
@@ -56,7 +83,15 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
   const [currentDigit, setCurrentDigit] = useState<number | null>(null);
   const [voicesReady, setVoicesReady] = useState(false);
   const [supported,   setSupported]   = useState(true);
+  const [leakAlert,   setLeakAlert]   = useState(false);
   const cancelRef = useRef(false);
+
+  const handleCodeChange = (raw: string) => {
+    const clean = raw.replace(/\D/g, '').slice(0, MAX_DIGITS);
+    setCode(clean);
+    setLeakAlert(isColombianMobilePrefix(clean));
+    stop();
+  };
 
   // Esperar a que el navegador cargue las voces
   useEffect(() => {
@@ -167,19 +202,43 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
 
       {/* Input del código */}
       <div className="mb-4">
-        <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5">
-          Código a dictar
+        <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 flex items-center justify-between">
+          <span>Código a dictar</span>
+          <span className="text-gray-400 dark:text-gray-500 font-normal">{code.length}/{MAX_DIGITS}</span>
         </label>
         <input
           type="text"
           inputMode="numeric"
           value={code}
-          onChange={e => { setCode(e.target.value.replace(/\D/g, '')); stop(); }}
+          onChange={e => handleCodeChange(e.target.value)}
           placeholder="Ej: 48271"
-          maxLength={12}
-          className="w-full px-3 py-2.5 rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-mono tracking-[0.3em] text-center focus:outline-none focus:ring-2 focus:ring-violet-400 dark:focus:ring-violet-500 placeholder:tracking-normal placeholder:text-sm placeholder:font-sans"
+          maxLength={MAX_DIGITS}
+          className={`w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-mono tracking-[0.3em] text-center focus:outline-none focus:ring-2 placeholder:tracking-normal placeholder:text-sm placeholder:font-sans transition-colors ${
+            leakAlert
+              ? 'border-red-400 dark:border-red-500 focus:ring-red-400'
+              : 'border-gray-200 dark:border-gray-600 focus:ring-violet-400 dark:focus:ring-violet-500'
+          }`}
         />
       </div>
+
+      {/* Alerta de posible filtración */}
+      {leakAlert && (
+        <div className="mb-4 rounded-lg border border-red-300 dark:border-red-500/60 bg-red-50 dark:bg-red-900/25 px-3 py-2.5 flex items-start gap-2">
+          <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
+              d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+          </svg>
+          <div>
+            <p className="text-xs font-bold text-red-700 dark:text-red-400 leading-tight">
+              Posible filtración de información sensible
+            </p>
+            <p className="text-xs text-red-600 dark:text-red-300 leading-snug mt-0.5">
+              Los primeros 3 dígitos coinciden con numeración de telefonía móvil colombiana.
+              Los administradores han sido notificados.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Visualizador de dígitos */}
       {digits.length > 0 && (
