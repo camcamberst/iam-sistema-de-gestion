@@ -95,8 +95,8 @@ export async function GET(request: NextRequest) {
     const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const periodLabel = `${d <= 15 ? 'P1' : 'P2'} ${monthNames[m - 1]} ${y}`;
 
-    // ── 3. Obtener modelos según jerarquía ───────────────────────────────────
-    let modelsQuery = supabase
+    // ── 3a. Todos los modelos de la agencia (para global) ───────────────────
+    const baseQuery = () => supabase
       .from('users')
       .select('id')
       .eq('role', 'modelo')
@@ -104,31 +104,36 @@ export async function GET(request: NextRequest) {
       .neq('id', AIM_BOTTY_ID)
       .neq('email', AIM_BOTTY_EMAIL);
 
+    // Global: todos los modelos (superadmin_aff acotado a su estudio; admin ve toda la agencia)
+    let globalModelsQuery = baseQuery();
     if (isSuperadminAff && adminUser.affiliate_studio_id) {
-      modelsQuery = modelsQuery.eq('affiliate_studio_id', adminUser.affiliate_studio_id);
-    } else if (isAdmin && adminGroupIds.length > 0) {
+      globalModelsQuery = globalModelsQuery.eq('affiliate_studio_id', adminUser.affiliate_studio_id);
+    }
+    const { data: allAgencyModels } = await globalModelsQuery;
+    const allAgencyModelIds = allAgencyModels?.map(m => m.id) ?? [];
+
+    // ── 3b. Modelos del admin (para bySede) ──────────────────────────────────
+    let adminModelIds: string[] = allAgencyModelIds; // super_admin y superadmin_aff ven todo
+    if (isAdmin && adminGroupIds.length > 0) {
       const { data: groupMembers } = await supabase
         .from('user_groups')
         .select('user_id')
         .in('group_id', adminGroupIds);
-      const memberIds = groupMembers?.map(g => g.user_id) || [];
-      if (memberIds.length === 0) {
-        return NextResponse.json({ success: true, global: [], bySede: [], periodLabel });
-      }
-      modelsQuery = modelsQuery.in('id', memberIds);
+      adminModelIds = groupMembers?.map(g => g.user_id) ?? [];
     }
 
-    const { data: models } = await modelsQuery;
-    if (!models?.length) {
+    if (allAgencyModelIds.length === 0) {
       return NextResponse.json({ success: true, global: [], bySede: [], periodLabel });
     }
-    const modelIds = models.map(m => m.id);
+
+    // Conjunto unión para una sola consulta de valores
+    const allModelIds = [...new Set([...allAgencyModelIds, ...adminModelIds])];
 
     // ── 4. Grupo de cada modelo ──────────────────────────────────────────────
     const { data: userGroupsData } = await supabase
       .from('user_groups')
       .select('user_id, groups!inner(id, name)')
-      .in('user_id', modelIds);
+      .in('user_id', allModelIds);
 
     const modelGroupMap = new Map<string, { id: string; name: string }>();
     userGroupsData?.forEach((ug: any) => {
@@ -157,11 +162,11 @@ export async function GET(request: NextRequest) {
     const platformMap = new Map<string, { name: string; currency: string }>();
     platformDefs?.forEach((p: any) => platformMap.set(p.id, { name: p.name, currency: p.currency }));
 
-    // ── 7. Valores del período para todos los modelos ────────────────────────
+    // ── 7. Valores del período (todos los modelos de la agencia) ────────────
     const { data: allValues } = await supabase
       .from('model_values')
       .select('model_id, platform_id, value, updated_at')
-      .in('model_id', modelIds)
+      .in('model_id', allModelIds)
       .gte('period_date', startStr)
       .lte('period_date', endStr)
       .order('updated_at', { ascending: false });
@@ -179,44 +184,49 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    // ── 8. Agregación global y por sede ──────────────────────────────────────
+    // ── 8. Agregación: global (toda la agencia) y bySede (solo grupos del admin) ──
     const globalTotals = new Map<string, { name: string; usd: number; models: Set<string> }>();
     const sedeTotals   = new Map<string, { sedeName: string; platforms: Map<string, { name: string; usd: number; models: Set<string> }> }>();
 
-    modelIds.forEach(modelId => {
+    const adminModelSet = new Set(adminModelIds);
+
+    allModelIds.forEach(modelId => {
       const platformValues = modelPlatformMap.get(modelId);
       if (!platformValues) return;
 
-      const group = modelGroupMap.get(modelId);
+      const group    = modelGroupMap.get(modelId);
       const sedeKey  = group?.id   ?? 'sin-sede';
       const sedeName = group?.name ?? 'Sin Sede';
-
-      if (!sedeTotals.has(sedeKey)) {
-        sedeTotals.set(sedeKey, { sedeName, platforms: new Map() });
-      }
-      const sedeData = sedeTotals.get(sedeKey)!;
 
       platformValues.forEach((rawValue, platformId) => {
         const pDef = platformMap.get(platformId);
         if (!pDef) return;
-        const usd  = toUsd(rawValue, platformId, pDef.currency, rates);
+        const usd = toUsd(rawValue, platformId, pDef.currency, rates);
         if (usd <= 0) return;
 
-        // Global
-        if (!globalTotals.has(platformId)) {
-          globalTotals.set(platformId, { name: pDef.name, usd: 0, models: new Set() });
+        // Global: todos los modelos de la agencia
+        if (allAgencyModelIds.includes(modelId)) {
+          if (!globalTotals.has(platformId)) {
+            globalTotals.set(platformId, { name: pDef.name, usd: 0, models: new Set() });
+          }
+          const g = globalTotals.get(platformId)!;
+          g.usd += usd;
+          g.models.add(modelId);
         }
-        const g = globalTotals.get(platformId)!;
-        g.usd += usd;
-        g.models.add(modelId);
 
-        // Por sede
-        if (!sedeData.platforms.has(platformId)) {
-          sedeData.platforms.set(platformId, { name: pDef.name, usd: 0, models: new Set() });
+        // Por sede: solo modelos a cargo del admin
+        if (adminModelSet.has(modelId)) {
+          if (!sedeTotals.has(sedeKey)) {
+            sedeTotals.set(sedeKey, { sedeName, platforms: new Map() });
+          }
+          const sedeData = sedeTotals.get(sedeKey)!;
+          if (!sedeData.platforms.has(platformId)) {
+            sedeData.platforms.set(platformId, { name: pDef.name, usd: 0, models: new Set() });
+          }
+          const s = sedeData.platforms.get(platformId)!;
+          s.usd += usd;
+          s.models.add(modelId);
         }
-        const s = sedeData.platforms.get(platformId)!;
-        s.usd += usd;
-        s.models.add(modelId);
       });
     });
 
