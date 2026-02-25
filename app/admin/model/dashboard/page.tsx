@@ -10,6 +10,7 @@ import AIDashboard from '@/components/AIDashboard';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import AnnouncementBoardWidget from '@/components/AnnouncementBoardWidget';
 import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
+import VoiceCodeReader from '@/components/VoiceCodeReader';
 
 interface User {
   id: string;
@@ -573,6 +574,11 @@ export default function ModelDashboard() {
           )}
         </div>
         )}
+
+        {/* Lector de Código Vx */}
+        <div className="mt-6">
+          <VoiceCodeReader />
+        </div>
 
         {/* AI Dashboard */}
         <div className="mt-6">
