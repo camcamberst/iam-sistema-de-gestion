@@ -389,8 +389,9 @@ export default function ModelDashboard() {
           {/* Columna 1: Corcho Informativo */}
           <AnnouncementBoardWidget userId={user.id} userGroups={user.groups} />
 
-          {/* Columna 2: Resumen de productividad */}
+          {/* Columna 2: Resumen de productividad + Lector de Código Vx */}
           {user.role === 'modelo' && (
+          <div className="flex flex-col gap-4 sm:gap-6">
         <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-3 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
           <div className="flex items-center space-x-2 mb-2.5 sm:mb-4">
             <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
@@ -574,14 +575,11 @@ export default function ModelDashboard() {
             </>
           )}
         </div>
+            <VoiceCodeReader />
+          </div>
           )}
 
         </div>{/* fin grid 2 columnas */}
-
-        {/* Lector de Código Vx */}
-        <div className="mt-6">
-          <VoiceCodeReader />
-        </div>
 
         {/* AI Dashboard */}
         <div className="mt-6">
