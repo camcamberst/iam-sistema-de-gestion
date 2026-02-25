@@ -172,9 +172,7 @@ export default function ConfigCalculatorPage() {
       console.log('🔍 [LOAD-GROUPS] Response data:', data);
       
       if (data.success && data.groups) {
-        // Filtrar grupos operativos (excluir Otros y Satélites)
         const filteredGroups = data.groups
-          .filter((g: any) => g.name !== 'Otros' && g.name !== 'Satélites')
           .map((g: any) => ({ id: g.id, name: g.name }));
         
         console.log('✅ [LOAD-GROUPS] Grupos cargados y filtrados:', filteredGroups.length);
