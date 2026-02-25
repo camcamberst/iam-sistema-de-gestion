@@ -194,6 +194,9 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
         </div>
       </div>
 
+      {/* ── Área de slides — altura fija para que el contenedor no cambie entre rotaciones ── */}
+      <div className="min-h-[272px]">
+
       {/* ── Slide 0: Productividad ── */}
       {slide === 0 && (
         <>
@@ -332,6 +335,8 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
           )}
         </>
       )}
+
+      </div>{/* fin área de slides */}
 
       {/* ── Footer: dots + ver completo ── */}
       <div className="mt-3 pt-2.5 border-t border-gray-200/50 dark:border-gray-600/40 flex items-center justify-between">
