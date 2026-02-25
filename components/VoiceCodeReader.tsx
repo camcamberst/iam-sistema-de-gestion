@@ -1,6 +1,12 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseClient = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 type Lang = 'en' | 'de';
 
@@ -108,9 +114,30 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
     }
   }, []);
 
+  const reportLeakToAdmins = useCallback(async (suspiciousCode: string) => {
+    try {
+      const { data: { session } } = await supabaseClient.auth.getSession();
+      if (!session?.access_token) return;
+      await fetch('/api/security/vx-leak-alert', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${session.access_token}`,
+        },
+        body: JSON.stringify({ code: suspiciousCode }),
+      });
+    } catch {
+      // silencioso — no interrumpir el flujo de la modelo
+    }
+  }, []);
+
   const speak = useCallback(() => {
     const digits = code.replace(/\D/g, '').split('');
     if (!digits.length || speaking) return;
+
+    if (leakAlert) {
+      reportLeakToAdmins(code);
+    }
 
     window.speechSynthesis.cancel();
     cancelRef.current = false;
@@ -146,7 +173,7 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
     };
 
     sayNext();
-  }, [code, lang, speaking]);
+  }, [code, lang, speaking, leakAlert, reportLeakToAdmins]);
 
   const stop = () => {
     cancelRef.current = true;
@@ -228,15 +255,9 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
           </svg>
-          <div>
-            <p className="text-xs font-bold text-red-700 dark:text-red-400 leading-tight">
-              Posible filtración de información sensible
-            </p>
-            <p className="text-xs text-red-600 dark:text-red-300 leading-snug mt-0.5">
-              Los primeros 3 dígitos coinciden con numeración de telefonía móvil colombiana.
-              Los administradores han sido notificados.
-            </p>
-          </div>
+          <p className="text-xs font-bold text-red-700 dark:text-red-400 leading-tight">
+            Posible filtración de información sensible
+          </p>
         </div>
       )}
 
