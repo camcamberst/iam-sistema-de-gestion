@@ -45,7 +45,11 @@ function pickFemaleVoice(lang: Lang): SpeechSynthesisVoice | null {
   return byLang[0];
 }
 
-export default function VoiceCodeReader() {
+interface VoiceCodeReaderProps {
+  className?: string;
+}
+
+export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps) {
   const [code,        setCode]        = useState('');
   const [lang,        setLang]        = useState<Lang>('en');
   const [speaking,    setSpeaking]    = useState(false);
@@ -127,7 +131,7 @@ export default function VoiceCodeReader() {
   }
 
   return (
-    <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4">
+    <div className={`bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 flex flex-col ${className}`}>
 
       {/* Header */}
       <div className="flex items-center space-x-2 mb-4">
