@@ -194,12 +194,14 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
         </div>
       </div>
 
-      {/* ── Área de slides — altura fija para que el contenedor no cambie entre rotaciones ── */}
-      <div className="min-h-[272px]">
+      {/* ── Área de slides: grid superpuesto — ambos siempre en el DOM para altura estable ── */}
+      <div className="grid">
 
-      {/* ── Slide 0: Productividad ── */}
-      {slide === 0 && (
-        <>
+        {/* ── Slide 0: Productividad ── */}
+        <div
+          className="col-start-1 row-start-1 transition-opacity duration-300"
+          style={{ opacity: slide === 0 ? 1 : 0, pointerEvents: slide === 0 ? 'auto' : 'none' }}
+        >
           {/* Summary cards */}
           {summary && !loading0 && (
             <div className="grid grid-cols-4 gap-1.5 mb-3">
@@ -270,12 +272,13 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
               )}
             </div>
           )}
-        </>
-      )}
+        </div>
 
-      {/* ── Slide 1: Top Plataformas ── */}
-      {slide === 1 && (
-        <>
+        {/* ── Slide 1: Top Plataformas ── */}
+        <div
+          className="col-start-1 row-start-1 transition-opacity duration-300"
+          style={{ opacity: slide === 1 ? 1 : 0, pointerEvents: slide === 1 ? 'auto' : 'none' }}
+        >
           {loading1 && (
             <div className="flex items-center justify-center py-6">
               <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
@@ -333,8 +336,7 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
               )}
             </div>
           )}
-        </>
-      )}
+        </div>
 
       </div>{/* fin área de slides */}
 
