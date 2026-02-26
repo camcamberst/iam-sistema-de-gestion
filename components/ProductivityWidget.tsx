@@ -72,7 +72,8 @@ const RANK_COLORS = [
 // ── componente ─────────────────────────────────────────────────────────────
 export default function ProductivityWidget({ userId, userRole }: Props) {
   const [slide,        setSlide]        = useState(0);       // 0 = productividad, 1 = plataformas
-  const [paused,       setPaused]       = useState(false);
+  const [paused,       setPaused]       = useState(false);   // pausa manual (navegación por dots)
+  const [hovered,      setHovered]      = useState(false);   // pausa por hover
 
   // Slide 0 — productividad
   const [models,       setModels]       = useState<ProductivityModel[]>([]);
@@ -134,15 +135,15 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [loadProductivity, loadPlatforms]);
 
-  // ── rotación automática ──────────────────────────────────────────────────
+  // ── rotación automática (se detiene si el cursor está encima o si se navegó manualmente) ──
   useEffect(() => {
-    if (paused) {
+    if (paused || hovered) {
       if (rotateRef.current) clearInterval(rotateRef.current);
       return;
     }
     rotateRef.current = setInterval(() => setSlide(s => (s + 1) % 2), ROTATE_MS);
     return () => { if (rotateRef.current) clearInterval(rotateRef.current); };
-  }, [paused]);
+  }, [paused, hovered]);
 
   const goTo = (idx: number) => {
     setSlide(idx);
@@ -161,7 +162,11 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
   const loading     = slide === 0 ? loading0     : loading1;
 
   return (
-    <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-emerald-900/10 dark:ring-0.5 dark:ring-emerald-500/15 border border-white/20 dark:border-gray-600/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 transition-all duration-300">
+    <div
+      className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-emerald-900/10 dark:ring-0.5 dark:ring-emerald-500/15 border border-white/20 dark:border-gray-600/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 transition-all duration-300"
+      onMouseEnter={() => setHovered(true)}
+      onMouseLeave={() => setHovered(false)}
+    >
 
       {/* ── Header ── */}
       <div className="flex items-center justify-between mb-3">
@@ -353,7 +358,7 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
             />
           ))}
           {/* Barra de progreso de rotación */}
-          {!paused && (
+          {!paused && !hovered && (
             <span className="ml-1 text-[9px] text-gray-300 dark:text-gray-600">auto</span>
           )}
         </div>
