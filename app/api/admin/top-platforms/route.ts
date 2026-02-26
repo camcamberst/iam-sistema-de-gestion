@@ -41,12 +41,35 @@ function toUsd(value: number, platformId: string, currency: string, rates: { eur
   return value;
 }
 
-function buildTop3(platformTotals: Map<string, { name: string; usd: number; models: Set<string> }>): TopPlatformEntry[] {
+/**
+ * Construye el top 3 de plataformas usando un score compuesto que combina
+ * volumen de facturación con amplitud de participación (nº de modelos).
+ *
+ * score = totalUsd × sqrt(modelCount)
+ *
+ * Esto evita que una plataforma aparezca en el top solo porque una sola modelo
+ * aportó casi todo el volumen. Una plataforma con USD moderado pero muchas
+ * modelos activas superará a una concentrada en una sola modelo.
+ */
+function buildTop3(
+  platformTotals: Map<string, { name: string; usd: number; models: Set<string> }>,
+  totalActiveModels = 1
+): TopPlatformEntry[] {
   return [...platformTotals.entries()]
-    .map(([id, data]) => ({ platformId: id, name: data.name, totalUsd: Math.round(data.usd * 100) / 100, modelCount: data.models.size, rank: 0 }))
-    .sort((a, b) => b.totalUsd - a.totalUsd)
+    .map(([id, data]) => {
+      const modelCount  = data.models.size;
+      const totalUsd    = Math.round(data.usd * 100) / 100;
+      // Participación relativa (0–1); raíz cuadrada amortigua el peso
+      const breadth     = modelCount / Math.max(totalActiveModels, 1);
+      const score       = totalUsd * Math.sqrt(breadth);
+      return { platformId: id, name: data.name, totalUsd, modelCount, score, rank: 0 };
+    })
+    .sort((a, b) => b.score - a.score)
     .slice(0, 3)
-    .map((entry, i) => ({ ...entry, rank: i + 1 }));
+    .map((entry, i) => {
+      const { score: _score, ...rest } = entry; // no exponer score en la respuesta
+      return { ...rest, rank: i + 1 };
+    });
 }
 
 export async function GET(request: NextRequest) {
@@ -231,13 +254,23 @@ export async function GET(request: NextRequest) {
     });
 
     // ── 9. Construir respuesta ────────────────────────────────────────────────
-    const globalTop3 = buildTop3(globalTotals);
+    // Pasar el total de modelos activos para normalizar la amplitud de participación
+    const globalTop3 = buildTop3(globalTotals, allAgencyModelIds.length);
+
+    // Para cada sede, usar el nº de modelos de esa sede como referencia
+    const sedeModelCounts = new Map<string, number>();
+    allModelIds.forEach(modelId => {
+      if (!adminModelSet.has(modelId)) return;
+      const group = modelGroupMap.get(modelId);
+      const key   = group?.id ?? 'sin-sede';
+      sedeModelCounts.set(key, (sedeModelCounts.get(key) ?? 0) + 1);
+    });
 
     const bySede: SedeTopPlatforms[] = [...sedeTotals.entries()]
       .map(([sedeId, { sedeName, platforms }]) => ({
         sedeId,
         sedeName,
-        top3: buildTop3(platforms),
+        top3: buildTop3(platforms, sedeModelCounts.get(sedeId) ?? 1),
       }))
       .filter(s => s.top3.length > 0)
       .sort((a, b) => (b.top3[0]?.totalUsd ?? 0) - (a.top3[0]?.totalUsd ?? 0));

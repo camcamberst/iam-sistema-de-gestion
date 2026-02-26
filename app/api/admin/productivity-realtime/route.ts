@@ -154,7 +154,7 @@ export async function GET(request: NextRequest) {
 
       return {
         modelId: model.id,
-        name: model.name || model.email.split('@')[0],
+        name: model.name?.trim() || model.email.split('@')[0],
         email: model.email.split('@')[0],
         groupId: group?.id ?? null,
         groupName: group?.name ?? null,
