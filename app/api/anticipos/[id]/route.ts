@@ -4,7 +4,8 @@ import {
   notifyAnticipoApproved, 
   notifyAnticipoRejected,
   notifyAnticipoRealizado,
-  notifyAdminsAnticipoConfirmado
+  notifyAdminsAnticipoConfirmado,
+  notifyAnticipoReversado
 } from '@/lib/chat/bot-notifications';
 
 const supabase = createClient(
@@ -69,6 +70,7 @@ export async function PUT(
       estado, 
       comentarios_admin, 
       comentarios_rechazo,
+      motivo_reversa,
       admin_id,
       model_id
     } = body;
@@ -81,7 +83,7 @@ export async function PUT(
       }, { status: 400 });
     }
 
-    if (!['pendiente', 'aprobado', 'rechazado', 'realizado', 'confirmado', 'cancelado'].includes(estado)) {
+    if (!['pendiente', 'aprobado', 'rechazado', 'realizado', 'confirmado', 'cancelado', 'reversado'].includes(estado)) {
       return NextResponse.json({ 
         success: false, 
         error: 'Estado inválido' 
@@ -126,6 +128,17 @@ export async function PUT(
     } else if (estado === 'cancelado') {
       updateData.cancelled_at = new Date().toISOString();
       updateData.cancelled_by = admin_id;
+    } else if (estado === 'reversado') {
+      // Solo se puede reversar un anticipo que esté en estado 'aprobado'
+      if (currentAnticipo.estado !== 'aprobado') {
+        return NextResponse.json({
+          success: false,
+          error: 'Solo se pueden reversar anticipos en estado aprobado'
+        }, { status: 400 });
+      }
+      updateData.reversed_at    = new Date().toISOString();
+      updateData.reversed_by    = admin_id;
+      updateData.motivo_reversa = motivo_reversa || null;
     }
 
     // Actualizar anticipo
@@ -165,6 +178,9 @@ export async function PUT(
       } else if (estado === 'confirmado') {
         await notifyAdminsAnticipoConfirmado(modelId, modelName, montoSolicitado);
         console.log('✅ [API ANTICIPOS] Notificación de confirmación enviada a admins');
+      } else if (estado === 'reversado') {
+        await notifyAnticipoReversado(modelId, montoSolicitado, motivo_reversa);
+        console.log('✅ [API ANTICIPOS] Notificación de reversión enviada a la modelo');
       }
     } catch (error) {
       console.error('⚠️ [API ANTICIPOS] Error enviando notificación:', error);

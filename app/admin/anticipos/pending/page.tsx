@@ -17,7 +17,7 @@ interface Anticipo {
   monto_solicitado: number;
   porcentaje_solicitado: number;
   medio_pago: string;
-  estado: 'pendiente' | 'aprobado' | 'rechazado' | 'realizado' | 'confirmado' | 'cancelado';
+  estado: 'pendiente' | 'aprobado' | 'rechazado' | 'realizado' | 'confirmado' | 'cancelado' | 'reversado';
   nombre_beneficiario?: string;
   numero_telefono?: string;
   nombre_titular?: string;
@@ -53,7 +53,7 @@ export default function SolicitudesPendientesPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado'>('todos');
+  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado' | 'reversado'>('todos');
   const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -99,7 +99,7 @@ export default function SolicitudesPendientesPage() {
     try {
       console.log('🔍 [ADMIN] Cargando anticipos para admin:', adminId);
       // Cargar tanto pendientes como aprobadas
-      const response = await fetch(`/api/anticipos?adminId=${adminId}&estado=pendiente,aprobado`);
+      const response = await fetch(`/api/anticipos?adminId=${adminId}&estado=pendiente,aprobado,reversado`);
       const data = await response.json();
       
       console.log('🔍 [ADMIN] Respuesta de la API:', data);
@@ -177,7 +177,7 @@ export default function SolicitudesPendientesPage() {
     return filtered;
   };
 
-  const handleAction = async (anticipoId: string, action: 'aprobado' | 'rechazado' | 'realizado', comentarios?: string) => {
+  const handleAction = async (anticipoId: string, action: 'aprobado' | 'rechazado' | 'realizado' | 'reversado', comentarios?: string) => {
     try {
       setProcessing(anticipoId);
       setError(null);
@@ -190,6 +190,7 @@ export default function SolicitudesPendientesPage() {
           estado: action,
           comentarios_admin: action === 'aprobado' ? comentarios : undefined,
           comentarios_rechazo: action === 'rechazado' ? comentarios : undefined,
+          motivo_reversa: action === 'reversado' ? comentarios : undefined,
           admin_id: user?.id
         })
       });
@@ -351,7 +352,7 @@ export default function SolicitudesPendientesPage() {
               </div>
             )}
             
-            {/* Filtro de Estado */}
+                    {/* Filtro de Estado */}
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">
                 {user?.role === 'super_admin' ? 'Filtrar por estado:' : 'Filtrar por estado:'}
@@ -362,10 +363,11 @@ export default function SolicitudesPendientesPage() {
                   { value: 'pendiente', label: 'Pendientes' },
                   { value: 'aprobado', label: 'Aprobadas' },
                   { value: 'realizado', label: 'Realizadas' },
-                  { value: 'confirmado', label: 'Confirmadas' }
+                  { value: 'confirmado', label: 'Confirmadas' },
+                  { value: 'reversado', label: 'Reversadas' }
                 ]}
                 value={estadoFiltro}
-                onChange={(value) => setEstadoFiltro(value as 'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado')}
+                onChange={(value) => setEstadoFiltro(value as 'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado' | 'reversado')}
                 placeholder="Selecciona un estado"
                 className="text-sm"
               />
@@ -568,18 +570,37 @@ export default function SolicitudesPendientesPage() {
                       )}
                       
                       {anticipo.estado === 'aprobado' && (
-                        <button
-                          onClick={() => {
-                            const confirmar = confirm('¿Confirmas que el anticipo ha sido realizado/pagado?');
-                            if (confirmar) {
-                              handleAction(anticipo.id, 'realizado');
-                            }
-                          }}
-                          disabled={processing === anticipo.id}
-                          className="w-full sm:w-auto px-3 py-2 sm:py-1.5 text-xs font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-95 touch-manipulation"
-                        >
-                          {processing === anticipo.id ? '...' : 'Realizado'}
-                        </button>
+                        <div className="flex flex-col sm:flex-row gap-2 w-full">
+                          <button
+                            onClick={() => {
+                              const confirmar = confirm('¿Confirmas que el anticipo ha sido realizado/pagado?');
+                              if (confirmar) {
+                                handleAction(anticipo.id, 'realizado');
+                              }
+                            }}
+                            disabled={processing === anticipo.id}
+                            className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-xs font-medium bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-95 touch-manipulation"
+                          >
+                            {processing === anticipo.id ? '...' : 'Realizado'}
+                          </button>
+                          <button
+                            onClick={() => {
+                              const motivo = prompt('Motivo de la reversión (opcional):');
+                              if (motivo !== null) {
+                                const confirmar = confirm(
+                                  `¿Reversar esta solicitud?\n\nEsto anulará la aprobación y la modelo NO tendrá descuento por este anticipo.`
+                                );
+                                if (confirmar) {
+                                  handleAction(anticipo.id, 'reversado', motivo || undefined);
+                                }
+                              }
+                            }}
+                            disabled={processing === anticipo.id}
+                            className="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-xs font-medium bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-lg hover:from-orange-600 hover:to-amber-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 shadow-md active:scale-95 touch-manipulation"
+                          >
+                            {processing === anticipo.id ? '...' : 'Reversar'}
+                          </button>
+                        </div>
                       )}
 
                       {anticipo.estado === 'realizado' && (
@@ -591,6 +612,15 @@ export default function SolicitudesPendientesPage() {
                       {anticipo.estado === 'confirmado' && (
                         <div className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-800 dark:text-emerald-300 rounded-lg text-xs font-medium text-center sm:text-left">
                           Confirmado por la modelo
+                        </div>
+                      )}
+
+                      {anticipo.estado === 'reversado' && (
+                        <div className="w-full sm:w-auto px-3 py-2 sm:py-1.5 bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300 rounded-lg text-xs font-medium text-center sm:text-left flex items-center gap-1.5">
+                          <svg className="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+                          </svg>
+                          Reversada — sin descuento a la modelo
                         </div>
                       )}
                     </div>

@@ -259,6 +259,26 @@ export async function notifyAnticipoRealizado(
   await sendBotNotification(modelId, 'anticipo_realizado', customMessage);
 }
 
+// Notificar a la modelo que su anticipo fue reversado
+export async function notifyAnticipoReversado(
+  modelId: string,
+  monto: number,
+  motivo?: string
+): Promise<void> {
+  const montoFormateado = new Intl.NumberFormat('es-CO', {
+    style: 'currency',
+    currency: 'COP',
+    minimumFractionDigits: 0
+  }).format(monto);
+
+  const motivoTexto = motivo ? ` Motivo: ${motivo}.` : '';
+  const customMessage =
+    `🔄 Tu solicitud de anticipo por ${montoFormateado} ha sido **reversada** por el administrador.${motivoTexto} ` +
+    `Este monto **no será descontado** de tu facturado. Si tienes dudas, contacta a tu administrador.`;
+
+  await sendBotNotification(modelId, 'anticipo_rechazado', customMessage);
+}
+
 // Notificar anticipo confirmado por modelo
 export async function notifyAdminsAnticipoConfirmado(
   modelId: string,
