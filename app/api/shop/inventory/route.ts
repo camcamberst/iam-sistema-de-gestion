@@ -34,14 +34,12 @@ export async function GET(req: NextRequest) {
   if (locationType) query = (query as any).eq('location_type', locationType);
   if (locationId) query = (query as any).eq('location_id', locationId);
 
-  // Filtrar por negocio a través del producto relacionado
+  // Filtrar por negocio a través del producto relacionado (sin excepciones)
   const scope = getStudioScope(user);
-  if (user.role !== 'super_admin') {
-    if (scope === null) {
-      query = (query as any).is('shop_products.affiliate_studio_id', null);
-    } else {
-      query = (query as any).eq('shop_products.affiliate_studio_id', scope);
-    }
+  if (scope === null) {
+    query = (query as any).is('shop_products.affiliate_studio_id', null);
+  } else {
+    query = (query as any).eq('shop_products.affiliate_studio_id', scope);
   }
 
   const { data, error } = await query;
@@ -149,9 +147,10 @@ async function notifyLowStock(
     .eq('is_active', true);
 
   if (affiliateStudioId === null) {
-    // Innova: admins sin affiliate_studio_id + super_admin
-    adminsQuery = (adminsQuery as any).or('role.eq.super_admin,and(role.eq.admin,affiliate_studio_id.is.null)');
+    // Innova: super_admin y admins de Innova (sin affiliate_studio_id)
+    adminsQuery = (adminsQuery as any).is('affiliate_studio_id', null);
   } else {
+    // Afiliado: solo admins de ese estudio
     adminsQuery = (adminsQuery as any).eq('affiliate_studio_id', affiliateStudioId);
   }
 

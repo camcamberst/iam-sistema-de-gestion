@@ -37,19 +37,22 @@ export async function getShopUser(req: NextRequest): Promise<ShopUser | null> {
 }
 
 /**
- * Retorna el affiliate_studio_id que se debe usar para filtrar / insertar
- * en la tienda, según el rol del usuario:
+ * Retorna el affiliate_studio_id del negocio al que pertenece el usuario
+ * en el contexto del shop. Cada negocio es una burbuja privada:
  *
- *   super_admin              → null  (Agencia Innova — bodega principal)
+ *   super_admin              → null  (Agencia Innova — solo ve su propio shop)
  *   admin de Innova          → null  (Agencia Innova)
- *   superadmin_aff           → su affiliate_studio_id
- *   admin de afiliado        → su affiliate_studio_id
+ *   superadmin_aff           → su affiliate_studio_id (solo su estudio)
+ *   admin de afiliado        → su affiliate_studio_id (solo su estudio)
  *   modelo de Innova         → null
  *   modelo de afiliado       → su affiliate_studio_id
+ *
+ * IMPORTANTE: incluso super_admin solo accede al shop de Innova.
+ * El inventario de cada afiliado es privado y no visible desde Innova.
  */
 export function getStudioScope(user: ShopUser): string | null {
-  if (user.role === 'super_admin') return null;
-  if (user.role === 'admin' && !user.affiliate_studio_id) return null;
+  if (user.role === 'super_admin') return null;           // Innova
+  if (user.role === 'admin' && !user.affiliate_studio_id) return null; // Innova
   return user.affiliate_studio_id ?? null;
 }
 
@@ -57,41 +60,31 @@ export function getStudioScope(user: ShopUser): string | null {
  * Aplica el filtro de burbuja a una query de Supabase sobre una tabla
  * que tiene la columna `affiliate_studio_id`.
  *
- * Reglas:
- *   super_admin        → sin filtro (ve todo)
- *   admin Innova       → solo NULL (Innova)
- *   superadmin_aff /
- *   admin afiliado     → solo su UUID
- *   modelo             → filtrado por su propio scope
+ * Todos los roles quedan estrictamente dentro de su propio negocio.
+ * Nadie puede ver el shop de otro negocio, incluido el super_admin.
  */
 export function applyShopAffiliateFilter(query: ReturnType<typeof supabase.from>, user: ShopUser) {
   const scope = getStudioScope(user);
 
-  if (user.role === 'super_admin') {
-    return query; // ve todo: Innova + todos los afiliados
-  }
-
   if (scope === null) {
-    // Innova: affiliate_studio_id IS NULL
+    // Innova (super_admin, admin Innova, modelo Innova)
     return (query as any).is('affiliate_studio_id', null);
   }
 
-  // Afiliado: affiliate_studio_id = su UUID
+  // Afiliado: solo su estudio
   return (query as any).eq('affiliate_studio_id', scope);
 }
 
-/** Verifica que un usuario admin/superadmin pueda gestionar un recurso del shop. */
+/**
+ * Verifica que un usuario pueda gestionar un recurso del shop.
+ * Cada negocio solo gestiona sus propios recursos.
+ */
 export function canManageShopResource(
   user: ShopUser,
   resourceAffiliateStudioId: string | null
 ): boolean {
-  if (user.role === 'super_admin') return true;
-
   const scope = getStudioScope(user);
 
-  // Admin Innova solo gestiona recursos de Innova (affiliate_studio_id IS NULL)
-  if (scope === null) return resourceAffiliateStudioId === null;
-
-  // Admin/superadmin afiliado solo gestiona recursos de su estudio
-  return resourceAffiliateStudioId === scope;
+  // Mismo negocio → puede gestionar
+  return scope === resourceAffiliateStudioId;
 }

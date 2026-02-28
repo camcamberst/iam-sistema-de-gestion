@@ -407,12 +407,10 @@ async function notifyPurchase(
     .eq('is_active', true);
 
   if (modelScope === null) {
-    // Modelo de Innova → notificar a super_admin + admins de Innova
-    adminsQuery = (adminsQuery as any).or(
-      'role.eq.super_admin,and(role.eq.admin,affiliate_studio_id.is.null)'
-    );
+    // Modelo de Innova → notificar solo a admins de Innova (affiliate_studio_id IS NULL)
+    adminsQuery = (adminsQuery as any).is('affiliate_studio_id', null);
   } else {
-    // Modelo afiliada → notificar a superadmin_aff + admins de ese estudio
+    // Modelo afiliada → notificar solo a admins de ese estudio
     adminsQuery = (adminsQuery as any).eq('affiliate_studio_id', modelScope);
   }
 

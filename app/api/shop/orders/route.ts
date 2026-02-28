@@ -33,34 +33,34 @@ export async function GET(req: NextRequest) {
     .limit(limit);
 
   if (user.role === 'modelo') {
-    // Modelo solo ve sus propios pedidos
+    // Modelo: solo sus propios pedidos
     query = (query as any).eq('model_id', user.id);
-  } else if (user.role === 'super_admin') {
-    // Super admin ve todo — sin filtro adicional
   } else {
-    // Admin / superadmin_aff: filtra por su negocio
+    // Todos los admins (incluido super_admin) ven solo su propio negocio
     const scope = getStudioScope(user);
 
-    if (user.role === 'admin' && !user.affiliate_studio_id) {
-      // Admin Innova: solo pedidos con affiliate_studio_id IS NULL
+    if (scope === null) {
+      // Innova (super_admin o admin Innova): pedidos con affiliate_studio_id IS NULL
       query = (query as any).is('affiliate_studio_id', null);
 
-      // Además, solo modelos de sus grupos
-      const { data: groupModels } = await supabase
-        .from('users')
-        .select('id')
-        .eq('group_id', user.group_id)
-        .eq('role', 'modelo')
-        .is('affiliate_studio_id', null);
+      // Admin de sede: además filtra por modelos de sus grupos
+      if (user.role === 'admin' && !user.affiliate_studio_id && user.group_id) {
+        const { data: groupModels } = await supabase
+          .from('users')
+          .select('id')
+          .eq('group_id', user.group_id)
+          .eq('role', 'modelo')
+          .is('affiliate_studio_id', null);
 
-      const modelIds = (groupModels || []).map((m: { id: string }) => m.id);
-      if (modelIds.length > 0) {
-        query = (query as any).in('model_id', modelIds);
-      } else {
-        return NextResponse.json([]);
+        const modelIds = (groupModels || []).map((m: { id: string }) => m.id);
+        if (modelIds.length > 0) {
+          query = (query as any).in('model_id', modelIds);
+        } else {
+          return NextResponse.json([]);
+        }
       }
-    } else if (scope) {
-      // superadmin_aff / admin afiliado: solo su burbuja
+    } else {
+      // Afiliado: solo su burbuja
       query = (query as any).eq('affiliate_studio_id', scope);
     }
   }

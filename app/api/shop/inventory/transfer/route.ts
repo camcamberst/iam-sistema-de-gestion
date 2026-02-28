@@ -133,14 +133,12 @@ export async function GET(req: NextRequest) {
 
   if (productId) query = (query as any).eq('product_id', productId);
 
-  // Filtrar historial por negocio
+  // Filtrar historial por negocio (sin excepciones)
   const scope = getStudioScope(user);
-  if (user.role !== 'super_admin') {
-    if (scope === null) {
-      query = (query as any).is('shop_products.affiliate_studio_id', null);
-    } else {
-      query = (query as any).eq('shop_products.affiliate_studio_id', scope);
-    }
+  if (scope === null) {
+    query = (query as any).is('shop_products.affiliate_studio_id', null);
+  } else {
+    query = (query as any).eq('shop_products.affiliate_studio_id', scope);
   }
 
   const { data, error } = await query;
