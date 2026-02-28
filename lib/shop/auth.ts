@@ -15,7 +15,6 @@ export interface ShopUser {
   id: string;
   role: string;
   affiliate_studio_id: string | null;
-  group_id: string | null;
 }
 
 /** Extrae y valida el usuario autenticado desde el header Authorization. */
@@ -26,13 +25,13 @@ export async function getShopUser(req: NextRequest): Promise<ShopUser | null> {
   const { data: { user } } = await supabase.auth.getUser(token);
   if (!user) return null;
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from('users')
-    .select('id, role, affiliate_studio_id, group_id')
+    .select('id, role, affiliate_studio_id')
     .eq('id', user.id)
     .single();
 
-  if (!profile) return null;
+  if (error || !profile) return null;
   return profile as ShopUser;
 }
 

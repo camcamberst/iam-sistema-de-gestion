@@ -43,21 +43,32 @@ export async function GET(req: NextRequest) {
       // Innova (super_admin o admin Innova): pedidos con affiliate_studio_id IS NULL
       query = (query as any).is('affiliate_studio_id', null);
 
-      // Admin de sede: además filtra por modelos de sus grupos
-      if (user.role === 'admin' && !user.affiliate_studio_id && user.group_id) {
-        const { data: groupModels } = await supabase
-          .from('users')
-          .select('id')
-          .eq('group_id', user.group_id)
-          .eq('role', 'modelo')
-          .is('affiliate_studio_id', null);
+      // Admin de sede: filtra por modelos de sus grupos (via user_groups)
+      if (user.role === 'admin' && !user.affiliate_studio_id) {
+        const { data: userGroupRows } = await supabase
+          .from('user_groups')
+          .select('group_id')
+          .eq('user_id', user.id);
 
-        const modelIds = (groupModels || []).map((m: { id: string }) => m.id);
-        if (modelIds.length > 0) {
-          query = (query as any).in('model_id', modelIds);
-        } else {
-          return NextResponse.json([]);
+        const adminGroupIds = (userGroupRows || []).map((r: { group_id: string }) => r.group_id);
+
+        if (adminGroupIds.length > 0) {
+          // Buscar modelos asignadas a esos grupos
+          const { data: groupMemberRows } = await supabase
+            .from('user_groups')
+            .select('user_id, users!inner(role, affiliate_studio_id)')
+            .in('group_id', adminGroupIds)
+            .eq('users.role', 'modelo')
+            .is('users.affiliate_studio_id', null);
+
+          const modelIds = (groupMemberRows || []).map((r: { user_id: string }) => r.user_id);
+          if (modelIds.length > 0) {
+            query = (query as any).in('model_id', modelIds);
+          } else {
+            return NextResponse.json([]);
+          }
         }
+        // Si no tiene grupos asignados, ve todos los pedidos de Innova (ya filtrado por IS NULL)
       }
     } else {
       // Afiliado: solo su burbuja
