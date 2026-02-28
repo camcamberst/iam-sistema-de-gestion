@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import ShopAdminNav from "@/components/ShopAdminNav";
 
 interface Category { id: string; name: string; }
 interface Variant { id?: string; name: string; sku: string; price_delta: number; }
@@ -144,11 +145,13 @@ export default function ShopProductsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
+        <ShopAdminNav />
+
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <span className="text-2xl">🛍️</span> Productos — Sexshop
+              <span className="text-2xl">🛍️</span> Productos
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
               {products.filter(p => p.is_active).length} productos activos · {products.length} total

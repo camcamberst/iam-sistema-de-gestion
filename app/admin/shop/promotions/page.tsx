@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import ShopAdminNav from "@/components/ShopAdminNav";
 
 interface Promotion {
   id: string;
@@ -119,10 +120,12 @@ export default function ShopPromotionsPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
+        <ShopAdminNav />
+
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
-              <span className="text-2xl">🏷️</span> Promociones — Sexshop
+              <span className="text-2xl">🏷️</span> Promociones
             </h1>
             <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Los descuentos no son acumulables — siempre aplica el mejor.</p>
           </div>
