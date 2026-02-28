@@ -351,12 +351,12 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  // Si es 1q: crear la cuota inmediatamente ligada al período activo
+  // Si es 1q: crear la cuota ligada al período activo (is_active, no status)
   if (payment_mode === '1q' && financing) {
     const { data: period } = await supabase
       .from('periods')
       .select('id')
-      .eq('status', 'active')
+      .eq('is_active', true)
       .order('start_date', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -364,7 +364,7 @@ export async function POST(req: NextRequest) {
     await supabase.from('shop_financing_installments').insert({
       financing_id: financing.id,
       installment_no: 1,
-      period_id: period?.id || null,
+      period_id: period?.id ?? null,
       amount: total,
       status: 'pendiente'
     });
