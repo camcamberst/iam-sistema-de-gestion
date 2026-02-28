@@ -139,6 +139,20 @@ async function notifyLowStock(
 ) {
   const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
 
+  let locationLabel: string;
+  if (locationType === 'bodega') {
+    locationLabel = 'Bodega Principal';
+  } else if (locationId) {
+    const { data: group } = await supabase
+      .from('groups')
+      .select('name')
+      .eq('id', locationId)
+      .maybeSingle();
+    locationLabel = group?.name ? `Sede ${group.name}` : `Sede ${locationId}`;
+  } else {
+    locationLabel = 'Sede (sin especificar)';
+  }
+
   // Solo notificar admins del MISMO negocio
   let adminsQuery = supabase
     .from('users')
@@ -147,17 +161,14 @@ async function notifyLowStock(
     .eq('is_active', true);
 
   if (affiliateStudioId === null) {
-    // Innova: super_admin y admins de Innova (sin affiliate_studio_id)
     adminsQuery = (adminsQuery as any).is('affiliate_studio_id', null);
   } else {
-    // Afiliado: solo admins de ese estudio
     adminsQuery = (adminsQuery as any).eq('affiliate_studio_id', affiliateStudioId);
   }
 
   const { data: admins } = await adminsQuery;
   if (!admins) return;
 
-  const locationLabel = locationType === 'bodega' ? 'Bodega Principal' : `Sede ${locationId}`;
   const msg = `⚠️ **Alerta de stock bajo — Sexshop**\n\nEl producto **${productName}** tiene solo **${available} unidad(es)** disponible(s) en **${locationLabel}**.\n\nSe recomienda reabastecer pronto.`;
 
   for (const admin of admins) {

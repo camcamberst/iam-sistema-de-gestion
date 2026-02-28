@@ -319,12 +319,16 @@ export default function ShopStorefront() {
       {/* Product Detail Modal */}
       {selectedProduct && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white dark:bg-gray-800 w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="relative h-56 bg-gradient-to-br from-pink-50 to-rose-100 dark:from-gray-700 dark:to-gray-600">
+          <div className="bg-white dark:bg-gray-800 w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl shadow-2xl max-h-[90vh] overflow-y-auto flex flex-col">
+            <div className="relative min-h-[300px] sm:min-h-[360px] flex items-center justify-center bg-gradient-to-br from-pink-50 to-rose-100 dark:from-gray-700 dark:to-gray-600 shrink-0 p-4">
               {selectedProduct.images?.[0] ? (
-                <img src={selectedProduct.images[0]} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                <img
+                  src={selectedProduct.images[0]}
+                  alt={selectedProduct.name}
+                  className="max-w-full max-h-[60vh] w-auto h-auto object-contain"
+                />
               ) : (
-                <div className="flex items-center justify-center h-full text-6xl">🛍️</div>
+                <div className="flex items-center justify-center min-h-[200px] text-6xl">🛍️</div>
               )}
               <button
                 onClick={() => setSelectedProduct(null)}
