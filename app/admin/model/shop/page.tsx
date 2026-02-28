@@ -312,7 +312,7 @@ export default function ShopStorefront() {
 
         {/* === MIS PEDIDOS === */}
         {activeTab === "orders" && (
-          <ModelOrders token={token} />
+          <ModelOrders token={token} onOrderCancelled={loadData} />
         )}
       </div>
 
@@ -597,7 +597,7 @@ export default function ShopStorefront() {
 }
 
 // Componente de "Mis pedidos" para modelos
-function ModelOrders({ token }: { token: string }) {
+function ModelOrders({ token, onOrderCancelled }: { token: string; onOrderCancelled?: () => void }) {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelling, setCancelling] = useState<string | null>(null);
@@ -641,6 +641,7 @@ function ModelOrders({ token }: { token: string }) {
     });
     if (res.ok) {
       setOrders(prev => prev.map(o => o.id === id ? { ...o, status: "cancelado" } : o));
+      onOrderCancelled?.();
     } else {
       const e = await res.json();
       alert(e.error || "Error al cancelar");
