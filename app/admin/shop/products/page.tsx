@@ -45,6 +45,7 @@ export default function ShopProductsPage() {
   const [filterCategory, setFilterCategory] = useState("all");
   const [userRole, setUserRole] = useState<string>("");
   const [token, setToken] = useState<string>("");
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -92,6 +93,21 @@ export default function ShopProductsPage() {
     setVariants(p.shop_product_variants?.map(v => ({ ...v })) || []);
     setImages(p.images || []);
     setShowModal(true);
+  }
+
+  async function handleDelete(product: Product) {
+    if (!confirm(`¿Eliminar el producto "${product.name}"? Dejará de mostrarse en la tienda (se marcará como inactivo).`)) return;
+    setDeletingId(product.id);
+    const res = await fetch(`/api/shop/products/${product.id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` }
+    });
+    setDeletingId(null);
+    if (res.ok) loadData();
+    else {
+      const err = await res.json();
+      alert(err.error || "Error al eliminar");
+    }
   }
 
   async function handleImageUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -279,12 +295,28 @@ export default function ShopProductsPage() {
                       {(product.shop_product_variants?.length || 0) > 0 && `${product.shop_product_variants!.length} var.`}
                     </span>
                   </div>
-                  <button
-                    onClick={() => openEdit(product)}
-                    className="w-full mt-2.5 text-xs bg-gray-50 dark:bg-gray-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 text-gray-700 dark:text-gray-300 hover:text-pink-700 dark:hover:text-pink-400 px-3 py-1.5 rounded-lg transition-colors font-medium border border-gray-100 dark:border-gray-600"
-                  >
-                    Editar producto
-                  </button>
+                  <div className="mt-2.5 flex gap-2">
+                    <button
+                      onClick={() => openEdit(product)}
+                      className="flex-1 text-xs bg-gray-50 dark:bg-gray-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 text-gray-700 dark:text-gray-300 hover:text-pink-700 dark:hover:text-pink-400 px-3 py-1.5 rounded-lg transition-colors font-medium border border-gray-100 dark:border-gray-600"
+                    >
+                      Editar producto
+                    </button>
+                    {(userRole === "super_admin" || userRole === "superadmin_aff") && (
+                      <button
+                        onClick={() => handleDelete(product)}
+                        disabled={deletingId === product.id}
+                        title="Eliminar producto (dejará de mostrarse en la tienda)"
+                        className="text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors font-medium border border-red-200 dark:border-red-800 disabled:opacity-50"
+                      >
+                        {deletingId === product.id ? (
+                          <span className="inline-block w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          "Eliminar"
+                        )}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
             ))}
