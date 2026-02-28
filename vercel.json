@@ -23,6 +23,14 @@
     {
       "path": "/api/cron/savings-reminders",
       "schedule": "0 15 1,2,3,16,17,18 * *"
+    },
+    {
+      "path": "/api/cron/shop-expire-reservations",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/shop-process-installments",
+      "schedule": "0 6 1,16 * *"
     }
   ]
 }
