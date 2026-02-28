@@ -167,7 +167,7 @@ export default function ShopStorefront() {
             <div className="flex items-center gap-3">
               {netoDisponible !== null && (
                 <div className="hidden md:block bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
-                  <p className="text-xs text-pink-100">Neto disponible</p>
+                  <p className="text-xs text-pink-100">Tu billetera</p>
                   <p className="text-lg font-bold">${netoDisponible.toLocaleString("es-CO")}</p>
                 </div>
               )}
@@ -466,7 +466,7 @@ export default function ShopStorefront() {
               <div className="p-4 border-t border-gray-100 dark:border-gray-700 space-y-3">
                 {netoDisponible !== null && (
                   <div className="flex justify-between text-xs text-gray-500">
-                    <span>Neto disponible</span>
+                    <span>Tu billetera</span>
                     <span className={cartTotal > netoDisponible * 0.9 ? "text-red-500" : "text-green-600"}>
                       ${netoDisponible.toLocaleString("es-CO")}
                     </span>
