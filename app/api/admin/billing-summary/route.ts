@@ -512,9 +512,9 @@ export async function GET(request: NextRequest) {
         
         // Buscar en calculator_totals para el rango del período (también buscar en 2024 por si hubo error de año)
         const { data: totals2025, error: totalsError2025 } = await supabase
-          .from('calculator_totals')
+      .from('calculator_totals')
           .select('model_id, period_date, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
-          .in('model_id', modelIds)
+      .in('model_id', modelIds)
           .gte('period_date', startStr)
           .lte('period_date', endStr)
           .order('period_date', { ascending: false });
@@ -678,29 +678,29 @@ export async function GET(request: NextRequest) {
         console.log('📚 [BILLING-SUMMARY] Procesando datos de calculator_history (misma lógica que Mi Historial)');
         // Una sola fila por (model_id, platform_id) para evitar doble conteo si hubiera duplicados en BD
         const seenPlatform = new Set<string>();
-        historyData.forEach(item => {
+      historyData.forEach(item => {
           if (item.platform_id === '__CONSOLIDATED_TOTAL__') return;
           const key = `${item.model_id}|${item.platform_id}`;
           if (seenPlatform.has(key)) return;
           seenPlatform.add(key);
 
-          if (!historyMap.has(item.model_id)) {
-            historyMap.set(item.model_id, {
-              model_id: item.model_id,
-              total_usd_bruto: 0,
-              total_usd_modelo: 0,
-              total_cop_modelo: 0,
-              period_date: item.period_date,
-              dataSource: 'calculator_history'
-            });
-          }
-          
-          const modelData = historyMap.get(item.model_id);
-          
+        if (!historyMap.has(item.model_id)) {
+          historyMap.set(item.model_id, {
+            model_id: item.model_id,
+            total_usd_bruto: 0,
+            total_usd_modelo: 0,
+            total_cop_modelo: 0,
+            period_date: item.period_date,
+            dataSource: 'calculator_history'
+          });
+        }
+        
+        const modelData = historyMap.get(item.model_id);
+        
           // USD Bruto: Sumar todos los value_usd_bruto de todas las plataformas (sin repartición)
           if (item.value_usd_bruto !== null && item.value_usd_bruto !== undefined) {
             modelData.total_usd_bruto += Number(item.value_usd_bruto) || 0;
-          } else {
+        } else {
             // Fallback: Si no hay value_usd_bruto, usar el valor original (datos antiguos)
             // NOTA: Esto debería ser raro ya que los registros nuevos siempre tienen value_usd_bruto
             modelData.total_usd_bruto += Number(item.value) || 0;
@@ -814,7 +814,7 @@ export async function GET(request: NextRequest) {
     const billingData = models.map(model => {
       const totalsForModel = (totals || []).filter(t => t.model_id === model.id);
       const modelGroup = modelGroupsMap.get(model.id);
-
+      
       const usdBruto = totalsForModel.reduce((s, t) => s + (t.total_usd_bruto || 0), 0);
       
       // Para afiliados: Modelo 60%, Estudio (40% - commission_percentage%), Innova (commission_percentage%)

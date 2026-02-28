@@ -793,8 +793,23 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
             {/* User Actions (Oculto en móvil cuando el menú está abierto) */}
             <div className={`flex items-center space-x-1 sm:space-x-1.5 md:space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
+              {/* Botón Sexshop */}
+              <Link
+                href={getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders'}
+                className={`hidden md:flex p-2 md:p-2.5 rounded-lg transition-all duration-200 hover:shadow-sm group ${
+                  pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')
+                    ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 shadow-sm'
+                    : 'text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20'
+                }`}
+                title="Sexshop"
+              >
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                </svg>
+              </Link>
+
               {/* Botón de búsqueda - Oculto en móvil */}
-              <button className="hidden md:flex p-2 md:p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-lg transition-all duration-200 hover:shadow-sm">
+              <button className="hidden md:flex p-2 md:p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 dark:text-gray-300 dark:hover:text-gray-100 dark:hover:bg-gray-800/60 rounded-lg transition-all duration-200 hover:shadow-sm">
                 <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
@@ -1325,6 +1340,42 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                 <div className="text-gray-500 dark:text-gray-400 text-sm px-4 py-3">Cargando menú...</div>
               )}
               
+              {/* Sexshop link móvil */}
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-700 mt-2">
+                <Link
+                  href={getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders'}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${
+                    pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')
+                      ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  <span className="font-medium">Sexshop</span>
+                </Link>
+              </div>
+
+              {/* Sexshop link — móvil */}
+              <div className="border-b border-gray-200 dark:border-gray-700 pb-2 mb-2">
+                <a
+                  href={getUserRole() === 'modelo' ? '/admin/model/shop' : '/admin/shop/orders'}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                    pathname.startsWith('/admin/model/shop') || pathname.startsWith('/admin/shop')
+                      ? 'bg-pink-50 dark:bg-pink-900/20 text-pink-700 dark:text-pink-400'
+                      : 'text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  <svg className="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                  Sexshop
+                </a>
+              </div>
+
               {/* User Info en móvil */}
               {userInfo && (
                 <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-700">

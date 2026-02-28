@@ -607,6 +607,32 @@ export async function PUT(request: NextRequest) {
       );
     }
 
+    // ── Advertencia de deuda sexshop al desactivar/eliminar modelo ──────────
+    if (is_active === false && targetUser.role === 'modelo') {
+      const { data: pendingFinancings } = await supabase
+        .from('shop_financing')
+        .select('id, total_amount, installments, shop_financing_installments(amount, status)')
+        .eq('model_id', id)
+        .eq('status', 'aprobado');
+
+      if (pendingFinancings && pendingFinancings.length > 0) {
+        const totalDebt = pendingFinancings.reduce((sum: number, fin: { shop_financing_installments?: Array<{ amount: number; status: string }> }) => {
+          const pendingInstallments = (fin.shop_financing_installments || []).filter((i: { status: string }) => i.status === 'pendiente');
+          return sum + pendingInstallments.reduce((s: number, i: { amount: number }) => s + i.amount, 0);
+        }, 0);
+
+        if (totalDebt > 0) {
+          try {
+            const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
+            const debtMsg = `⚠️ **Advertencia — Cuenta desactivada con deuda de Sexshop**\n\nEl usuario **${name}** (${email}) fue desactivado o eliminado, pero tiene **deuda pendiente de Sexshop por $${totalDebt.toLocaleString('es-CO')} COP** en ${pendingFinancings.length} financiación(es).\n\nSe recomienda gestionar el cobro pendiente antes de proceder. La desactivación fue ejecutada de todas formas.`;
+            await sendBotNotification(currentUser.id, 'custom_message' as never, debtMsg);
+          } catch (e) {
+            console.error('Error enviando alerta sexshop deuda:', e);
+          }
+        }
+      }
+    }
+
     // Actualizar datos vitales en tabla users
     console.log('🔍 [DEBUG] Actualizando usuario con:', { id, name, email, role, is_active });
     const { error: updateError } = await supabase
