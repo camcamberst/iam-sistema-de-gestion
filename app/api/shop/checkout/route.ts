@@ -20,38 +20,44 @@ const supabase = createClient(
 
 // Calcula el neto disponible de la modelo para el período activo
 async function getNetoDisponible(modelId: string): Promise<number> {
-  // Período activo
+  // Período activo — usa is_active (booleano), no status
   const { data: period } = await supabase
     .from('periods')
-    .select('id')
-    .eq('status', 'active')
+    .select('id, start_date, end_date')
+    .eq('is_active', true)
     .order('start_date', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   if (!period) return 0;
 
-  // Facturado del período
-  const { data: billing } = await supabase
-    .from('billing_records')
-    .select('amount_cop')
+  // Facturado del período — tabla real: calculator_totals / total_cop_modelo
+  const { data: totals } = await supabase
+    .from('calculator_totals')
+    .select('total_cop_modelo')
     .eq('model_id', modelId)
-    .eq('period_id', period.id);
+    .gte('period_date', period.start_date)
+    .lte('period_date', period.end_date ?? period.start_date)
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const facturado = (billing || []).reduce((s: number, r: { amount_cop: number }) => s + (r.amount_cop || 0), 0);
+  const facturado = Number(totals?.total_cop_modelo ?? 0);
 
   // Anticipos aprobados/realizados del período
   const { data: anticipos } = await supabase
     .from('anticipos')
     .select('monto_solicitado')
     .eq('model_id', modelId)
-    .in('estado', ['aprobado', 'realizado', 'confirmado'])
-    .gte('created_at', (await supabase.from('periods').select('start_date').eq('id', period.id).single())?.data?.start_date || '');
+    .eq('period_id', period.id)
+    .in('estado', ['aprobado', 'realizado', 'confirmado']);
 
-  const anticiposTotal = (anticipos || []).reduce((s: number, a: { monto_solicitado: number }) => s + (a.monto_solicitado || 0), 0);
+  const anticiposTotal = (anticipos || []).reduce(
+    (s: number, a: { monto_solicitado: number }) => s + Number(a.monto_solicitado || 0),
+    0
+  );
 
   // Cuotas de financiación sexshop pendientes en el período activo
-  // First fetch financing IDs for this model, then filter installments
   const { data: myFinancings } = await supabase
     .from('shop_financing')
     .select('id')
@@ -68,7 +74,10 @@ async function getNetoDisponible(modelId: string): Promise<number> {
       .eq('period_id', period.id)
       .eq('status', 'pendiente')
       .in('financing_id', financingIds);
-    installmentsTotal = (installments || []).reduce((s: number, i: { amount: number }) => s + (i.amount || 0), 0);
+    installmentsTotal = (installments || []).reduce(
+      (s: number, i: { amount: number }) => s + Number(i.amount || 0),
+      0
+    );
   }
 
   return facturado - anticiposTotal - installmentsTotal;

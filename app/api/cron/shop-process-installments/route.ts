@@ -32,11 +32,11 @@ export async function GET(req: NextRequest) {
     const { data } = await supabase.from('periods').select('id').eq('id', periodId).single();
     period = data;
   } else {
-    // Período activo más reciente
+    // Período activo más reciente — is_active (booleano)
     const { data } = await supabase
       .from('periods')
-      .select('id')
-      .eq('status', 'active')
+      .select('id, start_date, end_date')
+      .eq('is_active', true)
       .order('start_date', { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -142,24 +142,37 @@ export async function GET(req: NextRequest) {
 }
 
 async function getNetoDisponible(modelId: string, periodId: string): Promise<number> {
-  const { data: billing } = await supabase
-    .from('billing_records')
-    .select('amount_cop')
+  // Facturado: tabla real calculator_totals / total_cop_modelo
+  const { data: periodData } = await supabase
+    .from('periods')
+    .select('start_date, end_date')
+    .eq('id', periodId)
+    .single();
+
+  const { data: totals } = await supabase
+    .from('calculator_totals')
+    .select('total_cop_modelo')
     .eq('model_id', modelId)
-    .eq('period_id', periodId);
+    .gte('period_date', periodData?.start_date ?? '')
+    .lte('period_date', periodData?.end_date ?? periodData?.start_date ?? '')
+    .order('updated_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
 
-  const facturado = (billing || []).reduce((s: number, r: { amount_cop: number }) => s + (r.amount_cop || 0), 0);
+  const facturado = Number(totals?.total_cop_modelo ?? 0);
 
-  const { data: period } = await supabase.from('periods').select('start_date').eq('id', periodId).single();
-
+  // Anticipos aprobados del período
   const { data: anticipos } = await supabase
     .from('anticipos')
     .select('monto_solicitado')
     .eq('model_id', modelId)
-    .in('estado', ['aprobado', 'realizado', 'confirmado'])
-    .gte('created_at', period?.start_date || '');
+    .eq('period_id', periodId)
+    .in('estado', ['aprobado', 'realizado', 'confirmado']);
 
-  const anticiposTotal = (anticipos || []).reduce((s: number, a: { monto_solicitado: number }) => s + (a.monto_solicitado || 0), 0);
+  const anticiposTotal = (anticipos || []).reduce(
+    (s: number, a: { monto_solicitado: number }) => s + Number(a.monto_solicitado || 0),
+    0
+  );
 
   return facturado - anticiposTotal;
 }
