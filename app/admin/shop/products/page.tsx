@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
 
 interface Category { id: string; name: string; }
+interface Group { id: string; name: string; }
 interface Variant { id?: string; name: string; sku: string; price_delta: number; }
 interface Product {
   id: string;
@@ -23,12 +24,18 @@ interface Product {
 export default function ShopProductsPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editProduct, setEditProduct] = useState<Product | null>(null);
   const [form, setForm] = useState({
     name: "", description: "", base_price: "", category_id: "",
     allow_financing: true, min_stock_alert: "2", is_active: true
+  });
+  const [initialStock, setInitialStock] = useState({
+    quantity: "",
+    location_type: "sede" as "bodega" | "sede",
+    location_id: ""
   });
   const [variants, setVariants] = useState<Variant[]>([]);
   const [uploadingImage, setUploadingImage] = useState(false);
@@ -49,14 +56,18 @@ export default function ShopProductsPage() {
       .from("users").select("role").eq("id", session.user.id).single();
     setUserRole(profile?.role || "");
 
-    const [prodRes, catRes] = await Promise.all([
-      fetch("/api/shop/products?active_only=false&with_inventory=true", {
-        headers: { Authorization: `Bearer ${session.access_token}` }
-      }),
-      fetch("/api/shop/categories")
+    const authHeader = { Authorization: `Bearer ${session.access_token}` };
+    const [prodRes, catRes, grpRes] = await Promise.all([
+      fetch("/api/shop/products?active_only=false&with_inventory=true", { headers: authHeader }),
+      fetch("/api/shop/categories", { headers: authHeader }),
+      fetch("/api/groups", { headers: authHeader })
     ]);
     if (prodRes.ok) setProducts(await prodRes.json());
     if (catRes.ok) setCategories(await catRes.json());
+    if (grpRes.ok) {
+      const grpData = await grpRes.json();
+      if (grpData?.success && grpData?.groups) setGroups(grpData.groups);
+    }
     setLoading(false);
   }, []);
 
@@ -65,6 +76,7 @@ export default function ShopProductsPage() {
   function openCreate() {
     setEditProduct(null);
     setForm({ name: "", description: "", base_price: "", category_id: "", allow_financing: true, min_stock_alert: "2", is_active: true });
+    setInitialStock({ quantity: "", location_type: "sede", location_id: "" });
     setVariants([]);
     setImages([]);
     setShowModal(true);
@@ -126,13 +138,42 @@ export default function ShopProductsPage() {
       body: JSON.stringify(editProduct ? { id: editProduct.id, ...payload } : payload)
     });
 
-    if (res.ok) {
-      setShowModal(false);
-      loadData();
-    } else {
+    if (!res.ok) {
       const err = await res.json();
       alert(err.error || "Error al guardar");
+      setSaving(false);
+      return;
     }
+
+    const createdProduct = !editProduct ? await res.json() : null;
+
+    const qty = parseInt(initialStock.quantity, 10);
+    if (!editProduct && createdProduct?.id && !isNaN(qty) && qty > 0) {
+      const locationType = initialStock.location_type;
+      const locationId = locationType === "sede" ? (initialStock.location_id || null) : null;
+      if (locationType === "sede" && !locationId) {
+        alert("Selecciona una sede para el stock inicial o elige Bodega principal.");
+        setSaving(false);
+        return;
+      }
+      const invRes = await fetch("/api/shop/inventory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({
+          product_id: createdProduct.id,
+          quantity_delta: qty,
+          location_type: locationType,
+          location_id: locationId ?? undefined
+        })
+      });
+      if (!invRes.ok) {
+        const invErr = await invRes.json();
+        alert(`Producto creado, pero no se pudo registrar el stock: ${invErr.error || "Error"}`);
+      }
+    }
+
+    setShowModal(false);
+    loadData();
     setSaving(false);
   }
 
@@ -330,6 +371,49 @@ export default function ShopProductsPage() {
                   </label>
                 </div>
               </div>
+
+              {/* Stock inicial (solo al crear) */}
+              {!editProduct && (
+                <div className="p-4 rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-700/30 space-y-4">
+                  <h3 className="text-sm font-semibold text-gray-800 dark:text-gray-200">Stock inicial (opcional)</h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Indica la cantidad y en qué sede o bodega quedará el producto para el manejo interno.</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Cantidad en existencias</label>
+                      <input
+                        type="number"
+                        min="0"
+                        value={initialStock.quantity}
+                        onChange={e => setInitialStock(s => ({ ...s, quantity: e.target.value }))}
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none"
+                        placeholder="0"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
+                      <select
+                        value={initialStock.location_type === "bodega" ? "bodega" : initialStock.location_id}
+                        onChange={e => {
+                          const v = e.target.value;
+                          if (v === "bodega") setInitialStock(s => ({ ...s, location_type: "bodega", location_id: "" }));
+                          else setInitialStock(s => ({ ...s, location_type: "sede", location_id: v }));
+                        }}
+                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none"
+                      >
+                        {(userRole === "super_admin" || userRole === "superadmin_aff") && (
+                          <option value="bodega">Bodega principal</option>
+                        )}
+                        {groups.map(g => (
+                          <option key={g.id} value={g.id}>Sede {g.name}</option>
+                        ))}
+                        {groups.length === 0 && userRole !== "super_admin" && userRole !== "superadmin_aff" && (
+                          <option value="">Sin sedes asignadas</option>
+                        )}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Imágenes */}
               <div>

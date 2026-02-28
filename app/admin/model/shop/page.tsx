@@ -136,8 +136,7 @@ export default function ShopStorefront() {
   const filtered = products.filter(p => {
     const matchSearch = !search || p.name.toLowerCase().includes(search.toLowerCase()) || p.description?.toLowerCase().includes(search.toLowerCase());
     const matchCat = filterCategory === "all" || p.category_id === filterCategory;
-    const hasStock = (p.stock?.available || 0) > 0;
-    return matchSearch && matchCat && hasStock;
+    return matchSearch && matchCat;
   });
 
   if (loading) {
