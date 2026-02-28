@@ -9,6 +9,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, getStudioScope } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,13 +17,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
 
 // Calcula el neto disponible de la modelo para el período activo
 async function getNetoDisponible(modelId: string): Promise<number> {
@@ -140,18 +134,24 @@ async function applyBestPromotion(
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
-  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+  const shopUser = await getShopUser(req);
+  if (!shopUser) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('id, role, group_id, email')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || profile.role !== 'modelo') {
+  if (shopUser.role !== 'modelo') {
     return NextResponse.json({ error: 'Solo las modelos pueden hacer pedidos' }, { status: 403 });
   }
+
+  // Para el resto del handler necesitamos el email; lo buscamos
+  const { data: profile } = await supabase
+    .from('users')
+    .select('id, role, group_id, email, affiliate_studio_id')
+    .eq('id', shopUser.id)
+    .single();
+
+  if (!profile) return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 });
+
+  // Scope del negocio de la modelo
+  const modelScope = profile.affiliate_studio_id ?? null;
 
   const body = await req.json();
   const { items, payment_mode, notes } = body;
@@ -168,7 +168,7 @@ export async function POST(req: NextRequest) {
 
   // Regla: si tiene financiación multi-quincena activa, no puede pedir nueva
   if (isMultiQuincena) {
-    const hasPending = await hasActiveMultiQuincenaFinancing(profile.id);
+    const hasPending = await hasActiveMultiQuincenaFinancing(shopUser.id);
     if (hasPending) {
       return NextResponse.json({
         error: 'Tienes financiaciones activas pendientes. Debes completarlas antes de solicitar nueva financiación.'
@@ -195,12 +195,19 @@ export async function POST(req: NextRequest) {
   for (const item of items) {
     const { data: product } = await supabase
       .from('shop_products')
-      .select('id, name, base_price, category_id, allow_financing, is_active')
+      .select('id, name, base_price, category_id, allow_financing, is_active, affiliate_studio_id')
       .eq('id', item.product_id)
       .single();
 
     if (!product || !product.is_active) {
       return NextResponse.json({ error: `Producto no disponible: ${item.product_id}` }, { status: 400 });
+    }
+
+    // Validar que el producto pertenece al mismo negocio que la modelo
+    if ((product.affiliate_studio_id ?? null) !== modelScope) {
+      return NextResponse.json({
+        error: `El producto "${product.name}" no pertenece a tu tienda.`
+      }, { status: 403 });
     }
 
     if (!product.allow_financing && isMultiQuincena) {
@@ -258,7 +265,7 @@ export async function POST(req: NextRequest) {
 
   // Validación de fondos para 1q
   if (payment_mode === '1q') {
-    const neto = await getNetoDisponible(profile.id);
+    const neto = await getNetoDisponible(shopUser.id);
     if (neto < total * 0.9) {
       return NextResponse.json({
         error: `Fondos insuficientes. Tu neto disponible es $${neto.toLocaleString('es-CO')} y el pedido es $${total.toLocaleString('es-CO')}.`
@@ -275,18 +282,19 @@ export async function POST(req: NextRequest) {
   // Determinar estado inicial
   const orderStatus = payment_mode === '1q' ? 'aprobado' : 'reservado';
 
-  // Crear orden
+  // Crear orden — sellada con el scope del negocio de la modelo
   const { data: order, error: orderError } = await supabase
     .from('shop_orders')
     .insert({
-      model_id: profile.id,
+      model_id: shopUser.id,
       status: orderStatus,
       subtotal,
       discount_amount: totalDiscount,
       total,
       payment_mode,
       notes,
-      reservation_expires_at: reservationExpiresAt
+      reservation_expires_at: reservationExpiresAt,
+      affiliate_studio_id: modelScope    // ← separa por negocio
     })
     .select()
     .single();
@@ -325,7 +333,7 @@ export async function POST(req: NextRequest) {
     .from('shop_financing')
     .insert({
       order_id: order.id,
-      model_id: profile.id,
+      model_id: shopUser.id,
       total_amount: total,
       installments,
       amount_per_installment: amountPerInstallment,
@@ -372,7 +380,7 @@ export async function POST(req: NextRequest) {
 }
 
 async function notifyPurchase(
-  model: { id: string; email: string },
+  model: { id: string; email: string; affiliate_studio_id?: string | null },
   order: { id: string; total: number },
   total: number,
   paymentMode: string,
@@ -382,6 +390,7 @@ async function notifyPurchase(
 
   const modelName = model.email.split('@')[0];
   const totalFmt = `$${total.toLocaleString('es-CO')}`;
+  const modelScope = model.affiliate_studio_id ?? null;
 
   // Notificar a la modelo
   const modelMsg = requiresApproval
@@ -390,12 +399,24 @@ async function notifyPurchase(
 
   await sendBotNotification(model.id, 'custom_message' as never, modelMsg);
 
-  // Notificar a admins y super admins
-  const { data: admins } = await supabase
+  // Notificar solo a admins del MISMO negocio que la modelo
+  let adminsQuery = supabase
     .from('users')
-    .select('id, role, group_id')
-    .in('role', ['admin', 'super_admin'])
+    .select('id, role, affiliate_studio_id')
+    .in('role', ['admin', 'super_admin', 'superadmin_aff'])
     .eq('is_active', true);
+
+  if (modelScope === null) {
+    // Modelo de Innova → notificar a super_admin + admins de Innova
+    adminsQuery = (adminsQuery as any).or(
+      'role.eq.super_admin,and(role.eq.admin,affiliate_studio_id.is.null)'
+    );
+  } else {
+    // Modelo afiliada → notificar a superadmin_aff + admins de ese estudio
+    adminsQuery = (adminsQuery as any).eq('affiliate_studio_id', modelScope);
+  }
+
+  const { data: admins } = await adminsQuery;
 
   const adminMsg = requiresApproval
     ? `🛍️ **Nueva solicitud de financiación — Sexshop**\n\nLa modelo **${modelName}** solicitó financiación a **${paymentMode}** cuotas por **${totalFmt}**.\n\nPedido ID: \`${order.id}\`\n\nRevisa y aprueba o rechaza en /admin/shop/orders.`

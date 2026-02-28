@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, canManageShopResource, getStudioScope } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,24 +9,11 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
-
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+  if (!['admin', 'super_admin', 'superadmin_aff'].includes(user.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
@@ -41,6 +29,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Datos de traslado incompletos' }, { status: 400 });
   }
 
+  // Verificar que el producto pertenece al mismo negocio
+  const { data: product } = await supabase
+    .from('shop_products')
+    .select('affiliate_studio_id')
+    .eq('id', product_id)
+    .single();
+
+  if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 });
+
+  if (!canManageShopResource(user, product.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No tienes permiso para trasladar este producto' }, { status: 403 });
+  }
+
   // Verificar stock disponible en origen
   const { data: source } = await supabase
     .from('shop_inventory')
@@ -53,7 +54,9 @@ export async function POST(req: NextRequest) {
 
   if (!source) return NextResponse.json({ error: 'No hay inventario en el origen' }, { status: 400 });
   if (source.quantity - source.reserved < quantity) {
-    return NextResponse.json({ error: `Stock disponible insuficiente. Disponible: ${source.quantity - source.reserved}` }, { status: 400 });
+    return NextResponse.json({
+      error: `Stock disponible insuficiente. Disponible: ${source.quantity - source.reserved}`
+    }, { status: 400 });
   }
 
   // Descontar del origen
@@ -79,15 +82,13 @@ export async function POST(req: NextRequest) {
       .update({ quantity: dest.quantity + quantity })
       .eq('id', dest.id);
   } else {
-    await supabase
-      .from('shop_inventory')
-      .insert({
-        product_id,
-        variant_id: variant_id || null,
-        location_type: to_location_type,
-        location_id: to_location_id || null,
-        quantity
-      });
+    await supabase.from('shop_inventory').insert({
+      product_id,
+      variant_id: variant_id || null,
+      location_type: to_location_type,
+      location_id: to_location_id || null,
+      quantity
+    });
   }
 
   // Registrar traslado para trazabilidad
@@ -112,6 +113,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  const user = await getShopUser(req);
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+
   const url = new URL(req.url);
   const productId = url.searchParams.get('product_id');
   const limit = parseInt(url.searchParams.get('limit') || '50');
@@ -120,14 +124,24 @@ export async function GET(req: NextRequest) {
     .from('shop_stock_transfers')
     .select(`
       *,
-      shop_products(id, name),
+      shop_products!inner(id, name, affiliate_studio_id),
       shop_product_variants(id, name),
       users!transferred_by(id, email)
     `)
     .order('created_at', { ascending: false })
     .limit(limit);
 
-  if (productId) query = query.eq('product_id', productId);
+  if (productId) query = (query as any).eq('product_id', productId);
+
+  // Filtrar historial por negocio
+  const scope = getStudioScope(user);
+  if (user.role !== 'super_admin') {
+    if (scope === null) {
+      query = (query as any).is('shop_products.affiliate_studio_id', null);
+    } else {
+      query = (query as any).eq('shop_products.affiliate_studio_id', scope);
+    }
+  }
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

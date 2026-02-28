@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
     .eq('id', user.id)
     .single();
 
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+  if (!profile || !['admin', 'super_admin', 'superadmin_aff'].includes(profile.role)) {
     return NextResponse.json({ error: 'Solo admins pueden subir imágenes' }, { status: 403 });
   }
 

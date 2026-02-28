@@ -62,12 +62,12 @@ export default function ShopCategoriesPage() {
     setSaving(false);
   }
 
-  if (userRole && userRole !== "super_admin") {
+  if (userRole && userRole !== "super_admin" && userRole !== "superadmin_aff") {
     return (
       <div className="flex items-center justify-center min-h-64 text-gray-500">
         <div className="text-center">
           <div className="text-4xl mb-2">🔒</div>
-          <p className="font-medium">Solo el Super Admin puede gestionar categorías</p>
+          <p className="font-medium">Solo los Super Admins pueden gestionar categorías</p>
         </div>
       </div>
     );

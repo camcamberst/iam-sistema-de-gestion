@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, applyShopAffiliateFilter, getStudioScope } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,34 +9,27 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
-
 export async function GET(req: NextRequest) {
-  const { data, error } = await supabase
-    .from('shop_categories')
-    .select('*')
-    .order('name');
+  const user = await getShopUser(req);
+
+  let query = supabase.from('shop_categories').select('*').order('name');
+
+  if (user) {
+    query = applyShopAffiliateFilter(query as any, user) as any;
+  }
+  // Sin token (storefront público de catálogo): el filtro se aplica en /api/shop/products
+
+  const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json(data);
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || profile.role !== 'super_admin') {
-    return NextResponse.json({ error: 'Solo el super admin puede crear categorías' }, { status: 403 });
+  if (user.role !== 'super_admin' && user.role !== 'superadmin_aff') {
+    return NextResponse.json({ error: 'Solo super admins pueden crear categorías' }, { status: 403 });
   }
 
   const body = await req.json();
@@ -43,10 +37,11 @@ export async function POST(req: NextRequest) {
   if (!name) return NextResponse.json({ error: 'name requerido' }, { status: 400 });
 
   const slug = name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+  const scope = getStudioScope(user);
 
   const { data, error } = await supabase
     .from('shop_categories')
-    .insert({ name, description, slug, created_by: user.id })
+    .insert({ name, description, slug, created_by: user.id, affiliate_studio_id: scope })
     .select()
     .single();
 
@@ -55,22 +50,28 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || profile.role !== 'super_admin') {
-    return NextResponse.json({ error: 'Solo el super admin puede editar categorías' }, { status: 403 });
+  if (user.role !== 'super_admin' && user.role !== 'superadmin_aff') {
+    return NextResponse.json({ error: 'Solo super admins pueden editar categorías' }, { status: 403 });
   }
 
   const body = await req.json();
   const { id, name, description, is_active } = body;
   if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 });
+
+  // Verificar que la categoría pertenece al mismo estudio
+  const { data: cat } = await supabase
+    .from('shop_categories')
+    .select('affiliate_studio_id')
+    .eq('id', id)
+    .single();
+
+  const scope = getStudioScope(user);
+  if (user.role !== 'super_admin' && cat?.affiliate_studio_id !== scope) {
+    return NextResponse.json({ error: 'No autorizado para esta categoría' }, { status: 403 });
+  }
 
   const updates: Record<string, unknown> = {};
   if (name !== undefined) {

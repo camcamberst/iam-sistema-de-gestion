@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, applyShopAffiliateFilter, getStudioScope } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,23 +9,8 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
-
-async function getUserProfile(userId: string) {
-  const { data } = await supabase
-    .from('users')
-    .select('role, group_id')
-    .eq('id', userId)
-    .single();
-  return data;
-}
-
 export async function GET(req: NextRequest) {
+  const user = await getShopUser(req);
   const url = new URL(req.url);
   const categoryId = url.searchParams.get('category_id');
   const activeOnly = url.searchParams.get('active_only') !== 'false';
@@ -39,15 +25,21 @@ export async function GET(req: NextRequest) {
     `)
     .order('name');
 
-  if (activeOnly) query = query.eq('is_active', true);
-  if (categoryId) query = query.eq('category_id', categoryId);
+  if (activeOnly) query = (query as any).eq('is_active', true);
+  if (categoryId) query = (query as any).eq('category_id', categoryId);
+
+  // Aplicar filtro de burbuja si hay usuario autenticado
+  if (user) {
+    query = applyShopAffiliateFilter(query as any, user) as any;
+  }
+  // Sin token (catálogo público): no filtramos aquí — el storefront pasa su token
 
   const { data: products, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
   if (!withInventory) return NextResponse.json(products);
 
-  // Agrega stock total visible por producto
+  // Agrega stock total visible (sum de todas las ubicaciones)
   const { data: inventory } = await supabase
     .from('shop_inventory')
     .select('product_id, variant_id, quantity, reserved');
@@ -63,7 +55,10 @@ export async function GET(req: NextRequest) {
   const productsWithStock = products!.map((p: Record<string, unknown>) => {
     const productStock = Object.entries(stockMap)
       .filter(([k]) => k === p.id || k.startsWith(`${p.id}__`))
-      .reduce((acc, [, v]) => ({ available: acc.available + v.available, reserved: acc.reserved + v.reserved }), { available: 0, reserved: 0 });
+      .reduce(
+        (acc, [, v]) => ({ available: acc.available + v.available, reserved: acc.reserved + v.reserved }),
+        { available: 0, reserved: 0 }
+      );
     return { ...p, stock: productStock };
   });
 
@@ -71,11 +66,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const profile = await getUserProfile(user.id);
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+  if (!['admin', 'super_admin', 'superadmin_aff'].includes(user.role)) {
     return NextResponse.json({ error: 'Solo admins pueden crear productos' }, { status: 403 });
   }
 
@@ -85,6 +79,22 @@ export async function POST(req: NextRequest) {
   if (!name || base_price === undefined) {
     return NextResponse.json({ error: 'name y base_price son requeridos' }, { status: 400 });
   }
+
+  // Verificar que la categoría pertenece al mismo estudio
+  if (category_id) {
+    const { data: cat } = await supabase
+      .from('shop_categories')
+      .select('affiliate_studio_id')
+      .eq('id', category_id)
+      .single();
+
+    const scope = getStudioScope(user);
+    if (user.role !== 'super_admin' && cat?.affiliate_studio_id !== scope) {
+      return NextResponse.json({ error: 'La categoría no pertenece a tu negocio' }, { status: 403 });
+    }
+  }
+
+  const scope = getStudioScope(user);
 
   const { data: product, error } = await supabase
     .from('shop_products')
@@ -96,14 +106,14 @@ export async function POST(req: NextRequest) {
       images: images || [],
       allow_financing: allow_financing !== false,
       min_stock_alert: min_stock_alert ?? 2,
-      created_by: user.id
+      created_by: user.id,
+      affiliate_studio_id: scope
     })
     .select()
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Insertar variantes si las hay
   if (variants && variants.length > 0) {
     const variantRows = variants.map((v: { name: string; sku?: string; price_delta?: number }) => ({
       product_id: product.id,

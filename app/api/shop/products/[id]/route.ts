@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, canManageShopResource } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,13 +8,6 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const { data, error } = await supabase
@@ -32,17 +26,22 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
+  if (!['admin', 'super_admin', 'superadmin_aff'].includes(user.role)) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  // Verificar que el producto pertenece al mismo negocio
+  const { data: product } = await supabase
+    .from('shop_products')
+    .select('affiliate_studio_id')
+    .eq('id', params.id)
     .single();
 
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
-    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  if (!canManageShopResource(user, product?.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No tienes permiso para modificar este producto' }, { status: 403 });
   }
 
   const body = await req.json();
@@ -64,17 +63,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
+  if (!['super_admin', 'superadmin_aff'].includes(user.role)) {
+    return NextResponse.json({ error: 'Solo super admins pueden eliminar productos' }, { status: 403 });
+  }
+
+  const { data: product } = await supabase
+    .from('shop_products')
+    .select('affiliate_studio_id')
+    .eq('id', params.id)
     .single();
 
-  if (!profile || profile.role !== 'super_admin') {
-    return NextResponse.json({ error: 'Solo super admin puede eliminar productos' }, { status: 403 });
+  if (!canManageShopResource(user, product?.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No tienes permiso para eliminar este producto' }, { status: 403 });
   }
 
   const { error } = await supabase

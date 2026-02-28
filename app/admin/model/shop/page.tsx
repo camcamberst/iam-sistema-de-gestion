@@ -49,10 +49,12 @@ export default function ShopStorefront() {
     if (!session) return;
     setToken(session.access_token);
 
+    const authHeader = { Authorization: `Bearer ${session.access_token}` };
+
     const [prodRes, catRes, netoRes] = await Promise.all([
-      fetch("/api/shop/products?active_only=true&with_inventory=true"),
-      fetch("/api/shop/categories"),
-      fetch("/api/shop/neto-disponible", { headers: { Authorization: `Bearer ${session.access_token}` } })
+      fetch("/api/shop/products?active_only=true&with_inventory=true", { headers: authHeader }),
+      fetch("/api/shop/categories", { headers: authHeader }),
+      fetch("/api/shop/neto-disponible", { headers: authHeader })
     ]);
 
     if (prodRes.ok) setProducts(await prodRes.json());

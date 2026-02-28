@@ -4,8 +4,15 @@
  *   - PUT: cambiar estado (aprobado, rechazado, en_preparacion, entregado, cancelado)
  */
 
+/**
+ * Operaciones sobre un pedido individual:
+ *   - GET: detalle completo
+ *   - PUT: cambiar estado (aprobado, rechazado, en_preparacion, entregado, cancelado)
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, canManageShopResource } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -14,14 +21,10 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await getShopUser(req);
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
   const { data, error } = await supabase
     .from('shop_orders')
     .select(`
@@ -41,20 +44,22 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
     .single();
 
   if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+
+  // Verificar que el usuario puede ver este pedido
+  const order = data;
+  const isAdmin = ['admin', 'super_admin', 'superadmin_aff'].includes(user.role);
+  const isOwner = user.role === 'modelo' && order.model_id === user.id;
+
+  if (!isOwner && !canManageShopResource(user, order.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
   return NextResponse.json(data);
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
-
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role, group_id')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile) return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 });
 
   const body = await req.json();
   const { status } = body;
@@ -72,8 +77,13 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 
   if (!order) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
 
-  const isAdmin = ['admin', 'super_admin'].includes(profile.role);
-  const isModel = profile.role === 'modelo' && order.model_id === user.id;
+  const isAdmin = ['admin', 'super_admin', 'superadmin_aff'].includes(user.role);
+  const isModel = user.role === 'modelo' && order.model_id === user.id;
+
+  // Verificar que el admin pertenece al mismo negocio que el pedido
+  if (isAdmin && !canManageShopResource(user, order.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No tienes permiso para gestionar este pedido' }, { status: 403 });
+  }
 
   if (!isAdmin && !isModel) {
     return NextResponse.json({ error: 'No autorizado para modificar este pedido' }, { status: 403 });
@@ -87,7 +97,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       return NextResponse.json({ error: 'Solo se pueden aprobar pedidos reservados' }, { status: 400 });
     }
     updates.approved_by = user.id;
-    updates.approved_at = new Date().toISOString();
+    updates.approved_at  = new Date().toISOString();
     updates.status = 'en_preparacion';
 
     // Convertir reserva en descontado real

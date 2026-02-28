@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { getShopUser, applyShopAffiliateFilter, getStudioScope, canManageShopResource } from '@/lib/shop/auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -8,28 +9,26 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-async function getAuthUser(req: NextRequest) {
-  const token = req.headers.get('authorization')?.replace('Bearer ', '');
-  if (!token) return null;
-  const { data: { user } } = await supabase.auth.getUser(token);
-  return user;
-}
-
 export async function GET(req: NextRequest) {
+  const user = await getShopUser(req);
   const url = new URL(req.url);
   const activeOnly = url.searchParams.get('active_only') !== 'false';
   const now = new Date().toISOString();
 
   let query = supabase
     .from('shop_promotions')
-    .select(`*, shop_products(id, name), shop_categories(id, name)`)
+    .select('*, shop_products(id, name), shop_categories(id, name)')
     .order('created_at', { ascending: false });
 
   if (activeOnly) {
-    query = query
+    query = (query as any)
       .eq('is_active', true)
       .or(`starts_at.is.null,starts_at.lte.${now}`)
       .or(`ends_at.is.null,ends_at.gte.${now}`);
+  }
+
+  if (user) {
+    query = applyShopAffiliateFilter(query as any, user) as any;
   }
 
   const { data, error } = await query;
@@ -38,27 +37,22 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+  if (!['admin', 'super_admin', 'superadmin_aff'].includes(user.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
   const body = await req.json();
   const { name, type, value, product_id, category_id, min_quantity, starts_at, ends_at } = body;
-
   if (!name || !type) return NextResponse.json({ error: 'name y type son requeridos' }, { status: 400 });
+
+  const scope = getStudioScope(user);
 
   const { data, error } = await supabase
     .from('shop_promotions')
-    .insert({ name, type, value, product_id, category_id, min_quantity, starts_at, ends_at, created_by: user.id })
+    .insert({ name, type, value, product_id, category_id, min_quantity, starts_at, ends_at, created_by: user.id, affiliate_studio_id: scope })
     .select()
     .single();
 
@@ -67,22 +61,26 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const user = await getAuthUser(req);
+  const user = await getShopUser(req);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  const { data: profile } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (!profile || !['admin', 'super_admin'].includes(profile.role)) {
+  if (!['admin', 'super_admin', 'superadmin_aff'].includes(user.role)) {
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
   }
 
   const body = await req.json();
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'id requerido' }, { status: 400 });
+
+  const { data: promo } = await supabase
+    .from('shop_promotions')
+    .select('affiliate_studio_id')
+    .eq('id', id)
+    .single();
+
+  if (!canManageShopResource(user, promo?.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No tienes permiso para modificar esta promoción' }, { status: 403 });
+  }
 
   const allowed = ['name','type','value','product_id','category_id','min_quantity','starts_at','ends_at','is_active'];
   const filtered: Record<string, unknown> = {};

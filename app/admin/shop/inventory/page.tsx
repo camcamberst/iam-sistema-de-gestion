@@ -216,7 +216,7 @@ export default function ShopInventoryPage() {
                     if (e.target.value === "bodega") setAddForm(f => ({ ...f, location_type: "bodega", location_id: "" }));
                     else setAddForm(f => ({ ...f, location_type: "sede", location_id: e.target.value }));
                   }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {userRole === "super_admin" && <option value="bodega">Bodega Principal</option>}
+                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
                     {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
                   </select>
                 </div>
@@ -237,7 +237,7 @@ export default function ShopInventoryPage() {
               <label className="text-sm text-gray-600 dark:text-gray-400">Filtrar por ubicación:</label>
               <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
                 <option value="all">Todas</option>
-                {userRole === "super_admin" && <option value="bodega">Bodega Principal</option>}
+                {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
                 {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
               </select>
             </div>
@@ -327,7 +327,7 @@ export default function ShopInventoryPage() {
                     if (e.target.value === "bodega") setTransForm(f => ({ ...f, from_location_type: "bodega", from_location_id: "" }));
                     else setTransForm(f => ({ ...f, from_location_type: "sede", from_location_id: e.target.value }));
                   }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {userRole === "super_admin" && <option value="bodega">Bodega Principal</option>}
+                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
                     {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
                   </select>
                 </div>
@@ -337,7 +337,7 @@ export default function ShopInventoryPage() {
                     if (e.target.value === "bodega") setTransForm(f => ({ ...f, to_location_type: "bodega", to_location_id: "" }));
                     else setTransForm(f => ({ ...f, to_location_type: "sede", to_location_id: e.target.value }));
                   }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {userRole === "super_admin" && <option value="bodega">Bodega Principal</option>}
+                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
                     {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
                   </select>
                 </div>
