@@ -150,14 +150,14 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Solo las modelos pueden hacer pedidos' }, { status: 403 });
   }
 
-  // Para el resto del handler necesitamos el email; lo buscamos
-  const { data: profile } = await supabase
+  // Perfil de la modelo (email y scope para notificaciones)
+  const { data: profile, error: profileError } = await supabase
     .from('users')
-    .select('id, role, group_id, email, affiliate_studio_id')
+    .select('id, role, email, affiliate_studio_id')
     .eq('id', shopUser.id)
     .single();
 
-  if (!profile) return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 });
+  if (profileError || !profile) return NextResponse.json({ error: 'Perfil no encontrado' }, { status: 403 });
 
   // Scope del negocio de la modelo
   const modelScope = profile.affiliate_studio_id ?? null;
