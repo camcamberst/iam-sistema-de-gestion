@@ -200,15 +200,16 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       await reintegrarStock(order.shop_order_items, 'quantity');
     }
 
-    // Cancelar financiación y reintegrar cuotas cobradas
-    if (order.shop_financing?.[0]) {
-      const fin = order.shop_financing[0];
-      await supabase.from('shop_financing').update({ status: 'cancelado' }).eq('id', fin.id);
-      // Marcar cuotas como reintegradas
-      await supabase.from('shop_financing_installments')
+    // Cancelar financiación y marcar todas las cuotas como reintegradas (para que la billetera las deje de descontar)
+    const fin = Array.isArray(order.shop_financing) ? order.shop_financing[0] : order.shop_financing;
+    if (fin?.id) {
+      const { error: errFin } = await supabase.from('shop_financing').update({ status: 'cancelado' }).eq('id', fin.id);
+      if (errFin) console.error('[shop] Error al cancelar financiación:', errFin);
+      const { error: errInst } = await supabase
+        .from('shop_financing_installments')
         .update({ status: 'reintegrada' })
-        .eq('financing_id', fin.id)
-        .in('status', ['pendiente', 'cobrada']);
+        .eq('financing_id', fin.id);
+      if (errInst) console.error('[shop] Error al marcar cuotas reintegradas:', errInst);
     }
   }
 
