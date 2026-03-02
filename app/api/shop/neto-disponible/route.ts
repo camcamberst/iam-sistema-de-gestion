@@ -25,7 +25,7 @@ export async function GET(req: NextRequest) {
   const { data: { user } } = await supabase.auth.getUser(token);
   if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
 
-  // ── Período quincenal ACTUAL segun fecha de Colombia ──────────────────────
+  // ── Período quincenal ACTUAL según fecha de Colombia ──────────────────────
   const todayCo = getColombiaDate();
   const { startDate, endDate } = getPeriodDetails(todayCo);
 
@@ -55,6 +55,7 @@ export async function GET(req: NextRequest) {
 
   let anticiposTotal = 0;
   let cuotasPendientes = 0;
+  let comprasContado = 0;
 
   if (period?.id) {
     // ── Anticipos aprobados del período actual ───────────────────────────────
@@ -70,14 +71,16 @@ export async function GET(req: NextRequest) {
       0
     );
 
-    // ── Cuotas sexshop pendientes del período actual ─────────────────────────
+    // ── Cuotas sexshop pendientes SOLO de financiaciones multi-quincena ──────
     const { data: myFinancings } = await supabase
       .from('shop_financing')
-      .select('id')
+      .select('id, installments')
       .eq('model_id', user.id)
       .eq('status', 'aprobado');
 
-    const financingIds = (myFinancings || []).map((f: { id: string }) => f.id);
+    const financingIds = (myFinancings || [])
+      .filter((f: { installments: number }) => f.installments > 1) // excluir 1q
+      .map((f: { id: string }) => f.id);
 
     if (financingIds.length > 0) {
       const { data: installments } = await supabase
@@ -94,12 +97,32 @@ export async function GET(req: NextRequest) {
     }
   }
 
-  const netoDisponible = facturado - anticiposTotal - cuotasPendientes;
+  // ── Compras de contado (1q) de la quincena actual ──────────────────────────
+  // Se descuentan igual que un anticipo, pero se basan en las órdenes 1q
+  const startDateTime = `${startDate}T00:00:00`;
+  const endDateTime = `${endDate}T23:59:59.999Z`;
+
+  const { data: oneQOrders } = await supabase
+    .from('shop_orders')
+    .select('total, payment_mode, status, created_at')
+    .eq('model_id', user.id)
+    .eq('payment_mode', '1q')
+    .in('status', ['aprobado', 'en_preparacion', 'entregado'])
+    .gte('created_at', startDateTime)
+    .lte('created_at', endDateTime);
+
+  comprasContado = (oneQOrders || []).reduce(
+    (s: number, o: { total: number }) => s + Number(o.total || 0),
+    0
+  );
+
+  const netoDisponible = facturado - anticiposTotal - cuotasPendientes - comprasContado;
 
   return NextResponse.json({
     neto_disponible: netoDisponible,
     facturado,
     anticipos: anticiposTotal,
-    cuotas_pendientes: cuotasPendientes
+    cuotas_pendientes: cuotasPendientes,
+    compras_contado: comprasContado
   });
 }

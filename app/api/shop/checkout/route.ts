@@ -10,6 +10,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getShopUser, getStudioScope } from '@/lib/shop/auth';
+import { getColombiaDate, getPeriodDetails } from '@/utils/calculator-dates';
 
 export const dynamic = 'force-dynamic';
 
@@ -18,66 +19,72 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
-// Calcula el neto disponible de la modelo para el período activo
+// Calcula el neto disponible de la modelo para la QUINCENA ACTUAL (por fecha)
 async function getNetoDisponible(modelId: string): Promise<number> {
-  // Período activo — usa is_active (booleano), no status
-  const { data: period } = await supabase
-    .from('periods')
-    .select('id, start_date, end_date')
-    .eq('is_active', true)
-    .order('start_date', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  // Quincena actual según fecha de Colombia (1-15 o 16-fin de mes)
+  const todayCo = getColombiaDate();
+  const { startDate, endDate } = getPeriodDetails(todayCo);
 
-  if (!period) return 0;
-
-  // Facturado del período — tabla real: calculator_totals / total_cop_modelo
+  // Facturado del período actual — tabla real: calculator_totals / total_cop_modelo
   const { data: totals } = await supabase
     .from('calculator_totals')
     .select('total_cop_modelo')
     .eq('model_id', modelId)
-    .gte('period_date', period.start_date)
-    .lte('period_date', period.end_date ?? period.start_date)
+    .gte('period_date', startDate)
+    .lte('period_date', endDate)
     .order('updated_at', { ascending: false })
     .limit(1)
     .maybeSingle();
 
   const facturado = Number(totals?.total_cop_modelo ?? 0);
 
-  // Anticipos aprobados/realizados del período
-  const { data: anticipos } = await supabase
-    .from('anticipos')
-    .select('monto_solicitado')
-    .eq('model_id', modelId)
-    .eq('period_id', period.id)
-    .in('estado', ['aprobado', 'realizado', 'confirmado']);
-
-  const anticiposTotal = (anticipos || []).reduce(
-    (s: number, a: { monto_solicitado: number }) => s + Number(a.monto_solicitado || 0),
-    0
-  );
-
-  // Cuotas de financiación sexshop pendientes en el período activo
-  const { data: myFinancings } = await supabase
-    .from('shop_financing')
+  // Intentar localizar el período en `periods` por fechas exactas
+  const { data: period } = await supabase
+    .from('periods')
     .select('id')
-    .eq('model_id', modelId)
-    .eq('status', 'aprobado');
+    .eq('start_date', startDate)
+    .eq('end_date', endDate)
+    .maybeSingle();
 
-  const financingIds = (myFinancings || []).map((f: { id: string }) => f.id);
-
+  let anticiposTotal = 0;
   let installmentsTotal = 0;
-  if (financingIds.length > 0) {
-    const { data: installments } = await supabase
-      .from('shop_financing_installments')
-      .select('amount')
+
+  if (period?.id) {
+    // Anticipos aprobados/realizados del período actual
+    const { data: anticipos } = await supabase
+      .from('anticipos')
+      .select('monto_solicitado')
+      .eq('model_id', modelId)
       .eq('period_id', period.id)
-      .eq('status', 'pendiente')
-      .in('financing_id', financingIds);
-    installmentsTotal = (installments || []).reduce(
-      (s: number, i: { amount: number }) => s + Number(i.amount || 0),
+      .in('estado', ['aprobado', 'realizado', 'confirmado']);
+
+    anticiposTotal = (anticipos || []).reduce(
+      (s: number, a: { monto_solicitado: number }) => s + Number(a.monto_solicitado || 0),
       0
     );
+
+    // Cuotas de financiación sexshop pendientes en el período actual
+    const { data: myFinancings } = await supabase
+      .from('shop_financing')
+      .select('id')
+      .eq('model_id', modelId)
+      .eq('status', 'aprobado');
+
+    const financingIds = (myFinancings || []).map((f: { id: string }) => f.id);
+
+    if (financingIds.length > 0) {
+      const { data: installments } = await supabase
+        .from('shop_financing_installments')
+        .select('amount')
+        .eq('period_id', period.id)
+        .eq('status', 'pendiente')
+        .in('financing_id', financingIds);
+
+      installmentsTotal = (installments || []).reduce(
+        (s: number, i: { amount: number }) => s + Number(i.amount || 0),
+        0
+      );
+    }
   }
 
   return facturado - anticiposTotal - installmentsTotal;
@@ -351,20 +358,51 @@ export async function POST(req: NextRequest) {
     .select()
     .single();
 
-  // Si es 1q: crear la cuota ligada al período activo (is_active, no status)
+  // Si es 1q: crear la cuota ligada a la QUINCENA ACTUAL (por fecha, igual que neto-disponible)
   if (payment_mode === '1q' && financing) {
-    const { data: period } = await supabase
+    const todayCo = getColombiaDate();
+    const { startDate, endDate, name: periodName } = getPeriodDetails(todayCo);
+
+    // Buscar o crear período quincenal actual
+    let { data: period, error: periodError } = await supabase
       .from('periods')
       .select('id')
-      .eq('is_active', true)
-      .order('start_date', { ascending: false })
-      .limit(1)
+      .eq('start_date', startDate)
+      .eq('end_date', endDate)
       .maybeSingle();
+
+    let periodId = period?.id as string | undefined;
+
+    if (!periodId) {
+      const { data: newPeriod, error: createError } = await supabase
+        .from('periods')
+        .insert({
+          name: periodName,
+          start_date: startDate,
+          end_date: endDate,
+          is_active: true
+        })
+        .select('id')
+        .single();
+
+      if (!createError && newPeriod) {
+        periodId = newPeriod.id;
+      } else if (createError && createError.code === '23505') {
+        // Race condition: otro proceso creó el período en paralelo
+        const { data: retryPeriod } = await supabase
+          .from('periods')
+          .select('id')
+          .eq('start_date', startDate)
+          .eq('end_date', endDate)
+          .maybeSingle();
+        periodId = retryPeriod?.id;
+      }
+    }
 
     await supabase.from('shop_financing_installments').insert({
       financing_id: financing.id,
       installment_no: 1,
-      period_id: period?.id ?? null,
+      period_id: periodId ?? null,
       amount: total,
       status: 'pendiente'
     });
