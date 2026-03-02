@@ -129,37 +129,50 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         .update({ status: 'aprobado', approved_by: user.id, approved_at: new Date().toISOString() })
         .eq('id', fin.id);
 
-      // Crear cuotas:
-      //  - La primera ligada a la QUINCENA ACTUAL (para que se descuente de inmediato en Tu billetera)
-      //  - Las restantes quedan sin período asignado por ahora (se podrán reprogramar hacia futuros períodos)
-      const todayCo = getColombiaDate();
-      const { startDate, endDate, name: periodName } = getPeriodDetails(todayCo);
+      // Crear cuotas distribuidas en quincenas consecutivas:
+      //  - Primera cuota: quincena ACTUAL (por fecha de Colombia)
+      //  - Siguientes cuotas: siguientes quincenas consecutivas
+      const periodIds: (string | null)[] = [];
 
-      // Buscar o crear período quincenal actual
-      let { data: period } = await supabase
-        .from('periods')
-        .select('id')
-        .eq('start_date', startDate)
-        .eq('end_date', endDate)
-        .maybeSingle();
+      // Empezar desde hoy (quincena actual)
+      let baseDate = getColombiaDate();
 
-      let currentPeriodId = period?.id as string | undefined;
+      for (let i = 0; i < fin.installments; i++) {
+        const { startDate, endDate, name: periodName } = getPeriodDetails(baseDate);
 
-      if (!currentPeriodId) {
-        const { data: newPeriod, error: createError } = await supabase
+        // Buscar o crear período quincenal por fechas exactas
+        let { data: period } = await supabase
           .from('periods')
-          .insert({
-            name: periodName,
-            start_date: startDate,
-            end_date: endDate,
-            is_active: true
-          })
           .select('id')
-          .single();
+          .eq('start_date', startDate)
+          .eq('end_date', endDate)
+          .maybeSingle();
 
-        if (!createError && newPeriod) {
-          currentPeriodId = newPeriod.id;
+        let periodId = period?.id as string | undefined;
+
+        if (!periodId) {
+          const { data: newPeriod, error: createError } = await supabase
+            .from('periods')
+            .insert({
+              name: periodName,
+              start_date: startDate,
+              end_date: endDate,
+              is_active: true
+            })
+            .select('id')
+            .single();
+
+          if (!createError && newPeriod) {
+            periodId = newPeriod.id;
+          }
         }
+
+        periodIds.push(periodId ?? null);
+
+        // Avanzar a la siguiente quincena (día siguiente al endDate)
+        const end = new Date(endDate);
+        end.setDate(end.getDate() + 1);
+        baseDate = end.toISOString().slice(0, 10);
       }
 
       const installmentRows = [];
@@ -167,8 +180,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         installmentRows.push({
           financing_id: fin.id,
           installment_no: i + 1,
-          // Primera cuota: período actual; siguientes: sin período (se asignarán luego)
-          period_id: i === 0 ? currentPeriodId ?? null : null,
+          period_id: periodIds[i],
           amount: fin.amount_per_installment,
           status: 'pendiente'
         });
