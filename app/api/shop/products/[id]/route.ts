@@ -80,9 +80,11 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
     return NextResponse.json({ error: 'No tienes permiso para eliminar este producto' }, { status: 403 });
   }
 
+  // Borrado real: el producto desaparece del sistema.
+  // Requiere migración migration_product_hard_delete.sql (order_items y stock_transfers con ON DELETE SET NULL).
   const { error } = await supabase
     .from('shop_products')
-    .update({ is_active: false })
+    .delete()
     .eq('id', params.id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

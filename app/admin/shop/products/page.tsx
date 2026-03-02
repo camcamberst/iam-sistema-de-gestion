@@ -96,7 +96,7 @@ export default function ShopProductsPage() {
   }
 
   async function handleDelete(product: Product) {
-    if (!confirm(`¿Eliminar el producto "${product.name}"? Dejará de mostrarse en la tienda (se marcará como inactivo).`)) return;
+    if (!confirm(`¿Eliminar el producto "${product.name}"? Se borrará por completo del sistema (no quedará como inactivo).`)) return;
     setDeletingId(product.id);
     const res = await fetch(`/api/shop/products/${product.id}`, {
       method: "DELETE",
@@ -306,7 +306,7 @@ export default function ShopProductsPage() {
                       <button
                         onClick={() => handleDelete(product)}
                         disabled={deletingId === product.id}
-                        title="Eliminar producto (dejará de mostrarse en la tienda)"
+                        title="Eliminar producto (se borra del sistema)"
                         className="text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors font-medium border border-red-200 dark:border-red-800 disabled:opacity-50"
                       >
                         {deletingId === product.id ? (

@@ -127,6 +127,17 @@ export async function POST(req: NextRequest) {
     ).catch(console.error);
   }
 
+  // Actualizar is_active del producto: inactivo solo cuando el stock total disponible es 0
+  const { data: allInv } = await supabase
+    .from('shop_inventory')
+    .select('quantity, reserved')
+    .eq('product_id', product_id);
+  const totalAvailable = (allInv || []).reduce((s, r) => s + (r.quantity - (r.reserved || 0)), 0);
+  await supabase
+    .from('shop_products')
+    .update({ is_active: totalAvailable > 0 })
+    .eq('id', product_id);
+
   return NextResponse.json(result);
 }
 

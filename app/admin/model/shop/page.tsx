@@ -51,8 +51,9 @@ export default function ShopStorefront() {
 
     const authHeader = { Authorization: `Bearer ${session.access_token}` };
 
+    // active_only=false para mostrar también productos sin stock como "No disponible"
     const [prodRes, catRes, netoRes] = await Promise.all([
-      fetch("/api/shop/products?active_only=true&with_inventory=true", { headers: authHeader }),
+      fetch("/api/shop/products?active_only=false&with_inventory=true", { headers: authHeader }),
       fetch("/api/shop/categories", { headers: authHeader }),
       fetch("/api/shop/neto-disponible", { headers: authHeader })
     ]);
@@ -260,21 +261,27 @@ export default function ShopStorefront() {
                 {filtered.map(product => {
                   const hasVariants = (product.shop_product_variants?.length || 0) > 0;
                   const available = product.stock?.available || 0;
+                  const noDisponible = available <= 0;
                   return (
                     <button
                       key={product.id}
                       onClick={() => { setSelectedProduct(product); setSelectedVariant(null); }}
-                      className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden text-left hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 group"
+                      className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden text-left transition-all duration-200 group ${noDisponible ? "border-gray-200 dark:border-gray-600 opacity-90" : "border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-0.5"}`}
                     >
                       <div className="relative h-44 bg-gradient-to-br from-pink-50 to-rose-50 dark:from-gray-700 dark:to-gray-600 overflow-hidden">
                         {product.images?.[0] ? (
-                          <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+                          <img src={product.images[0]} alt={product.name} className={`w-full h-full object-cover transition-transform duration-300 ${noDisponible ? "opacity-70" : "group-hover:scale-105"}`} />
                         ) : (
                           <div className="flex items-center justify-center h-full">
                             <span className="text-5xl">🛍️</span>
                           </div>
                         )}
-                        {!product.allow_financing && (
+                        {noDisponible && (
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                            <span className="bg-gray-800 text-white text-sm px-3 py-1.5 rounded-full font-medium">No disponible</span>
+                          </div>
+                        )}
+                        {!product.allow_financing && !noDisponible && (
                           <div className="absolute top-2 left-2">
                             <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">Solo 1Q</span>
                           </div>
@@ -294,11 +301,13 @@ export default function ShopStorefront() {
                           <span className="text-base font-bold text-gray-900 dark:text-white">
                             ${product.base_price.toLocaleString("es-CO")}
                           </span>
-                          {hasVariants && (
+                          {noDisponible ? (
+                            <span className="text-xs font-medium text-amber-600 dark:text-amber-400">No disponible</span>
+                          ) : hasVariants ? (
                             <span className="text-xs text-gray-400">{product.shop_product_variants!.length} opciones</span>
-                          )}
+                          ) : null}
                         </div>
-                        <div className="mt-2 w-full bg-pink-600 hover:bg-pink-700 text-white text-xs py-1.5 rounded-lg text-center font-medium transition-colors">
+                        <div className={`mt-2 w-full text-xs py-1.5 rounded-lg text-center font-medium transition-colors ${noDisponible ? "bg-gray-300 dark:bg-gray-600 text-gray-500 dark:text-gray-400 cursor-default" : "bg-pink-600 hover:bg-pink-700 text-white"}`}>
                           Ver producto
                         </div>
                       </div>
@@ -383,28 +392,33 @@ export default function ShopStorefront() {
                 <span className="text-gray-500">
                   {(selectedProduct.stock?.available || 0) > 0
                     ? `${selectedProduct.stock!.available} disponible(s)`
-                    : "Sin stock"}
+                    : "No disponible"}
                 </span>
               </div>
 
-              {!selectedProduct.allow_financing && (
+              {!selectedProduct.allow_financing && (selectedProduct.stock?.available || 0) > 0 && (
                 <div className="mt-2 flex items-center gap-2 text-xs text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800 rounded-xl p-2.5">
                   <span>⚠️</span>
                   <span>Este producto es solo de contado (1 quincena, aprobación automática si tienes fondos).</span>
                 </div>
               )}
 
-              <button
-                onClick={() => {
-                  const needsVariant = selectedProduct.shop_product_variants && selectedProduct.shop_product_variants.length > 0;
-                  if (needsVariant && !selectedVariant) { alert("Por favor selecciona una opción"); return; }
-                  if ((selectedProduct.stock?.available || 0) <= 0) { alert("Producto sin stock"); return; }
-                  addToCart(selectedProduct, selectedVariant);
-                }}
-                className="w-full mt-4 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md text-sm"
-              >
-                Agregar al carrito
-              </button>
+              {(selectedProduct.stock?.available || 0) <= 0 ? (
+                <div className="w-full mt-4 py-3 bg-gray-200 dark:bg-gray-600 text-gray-500 dark:text-gray-400 rounded-xl font-semibold text-center text-sm cursor-not-allowed">
+                  No disponible
+                </div>
+              ) : (
+                <button
+                  onClick={() => {
+                    const needsVariant = selectedProduct.shop_product_variants && selectedProduct.shop_product_variants.length > 0;
+                    if (needsVariant && !selectedVariant) { alert("Por favor selecciona una opción"); return; }
+                    addToCart(selectedProduct, selectedVariant);
+                  }}
+                  className="w-full mt-4 py-3 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white rounded-xl font-semibold transition-all shadow-sm hover:shadow-md text-sm"
+                >
+                  Agregar al carrito
+                </button>
+              )}
             </div>
           </div>
         </div>
