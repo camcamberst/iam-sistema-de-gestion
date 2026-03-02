@@ -13,6 +13,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getShopUser, canManageShopResource } from '@/lib/shop/auth';
+import { getColombiaDate, getPeriodDetails } from '@/utils/calculator-dates';
 
 export const dynamic = 'force-dynamic';
 
@@ -125,20 +126,46 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       const fin = order.shop_financing[0];
       await supabase.from('shop_financing').update({ status: 'aprobado', approved_by: user.id, approved_at: new Date().toISOString() }).eq('id', fin.id);
 
-      // Crear cuotas para los periodos futuros
-      const { data: periods } = await supabase
+      // Crear cuotas:
+      //  - La primera ligada a la QUINCENA ACTUAL (para que se descuente de inmediato en Tu billetera)
+      //  - Las restantes quedan sin período asignado por ahora (se podrán reprogramar hacia futuros períodos)
+      const todayCo = getColombiaDate();
+      const { startDate, endDate, name: periodName } = getPeriodDetails(todayCo);
+
+      // Buscar o crear período quincenal actual
+      let { data: period } = await supabase
         .from('periods')
-        .select('id, start_date')
-        .in('status', ['active', 'upcoming'])
-        .order('start_date', { ascending: true })
-        .limit(fin.installments);
+        .select('id')
+        .eq('start_date', startDate)
+        .eq('end_date', endDate)
+        .maybeSingle();
+
+      let currentPeriodId = period?.id as string | undefined;
+
+      if (!currentPeriodId) {
+        const { data: newPeriod, error: createError } = await supabase
+          .from('periods')
+          .insert({
+            name: periodName,
+            start_date: startDate,
+            end_date: endDate,
+            is_active: true
+          })
+          .select('id')
+          .single();
+
+        if (!createError && newPeriod) {
+          currentPeriodId = newPeriod.id;
+        }
+      }
 
       const installmentRows = [];
       for (let i = 0; i < fin.installments; i++) {
         installmentRows.push({
           financing_id: fin.id,
           installment_no: i + 1,
-          period_id: periods?.[i]?.id || null,
+          // Primera cuota: período actual; siguientes: sin período (se asignarán luego)
+          period_id: i === 0 ? currentPeriodId ?? null : null,
           amount: fin.amount_per_installment,
           status: 'pendiente'
         });
