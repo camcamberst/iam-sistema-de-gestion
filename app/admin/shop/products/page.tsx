@@ -333,7 +333,7 @@ export default function ShopProductsPage() {
                       </span>
                       <span className="text-xs text-gray-400">
                         {(product.shop_product_variants?.length || 0) > 0 && `${product.shop_product_variants!.length} var.`}
-                        {(product.stock?.available ?? 0) > 0 && ` · ${product.stock.available} uds.`}
+                        {(product.stock?.available ?? 0) > 0 && ` · ${product.stock?.available ?? 0} uds.`}
                       </span>
                     </div>
                     <p className="text-xs text-gray-400 mt-1">Clic para ver unidades por sede</p>
