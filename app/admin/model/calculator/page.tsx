@@ -75,7 +75,7 @@ export default function ModelCalculatorPage() {
   const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
   const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
   // Neto disponible del período (después de anticipos y compras sexshop) para indicador en calculadora
-  const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number } | null>(null);
+  const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number; cuotas_primera_aprobacion?: number } | null>(null);
   
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
@@ -1510,15 +1510,17 @@ export default function ModelCalculatorPage() {
           {/* Indicador: el total COP no es el neto si hay anticipos o compras */}
           {netoDisponible != null && (
             <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
-              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium mb-1">
-                💳 Tu neto disponible este período
-              </p>
-              <p className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100">
-                ${Number(netoDisponible.neto_disponible ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium">
+                💳 Tu neto disponible este período: <span className="font-bold text-amber-900 dark:text-amber-100">${Number(netoDisponible.neto_disponible ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP</span>
               </p>
               {(Number(netoDisponible.facturado ?? 0) - Number(netoDisponible.neto_disponible ?? 0)) > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                  Este monto ya descuenta: anticipos aprobados y compras en Sexshop (contado y cuotas pendientes).
+                  {[
+                    Number(netoDisponible.anticipos ?? 0) > 0 && `Anticipos: $${Number(netoDisponible.anticipos).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                    Number(netoDisponible.compras_contado ?? 0) > 0 && `Compras contado: $${Number(netoDisponible.compras_contado).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                    Number(netoDisponible.cuotas_pendientes ?? 0) > 0 && `Cuotas pendientes: $${Number(netoDisponible.cuotas_pendientes).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                    Number(netoDisponible.cuotas_primera_aprobacion ?? 0) > 0 && `Primera cuota aprobada: $${Number(netoDisponible.cuotas_primera_aprobacion).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
+                  ].filter(Boolean).join(' · ')}
                 </p>
               )}
             </div>
