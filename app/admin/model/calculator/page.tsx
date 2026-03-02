@@ -74,6 +74,8 @@ export default function ModelCalculatorPage() {
   // Resumen periodo/objetivo para la barra horaria (solo modelo)
   const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
   const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
+  // Neto disponible del período (después de anticipos y compras sexshop) para indicador en calculadora
+  const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number } | null>(null);
   
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
@@ -88,6 +90,30 @@ export default function ModelCalculatorPage() {
     console.log('🔍 [CALCULATOR] Initializing periodDate (Frontend):', start);
     setPeriodDate(start);
   }, []);
+
+  // Neto disponible (anticipos + sexshop): solo para modelo, para indicar que el total COP no es el neto
+  useEffect(() => {
+    if (!user?.id || user?.role !== 'modelo') {
+      setNetoDisponible(null);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.access_token || cancelled) return;
+        const res = await fetch('/api/shop/neto-disponible', {
+          headers: { Authorization: `Bearer ${session.access_token}` }
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (!cancelled) setNetoDisponible(data);
+      } catch {
+        if (!cancelled) setNetoDisponible(null);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id, user?.role]);
 
   // 🔧 NUEVO: Cargar offset de ganancias hoy desde localStorage
   useEffect(() => {
@@ -1480,6 +1506,23 @@ export default function ModelCalculatorPage() {
               className="col-span-2 md:col-span-1"
             />
           </div>
+
+          {/* Indicador: el total COP no es el neto si hay anticipos o compras */}
+          {netoDisponible != null && (
+            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
+              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium mb-1">
+                💳 Tu neto disponible este período
+              </p>
+              <p className="text-sm sm:text-base font-bold text-amber-900 dark:text-amber-100">
+                ${Number(netoDisponible.neto_disponible ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+              </p>
+              {(Number(netoDisponible.facturado ?? 0) - Number(netoDisponible.neto_disponible ?? 0)) > 0 && (
+                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
+                  Este monto ya descuenta: anticipos aprobados y compras en Sexshop (contado y cuotas pendientes).
+                </p>
+              )}
+            </div>
+          )}
           
           {/* 90% de anticipo - estilo sutil */}
           <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
