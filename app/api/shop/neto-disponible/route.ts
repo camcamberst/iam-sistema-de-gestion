@@ -116,13 +116,35 @@ export async function GET(req: NextRequest) {
     0
   );
 
-  const netoDisponible = facturado - anticiposTotal - cuotasPendientes - comprasContado;
+  // ── Fallback: primera cuota de financiaciones multi-quincena recién aprobadas ─
+  // Si por algún motivo aún no hay cuota pendiente ligada al período actual
+  // (period_id null o desajuste), pero la financiación fue aprobada en esta
+  // quincena, restamos al menos una cuota equivalente a amount_per_installment.
+  let cuotaPrimeraAprobacion = 0;
+  if (cuotasPendientes === 0) {
+    const { data: recentlyApproved } = await supabase
+      .from('shop_financing')
+      .select('amount_per_installment')
+      .eq('model_id', user.id)
+      .eq('status', 'aprobado')
+      .gt('installments', 1)
+      .gte('approved_at', startDateTime)
+      .lte('approved_at', endDateTime);
+
+    cuotaPrimeraAprobacion = (recentlyApproved || []).reduce(
+      (s: number, f: { amount_per_installment: number }) => s + Number(f.amount_per_installment || 0),
+      0
+    );
+  }
+
+  const netoDisponible = facturado - anticiposTotal - cuotasPendientes - comprasContado - cuotaPrimeraAprobacion;
 
   return NextResponse.json({
     neto_disponible: netoDisponible,
     facturado,
     anticipos: anticiposTotal,
     cuotas_pendientes: cuotasPendientes,
-    compras_contado: comprasContado
+    compras_contado: comprasContado,
+    cuotas_primera_aprobacion: cuotaPrimeraAprobacion
   });
 }
