@@ -56,6 +56,7 @@ export async function GET(req: NextRequest) {
   let anticiposTotal = 0;
   let cuotasPendientes = 0;
   let comprasContado = 0;
+  let financingIds: string[] = [];
 
   if (period?.id) {
     // ── Anticipos aprobados del período actual ───────────────────────────────
@@ -78,7 +79,7 @@ export async function GET(req: NextRequest) {
       .eq('model_id', user.id)
       .eq('status', 'aprobado');
 
-    const financingIds = (myFinancings || [])
+    financingIds = (myFinancings || [])
       .filter((f: { installments: number }) => f.installments > 1) // excluir 1q
       .map((f: { id: string }) => f.id);
 
@@ -104,7 +105,7 @@ export async function GET(req: NextRequest) {
 
   const { data: oneQOrders } = await supabase
     .from('shop_orders')
-    .select('total, payment_mode, status, created_at')
+    .select('id, total, payment_mode, status, created_at')
     .eq('model_id', user.id)
     .eq('payment_mode', '1q')
     .in('status', ['aprobado', 'en_preparacion', 'entregado'])
@@ -139,12 +140,85 @@ export async function GET(req: NextRequest) {
 
   const netoDisponible = facturado - anticiposTotal - cuotasPendientes - comprasContado - cuotaPrimeraAprobacion;
 
+  // ── Detalle legible para la modelo (ej. "Cuota 1/4 Sexshop (Producto X): $15.000") ─
+  const descuentos_detalle: Array<{ concepto: string; monto: number }> = [];
+
+  if (anticiposTotal > 0) {
+    descuentos_detalle.push({ concepto: `Anticipo: $${anticiposTotal.toLocaleString('es-CO', { maximumFractionDigits: 0 })}`, monto: anticiposTotal });
+  }
+
+  // Compras 1q con nombres de productos
+  if (oneQOrders && oneQOrders.length > 0) {
+    for (const ord of oneQOrders) {
+      const orderId = (ord as any).id;
+      if (!orderId) continue;
+      const { data: items } = await supabase
+        .from('shop_order_items')
+        .select('shop_products(name)')
+        .eq('order_id', orderId);
+      const names = (items || [])
+        .map((i: any) => i.shop_products?.name)
+        .filter(Boolean);
+      const label = names.length > 0
+        ? `Compra Sexshop (${names.slice(0, 2).join(', ')}${names.length > 2 ? '...' : ''}): $${Number(ord.total || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`
+        : `Compra Sexshop: $${Number(ord.total || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
+      descuentos_detalle.push({ concepto: label, monto: Number(ord.total || 0) });
+    }
+  }
+
+  // Cuotas pendientes multi-cuota: "Cuota N/M Sexshop (producto): $X"
+  if (financingIds && financingIds.length > 0 && period?.id) {
+    const { data: installmentsWithFin } = await supabase
+      .from('shop_financing_installments')
+      .select('id, financing_id, installment_no, amount, shop_financing(installments, order_id)')
+      .in('financing_id', financingIds)
+      .eq('period_id', period.id)
+      .eq('status', 'pendiente');
+    for (const inst of installmentsWithFin || []) {
+      const fin = Array.isArray((inst as any).shop_financing) ? (inst as any).shop_financing[0] : (inst as any).shop_financing;
+      const orderId = fin?.order_id;
+      const totalInst = fin?.installments ?? 1;
+      let productLabel = '';
+      if (orderId) {
+        const { data: orderItems } = await supabase
+          .from('shop_order_items')
+          .select('shop_products(name)')
+          .eq('order_id', orderId);
+        const names = (orderItems || []).map((i: any) => i.shop_products?.name).filter(Boolean);
+        productLabel = names.length > 0 ? ` (${names.slice(0, 2).join(', ')}${names.length > 2 ? '...' : ''})` : '';
+      }
+      const label = `Cuota ${(inst as any).installment_no}/${totalInst} Sexshop${productLabel}: $${Number((inst as any).amount || 0).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`;
+      descuentos_detalle.push({ concepto: label, monto: Number((inst as any).amount || 0) });
+    }
+  }
+
+  if (cuotaPrimeraAprobacion > 0 && cuotasPendientes === 0) {
+    const { data: recent } = await supabase
+      .from('shop_financing')
+      .select('order_id, installments, amount_per_installment')
+      .eq('model_id', user.id)
+      .eq('status', 'aprobado')
+      .gt('installments', 1)
+      .gte('approved_at', startDateTime)
+      .lte('approved_at', endDateTime)
+      .limit(1)
+      .maybeSingle();
+    let productLabel = '';
+    if (recent?.order_id) {
+      const { data: orderItems } = await supabase.from('shop_order_items').select('shop_products(name)').eq('order_id', recent.order_id);
+      const names = (orderItems || []).map((i: any) => i.shop_products?.name).filter(Boolean);
+      productLabel = names.length > 0 ? ` (${names.slice(0, 2).join(', ')}${names.length > 2 ? '...' : ''})` : '';
+    }
+    descuentos_detalle.push({ concepto: `Cuota 1/${recent?.installments ?? 1} Sexshop${productLabel}: $${Number(cuotaPrimeraAprobacion).toLocaleString('es-CO', { maximumFractionDigits: 0 })}`, monto: cuotaPrimeraAprobacion });
+  }
+
   return NextResponse.json({
     neto_disponible: netoDisponible,
     facturado,
     anticipos: anticiposTotal,
     cuotas_pendientes: cuotasPendientes,
     compras_contado: comprasContado,
-    cuotas_primera_aprobacion: cuotaPrimeraAprobacion
+    cuotas_primera_aprobacion: cuotaPrimeraAprobacion,
+    descuentos_detalle
   });
 }

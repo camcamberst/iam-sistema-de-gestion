@@ -75,7 +75,7 @@ export default function ModelCalculatorPage() {
   const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
   const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
   // Neto disponible del período (después de anticipos y compras sexshop) para indicador en calculadora
-  const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number; cuotas_primera_aprobacion?: number } | null>(null);
+  const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number; cuotas_primera_aprobacion?: number; descuentos_detalle?: Array<{ concepto: string; monto: number }> } | null>(null);
   
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
@@ -1513,14 +1513,9 @@ export default function ModelCalculatorPage() {
               <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium">
                 💳 Tu neto disponible este período: <span className="font-bold text-amber-900 dark:text-amber-100">${Number(netoDisponible.neto_disponible ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP</span>
               </p>
-              {(Number(netoDisponible.facturado ?? 0) - Number(netoDisponible.neto_disponible ?? 0)) > 0 && (
+              {netoDisponible.descuentos_detalle && netoDisponible.descuentos_detalle.length > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                  {[
-                    Number(netoDisponible.anticipos ?? 0) > 0 && `Anticipos: $${Number(netoDisponible.anticipos).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                    Number(netoDisponible.compras_contado ?? 0) > 0 && `Compras contado: $${Number(netoDisponible.compras_contado).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                    Number(netoDisponible.cuotas_pendientes ?? 0) > 0 && `Cuotas pendientes: $${Number(netoDisponible.cuotas_pendientes).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
-                    Number(netoDisponible.cuotas_primera_aprobacion ?? 0) > 0 && `Primera cuota aprobada: $${Number(netoDisponible.cuotas_primera_aprobacion).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`
-                  ].filter(Boolean).join(' · ')}
+                  {netoDisponible.descuentos_detalle.map(d => d.concepto).join(' · ')}
                 </p>
               )}
             </div>
