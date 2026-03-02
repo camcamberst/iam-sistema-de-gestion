@@ -96,6 +96,25 @@ export async function POST(req: NextRequest) {
 
   const scope = getStudioScope(user);
 
+  // Evitar duplicados: mismo nombre (ignorando mayúsculas/espacios) en el mismo negocio
+  let scopeQuery = supabase.from('shop_products').select('id, name');
+  if (scope === null) {
+    scopeQuery = (scopeQuery as any).is('affiliate_studio_id', null);
+  } else {
+    scopeQuery = (scopeQuery as any).eq('affiliate_studio_id', scope);
+  }
+  const { data: existingProducts } = await scopeQuery;
+  const normalized = String(name).trim().toLowerCase();
+  const duplicate = (existingProducts || []).find(
+    (p: { name: string }) => (p.name || '').trim().toLowerCase() === normalized
+  );
+  if (duplicate) {
+    return NextResponse.json(
+      { error: 'Ya existe un producto con ese nombre en tu catálogo. Agrega unidades a ese producto desde Inventario.', existing_product_id: duplicate.id },
+      { status: 409 }
+    );
+  }
+
   const { data: product, error } = await supabase
     .from('shop_products')
     .insert({

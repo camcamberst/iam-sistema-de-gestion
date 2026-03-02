@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
 
@@ -61,6 +62,7 @@ export default function ShopInventoryPage() {
   // Products for selects
   const [products, setProducts] = useState<Array<{ id: string; name: string; shop_product_variants?: Array<{ id: string; name: string }> }>>([]);
   const [filterLocation, setFilterLocation] = useState("all");
+  const searchParams = useSearchParams();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -87,6 +89,16 @@ export default function ShopInventoryPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Prellenar "Agregar unidades" si se llega desde productos (duplicado o "Agregar unidades")
+  useEffect(() => {
+    const productId = searchParams.get("product_id");
+    const add = searchParams.get("add");
+    if (productId && add === "1") {
+      setTab("stock");
+      setAddForm(f => ({ ...f, product_id: productId }));
+    }
+  }, [searchParams]);
 
   function getLocationLabel(type: string, id: string | null) {
     if (type === "bodega") return "Bodega Principal";
@@ -192,7 +204,8 @@ export default function ShopInventoryPage() {
           <div className="space-y-4">
             {/* Add stock form */}
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-5">
-              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Agregar / ajustar stock</h2>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Agregar unidades</h2>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Elige el producto y la sede donde se agregan las unidades (evita crear productos duplicados; si ya existe, solo agrega stock aquí).</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Producto</label>
@@ -211,12 +224,12 @@ export default function ShopInventoryPage() {
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Ubicación</label>
+                  <label className="block text-xs font-medium text-gray-500 mb-1">Sede que agrega las unidades</label>
                   <select value={addForm.location_type === "bodega" ? "bodega" : addForm.location_id} onChange={e => {
                     if (e.target.value === "bodega") setAddForm(f => ({ ...f, location_type: "bodega", location_id: "" }));
                     else setAddForm(f => ({ ...f, location_type: "sede", location_id: e.target.value }));
                   }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
+                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega principal</option>}
                     {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
                   </select>
                 </div>

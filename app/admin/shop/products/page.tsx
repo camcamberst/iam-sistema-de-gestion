@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
 
@@ -19,6 +20,15 @@ interface Product {
   is_active: boolean;
   shop_categories?: { name: string } | null;
   shop_product_variants?: Variant[];
+  stock?: { available: number; reserved: number };
+}
+
+interface InventoryRow {
+  id: string;
+  location_type: string;
+  location_id: string | null;
+  quantity: number;
+  reserved: number;
 }
 
 export default function ShopProductsPage() {
@@ -46,6 +56,10 @@ export default function ShopProductsPage() {
   const [userRole, setUserRole] = useState<string>("");
   const [token, setToken] = useState<string>("");
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [detailProduct, setDetailProduct] = useState<Product | null>(null);
+  const [detailInventory, setDetailInventory] = useState<InventoryRow[]>([]);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const router = useRouter();
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -73,6 +87,22 @@ export default function ShopProductsPage() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  useEffect(() => {
+    if (!detailProduct || !token) return;
+    setDetailLoading(true);
+    fetch(`/api/shop/inventory?product_id=${detailProduct.id}`, { headers: { Authorization: `Bearer ${token}` } })
+      .then(r => r.ok ? r.json() : [])
+      .then((rows: InventoryRow[]) => setDetailInventory(rows || []))
+      .catch(() => setDetailInventory([]))
+      .finally(() => setDetailLoading(false));
+  }, [detailProduct?.id, token]);
+
+  function getLocationLabel(locationType: string, locationId: string | null) {
+    if (locationType === "bodega") return "Bodega principal";
+    const g = groups.find(gr => gr.id === locationId);
+    return g ? `Sede ${g.name}` : (locationId ? `Sede ${locationId}` : "Sede");
+  }
 
   function openCreate() {
     setEditProduct(null);
@@ -156,7 +186,14 @@ export default function ShopProductsPage() {
 
     if (!res.ok) {
       const err = await res.json();
-      alert(err.error || "Error al guardar");
+      if (res.status === 409 && err.existing_product_id) {
+        const go = confirm(
+          "Ya existe un producto con ese nombre en tu catálogo. Los demás admins deben agregar sus unidades a ese producto.\n\n¿Ir a Inventario para agregar unidades a ese producto?"
+        );
+        if (go) router.push(`/admin/shop/inventory?product_id=${err.existing_product_id}&add=1`);
+      } else {
+        alert(err.error || "Error al guardar");
+      }
       setSaving(false);
       return;
     }
@@ -260,63 +297,69 @@ export default function ShopProductsPage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {filtered.map(product => (
-              <div key={product.id} className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border ${product.is_active ? 'border-gray-100 dark:border-gray-700' : 'border-gray-200 dark:border-gray-600 opacity-60'} overflow-hidden hover:shadow-md transition-all`}>
-                {/* Image */}
-                <div className="h-40 bg-gradient-to-br from-pink-50 to-rose-50 dark:from-gray-700 dark:to-gray-600 relative overflow-hidden">
-                  {product.images?.[0] ? (
-                    <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="flex items-center justify-center h-full text-4xl">🛍️</div>
-                  )}
-                  {!product.is_active && (
-                    <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
-                      <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full">Inactivo</span>
-                    </div>
-                  )}
-                  {!product.allow_financing && (
-                    <div className="absolute top-2 right-2">
-                      <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">Solo contado</span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Info */}
-                <div className="p-3">
-                  <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mb-0.5">
-                    {product.shop_categories?.name || "Sin categoría"}
-                  </div>
-                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.name}</h3>
-                  <p className="text-gray-500 dark:text-gray-400 text-xs line-clamp-2 mt-0.5">{product.description}</p>
-                  <div className="flex items-center justify-between mt-2">
-                    <span className="text-base font-bold text-gray-900 dark:text-white">
-                      ${product.base_price.toLocaleString("es-CO")}
-                    </span>
-                    <span className="text-xs text-gray-400">
-                      {(product.shop_product_variants?.length || 0) > 0 && `${product.shop_product_variants!.length} var.`}
-                    </span>
-                  </div>
-                  <div className="mt-2.5 flex gap-2">
-                    <button
-                      onClick={() => openEdit(product)}
-                      className="flex-1 text-xs bg-gray-50 dark:bg-gray-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 text-gray-700 dark:text-gray-300 hover:text-pink-700 dark:hover:text-pink-400 px-3 py-1.5 rounded-lg transition-colors font-medium border border-gray-100 dark:border-gray-600"
-                    >
-                      Editar producto
-                    </button>
-                    {(userRole === "super_admin" || userRole === "superadmin_aff") && (
-                      <button
-                        onClick={() => handleDelete(product)}
-                        disabled={deletingId === product.id}
-                        title="Eliminar producto (se borra del sistema)"
-                        className="text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors font-medium border border-red-200 dark:border-red-800 disabled:opacity-50"
-                      >
-                        {deletingId === product.id ? (
-                          <span className="inline-block w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          "Eliminar"
-                        )}
-                      </button>
+              <div key={product.id} className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border ${product.is_active ? 'border-gray-100 dark:border-gray-700' : 'border-gray-200 dark:border-gray-600 opacity-60'} overflow-hidden hover:shadow-md transition-all flex flex-col`}>
+                {/* Clic en imagen + datos abre detalle (unidades por sede) */}
+                <button
+                  type="button"
+                  onClick={() => setDetailProduct(product)}
+                  className="flex-1 text-left min-w-0"
+                >
+                  <div className="h-40 bg-gradient-to-br from-pink-50 to-rose-50 dark:from-gray-700 dark:to-gray-600 relative overflow-hidden">
+                    {product.images?.[0] ? (
+                      <img src={product.images[0]} alt={product.name} className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="flex items-center justify-center h-full text-4xl">🛍️</div>
+                    )}
+                    {!product.is_active && (
+                      <div className="absolute inset-0 bg-gray-900/40 flex items-center justify-center">
+                        <span className="bg-gray-800 text-white text-xs px-2 py-1 rounded-full">Inactivo</span>
+                      </div>
+                    )}
+                    {!product.allow_financing && (
+                      <div className="absolute top-2 right-2">
+                        <span className="bg-orange-500 text-white text-xs px-2 py-0.5 rounded-full font-medium">Solo contado</span>
+                      </div>
                     )}
                   </div>
+                  <div className="p-3">
+                    <div className="text-xs text-pink-600 dark:text-pink-400 font-medium mb-0.5">
+                      {product.shop_categories?.name || "Sin categoría"}
+                    </div>
+                    <h3 className="font-semibold text-gray-900 dark:text-white text-sm line-clamp-1">{product.name}</h3>
+                    <p className="text-gray-500 dark:text-gray-400 text-xs line-clamp-2 mt-0.5">{product.description}</p>
+                    <div className="flex items-center justify-between mt-2">
+                      <span className="text-base font-bold text-gray-900 dark:text-white">
+                        ${product.base_price.toLocaleString("es-CO")}
+                      </span>
+                      <span className="text-xs text-gray-400">
+                        {(product.shop_product_variants?.length || 0) > 0 && `${product.shop_product_variants!.length} var.`}
+                        {(product.stock?.available ?? 0) > 0 && ` · ${product.stock.available} uds.`}
+                      </span>
+                    </div>
+                    <p className="text-xs text-gray-400 mt-1">Clic para ver unidades por sede</p>
+                  </div>
+                </button>
+                <div className="px-3 pb-3 flex gap-2" onClick={e => e.stopPropagation()}>
+                  <button
+                    onClick={() => openEdit(product)}
+                    className="flex-1 text-xs bg-gray-50 dark:bg-gray-700 hover:bg-pink-50 dark:hover:bg-pink-900/20 text-gray-700 dark:text-gray-300 hover:text-pink-700 dark:hover:text-pink-400 px-3 py-1.5 rounded-lg transition-colors font-medium border border-gray-100 dark:border-gray-600"
+                  >
+                    Editar producto
+                  </button>
+                  {(userRole === "super_admin" || userRole === "superadmin_aff") && (
+                    <button
+                      onClick={() => handleDelete(product)}
+                      disabled={deletingId === product.id}
+                      title="Eliminar producto (se borra del sistema)"
+                      className="text-xs text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 px-3 py-1.5 rounded-lg transition-colors font-medium border border-red-200 dark:border-red-800 disabled:opacity-50"
+                    >
+                      {deletingId === product.id ? (
+                        <span className="inline-block w-3.5 h-3.5 border-2 border-red-500 border-t-transparent rounded-full animate-spin" />
+                      ) : (
+                        "Eliminar"
+                      )}
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -324,7 +367,61 @@ export default function ShopProductsPage() {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Modal detalle: unidades por sede (sin editar) */}
+      {detailProduct && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={() => setDetailProduct(null)}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between p-4 border-b border-gray-100 dark:border-gray-700">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-white truncate pr-2">{detailProduct.name}</h2>
+              <button onClick={() => setDetailProduct(null)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500 shrink-0">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
+            </div>
+            <div className="p-4 overflow-y-auto flex-1">
+              <p className="text-sm text-gray-500 dark:text-gray-400 mb-3">Unidades existentes por ubicación</p>
+              {detailLoading ? (
+                <div className="flex justify-center py-8"><div className="animate-spin w-8 h-8 border-2 border-pink-500 border-t-transparent rounded-full" /></div>
+              ) : detailInventory.length === 0 ? (
+                <p className="text-sm text-gray-500 dark:text-gray-400 py-4">Aún no hay stock registrado en ninguna sede.</p>
+              ) : (
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="border-b border-gray-200 dark:border-gray-600">
+                      <th className="text-left py-2 font-semibold text-gray-700 dark:text-gray-300">Ubicación</th>
+                      <th className="text-right py-2 font-semibold text-gray-700 dark:text-gray-300">Disponible</th>
+                      <th className="text-right py-2 font-semibold text-gray-700 dark:text-gray-300">Reservado</th>
+                      <th className="text-right py-2 font-semibold text-gray-700 dark:text-gray-300">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
+                    {detailInventory.map(row => (
+                      <tr key={row.id}>
+                        <td className="py-2 text-gray-900 dark:text-white">{getLocationLabel(row.location_type, row.location_id)}</td>
+                        <td className="py-2 text-right font-medium">{row.quantity - row.reserved}</td>
+                        <td className="py-2 text-right text-orange-600 dark:text-orange-400">{row.reserved}</td>
+                        <td className="py-2 text-right text-gray-500">{row.quantity}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="p-4 border-t border-gray-100 dark:border-gray-700 flex gap-2">
+              <button
+                onClick={() => { setDetailProduct(null); router.push(`/admin/shop/inventory?product_id=${detailProduct.id}&add=1`); }}
+                className="flex-1 py-2.5 bg-pink-600 hover:bg-pink-700 text-white text-sm font-medium rounded-xl transition-colors"
+              >
+                Agregar unidades
+              </button>
+              <button onClick={() => setDetailProduct(null)} className="px-4 py-2.5 text-sm text-gray-600 dark:text-gray-400 border border-gray-200 dark:border-gray-600 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700">
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal crear/editar */}
       {showModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
