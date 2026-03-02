@@ -122,9 +122,12 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     }
 
     // Actualizar financiación a aprobada + crear cuotas
-    if (order.shop_financing?.[0]) {
-      const fin = order.shop_financing[0];
-      await supabase.from('shop_financing').update({ status: 'aprobado', approved_by: user.id, approved_at: new Date().toISOString() }).eq('id', fin.id);
+    const fin = Array.isArray(order.shop_financing) ? order.shop_financing[0] : order.shop_financing;
+    if (fin?.id) {
+      await supabase
+        .from('shop_financing')
+        .update({ status: 'aprobado', approved_by: user.id, approved_at: new Date().toISOString() })
+        .eq('id', fin.id);
 
       // Crear cuotas:
       //  - La primera ligada a la QUINCENA ACTUAL (para que se descuente de inmediato en Tu billetera)
