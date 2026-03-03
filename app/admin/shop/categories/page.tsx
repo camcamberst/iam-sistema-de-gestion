@@ -185,7 +185,6 @@ export default function ShopCategoriesPage() {
           </div>
         </div>
       )}
-        </div>
       </div>
     </div>
   );
