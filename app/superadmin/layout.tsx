@@ -337,6 +337,23 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                 </svg>
               </button>
 
+              {/* Acceso rápido Sexshop (solo admin/super_admin) */}
+              {(userInfo?.role === 'super_admin' || userInfo?.role === 'admin') && (
+                <Link
+                  href="/admin/shop/orders"
+                  className={`hidden md:flex p-2 md:p-2.5 rounded-lg transition-all duration-200 hover:shadow-sm group ${
+                    pathname.startsWith('/admin/shop') || pathname.startsWith('/admin/model/shop')
+                      ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-600 dark:text-pink-400 shadow-sm'
+                      : 'text-gray-600 dark:text-gray-300 hover:text-pink-600 dark:hover:text-pink-400 hover:bg-pink-50 dark:hover:bg-pink-900/20'
+                  }`}
+                  title="Sexshop"
+                >
+                  <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                  </svg>
+                </Link>
+              )}
+
               {/* Theme Toggle */}
               <div className="scale-75 sm:scale-90 md:scale-100">
                 <ThemeToggle />
@@ -547,6 +564,26 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                 })
               ) : (
                 <div className="text-gray-500 dark:text-gray-400 text-sm px-4 py-3">Cargando menú...</div>
+              )}
+
+              {/* Acceso directo Sexshop en móvil (solo admin/super_admin) */}
+              {userInfo && (userInfo.role === 'super_admin' || userInfo.role === 'admin') && (
+                <div className="border-t border-gray-200 dark:border-gray-700 pt-3 mt-2">
+                  <Link
+                    href="/admin/shop/orders"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className={`flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
+                      pathname.startsWith('/admin/shop')
+                        ? 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-pink-50 dark:hover:bg-pink-900/20'
+                    }`}
+                  >
+                    <svg className="w-5 h-5 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                    </svg>
+                    <span>Sexshop</span>
+                  </Link>
+                </div>
               )}
               
               {/* User Info en móvil */}
