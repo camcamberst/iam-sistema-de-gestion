@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
+import AppleDropdown from "@/components/ui/AppleDropdown";
 
 interface Group { id: string; name: string; }
 interface InventoryRow {
@@ -74,15 +75,19 @@ export default function ShopInventoryPage() {
     setUserRole(profile?.role || "");
     setUserGroupId(profile?.group_id || null);
 
+    const authHeader = { Authorization: `Bearer ${session.access_token}` };
     const [invRes, grpRes, prodRes, transRes] = await Promise.all([
-      fetch("/api/shop/inventory", { headers: { Authorization: `Bearer ${session.access_token}` } }),
-      supabase.from("groups").select("id, name").order("name"),
-      fetch("/api/shop/products?active_only=false", { headers: { Authorization: `Bearer ${session.access_token}` } }),
-      fetch("/api/shop/inventory/transfer?limit=100", { headers: { Authorization: `Bearer ${session.access_token}` } })
+      fetch("/api/shop/inventory", { headers: authHeader }),
+      fetch("/api/groups", { headers: authHeader }),
+      fetch("/api/shop/products?active_only=false", { headers: authHeader }),
+      fetch("/api/shop/inventory/transfer?limit=100", { headers: authHeader })
     ]);
 
     if (invRes.ok) setInventory(await invRes.json());
-    if (grpRes.data) setGroups(grpRes.data);
+    if (grpRes.ok) {
+      const grpData = await grpRes.json();
+      if (grpData?.success && grpData?.groups) setGroups(grpData.groups);
+    }
     if (prodRes.ok) setProducts(await prodRes.json());
     if (transRes.ok) setTransfers(await transRes.json());
     setLoading(false);
@@ -168,6 +173,28 @@ export default function ShopInventoryPage() {
   const selectedProduct = products.find(p => p.id === addForm.product_id);
   const selectedTransProduct = products.find(p => p.id === transForm.product_id);
 
+  const canBodega = userRole === "super_admin" || userRole === "superadmin_aff";
+
+  const productOptions = useMemo(() => [
+    { value: "", label: "Seleccionar..." },
+    ...products.map(p => ({ value: p.id, label: p.name }))
+  ], [products]);
+
+  const locationOptionsAdd = useMemo(() => [
+    ...(canBodega ? [{ value: "bodega", label: "Bodega principal" }] : []),
+    ...groups.map(g => ({ value: g.id, label: `Sede ${g.name}` }))
+  ], [canBodega, groups]);
+
+  const locationOptionsFilter = useMemo(() => [
+    { value: "all", label: "Todas" },
+    ...(canBodega ? [{ value: "bodega", label: "Bodega Principal" }] : []),
+    ...groups.map(g => ({ value: g.id, label: `Sede ${g.name}` }))
+  ], [canBodega, groups]);
+
+  const addLocationValue = addForm.location_type === "bodega" ? "bodega" : addForm.location_id || "";
+  const transFromValue = transForm.from_location_type === "bodega" ? "bodega" : transForm.from_location_id || "";
+  const transToValue = transForm.to_location_type === "bodega" ? "bodega" : transForm.to_location_id || "";
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -207,31 +234,37 @@ export default function ShopInventoryPage() {
               <h2 className="text-base font-semibold text-gray-900 dark:text-white mb-4">Agregar unidades</h2>
               <p className="text-xs text-gray-500 dark:text-gray-400 mb-3">Elige el producto y la sede donde se agregan las unidades (evita crear productos duplicados; si ya existe, solo agrega stock aquí).</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Producto</label>
-                  <select value={addForm.product_id} onChange={e => setAddForm(f => ({ ...f, product_id: e.target.value, variant_id: "" }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    <option value="">Seleccionar...</option>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+<div>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Producto</label>
+                  <AppleDropdown
+                    options={productOptions}
+                    value={addForm.product_id}
+                    onChange={v => setAddForm(f => ({ ...f, product_id: v, variant_id: "" }))}
+                    placeholder="Seleccionar..."
+                  />
                 </div>
                 {selectedProduct?.shop_product_variants && selectedProduct.shop_product_variants.length > 0 && (
                   <div>
-                    <label className="block text-xs font-medium text-gray-500 mb-1">Variante</label>
-                    <select value={addForm.variant_id} onChange={e => setAddForm(f => ({ ...f, variant_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                      <option value="">Sin variante</option>
-                      {selectedProduct.shop_product_variants.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                    </select>
+                    <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Variante</label>
+                    <AppleDropdown
+                      options={[{ value: "", label: "Sin variante" }, ...selectedProduct.shop_product_variants.map(v => ({ value: v.id, label: v.name }))]}
+                      value={addForm.variant_id}
+                      onChange={v => setAddForm(f => ({ ...f, variant_id: v }))}
+                      placeholder="Sin variante"
+                    />
                   </div>
                 )}
                 <div>
-                  <label className="block text-xs font-medium text-gray-500 mb-1">Sede que agrega las unidades</label>
-                  <select value={addForm.location_type === "bodega" ? "bodega" : addForm.location_id} onChange={e => {
-                    if (e.target.value === "bodega") setAddForm(f => ({ ...f, location_type: "bodega", location_id: "" }));
-                    else setAddForm(f => ({ ...f, location_type: "sede", location_id: e.target.value }));
-                  }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega principal</option>}
-                    {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
-                  </select>
+                  <label className="block text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">Sede que agrega las unidades</label>
+                  <AppleDropdown
+                    options={locationOptionsAdd}
+                    value={addLocationValue}
+                    onChange={v => {
+                      if (v === "bodega") setAddForm(f => ({ ...f, location_type: "bodega", location_id: "" }));
+                      else setAddForm(f => ({ ...f, location_type: "sede", location_id: v }));
+                    }}
+                    placeholder="Selecciona sede"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-500 mb-1">Unidades (+ añadir / - retirar)</label>
@@ -246,13 +279,16 @@ export default function ShopInventoryPage() {
             </div>
 
             {/* Filter */}
-            <div className="flex items-center gap-3">
+<div className="flex items-center gap-3">
               <label className="text-sm text-gray-600 dark:text-gray-400">Filtrar por ubicación:</label>
-              <select value={filterLocation} onChange={e => setFilterLocation(e.target.value)} className="px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                <option value="all">Todas</option>
-                {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
-                {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
-              </select>
+              <div className="min-w-[180px]">
+                <AppleDropdown
+                  options={locationOptionsFilter}
+                  value={filterLocation}
+                  onChange={setFilterLocation}
+                  placeholder="Todas"
+                />
+              </div>
             </div>
 
             {/* Stock table */}
@@ -263,12 +299,12 @@ export default function ShopInventoryPage() {
                 <table className="w-full text-sm">
                   <thead className="bg-gray-50 dark:bg-gray-700/50">
                     <tr>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Producto</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Variante</th>
-                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Ubicación</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Disponible</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Reservado</th>
-                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase">Total</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Producto</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Variante</th>
+                      <th className="text-left px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Ubicación</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Disponible</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Reservado</th>
+                      <th className="text-right px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Total</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
@@ -298,7 +334,7 @@ export default function ShopInventoryPage() {
                             {isLow && <span className="ml-1 text-xs">⚠️</span>}
                           </td>
                           <td className="px-4 py-3 text-right text-orange-600 dark:text-orange-400">{row.reserved}</td>
-                          <td className="px-4 py-3 text-right text-gray-500">{row.quantity}</td>
+                          <td className="px-4 py-3 text-right text-gray-600 dark:text-gray-400">{row.quantity}</td>
                         </tr>
                       );
                     })}
@@ -319,40 +355,48 @@ export default function ShopInventoryPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Producto</label>
-                <select value={transForm.product_id} onChange={e => setTransForm(f => ({ ...f, product_id: e.target.value, variant_id: "" }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                  <option value="">Seleccionar producto...</option>
-                  {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                </select>
+                <AppleDropdown
+                  options={[{ value: "", label: "Seleccionar producto..." }, ...products.map(p => ({ value: p.id, label: p.name }))]}
+                  value={transForm.product_id}
+                  onChange={v => setTransForm(f => ({ ...f, product_id: v, variant_id: "" }))}
+                  placeholder="Seleccionar producto..."
+                />
               </div>
               {selectedTransProduct?.shop_product_variants && selectedTransProduct.shop_product_variants.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Variante</label>
-                  <select value={transForm.variant_id} onChange={e => setTransForm(f => ({ ...f, variant_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    <option value="">Sin variante</option>
-                    {selectedTransProduct.shop_product_variants.map(v => <option key={v.id} value={v.id}>{v.name}</option>)}
-                  </select>
+                  <AppleDropdown
+                    options={[{ value: "", label: "Sin variante" }, ...selectedTransProduct.shop_product_variants.map(v => ({ value: v.id, label: v.name }))]}
+                    value={transForm.variant_id}
+                    onChange={v => setTransForm(f => ({ ...f, variant_id: v }))}
+                    placeholder="Sin variante"
+                  />
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Origen</label>
-                  <select value={transForm.from_location_type === "bodega" ? "bodega" : transForm.from_location_id} onChange={e => {
-                    if (e.target.value === "bodega") setTransForm(f => ({ ...f, from_location_type: "bodega", from_location_id: "" }));
-                    else setTransForm(f => ({ ...f, from_location_type: "sede", from_location_id: e.target.value }));
-                  }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
-                    {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
-                  </select>
+                  <AppleDropdown
+                    options={locationOptionsAdd}
+                    value={transFromValue}
+                    onChange={v => {
+                      if (v === "bodega") setTransForm(f => ({ ...f, from_location_type: "bodega", from_location_id: "" }));
+                      else setTransForm(f => ({ ...f, from_location_type: "sede", from_location_id: v }));
+                    }}
+                    placeholder="Selecciona origen"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Destino</label>
-                  <select value={transForm.to_location_type === "bodega" ? "bodega" : transForm.to_location_id} onChange={e => {
-                    if (e.target.value === "bodega") setTransForm(f => ({ ...f, to_location_type: "bodega", to_location_id: "" }));
-                    else setTransForm(f => ({ ...f, to_location_type: "sede", to_location_id: e.target.value }));
-                  }} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    {(userRole === "super_admin" || userRole === "superadmin_aff") && <option value="bodega">Bodega Principal</option>}
-                    {groups.map(g => <option key={g.id} value={g.id}>Sede {g.name}</option>)}
-                  </select>
+                  <AppleDropdown
+                    options={locationOptionsAdd}
+                    value={transToValue}
+                    onChange={v => {
+                      if (v === "bodega") setTransForm(f => ({ ...f, to_location_type: "bodega", to_location_id: "" }));
+                      else setTransForm(f => ({ ...f, to_location_type: "sede", to_location_id: v }));
+                    }}
+                    placeholder="Selecciona destino"
+                  />
                 </div>
               </div>
               <div>
