@@ -210,7 +210,7 @@ export default function ShopPromotionsPage() {
 
       {showModal && typeof document !== "undefined" && document.body && createPortal(
         <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm" onClick={(e) => e.target === e.currentTarget && setShowModal(false)}>
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg" onClick={e => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full min-w-[28rem] max-w-lg flex-shrink-0" onClick={e => e.stopPropagation()}>
             <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
               <h2 className="text-lg font-bold text-gray-900 dark:text-white">{editPromo ? "Editar" : "Nueva"} Promoción</h2>
               <button onClick={() => setShowModal(false)} className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-gray-500">
