@@ -1,9 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
+import AppleDropdown from "@/components/ui/AppleDropdown";
 
 interface Category { id: string; name: string; }
 interface Group { id: string; name: string; }
@@ -103,6 +104,21 @@ export default function ShopProductsPage() {
     const g = groups.find(gr => gr.id === locationId);
     return g ? `Sede ${g.name}` : (locationId ? `Sede ${locationId}` : "Sede");
   }
+
+  const canBodega = userRole === "super_admin" || userRole === "superadmin_aff";
+  const categoryFilterOptions = useMemo(() => [
+    { value: "all", label: "Todas las categorías" },
+    ...categories.map(c => ({ value: c.id, label: c.name }))
+  ], [categories]);
+  const categoryFormOptions = useMemo(() => [
+    { value: "", label: "Sin categoría" },
+    ...categories.map(c => ({ value: c.id, label: c.name }))
+  ], [categories]);
+  const locationOptions = useMemo(() => [
+    ...(canBodega ? [{ value: "bodega", label: "Bodega principal" }] : []),
+    ...groups.map(g => ({ value: g.id, label: `Sede ${g.name}` }))
+  ], [canBodega, groups]);
+  const initialStockLocationValue = initialStock.location_type === "bodega" ? "bodega" : (initialStock.location_id || "");
 
   function openCreate() {
     setEditProduct(null);
@@ -274,13 +290,14 @@ export default function ShopProductsPage() {
               className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-pink-500 focus:border-transparent outline-none"
             />
           </div>
-          <select
-            value={filterCategory} onChange={e => setFilterCategory(e.target.value)}
-            className="px-3 py-2.5 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-800 text-sm focus:ring-2 focus:ring-pink-500 outline-none"
-          >
-            <option value="all">Todas las categorías</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-          </select>
+          <div className="min-w-[200px]">
+            <AppleDropdown
+              options={categoryFilterOptions}
+              value={filterCategory}
+              onChange={setFilterCategory}
+              placeholder="Todas las categorías"
+            />
+          </div>
         </div>
 
         {/* Products Grid */}
@@ -470,13 +487,12 @@ export default function ShopProductsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría</label>
-                  <select
-                    value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none"
-                  >
-                    <option value="">Sin categoría</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <AppleDropdown
+                    options={categoryFormOptions}
+                    value={form.category_id}
+                    onChange={v => setForm(f => ({ ...f, category_id: v }))}
+                    placeholder="Sin categoría"
+                  />
                 </div>
               </div>
 
@@ -520,25 +536,15 @@ export default function ShopProductsPage() {
                     </div>
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Ubicación</label>
-                      <select
-                        value={initialStock.location_type === "bodega" ? "bodega" : initialStock.location_id}
-                        onChange={e => {
-                          const v = e.target.value;
+                      <AppleDropdown
+                        options={locationOptions.length ? locationOptions : [{ value: "", label: "Sin sedes asignadas" }]}
+                        value={initialStockLocationValue}
+                        onChange={v => {
                           if (v === "bodega") setInitialStock(s => ({ ...s, location_type: "bodega", location_id: "" }));
                           else setInitialStock(s => ({ ...s, location_type: "sede", location_id: v }));
                         }}
-                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none"
-                      >
-                        {(userRole === "super_admin" || userRole === "superadmin_aff") && (
-                          <option value="bodega">Bodega principal</option>
-                        )}
-                        {groups.map(g => (
-                          <option key={g.id} value={g.id}>Sede {g.name}</option>
-                        ))}
-                        {groups.length === 0 && userRole !== "super_admin" && userRole !== "superadmin_aff" && (
-                          <option value="">Sin sedes asignadas</option>
-                        )}
-                      </select>
+                        placeholder="Sin sedes asignadas"
+                      />
                     </div>
                   </div>
                 </div>

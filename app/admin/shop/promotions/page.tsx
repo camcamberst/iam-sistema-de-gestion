@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabase";
 import ShopAdminNav from "@/components/ShopAdminNav";
+import AppleDropdown from "@/components/ui/AppleDropdown";
 
 interface Promotion {
   id: string;
@@ -117,6 +118,21 @@ export default function ShopPromotionsPage() {
     return <span className="px-2 py-0.5 rounded-full text-xs bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400">Activa</span>;
   }
 
+  const typeOptions = useMemo(() => [
+    { value: "percentage", label: "% Descuento" },
+    { value: "fixed", label: "Monto fijo" },
+    { value: "2x1", label: "2×1" },
+    { value: "category", label: "Categoría %" }
+  ], []);
+  const productOptions = useMemo(() => [
+    { value: "", label: "Todos" },
+    ...products.map(p => ({ value: p.id, label: p.name }))
+  ], [products]);
+  const categoryOptions = useMemo(() => [
+    { value: "", label: "Todas" },
+    ...categories.map(c => ({ value: c.id, label: c.name }))
+  ], [categories]);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-pink-50 to-rose-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 p-4 md:p-6">
       <div className="max-w-6xl mx-auto">
@@ -201,12 +217,12 @@ export default function ShopPromotionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Tipo</label>
-                  <select value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    <option value="percentage">% Descuento</option>
-                    <option value="fixed">Monto fijo</option>
-                    <option value="2x1">2×1</option>
-                    <option value="category">Categoría %</option>
-                  </select>
+                  <AppleDropdown
+                    options={typeOptions}
+                    value={form.type}
+                    onChange={v => setForm(f => ({ ...f, type: v }))}
+                    placeholder="Tipo"
+                  />
                 </div>
                 {form.type !== "2x1" && (
                   <div>
@@ -220,17 +236,21 @@ export default function ShopPromotionsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Producto (opcional)</label>
-                  <select value={form.product_id} onChange={e => setForm(f => ({ ...f, product_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    <option value="">Todos</option>
-                    {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-                  </select>
+                  <AppleDropdown
+                    options={productOptions}
+                    value={form.product_id}
+                    onChange={v => setForm(f => ({ ...f, product_id: v }))}
+                    placeholder="Todos"
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Categoría (opcional)</label>
-                  <select value={form.category_id} onChange={e => setForm(f => ({ ...f, category_id: e.target.value }))} className="w-full px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-pink-500 outline-none">
-                    <option value="">Todas</option>
-                    {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                  </select>
+                  <AppleDropdown
+                    options={categoryOptions}
+                    value={form.category_id}
+                    onChange={v => setForm(f => ({ ...f, category_id: v }))}
+                    placeholder="Todas"
+                  />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
