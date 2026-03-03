@@ -330,14 +330,7 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
 
             {/* User Actions (Oculto en móvil cuando el menú está abierto) */}
             <div className={`flex items-center space-x-1 sm:space-x-1.5 md:space-x-3 ${mobileMenuOpen ? 'hidden' : 'flex'}`}>
-              {/* Botón de búsqueda - Oculto en móvil */}
-              <button className="hidden md:flex p-2 md:p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-lg transition-all duration-200 hover:shadow-sm">
-                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                </svg>
-              </button>
-
-              {/* Acceso rápido Sexshop (solo admin/super_admin) */}
+              {/* Acceso rápido Sexshop — entre Gestión Agencia y la lupa (solo admin/super_admin) */}
               {(userInfo?.role === 'super_admin' || userInfo?.role === 'admin') && (
                 <Link
                   href="/admin/shop/orders"
@@ -353,6 +346,13 @@ export default function SuperAdminLayout({ children }: { children: ReactNode }) 
                   </svg>
                 </Link>
               )}
+
+              {/* Botón de búsqueda (lupa) - Oculto en móvil */}
+              <button className="hidden md:flex p-2 md:p-2.5 text-gray-600 hover:text-gray-900 hover:bg-white/60 rounded-lg transition-all duration-200 hover:shadow-sm">
+                <svg className="w-4 h-4 md:w-5 md:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </button>
 
               {/* Theme Toggle */}
               <div className="scale-75 sm:scale-90 md:scale-100">
