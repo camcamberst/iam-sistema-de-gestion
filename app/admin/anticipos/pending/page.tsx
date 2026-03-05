@@ -53,7 +53,8 @@ export default function SolicitudesPendientesPage() {
   const [processing, setProcessing] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado' | 'reversado'>('todos');
+  // Por defecto, mostrar solo solicitudes pendientes (no incluir reversadas en la vista principal)
+  const [estadoFiltro, setEstadoFiltro] = useState<'todos' | 'pendiente' | 'aprobado' | 'realizado' | 'confirmado' | 'reversado'>('pendiente');
   const [grupoFiltro, setGrupoFiltro] = useState<string>('todos');
   const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -161,12 +162,15 @@ export default function SolicitudesPendientesPage() {
   // Filtrar anticipos por estado y grupo
   const getAnticiposFiltrados = () => {
     let filtered = anticipos;
-    
+
     // Filtrar por estado
-    if (estadoFiltro !== 'todos') {
+    if (estadoFiltro === 'todos') {
+      // En la vista de "Solicitudes pendientes", no consideramos las reversadas como parte del flujo activo
+      filtered = filtered.filter(anticipo => anticipo.estado !== 'reversado');
+    } else {
       filtered = filtered.filter(anticipo => anticipo.estado === estadoFiltro);
     }
-    
+
     // Filtrar por grupo (super admin o admin)
     if ((user?.role === 'super_admin' || user?.role === 'admin') && grupoFiltro !== 'todos') {
       filtered = filtered.filter(anticipo => 
@@ -402,13 +406,19 @@ export default function SolicitudesPendientesPage() {
         )}
 
         {/* Lista de Solicitudes */}
-        {anticipos.length === 0 ? (
+        {getAnticiposFiltrados().length === 0 ? (
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 text-center py-8 px-6">
             <svg className="w-8 h-8 text-gray-400 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay solicitudes pendientes</h3>
-            <p className="text-gray-500 dark:text-gray-400">Todas las solicitudes han sido procesadas</p>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+              {estadoFiltro === 'pendiente' ? 'No hay solicitudes pendientes' : 'No hay solicitudes para este estado'}
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400">
+              {estadoFiltro === 'pendiente'
+                ? 'Todas las solicitudes pendientes han sido procesadas'
+                : 'Ajusta los filtros para ver otras solicitudes'}
+            </p>
           </div>
         ) : (
           <div className="space-y-3">
