@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from "@/lib/supabase";
 import { getColombiaPeriodStartDate, getColombiaDate } from '@/utils/calculator-dates';
@@ -76,7 +76,35 @@ export default function ModelCalculatorPage() {
   const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
   // Neto disponible del período (después de anticipos y compras sexshop) para indicador en calculadora
   const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number; cuotas_primera_aprobacion?: number; descuentos_detalle?: Array<{ concepto: string; monto: number }> } | null>(null);
-  
+
+  // COP Modelo en vivo (misma fórmula que la card morada) para que el neto mostrado coincida con la card cuando no hay descuentos
+  const liveCopModelo = useMemo(() => {
+    const usdModelo = platforms.reduce((sum, p) => {
+      let val = 0;
+      if (p.currency === 'EUR') {
+        if (p.id === 'big7') val = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+        else if (p.id === 'mondo') val = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+        else if (p.id === 'modelka' || p.id === 'xmodels' || p.id === '777' || p.id === 'vx' || p.id === 'livecreator' || p.id === 'mow') val = p.value * (rates?.eur_usd || 1.01);
+        else val = p.value * (rates?.eur_usd || 1.01);
+      } else if (p.currency === 'GBP') {
+        if (p.id === 'aw') val = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+        else val = p.value * (rates?.gbp_usd || 1.20);
+      } else if (p.currency === 'USD') {
+        if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') val = p.value * 0.75;
+        else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') val = p.value * 0.05;
+        else if (p.id === 'dxlive') val = p.value * 0.60;
+        else if (p.id === 'secretfriends') val = p.value * 0.5;
+        else if (p.id === 'superfoon') val = p.value;
+        else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') val = p.value;
+        else val = p.value;
+      }
+      const norm = String(p.id || '').toLowerCase();
+      if (norm === 'superfoon') return sum + val;
+      return sum + (val * p.percentage / 100);
+    }, 0);
+    return usdModelo * (rates?.usd_cop || 3900);
+  }, [platforms, rates]);
+
   const router = useRouter();
   // Eliminado: Ya no maneja parámetros de admin
   // Sistema V2 siempre activo (sin flags de entorno)
@@ -1507,11 +1535,11 @@ export default function ModelCalculatorPage() {
             />
           </div>
 
-          {/* Indicador: el total COP no es el neto si hay anticipos o compras */}
+          {/* Indicador: neto = COP Modelo (en vivo) menos descuentos; así coincide con la card cuando no hay descuentos */}
           {netoDisponible != null && (
             <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
               <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium">
-                💳 Tu neto disponible este período: <span className="font-bold text-amber-900 dark:text-amber-100">${Number(netoDisponible.neto_disponible ?? 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP</span>
+                💳 Tu neto disponible este período: <span className="font-bold text-amber-900 dark:text-amber-100">${Math.max(0, liveCopModelo - ((netoDisponible.anticipos ?? 0) + (netoDisponible.cuotas_pendientes ?? 0) + (netoDisponible.compras_contado ?? 0) + (netoDisponible.cuotas_primera_aprobacion ?? 0))).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP</span>
               </p>
               {netoDisponible.descuentos_detalle && netoDisponible.descuentos_detalle.length > 0 && (
                 <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
