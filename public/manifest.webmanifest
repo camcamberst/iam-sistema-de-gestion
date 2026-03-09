@@ -1,0 +1,20 @@
+{
+  "name": "AIM Sistema de Gestión",
+  "short_name": "AIM Gestión",
+  "description": "Sistema de gestión AIM para modelos, administración y finanzas.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
+

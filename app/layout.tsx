@@ -5,6 +5,7 @@ import ThemeTransition from "@/components/ThemeTransition";
 export const metadata: Metadata = {
   title: "AIM Sistema de Gestión",
   description: "Sistema de gestión de usuarios con roles y grupos - Diseño Apple.com",
+  manifest: "/manifest.webmanifest",
   icons: {
     icon: [
       { url: '/favicon.png', type: 'image/png', sizes: '512x512' },
