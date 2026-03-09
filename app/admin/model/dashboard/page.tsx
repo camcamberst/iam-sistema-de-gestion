@@ -425,7 +425,7 @@ export default function ModelDashboard() {
                 />
                 {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
                 <InfoCard
-                  value={productivityData ? `${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
+                  value={productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
                   label="COP Modelo"
                   color="purple"
                   size="sm"
