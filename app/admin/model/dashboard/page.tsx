@@ -480,7 +480,7 @@ export default function ModelDashboard() {
 
                   return (
                     <div
-                      className={`relative overflow-hidden rounded-2xl border transition-all duration-300`}
+                      className="relative overflow-hidden rounded-2xl border transition-all duration-300 min-h-[112px] sm:min-h-[124px]"
                       style={{
                         background: `linear-gradient(135deg, ${cardBgStart}, ${cardBgEnd})`,
                         borderColor: cardBorder,
@@ -498,19 +498,19 @@ export default function ModelDashboard() {
                           {/* Icono animado */}
                           <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
                             <div
-                              className={`w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md`}
+                              className="w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md"
                               style={{
                                 background: `linear-gradient(135deg, ${iconStart}, ${iconEnd})`
                               }}
                             >
-                              <span className="text-white text-[10px] sm:text-sm">✓</span>
+                              <span className="text-white text-[9px] sm:text-xs">✓</span>
                             </div>
                           </div>
                           
                           {/* Contenido compacto */}
                           <div className="flex-1 min-w-0">
                             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
-                              <div className={`font-bold text-[11px] sm:text-sm leading-tight`} style={{ color: headingColor }}>
+                              <div className="font-bold text-[10px] sm:text-xs leading-tight" style={{ color: headingColor }}>
                                 {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
                               </div>
                               {(() => {
@@ -543,15 +543,17 @@ export default function ModelDashboard() {
                               })()}
                             </div>
                             
-                            {/* Mensaje de progreso por hito */}
-                            {(() => {
-                              const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                              return <ProgressMilestone progress={roundedProgress} />;
-                            })()}
+                            {/* Mensaje de progreso por hito (alto fijo para evitar saltos de layout) */}
+                            <div className="mt-1 sm:mt-1.5 min-h-[22px] sm:min-h-[26px] flex items-center">
+                              {(() => {
+                                const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
+                                return <ProgressMilestone progress={roundedProgress} />;
+                              })()}
+                            </div>
                             
                             {/* Barra de progreso compacta */}
                             <div className="mt-1.5 sm:mt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
+                              <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-1.5 overflow-hidden">
                                 <div 
                                   className={`h-full transition-all duration-1000 ease-out`}
                                   style={{ 
