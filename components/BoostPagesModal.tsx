@@ -74,36 +74,82 @@ export default function BoostPagesModal({
         });
 
         const data = await res.json();
-        const list: AutoUploadModel[] = data?.data || [];
+
+        // La respuesta puede ser { data: [...] } o directamente un array [...]
+        const rawList = Array.isArray(data) ? data : (data?.data || data?.models || data?.records || []);
+        const list: AutoUploadModel[] = Array.isArray(rawList) ? rawList : [];
+
         if (!cancelled) {
           setAutoModels(list);
 
-          // Buscar por username (parte antes de @ del correo, ej: "hollyrogers")
           const username = (modelEmail.split('@')[0] || '').toLowerCase().trim();
 
-          console.log(`🔍 [BOOST-AUTOUPLOAD] Buscando modelo en AutoUpload con username: "${username}", lista tiene ${list.length} modelos`);
-          list.forEach(m => console.log(`  → AutoUpload modelo: "${m.nombre}" (estado: ${m.estado})`));
+          console.log(`🔍 [BOOST-AUTOUPLOAD] Buscando username: "${username}", lista tiene ${list.length} modelos`);
+          console.log('🔍 [BOOST-AUTOUPLOAD] Respuesta raw keys:', typeof data === 'object' ? Object.keys(data || {}) : typeof data);
+          list.forEach((m, i) => {
+            const keys = Object.keys(m);
+            console.log(`  → [${i}] keys: [${keys.join(', ')}]`, JSON.stringify(m).slice(0, 200));
+          });
 
-          let match = list.find((m) => String(m.nombre || '').toLowerCase().trim() === username);
+          // Buscar en múltiples campos posibles: nombre, name, username, user, email
+          const findByField = (fieldName: string, value: string) =>
+            list.find((m: any) => String(m[fieldName] || '').toLowerCase().trim() === value);
 
-          // Fallback: buscar por nombre completo si no se encontró por username
+          let match =
+            findByField('nombre', username) ||
+            findByField('name', username) ||
+            findByField('username', username) ||
+            findByField('user', username) ||
+            findByField('nombre', modelName.toLowerCase().trim()) ||
+            findByField('name', modelName.toLowerCase().trim());
+
+          // Búsqueda en fields anidados
           if (!match) {
-            const normalizedName = modelName.toLowerCase().trim();
-            match = list.find((m) => String(m.nombre || '').toLowerCase().trim() === normalizedName);
+            match = list.find((m: any) => {
+              const fields = m.fields || {};
+              return Object.values(fields).some(
+                (v: any) => typeof v === 'string' && v.toLowerCase().trim() === username
+              );
+            });
           }
 
-          const driveId =
-            match?.fields?.['Google Drive Folder ID'] ??
-            match?.fields?.['Google drive Folder ID'] ??
-            match?.fields?.['google_drive_folder_id'];
+          // Búsqueda parcial (contains) como último recurso
+          if (!match) {
+            match = list.find((m: any) => {
+              const allValues = [m.nombre, m.name, m.username, m.user]
+                .filter(Boolean)
+                .map((v: any) => String(v).toLowerCase());
+              return allValues.some(v => v.includes(username) || username.includes(v));
+            });
+          }
+
+          const driveId = match
+            ? (match as any)?.fields?.['Google Drive Folder ID'] ??
+              (match as any)?.fields?.['Google drive Folder ID'] ??
+              (match as any)?.fields?.['google_drive_folder_id'] ??
+              (match as any)?.['Google Drive Folder ID'] ??
+              (match as any)?.['google_drive_folder_id'] ??
+              (match as any)?.folderId ??
+              (match as any)?.folder_id ??
+              (match as any)?.driveId
+            : null;
 
           if (match && driveId) {
-            console.log(`✅ [BOOST-AUTOUPLOAD] Modelo encontrada: "${match.nombre}", folderId: ${driveId}`);
+            console.log(`✅ [BOOST-AUTOUPLOAD] Modelo encontrada: "${(match as any).nombre || (match as any).name}", folderId: ${driveId}`);
             setFolderId(String(driveId));
-          } else {
+          } else if (match && !driveId) {
+            console.warn(`⚠️ [BOOST-AUTOUPLOAD] Modelo encontrada pero sin Folder ID. Keys del match:`, Object.keys(match), 'fields:', match.fields);
             setFolderId(null);
             setError(
-              `No se encontró "${username}" en AutoUpload o no tiene Google Drive Folder ID configurado. Verifica que el username coincida con el registrado en AutoUpload.`
+              `Se encontró "${username}" en AutoUpload pero no tiene Google Drive Folder ID configurado.`
+            );
+          } else {
+            console.warn(`⚠️ [BOOST-AUTOUPLOAD] No se encontró "${username}" en ${list.length} modelos.`);
+            setFolderId(null);
+            setError(
+              list.length === 0
+                ? 'AutoUpload no devolvió modelos. Verifica que el servicio esté activo.'
+                : `No se encontró "${username}" en AutoUpload (${list.length} modelos disponibles). Verifica que el username coincida.`
             );
           }
         }
