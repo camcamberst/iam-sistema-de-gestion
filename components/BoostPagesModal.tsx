@@ -234,9 +234,17 @@ export default function BoostPagesModal({
           body: fd
         });
 
-        const uploadData = await uploadRes.json();
+        let uploadData: any;
+        try {
+          uploadData = await uploadRes.json();
+        } catch {
+          setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
+          setError(uploadRes.status === 413
+            ? `${file.name} excede el tamaño máximo permitido (8 MB).`
+            : `Error del servidor al subir ${file.name} (HTTP ${uploadRes.status}).`);
+          continue;
+        }
         if (!uploadRes.ok || !uploadData?.success) {
-          console.error('❌ [BOOST-AUTOUPLOAD] Error subiendo a Supabase:', uploadData);
           setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
           setError(uploadData?.error || `Error al subir ${file.name}`);
           continue;
@@ -253,11 +261,11 @@ export default function BoostPagesModal({
             body: JSON.stringify({ fileUrl, fileName: file.name, folderId, platform })
           });
 
-          const driveData = await driveRes.json();
+          let driveData: any;
+          try { driveData = await driveRes.json(); } catch { driveData = null; }
           if (!driveRes.ok || driveData?.success === false) {
-            console.error(`❌ [BOOST-AUTOUPLOAD] Error enviando a ${platform}:`, driveData);
             allOk = false;
-            setError(driveData?.error || `Error al enviar ${file.name} a ${platform}`);
+            setError(driveData?.error || `Error al enviar ${file.name} a ${platform} (HTTP ${driveRes.status})`);
           }
         }
 
