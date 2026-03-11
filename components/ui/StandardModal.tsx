@@ -65,11 +65,6 @@ export default function StandardModal({
     return null;
   }
 
-  // Debug: verificar que el modal se está intentando renderizar
-  if (isOpen) {
-    console.log('🔵 StandardModal: Renderizando modal', { isOpen, mounted, hasBody: !!document.body });
-  }
-
   const modalContent = (
     <div
       onClick={() => { if (closeOnBackdrop) onClose(); }}

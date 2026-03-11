@@ -41,6 +41,7 @@ export default function BoostPagesModal({
   const [uploadStatus, setUploadStatus] = useState<Record<string, 'pending' | 'uploading' | 'success' | 'error'>>({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [debugInfo, setDebugInfo] = useState<string>('');
 
   // Cargar sesión y modelos de AutoUpload cuando se abre el modal
   useEffect(() => {
@@ -84,26 +85,37 @@ export default function BoostPagesModal({
 
           const username = (modelEmail.split('@')[0] || '').toLowerCase().trim();
 
-          console.log(`🔍 [BOOST-AUTOUPLOAD] Buscando username: "${username}", lista tiene ${list.length} modelos`);
-          console.log('🔍 [BOOST-AUTOUPLOAD] Respuesta raw keys:', typeof data === 'object' ? Object.keys(data || {}) : typeof data);
-          list.forEach((m, i) => {
-            const keys = Object.keys(m);
-            console.log(`  → [${i}] keys: [${keys.join(', ')}]`, JSON.stringify(m).slice(0, 200));
-          });
+          // Diagnóstico visible: mostrar qué modelos devolvió AutoUpload
+          const modelNames = list.map((m: any) =>
+            m.nombre || m.name || m.fields?.['Nombre de Modelo'] || JSON.stringify(m).slice(0, 80)
+          );
+          setDebugInfo(`Buscando: "${username}" | AutoUpload devolvió ${list.length} modelo(s): [${modelNames.join(', ')}]`);
 
-          // Buscar en múltiples campos posibles: nombre, name, username, user, email
+          // Buscar en múltiples campos posibles
           const findByField = (fieldName: string, value: string) =>
             list.find((m: any) => String(m[fieldName] || '').toLowerCase().trim() === value);
 
+          // También buscar dentro de fields['Nombre de Modelo']
+          const findByNestedField = (fieldName: string, value: string) =>
+            list.find((m: any) => String(m.fields?.[fieldName] || '').toLowerCase().trim() === value);
+
           let match =
             findByField('nombre', username) ||
+            findByNestedField('Nombre de Modelo', username) ||
             findByField('name', username) ||
             findByField('username', username) ||
-            findByField('user', username) ||
-            findByField('nombre', modelName.toLowerCase().trim()) ||
-            findByField('name', modelName.toLowerCase().trim());
+            findByField('user', username);
 
-          // Búsqueda en fields anidados
+          // Fallback: buscar por nombre completo
+          if (!match) {
+            const normalizedName = modelName.toLowerCase().trim();
+            match =
+              findByField('nombre', normalizedName) ||
+              findByNestedField('Nombre de Modelo', normalizedName) ||
+              findByField('name', normalizedName);
+          }
+
+          // Búsqueda en TODOS los valores string de fields
           if (!match) {
             match = list.find((m: any) => {
               const fields = m.fields || {};
@@ -113,12 +125,13 @@ export default function BoostPagesModal({
             });
           }
 
-          // Búsqueda parcial (contains) como último recurso
+          // Búsqueda parcial como último recurso
           if (!match) {
             match = list.find((m: any) => {
-              const allValues = [m.nombre, m.name, m.username, m.user]
-                .filter(Boolean)
-                .map((v: any) => String(v).toLowerCase());
+              const allValues = [
+                m.nombre, m.name, m.username, m.user,
+                m.fields?.['Nombre de Modelo']
+              ].filter(Boolean).map((v: any) => String(v).toLowerCase());
               return allValues.some(v => v.includes(username) || username.includes(v));
             });
           }
@@ -128,23 +141,17 @@ export default function BoostPagesModal({
               (match as any)?.fields?.['Google drive Folder ID'] ??
               (match as any)?.fields?.['google_drive_folder_id'] ??
               (match as any)?.['Google Drive Folder ID'] ??
-              (match as any)?.['google_drive_folder_id'] ??
               (match as any)?.folderId ??
-              (match as any)?.folder_id ??
-              (match as any)?.driveId
+              (match as any)?.folder_id
             : null;
 
           if (match && driveId) {
-            console.log(`✅ [BOOST-AUTOUPLOAD] Modelo encontrada: "${(match as any).nombre || (match as any).name}", folderId: ${driveId}`);
             setFolderId(String(driveId));
+            setDebugInfo('');
           } else if (match && !driveId) {
-            console.warn(`⚠️ [BOOST-AUTOUPLOAD] Modelo encontrada pero sin Folder ID. Keys del match:`, Object.keys(match), 'fields:', match.fields);
             setFolderId(null);
-            setError(
-              `Se encontró "${username}" en AutoUpload pero no tiene Google Drive Folder ID configurado.`
-            );
+            setError(`Se encontró "${username}" en AutoUpload pero no tiene Google Drive Folder ID configurado.`);
           } else {
-            console.warn(`⚠️ [BOOST-AUTOUPLOAD] No se encontró "${username}" en ${list.length} modelos.`);
             setFolderId(null);
             setError(
               list.length === 0
@@ -443,6 +450,12 @@ export default function BoostPagesModal({
           <div className="flex items-center gap-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700 dark:text-red-300">
             <AlertCircle className="w-4 h-4" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {debugInfo && (
+          <div className="rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-800 px-3 py-2 text-[10px] font-mono text-gray-600 dark:text-gray-400 break-all">
+            🔍 {debugInfo}
           </div>
         )}
 
