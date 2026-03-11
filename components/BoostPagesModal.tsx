@@ -74,11 +74,14 @@ export default function BoostPagesModal({
           body: JSON.stringify({ action: 'list-models' })
         });
 
-        const data = await res.json();
+        let parsed = await res.json();
 
-        // La respuesta puede ser { data: [...] } o directamente un array [...]
-        const rawList = Array.isArray(data) ? data : (data?.data || data?.models || data?.records || []);
-        const list: AutoUploadModel[] = Array.isArray(rawList) ? rawList : [];
+        // n8n webhooks envuelven la respuesta en un array: [{ success, data: [...] }]
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data) {
+          parsed = parsed[0];
+        }
+
+        const list: AutoUploadModel[] = Array.isArray(parsed?.data) ? parsed.data : [];
 
         if (!cancelled) {
           setAutoModels(list);
