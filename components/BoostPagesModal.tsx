@@ -219,6 +219,7 @@ export default function BoostPagesModal({
       setUploading(true);
       setError('');
       setSuccess('');
+      let hasErrors = false;
 
       for (const file of selectedFiles) {
         const key = file.name;
@@ -239,6 +240,7 @@ export default function BoostPagesModal({
           uploadData = await uploadRes.json();
         } catch {
           setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
+          hasErrors = true;
           setError(uploadRes.status === 413
             ? `${file.name} excede el tamaño máximo permitido (8 MB).`
             : `Error del servidor al subir ${file.name} (HTTP ${uploadRes.status}).`);
@@ -246,6 +248,7 @@ export default function BoostPagesModal({
         }
         if (!uploadRes.ok || !uploadData?.success) {
           setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
+          hasErrors = true;
           setError(uploadData?.error || `Error al subir ${file.name}`);
           continue;
         }
@@ -270,9 +273,13 @@ export default function BoostPagesModal({
         }
 
         setUploadStatus((prev) => ({ ...prev, [key]: allOk ? 'success' : 'error' }));
+        if (!allOk) hasErrors = true;
       }
 
-      setSuccess(`Carga enviada a AutoUpload (${platforms.join(', ')}). Las plataformas deberían publicar en unos segundos.`);
+      if (!hasErrors) {
+        setError('');
+        setSuccess(`Carga enviada a AutoUpload (${platforms.join(', ')}). Las plataformas deberían publicar en unos segundos.`);
+      }
     } catch (err: any) {
       console.error('❌ [BOOST-AUTOUPLOAD] Error general al subir archivos:', err);
       setError(err?.message || 'Error inesperado al subir archivos');
