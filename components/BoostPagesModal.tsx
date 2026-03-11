@@ -78,13 +78,19 @@ export default function BoostPagesModal({
         if (!cancelled) {
           setAutoModels(list);
 
-          // 1) Intentar match por username (parte antes de @ del correo)
+          // Buscar por username (parte antes de @ del correo, ej: "hollyrogers")
           const username = (modelEmail.split('@')[0] || '').toLowerCase().trim();
-          const normalizedName = modelName.toLowerCase().trim();
 
-          let match =
-            list.find((m) => String(m.nombre || '').toLowerCase().trim() === username) ||
-            list.find((m) => String(m.nombre || '').toLowerCase().trim() === normalizedName);
+          console.log(`🔍 [BOOST-AUTOUPLOAD] Buscando modelo en AutoUpload con username: "${username}", lista tiene ${list.length} modelos`);
+          list.forEach(m => console.log(`  → AutoUpload modelo: "${m.nombre}" (estado: ${m.estado})`));
+
+          let match = list.find((m) => String(m.nombre || '').toLowerCase().trim() === username);
+
+          // Fallback: buscar por nombre completo si no se encontró por username
+          if (!match) {
+            const normalizedName = modelName.toLowerCase().trim();
+            match = list.find((m) => String(m.nombre || '').toLowerCase().trim() === normalizedName);
+          }
 
           const driveId =
             match?.fields?.['Google Drive Folder ID'] ??
@@ -92,11 +98,12 @@ export default function BoostPagesModal({
             match?.fields?.['google_drive_folder_id'];
 
           if (match && driveId) {
+            console.log(`✅ [BOOST-AUTOUPLOAD] Modelo encontrada: "${match.nombre}", folderId: ${driveId}`);
             setFolderId(String(driveId));
           } else {
             setFolderId(null);
             setError(
-              `No se encontró la modelo "${modelName}" en AutoUpload o no tiene configurado el Google Drive Folder ID. Verifica que el nombre coincida.`
+              `No se encontró "${username}" en AutoUpload o no tiene Google Drive Folder ID configurado. Verifica que el username coincida con el registrado en AutoUpload.`
             );
           }
         }
@@ -115,7 +122,7 @@ export default function BoostPagesModal({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, modelName]);
+  }, [isOpen, modelEmail, modelName]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((file) => file.type.startsWith('image/'));
@@ -264,8 +271,7 @@ export default function BoostPagesModal({
             <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
               <AlertCircle className="w-4 h-4" />
               <span>
-                No se encontró la modelo en AutoUpload o no tiene Google Drive configurado. Revisa el nombre de
-                modelo en AutoUpload.
+                No se encontró &quot;{modelEmail.split('@')[0]}&quot; en AutoUpload o no tiene Google Drive configurado. Revisa que el username coincida.
               </span>
             </div>
           )}
