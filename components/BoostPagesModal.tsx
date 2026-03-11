@@ -1,9 +1,9 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { X, Upload, Folder, Settings, ExternalLink, AlertCircle, CheckCircle, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Loader2, Image, Globe2 } from 'lucide-react';
 import StandardModal from '@/components/ui/StandardModal';
-import BoostPagesFileUpload from '@/components/BoostPagesFileUpload';
+import { supabase } from '@/lib/supabase';
 
 interface BoostPagesModalProps {
   isOpen: boolean;
@@ -14,635 +14,384 @@ interface BoostPagesModalProps {
   userId: string; // ID del usuario autenticado (admin)
 }
 
-interface GoogleDriveConfig {
-  folderUrl: string | null;
-  folderId: string | null;
-}
+type PlatformKey = 'mondo' | 'big7' | 'vxmodels' | 'd2pass' | 'modelka' | 'universal';
 
-interface DriveFolder {
+interface AutoUploadModel {
   id: string;
-  name: string;
+  nombre: string;
+  estado: string;
+  fields?: Record<string, any>;
 }
 
 export default function BoostPagesModal({
   isOpen,
   onClose,
-  modelId,
+  modelId: _modelId,
   modelName,
   modelEmail,
-  userId
+  userId: _userId
 }: BoostPagesModalProps) {
-  const [config, setConfig] = useState<GoogleDriveConfig>({ folderUrl: null, folderId: null });
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [editing, setEditing] = useState(false);
-  const [newFolderUrl, setNewFolderUrl] = useState('');
+  const [token, setToken] = useState<string | null>(null);
+  const [autoModels, setAutoModels] = useState<AutoUploadModel[]>([]);
+  const [folderId, setFolderId] = useState<string | null>(null);
+  const [loadingModels, setLoadingModels] = useState(false);
+  const [selectedPlatform, setSelectedPlatform] = useState<PlatformKey>('universal');
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<Record<string, 'pending' | 'uploading' | 'success' | 'error'>>({});
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [folders, setFolders] = useState<DriveFolder[]>([]);
-  const [loadingFolders, setLoadingFolders] = useState(false);
-  const [draggedOverFolder, setDraggedOverFolder] = useState<string | null>(null);
-  const [uploadingToFolder, setUploadingToFolder] = useState<string | null>(null);
-  const [uploadStatus, setUploadStatus] = useState<Record<string, 'uploading' | 'success' | 'error'>>({});
-  const [isConfigExpanded, setIsConfigExpanded] = useState(false);
 
-  // Extraer folder ID de la URL de Google Drive
-  const extractFolderId = (url: string): string | null => {
-    try {
-      // Formato: https://drive.google.com/drive/folders/FOLDER_ID
-      const match = url.match(/\/folders\/([a-zA-Z0-9_-]+)/);
-      return match ? match[1] : null;
-    } catch {
-      return null;
-    }
-  };
-
-  // Cargar configuración del Google Drive
+  // Cargar sesión y modelos de AutoUpload cuando se abre el modal
   useEffect(() => {
-    if (isOpen && modelId) {
-      loadConfig();
-    }
-  }, [isOpen, modelId]);
+    if (!isOpen) return;
 
-  const loadConfig = async () => {
-    try {
-      setLoading(true);
-      setError('');
-      const response = await fetch(`/api/models/google-drive-config?modelId=${modelId}`);
-      const data = await response.json();
+    let cancelled = false;
 
-      if (data.success) {
-        setConfig({
-          folderUrl: data.folderUrl || null,
-          folderId: data.folderId || null
+    const load = async () => {
+      try {
+        setLoadingModels(true);
+        setError('');
+        setSuccess('');
+
+        // 1) Obtener sesión para subir imágenes y obtener URL pública
+        const {
+          data: { session }
+        } = await supabase.auth.getSession();
+        if (!session?.access_token) {
+          if (!cancelled) {
+            setError('No se pudo obtener la sesión actual. Vuelve a iniciar sesión para usar Boost.');
+          }
+          return;
+        }
+        if (!cancelled) setToken(session.access_token);
+
+        // 2) Obtener listado de modelos desde AutoUpload
+        const res = await fetch('/api/autoupload/dashboard', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'list-models' })
         });
-        setNewFolderUrl(data.folderUrl || '');
-      } else {
-        setError(data.error || 'Error al cargar configuración');
+
+        const data = await res.json();
+        const list: AutoUploadModel[] = data?.data || [];
+        if (!cancelled) {
+          setAutoModels(list);
+          const normalizedTarget = modelName.toLowerCase().trim();
+          const match = list.find((m) => String(m.nombre || '').toLowerCase().trim() === normalizedTarget);
+
+          const driveId =
+            match?.fields?.['Google Drive Folder ID'] ??
+            match?.fields?.['Google drive Folder ID'] ??
+            match?.fields?.['google_drive_folder_id'];
+
+          if (match && driveId) {
+            setFolderId(String(driveId));
+          } else {
+            setFolderId(null);
+            setError(
+              `No se encontró la modelo "${modelName}" en AutoUpload o no tiene configurado el Google Drive Folder ID. Verifica que el nombre coincida.`
+            );
+          }
+        }
+      } catch (e: any) {
+        console.error('❌ [BOOST-AUTOUPLOAD] Error cargando modelos:', e);
+        if (!cancelled) {
+          setError('Error al conectar con AutoUpload. Intenta de nuevo en unos minutos.');
+        }
+      } finally {
+        if (!cancelled) setLoadingModels(false);
       }
-    } catch (err: any) {
-      setError('Error al cargar configuración');
-      console.error('Error loading Google Drive config:', err);
-    } finally {
-      setLoading(false);
-    }
+    };
+
+    load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, modelName]);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []).filter((file) => file.type.startsWith('image/'));
+    setSelectedFiles(files);
+    setUploadStatus({});
+    setError('');
+    setSuccess('');
   };
 
-  const handleSaveConfig = async () => {
-    if (!newFolderUrl.trim()) {
-      setError('Por favor ingresa una URL válida de Google Drive');
-      return;
-    }
+  const removeFile = (name: string) => {
+    setSelectedFiles((prev) => prev.filter((f) => f.name !== name));
+    setUploadStatus((prev) => {
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
+  };
 
-    const folderId = extractFolderId(newFolderUrl);
-    if (!folderId) {
-      setError('URL inválida. Debe ser un enlace de carpeta de Google Drive (formato: https://drive.google.com/drive/folders/...)');
+  const uploadFiles = useCallback(async () => {
+    if (!token) {
+      setError('No se pudo obtener la sesión actual. Cierra y vuelve a abrir el Boost.');
       return;
     }
+    if (!folderId) {
+      setError('No hay carpeta configurada en AutoUpload para esta modelo.');
+      return;
+    }
+    if (selectedFiles.length === 0) return;
 
     try {
-      setSaving(true);
+      setUploading(true);
       setError('');
       setSuccess('');
 
-      const response = await fetch('/api/models/google-drive-config', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          modelId,
-          folderUrl: newFolderUrl.trim(),
-          folderId
-        }),
-      });
+      for (const file of selectedFiles) {
+        const key = file.name;
+        setUploadStatus((prev) => ({ ...prev, [key]: 'uploading' }));
 
-      const data = await response.json();
+        // 1) Subir a Supabase para obtener URL pública
+        const fd = new FormData();
+        fd.append('file', file);
 
-      if (data.success) {
-        setConfig({
-          folderUrl: newFolderUrl.trim(),
-          folderId
+        const uploadRes = await fetch('/api/boost/upload-image', {
+          method: 'POST',
+          headers: {
+            Authorization: `Bearer ${token}`
+          },
+          body: fd
         });
-        setEditing(false);
-        setSuccess('Configuración guardada correctamente');
-        setTimeout(() => setSuccess(''), 3000);
-      } else {
-        setError(data.error || 'Error al guardar configuración');
-      }
-    } catch (err: any) {
-      setError('Error al guardar configuración');
-      console.error('Error saving Google Drive config:', err);
-    } finally {
-      setSaving(false);
-    }
-  };
 
-  const handleCancelEdit = () => {
-    setNewFolderUrl(config.folderUrl || '');
-    setEditing(false);
-    setError('');
-  };
-
-  // Cargar carpetas del Google Drive
-  const loadFolders = useCallback(async () => {
-    if (!config.folderId || !userId) return;
-    
-    try {
-      setLoadingFolders(true);
-      setError('');
-      const response = await fetch(`/api/google-drive/folders?folderId=${config.folderId}&userId=${userId}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setFolders(data.folders || []);
-      } else {
-        if (data.requiresAuth) {
-          const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
-          const authData = await authResponse.json();
-          if (authData.success && authData.authUrl) {
-            window.location.href = authData.authUrl;
-          }
-        } else if (data.requiresSetup) {
-          setError('Google OAuth no está configurado. Por favor, contacta al administrador.');
-        } else {
-          setError(data.error || 'Error al cargar carpetas');
+        const uploadData = await uploadRes.json();
+        if (!uploadRes.ok || !uploadData?.success) {
+          console.error('❌ [BOOST-AUTOUPLOAD] Error subiendo a Supabase:', uploadData);
+          setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
+          setError(uploadData?.error || `Error al subir ${file.name}`);
+          continue;
         }
-      }
-    } catch (err: any) {
-      setError('Error al cargar carpetas');
-      console.error('Error loading folders:', err);
-    } finally {
-      setLoadingFolders(false);
-    }
-  }, [config.folderId, userId]);
 
-  // Verificar scope y cargar carpetas cuando hay configuración
-  useEffect(() => {
-    if (config.folderId && !editing && isOpen) {
-      // Verificar scope primero
-      const verifyScope = async () => {
-        try {
-          const response = await fetch(`/api/google-drive/verify-scope?userId=${userId}`);
-          const data = await response.json();
-          
-          if (data.success && data.needsReauth) {
-            setError('Necesitas reautenticarte con permisos completos de Google Drive. Intenta subir un archivo para iniciar la autenticación.');
-          }
-        } catch (err) {
-          console.error('Error verificando scope:', err);
+        const fileUrl: string = uploadData.url;
+
+        // 2) Enviar a AutoUpload (Drive Bridge)
+        const driveRes = await fetch('/api/autoupload/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            fileUrl,
+            fileName: file.name,
+            folderId,
+            platform: selectedPlatform
+          })
+        });
+
+        const driveData = await driveRes.json();
+        if (!driveRes.ok || driveData?.success === false) {
+          console.error('❌ [BOOST-AUTOUPLOAD] Error enviando a AutoUpload:', driveData);
+          setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
+          setError(driveData?.error || `Error al enviar ${file.name} a AutoUpload`);
+          continue;
         }
-      };
-      
-      verifyScope();
-      loadFolders();
-    }
-  }, [config.folderId, editing, isOpen, loadFolders, userId]);
 
-  // Manejar drag & drop sobre carpetas
-  const handleFolderDragEnter = useCallback((e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDraggedOverFolder(folderId);
-  }, []);
-
-  const handleFolderDragLeave = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    // Solo quitar el highlight si realmente salimos del elemento
-    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-    const x = e.clientX;
-    const y = e.clientY;
-    if (x < rect.left || x > rect.right || y < rect.top || y > rect.bottom) {
-      setDraggedOverFolder(null);
-    }
-  }, []);
-
-  const handleFolderDragOver = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-  }, []);
-
-  const handleFolderDrop = useCallback(async (e: React.DragEvent, folderId: string) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDraggedOverFolder(null);
-
-    const files = Array.from(e.dataTransfer.files).filter(file => 
-      file.type.startsWith('image/')
-    );
-
-    if (files.length === 0) {
-      setError('Por favor arrastra solo archivos de imagen');
-      return;
-    }
-
-    try {
-      setUploadingToFolder(folderId);
-      setError('');
-
-      // Si el folderId es 'broadcast', subimos a TODAS las carpetas
-      const targetFolders = folderId === 'broadcast' ? folders : [{ id: folderId, name: '' }];
-      
-      console.log('🚀 [BOOST-PAGES] Iniciando carga...', { 
-        mode: folderId === 'broadcast' ? 'BROADCAST' : 'SINGLE', 
-        targetFoldersCount: targetFolders.length,
-        filesCount: files.length 
-      });
-
-      for (const file of files) {
-        for (const targetFolder of targetFolders) {
-          const currentFolderId = targetFolder.id;
-          const uploadKey = `${currentFolderId}-${file.name}`;
-          
-          setUploadStatus(prev => ({ ...prev, [uploadKey]: 'uploading' }));
-
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('folderId', currentFolderId);
-          formData.append('modelId', modelId);
-          formData.append('userId', userId);
-
-          console.log(`📤 [BOOST-PAGES] Subiendo archivo a folder ${currentFolderId}:`, file.name);
-          
-          const response = await fetch('/api/google-drive/upload', {
-            method: 'POST',
-            body: formData,
-          });
-
-          let data;
-          try {
-            const responseText = await response.text();
-            if (!responseText) throw new Error('Respuesta vacía del servidor');
-            data = JSON.parse(responseText);
-          } catch (jsonError: any) {
-            console.error('❌ [BOOST-PAGES] Error procesando respuesta:', jsonError);
-            throw new Error(`Error al procesar respuesta del servidor: ${jsonError.message || response.status}`);
-          }
-          
-          if (!response.ok && !data) {
-            throw new Error(`Error HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          if (data.success) {
-            console.log(`✅ [BOOST-PAGES] Archivo subido a ${currentFolderId} exitosamente`);
-            setUploadStatus(prev => ({ ...prev, [uploadKey]: 'success' }));
-            
-            // Solo mostrar toast de éxito si es carga individual o al final del broadcast
-            if (folderId !== 'broadcast') {
-                setSuccess(`Archivo ${file.name} subido correctamente`);
-                setTimeout(() => {
-                    setSuccess('');
-                    setUploadStatus(prev => {
-                    const newStatus = { ...prev };
-                    delete newStatus[uploadKey];
-                    return newStatus;
-                    });
-                }, 3000);
-            }
-          } else {
-            console.error(`❌ [BOOST-PAGES] Error al subir a ${currentFolderId}:`, data);
-            setUploadStatus(prev => ({ ...prev, [uploadKey]: 'error' }));
-            
-            if (data.requiresAuth) {
-              // ... lógica de auth existente
-              const authResponse = await fetch(`/api/google-drive/auth?userId=${userId}`);
-              const authData = await authResponse.json();
-              if (authData.success && authData.authUrl) {
-                window.location.href = authData.authUrl;
-                return;
-              } else {
-                setError('Error al iniciar autenticación con Google Drive');
-              }
-            } else {
-               if (folderId !== 'broadcast') setError(data.error || `Error al subir ${file.name}`);
-            }
-          }
-        }
-      }
-      
-      if (folderId === 'broadcast') {
-        setSuccess(`¡Carga masiva completada! Archivos distribuidos en ${targetFolders.length} carpetas.`);
-        setTimeout(() => {
-            setSuccess('');
-            // Limpiar estados
-            setUploadStatus({});
-        }, 4000);
+        setUploadStatus((prev) => ({ ...prev, [key]: 'success' }));
       }
 
+      setSuccess('Carga enviada a AutoUpload. Las plataformas deberían publicar en unos segundos.');
     } catch (err: any) {
-      console.error('❌ [BOOST-PAGES] Error general al subir archivos:', err);
-      // ... manejo de error existente
-      setError(err.message || 'Error desconocido al subir archivos');
+      console.error('❌ [BOOST-AUTOUPLOAD] Error general al subir archivos:', err);
+      setError(err?.message || 'Error inesperado al subir archivos');
     } finally {
-      setUploadingToFolder(null);
+      setUploading(false);
     }
-  }, [modelId, userId, folders]);
+  }, [token, folderId, selectedFiles, selectedPlatform]);
 
   return (
     <StandardModal
       isOpen={isOpen}
       onClose={onClose}
-      title="Boost Pages"
-      maxWidthClass="max-w-4xl"
+      title="Boost AutoUpload"
+      maxWidthClass="max-w-3xl"
       paddingClass="p-6"
     >
       <div className="space-y-4">
         {/* Información del modelo */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-lg p-4 border border-blue-200 dark:border-blue-800">
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between gap-3">
             <div>
               <h3 className="font-semibold text-gray-900 dark:text-gray-100">{modelName}</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">{modelEmail}</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{modelEmail}</p>
+              <p className="mt-1 text-[11px] sm:text-xs text-gray-600 dark:text-gray-300">
+                Las fotos se enviarán al sistema de AutoUpload usando la carpeta Drive configurada para esta modelo.
+              </p>
             </div>
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <Upload className="w-5 h-5 text-white" />
+            <div className="flex items-center gap-2">
+              <div className="w-9 h-9 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-md">
+                <Upload className="w-4 h-4 sm:w-5 h-5 text-white" />
+              </div>
+              <div className="hidden sm:flex flex-col text-right">
+                <span className="text-[11px] text-gray-500 dark:text-gray-400">Integración</span>
+                <span className="text-xs font-semibold text-gray-800 dark:text-gray-100 flex items-center justify-end gap-1">
+                  <Globe2 className="w-3 h-3" /> AutoUpload
+                </span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Configuración de Google Drive (Collapsible) */}
-        <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-          <div 
-            className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-750 transition-colors"
-            onClick={() => setIsConfigExpanded(!isConfigExpanded)}
-          >
-            <div className="flex items-center gap-2">
-              {isConfigExpanded ? <ChevronDown className="w-4 h-4 text-gray-500" /> : <ChevronRight className="w-4 h-4 text-gray-500" />}
-              <Folder className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-              <h4 className="font-medium text-gray-900 dark:text-gray-100">Configuración de Google Drive</h4>
+        {/* Estado de carpeta / modelo en AutoUpload */}
+        <div className="rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 p-3 text-xs sm:text-sm">
+          {loadingModels ? (
+            <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span>Conectando con AutoUpload y buscando la modelo...</span>
             </div>
-            
-            {!editing && config.folderUrl && (
-              <div className="flex items-center gap-3">
-                <div className="flex items-center gap-1 text-xs text-green-600 dark:text-green-400">
-                  <CheckCircle className="w-3 h-3" />
-                  <span>Conectado</span>
-                </div>
-                <button
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setEditing(true);
-                    setIsConfigExpanded(true);
-                  }}
-                  className="text-sm text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1"
-                >
-                  <Settings className="w-4 h-4" />
-                </button>
+          ) : folderId ? (
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 text-emerald-700 dark:text-emerald-300">
+                <CheckCircle className="w-4 h-4" />
+                <span>
+                  Carpeta de AutoUpload encontrada para <strong>{modelName}</strong>.
+                </span>
               </div>
-            )}
-          </div>
-
-          {/* Contenido del acordeón */}
-          {(isConfigExpanded || editing || !config.folderUrl) && (
-            <div className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900">
-              {loading ? (
-                <div className="text-center py-4">
-                  <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Cargando configuración...</p>
-                </div>
-              ) : editing ? (
-                <div className="space-y-3">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      URL de la carpeta de Google Drive
-                    </label>
-                    <input
-                      type="text"
-                      value={newFolderUrl}
-                      onChange={(e) => setNewFolderUrl(e.target.value)}
-                      placeholder="https://drive.google.com/drive/folders/..."
-                      className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    />
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Ingresa el enlace completo de la carpeta de Google Drive donde se encuentran las carpetas de cada plataforma
-                    </p>
-                  </div>
-                  {error && (
-                    <div className="flex items-center gap-2 text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 p-2 rounded">
-                      <AlertCircle className="w-4 h-4" />
-                      {error}
-                    </div>
-                  )}
-                  {success && (
-                    <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20 p-2 rounded">
-                      <CheckCircle className="w-4 h-4" />
-                      {success}
-                    </div>
-                  )}
-                  <div className="flex gap-2">
-                    <button
-                      onClick={handleSaveConfig}
-                      disabled={saving}
-                      className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                    >
-                      {saving ? 'Guardando...' : 'Guardar'}
-                    </button>
-                    <button
-                      onClick={handleCancelEdit}
-                      disabled={saving}
-                      className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 disabled:opacity-50 transition-colors"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                </div>
-              ) : config.folderUrl ? (
-                <div className="space-y-2">
-                  <div className="bg-gray-50 dark:bg-gray-800 rounded p-2">
-                    <p className="text-xs text-gray-500 dark:text-gray-400 break-all">{config.folderUrl}</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  <div className="text-center py-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                    <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      No hay configuración de Google Drive para esta modelo
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setEditing(true)}
-                    className="w-full px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    Configurar Google Drive
-                  </button>
-                </div>
-              )}
+              <span className="hidden sm:inline text-[11px] text-gray-500 dark:text-gray-400 truncate max-w-xs">
+                Folder ID: {folderId}
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+              <AlertCircle className="w-4 h-4" />
+              <span>
+                No se encontró la modelo en AutoUpload o no tiene Google Drive configurado. Revisa el nombre de
+                modelo en AutoUpload.
+              </span>
             </div>
           )}
         </div>
 
-        {/* Acceso a Google Drive */}
-        {config.folderId && !editing && (
-          <div className="space-y-4">
-            
-            {/* Vista previa con carpetas interactivas */}
-            <div className="border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-              <div className="bg-gray-50 dark:bg-gray-800 px-4 py-2 flex items-center justify-between border-b border-gray-200 dark:border-gray-700">
-                <h4 className="font-medium text-gray-900 dark:text-gray-100 text-sm flex items-center gap-2">
-                  <Folder className="w-4 h-4" />
-                  Carpetas disponibles
-                </h4>
-                <span className="text-xs text-blue-600 dark:text-blue-400 font-medium">
-                  Arrastra archivos directamente sobre las carpetas
-                </span>
-              </div>
-              
-              {/* ZONA DE BROADCAST / CARGA MASIVA */}
-              {folders.length > 0 && !loadingFolders && (
-                <div 
-                  className={`
-                    mx-4 mt-4 mb-2 border-2 border-dashed rounded-xl p-6 transition-all duration-200 cursor-pointer text-center
-                    bg-gradient-to-br from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20
-                    ${draggedOverFolder === 'broadcast'
-                      ? 'border-indigo-500 scale-[1.02] shadow-lg ring-2 ring-indigo-400/30'
-                      : 'border-indigo-300 dark:border-indigo-700 hover:border-indigo-400 dark:hover:border-indigo-500'
-                    }
-                  `}
-                  onDragEnter={(e) => handleFolderDragEnter(e, 'broadcast')}
-                  onDragLeave={handleFolderDragLeave}
-                  onDragOver={handleFolderDragOver}
-                  onDrop={(e) => handleFolderDrop(e, 'broadcast')}
-                >
-                  <div className="flex flex-col items-center justify-center gap-2">
-                    <div className="p-3 bg-indigo-100 dark:bg-indigo-900/50 rounded-full">
-                      <Upload className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                    </div>
-                    <div>
-                        <h3 className="text-sm font-bold text-indigo-900 dark:text-indigo-200">
-                            🚀 Carga Masiva / Difusión
-                        </h3>
-                        <p className="text-xs text-indigo-700 dark:text-indigo-300 mt-1">
-                            Arrastra tu foto aquí para subirla a <strong>TODAS las {folders.length} carpetas</strong> al mismo tiempo
-                        </p>
-                    </div>
-                  </div>
+        {/* Selección de plataforma */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
+          {[
+            { key: 'universal', label: 'Todas (universal)' },
+            { key: 'mondo', label: 'Mondo' },
+            { key: 'big7', label: 'Big7' },
+            { key: 'vxmodels', label: 'VXModels' },
+            { key: 'd2pass', label: 'D2Pass/DXLive' },
+            { key: 'modelka', label: 'Modelka' }
+          ].map((p) => (
+            <button
+              key={p.key}
+              type="button"
+              onClick={() => setSelectedPlatform(p.key as PlatformKey)}
+              className={`px-2 py-1.5 rounded-md border text-xs flex items-center justify-center gap-1 ${
+                selectedPlatform === p.key
+                  ? 'border-purple-500 bg-purple-50 text-purple-700 dark:border-purple-400 dark:bg-purple-900/30 dark:text-purple-100'
+                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+              }`}
+            >
+              <Image className="w-3 h-3" />
+              <span className="truncate">{p.label}</span>
+            </button>
+          ))}
+        </div>
+
+        {/* Zona de selección de archivos */}
+        <div className="border-2 border-dashed rounded-lg p-6 text-center bg-gray-50 dark:bg-gray-900/60 border-gray-300 dark:border-gray-700">
+          <input
+            id="boost-files-input"
+            type="file"
+            multiple
+            accept="image/*"
+            onChange={handleFileSelect}
+            className="hidden"
+            disabled={uploading}
+          />
+          <label
+            htmlFor="boost-files-input"
+            className={`flex flex-col items-center cursor-pointer ${
+              uploading ? 'opacity-50 pointer-events-none' : ''
+            }`}
+          >
+            <Upload className="w-10 h-10 mb-3 text-gray-400" />
+            <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
+              {uploading ? 'Subiendo archivos...' : 'Haz clic para seleccionar fotos'}
+            </span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+              Formatos soportados: JPG, PNG, GIF, WebP (máx. 8MB por archivo)
+            </span>
+          </label>
+        </div>
+
+        {/* Lista de archivos seleccionados */}
+        {selectedFiles.length > 0 && (
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            <h4 className="text-xs sm:text-sm font-medium text-gray-800 dark:text-gray-100">
+              Archivos seleccionados ({selectedFiles.length})
+            </h4>
+            {selectedFiles.map((file) => (
+              <div
+                key={file.name}
+                className="flex items-center justify-between p-2 rounded-lg bg-gray-50 dark:bg-gray-800 text-xs"
+              >
+                <div className="flex items-center gap-2 flex-1 min-w-0">
+                  {uploadStatus[file.name] === 'success' ? (
+                    <CheckCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
+                  ) : uploadStatus[file.name] === 'error' ? (
+                    <AlertCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
+                  ) : uploadStatus[file.name] === 'uploading' ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-blue-500 flex-shrink-0" />
+                  ) : (
+                    <Image className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  )}
+                  <span className="truncate text-gray-800 dark:text-gray-100">{file.name}</span>
+                  <span className="ml-2 text-[11px] text-gray-500 dark:text-gray-400">
+                    {(file.size / 1024 / 1024).toFixed(2)} MB
+                  </span>
                 </div>
-              )}
-
-              <div className="bg-white dark:bg-gray-900 p-4" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                {loadingFolders ? (
-                  <div className="flex items-center justify-center py-8">
-                    <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
-                    <span className="ml-2 text-sm text-gray-600 dark:text-gray-400">
-                      Cargando carpetas...
-                    </span>
-                  </div>
-                ) : folders.length > 0 ? (
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                    {folders.map((folder) => {
-                      const isDraggedOver = draggedOverFolder === folder.id;
-                      const isUploading = uploadingToFolder === folder.id;
-                      const hasUploadingFiles = Object.keys(uploadStatus).some(key => 
-                        key.startsWith(`${folder.id}-`) && uploadStatus[key] === 'uploading'
-                      );
-                      const hasSuccessFiles = Object.keys(uploadStatus).some(key => 
-                        key.startsWith(`${folder.id}-`) && uploadStatus[key] === 'success'
-                      );
-
-                      return (
-                        <div
-                          key={folder.id}
-                          onDragEnter={(e) => handleFolderDragEnter(e, folder.id)}
-                          onDragLeave={handleFolderDragLeave}
-                          onDragOver={handleFolderDragOver}
-                          onDrop={(e) => handleFolderDrop(e, folder.id)}
-                          className={`
-                            relative border-2 rounded-lg p-4 transition-all duration-200 cursor-pointer
-                            ${isDraggedOver 
-                              ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/30 scale-105 shadow-lg' 
-                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 hover:border-blue-300 dark:hover:border-blue-600 hover:bg-gray-100 dark:hover:bg-gray-700'
-                            }
-                            ${isUploading || hasUploadingFiles ? 'opacity-75' : ''}
-                          `}
-                        >
-                          <div className="flex flex-col items-center text-center">
-                            {hasUploadingFiles ? (
-                              <Loader2 className="w-8 h-8 animate-spin text-blue-500 mb-2" />
-                            ) : hasSuccessFiles ? (
-                              <CheckCircle className="w-8 h-8 text-green-500 mb-2" />
-                            ) : (
-                              <Folder className={`w-8 h-8 mb-2 ${isDraggedOver ? 'text-blue-500' : 'text-gray-400'}`} />
-                            )}
-                            <span className="text-sm font-medium text-gray-700 dark:text-gray-300 truncate w-full">
-                              {folder.name}
-                            </span>
-                            {isDraggedOver && (
-                              <span className="text-xs text-blue-600 dark:text-blue-400 mt-1 font-medium">
-                                Suelta aquí
-                              </span>
-                            )}
-                            {hasUploadingFiles && (
-                              <span className="text-xs text-blue-600 dark:text-blue-400 mt-1">
-                                Subiendo...
-                              </span>
-                            )}
-                            {hasSuccessFiles && !hasUploadingFiles && (
-                              <span className="text-xs text-green-600 dark:text-green-400 mt-1">
-                                ✓ Subido
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <AlertCircle className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-sm text-gray-600 dark:text-gray-400">
-                      No se encontraron carpetas. Asegúrate de que el Google Drive tenga carpetas configuradas.
-                    </p>
-                  </div>
+                {uploadStatus[file.name] !== 'uploading' && (
+                  <button
+                    type="button"
+                    onClick={() => removeFile(file.name)}
+                    className="ml-2 text-gray-400 hover:text-red-500"
+                  >
+                    ×
+                  </button>
                 )}
               </div>
-            </div>
-
-            {/* Instrucciones */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 px-4 py-3 border border-blue-200 dark:border-blue-800 rounded-lg">
-              <p className="text-sm font-medium text-blue-900 dark:text-blue-300 mb-2">
-                📋 Instrucciones:
-              </p>
-              <ul className="text-xs text-blue-800 dark:text-blue-400 space-y-1 list-disc list-inside">
-                <li><strong>Carga Masiva:</strong> Arrastra fotos a la zona superior para subirlas a TODAS las carpetas.</li>
-                <li><strong>Carga Individual:</strong> Arrastra fotos sobre una carpeta específica.</li>
-                <li><strong>Google Drive:</strong> Abre el enlace para gestionar archivos manualmente.</li>
-              </ul>
-            </div>
-
-            {/* Opción alternativa: Abrir en nueva pestaña */}
-            <div className="border-t border-gray-200 dark:border-gray-700 pt-4">
-              <p className="text-xs text-gray-600 dark:text-gray-400 mb-2 text-center">
-                O si prefieres, puedes abrir el Google Drive en una nueva pestaña:
-              </p>
-              <a
-                href={config.folderUrl || '#'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block w-full px-4 py-2 bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors text-sm text-center flex items-center justify-center gap-2"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Abrir Google Drive en nueva pestaña</span>
-              </a>
-            </div>
+            ))}
           </div>
         )}
 
-        {/* Mensaje cuando no hay configuración */}
-        {!config.folderId && !editing && (
-          <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-              <div>
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-300">
-                  Configuración requerida
-                </p>
-                <p className="text-xs text-yellow-700 dark:text-yellow-400 mt-1">
-                  Para usar Boost Pages, primero debes configurar el enlace de Google Drive de esta modelo.
-                </p>
-              </div>
-            </div>
+        {/* Botón de subir */}
+        {selectedFiles.length > 0 && (
+          <button
+            type="button"
+            onClick={uploadFiles}
+            disabled={uploading || !folderId}
+            className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            {uploading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Subiendo archivos...
+              </>
+            ) : (
+              <>
+                <Upload className="w-4 h-4" />
+                Enviar {selectedFiles.length} archivo(s) a AutoUpload
+              </>
+            )}
+          </button>
+        )}
+
+        {/* Mensajes de estado */}
+        {error && (
+          <div className="flex items-center gap-2 rounded-md border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-900/20 px-3 py-2 text-xs text-red-700 dark:text-red-300">
+            <AlertCircle className="w-4 h-4" />
+            <span>{error}</span>
+          </div>
+        )}
+
+        {success && (
+          <div className="flex items-center gap-2 rounded-md border border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-900/20 px-3 py-2 text-xs text-emerald-700 dark:text-emerald-300">
+            <CheckCircle className="w-4 h-4" />
+            <span>{success}</span>
           </div>
         )}
       </div>
