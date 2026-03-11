@@ -42,6 +42,7 @@ export default function BoostPagesModal({
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [debugInfo, setDebugInfo] = useState<string>('');
+  const [dragging, setDragging] = useState(false);
 
   // Cargar sesión y modelos de AutoUpload cuando se abre el modal
   useEffect(() => {
@@ -182,7 +183,7 @@ export default function BoostPagesModal({
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || []).filter((file) => file.type.startsWith('image/'));
-    setSelectedFiles(files);
+    setSelectedFiles((prev) => [...prev, ...files]);
     setUploadStatus({});
     setError('');
     setSuccess('');
@@ -385,8 +386,25 @@ export default function BoostPagesModal({
           })}
         </div>
 
-        {/* Zona de selección de archivos */}
-        <div className="border-2 border-dashed rounded-lg p-6 text-center bg-gray-50 dark:bg-gray-900/60 border-gray-300 dark:border-gray-700">
+        {/* Zona de selección / drag & drop */}
+        <div
+          className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+            dragging
+              ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+              : 'border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/60'
+          }`}
+          onDragOver={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(true); }}
+          onDragEnter={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(true); }}
+          onDragLeave={(e) => { e.preventDefault(); e.stopPropagation(); setDragging(false); }}
+          onDrop={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            setDragging(false);
+            if (uploading) return;
+            const files = Array.from(e.dataTransfer.files).filter((f) => f.type.startsWith('image/'));
+            if (files.length > 0) setSelectedFiles((prev) => [...prev, ...files]);
+          }}
+        >
           <input
             id="boost-files-input"
             type="file"
@@ -402,9 +420,9 @@ export default function BoostPagesModal({
               uploading ? 'opacity-50 pointer-events-none' : ''
             }`}
           >
-            <Upload className="w-10 h-10 mb-3 text-gray-400" />
+            <Upload className={`w-10 h-10 mb-3 transition-colors ${dragging ? 'text-purple-500' : 'text-gray-400'}`} />
             <span className="text-sm font-medium text-gray-800 dark:text-gray-100">
-              {uploading ? 'Subiendo archivos...' : 'Haz clic para seleccionar fotos'}
+              {uploading ? 'Subiendo archivos...' : dragging ? 'Suelta las imágenes aquí' : 'Arrastra imágenes aquí o haz clic para seleccionar'}
             </span>
             <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
               Formatos soportados: JPG, PNG, GIF, WebP (máx. 8MB por archivo)
