@@ -77,8 +77,14 @@ export default function BoostPagesModal({
         const list: AutoUploadModel[] = data?.data || [];
         if (!cancelled) {
           setAutoModels(list);
-          const normalizedTarget = modelName.toLowerCase().trim();
-          const match = list.find((m) => String(m.nombre || '').toLowerCase().trim() === normalizedTarget);
+
+          // 1) Intentar match por username (parte antes de @ del correo)
+          const username = (modelEmail.split('@')[0] || '').toLowerCase().trim();
+          const normalizedName = modelName.toLowerCase().trim();
+
+          let match =
+            list.find((m) => String(m.nombre || '').toLowerCase().trim() === username) ||
+            list.find((m) => String(m.nombre || '').toLowerCase().trim() === normalizedName);
 
           const driveId =
             match?.fields?.['Google Drive Folder ID'] ??
