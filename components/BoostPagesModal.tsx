@@ -35,7 +35,7 @@ export default function BoostPagesModal({
   const [autoModels, setAutoModels] = useState<AutoUploadModel[]>([]);
   const [folderId, setFolderId] = useState<string | null>(null);
   const [loadingModels, setLoadingModels] = useState(false);
-  const [selectedPlatform, setSelectedPlatform] = useState<PlatformKey>('universal');
+  const [selectedPlatforms, setSelectedPlatforms] = useState<Set<PlatformKey>>(new Set(['universal']));
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<Record<string, 'pending' | 'uploading' | 'success' | 'error'>>({});
@@ -207,6 +207,12 @@ export default function BoostPagesModal({
       return;
     }
     if (selectedFiles.length === 0) return;
+    if (selectedPlatforms.size === 0) {
+      setError('Selecciona al menos una plataforma.');
+      return;
+    }
+
+    const platforms = Array.from(selectedPlatforms);
 
     try {
       setUploading(true);
@@ -223,9 +229,7 @@ export default function BoostPagesModal({
 
         const uploadRes = await fetch('/api/boost/upload-image', {
           method: 'POST',
-          headers: {
-            Authorization: `Bearer ${token}`
-          },
+          headers: { Authorization: `Bearer ${token}` },
           body: fd
         });
 
@@ -239,37 +243,34 @@ export default function BoostPagesModal({
 
         const fileUrl: string = uploadData.url;
 
-        // 2) Enviar a AutoUpload (Drive Bridge)
-        const driveRes = await fetch('/api/autoupload/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            fileUrl,
-            fileName: file.name,
-            folderId,
-            platform: selectedPlatform
-          })
-        });
+        // 2) Enviar a AutoUpload para cada plataforma seleccionada
+        let allOk = true;
+        for (const platform of platforms) {
+          const driveRes = await fetch('/api/autoupload/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ fileUrl, fileName: file.name, folderId, platform })
+          });
 
-        const driveData = await driveRes.json();
-        if (!driveRes.ok || driveData?.success === false) {
-          console.error('❌ [BOOST-AUTOUPLOAD] Error enviando a AutoUpload:', driveData);
-          setUploadStatus((prev) => ({ ...prev, [key]: 'error' }));
-          setError(driveData?.error || `Error al enviar ${file.name} a AutoUpload`);
-          continue;
+          const driveData = await driveRes.json();
+          if (!driveRes.ok || driveData?.success === false) {
+            console.error(`❌ [BOOST-AUTOUPLOAD] Error enviando a ${platform}:`, driveData);
+            allOk = false;
+            setError(driveData?.error || `Error al enviar ${file.name} a ${platform}`);
+          }
         }
 
-        setUploadStatus((prev) => ({ ...prev, [key]: 'success' }));
+        setUploadStatus((prev) => ({ ...prev, [key]: allOk ? 'success' : 'error' }));
       }
 
-      setSuccess('Carga enviada a AutoUpload. Las plataformas deberían publicar en unos segundos.');
+      setSuccess(`Carga enviada a AutoUpload (${platforms.join(', ')}). Las plataformas deberían publicar en unos segundos.`);
     } catch (err: any) {
       console.error('❌ [BOOST-AUTOUPLOAD] Error general al subir archivos:', err);
       setError(err?.message || 'Error inesperado al subir archivos');
     } finally {
       setUploading(false);
     }
-  }, [token, folderId, selectedFiles, selectedPlatform]);
+  }, [token, folderId, selectedFiles, selectedPlatforms]);
 
   return (
     <StandardModal
@@ -333,30 +334,55 @@ export default function BoostPagesModal({
           )}
         </div>
 
-        {/* Selección de plataforma */}
+        {/* Selección de plataformas (multi-select) */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-xs">
           {[
-            { key: 'universal', label: 'Todas (universal)' },
-            { key: 'mondo', label: 'Mondo' },
-            { key: 'big7', label: 'Big7' },
-            { key: 'vxmodels', label: 'VXModels' },
-            { key: 'd2pass', label: 'D2Pass/DXLive' },
-            { key: 'modelka', label: 'Modelka' }
-          ].map((p) => (
-            <button
-              key={p.key}
-              type="button"
-              onClick={() => setSelectedPlatform(p.key as PlatformKey)}
-              className={`px-2 py-1.5 rounded-md border text-xs flex items-center justify-center gap-1 ${
-                selectedPlatform === p.key
-                  ? 'border-purple-500 bg-purple-50 text-purple-700 dark:border-purple-400 dark:bg-purple-900/30 dark:text-purple-100'
-                  : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
-              }`}
-            >
-              <Image className="w-3 h-3" />
-              <span className="truncate">{p.label}</span>
-            </button>
-          ))}
+            { key: 'universal' as PlatformKey, label: 'Todas (universal)' },
+            { key: 'mondo' as PlatformKey, label: 'Mondo' },
+            { key: 'big7' as PlatformKey, label: 'Big7' },
+            { key: 'vxmodels' as PlatformKey, label: 'VXModels' },
+            { key: 'd2pass' as PlatformKey, label: 'D2Pass/DXLive' },
+            { key: 'modelka' as PlatformKey, label: 'Modelka' }
+          ].map((p) => {
+            const isSelected = selectedPlatforms.has(p.key);
+            return (
+              <button
+                key={p.key}
+                type="button"
+                onClick={() => {
+                  setSelectedPlatforms((prev) => {
+                    const next = new Set(prev);
+                    if (p.key === 'universal') {
+                      // "Todas" es exclusiva: si la activan, desmarcar las demás
+                      return isSelected ? new Set() : new Set(['universal']);
+                    }
+                    // Si seleccionan una individual, quitar "universal"
+                    next.delete('universal');
+                    if (next.has(p.key)) {
+                      next.delete(p.key);
+                    } else {
+                      next.add(p.key);
+                    }
+                    return next;
+                  });
+                }}
+                className={`px-2 py-1.5 rounded-md border text-xs flex items-center justify-center gap-1.5 transition-colors ${
+                  isSelected
+                    ? 'border-purple-500 bg-purple-50 text-purple-700 dark:border-purple-400 dark:bg-purple-900/30 dark:text-purple-100'
+                    : 'border-gray-200 bg-white text-gray-700 hover:border-gray-300 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-200'
+                }`}
+              >
+                <span className={`w-3.5 h-3.5 rounded border flex items-center justify-center flex-shrink-0 ${
+                  isSelected
+                    ? 'bg-purple-500 border-purple-500 text-white'
+                    : 'border-gray-400 dark:border-gray-500'
+                }`}>
+                  {isSelected && <span className="text-[9px] leading-none">✓</span>}
+                </span>
+                <span className="truncate">{p.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* Zona de selección de archivos */}
@@ -431,7 +457,7 @@ export default function BoostPagesModal({
           <button
             type="button"
             onClick={uploadFiles}
-            disabled={uploading || !folderId}
+            disabled={uploading || !folderId || selectedPlatforms.size === 0}
             className="w-full px-4 py-2.5 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed"
           >
             {uploading ? (
@@ -442,7 +468,7 @@ export default function BoostPagesModal({
             ) : (
               <>
                 <Upload className="w-4 h-4" />
-                Enviar {selectedFiles.length} archivo(s) a AutoUpload
+                Enviar {selectedFiles.length} archivo(s) a {selectedPlatforms.has('universal') ? 'todas las plataformas' : `${selectedPlatforms.size} plataforma(s)`}
               </>
             )}
           </button>
