@@ -47,6 +47,8 @@ export default function StandardModal({
   useEffect(() => {
     if (!isOpen) return;
     const handleKey = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKey);

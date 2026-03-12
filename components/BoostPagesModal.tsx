@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
-import { Upload, AlertCircle, CheckCircle, Loader2, Image, Globe2 } from 'lucide-react';
+import { Upload, AlertCircle, CheckCircle, Loader2, Image, Globe2, Eye, EyeOff } from 'lucide-react';
 import StandardModal from '@/components/ui/StandardModal';
 import { supabase } from '@/lib/supabase';
 
@@ -46,6 +46,7 @@ export default function BoostPagesModal({
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [creating, setCreating] = useState(false);
   const [platformAccounts, setPlatformAccounts] = useState<Record<string, { nickname: string; password: string }>>({});
+  const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
 
   // Cargar sesión y modelos de AutoUpload cuando se abre el modal
   useEffect(() => {
@@ -431,67 +432,17 @@ export default function BoostPagesModal({
               </div>
 
               {showCreateForm && (
-                <div className="rounded-lg border border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 p-4 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-200">
-                      Crear &quot;{modelEmail.split('@')[0]}&quot; en AutoUpload
-                    </h4>
-                    <button
-                      type="button"
-                      onClick={() => { setShowCreateForm(false); setPlatformAccounts({}); }}
-                      className="text-[10px] text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
-                    >
-                      Cancelar
-                    </button>
-                  </div>
-                  <p className="text-[11px] text-gray-600 dark:text-gray-400">
-                    Ingresa las credenciales de las plataformas donde esta modelo tiene cuenta. Solo completa las que apliquen.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    {(['mondo', 'big7', 'vxmodels', 'd2pass', 'modelka'] as const).map((p) => {
-                      const acc = platformAccounts[p] || { nickname: '', password: '' };
-                      const isActive = !!(acc.nickname || acc.password);
-                      return (
-                        <div
-                          key={p}
-                          className={`rounded-md border p-2.5 space-y-1.5 transition-colors ${
-                            isActive
-                              ? 'border-purple-400 dark:border-purple-600 bg-white dark:bg-gray-800'
-                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'
-                          }`}
-                        >
-                          <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 capitalize">{p === 'd2pass' ? 'D2Pass/DXLive' : p.charAt(0).toUpperCase() + p.slice(1)}</span>
-                          <input
-                            type="text"
-                            placeholder="Usuario"
-                            value={acc.nickname}
-                            onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, nickname: e.target.value } }))}
-                            className="w-full text-[11px] px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-400"
-                          />
-                          <input
-                            type="password"
-                            placeholder="Contraseña"
-                            value={acc.password}
-                            onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, password: e.target.value } }))}
-                            className="w-full text-[11px] px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-400"
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={createModelInAutoUpload}
-                    disabled={creating}
-                    className="w-full px-3 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
-                  >
-                    {creating ? (
-                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creando modelo y carpetas...</>
-                    ) : (
-                      <>Crear modelo en AutoUpload</>
-                    )}
-                  </button>
-                </div>
+                <CreateModelForm
+                  username={modelEmail.split('@')[0]}
+                  platformAccounts={platformAccounts}
+                  setPlatformAccounts={setPlatformAccounts}
+                  showPasswords={showPasswords}
+                  setShowPasswords={setShowPasswords}
+                  creating={creating}
+                  onCancel={() => { setShowCreateForm(false); setPlatformAccounts({}); setShowPasswords({}); }}
+                  onCreate={createModelInAutoUpload}
+                  error={error}
+                />
               )}
             </div>
           )}
@@ -676,6 +627,154 @@ export default function BoostPagesModal({
         )}
       </div>
     </StandardModal>
+  );
+}
+
+const PLATFORM_LABELS: Record<string, string> = {
+  mondo: 'Mondo',
+  big7: 'Big7',
+  vxmodels: 'VXModels',
+  d2pass: 'D2Pass / DXLive',
+  modelka: 'Modelka'
+};
+
+function CreateModelForm({
+  username,
+  platformAccounts,
+  setPlatformAccounts,
+  showPasswords,
+  setShowPasswords,
+  creating,
+  onCancel,
+  onCreate,
+  error
+}: {
+  username: string;
+  platformAccounts: Record<string, { nickname: string; password: string }>;
+  setPlatformAccounts: React.Dispatch<React.SetStateAction<Record<string, { nickname: string; password: string }>>>;
+  showPasswords: Record<string, boolean>;
+  setShowPasswords: React.Dispatch<React.SetStateAction<Record<string, boolean>>>;
+  creating: boolean;
+  onCancel: () => void;
+  onCreate: () => void;
+  error: string;
+}) {
+  const platforms = ['mondo', 'big7', 'vxmodels', 'd2pass', 'modelka'] as const;
+  const filledCount = platforms.filter(p => {
+    const a = platformAccounts[p];
+    return a?.nickname?.trim() && a?.password?.trim();
+  }).length;
+
+  return (
+    <div
+      className="mt-2 rounded-xl border border-purple-400/50 dark:border-purple-600/50 bg-gradient-to-b from-purple-50 to-white dark:from-purple-950/30 dark:to-gray-900 p-5 space-y-4"
+      onKeyDown={(e) => {
+        if (e.key === 'Backspace' || e.key === 'Delete') {
+          e.stopPropagation();
+        }
+      }}
+    >
+      <div className="flex items-center justify-between">
+        <div>
+          <h4 className="text-sm font-bold text-purple-800 dark:text-purple-200">
+            Registrar &quot;{username}&quot; en AutoUpload
+          </h4>
+          <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
+            Completa solo las plataformas donde la modelo tiene cuenta activa.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onCancel}
+          className="text-xs text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 px-2 py-1 rounded hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+        >
+          Cancelar
+        </button>
+      </div>
+
+      {/* Tabla horizontal en escritorio */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="text-left">
+              <th className="text-xs font-semibold text-gray-500 dark:text-gray-400 pb-2 pr-3 w-28">Plataforma</th>
+              <th className="text-xs font-semibold text-gray-500 dark:text-gray-400 pb-2 px-2">Usuario</th>
+              <th className="text-xs font-semibold text-gray-500 dark:text-gray-400 pb-2 pl-2">Contraseña</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
+            {platforms.map((p) => {
+              const acc = platformAccounts[p] || { nickname: '', password: '' };
+              const isActive = !!(acc.nickname || acc.password);
+              const pwVisible = showPasswords[p] ?? false;
+
+              return (
+                <tr key={p} className={`transition-colors ${isActive ? 'bg-purple-50/50 dark:bg-purple-900/10' : ''}`}>
+                  <td className="py-2.5 pr-3">
+                    <span className={`text-xs font-semibold ${isActive ? 'text-purple-700 dark:text-purple-300' : 'text-gray-500 dark:text-gray-400'}`}>
+                      {PLATFORM_LABELS[p]}
+                    </span>
+                  </td>
+                  <td className="py-2.5 px-2">
+                    <input
+                      type="text"
+                      placeholder="usuario"
+                      value={acc.nickname}
+                      onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, nickname: e.target.value } }))}
+                      className="w-full text-sm px-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none transition-shadow"
+                    />
+                  </td>
+                  <td className="py-2.5 pl-2">
+                    <div className="relative">
+                      <input
+                        type={pwVisible ? 'text' : 'password'}
+                        placeholder="contraseña"
+                        value={acc.password}
+                        onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, password: e.target.value } }))}
+                        className="w-full text-sm px-3 py-2 pr-9 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-2 focus:ring-purple-400 focus:border-transparent outline-none transition-shadow"
+                      />
+                      <button
+                        type="button"
+                        tabIndex={-1}
+                        onClick={() => setShowPasswords((prev) => ({ ...prev, [p]: !pwVisible }))}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                      >
+                        {pwVisible ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      {error && (
+        <div className="flex items-center gap-2 text-xs text-red-600 dark:text-red-400">
+          <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      <div className="flex items-center justify-between pt-1">
+        <span className="text-xs text-gray-500 dark:text-gray-400">
+          {filledCount === 0 ? 'Sin plataformas configuradas' : `${filledCount} plataforma(s) lista(s)`}
+        </span>
+        <button
+          type="button"
+          onClick={onCreate}
+          disabled={creating || filledCount === 0}
+          className="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-pink-500 text-white text-sm font-semibold flex items-center gap-2 shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+        >
+          {creating ? (
+            <><Loader2 className="w-4 h-4 animate-spin" /> Creando...</>
+          ) : (
+            <>Crear modelo en AutoUpload</>
+          )}
+        </button>
+      </div>
+    </div>
   );
 }
 
