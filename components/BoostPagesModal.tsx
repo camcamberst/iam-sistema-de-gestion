@@ -266,9 +266,12 @@ export default function BoostPagesModal({
 
           let driveData: any;
           try { driveData = await driveRes.json(); } catch { driveData = null; }
-          if (!driveRes.ok || driveData?.success === false) {
+          if (driveData?.success === false) {
             allOk = false;
-            setError(driveData?.error || `Error al enviar ${file.name} a ${platform} (HTTP ${driveRes.status})`);
+            const debugMsg = driveData?.debug
+              ? ` [Debug: status=${driveData.debug.status}, redirected=${driveData.debug.redirected}, finalUrl=${driveData.debug.finalUrl}]`
+              : '';
+            setError(`${driveData?.error || `Error al enviar ${file.name} a ${platform}`}${debugMsg}`);
           }
         }
 
