@@ -43,6 +43,9 @@ export default function BoostPagesModal({
   const [success, setSuccess] = useState('');
   const [debugInfo, setDebugInfo] = useState<string>('');
   const [dragging, setDragging] = useState(false);
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [platformAccounts, setPlatformAccounts] = useState<Record<string, { nickname: string; password: string }>>({});
 
   // Cargar sesión y modelos de AutoUpload cuando se abre el modal
   useEffect(() => {
@@ -198,6 +201,73 @@ export default function BoostPagesModal({
     });
   };
 
+  const createModelInAutoUpload = useCallback(async () => {
+    const username = (modelEmail.split('@')[0] || '').toLowerCase().trim();
+    if (!username) return;
+
+    const accounts = Object.entries(platformAccounts)
+      .filter(([, v]) => v.nickname.trim() && v.password.trim())
+      .map(([platform, v]) => ({ platform, nickname: v.nickname.trim(), password: v.password.trim() }));
+
+    if (accounts.length === 0) {
+      setError('Agrega al menos una plataforma con sus credenciales.');
+      return;
+    }
+
+    try {
+      setCreating(true);
+      setError('');
+
+      const res = await fetch('/api/autoupload/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'create-model-drive',
+          data: { nombre: username, accounts }
+        })
+      });
+
+      let data = await res.json();
+      if (Array.isArray(data) && data.length > 0) data = data[0];
+
+      if (!res.ok || data?.success === false) {
+        setError(data?.error || data?.message || 'Error al crear la modelo en AutoUpload.');
+        return;
+      }
+
+      setSuccess(`Modelo "${username}" creada en AutoUpload con ${accounts.length} plataforma(s). Reconectando...`);
+      setShowCreateForm(false);
+      setPlatformAccounts({});
+
+      // Recargar para encontrar la modelo recién creada
+      const reloadRes = await fetch('/api/autoupload/dashboard', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'list-models' })
+      });
+      let reloadData = await reloadRes.json();
+      if (Array.isArray(reloadData) && reloadData.length > 0) reloadData = reloadData[0];
+      const list: AutoUploadModel[] = Array.isArray(reloadData?.data) ? reloadData.data : [];
+      setAutoModels(list);
+
+      const match = list.find((m: any) => String(m.nombre || '').toLowerCase().trim() === username);
+      const driveId =
+        match?.fields?.['Google Drive Folder ID'] ??
+        (match as any)?.fields?.['Google drive Folder ID'] ??
+        (match as any)?.folderId;
+
+      if (match && driveId) {
+        setFolderId(String(driveId));
+        setError('');
+        setSuccess(`Modelo "${username}" creada y conectada. Ya puedes subir fotos.`);
+      }
+    } catch (e: any) {
+      setError(e?.message || 'Error al crear la modelo en AutoUpload.');
+    } finally {
+      setCreating(false);
+    }
+  }, [modelEmail, platformAccounts]);
+
   const uploadFiles = useCallback(async () => {
     if (!token) {
       setError('No se pudo obtener la sesión actual. Cierra y vuelve a abrir el Boost.');
@@ -341,11 +411,88 @@ export default function BoostPagesModal({
               </span>
             </div>
           ) : (
-            <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
-              <AlertCircle className="w-4 h-4" />
-              <span>
-                No se encontró &quot;{modelEmail.split('@')[0]}&quot; en AutoUpload o no tiene Google Drive configurado. Revisa que el username coincida.
-              </span>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  <span>
+                    No se encontró &quot;{modelEmail.split('@')[0]}&quot; en AutoUpload.
+                  </span>
+                </div>
+                {!showCreateForm && (
+                  <button
+                    type="button"
+                    onClick={() => setShowCreateForm(true)}
+                    className="text-[11px] px-3 py-1 rounded-md bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors whitespace-nowrap"
+                  >
+                    + Crear en AutoUpload
+                  </button>
+                )}
+              </div>
+
+              {showCreateForm && (
+                <div className="rounded-lg border border-purple-300 dark:border-purple-700 bg-purple-50 dark:bg-purple-900/20 p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h4 className="text-xs font-semibold text-purple-800 dark:text-purple-200">
+                      Crear &quot;{modelEmail.split('@')[0]}&quot; en AutoUpload
+                    </h4>
+                    <button
+                      type="button"
+                      onClick={() => { setShowCreateForm(false); setPlatformAccounts({}); }}
+                      className="text-[10px] text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                  <p className="text-[11px] text-gray-600 dark:text-gray-400">
+                    Ingresa las credenciales de las plataformas donde esta modelo tiene cuenta. Solo completa las que apliquen.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    {(['mondo', 'big7', 'vxmodels', 'd2pass', 'modelka'] as const).map((p) => {
+                      const acc = platformAccounts[p] || { nickname: '', password: '' };
+                      const isActive = !!(acc.nickname || acc.password);
+                      return (
+                        <div
+                          key={p}
+                          className={`rounded-md border p-2.5 space-y-1.5 transition-colors ${
+                            isActive
+                              ? 'border-purple-400 dark:border-purple-600 bg-white dark:bg-gray-800'
+                              : 'border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50'
+                          }`}
+                        >
+                          <span className="text-[11px] font-semibold text-gray-700 dark:text-gray-300 capitalize">{p === 'd2pass' ? 'D2Pass/DXLive' : p.charAt(0).toUpperCase() + p.slice(1)}</span>
+                          <input
+                            type="text"
+                            placeholder="Usuario"
+                            value={acc.nickname}
+                            onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, nickname: e.target.value } }))}
+                            className="w-full text-[11px] px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-400"
+                          />
+                          <input
+                            type="password"
+                            placeholder="Contraseña"
+                            value={acc.password}
+                            onChange={(e) => setPlatformAccounts((prev) => ({ ...prev, [p]: { ...acc, password: e.target.value } }))}
+                            className="w-full text-[11px] px-2 py-1 rounded border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-900 text-gray-800 dark:text-gray-100 placeholder-gray-400"
+                          />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={createModelInAutoUpload}
+                    disabled={creating}
+                    className="w-full px-3 py-2 rounded-md bg-gradient-to-r from-purple-500 to-pink-500 text-white text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-60"
+                  >
+                    {creating ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Creando modelo y carpetas...</>
+                    ) : (
+                      <>Crear modelo en AutoUpload</>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>
