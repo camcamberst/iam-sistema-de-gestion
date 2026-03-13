@@ -63,7 +63,7 @@ export async function GET(request: NextRequest) {
 
     const { data: platforms } = await supabase
       .from('calculator_platforms')
-      .select('id, currency')
+      .select('id, currency, percentage_override, group_percentage')
       .in('id', platformIds)
       .eq('active', true);
 
@@ -120,16 +120,46 @@ export async function GET(request: NextRequest) {
       const platform = platformMap.get(platformId);
       const currency = platform?.currency || 'USD';
       const usdBruto = toUsdBruto(entry.value, platformId, currency);
-      const pct = platformId === 'superfoon' ? 100 : defaultPct;
+      const pct = platformId === 'superfoon'
+        ? 100
+        : Number(platform?.percentage_override || platform?.group_percentage || defaultPct);
       periodBilledUsd += usdBruto * (pct / 100);
     }
 
     periodBilledUsd = Math.round(periodBilledUsd * 100) / 100;
 
+    // Detalle por plataforma para verificar coherencia con la calculadora
+    const breakdown = Object.entries(latestByPlatform).map(([pid, entry]) => {
+      const platform = platformMap.get(pid);
+      const currency = platform?.currency || 'USD';
+      const usdBruto = toUsdBruto(entry.value, pid, currency);
+      const pct = pid === 'superfoon'
+        ? 100
+        : Number(platform?.percentage_override || platform?.group_percentage || defaultPct);
+      return {
+        platformId: pid,
+        currency,
+        rawValue: entry.value,
+        date: entry.date,
+        usdBruto: Math.round(usdBruto * 100) / 100,
+        percentage: pct,
+        usdModelo: Math.round(usdBruto * (pct / 100) * 100) / 100
+      };
+    });
+
     return NextResponse.json({
       success: true,
       goalUsd,
-      periodBilledUsd
+      periodBilledUsd,
+      _debug: {
+        periodStart,
+        today,
+        defaultPct,
+        rates,
+        totalRows: (rows || []).length,
+        platformCount: Object.keys(latestByPlatform).length,
+        breakdown
+      }
     });
   } catch (e: any) {
     console.error('❌ [PERIOD-GOAL-SUMMARY]', e);
