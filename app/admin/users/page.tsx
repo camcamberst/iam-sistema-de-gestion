@@ -858,15 +858,7 @@ export default function UsersListPage() {
             onSubmit={async (userData) => {
               try {
                 console.log('🔍 [PARENT] Recibiendo datos del formulario:', userData);
-                const response = await fetch('/api/users', {
-                  method: 'PUT',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify(userData),
-                });
-
-                const result = await response.json();
+                const result = await updateUser(userData);
                 console.log('🔍 [PARENT] Respuesta de la API:', result);
                 
                 if (result.success) {
@@ -997,23 +989,10 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
     setPasswordError(null);
 
     try {
-      const response = await fetch('/api/users', {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          id: formData.id,
-          name: formData.name,
-          email: formData.email,
-          role: formData.role,
-          is_active: formData.is_active,
-          group_ids: formData.group_ids,
-          password: passwordData.newPassword.trim()
-        }),
-      });
-
-      const result = await response.json();
+      const result = await updateUser({
+        ...formData,
+        password: passwordData.newPassword.trim()
+      } as any);
       
       if (result.success) {
         setPasswordError(null);
