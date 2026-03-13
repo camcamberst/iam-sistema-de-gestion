@@ -352,20 +352,28 @@ export async function GET(request: NextRequest) {
         if (modelsWithValues.size > 0) {
           console.log('⚠️ [BILLING-SUMMARY] Detectados modelos con valores pero sin totales:', Array.from(modelsWithValues));
           
-          // Obtener valores de modelos faltantes y calcular totales
+          // Obtener valores de modelos faltantes (sin JOIN a tabla inexistente)
           const { data: missingValues, error: missingValuesError } = await supabase
             .from('model_values')
-            .select(`
-              *,
-              platforms!inner(id, name, currency, percentage)
-            `)
+            .select('model_id, platform_id, value, period_date, updated_at')
             .in('model_id', Array.from(modelsWithValues))
             .gte('period_date', startStr)
             .lte('period_date', endStr)
+            .gt('value', 0)
             .order('updated_at', { ascending: false });
 
+          // Obtener mapa de currencies desde calculator_platforms
+          const allPlatformIds = [...new Set((missingValues || []).map(mv => mv.platform_id))];
+          let platformCurrencyMap: Record<string, string> = {};
+          if (allPlatformIds.length > 0) {
+            const { data: cpRows } = await supabase
+              .from('calculator_platforms')
+              .select('id, currency')
+              .in('id', allPlatformIds);
+            (cpRows || []).forEach((p: any) => { platformCurrencyMap[p.id] = p.currency || 'USD'; });
+          }
+
           if (!missingValuesError && missingValues && missingValues.length > 0) {
-            // Obtener tasas y configuraciones necesarias
             const { data: ratesData } = await supabase
               .from('rates')
               .select('kind, value')
@@ -382,7 +390,6 @@ export async function GET(request: NextRequest) {
               });
             }
 
-            // Agrupar valores por modelo y calcular totales
             const totalsToInsert: any[] = [];
             const valuesByModel = new Map<string, any[]>();
             
@@ -393,21 +400,18 @@ export async function GET(request: NextRequest) {
               valuesByModel.get(mv.model_id)!.push(mv);
             });
 
-            // Calcular totales para cada modelo (lógica simplificada - usar la misma que Mi Calculadora)
-            const modelIds = Array.from(valuesByModel.keys());
-            for (let i = 0; i < modelIds.length; i++) {
-              const modelId = modelIds[i];
-              const modelValues = valuesByModel.get(modelId) || [];
+            const missingModelIds = Array.from(valuesByModel.keys());
+            for (let i = 0; i < missingModelIds.length; i++) {
+              const mId = missingModelIds[i];
+              const modelValues = valuesByModel.get(mId) || [];
               
-              // Obtener configuración del modelo
               const { data: config } = await supabase
                 .from('calculator_config')
                 .select('percentage_override, group_percentage')
-                .eq('model_id', modelId)
+                .eq('model_id', mId)
                 .eq('active', true)
-                .single();
+                .maybeSingle();
 
-              // Calcular totales (lógica simplificada - similar a Mi Calculadora)
               let totalUsdBruto = 0;
               const valuesByPlatform = new Map();
               
@@ -419,24 +423,19 @@ export async function GET(request: NextRequest) {
                 }
               });
 
-              const platformIds = Array.from(valuesByPlatform.keys());
-              for (let j = 0; j < platformIds.length; j++) {
-                const platformId = platformIds[j];
-                const mv = valuesByPlatform.get(platformId);
-                if (!mv) continue;
-                
-                const platform = mv.platforms;
-                if (!platform || !mv.value || mv.value <= 0) continue;
+              valuesByPlatform.forEach((mv, platformId) => {
+                if (!mv.value || mv.value <= 0) return;
+                const currency = platformCurrencyMap[platformId] || 'USD';
 
                 let usdBruto = 0;
-                if (platform.currency === 'EUR') {
+                if (currency === 'EUR') {
                   if (platformId === 'big7') usdBruto = (mv.value * rates.eur_usd) * 0.84;
                   else if (platformId === 'mondo') usdBruto = (mv.value * rates.eur_usd) * 0.78;
                   else usdBruto = mv.value * rates.eur_usd;
-                } else if (platform.currency === 'GBP') {
+                } else if (currency === 'GBP') {
                   if (platformId === 'aw') usdBruto = (mv.value * rates.gbp_usd) * 0.677;
                   else usdBruto = mv.value * rates.gbp_usd;
-                } else if (platform.currency === 'USD') {
+                } else {
                   if (['cmd', 'camlust', 'skypvt'].includes(platformId)) usdBruto = mv.value * 0.75;
                   else if (['chaturbate', 'myfreecams', 'stripchat'].includes(platformId)) usdBruto = mv.value * 0.05;
                   else if (platformId === 'dxlive') usdBruto = mv.value * 0.60;
@@ -444,14 +443,14 @@ export async function GET(request: NextRequest) {
                   else usdBruto = mv.value;
                 }
                 totalUsdBruto += usdBruto;
-              }
+              });
 
               const modelPercentage = config?.percentage_override || config?.group_percentage || 70;
               const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
               const totalCopModelo = totalUsdModelo * rates.usd_cop;
 
               totalsToInsert.push({
-                model_id: modelId,
+                model_id: mId,
                 period_date: todayStr,
                 total_usd_bruto: Math.round(totalUsdBruto * 100) / 100,
                 total_usd_modelo: Math.round(totalUsdModelo * 100) / 100,
@@ -460,7 +459,6 @@ export async function GET(request: NextRequest) {
               });
             }
 
-            // Insertar totales calculados
             if (totalsToInsert.length > 0) {
               const { data: insertedTotals, error: insertError } = await supabase
                 .from('calculator_totals')
@@ -468,7 +466,6 @@ export async function GET(request: NextRequest) {
                 .select();
 
               if (!insertError && insertedTotals) {
-                // Agregar los nuevos totales a totalsData
                 totalsData = [...(totalsData || []), ...insertedTotals];
                 console.log(`✅ [BILLING-SUMMARY] Sincronizados ${insertedTotals.length} totales faltantes`);
               } else if (insertError) {

@@ -25,13 +25,10 @@ export async function POST(request: NextRequest) {
     const targetDate = periodDate || getColombiaDate();
     console.log('🔍 [SYNC-MISSING-TOTALS] Sincronizando totales para:', { modelId, targetDate });
 
-    // 1. Obtener valores del modelo
+    // 1. Obtener valores del modelo (sin JOIN a tabla inexistente)
     const { data: modelValues, error: valuesError } = await supabase
       .from('model_values')
-      .select(`
-        *,
-        platforms!inner(id, name, currency, percentage)
-      `)
+      .select('model_id, platform_id, value, period_date, updated_at')
       .eq('model_id', modelId)
       .gte('period_date', new Date(new Date(targetDate).setDate(new Date(targetDate).getDate() - 2)).toISOString().split('T')[0])
       .lte('period_date', new Date(new Date(targetDate).setDate(new Date(targetDate).getDate() + 2)).toISOString().split('T')[0])
@@ -58,7 +55,7 @@ export async function POST(request: NextRequest) {
       .select('percentage_override, group_percentage')
       .eq('model_id', modelId)
       .eq('active', true)
-      .single();
+      .maybeSingle();
 
     if (configError && configError.code !== 'PGRST116') {
       console.error('❌ [SYNC-MISSING-TOTALS] Error obteniendo configuración:', configError);
@@ -81,25 +78,23 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 4. Obtener plataformas con sus configuraciones
-    const { data: platformsData, error: platformsError } = await supabase
-      .from('platforms')
-      .select('id, name, currency, percentage');
-
-    if (platformsError) {
-      console.error('❌ [SYNC-MISSING-TOTALS] Error obteniendo plataformas:', platformsError);
+    // 4. Obtener currencies desde calculator_platforms (tabla correcta)
+    const allPlatformIds = [...new Set(modelValues.map(mv => mv.platform_id))];
+    const platformCurrencyMap: Record<string, string> = {};
+    if (allPlatformIds.length > 0) {
+      const { data: cpRows, error: platformsError } = await supabase
+        .from('calculator_platforms')
+        .select('id, currency')
+        .in('id', allPlatformIds);
+      if (platformsError) {
+        console.error('❌ [SYNC-MISSING-TOTALS] Error obteniendo plataformas:', platformsError);
+      }
+      (cpRows || []).forEach((p: any) => { platformCurrencyMap[p.id] = p.currency || 'USD'; });
     }
-
-    const platformMap = new Map();
-    platformsData?.forEach(p => {
-      platformMap.set(p.id, p);
-    });
 
     // 5. Calcular totales usando la misma lógica que Mi Calculadora
     let totalUsdBruto = 0;
-    let totalUsdModelo = 0;
 
-    // Agrupar valores por plataforma (tomar el más reciente)
     const valuesByPlatform = new Map();
     modelValues.forEach(mv => {
       const platformId = mv.platform_id;
@@ -110,48 +105,29 @@ export async function POST(request: NextRequest) {
     });
 
     valuesByPlatform.forEach((mv, platformId) => {
-      const platform = platformMap.get(platformId);
-      if (!platform || !mv.value || mv.value <= 0) return;
+      if (!mv.value || mv.value <= 0) return;
+      const currency = platformCurrencyMap[platformId] || 'USD';
 
       let usdBruto = 0;
-      let usdModelo = 0;
-
-      if (platform.currency === 'EUR') {
-        if (platformId === 'big7') {
-          usdBruto = (mv.value * rates.eur_usd) * 0.84;
-        } else if (platformId === 'mondo') {
-          usdBruto = (mv.value * rates.eur_usd) * 0.78;
-        } else {
-          usdBruto = mv.value * rates.eur_usd;
-        }
-      } else if (platform.currency === 'GBP') {
-        if (platformId === 'aw') {
-          usdBruto = (mv.value * rates.gbp_usd) * 0.677;
-        } else {
-          usdBruto = mv.value * rates.gbp_usd;
-        }
-      } else if (platform.currency === 'USD') {
-        if (platformId === 'cmd' || platformId === 'camlust' || platformId === 'skypvt') {
-          usdBruto = mv.value * 0.75;
-        } else if (platformId === 'chaturbate' || platformId === 'myfreecams' || platformId === 'stripchat') {
-          usdBruto = mv.value * 0.05;
-        } else if (platformId === 'dxlive') {
-          usdBruto = mv.value * 0.60;
-        } else if (platformId === 'secretfriends') {
-          usdBruto = mv.value * 0.5;
-        } else {
-          usdBruto = mv.value;
-        }
+      if (currency === 'EUR') {
+        if (platformId === 'big7') usdBruto = (mv.value * rates.eur_usd) * 0.84;
+        else if (platformId === 'mondo') usdBruto = (mv.value * rates.eur_usd) * 0.78;
+        else usdBruto = mv.value * rates.eur_usd;
+      } else if (currency === 'GBP') {
+        if (platformId === 'aw') usdBruto = (mv.value * rates.gbp_usd) * 0.677;
+        else usdBruto = mv.value * rates.gbp_usd;
+      } else {
+        if (['cmd', 'camlust', 'skypvt'].includes(platformId)) usdBruto = mv.value * 0.75;
+        else if (['chaturbate', 'myfreecams', 'stripchat'].includes(platformId)) usdBruto = mv.value * 0.05;
+        else if (platformId === 'dxlive') usdBruto = mv.value * 0.60;
+        else if (platformId === 'secretfriends') usdBruto = mv.value * 0.5;
+        else usdBruto = mv.value;
       }
-
       totalUsdBruto += usdBruto;
-      usdModelo = usdBruto * (platform.percentage / 100);
-      totalUsdModelo += usdModelo;
     });
 
-    // Aplicar porcentaje de configuración si existe
     const modelPercentage = config?.percentage_override || config?.group_percentage || 70;
-    totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
+    let totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
 
     const totalCopModelo = totalUsdModelo * rates.usd_cop;
 

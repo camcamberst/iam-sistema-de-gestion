@@ -221,6 +221,89 @@ export async function POST(request: NextRequest) {
     }
 
     console.log('✅ [MODEL-VALUES-V2] Values saved successfully to bucket:', effectiveDate);
+
+    // Auto-sync calculator_totals para que billing-summary y billetera tengan datos frescos
+    try {
+      const isP2 = parseInt(effectiveDate.split('-')[2]) >= 16;
+      const periodEndObj = new Date(effectiveDate);
+      if (isP2) { periodEndObj.setMonth(periodEndObj.getMonth() + 1); periodEndObj.setDate(0); }
+      else { periodEndObj.setDate(15); }
+      const periodEnd = periodEndObj.toISOString().split('T')[0];
+
+      const { data: allVals } = await supabase
+        .from('model_values')
+        .select('platform_id, value, updated_at')
+        .eq('model_id', modelId)
+        .gte('period_date', effectiveDate)
+        .lte('period_date', periodEnd)
+        .order('updated_at', { ascending: false });
+
+      if (allVals && allVals.length > 0) {
+        const latestByPlatform = new Map<string, any>();
+        allVals.forEach(v => { if (!latestByPlatform.has(v.platform_id)) latestByPlatform.set(v.platform_id, v); });
+
+        const pIds = [...latestByPlatform.keys()];
+        const { data: cpRows } = await supabase
+          .from('calculator_platforms').select('id, currency').in('id', pIds);
+        const currMap: Record<string, string> = {};
+        (cpRows || []).forEach((p: any) => { currMap[p.id] = p.currency || 'USD'; });
+
+        const { data: ratesRows } = await supabase
+          .from('rates').select('kind, value').eq('active', true).is('valid_to', null);
+        const r = { usd_cop: 3900, eur_usd: 1.01, gbp_usd: 1.20 };
+        (ratesRows || []).forEach((rt: any) => {
+          if (rt.kind === 'USD→COP') r.usd_cop = rt.value;
+          if (rt.kind === 'EUR→USD') r.eur_usd = rt.value;
+          if (rt.kind === 'GBP→USD') r.gbp_usd = rt.value;
+        });
+
+        const { data: cfg } = await supabase
+          .from('calculator_config').select('percentage_override, group_percentage')
+          .eq('model_id', modelId).eq('active', true).maybeSingle();
+
+        let totalBruto = 0;
+        latestByPlatform.forEach((mv, pid) => {
+          if (!mv.value || mv.value <= 0) return;
+          const cur = currMap[pid] || 'USD';
+          let ub = 0;
+          if (cur === 'EUR') {
+            if (pid === 'big7') ub = (mv.value * r.eur_usd) * 0.84;
+            else if (pid === 'mondo') ub = (mv.value * r.eur_usd) * 0.78;
+            else ub = mv.value * r.eur_usd;
+          } else if (cur === 'GBP') {
+            if (pid === 'aw') ub = (mv.value * r.gbp_usd) * 0.677;
+            else ub = mv.value * r.gbp_usd;
+          } else {
+            if (['cmd', 'camlust', 'skypvt'].includes(pid)) ub = mv.value * 0.75;
+            else if (['chaturbate', 'myfreecams', 'stripchat'].includes(pid)) ub = mv.value * 0.05;
+            else if (pid === 'dxlive') ub = mv.value * 0.60;
+            else if (pid === 'secretfriends') ub = mv.value * 0.5;
+            else ub = mv.value;
+          }
+          totalBruto += ub;
+        });
+
+        const pct = cfg?.percentage_override || cfg?.group_percentage || 70;
+        const totalModelo = totalBruto * (pct / 100);
+        const totalCop = totalModelo * r.usd_cop;
+
+        await supabase.from('calculator_totals').upsert({
+          model_id: modelId,
+          period_date: effectiveDate,
+          total_usd_bruto: Math.round(totalBruto * 100) / 100,
+          total_usd_modelo: Math.round(totalModelo * 100) / 100,
+          total_cop_modelo: Math.round(totalCop),
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'model_id,period_date' });
+
+        console.log('✅ [MODEL-VALUES-V2] Auto-sync calculator_totals:', {
+          modelId, bruto: Math.round(totalBruto * 100) / 100, modelo: Math.round(totalModelo * 100) / 100
+        });
+      }
+    } catch (syncErr: any) {
+      console.error('⚠️ [MODEL-VALUES-V2] Auto-sync totals failed (non-blocking):', syncErr.message);
+    }
+
     return NextResponse.json({ success: true, data: data || [], message: 'Valores guardados correctamente' });
 
   } catch (error: any) {
