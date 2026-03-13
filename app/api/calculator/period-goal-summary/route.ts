@@ -79,17 +79,23 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ success: false, error: valuesError.message }, { status: 500 });
     }
 
-    const latestByKey: Record<string, number> = {};
+    // Los valores en model_values son acumulativos: el valor del día 12 ya incluye los anteriores.
+    // Para cada plataforma, tomar solo el valor de la fecha más reciente.
+    const latestByPlatform: Record<string, { value: number; date: string }> = {};
     (rows || []).forEach((r: any) => {
-      const key = `${r.period_date}-${r.platform_id}`;
-      if (latestByKey[key] == null) latestByKey[key] = Number(r.value) || 0;
+      const pid = r.platform_id;
+      const val = Number(r.value) || 0;
+      const existing = latestByPlatform[pid];
+      if (!existing || r.period_date > existing.date || (r.period_date === existing.date && val > existing.value)) {
+        latestByPlatform[pid] = { value: val, date: r.period_date };
+      }
     });
 
     const platformMap = new Map((platforms || []).map((p: any) => [p.id, p]));
     let periodBilledUsd = 0;
 
     const toUsdBruto = (value: number, platformId: string, currency: string) => {
-      const n = String(platformId || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+      const n = String(platformId || '').toLowerCase();
       if (currency === 'EUR') {
         if (n === 'big7') return (value * rates.eur_usd) * 0.84;
         if (n === 'mondo') return (value * rates.eur_usd) * 0.78;
@@ -109,14 +115,11 @@ export async function GET(request: NextRequest) {
       return value;
     };
 
-    for (const key of Object.keys(latestByKey)) {
-      const parts = key.split('-');
-      const platformId = parts.length >= 4 ? parts.slice(3).join('-') : (parts[1] || '');
+    for (const [platformId, entry] of Object.entries(latestByPlatform)) {
+      if (entry.value <= 0) continue;
       const platform = platformMap.get(platformId);
       const currency = platform?.currency || 'USD';
-      const value = latestByKey[key];
-      if (value <= 0) continue;
-      const usdBruto = toUsdBruto(value, platformId, currency);
+      const usdBruto = toUsdBruto(entry.value, platformId, currency);
       const pct = platformId === 'superfoon' ? 100 : defaultPct;
       periodBilledUsd += usdBruto * (pct / 100);
     }
