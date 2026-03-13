@@ -61,11 +61,15 @@ export async function GET(request: NextRequest) {
       gbp_usd: ratesData?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.2
     };
 
-    const { data: platforms } = await supabase
+    const { data: platforms, error: platformsError } = await supabase
       .from('calculator_platforms')
-      .select('id, currency, percentage_override, group_percentage')
+      .select('id, currency')
       .in('id', platformIds)
       .eq('active', true);
+
+    if (platformsError) {
+      console.error('❌ [PERIOD-GOAL-SUMMARY] Error cargando plataformas:', platformsError);
+    }
 
     const { data: rows, error: valuesError } = await supabase
       .from('model_values')
@@ -120,22 +124,17 @@ export async function GET(request: NextRequest) {
       const platform = platformMap.get(platformId);
       const currency = platform?.currency || 'USD';
       const usdBruto = toUsdBruto(entry.value, platformId, currency);
-      const pct = platformId === 'superfoon'
-        ? 100
-        : Number(platform?.percentage_override || platform?.group_percentage || defaultPct);
+      const pct = platformId === 'superfoon' ? 100 : defaultPct;
       periodBilledUsd += usdBruto * (pct / 100);
     }
 
     periodBilledUsd = Math.round(periodBilledUsd * 100) / 100;
 
-    // Detalle por plataforma para verificar coherencia con la calculadora
     const breakdown = Object.entries(latestByPlatform).map(([pid, entry]) => {
       const platform = platformMap.get(pid);
       const currency = platform?.currency || 'USD';
       const usdBruto = toUsdBruto(entry.value, pid, currency);
-      const pct = pid === 'superfoon'
-        ? 100
-        : Number(platform?.percentage_override || platform?.group_percentage || defaultPct);
+      const pct = pid === 'superfoon' ? 100 : defaultPct;
       return {
         platformId: pid,
         currency,
