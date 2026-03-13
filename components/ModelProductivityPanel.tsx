@@ -74,7 +74,7 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
       setSummary(data.summary);
       setPeriodLabel(data.periodLabel || '');
       setLastRefresh(new Date());
-      setExpandedGroups(new Set());
+      if (!silent) setExpandedGroups(new Set());
     } catch (e: any) {
       setError(e.message);
     } finally {
@@ -291,8 +291,8 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                                       {fmtD(model.porcentaje)}%
                                     </span>
                                     {/* USD — w-[118px] */}
-                                    <span className="w-[118px] flex-shrink-0 text-xs tabular-nums text-right text-gray-500 dark:text-gray-400">
-                                      ${fmt(model.usdBruto)}<span className="text-gray-300 dark:text-gray-600"> / ${fmt(model.cuotaMinima)}</span>
+                                    <span className="w-[118px] flex-shrink-0 text-xs tabular-nums text-right text-gray-600 dark:text-white">
+                                      ${fmt(model.usdBruto)}<span className="text-gray-300 dark:text-gray-500"> / ${fmt(model.cuotaMinima)}</span>
                                     </span>
                                   </div>
 
@@ -320,7 +320,7 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                                   </div>
 
                                   {/* Mobile: amount */}
-                                  <p className="sm:hidden text-[10px] text-gray-400 dark:text-gray-500 mt-1 tabular-nums text-right">
+                                  <p className="sm:hidden text-[10px] text-gray-500 dark:text-gray-300 mt-1 tabular-nums text-right">
                                     ${fmt(model.usdBruto)} / ${fmt(model.cuotaMinima)} USD
                                   </p>
                                 </div>
