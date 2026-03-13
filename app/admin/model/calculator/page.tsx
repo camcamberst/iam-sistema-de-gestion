@@ -72,7 +72,7 @@ export default function ModelCalculatorPage() {
   // 🔧 EARLY FREEZE: Estado para plataformas congeladas
   const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
   // Resumen periodo/objetivo para la barra horaria (solo modelo)
-  const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
+  const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number; periodBilledUsdModelo: number } | null>(null);
   const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
   // Neto disponible del período (después de anticipos y compras sexshop) para indicador en calculadora
   const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number; cuotas_primera_aprobacion?: number; descuentos_detalle?: Array<{ concepto: string; monto: number }> } | null>(null);
@@ -464,7 +464,11 @@ export default function ModelCalculatorPage() {
             const res = await fetch(`/api/calculator/period-goal-summary?modelId=${current.id}`, { cache: 'no-store' });
             const json = await res.json();
             if (json?.success && typeof json.goalUsd === 'number') {
-              setPeriodGoal({ goalUsd: json.goalUsd, periodBilledUsd: json.periodBilledUsd ?? 0 });
+              setPeriodGoal({
+                goalUsd: json.goalUsd,
+                periodBilledUsd: json.periodBilledUsd ?? 0,
+                periodBilledUsdModelo: json.periodBilledUsdModelo ?? json.periodBilledUsd ?? 0
+              });
             }
           } catch (_) {}
         }
@@ -1047,6 +1051,7 @@ export default function ModelCalculatorPage() {
           className="!max-w-none !px-0"
           objetivoUsd={user?.role === 'modelo' ? periodGoal?.goalUsd : undefined}
           facturadoPeriodoUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsd : undefined}
+          facturadoDisplayUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsdModelo : undefined}
         />
 
         {/* Tasas actualizadas - ESTILO APPLE REFINADO */}

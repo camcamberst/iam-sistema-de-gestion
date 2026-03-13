@@ -60,20 +60,13 @@ export async function GET(request: NextRequest) {
       .maybeSingle();
 
     const periodBilledUsd = Math.round((Number(totalsRow?.total_usd_bruto) || 0) * 100) / 100;
+    const periodBilledUsdModelo = Math.round((Number(totalsRow?.total_usd_modelo) || 0) * 100) / 100;
 
     return NextResponse.json({
       success: true,
       goalUsd,
       periodBilledUsd,
-      _debug: {
-        source: 'calculator_totals.total_usd_bruto',
-        periodStart,
-        today,
-        savedDate: totalsRow?.period_date,
-        savedAt: totalsRow?.updated_at,
-        totalUsdBruto: Number(totalsRow?.total_usd_bruto) || 0,
-        totalUsdModelo: Number(totalsRow?.total_usd_modelo) || 0
-      }
+      periodBilledUsdModelo,
     });
   } catch (e: any) {
     console.error('❌ [PERIOD-GOAL-SUMMARY]', e);

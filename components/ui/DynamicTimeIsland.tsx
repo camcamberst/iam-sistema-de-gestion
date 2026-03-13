@@ -5,13 +5,15 @@ import { getEuropeanCentralMidnightInColombia, getColombiaDate } from '@/utils/p
 
 interface DynamicTimeIslandProps {
   className?: string;
-  /** Objetivo básico en USD (cuota mínima de la modelo). Si se pasa junto con facturadoPeriodoUsd, se muestran mensajes de promedio diario. */
+  /** Objetivo básico en USD (cuota mínima bruta). Si se pasa junto con facturadoPeriodoUsd, se muestran mensajes de promedio diario. */
   objetivoUsd?: number;
-  /** Total facturado en el periodo actual en USD modelo. */
+  /** Total facturado USD Bruto (para cálculo interno del objetivo). */
   facturadoPeriodoUsd?: number;
+  /** Total facturado USD Modelo (para mostrar al usuario). Si no se pasa, se usa facturadoPeriodoUsd. */
+  facturadoDisplayUsd?: number;
 }
 
-export default function DynamicTimeIsland({ className = '', objetivoUsd, facturadoPeriodoUsd }: DynamicTimeIslandProps) {
+export default function DynamicTimeIsland({ className = '', objetivoUsd, facturadoPeriodoUsd, facturadoDisplayUsd }: DynamicTimeIslandProps) {
   const [times, setTimes] = useState({
     europe: '',
     japan: '',
@@ -123,19 +125,24 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
       const goal = typeof objetivoUsd === 'number' && objetivoUsd > 0;
       const billed = typeof facturadoPeriodoUsd === 'number';
       if (goal && billed && !isClosureDay && daysLeft > 0) {
+        // Cálculo del objetivo usa USD Bruto (misma métrica que cuotaMinima)
         const remaining = Math.max(0, objetivoUsd - facturadoPeriodoUsd);
         const dailyAvg = remaining / daysLeft;
+        // Display usa USD Modelo (lo que la modelo reconoce como su facturado)
+        const displayValue = typeof facturadoDisplayUsd === 'number' ? facturadoDisplayUsd : facturadoPeriodoUsd;
         const formatUsd = (n: number) => n.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         newMessages.push({ 
-          text: `Facturado este periodo: $${formatUsd(facturadoPeriodoUsd)} USD`, 
+          text: `Facturado este periodo: $${formatUsd(displayValue)} USD`, 
           urgent: false, 
           closed: false 
         });
-        newMessages.push({ 
-          text: `Objetivo promedio por día: $${formatUsd(dailyAvg)} USD, para lograrlo`, 
-          urgent: remaining > 0, 
-          closed: false 
-        });
+        if (remaining > 0) {
+          newMessages.push({ 
+            text: `Objetivo promedio por día: $${formatUsd(dailyAvg)} USD, para lograrlo`, 
+            urgent: true, 
+            closed: false 
+          });
+        }
       }
 
       setMessages(newMessages);
@@ -144,7 +151,7 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
     updateTimes();
     const timer = setInterval(updateTimes, 1000);
     return () => clearInterval(timer);
-  }, [objetivoUsd, facturadoPeriodoUsd]);
+  }, [objetivoUsd, facturadoPeriodoUsd, facturadoDisplayUsd]);
 
   // Rotar el ticker cada 7 segundos para que el texto informativo se lea con calma
   useEffect(() => {
