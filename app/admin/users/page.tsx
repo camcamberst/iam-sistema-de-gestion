@@ -1162,19 +1162,24 @@ function EditUserModal({ user, groups, onClose, onSubmit, currentUser, modalErro
 
           <div>
             <label className="block text-gray-700 dark:text-gray-200 text-sm font-medium mb-1">Usuario Activo</label>
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
-              className="relative w-10 h-6 rounded-full transition-colors"
-              style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
-              aria-pressed={formData.is_active}
-            >
-              <span
-                className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow"
-                style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
-              />
-            </button>
-              </div>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, is_active: !formData.is_active })}
+                className="relative w-10 h-6 rounded-full transition-colors"
+                style={{ background: formData.is_active ? '#111827' : '#e5e7eb' }}
+                aria-pressed={formData.is_active}
+              >
+                <span
+                  className="absolute top-[3px] rounded-full bg-white dark:bg-gray-200 shadow transition-all"
+                  style={{ left: formData.is_active ? 20 : 3, width: 18, height: 18 }}
+                />
+              </button>
+              <span className={`text-xs font-medium ${formData.is_active ? 'text-green-600 dark:text-green-400' : 'text-red-500 dark:text-red-400'}`}>
+                {formData.is_active ? 'Activo' : 'Inactivo'}
+              </span>
+            </div>
+          </div>
             </div>
           </div>
 
