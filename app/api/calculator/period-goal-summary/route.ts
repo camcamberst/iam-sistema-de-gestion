@@ -43,121 +43,30 @@ export async function GET(request: NextRequest) {
     }
 
     const goalUsd = Number(config.min_quota_override ?? config.group_min_quota ?? 470);
-    const defaultPct = Number(config.percentage_override ?? config.group_percentage ?? 80);
-    const platformIds: string[] = config.enabled_platforms || [];
 
-    if (platformIds.length === 0) {
-      return NextResponse.json({ success: true, goalUsd, periodBilledUsd: 0 });
-    }
-
-    const { data: ratesData } = await supabase
-      .from('rates')
-      .select('kind, value')
-      .eq('active', true)
-      .is('valid_to', null);
-    const rates = {
-      usd_cop: ratesData?.find((r: any) => r.kind === 'USD→COP')?.value || 3900,
-      eur_usd: ratesData?.find((r: any) => r.kind === 'EUR→USD')?.value || 1.01,
-      gbp_usd: ratesData?.find((r: any) => r.kind === 'GBP→USD')?.value || 1.2
-    };
-
-    const { data: platforms, error: platformsError } = await supabase
-      .from('calculator_platforms')
-      .select('id, currency')
-      .in('id', platformIds)
-      .eq('active', true);
-
-    if (platformsError) {
-      console.error('❌ [PERIOD-GOAL-SUMMARY] Error cargando plataformas:', platformsError);
-    }
-
-    const { data: rows, error: valuesError } = await supabase
-      .from('model_values')
-      .select('platform_id, period_date, value, updated_at')
+    // Leer el total USD Modelo guardado por la calculadora (misma fórmula exacta)
+    const { data: totalsRow } = await supabase
+      .from('calculator_totals')
+      .select('total_usd_modelo, period_date, updated_at')
       .eq('model_id', modelId)
       .gte('period_date', periodStart)
       .lte('period_date', today)
-      .order('updated_at', { ascending: false });
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
 
-    if (valuesError) {
-      return NextResponse.json({ success: false, error: valuesError.message }, { status: 500 });
-    }
-
-    // Los valores en model_values son acumulativos: el valor del día 12 ya incluye los anteriores.
-    // Para cada plataforma, tomar solo el valor de la fecha más reciente.
-    const latestByPlatform: Record<string, { value: number; date: string }> = {};
-    (rows || []).forEach((r: any) => {
-      const pid = r.platform_id;
-      const val = Number(r.value) || 0;
-      const existing = latestByPlatform[pid];
-      if (!existing || r.period_date > existing.date || (r.period_date === existing.date && val > existing.value)) {
-        latestByPlatform[pid] = { value: val, date: r.period_date };
-      }
-    });
-
-    const platformMap = new Map((platforms || []).map((p: any) => [p.id, p]));
-    let periodBilledUsd = 0;
-
-    const toUsdBruto = (value: number, platformId: string, currency: string) => {
-      const n = String(platformId || '').toLowerCase();
-      if (currency === 'EUR') {
-        if (n === 'big7') return (value * rates.eur_usd) * 0.84;
-        if (n === 'mondo') return (value * rates.eur_usd) * 0.78;
-        return value * rates.eur_usd;
-      }
-      if (currency === 'GBP') {
-        if (n === 'aw') return (value * rates.gbp_usd) * 0.677;
-        return value * rates.gbp_usd;
-      }
-      if (currency === 'USD') {
-        if (n === 'cmd' || n === 'camlust' || n === 'skypvt') return value * 0.75;
-        if (n === 'chaturbate' || n === 'myfreecams' || n === 'stripchat') return value * 0.05;
-        if (n === 'dxlive') return value * 0.6;
-        if (n === 'secretfriends') return value * 0.5;
-        return value;
-      }
-      return value;
-    };
-
-    for (const [platformId, entry] of Object.entries(latestByPlatform)) {
-      if (entry.value <= 0) continue;
-      const platform = platformMap.get(platformId);
-      const currency = platform?.currency || 'USD';
-      const usdBruto = toUsdBruto(entry.value, platformId, currency);
-      const pct = platformId === 'superfoon' ? 100 : defaultPct;
-      periodBilledUsd += usdBruto * (pct / 100);
-    }
-
-    periodBilledUsd = Math.round(periodBilledUsd * 100) / 100;
-
-    const breakdown = Object.entries(latestByPlatform).map(([pid, entry]) => {
-      const platform = platformMap.get(pid);
-      const currency = platform?.currency || 'USD';
-      const usdBruto = toUsdBruto(entry.value, pid, currency);
-      const pct = pid === 'superfoon' ? 100 : defaultPct;
-      return {
-        platformId: pid,
-        currency,
-        rawValue: entry.value,
-        date: entry.date,
-        usdBruto: Math.round(usdBruto * 100) / 100,
-        percentage: pct,
-        usdModelo: Math.round(usdBruto * (pct / 100) * 100) / 100
-      };
-    });
+    const periodBilledUsd = Math.round((Number(totalsRow?.total_usd_modelo) || 0) * 100) / 100;
 
     return NextResponse.json({
       success: true,
       goalUsd,
       periodBilledUsd,
       _debug: {
+        source: 'calculator_totals',
         periodStart,
         today,
-        defaultPct,
-        rates,
-        totalRows: (rows || []).length,
-        platformCount: Object.keys(latestByPlatform).length,
-        breakdown
+        savedDate: totalsRow?.period_date,
+        savedAt: totalsRow?.updated_at
       }
     });
   } catch (e: any) {
