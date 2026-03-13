@@ -1,6 +1,8 @@
 /**
- * Resumen del periodo actual: objetivo (cuota) y total facturado en USD modelo.
+ * Resumen del periodo actual: objetivo (cuota) y total facturado en USD bruto.
  * Usado por la barra horaria para mostrar "promedio diario para alcanzar objetivo".
+ * NOTA: La cuota mínima (goalUsd) es un objetivo de producción BRUTA,
+ * por lo que periodBilledUsd usa total_usd_bruto (no total_usd_modelo).
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
@@ -44,10 +46,12 @@ export async function GET(request: NextRequest) {
 
     const goalUsd = Number(config.min_quota_override ?? config.group_min_quota ?? 470);
 
-    // Leer el total USD Modelo guardado por la calculadora (misma fórmula exacta)
+    // Leer el total USD Bruto guardado por la calculadora.
+    // La cuota mínima (goalUsd) es un objetivo de producción BRUTA,
+    // por lo que la comparación debe hacerse contra total_usd_bruto (no modelo).
     const { data: totalsRow } = await supabase
       .from('calculator_totals')
-      .select('total_usd_modelo, period_date, updated_at')
+      .select('total_usd_bruto, total_usd_modelo, period_date, updated_at')
       .eq('model_id', modelId)
       .gte('period_date', periodStart)
       .lte('period_date', today)
@@ -55,18 +59,20 @@ export async function GET(request: NextRequest) {
       .limit(1)
       .maybeSingle();
 
-    const periodBilledUsd = Math.round((Number(totalsRow?.total_usd_modelo) || 0) * 100) / 100;
+    const periodBilledUsd = Math.round((Number(totalsRow?.total_usd_bruto) || 0) * 100) / 100;
 
     return NextResponse.json({
       success: true,
       goalUsd,
       periodBilledUsd,
       _debug: {
-        source: 'calculator_totals',
+        source: 'calculator_totals.total_usd_bruto',
         periodStart,
         today,
         savedDate: totalsRow?.period_date,
-        savedAt: totalsRow?.updated_at
+        savedAt: totalsRow?.updated_at,
+        totalUsdBruto: Number(totalsRow?.total_usd_bruto) || 0,
+        totalUsdModelo: Number(totalsRow?.total_usd_modelo) || 0
       }
     });
   } catch (e: any) {
