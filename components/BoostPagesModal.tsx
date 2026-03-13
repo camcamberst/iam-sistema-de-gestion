@@ -23,24 +23,29 @@ interface AutoUploadModel {
   fields?: Record<string, any>;
 }
 
-// Cache de list-models para evitar llamadas repetitivas a la API externa
-let _modelsCache: { data: AutoUploadModel[]; ts: number } | null = null;
+// Cache de dashboard-init: 1 sola llamada devuelve modelos, cuentas, prompts, stats
+let _dashboardCache: { data: any; ts: number } | null = null;
 const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
 
-async function fetchAutoUploadModels(forceRefresh = false): Promise<AutoUploadModel[]> {
-  if (!forceRefresh && _modelsCache && Date.now() - _modelsCache.ts < CACHE_TTL_MS) {
-    return _modelsCache.data;
+async function fetchDashboardInit(forceRefresh = false): Promise<any> {
+  if (!forceRefresh && _dashboardCache && Date.now() - _dashboardCache.ts < CACHE_TTL_MS) {
+    return _dashboardCache.data;
   }
   const res = await fetch('/api/autoupload/dashboard', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ action: 'list-models' })
+    body: JSON.stringify({ action: 'dashboard-init' })
   });
   let parsed = await res.json();
   if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data) parsed = parsed[0];
-  const list: AutoUploadModel[] = Array.isArray(parsed?.data) ? parsed.data : [];
-  _modelsCache = { data: list, ts: Date.now() };
-  return list;
+  _dashboardCache = { data: parsed?.data ?? parsed ?? {}, ts: Date.now() };
+  return _dashboardCache.data;
+}
+
+function getModelsFromDashboard(dashboard: any): AutoUploadModel[] {
+  if (Array.isArray(dashboard?.models)) return dashboard.models;
+  if (Array.isArray(dashboard?.data?.models)) return dashboard.data.models;
+  return [];
 }
 
 export default function BoostPagesModal({
@@ -92,8 +97,9 @@ export default function BoostPagesModal({
         }
         if (!cancelled) setToken(session.access_token);
 
-        // 2) Obtener listado de modelos desde AutoUpload (cacheado 5 min)
-        const list = await fetchAutoUploadModels();
+        // 2) Obtener datos desde dashboard-init (cacheado 5 min — 1 llamada = todo)
+        const dashboard = await fetchDashboardInit();
+        const list = getModelsFromDashboard(dashboard);
 
         if (!cancelled) {
           setAutoModels(list);
@@ -253,8 +259,9 @@ export default function BoostPagesModal({
         setError('');
         setSuccess(`Modelo "${username}" creada y conectada. Ya puedes subir fotos.`);
       } else {
-        // Solo si el response no incluye folderId, recargar lista (forzando refresh del cache)
-        const list = await fetchAutoUploadModels(true);
+        // Solo si el response no incluye folderId, recargar (forzando refresh del cache)
+        const dashReload = await fetchDashboardInit(true);
+        const list = getModelsFromDashboard(dashReload);
         setAutoModels(list);
         const match = list.find((m: any) => String(m.nombre || '').toLowerCase().trim() === username);
         const driveId =
