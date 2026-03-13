@@ -23,6 +23,26 @@ interface AutoUploadModel {
   fields?: Record<string, any>;
 }
 
+// Cache de list-models para evitar llamadas repetitivas a la API externa
+let _modelsCache: { data: AutoUploadModel[]; ts: number } | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutos
+
+async function fetchAutoUploadModels(forceRefresh = false): Promise<AutoUploadModel[]> {
+  if (!forceRefresh && _modelsCache && Date.now() - _modelsCache.ts < CACHE_TTL_MS) {
+    return _modelsCache.data;
+  }
+  const res = await fetch('/api/autoupload/dashboard', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'list-models' })
+  });
+  let parsed = await res.json();
+  if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data) parsed = parsed[0];
+  const list: AutoUploadModel[] = Array.isArray(parsed?.data) ? parsed.data : [];
+  _modelsCache = { data: list, ts: Date.now() };
+  return list;
+}
+
 export default function BoostPagesModal({
   isOpen,
   onClose,
@@ -72,21 +92,8 @@ export default function BoostPagesModal({
         }
         if (!cancelled) setToken(session.access_token);
 
-        // 2) Obtener listado de modelos desde AutoUpload
-        const res = await fetch('/api/autoupload/dashboard', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'list-models' })
-        });
-
-        let parsed = await res.json();
-
-        // n8n webhooks envuelven la respuesta en un array: [{ success, data: [...] }]
-        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.data) {
-          parsed = parsed[0];
-        }
-
-        const list: AutoUploadModel[] = Array.isArray(parsed?.data) ? parsed.data : [];
+        // 2) Obtener listado de modelos desde AutoUpload (cacheado 5 min)
+        const list = await fetchAutoUploadModels();
 
         if (!cancelled) {
           setAutoModels(list);
@@ -236,31 +243,31 @@ export default function BoostPagesModal({
         return;
       }
 
-      setSuccess(`Modelo "${username}" creada en AutoUpload con ${accounts.length} plataforma(s). Reconectando...`);
       setShowCreateForm(false);
       setPlatformAccounts({});
 
-      // Recargar para encontrar la modelo recién creada
-      const reloadRes = await fetch('/api/autoupload/dashboard', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'list-models' })
-      });
-      let reloadData = await reloadRes.json();
-      if (Array.isArray(reloadData) && reloadData.length > 0) reloadData = reloadData[0];
-      const list: AutoUploadModel[] = Array.isArray(reloadData?.data) ? reloadData.data : [];
-      setAutoModels(list);
-
-      const match = list.find((m: any) => String(m.nombre || '').toLowerCase().trim() === username);
-      const driveId =
-        match?.fields?.['Google Drive Folder ID'] ??
-        (match as any)?.fields?.['Google drive Folder ID'] ??
-        (match as any)?.folderId;
-
-      if (match && driveId) {
-        setFolderId(String(driveId));
+      // Usar folderId del response de creación si está disponible
+      const createdFolderId = data?.folderId || data?.data?.folderId || data?.data?.fields?.['Google Drive Folder ID'];
+      if (createdFolderId) {
+        setFolderId(String(createdFolderId));
         setError('');
         setSuccess(`Modelo "${username}" creada y conectada. Ya puedes subir fotos.`);
+      } else {
+        // Solo si el response no incluye folderId, recargar lista (forzando refresh del cache)
+        const list = await fetchAutoUploadModels(true);
+        setAutoModels(list);
+        const match = list.find((m: any) => String(m.nombre || '').toLowerCase().trim() === username);
+        const driveId =
+          match?.fields?.['Google Drive Folder ID'] ??
+          (match as any)?.fields?.['Google drive Folder ID'] ??
+          (match as any)?.folderId;
+        if (match && driveId) {
+          setFolderId(String(driveId));
+          setError('');
+          setSuccess(`Modelo "${username}" creada y conectada. Ya puedes subir fotos.`);
+        } else {
+          setSuccess(`Modelo "${username}" creada en AutoUpload con ${accounts.length} plataforma(s). Puede tomar unos segundos en aparecer la carpeta.`);
+        }
       }
     } catch (e: any) {
       setError(e?.message || 'Error al crear la modelo en AutoUpload.');
@@ -326,20 +333,27 @@ export default function BoostPagesModal({
 
         const fileUrl: string = uploadData.url;
 
-        // 2) Enviar a AutoUpload para cada plataforma seleccionada
+        // 2) Enviar a AutoUpload para todas las plataformas en paralelo
+        const driveResults = await Promise.allSettled(
+          platforms.map(platform =>
+            fetch('/api/autoupload/upload', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ fileUrl, fileName: file.name, folderId, platform })
+            }).then(async r => {
+              let d: any;
+              try { d = await r.json(); } catch { d = null; }
+              return { platform, ok: d?.success !== false, error: d?.error };
+            })
+          )
+        );
         let allOk = true;
-        for (const platform of platforms) {
-          const driveRes = await fetch('/api/autoupload/upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ fileUrl, fileName: file.name, folderId, platform })
-          });
-
-          let driveData: any;
-          try { driveData = await driveRes.json(); } catch { driveData = null; }
-          if (driveData?.success === false) {
+        for (const result of driveResults) {
+          if (result.status === 'rejected' || (result.status === 'fulfilled' && !result.value.ok)) {
             allOk = false;
-            setError(driveData?.error || `Error al enviar ${file.name} a ${platform}`);
+            const errMsg = result.status === 'fulfilled' ? result.value.error : 'Error de red';
+            const plat = result.status === 'fulfilled' ? result.value.platform : '?';
+            setError(errMsg || `Error al enviar ${file.name} a ${plat}`);
           }
         }
 

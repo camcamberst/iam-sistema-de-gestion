@@ -22,17 +22,7 @@ export async function POST(request: NextRequest) {
     try {
       data = JSON.parse(rawText);
     } catch {
-      console.error('❌ [AUTOUPLOAD-DASHBOARD] Respuesta no es JSON válido. Status:', res.status, 'Body (primeros 500 chars):', rawText.slice(0, 500));
-    }
-
-    console.log('📡 [AUTOUPLOAD-DASHBOARD] action:', body?.action, '| status:', res.status, '| response keys:', data ? Object.keys(data) : 'null', '| is array?', Array.isArray(data));
-
-    if (Array.isArray(data)) {
-      console.log('📡 [AUTOUPLOAD-DASHBOARD] La respuesta ES un array directo con', data.length, 'elementos');
-      if (data.length > 0) console.log('📡 [AUTOUPLOAD-DASHBOARD] Primer elemento keys:', Object.keys(data[0]), '| sample:', JSON.stringify(data[0]).slice(0, 300));
-    } else if (data?.data && Array.isArray(data.data)) {
-      console.log('📡 [AUTOUPLOAD-DASHBOARD] data.data es array con', data.data.length, 'elementos');
-      if (data.data.length > 0) console.log('📡 [AUTOUPLOAD-DASHBOARD] Primer elemento keys:', Object.keys(data.data[0]), '| sample:', JSON.stringify(data.data[0]).slice(0, 300));
+      console.error('❌ [AUTOUPLOAD-DASHBOARD] Respuesta no es JSON válido. Status:', res.status);
     }
 
     return NextResponse.json(data ?? { success: false, error: 'Respuesta inválida del Dashboard API' }, {
