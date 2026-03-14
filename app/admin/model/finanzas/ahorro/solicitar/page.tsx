@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { isWithinSavingsWindow } from '@/lib/savings/savings-utils';
+import { isWithinSavingsWindow } from '@/lib/savings/savings-window';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard from '@/components/ui/InfoCard';
 
