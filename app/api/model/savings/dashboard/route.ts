@@ -135,46 +135,69 @@ export async function GET(request: NextRequest) {
       .gte('realized_at', sixMonthsAgo.toISOString())
       .order('realized_at', { ascending: true });
 
-    // Calcular crecimiento mensual
+    // Eventos ordenados por fecha para saldo acumulado cronológico
+    type ChartEvent = { date: string; amount: number; month: string };
+    const events: ChartEvent[] = [];
+    (historicalSavings || []).forEach(s => {
+      const d = s.approved_at || s.created_at;
+      events.push({
+        date: d,
+        amount: parseFloat(String(s.monto_ajustado || s.monto_ahorrado)),
+        month: new Date(d).toISOString().slice(0, 7)
+      });
+    });
+    (historicalWithdrawals || []).forEach(w => {
+      const d = w.realized_at || w.created_at;
+      events.push({
+        date: d,
+        amount: -parseFloat(String(w.monto_solicitado)),
+        month: new Date(d).toISOString().slice(0, 7)
+      });
+    });
+    events.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
     const monthlyData: Record<string, { ingresos: number; retiros: number; saldo: number }> = {};
     let runningBalance = 0;
-
-    (historicalSavings || []).forEach(s => {
-      const month = new Date(s.approved_at || s.created_at).toISOString().slice(0, 7); // YYYY-MM
+    events.forEach(ev => {
+      const month = ev.month;
       if (!monthlyData[month]) {
         monthlyData[month] = { ingresos: 0, retiros: 0, saldo: 0 };
       }
-      const monto = parseFloat(String(s.monto_ajustado || s.monto_ahorrado));
-      monthlyData[month].ingresos += monto;
-      runningBalance += monto;
-      monthlyData[month].saldo = runningBalance;
-    });
-
-    (historicalWithdrawals || []).forEach(w => {
-      const month = new Date(w.realized_at || w.created_at).toISOString().slice(0, 7);
-      if (!monthlyData[month]) {
-        monthlyData[month] = { ingresos: 0, retiros: 0, saldo: 0 };
+      if (ev.amount > 0) {
+        monthlyData[month].ingresos += ev.amount;
+      } else {
+        monthlyData[month].retiros += Math.abs(ev.amount);
       }
-      const monto = parseFloat(String(w.monto_solicitado));
-      monthlyData[month].retiros += monto;
-      runningBalance -= monto;
+      runningBalance += ev.amount;
       monthlyData[month].saldo = runningBalance;
     });
 
     const chartData = Object.entries(monthlyData)
-      .map(([month, data]) => ({
-        month,
-        ...data
-      }))
+      .map(([month, data]) => ({ month, ...data }))
       .sort((a, b) => a.month.localeCompare(b.month));
 
-    // Obtener metas activas
-    const { data: goals } = await supabase
+    // Obtener metas activas y enriquecer con porcentaje_progreso y faltante (evita error en frontend)
+    const { data: goalsRaw } = await supabase
       .from('savings_goals')
       .select('*')
       .eq('model_id', targetModelId)
       .eq('estado', 'activa')
       .order('created_at', { ascending: false });
+
+    const saldoActual = balance.success ? balance.saldo_actual : 0;
+    const goals = (goalsRaw || []).map((g: any) => {
+      const montoMeta = parseFloat(String(g.monto_meta ?? 0));
+      const montoActual = saldoActual; // Todas las metas comparten el saldo actual
+      const porcentaje = montoMeta > 0 ? (montoActual / montoMeta) * 100 : 0;
+      return {
+        ...g,
+        monto_actual: montoActual,
+        monto_meta: montoMeta,
+        porcentaje_progreso: Math.min(100, porcentaje),
+        faltante: Math.max(0, montoMeta - montoActual),
+        is_completed: porcentaje >= 100
+      };
+    });
 
     return NextResponse.json({
       success: true,
@@ -185,7 +208,7 @@ export async function GET(request: NextRequest) {
       } : null,
       movements: movements.slice(0, 10), // Últimos 10 movimientos
       chartData,
-      goals: goals || [],
+      goals,
       stats: {
         total_deposits: (savings || []).length,
         total_withdrawals: (withdrawals || []).length,

@@ -430,27 +430,27 @@ export default function MiAhorroPage() {
                   <div className="mb-2">
                     <div className="flex justify-between text-sm mb-1">
                       <span className="text-gray-600 dark:text-gray-400">
-                        {formatCurrency(goal.monto_actual)} / {formatCurrency(goal.monto_meta)}
+                        {formatCurrency(goal.monto_actual ?? 0)} / {formatCurrency(goal.monto_meta ?? 0)}
                       </span>
                       <span className="font-semibold text-gray-900 dark:text-gray-800">
-                        {goal.porcentaje_progreso.toFixed(1)}%
+                        {(goal.porcentaje_progreso ?? 0).toFixed(1)}%
                       </span>
                     </div>
                     <div className="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-3">
                       <div
                         className={`h-3 rounded-full transition-all duration-500 ${
-                          goal.porcentaje_progreso >= 100
+                          (goal.porcentaje_progreso ?? 0) >= 100
                             ? 'bg-gradient-to-r from-green-500 to-emerald-600'
                             : 'bg-gradient-to-r from-blue-500 to-indigo-600'
                         }`}
-                        style={{ width: `${Math.min(100, goal.porcentaje_progreso)}%` }}
+                        style={{ width: `${Math.min(100, goal.porcentaje_progreso ?? 0)}%` }}
                       ></div>
                     </div>
                   </div>
 
-                  {goal.estado === 'activa' && goal.faltante > 0 && (
+                  {goal.estado === 'activa' && (goal.faltante ?? 0) > 0 && (
                     <p className="text-xs text-gray-500 dark:text-gray-600">
-                      Faltan {formatCurrency(goal.faltante)} para alcanzar tu meta
+                      Faltan {formatCurrency(goal.faltante ?? 0)} para alcanzar tu meta
                     </p>
                   )}
 

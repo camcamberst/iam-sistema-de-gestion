@@ -291,7 +291,7 @@ export async function getTotalSavingsBalance(modelId: string): Promise<{
 
 /**
  * Valida si una modelo puede retirar en el período actual
- * Solo puede retirar una vez por período
+ * Solo puede retirar una vez por período (P1: días 1-15, P2: 16-fin de mes)
  */
 export async function canWithdrawInPeriod(
   modelId: string,
@@ -303,13 +303,28 @@ export async function canWithdrawInPeriod(
   existingWithdrawal?: any;
 }> {
   try {
-    // Buscar si ya hay un retiro en este período
+    const period = new Date(periodDate);
+    const year = period.getFullYear();
+    const month = period.getMonth() + 1;
+    const pad = (n: number) => String(n).padStart(2, '0');
+
+    let periodStart: string;
+    let periodEnd: string;
+    if (periodType === '1-15') {
+      periodStart = `${year}-${pad(month)}-01T00:00:00`;
+      periodEnd = `${year}-${pad(month)}-15T23:59:59`;
+    } else {
+      const lastDay = new Date(year, month, 0).getDate();
+      periodStart = `${year}-${pad(month)}-16T00:00:00`;
+      periodEnd = `${year}-${pad(month)}-${pad(lastDay)}T23:59:59`;
+    }
+
     const { data: existing } = await supabase
       .from('savings_withdrawals')
       .select('id, estado, created_at')
       .eq('model_id', modelId)
-      .gte('created_at', `${periodDate}T00:00:00`)
-      .lte('created_at', `${periodDate}T23:59:59`)
+      .gte('created_at', periodStart)
+      .lte('created_at', periodEnd)
       .in('estado', ['pendiente', 'aprobado', 'realizado'])
       .maybeSingle();
 
