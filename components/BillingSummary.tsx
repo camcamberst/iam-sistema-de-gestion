@@ -429,33 +429,54 @@ export default function BillingSummary({ userRole, userId, userGroups = [], sele
                     className="px-4 py-3 cursor-pointer hover:bg-gray-50/50 dark:hover:bg-gray-600/50 transition-all duration-200"
                     onClick={() => toggleSedeExpansion(sede.sedeId)}
                   >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-4">
-                        <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
-                          <svg 
-                            className={`w-4 h-4 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
-                            fill="none" 
-                            stroke="currentColor" 
-                            viewBox="0 0 24 24"
-                          >
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                          </svg>
+                    <div className="flex flex-col gap-3">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                            <svg 
+                              className={`w-4 h-4 text-gray-600 dark:text-gray-600 dark:text-gray-500 transition-transform duration-200 ${expandedSedes.has(sede.sedeId) ? 'rotate-90' : ''}`}
+                              fill="none" 
+                              stroke="currentColor" 
+                              viewBox="0 0 24 24"
+                            >
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                            </svg>
+                          </div>
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900">
+                              {sede.sedeName}
+                              {sede.isAffiliate && (
+                                <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                                  Afiliado
+                                </span>
+                              )}
+                            </h3>
+                            <p className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
+                              {sede.isAffiliate 
+                                ? `${sede.totalModels} modelos • ${sede.sedes_count || 0} sedes • ${sede.commission_percentage || 10}% comisión`
+                                : `${sede.totalModels} modelos • ${sede.groups?.length || 0} grupos`
+                              }
+                            </p>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-900">
-                            {sede.sedeName}
-                            {sede.isAffiliate && (
-                              <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                                Afiliado
-                              </span>
-                            )}
-                          </h3>
-                          <p className="text-xs text-gray-500 dark:text-gray-600 dark:text-gray-500">
-                            {sede.isAffiliate 
-                              ? `${sede.totalModels} modelos • ${sede.sedes_count || 0} sedes • ${sede.commission_percentage || 10}% comisión`
-                              : `${sede.totalModels} modelos • ${sede.groups?.length || 0} grupos`
-                            }
-                          </p>
+                      </div>
+                      {/* Consolidado: USD Modelo, USD Sede, COP Modelo, COP Sede — entre nombre de sede y barra/contenido */}
+                      <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2 pl-12 sm:pl-12 border-t border-gray-100 dark:border-gray-600/40 pt-2">
+                        <div className="flex flex-col items-start min-w-[70px]">
+                          <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-500">USD Modelo</span>
+                          <span className="text-xs sm:text-sm font-semibold text-green-600 dark:text-green-600">${formatCurrency(sede.totalUsdModelo)}</span>
+                        </div>
+                        <div className="flex flex-col items-start min-w-[70px]">
+                          <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-500">USD Sede</span>
+                          <span className="text-xs sm:text-sm font-semibold text-purple-600 dark:text-purple-600">${formatCurrency(sede.totalUsdSede)}</span>
+                        </div>
+                        <div className="flex flex-col items-start min-w-[70px]">
+                          <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-500">COP Modelo</span>
+                          <span className="text-xs sm:text-sm font-semibold text-green-700 dark:text-green-400">{formatCurrency(sede.totalCopModelo ?? 0, 'COP')}</span>
+                        </div>
+                        <div className="flex flex-col items-start min-w-[70px]">
+                          <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-500">COP Sede</span>
+                          <span className="text-xs sm:text-sm font-semibold text-purple-700 dark:text-purple-400">{formatCurrency(sede.totalCopSede ?? 0, 'COP')}</span>
                         </div>
                       </div>
                     </div>
