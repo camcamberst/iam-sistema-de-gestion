@@ -118,6 +118,33 @@ export default function MisSolicitudesPage() {
     }
   };
 
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
+
+  const handleCancelAnticipo = async (anticipoId: string) => {
+    if (!confirm('¿Estás segura de que deseas cancelar esta solicitud de anticipo?')) return;
+    setCancellingId(anticipoId);
+    try {
+      const res = await fetch(`/api/anticipos/${anticipoId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          estado: 'cancelado',
+          admin_id: user?.id,
+        }),
+      });
+      const result = await res.json();
+      if (result.success) {
+        setAnticipos(prev => prev.map(a => a.id === anticipoId ? { ...a, estado: 'cancelado' } : a));
+      } else {
+        alert('Error al cancelar: ' + (result.error || 'Intenta de nuevo'));
+      }
+    } catch {
+      alert('Error de conexión al cancelar la solicitud');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
   const filteredAnticipos = filterStatus === 'todos' 
     ? anticipos 
     : anticipos.filter(a => a.estado === filterStatus);
@@ -292,6 +319,26 @@ export default function MisSolicitudesPage() {
                         <p className="text-xs sm:text-sm text-gray-700 dark:text-gray-300">
                           <strong className="font-semibold">Comentarios:</strong> {anticipo.comentarios_admin || anticipo.comentarios_rechazo}
                         </p>
+                      </div>
+                    )}
+
+                    {/* Botón cancelar para solicitudes pendientes */}
+                    {anticipo.estado === 'pendiente' && (
+                      <div className="flex justify-end mt-1">
+                        <button
+                          onClick={() => handleCancelAnticipo(anticipo.id)}
+                          disabled={cancellingId === anticipo.id}
+                          className="px-4 py-2 text-xs sm:text-sm font-medium text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-700/50 rounded-lg hover:bg-red-100 dark:hover:bg-red-900/40 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {cancellingId === anticipo.id ? (
+                            <span className="flex items-center gap-1.5">
+                              <span className="w-3.5 h-3.5 border-2 border-red-400 border-t-transparent rounded-full animate-spin" />
+                              Cancelando...
+                            </span>
+                          ) : (
+                            'Cancelar solicitud'
+                          )}
+                        </button>
                       </div>
                     )}
                   </div>
