@@ -260,21 +260,21 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                           </svg>
                         </div>
                         </div>
-                        {/* Consolidado: columnas de ancho fijo, valores alineados a la derecha */}
-                        <div className="grid grid-cols-4 gap-x-2 sm:gap-x-4 px-3 sm:px-4 py-2 border-t border-gray-100/80 dark:border-gray-600/40 bg-white/40 dark:bg-gray-800/20">
-                          <div className="flex flex-col items-end min-w-0">
+                        {/* Consolidado: compacto, sin estirar a todo el ancho */}
+                        <div className="flex flex-wrap items-baseline gap-x-5 gap-y-1 px-3 sm:px-4 py-2 border-t border-gray-100/80 dark:border-gray-600/40 bg-white/40 dark:bg-gray-800/20">
+                          <div className="flex flex-col items-end">
                             <span className="text-[10px] text-gray-500 dark:text-gray-400">USD Modelo</span>
                             <span className="text-[11px] sm:text-xs font-medium text-blue-600 dark:text-blue-400 tabular-nums">${fmt(groupUsdModelo)}</span>
                           </div>
-                          <div className="flex flex-col items-end min-w-0">
+                          <div className="flex flex-col items-end">
                             <span className="text-[10px] text-gray-500 dark:text-gray-400">USD Sede</span>
                             <span className="text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300 tabular-nums">${fmt(groupUsdSede)}</span>
                           </div>
-                          <div className="flex flex-col items-end min-w-0">
+                          <div className="flex flex-col items-end">
                             <span className="text-[10px] text-gray-500 dark:text-gray-400">COP Modelo</span>
                             <span className="text-[11px] sm:text-xs font-medium text-blue-600 dark:text-blue-400 tabular-nums">{fmtCOP(groupCopModelo)}</span>
                           </div>
-                          <div className="flex flex-col items-end min-w-0">
+                          <div className="flex flex-col items-end">
                             <span className="text-[10px] text-gray-500 dark:text-gray-400">COP Sede</span>
                             <span className="text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300 tabular-nums">{fmtCOP(groupCopSede)}</span>
                           </div>
