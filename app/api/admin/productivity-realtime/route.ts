@@ -18,6 +18,10 @@ export interface ProductivityModel {
   porcentaje: number;
   estaPorDebajo: boolean;
   lastUpdated: string | null;
+  usdModelo: number;
+  usdSede: number;
+  copModelo: number;
+  copSede: number;
 }
 
 export async function GET(request: NextRequest) {
@@ -111,22 +115,37 @@ export async function GET(request: NextRequest) {
     const monthNames = ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
     const periodLabel = `${d <= 15 ? 'P1' : 'P2'} ${monthNames[m - 1]} ${y}  (${startStr} – ${endStr})`;
 
-    // 5. Totales actuales desde calculator_totals
+    // 5. Totales actuales desde calculator_totals (incl. USD/COP modelo para consolidado)
     const { data: totalsData } = await supabase
       .from('calculator_totals')
-      .select('model_id, total_usd_bruto, updated_at')
+      .select('model_id, total_usd_bruto, total_usd_modelo, total_cop_modelo, updated_at')
       .in('model_id', modelIds)
       .gte('period_date', startStr)
       .lte('period_date', endStr)
       .order('updated_at', { ascending: false });
 
+    // Tasa USD→COP para COP Sede (fallback 3900)
+    let usdCopRate = 3900;
+    const { data: rateRow } = await supabase
+      .from('rates')
+      .select('value')
+      .eq('kind', 'USD→COP')
+      .limit(1)
+      .maybeSingle();
+    if (rateRow?.value) usdCopRate = Number(rateRow.value);
+
     // Tomar el más reciente por modelo
-    const totalsMap = new Map<string, { usdBruto: number; updatedAt: string }>();
+    const totalsMap = new Map<string, { usdBruto: number; usdModelo: number; copModelo: number; updatedAt: string }>();
     totalsData?.forEach(t => {
       const existing = totalsMap.get(t.model_id);
       if (!existing || t.updated_at > existing.updatedAt) {
+        const usdBruto = Number(t.total_usd_bruto) || 0;
+        const usdModelo = Number(t.total_usd_modelo) ?? 0;
+        const copModelo = Number(t.total_cop_modelo) ?? 0;
         totalsMap.set(t.model_id, {
-          usdBruto: Number(t.total_usd_bruto) || 0,
+          usdBruto,
+          usdModelo,
+          copModelo,
           updatedAt: t.updated_at
         });
       }
@@ -149,6 +168,11 @@ export async function GET(request: NextRequest) {
       const group = modelGroupMap.get(model.id);
 
       const usdBruto = totals?.usdBruto ?? 0;
+      const usdModelo = totals?.usdModelo ?? 0;
+      const copModelo = totals?.copModelo ?? 0;
+      const usdSede = usdBruto - usdModelo;
+      const copSede = Math.round(usdSede * usdCopRate);
+
       const cuotaMinima = config?.min_quota_override || config?.group_min_quota || 470;
       const porcentaje = (usdBruto / cuotaMinima) * 100;
 
@@ -162,7 +186,11 @@ export async function GET(request: NextRequest) {
         cuotaMinima,
         porcentaje: Math.round(porcentaje * 10) / 10,
         estaPorDebajo: usdBruto < cuotaMinima,
-        lastUpdated: totals?.updatedAt ?? null
+        lastUpdated: totals?.updatedAt ?? null,
+        usdModelo,
+        usdSede,
+        copModelo,
+        copSede
       };
     });
 
