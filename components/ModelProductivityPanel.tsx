@@ -260,27 +260,25 @@ export default function ModelProductivityPanel({ userId, userRole }: Props) {
                           </svg>
                         </div>
                         </div>
-                        {/* Consolidado: solo cuando el grupo está abierto */}
-                        {isOpen && (
-                          <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 sm:px-4 pb-2.5 pt-0 border-t border-gray-100/80 dark:border-gray-600/40 bg-gray-50/50 dark:bg-gray-800/30">
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400">USD Modelo</span>
-                              <span className="text-[11px] sm:text-xs font-semibold text-green-600 dark:text-green-400">${fmt(groupUsdModelo)}</span>
-                            </div>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400">USD Sede</span>
-                              <span className="text-[11px] sm:text-xs font-semibold text-purple-600 dark:text-purple-400">${fmt(groupUsdSede)}</span>
-                            </div>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400">COP Modelo</span>
-                              <span className="text-[11px] sm:text-xs font-semibold text-green-700 dark:text-green-300">{fmtCOP(groupCopModelo)}</span>
-                            </div>
-                            <div className="flex items-baseline gap-1.5">
-                              <span className="text-[10px] text-gray-500 dark:text-gray-400">COP Sede</span>
-                              <span className="text-[11px] sm:text-xs font-semibold text-purple-700 dark:text-purple-300">{fmtCOP(groupCopSede)}</span>
-                            </div>
+                        {/* Consolidado: siempre visible; estética AIM (azul/slate y grises) */}
+                        <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 px-3 sm:px-4 py-2 border-t border-gray-100/80 dark:border-gray-600/40 bg-white/40 dark:bg-gray-800/20">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400">USD Modelo</span>
+                            <span className="text-[11px] sm:text-xs font-medium text-blue-600 dark:text-blue-400">${fmt(groupUsdModelo)}</span>
                           </div>
-                        )}
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400">USD Sede</span>
+                            <span className="text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300">${fmt(groupUsdSede)}</span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400">COP Modelo</span>
+                            <span className="text-[11px] sm:text-xs font-medium text-blue-600 dark:text-blue-400">{fmtCOP(groupCopModelo)}</span>
+                          </div>
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="text-[10px] text-gray-500 dark:text-gray-400">COP Sede</span>
+                            <span className="text-[11px] sm:text-xs font-medium text-gray-600 dark:text-gray-300">{fmtCOP(groupCopSede)}</span>
+                          </div>
+                        </div>
                       </button>
 
                       {/* ── Model rows ── */}
