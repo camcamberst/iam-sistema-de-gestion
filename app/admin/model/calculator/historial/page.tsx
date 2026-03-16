@@ -203,11 +203,24 @@ export default function CalculatorHistorialPage() {
     initLoad();
   }, []);
 
-  const formatDate = (dateStr: string) => new Date(dateStr).toLocaleDateString('es-CO');
+  // ⚠️ IMPORTANTE: `new Date('YYYY-MM-DD')` se interpreta como UTC y en Colombia
+  // puede correrse al día/mes anterior (ej. 2026-03-01 -> 29 febrero local).
+  // Para evitar que Marzo P1 se muestre como Febrero P1, parseamos YYYY-MM-DD
+  // construyendo un Date local (año, mes-1, día).
+  const parseLocalYmd = (dateStr: string) => {
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, (m || 1) - 1, d || 1);
+  };
+
+  const formatDate = (dateStr: string) =>
+    parseLocalYmd(dateStr).toLocaleDateString('es-CO');
+
   const formatPeriodMonth = (dateStr: string, periodType: string) => {
-    const date = new Date(dateStr);
+    const date = parseLocalYmd(dateStr);
     const m = date.toLocaleDateString('es-CO', { month: 'long' });
-    return `${m.charAt(0).toUpperCase() + m.slice(1)} - ${periodType === '1-15' ? '1ra Quincena' : '2da Quincena'}`;
+    return `${m.charAt(0).toUpperCase() + m.slice(1)} - ${
+      periodType === '1-15' ? '1ra Quincena' : '2da Quincena'
+    }`;
   };
   const formatArchivedDate = (dateStr: string) => {
     const d = new Date(dateStr);
