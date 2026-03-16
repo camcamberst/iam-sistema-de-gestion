@@ -241,7 +241,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Actualizar o insertar credenciales (sin login_url, viene de calculator_platforms)
+    // Actualizar credenciales (login_url solo se usa para mostrar, no es obligatorio)
     const { data, error } = await supabase
       .from('modelo_plataformas')
       .update({
