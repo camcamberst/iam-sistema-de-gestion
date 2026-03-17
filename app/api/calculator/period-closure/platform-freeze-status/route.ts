@@ -66,6 +66,13 @@ export async function GET(request: NextRequest) {
     const closedStatuses = ['completed', 'closing_calculators', 'waiting_summary', 'closing_summary'];
     periodAlreadyClosed = closureStatus?.status ? closedStatuses.includes(closureStatus.status) : false;
     
+    // 🔧 Si estamos en días 2-14 (P1 en curso) o 16-30 (P2 en curso), período en curso: no congelar inputs.
+    // Solo se congela el último día del período (15 o 31) y el día 1 según hora de cierre.
+    if (!periodAlreadyClosed && ((currentDay >= 2 && currentDay <= 14) || (currentDay >= 16 && currentDay <= 30))) {
+      periodAlreadyClosed = true;
+      console.log(`✅ [PLATFORM-FREEZE-STATUS] Días ${currentDay}: período en curso. Inputs habilitados para registro.`);
+    }
+    
     // 🔒 CRÍTICO: Si estamos en día 16 o después, verificar si el período anterior (1-15) fue cerrado
     // Si el período anterior fue cerrado o está en proceso de cierre, estamos en un período nuevo y NO debemos aplicar early freeze
     if (currentDay >= 16 && !periodAlreadyClosed) {
@@ -85,6 +92,12 @@ export async function GET(request: NextRequest) {
       if (previousClosureStatus?.status && closedStatuses.includes(previousClosureStatus.status)) {
         periodAlreadyClosed = true; // Tratar como cerrado para evitar early freeze en período nuevo
         console.log(`✅ [PLATFORM-FREEZE-STATUS] Período anterior (1-15, date: ${previousClosureStatus.period_date}) está cerrado o en proceso (status: ${previousClosureStatus.status}). Estamos en período nuevo (16-31). No aplicar early freeze.`);
+      }
+      // 🔧 Si estamos en días 16-30 (inicio/mitad de P2), asumir período nuevo aunque no exista fila de cierre de P1:
+      // las modelos deben poder registrar valores. Solo el día 31 aplica early freeze para P2.
+      if (!periodAlreadyClosed && currentDay >= 16 && currentDay <= 30) {
+        periodAlreadyClosed = true;
+        console.log(`✅ [PLATFORM-FREEZE-STATUS] Días 16-30: período nuevo (P2) en curso. Inputs habilitados para registro.`);
       }
     }
     
