@@ -418,15 +418,17 @@ export default function CalculatorHistorialPage() {
   return (
     <>
       {showBackButton && (
-        <div className="mb-6 px-1">
+        <div className="mb-4 sm:mb-6">
+          <div className="flex gap-2 pt-1">
           <button
             type="button"
             onClick={() => router.back()}
-            className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 transition"
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-xs sm:text-sm font-medium text-blue-600 dark:text-blue-400 bg-white/80 dark:bg-gray-800/60 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg hover:bg-blue-50/80 dark:hover:bg-gray-700/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
           >
             <ArrowLeft className="w-4 h-4" />
             Volver a filtros
           </button>
+          </div>
         </div>
       )}
 
