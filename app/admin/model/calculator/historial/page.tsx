@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X, AlertTriangle, CheckCircle, Info, Plus, Trash2 } from 'lucide-react';
 import AppleDropdown from '@/components/ui/AppleDropdown';
@@ -94,6 +94,11 @@ export default function CalculatorHistorialPage() {
   const [deductionType, setDeductionType] = useState<'deduction' | 'bonus'>('deduction'); // 🔧 NUEVO
   
   const [saving, setSaving] = useState(false);
+
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const from = searchParams.get('from');
+  const showBackButton = from === 'historial-modelo';
 
   // Función para recargar datos
   const loadData = async () => {
@@ -412,6 +417,19 @@ export default function CalculatorHistorialPage() {
 
   return (
     <>
+      {showBackButton && (
+        <div className="mb-6 px-1">
+          <button
+            type="button"
+            onClick={() => router.back()}
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white/80 dark:bg-gray-800/60 hover:bg-white dark:hover:bg-gray-800 transition"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Volver a filtros
+          </button>
+        </div>
+      )}
+
       {/* Header estándar */}
       <div className="mb-8 sm:mb-12">
         <div className="relative">

@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import { Building2, History, Search, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 interface UserRow {
   id: string;
@@ -41,6 +42,9 @@ export default function HistorialModeloPage() {
 
   const [allModels, setAllModels] = useState<Model[]>([]);
   const [selectedModelId, setSelectedModelId] = useState<string>('');
+
+  const router = useRouter();
+  const hasNavigatedRef = useRef(false);
 
   // Inicializar usuario + cargar grupos + cargar modelos
   useEffect(() => {
@@ -109,6 +113,22 @@ export default function HistorialModeloPage() {
     init();
   }, []);
 
+  // Cuando el usuario elige un modelo, navegamos a la pantalla real del historial
+  // (sin iframe) para que el scroll sea el del navegador.
+  useEffect(() => {
+    if (selectedModelId && !hasNavigatedRef.current) {
+      hasNavigatedRef.current = true;
+      router.push(
+        `/admin/model/calculator/historial?modelId=${selectedModelId}&from=historial-modelo`
+      );
+    }
+
+    // Si el usuario vuelve a seleccionar/vacía, permitimos otra navegación.
+    if (!selectedModelId) {
+      hasNavigatedRef.current = false;
+    }
+  }, [selectedModelId, router]);
+
   const filteredModels = useMemo(() => {
     const q = nameFilter.trim().toLowerCase();
     return (allModels || []).filter((m) => {
@@ -155,37 +175,14 @@ export default function HistorialModeloPage() {
   }
 
   if (selectedModelId) {
+    // UI mínima mientras se navega.
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between gap-3 bg-white/80 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 shadow-sm px-4 py-3">
-              <div className="flex items-center gap-3 min-w-0">
-                <button
-                  type="button"
-                  onClick={() => setSelectedModelId('')}
-                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
-                >
-                  <span className="text-gray-700 dark:text-gray-200 font-medium">Volver</span>
-                </button>
-
-                <div className="min-w-0">
-                  <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent whitespace-nowrap overflow-hidden text-ellipsis">
-                    Historial de facturación (modelo)
-                  </h1>
-                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
-                    {selectedModel?.email}
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 p-0 shadow-md">
-              <iframe
-                key={selectedModelId}
-                src={`/admin/model/calculator/historial?modelId=${selectedModelId}`}
-                className="w-full h-[calc(100vh-260px)] rounded-xl border-0 bg-white dark:bg-gray-900"
-              />
+          <div className="flex items-center justify-center py-20">
+            <div className="flex items-center gap-3 text-gray-700 dark:text-gray-200">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+              <span>Abriendo historial...</span>
             </div>
           </div>
         </div>
