@@ -656,6 +656,12 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return shouldShow;
   };
 
+  // Para el historial embebido (iframe) queremos "full-bleed" visual (sin max-width ni padding),
+  // para que no parezca una ventana dentro de otra.
+  const isFullBleedHistorial =
+    pathname.startsWith('/admin/model/calculator/historial') ||
+    pathname.startsWith('/admin/calculator/historial-modelo');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       {/* Apple Style 2 Header */}
@@ -1437,7 +1443,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       {/* Main Content */}
       <main className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8">
+        <div
+          className={
+            isFullBleedHistorial
+              ? 'max-w-none mx-auto px-0 py-0 w-full'
+              : 'max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8'
+          }
+        >
           {children}
         </div>
       </main>
