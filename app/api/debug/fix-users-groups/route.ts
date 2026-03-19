@@ -8,73 +8,42 @@ export async function POST(request: NextRequest) {
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    console.log('🔧 [DEBUG] Agregando columna groups a la tabla users...');
+    console.log('🔧 [DEBUG] Verificando relación users <-> groups via user_groups...');
 
-    // 1. Verificar si la columna ya existe
-    const { data: existingColumns, error: checkError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name')
-      .eq('table_name', 'users')
-      .eq('column_name', 'groups');
+    // Nota: En este proyecto, NO existe `users.groups` como columna.
+    // La relación se modela con la tabla relacional `user_groups` (user_id, group_id).
 
-    if (checkError) {
-      console.error('Error verificando columnas:', checkError);
-      return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Error verificando estructura de tabla',
-          details: checkError 
-        },
-        { status: 500 }
-      );
-    }
-
-    // 2. Si la columna no existe, intentar agregarla usando una consulta directa
-    let columnAdded = false;
-    if (!existingColumns || existingColumns.length === 0) {
-      try {
-        // Usar una consulta SQL directa
-        const { error: alterError } = await supabase
-          .from('users')
-          .select('id')
-          .limit(1);
-        
-        // Si llegamos aquí, la tabla existe, pero necesitamos agregar la columna
-        // Como no podemos usar ALTER TABLE directamente, vamos a simular que la columna existe
-        columnAdded = true;
-        console.log('Columna groups será agregada en la próxima migración');
-      } catch (error) {
-        console.error('Error verificando tabla:', error);
-      }
-    } else {
-      columnAdded = true;
-      console.log('Columna groups ya existe');
-    }
-
-    // 3. Verificar que la columna se creó correctamente
-    const { data: columnInfo, error: columnError } = await supabase
-      .from('information_schema.columns')
-      .select('column_name, data_type, is_nullable')
-      .eq('table_name', 'users')
-      .eq('column_name', 'groups');
-
-    // 4. Mostrar algunos usuarios para verificar
     const { data: users, error: usersError } = await supabase
       .from('users')
-      .select('id, name, email, role, groups')
+      .select('id, name, email, role')
       .eq('role', 'modelo')
       .limit(3);
 
+    const userIds = (users || []).map((u) => u.id);
+
+    const { data: mappings, error: mappingsError } = await supabase
+      .from('user_groups')
+      .select('user_id, group_id')
+      .in('user_id', userIds.length > 0 ? userIds : ['00000000-0000-0000-0000-000000000000']);
+
+    const groupIds = (mappings || []).map((m) => m.group_id);
+
+    const { data: groups, error: groupsError } = await supabase
+      .from('groups')
+      .select('id, name')
+      .in('id', groupIds.length > 0 ? groupIds : ['00000000-0000-0000-0000-000000000000']);
+
     return NextResponse.json({
       success: true,
-      message: columnAdded ? 'Columna groups verificada/agregada exitosamente' : 'Columna groups necesita ser agregada manualmente',
+      message: 'Relación correcta usando tabla relacional `user_groups`.',
       results: {
-        columnExists: columnAdded,
-        columnInfo: columnInfo || [],
         users: users || [],
+        user_groups: mappings || [],
+        groups: groups || [],
         errors: {
-          columnError,
-          usersError
+          usersError,
+          mappingsError,
+          groupsError
         }
       }
     });

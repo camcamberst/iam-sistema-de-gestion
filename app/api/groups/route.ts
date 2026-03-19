@@ -23,18 +23,28 @@ export async function GET(request: NextRequest) {
         const { data: { user }, error: userError } = await supabaseAuth.auth.getUser(token);
         
         if (!userError && user) {
-          // Obtener información completa del usuario
+          // Obtener rol del usuario
           const { data: userData, error: userDataError } = await supabaseServer
             .from('users')
-            .select('role, groups')
+            .select('role')
             .eq('id', user.id)
             .single();
 
           if (!userDataError && userData) {
             userRole = userData.role;
-            userGroups = userData.groups || [];
-            console.log('🔍 [API] Usuario:', { role: userRole, groups: userGroups });
           }
+
+          // Obtener grupos del usuario desde tabla relacional (no existe users.groups en BD)
+          const { data: userGroupsRows, error: userGroupsError } = await supabaseServer
+            .from('user_groups')
+            .select('group_id')
+            .eq('user_id', user.id);
+
+          if (!userGroupsError && userGroupsRows) {
+            userGroups = userGroupsRows.map((r: any) => r.group_id).filter(Boolean);
+          }
+
+          console.log('🔍 [API] Usuario:', { role: userRole, group_ids: userGroups });
         }
       } catch (authError) {
         console.log('⚠️ [API] No se pudo obtener info del usuario, usando defaults');
@@ -92,10 +102,12 @@ export async function GET(request: NextRequest) {
     else if (userRole === 'admin' && !affiliateStudioId) {
       query = query.is('affiliate_studio_id', null);
       console.log('🔑 [API GET] Admin de Innova - solo sedes de Innova');
-      if (userGroups.length > 0) {
-        query = query.in('id', userGroups);
-        console.log('🔒 [API GET] Filtrando por grupos del admin:', userGroups);
+      if (userGroups.length === 0) {
+        return NextResponse.json({ success: true, groups: [] });
       }
+
+      query = query.in('id', userGroups);
+      console.log('🔒 [API GET] Filtrando por grupos del admin:', userGroups);
     }
     // Si tiene affiliate_studio_id (cualquier usuario de afiliado), solo mostrar sedes de su afiliado
     else if (affiliateStudioId) {
