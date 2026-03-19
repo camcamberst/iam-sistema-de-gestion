@@ -227,7 +227,7 @@ export default function HistorialModeloPage() {
                       value: m.id,
                       label: m.email.split('@')[0],
                       badge: m.hasConfig ? 'Configurada' : 'Sin configurar',
-                      badgeColor: m.hasConfig ? 'green' : 'gray'
+                      badgeColor: (m.hasConfig ? 'green' : 'gray') as 'green' | 'gray'
                     }))
                   ]}
                   value={selectedModelId}
