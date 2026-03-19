@@ -249,7 +249,7 @@ export default function HistorialModeloPage() {
                 )}
                 {nameFilter.trim() && (
                   <p className="text-xs text-green-600 dark:text-green-400 mt-1">
-                    Búsqueda: "{nameFilter.trim()}"
+                    Búsqueda: {`"${nameFilter.trim()}"`}
                   </p>
                 )}
                 {selectedModel && (
