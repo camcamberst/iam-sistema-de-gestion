@@ -128,6 +128,17 @@ const adminMenu: MenuItem[] = [
           </svg>
         ),
         description: 'Vista de la calculadora para modelos'
+      },
+      {
+        label: 'Ver Historial Modelo',
+        href: '/admin/calculator/historial-modelo',
+        icon: (
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 7v5l3 3" />
+          </svg>
+        ),
+        description: 'Historial de facturación por modelo'
       }
     ]
   },
