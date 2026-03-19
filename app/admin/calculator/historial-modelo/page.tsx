@@ -157,6 +157,39 @@ export default function HistorialModeloPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+        {selectedModelId ? (
+          // Vista "historial a pantalla completa"
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center justify-between gap-3 bg-white/80 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 shadow-sm px-4 py-3">
+              <div className="flex items-center gap-3 min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setSelectedModelId('')}
+                  className="inline-flex items-center gap-2 px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700 transition"
+                >
+                  <span className="text-gray-700 dark:text-gray-200 font-medium">Volver</span>
+                </button>
+
+                <div className="min-w-0">
+                  <h1 className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent whitespace-nowrap overflow-hidden text-ellipsis">
+                    Historial de facturación (modelo)
+                  </h1>
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 truncate">
+                    {selectedModel?.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 p-0 shadow-md">
+              <iframe
+                key={selectedModelId}
+                src={`/admin/model/calculator/historial?modelId=${selectedModelId}`}
+                className="w-full h-[calc(100vh-260px)] rounded-xl border-0 bg-white dark:bg-gray-900"
+              />
+            </div>
+          </div>
+        ) : (
         <div className="mb-8 sm:mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl" />
@@ -284,6 +317,7 @@ export default function HistorialModeloPage() {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
