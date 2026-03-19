@@ -154,11 +154,10 @@ export default function HistorialModeloPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-        {selectedModelId ? (
-          // Vista "historial a pantalla completa"
+  if (selectedModelId) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
           <div className="flex flex-col gap-4">
             <div className="flex items-center justify-between gap-3 bg-white/80 dark:bg-gray-800/60 backdrop-blur-sm rounded-xl border border-white/20 dark:border-gray-600/20 shadow-sm px-4 py-3">
               <div className="flex items-center gap-3 min-w-0">
@@ -189,7 +188,14 @@ export default function HistorialModeloPage() {
               />
             </div>
           </div>
-        ) : (
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
         <div className="mb-8 sm:mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl" />
@@ -317,7 +323,6 @@ export default function HistorialModeloPage() {
             </div>
           </div>
         </div>
-        )}
       </div>
     </div>
   );
