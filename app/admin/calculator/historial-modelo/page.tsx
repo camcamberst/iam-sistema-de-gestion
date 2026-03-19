@@ -10,7 +10,6 @@ interface UserRow {
   email: string;
   name: string;
   role: 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff';
-  groups: string[];
   organization_id: string;
   is_active: boolean;
   last_login: string;
@@ -60,7 +59,8 @@ export default function HistorialModeloPage() {
         // Cargar usuario (tabla negocio)
         const { data: userRow, error: userError } = await supabase
           .from('users')
-          .select('id,email,name,role,groups,organization_id,is_active,last_login')
+          // `users.groups` NO existe en la BD; la relación se modela vía `user_groups`
+          .select('id,email,name,role,organization_id,is_active,last_login')
           .eq('id', uid)
           .single();
 
