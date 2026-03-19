@@ -1446,7 +1446,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <div
           className={
             isFullBleedHistorial
-              ? 'max-w-none mx-auto px-0 py-0 w-full'
+              // Sin max-width (ancho completo), pero conservando el padding estándar
+              // para mantener el mismo "lenguaje visual" del resto del proyecto.
+              ? 'max-w-none mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8 w-full'
               : 'max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-4 sm:py-6 md:py-8'
           }
         >
