@@ -4,6 +4,7 @@ Plataforma interna de gestión con chat integrado, AIM Botty (asistente IA con G
 
 ## Documentación principal
 
+- `docs/WORKFLOW_SEGURO.md` – **Canal seguro**: ramas, PRs, preview y reglas antes de producción.
 - `docs/AIM_BOTTY_IMPLEMENTATION.md` – Implementación y uso de AIM Botty, difusiones y UX del chat.
 - `docs/PROJECT_OVERVIEW.md` – Visión general técnica y funcional del sistema.
 - `CHANGELOG.md` – Cambios por versión.
