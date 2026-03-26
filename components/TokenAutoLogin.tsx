@@ -40,24 +40,8 @@ export default function TokenAutoLogin() {
           const cleanUrl = window.location.pathname;
           window.history.replaceState({}, "", cleanUrl);
 
-          // Redirect to admin dashboard (the model's main view)
-          const { data: userData } = await supabase
-            .from("users")
-            .select("role")
-            .eq("id", data.session.user.id)
-            .single();
-
-          const role = userData?.role || "modelo";
-          const dashboardPath =
-            role === "modelo"
-              ? "/admin/model/portafolio"
-              : role === "admin"
-              ? "/admin"
-              : role === "super_admin"
-              ? "/superadmin"
-              : "/admin";
-
-          window.location.href = dashboardPath;
+          // Redirect to the main dashboard
+          window.location.href = "/admin";
         }
       } catch (err) {
         console.error("❌ [AutoLogin] Error:", err);
