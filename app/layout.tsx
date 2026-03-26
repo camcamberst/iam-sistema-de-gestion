@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ThemeTransition from "@/components/ThemeTransition";
+import TokenAutoLogin from "@/components/TokenAutoLogin";
 
 export const metadata: Metadata = {
   title: "AIM Sistema de Gestión",
@@ -28,6 +29,7 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className="min-h-screen bg-white text-gray-900 antialiased">
+        <TokenAutoLogin />
         <ThemeTransition>
           {children}
         </ThemeTransition>
@@ -35,3 +37,4 @@ export default function RootLayout({
     </html>
   );
 }
+
