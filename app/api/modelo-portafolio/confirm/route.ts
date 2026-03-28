@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { 
-
-export const dynamic = 'force-dynamic';
-
   notifyPlataformaConfirmada,
   notifyAdminsPlataformaConfirmada
 } from '@/lib/chat/bot-notifications';
+
+export const dynamic = 'force-dynamic';
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,

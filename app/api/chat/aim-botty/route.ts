@@ -2,9 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { 
-
-export const dynamic = 'force-dynamic';
-
   AIM_BOTTY_ID, 
   getBotPersonalityForRole,
   type UserContext 
@@ -30,6 +27,9 @@ import { withCache, generateCacheKey } from '@/lib/cache/query-cache';
 import { fetchUrlContent, type FetchedContent } from '@/lib/chat/web-fetcher';
 import { saveKnowledge, getRelevantKnowledge, formatKnowledgeForPrompt } from '@/lib/chat/bot-knowledge';
 import { saveMemory } from '@/lib/chat/bot-memory';
+
+export const dynamic = 'force-dynamic';
+
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;

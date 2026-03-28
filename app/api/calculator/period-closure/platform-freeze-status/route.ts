@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { 
-
-export const dynamic = 'force-dynamic';
-
   getColombiaDate, 
   getColombiaDateTime,
   isClosureDay, 
@@ -11,6 +8,9 @@ export const dynamic = 'force-dynamic';
   getEuropeanCentralMidnightInColombia
 } from '@/utils/period-closure-dates';
 import { getFrozenPlatformsForModel } from '@/lib/calculator/period-closure-helpers';
+
+export const dynamic = 'force-dynamic';
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,

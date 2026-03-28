@@ -1,15 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { 
-
-export const dynamic = 'force-dynamic';
-
   notifyAnticipoApproved, 
   notifyAnticipoRejected,
   notifyAnticipoRealizado,
   notifyAdminsAnticipoConfirmado,
   notifyAnticipoReversado
 } from '@/lib/chat/bot-notifications';
+
+export const dynamic = 'force-dynamic';
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

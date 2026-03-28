@@ -1,9 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { 
-
-export const dynamic = 'force-dynamic';
-
   getColombiaDate, 
   getCurrentPeriodType,
   getPeriodToClose,
@@ -18,6 +15,9 @@ import {
 } from '@/lib/calculator/period-closure-helpers';
 import { sendBotNotification } from '@/lib/chat/bot-notifications';
 import { calculateAndSaveAllAffiliatesBilling } from '@/lib/affiliates/billing';
+
+export const dynamic = 'force-dynamic';
+
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL as string,
