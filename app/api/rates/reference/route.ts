@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getExternalRates, combineRateResults } from '@/lib/rates/external-sources';
 
 // GET /api/rates/reference - Obtener tasas de referencia desde fuentes externas
+
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
   try {
     console.log('🌐 [RATES-REFERENCE] Starting external rates fetch with multiple sources...');

@@ -7,6 +7,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { modernLogout } from '../../../../lib/auth-modern';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🚪 [API] Iniciando logout moderno via API');

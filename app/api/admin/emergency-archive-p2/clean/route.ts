@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 /**
  * 🧹 Endpoint para limpiar registros archivados incorrectamente
  * Elimina los registros de calculator_history para el período P2 de diciembre

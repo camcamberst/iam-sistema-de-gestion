@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Endpoint de verificación: Revisar estado del archivado de P2 de Diciembre
  * Verifica si hay registros en calculator_history y valores en model_values

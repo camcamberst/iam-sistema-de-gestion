@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isFullClosureTime, isClosureDay } from '@/utils/period-closure-dates';
 
+
+export const dynamic = 'force-dynamic';
+
 /**
  * GET: Cron job para cierre completo (00:00 Colombia)
  * Se ejecuta los días 1 y 16

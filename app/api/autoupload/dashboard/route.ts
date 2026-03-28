@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Proxy sencillo al Dashboard API de AutoUpload
+
+export const dynamic = 'force-dynamic';
+
 const AUTOUpload_DASHBOARD_URL = 'https://innovah.app.n8n.cloud/webhook/dashboard-api';
 
 export const runtime = 'edge';

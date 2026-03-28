@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { cleanupInactiveUsers } from '@/lib/chat/status-manager';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET(request: NextRequest) {
   try {
     console.log('🕐 [CRON] Ejecutando limpieza automática de chat...');

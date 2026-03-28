@@ -6,6 +6,9 @@ import { calculateAffiliateBilling } from '@/lib/affiliates/billing';
 import { addAffiliateFilter, type AuthUser } from '@/lib/affiliates/filters';
 
 // Usar service role key para bypass RLS
+
+export const dynamic = 'force-dynamic';
+
 const supabase = supabaseServer;
 
 // GET: Obtener resumen de facturación por sede

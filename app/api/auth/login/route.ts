@@ -8,6 +8,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { modernLogin } from '../../../../lib/auth-modern';
 
+
+export const dynamic = 'force-dynamic';
+
 export async function POST(request: NextRequest) {
   try {
     console.log('🔐 [API] Iniciando login moderno via API');

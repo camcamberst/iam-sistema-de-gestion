@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 /**
  * 🚨 ENDPOINT DE EMERGENCIA: Archivar P2 de Diciembre 2025
  * 

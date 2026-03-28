@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { monitorCriticalCrons } from '@/lib/alerts/cron-failure-alerts';
 
+
+export const dynamic = 'force-dynamic';
+
 /**
  * GET: Monitorea cron jobs críticos y envía alertas si fallan
  * 

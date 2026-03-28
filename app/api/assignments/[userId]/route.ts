@@ -5,6 +5,9 @@ import { NextRequest, NextResponse } from 'next/server';
 // 📋 GET - Obtener asignaciones de un usuario específico
 // =====================================================
 
+
+export const dynamic = 'force-dynamic';
+
 export async function GET(
   request: NextRequest,
   { params }: { params: { userId: string } }

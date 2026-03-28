@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTimezoneInfo, getCronScheduleForEuropeanMidnight } from '@/utils/timezone-detector';
 
+
+export const dynamic = 'force-dynamic';
+
 /**
  * API para obtener y actualizar el schedule de cron jobs
  * basado en el horario de verano/invierno europeo

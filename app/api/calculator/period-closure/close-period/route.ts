@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { 
+
+export const dynamic = 'force-dynamic';
+
   getColombiaDate, 
   getCurrentPeriodType,
   getPeriodToClose,

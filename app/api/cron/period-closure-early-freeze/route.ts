@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { isEarlyFreezeTime, isEarlyFreezeRelevantDay } from '@/utils/period-closure-dates';
 
+
+export const dynamic = 'force-dynamic';
+
 /**
  * GET: Cron job para congelación anticipada (medianoche Europa Central)
  * 

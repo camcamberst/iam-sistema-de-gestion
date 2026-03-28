@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 /**
  * 🏢 API: Gestión de Superadmin AFF para Estudios Afiliados
  * 

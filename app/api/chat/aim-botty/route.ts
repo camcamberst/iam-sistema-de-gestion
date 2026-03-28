@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import { 
+
+export const dynamic = 'force-dynamic';
+
   AIM_BOTTY_ID, 
   getBotPersonalityForRole,
   type UserContext 

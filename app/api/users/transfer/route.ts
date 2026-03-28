@@ -6,6 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 import type { CurrentUser, User } from '../../../../lib/hierarchy';
 import { canTransferUser } from '../../../../lib/hierarchy';
 
+
+export const dynamic = 'force-dynamic';
+
 /**
  * Body esperado:
  * {

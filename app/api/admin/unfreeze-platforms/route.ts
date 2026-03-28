@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 /**
  * 🔓 Endpoint para descongelar plataformas especiales
  * Permite descongelar todas las plataformas o por modelo específico

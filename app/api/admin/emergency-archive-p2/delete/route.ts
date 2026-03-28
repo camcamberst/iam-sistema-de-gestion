@@ -1,3 +1,6 @@
+
+export const dynamic = 'force-dynamic';
+
 /**
  * 🗑️ Endpoint para eliminar valores de model_values del período P2 de Diciembre
  * 

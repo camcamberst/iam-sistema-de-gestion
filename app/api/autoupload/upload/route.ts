@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+
+export const dynamic = 'force-dynamic';
+
 const DASHBOARD_API_URL = 'https://innovah.app.n8n.cloud/webhook/dashboard-api';
 
 export const runtime = 'nodejs';
