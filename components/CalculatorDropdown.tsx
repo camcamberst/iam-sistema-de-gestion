@@ -9,17 +9,19 @@ interface CalculatorDropdownProps {
   isActive: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  onClose?: () => void;
 }
 
-export default function CalculatorDropdown({ isActive, isOpen, onToggle }: CalculatorDropdownProps) {
+export default function CalculatorDropdown({ isActive, isOpen, onToggle, onClose }: CalculatorDropdownProps) {
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const close = onClose || onToggle;
 
   // Cerrar dropdown al hacer click fuera (soporte para móvil y escritorio)
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent | TouchEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onToggle(); // Cerrar usando el estado del layout
+        close();
       }
     };
 
@@ -33,7 +35,7 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('touchstart', handleClickOutside);
     };
-  }, [isOpen, onToggle]);
+  }, [isOpen, close]);
 
   const handleToggle = () => {
     onToggle(); // Usar el estado del layout
@@ -94,13 +96,10 @@ export default function CalculatorDropdown({ isActive, isOpen, onToggle }: Calcu
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onToggle();
-                  }}
+                  onClick={() => close()}
                   onTouchEnd={(e) => {
                     e.stopPropagation();
-                    onToggle();
+                    close();
                   }}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group touch-manipulation active:bg-gray-100 dark:active:bg-gray-200 ${
                     isCurrentPage

@@ -7,6 +7,8 @@ import { getColombiaDate, getColombiaPeriodStartDate } from '@/utils/calculator-
 import { canRequestAnticipo, AnticipoRestriction } from '@/utils/anticipo-restrictions';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
+import GlassCard from '@/components/ui/GlassCard';
+import PageHeader from '@/components/ui/PageHeader';
 
 interface User {
   id: string;
@@ -406,7 +408,7 @@ export default function SolicitarAnticipoPage() {
   // Mostrar pantalla de restricción si no está permitido solicitar anticipo
   if (restrictionInfo && !restrictionInfo.allowed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="aim-page-bg flex items-center justify-center">
         <div className="max-w-md mx-auto text-center p-6">
           <div className="mb-4">
             <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -445,7 +447,7 @@ export default function SolicitarAnticipoPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="aim-page-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-300 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
@@ -456,7 +458,7 @@ export default function SolicitarAnticipoPage() {
 
   if (!user) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="aim-page-bg flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
           <p className="text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
@@ -466,7 +468,7 @@ export default function SolicitarAnticipoPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="aim-page-bg">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
       <style jsx>{`
         /* Dropdown compacto con scrollbar */
@@ -489,49 +491,33 @@ export default function SolicitarAnticipoPage() {
           background: #94a3b8;
         }
       `}</style>
-        {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              {/* Layout móvil: vertical, escritorio: horizontal */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                {/* Título e icono */}
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-                    </svg>
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Solicitar Anticipo
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                      Solicita un anticipo de hasta el 90% de tu productividad
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Indicador de política activa integrado */}
-              <div className="mt-4 p-3 sm:p-4 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
-                <div className="flex items-start sm:items-center">
-                  <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-                  </svg>
-                  <div>
-                    <p className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
-                    <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400 mt-0.5">No disponible del fin de mes al 5 y del 15 al 20</p>
-                  </div>
-                </div>
+        {/* Header — Migrado a PageHeader */}
+        <PageHeader
+          title="Solicitar Anticipo"
+          subtitle="Solicita un anticipo de hasta el 90% de tu productividad"
+          glow="model"
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          }
+        >
+          {/* Indicador de política activa integrado */}
+          <div className="p-3 sm:p-4 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
+            <div className="flex items-start sm:items-center">
+              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+              </svg>
+              <div>
+                <p className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
+                <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400 mt-0.5">No disponible del fin de mes al 5 y del 15 al 20</p>
               </div>
             </div>
           </div>
-        </div>
+        </PageHeader>
 
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <GlassCard glow="model" padding="none" className="rounded-2xl p-3 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
             <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></span>
@@ -588,10 +574,10 @@ export default function SolicitarAnticipoPage() {
               </div>
             </div>
           )}
-        </div>
+        </GlassCard>
 
         {/* Formulario */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <GlassCard glow="model" padding="none" className="rounded-2xl p-4 sm:p-6">
           <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Datos del Anticipo</h2>
           
           {success && (
@@ -841,7 +827,7 @@ export default function SolicitarAnticipoPage() {
               </div>
             </div>
           </form>
-        </div>
+        </GlassCard>
       </div>
     </div>
   );

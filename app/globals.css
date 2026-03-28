@@ -2,10 +2,125 @@
 @tailwind components;
 @tailwind utilities;
 
+/* =====================================================
+   🎨 AIM DESIGN TOKENS — Variables CSS Centralizadas
+   =====================================================
+   Fuente única de verdad para colores, sombras y efectos.
+   Cambiar un valor aquí lo cambia en todo el sistema.
+   ===================================================== */
+
+:root {
+  /* Colores primarios */
+  --aim-blue: #3b82f6;
+  --aim-indigo: #4f46e5;
+  --aim-gray-dark: #374151;
+  --aim-slate-dark: #1e293b;
+
+  /* Superficies (glass) */
+  --aim-surface: rgba(255, 255, 255, 0.7);
+  --aim-surface-header: rgba(255, 255, 255, 0.8);
+  --aim-surface-dropdown: rgba(255, 255, 255, 0.95);
+  --aim-border: rgba(255, 255, 255, 0.2);
+
+  /* Fondos de página */
+  --aim-bg-from: #f8fafc;    /* slate-50 */
+  --aim-bg-via: #eff6ff;     /* blue-50 */
+  --aim-bg-to: #eef2ff;      /* indigo-50 */
+
+  /* Sombras por rol */
+  --aim-glow-model: rgba(30, 58, 138, 0.15);      /* blue-900 */
+  --aim-ring-model: rgba(96, 165, 250, 0.2);       /* blue-400 */
+  --aim-glow-admin: rgba(20, 83, 45, 0.15);        /* green-900 */
+  --aim-ring-admin: rgba(74, 222, 128, 0.2);       /* green-400 */
+  --aim-glow-superadmin: rgba(88, 28, 135, 0.15);  /* purple-900 */
+  --aim-ring-superadmin: rgba(192, 132, 252, 0.2); /* purple-400 */
+}
+
+.dark {
+  --aim-surface: rgba(55, 65, 81, 0.7);
+  --aim-surface-header: rgba(31, 41, 55, 0.8);
+  --aim-surface-dropdown: rgba(55, 65, 81, 0.95);
+  --aim-border: rgba(75, 85, 99, 0.2);
+
+  --aim-bg-from: #030712;    /* gray-950 */
+  --aim-bg-via: #1f2937;     /* gray-800 */
+  --aim-bg-to: #030712;      /* gray-950 */
+}
+
 /* Clase apple-input con dark mode */
 @layer components {
   .apple-input {
     @apply w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 focus:outline-none;
+  }
+
+  /* 🪟 Glass Card — Contenedor principal de contenido */
+  .glass-card {
+    @apply bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl
+           border border-white/20 dark:border-gray-600/20
+           shadow-md dark:shadow-lg;
+  }
+
+  /* 🪟 Glass Header — Header de página con mayor opacidad */
+  .glass-header {
+    @apply bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl
+           border border-white/20 dark:border-gray-600/20
+           shadow-lg;
+  }
+
+  /* 🎨 Gradiente primario (azul→índigo) */
+  .gradient-primary {
+    @apply bg-gradient-to-br from-blue-500 to-indigo-600;
+  }
+
+  /* 🎨 Gradiente del fondo de página */
+  .aim-page-bg {
+    @apply min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50
+           dark:from-gray-900 dark:via-gray-800 dark:to-gray-900;
+  }
+
+  /* 🎨 Texto con gradiente (títulos principales) */
+  .aim-title-gradient {
+    @apply font-bold bg-gradient-to-r from-gray-900 to-gray-700
+           dark:from-gray-100 dark:to-gray-300
+           bg-clip-text text-transparent;
+  }
+
+  /* ✨ Glow por rol (panel modelo — azul) */
+  .glow-model {
+    @apply dark:shadow-lg dark:shadow-blue-900/15
+           dark:ring-1 dark:ring-blue-400/20;
+  }
+
+  /* ✨ Glow por rol (panel admin — verde) */
+  .glow-admin {
+    @apply dark:shadow-lg dark:shadow-green-900/15
+           dark:ring-1 dark:ring-green-400/20;
+  }
+
+  /* ✨ Glow por rol (panel super admin — púrpura) */
+  .glow-superadmin {
+    @apply dark:shadow-lg dark:shadow-purple-900/15
+           dark:ring-1 dark:ring-purple-400/20;
+  }
+
+  /* 🔘 Botón primario estándar */
+  .btn-aim-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white
+           py-2 px-3 rounded-lg font-medium text-sm
+           hover:from-blue-700 hover:to-indigo-700
+           transition-all duration-300
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+           shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+
+  /* 🔘 Botón secundario (gris) */
+  .btn-aim-secondary {
+    @apply bg-gradient-to-r from-gray-700 to-slate-800 text-white
+           py-2 px-3 rounded-lg font-medium text-sm
+           hover:from-gray-800 hover:to-slate-900
+           transition-all duration-300
+           focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+           shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
   }
 }
 

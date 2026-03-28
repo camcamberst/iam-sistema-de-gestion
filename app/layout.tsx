@@ -1,7 +1,15 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import ThemeTransition from "@/components/ThemeTransition";
 import TokenAutoLogin from "@/components/TokenAutoLogin";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  display: "swap",
+  variable: "--font-inter",
+});
 
 export const metadata: Metadata = {
   title: "AIM Sistema de Gestión",
@@ -27,8 +35,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es">
-      <body className="min-h-screen bg-white text-gray-900 antialiased">
+    <html lang="es" className={inter.variable}>
+      <body className={`${inter.className} min-h-screen bg-white dark:bg-gray-950 text-gray-900 dark:text-gray-100 antialiased`}>
         <TokenAutoLogin />
         <ThemeTransition>
           {children}

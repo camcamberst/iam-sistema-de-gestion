@@ -22,6 +22,8 @@ import {
   Copy,
   User
 } from 'lucide-react';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
 
 interface Platform {
   id: string;
@@ -415,7 +417,7 @@ export default function MiPortafolio() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="aim-page-bg">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
           <div className="flex items-center justify-center h-64">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 dark:border-blue-400"></div>
@@ -427,7 +429,7 @@ export default function MiPortafolio() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-100 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="aim-page-bg">
         <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
           <div className="text-center">
             <AlertCircle className="w-16 h-16 text-red-500 dark:text-red-400 mx-auto mb-4" />
@@ -440,46 +442,28 @@ export default function MiPortafolio() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="aim-page-bg">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-        {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              {/* Layout móvil: vertical, escritorio: horizontal */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                {/* Título e icono */}
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                      Mi Portafolio
-                    </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                      Gestiona tus plataformas y confirma entregas
-                    </p>
-                  </div>
-                </div>
-
-                {/* Información de actualización - Oculto en móvil */}
-                <div className="hidden md:flex items-center space-x-4">
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">Última actualización</p>
-                    <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                      {portfolioData?.lastUpdated ? 
-                        new Date(portfolioData.lastUpdated).toLocaleString('es-ES') : 
-                        'N/A'
-                      }
-                    </p>
-                  </div>
-                </div>
+        {/* Header — Migrado a PageHeader */}
+        <PageHeader
+          title="Mi Portafolio"
+          subtitle="Gestiona tus plataformas y confirma entregas"
+          glow="model"
+          icon={<Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+          actions={
+            <div className="hidden md:flex items-center space-x-4">
+              <div className="text-right">
+                <p className="text-xs text-gray-500 dark:text-gray-400">Última actualización</p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                  {portfolioData?.lastUpdated ? 
+                    new Date(portfolioData.lastUpdated).toLocaleString('es-ES') : 
+                    'N/A'
+                  }
+                </p>
               </div>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {/* Tabs */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-1 sm:space-x-1 mb-6 sm:mb-8">
@@ -508,7 +492,7 @@ export default function MiPortafolio() {
         {activeTab === 'platforms' && (
           <>
             {/* Etiquetas de Plataformas */}
-            <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <GlassCard padding="md">
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
                 <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Mis Plataformas</h2>
                 <div className="flex items-center space-x-2">
@@ -951,7 +935,7 @@ export default function MiPortafolio() {
                   </div>
                 </>
               )}
-            </div>
+            </GlassCard>
           </>
         )}
 
@@ -960,7 +944,7 @@ export default function MiPortafolio() {
             {/* Resumen - Tarjetas Estadísticas */}
             {portfolioData && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <GlassCard padding="md" className="hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                     <div className="flex-1">
                       <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Total Plataformas</p>
@@ -968,9 +952,9 @@ export default function MiPortafolio() {
                     </div>
                     <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
                   </div>
-                </div>
+                </GlassCard>
 
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <GlassCard padding="md" className="hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                     <div className="flex-1">
                       <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Activas</p>
@@ -978,9 +962,9 @@ export default function MiPortafolio() {
                     </div>
                     <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
                   </div>
-                </div>
+                </GlassCard>
 
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <GlassCard padding="md" className="hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                     <div className="flex-1">
                       <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Pendientes</p>
@@ -988,9 +972,9 @@ export default function MiPortafolio() {
                     </div>
                     <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
                   </div>
-                </div>
+                </GlassCard>
 
-                <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 sm:p-6 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 col-span-2 md:col-span-1">
+                <GlassCard padding="md" className="col-span-2 md:col-span-1 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
                     <div className="flex-1 min-w-0">
                       <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Ganancias (30 días)</p>
@@ -1000,14 +984,14 @@ export default function MiPortafolio() {
                     </div>
                     <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
                   </div>
-                </div>
+                </GlassCard>
               </div>
             )}
 
             {/* Análisis Detallado */}
-            <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <GlassCard padding="lg">
               <PortfolioAnalytics modelId={user?.id} />
-            </div>
+            </GlassCard>
           </div>
         )}
       </div>

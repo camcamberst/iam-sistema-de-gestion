@@ -9,17 +9,19 @@ interface AnticiposDropdownProps {
   isActive: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  onClose?: () => void;
 }
 
-export default function AnticiposDropdown({ isActive, isOpen, onToggle }: AnticiposDropdownProps) {
+export default function AnticiposDropdown({ isActive, isOpen, onToggle, onClose }: AnticiposDropdownProps) {
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const close = onClose || onToggle; // Prefer onClose if available
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onToggle(); // Cerrar usando el estado del layout
+        close(); // Only close, never toggle
       }
     };
 
@@ -30,7 +32,7 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onToggle]);
+  }, [isOpen, close]);
 
   const handleToggle = () => {
     onToggle(); // Usar el estado del layout
@@ -93,7 +95,7 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle }: Antici
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => onToggle()}
+                  onClick={() => close()}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
                       ? 'bg-blue-50 dark:bg-blue-50 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200 dark:border-blue-200'

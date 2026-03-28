@@ -9,17 +9,19 @@ interface PortfolioDropdownProps {
   isActive: boolean;
   isOpen: boolean;
   onToggle: () => void;
+  onClose?: () => void;
 }
 
-export default function PortfolioDropdown({ isActive, isOpen, onToggle }: PortfolioDropdownProps) {
+export default function PortfolioDropdown({ isActive, isOpen, onToggle, onClose }: PortfolioDropdownProps) {
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const close = onClose || onToggle;
 
   // Cerrar dropdown al hacer click fuera
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-        onToggle(); // Cerrar usando el estado del layout
+        close();
       }
     };
 
@@ -30,7 +32,7 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen, onToggle]);
+  }, [isOpen, close]);
 
   const handleToggle = () => {
     onToggle(); // Usar el estado del layout
@@ -82,7 +84,7 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle }: Portfo
                 <Link
                   key={item.href}
                   href={item.href}
-                  onClick={() => onToggle()}
+                  onClick={() => close()}
                   className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
                     isCurrentPage
                       ? 'bg-blue-50 dark:bg-blue-50 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200 dark:border-blue-200'

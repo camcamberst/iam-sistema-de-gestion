@@ -7,6 +7,8 @@ import { getColombiaPeriodStartDate, getColombiaDate } from '@/utils/calculator-
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
 
 interface User {
   id: string;
@@ -984,7 +986,7 @@ export default function ModelCalculatorPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+      <div className="aim-page-bg flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando calculadora...</p>
@@ -998,7 +1000,7 @@ export default function ModelCalculatorPage() {
 
   if (!allowed) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+      <div className="aim-page-bg flex items-center justify-center pt-16">
         <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
@@ -1017,34 +1019,19 @@ export default function ModelCalculatorPage() {
   
 
   return (
-    <>
-        {/* Header */}
-        <div className="mb-8 sm:mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              {/* Layout móvil: vertical, escritorio: horizontal */}
-              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
-                {/* Título e icono */}
-                <div className="flex items-center space-x-3 min-w-0 flex-1">
-                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-          </div>
-                  <div className="min-w-0 flex-1">
-                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                Mi Calculadora
-              </h1>
-                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">
-                Bienvenida, {user?.name || 'Usuario'} · Ingresa tus valores por plataforma
-              </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="aim-page-bg min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+        {/* Header — Migrado a PageHeader */}
+        <PageHeader
+          title="Mi Calculadora"
+          subtitle={`Bienvenida, ${user?.name || 'Usuario'} · Ingresa tus valores por plataforma`}
+          glow="model"
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+            </svg>
+          }
+        />
 
         {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
         <DynamicTimeIsland
@@ -1055,7 +1042,7 @@ export default function ModelCalculatorPage() {
         />
 
         {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <GlassCard padding="sm" className="mb-4">
           <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
             <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
             Tasas Actualizadas
@@ -1084,11 +1071,11 @@ export default function ModelCalculatorPage() {
           <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
             Configuradas por tu administrador
           </p>
-        </div>
+        </GlassCard>
 
         {/* Error Message */}
         {error && (
-          <div className="relative bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 mb-6 dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
+          <GlassCard padding="lg" className="mb-6 border-red-200 dark:border-red-900/30">
             <div className="text-center py-8">
               <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1110,11 +1097,11 @@ export default function ModelCalculatorPage() {
                 Reintentar
               </button>
             </div>
-          </div>
+          </GlassCard>
         )}
 
         {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-4 sm:p-6 mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <GlassCard padding="md" className="mb-4">
           <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
             Calculadora de Ingresos
@@ -1412,10 +1399,10 @@ export default function ModelCalculatorPage() {
             </div>
             </>
           )}
-        </div>
+        </GlassCard>
 
         {/* Totales y Alertas - ESTILO APPLE REFINADO */}
-        <div className="bg-white dark:bg-gray-700/80 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-6 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <GlassCard padding="md">
           <div className="flex items-center justify-between mb-2.5 sm:mb-4">
             <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
               <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
@@ -2034,7 +2021,8 @@ export default function ModelCalculatorPage() {
           100% { transform: translateY(8px); opacity: 0; } 
         }
         `}</style>
-        </div>
-    </>
+        </GlassCard>
+      </div>
+    </div>
   );
 }

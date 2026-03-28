@@ -2,6 +2,8 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
 
 interface Category { id: string; name: string; }
 interface Variant { id: string; name: string; price_delta: number; is_active: boolean; }
@@ -153,58 +155,56 @@ export default function ShopStorefront() {
   }
 
   return (
-    <div className="-mx-3 sm:-mx-4 md:-mx-6 lg:-mx-8 -mt-4 sm:-mt-6 md:-mt-8">
-      {/* Hero header de la tienda */}
-      <div className="bg-gradient-to-r from-pink-600 via-rose-600 to-fuchsia-600 text-white px-4 md:px-8 py-8 md:py-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-3xl">🛍️</span>
-                <h1 className="text-2xl md:text-3xl font-bold tracking-tight">AIM Sexshop</h1>
-              </div>
-              <p className="text-pink-100 text-sm">Descuentos directos de tu producido</p>
-            </div>
+    <div className="aim-page-bg min-h-screen">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+        <PageHeader
+          title="AIM Sexshop"
+          subtitle="Descuentos directos de tu producido"
+          glow="model"
+          icon={<span className="text-xl sm:text-2xl">🛍️</span>}
+          actions={
             <div className="flex items-center gap-3">
               {netoDisponible !== null && (
-                <div className="hidden md:block bg-white/20 backdrop-blur-sm rounded-xl px-4 py-2 text-center">
-                  <p className="text-xs text-pink-100">Tu billetera</p>
-                  <p className="text-lg font-bold">${netoDisponible.toLocaleString("es-CO")}</p>
+                <div className="hidden md:block bg-white/70 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl px-4 py-2 text-center border border-white/20 dark:border-gray-600/20 shadow-sm">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">Tu billetera</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">${netoDisponible.toLocaleString("es-CO")}</p>
                 </div>
               )}
               {/* Cart button */}
               <button
                 onClick={() => setShowCart(true)}
-                className="relative bg-white/20 hover:bg-white/30 backdrop-blur-sm rounded-xl p-3 transition-all"
+                className="relative bg-white/70 hover:bg-white/90 dark:bg-gray-700/80 dark:hover:bg-gray-600/80 backdrop-blur-sm rounded-xl p-3 transition-all border border-white/20 dark:border-gray-600/20 shadow-sm text-gray-700 dark:text-gray-200"
               >
                 <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-yellow-400 text-gray-900 text-xs font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-gradient-to-r from-pink-500 to-rose-600 text-white text-xs font-bold rounded-full flex items-center justify-center shadow-md">
                     {cartCount}
                   </span>
                 )}
               </button>
             </div>
-          </div>
+          }
+        />
 
-          {/* Tabs */}
-          <div className="flex gap-1 mt-6 bg-white/10 backdrop-blur-sm rounded-xl p-1 w-fit">
-            {[{ key: "catalog", label: "Catálogo" }, { key: "orders", label: "Mis pedidos" }].map(t => (
-              <button
-                key={t.key}
-                onClick={() => setActiveTab(t.key as typeof activeTab)}
-                className={`px-5 py-2 text-sm font-medium rounded-lg transition-all ${activeTab === t.key ? "bg-white text-pink-600 shadow-sm" : "text-white/80 hover:text-white"}`}
-              >
-                {t.label}
-              </button>
-            ))}
-          </div>
+        {/* Tabs */}
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-1 sm:space-x-1 mb-6 sm:mb-8 mt-2">
+          {[{ key: "catalog", label: "Catálogo" }, { key: "orders", label: "Mis pedidos" }].map(t => (
+            <button
+              key={t.key}
+              onClick={() => setActiveTab(t.key as typeof activeTab)}
+              className={`px-4 sm:px-5 py-2.5 sm:py-2 rounded-lg text-sm sm:text-base font-medium transition-all duration-200 active:scale-95 touch-manipulation ${
+                activeTab === t.key
+                  ? 'bg-gradient-to-r from-pink-500 to-rose-600 text-white shadow-md'
+                  : 'bg-white/70 dark:bg-gray-700/70 text-gray-600 dark:text-gray-300 hover:bg-white/90 dark:hover:bg-gray-600/80'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
-      </div>
 
-      <div className="px-4 md:px-8 py-6 max-w-7xl mx-auto">
         {/* Resultado del checkout */}
         {checkoutResult && (
           <div className={`mb-6 p-4 rounded-xl border flex items-start gap-3 ${checkoutResult.success ? "bg-green-50 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-400" : "bg-red-50 border-red-200 text-red-700 dark:bg-red-900/20 dark:border-red-800 dark:text-red-400"}`}>
@@ -263,10 +263,12 @@ export default function ShopStorefront() {
                   const available = product.stock?.available || 0;
                   const noDisponible = available <= 0;
                   return (
-                    <button
+                    <GlassCard
+                      as="button"
+                      padding="none"
                       key={product.id}
                       onClick={() => { setSelectedProduct(product); setSelectedVariant(null); }}
-                      className={`bg-white dark:bg-gray-800 rounded-2xl shadow-sm border overflow-hidden text-left transition-all duration-200 group ${noDisponible ? "border-gray-200 dark:border-gray-600 opacity-90" : "border-gray-100 dark:border-gray-700 hover:shadow-lg hover:-translate-y-0.5"}`}
+                      className={`w-full overflow-hidden text-left transition-all duration-300 group ${noDisponible ? "opacity-80" : "hover:shadow-xl hover:-translate-y-1 hover:bg-white/95 dark:hover:bg-gray-600/80"}`}
                     >
                       <div className="relative h-44 bg-gradient-to-br from-pink-50 to-rose-50 dark:from-gray-700 dark:to-gray-600 overflow-hidden">
                         {product.images?.[0] ? (
@@ -311,7 +313,7 @@ export default function ShopStorefront() {
                           Ver producto
                         </div>
                       </div>
-                    </button>
+                    </GlassCard>
                   );
                 })}
               </div>

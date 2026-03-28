@@ -5,6 +5,8 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@supabase/supabase-js";
 import Link from "next/link";
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
+import GlassCard from '@/components/ui/GlassCard';
+import PageHeader from '@/components/ui/PageHeader';
 
 interface User {
   id: string;
@@ -148,7 +150,7 @@ export default function MiAhorroPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
+      <div className="aim-page-bg flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
@@ -158,47 +160,24 @@ export default function MiAhorroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="aim-page-bg">
       <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-        {/* Header */}
-        <div className="mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex items-center justify-between flex-wrap gap-4">
-                <div className="flex items-center space-x-3">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                    <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                      Mi Ahorro
-                    </h1>
-                    <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                      Gestiona tus ahorros y retiros
-                    </p>
-                  </div>
-                </div>
-                <div className="flex gap-3">
-                  <Link
-                    href="/admin/model/finanzas/ahorro/solicitar"
-                    className="px-4 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm"
-                  >
-                    Solicitar Ahorro
-                  </Link>
-                  <Link
-                    href="/admin/model/finanzas/ahorro/retiros"
-                    className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium text-sm"
-                  >
-                    Solicitar Retiro
-                  </Link>
-                </div>
-              </div>
+        <PageHeader
+          title="Mi Ahorro"
+          subtitle="Gestiona tus ahorros y retiros"
+          glow="model"
+          icon={
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+          actions={
+            <div className="flex gap-3">
+              <Link href="/admin/model/finanzas/ahorro/solicitar" className="btn-aim-primary text-sm">Solicitar Ahorro</Link>
+              <Link href="/admin/model/finanzas/ahorro/retiros" className="px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg hover:from-purple-700 hover:to-pink-700 transition-all duration-300 shadow-md hover:shadow-lg font-medium text-sm">Solicitar Retiro</Link>
             </div>
-          </div>
-        </div>
+          }
+        />
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
@@ -239,7 +218,7 @@ export default function MiAhorroPage() {
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Gráfico de Crecimiento */}
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <GlassCard padding="md" className="rounded-xl">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
               Crecimiento de Ahorros
             </h2>
@@ -313,10 +292,10 @@ export default function MiAhorroPage() {
                 <p>No hay datos de crecimiento disponibles</p>
               </div>
             )}
-          </div>
+          </GlassCard>
 
           {/* Últimos Movimientos */}
-          <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <GlassCard padding="md" className="rounded-xl">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
                 Últimos Movimientos
@@ -381,11 +360,11 @@ export default function MiAhorroPage() {
                 <p>No hay movimientos registrados</p>
               </div>
             )}
-          </div>
+          </GlassCard>
         </div>
 
         {/* Metas de Ahorro */}
-        <div className="mt-6 bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+        <GlassCard padding="md" className="mt-6 rounded-xl">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
               Mis Metas de Ahorro
@@ -507,7 +486,7 @@ export default function MiAhorroPage() {
               <p className="text-xs mt-2">Crea una meta para motivarte a ahorrar más</p>
             </div>
           )}
-        </div>
+        </GlassCard>
 
         {/* Modal para crear meta */}
         {showGoalModal && (

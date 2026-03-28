@@ -1137,7 +1137,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     closeToast(toasts.find(t => t.conversationId === conversationId)?.id || '');
   };
 
-  // Cargar datos iniciales
+  // Cargar datos iniciales y agregar el Pausado Inteligente (Visibility API)
   useEffect(() => {
     if (session) {
       loadConversations();
@@ -1145,7 +1145,31 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       // Marcar usuario como online cuando se carga el chat
       updateUserStatus(true);
     }
-  }, [session]);
+    
+    // Optimizador: Detectar cuando el usuario regresa a la pestaña
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && session) {
+        console.log('👁️ [ChatWidget] Pestaña reactivada: Recuperando datos instantáneamente...');
+        loadAvailableUsers();
+        loadConversations();
+        if (selectedConversation) {
+          loadMessages(selectedConversation);
+        }
+      } else {
+        console.log('🙈 [ChatWidget] Pestaña inactiva: Chat en modo ahorro de energía.');
+      }
+    };
+    
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange);
+    }
+    
+    return () => {
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange);
+      }
+    };
+  }, [session, selectedConversation]);
 
   // 🔧 NUEVO: Cuando se carga la página y hay una conversación seleccionada, marcarla como leída
   useEffect(() => {
@@ -1194,6 +1218,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     // Actualizar lista de usuarios cada 60 segundos como respaldo
     const usersUpdateInterval = setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return; // Pausado Inteligente
       loadAvailableUsers();
     }, 60000); // 60s
 
@@ -1210,11 +1235,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     console.log('🔄 [ChatWidget] Iniciando polling de mensajes como respaldo...');
     
     const messagesPollingInterval = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return; // Pausado Inteligente
       console.log('🔄 [ChatWidget] Polling: verificando mensajes nuevos...');
       await loadMessages(selectedConversation);
       // El marcado como leído se maneja automáticamente en loadMessages
       // No necesitamos marcado adicional aquí para evitar duplicados
-    }, 3000); // Cada 3 segundos
+    }, 15000); // Cada 15 segundos (Respaldo del Realtime)
 
     // Cleanup
     return () => {
@@ -1253,6 +1279,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (!session) return;
     
     const conversationsPollingInterval = setInterval(async () => {
+      if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return; // Pausado Inteligente
       try {
         // Obtener token válido (refrescando si es necesario)
         const token = await getValidToken();

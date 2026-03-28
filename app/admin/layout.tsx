@@ -8,6 +8,7 @@ import CalculatorDropdown from "@/components/CalculatorDropdown";
 import AnticiposDropdown from "@/components/AnticiposDropdown";
 import { supabase } from '@/lib/supabase';
 import { modernLogout } from '@/lib/auth-modern';
+import { buildMenuItems, MenuItem, UserRole } from '@/lib/menu-config';
 import dynamic from 'next/dynamic';
 
 import ClientOnly from '@/components/ClientOnly';
@@ -139,7 +140,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // Funciones para manejar el dropdown - SOLUCIÓN RADICAL
   const handleMenuClick = (itemId: string) => {
-    console.log(`🔍 [MENU] Click: ${itemId}, current: ${activeMenu}`);
     // Toggle: si ya está activo, lo cierra; si no, lo abre
     if (activeMenu === itemId) {
       setActiveMenu(null);
@@ -149,7 +149,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const handleMenuEnter = (itemId: string) => {
-    console.log(`🔍 [MENU] Enter: ${itemId}`);
     if (menuTimeout) {
       clearTimeout(menuTimeout);
       setMenuTimeout(null);
@@ -158,16 +157,14 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const handleMenuLeave = () => {
-    console.log(`🔍 [MENU] Leave: setting timeout to close`);
     const timeout = setTimeout(() => {
-      console.log(`🔍 [MENU] Timeout: closing menu`);
+
       setActiveMenu(null);
     }, 200); // Reducido a 200ms
     setMenuTimeout(timeout);
   };
 
   const handleDropdownEnter = () => {
-    console.log(`🔍 [DROPDOWN] Enter`);
     if (menuTimeout) {
       clearTimeout(menuTimeout);
       setMenuTimeout(null);
@@ -175,9 +172,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   };
 
   const handleDropdownLeave = () => {
-    console.log(`🔍 [DROPDOWN] Leave`);
     const timeout = setTimeout(() => {
-      console.log(`🔍 [DROPDOWN] Timeout: closing menu`);
+
       setActiveMenu(null);
     }, 100); // Delay muy corto
     setMenuTimeout(timeout);
@@ -187,12 +183,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   // 🍎 APPLE.COM STYLE MENU STRUCTURE
   // ===========================================
   // Estado para el menú fijo
-  const [menuItems, setMenuItems] = useState<Array<{
-    id: string;
-    label: string;
-    href: string;
-    subItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}>;
-  }>>([]);
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);;
 
   // Función helper para obtener el rol del usuario (desde userInfo o localStorage)
   const getUserRole = (): 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff' => {
@@ -215,20 +206,17 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     return 'modelo';
   };
 
-  // Función para inicializar el menú una sola vez
+  // Función para inicializar el menú (usa la config extraída en lib/menu-config.tsx)
   const initializeMenu = () => {
     if (!isClient) return;
-    
-    // Obtener el rol del usuario desde localStorage de forma segura
+
     let userRole = getUserRole();
-    let userData = null;
-    
+
     try {
-      userData = localStorage.getItem('user');
+      const userData = localStorage.getItem('user');
       if (userData) {
         const parsed = JSON.parse(userData);
         userRole = parsed.role || 'modelo';
-        // Establecer userInfo inmediatamente desde localStorage para no depender del fetch
         if (!userInfo && parsed?.id && parsed?.role) {
           setUserInfo({
             id: parsed.id,
@@ -243,374 +231,8 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       console.warn('Error parsing user data from localStorage:', error);
       userRole = 'modelo';
     }
-    
-    console.log('🔍 [MENU-INIT] User role:', userRole);
 
-    // Menú base para todos los roles
-    const baseItems: Array<{
-      id: string;
-      label: string;
-      href: string;
-      subItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}>;
-    }> = [
-      {
-        id: 'calculator',
-        label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
-        href: userRole === 'modelo' ? '/admin/model/calculator' : '#',
-        subItems: userRole === 'modelo'
-          ? [ { label: 'Ingresar Valores', href: '/admin/model/calculator' } ]
-          : []
-      }
-    ];
-
-    // Agregar menú de finanzas para modelos
-    if (userRole === 'modelo') {
-      baseItems.push({
-        id: 'finanzas',
-        label: 'Mis Finanzas',
-        href: '/admin/model/anticipos/solicitar',
-        subItems: [
-          { label: 'Solicitar Anticipo', href: '/admin/model/anticipos/solicitar' },
-          { label: 'Mis Solicitudes', href: '/admin/model/anticipos/solicitudes' },
-          { label: 'Mi Ahorro', href: '/admin/model/finanzas/ahorro' }
-        ]
-      });
-
-      // Agregar Mi Portafolio para modelos
-      baseItems.push({
-        id: 'portafolio',
-        label: 'Mi Portafolio',
-        href: '/admin/model/portafolio',
-        subItems: []
-      });
-    }
-
-    // Agregar opciones según el rol
-    if (userRole === 'super_admin' || userRole === 'admin') {
-      baseItems.unshift({
-        id: 'users',
-        label: 'Gestión Usuarios',
-        href: '#',
-        subItems: [
-          { 
-            label: 'Crear Usuario', 
-            href: '/admin/users/create',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            ),
-            description: 'Registra nuevos usuarios en el sistema'
-          },
-          { 
-            label: 'Consultar Usuarios', 
-        href: '/admin/users',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            ),
-            description: 'Administra usuarios existentes'
-          }
-        ]
-      });
-
-      baseItems.push({
-        id: 'finanzas',
-        label: 'Gestión Finanzas',
-        href: '#',
-        subItems: [
-          { 
-            label: 'Solicitudes Pendientes', 
-            href: '/admin/anticipos/pending',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            description: 'Revisa solicitudes de anticipos por aprobar'
-          },
-          { 
-            label: 'Gestión Ahorros', 
-            href: '/admin/finanzas/ahorros',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            description: 'Gestiona solicitudes de ahorro y retiros'
-          }
-        ]
-      });
-
-      // Mostrar "Gestión Agencia" para todos los usuarios (los límites se aplican en las páginas)
-      const sedesSubItems = [
-        { 
-          label: 'Gestionar Sedes', 
-          href: '/admin/sedes/gestionar',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          ),
-          description: 'Administra sedes y ubicaciones'
-        },
-        { 
-          label: 'Portafolio Modelos', 
-          href: '/admin/sedes/portafolio',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-            </svg>
-          ),
-          description: 'Gestiona portafolios por sede'
-        },
-        { 
-          label: 'Dashboard Sedes', 
-          href: '/admin/sedes/dashboard',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-            </svg>
-          ),
-          description: 'Vista general de todas las sedes'
-        }
-      ];
-
-      // Agregar "Gestionar Afiliados" solo para super_admin
-      if (userRole === 'super_admin') {
-        sedesSubItems.push({
-          label: 'Gestionar Afiliados',
-          href: '/admin/affiliates/gestionar',
-          icon: (
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-            </svg>
-          ),
-          description: 'Administra estudios afiliados'
-        });
-      }
-
-      baseItems.push({
-        id: 'sedes',
-        label: 'Gestión Agencia',
-        href: '#',
-        subItems: sedesSubItems
-      });
-
-      // Agregar opciones administrativas de calculadora
-      const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
-      if (calculatorIndex !== -1) {
-        const calculatorSubItems: Array<{label: string; href: string; icon?: React.ReactNode; description?: string}> = [
-          { 
-            label: 'Definir RATES', 
-            href: '/admin/rates',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
-              </svg>
-            ),
-            description: 'Configura las tasas de conversión'
-          }
-        ];
-
-        // Agregar "Gestionar Plataformas" solo para super_admin
-        if (userRole === 'super_admin') {
-          calculatorSubItems.push({
-            label: 'Gestionar Plataformas',
-            href: '/admin/calculator/platforms',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
-              </svg>
-            ),
-            description: 'Administrar, crear, editar y eliminar plataformas'
-          });
-        }
-
-        calculatorSubItems.push(
-          { 
-            label: 'Configurar Calculadora', 
-            href: '/admin/calculator/config',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            ),
-            description: 'Configura parámetros del sistema'
-          },
-          { 
-            label: 'Ver Calculadora Modelo', 
-            href: '/admin/calculator/view-model',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            ),
-            description: 'Vista de la calculadora para modelos'
-          },
-          { 
-            label: 'Ver Historial Modelo',
-            href: '/admin/calculator/historial-modelo',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 7v5l3 3" />
-              </svg>
-            ),
-            description: 'Historial de facturación por modelo'
-          }
-        );
-
-        baseItems[calculatorIndex].subItems = calculatorSubItems;
-      }
-    }
-
-    // Agregar menú completo para superadmin_aff (gestión de su estudio afiliado)
-    if (userRole === 'superadmin_aff') {
-      // Gestión Usuarios (solo de su estudio)
-      baseItems.unshift({
-        id: 'users',
-        label: 'Gestión Usuarios',
-        href: '#',
-        subItems: [
-          { 
-            label: 'Crear Usuario', 
-            href: '/admin/users/create',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-            ),
-            description: 'Registra nuevos usuarios en tu estudio'
-          },
-          { 
-            label: 'Consultar Usuarios', 
-            href: '/admin/users',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-              </svg>
-            ),
-            description: 'Administra usuarios de tu estudio'
-          }
-        ]
-      });
-
-      // Gestión Finanzas (solo de su estudio)
-      baseItems.push({
-        id: 'finanzas',
-        label: 'Gestión Finanzas',
-        href: '#',
-        subItems: [
-          { 
-            label: 'Solicitudes Pendientes', 
-            href: '/admin/anticipos/pending',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            description: 'Revisa solicitudes de anticipos'
-          },
-          { 
-            label: 'Gestión Ahorros', 
-            href: '/admin/finanzas/ahorros',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            ),
-            description: 'Gestiona solicitudes de ahorro y retiros'
-          }
-        ]
-      });
-
-      // Gestión Sedes (solo de su estudio)
-      baseItems.push({
-        id: 'sedes',
-        label: 'Gestión Sedes',
-        href: '#',
-        subItems: [
-          { 
-            label: 'Gestionar Sedes', 
-            href: '/admin/sedes/gestionar',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-              </svg>
-            ),
-            description: 'Administra sedes de tu estudio'
-          },
-          { 
-            label: 'Portafolio Modelos', 
-            href: '/admin/sedes/portafolio',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-            ),
-            description: 'Gestiona portafolios de tu estudio'
-          },
-          { 
-            label: 'Dashboard Sedes', 
-            href: '/admin/sedes/dashboard',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-            ),
-            description: 'Vista general de las sedes de tu estudio'
-          }
-        ]
-      });
-
-      // Gestión Calculadora (solo de su estudio)
-      const calculatorIndex = baseItems.findIndex(item => item.id === 'calculator');
-      if (calculatorIndex !== -1) {
-        baseItems[calculatorIndex].label = 'Gestión Calculadora';
-        baseItems[calculatorIndex].subItems = [
-          { 
-            label: 'Configurar Calculadora', 
-            href: '/admin/calculator/config',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-              </svg>
-            ),
-            description: 'Configura parámetros de tu estudio'
-          },
-          { 
-            label: 'Ver Calculadora Modelo', 
-            href: '/admin/calculator/view-model',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-            ),
-            description: 'Vista de la calculadora para modelos'
-          },
-          { 
-            label: 'Ver Historial Modelo',
-            href: '/admin/calculator/historial-modelo',
-            icon: (
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12a9 9 0 1018 0 9 9 0 00-18 0z" />
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 7v5l3 3" />
-              </svg>
-            ),
-            description: 'Historial de facturación por modelo'
-          }
-        ];
-      }
-    }
-
-    console.log('🔍 [MENU-INIT] Final menu items:', baseItems);
-    setMenuItems(baseItems);
+    setMenuItems(buildMenuItems(userRole as UserRole));
   };
 
   // Inicializar el menú solo una vez cuando el cliente esté listo
@@ -649,9 +271,6 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     const hasSubItems = item.subItems && item.subItems.length > 0;
     const isActive = activeMenu === item.id;
     const shouldShow = hasSubItems && isActive;
-    
-    console.log(`🔍 [DROPDOWN] ${item.id}: hasSubItems=${hasSubItems}, isActive=${isActive}, shouldShow=${shouldShow}`);
-    console.log(`🔍 [DROPDOWN] activeMenu=${activeMenu}, subItems=${item.subItems?.length || 0}`);
     
     return shouldShow;
   };
@@ -1043,30 +662,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                             <Link
                               href="/admin/model/portafolio"
                               onClick={(e) => {
-                                // Detener TODA la propagación
                                 e.stopPropagation();
-                                e.preventDefault();
-                                console.log('🔍 [MENU] Click en sub opción (Link): Mi Portafolio');
-                                
-                                // Navegar manualmente después de un pequeño delay para asegurar que el evento se procese
-                                setTimeout(() => {
-                                  router.push('/admin/model/portafolio');
-                                }, 10);
-                              }}
-                              onMouseDown={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                              }}
-                              onTouchStart={(e) => {
-                                e.stopPropagation();
-                              }}
-                              onTouchEnd={(e) => {
-                                e.stopPropagation();
-                                e.preventDefault();
-                                // Navegar en touch también
-                                setTimeout(() => {
-                                  router.push('/admin/model/portafolio');
-                                }, 10);
                               }}
                               className="sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 cursor-pointer touch-manipulation"
                             >
@@ -1143,30 +739,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 key={subItem.href}
                                 href={subItem.href}
                                 onClick={(e) => {
-                                  // Detener TODA la propagación
                                   e.stopPropagation();
-                                  e.preventDefault();
-                                  console.log('🔍 [MENU] Click en sub opción (Link):', subItem.label, subItem.href);
-                                  
-                                  // Navegar manualmente después de un pequeño delay para asegurar que el evento se procese
-                                  setTimeout(() => {
-                                    router.push(subItem.href);
-                                  }, 10);
-                                }}
-                                onMouseDown={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                }}
-                                onTouchStart={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                onTouchEnd={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  // Navegar en touch también
-                                  setTimeout(() => {
-                                    router.push(subItem.href);
-                                  }, 10);
                                 }}
                                 className={`sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer touch-manipulation ${
                                   isActive(subItem.href)
@@ -1233,30 +806,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
                                 key={subItem.href}
                                 href={subItem.href}
                                 onClick={(e) => {
-                                  // Detener TODA la propagación
                                   e.stopPropagation();
-                                  e.preventDefault();
-                                  console.log('🔍 [MENU] Click en sub opción (Link):', subItem.label, subItem.href);
-                                  
-                                  // Navegar manualmente después de un pequeño delay para asegurar que el evento se procese
-                                  setTimeout(() => {
-                                    router.push(subItem.href);
-                                  }, 10);
-                                }}
-                                onMouseDown={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                }}
-                                onTouchStart={(e) => {
-                                  e.stopPropagation();
-                                }}
-                                onTouchEnd={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  // Navegar en touch también
-                                  setTimeout(() => {
-                                    router.push(subItem.href);
-                                  }, 10);
                                 }}
                                 className={`sub-menu-item w-full text-left block px-4 py-2 text-sm rounded-lg transition-all cursor-pointer touch-manipulation ${
                                   isActive(subItem.href)

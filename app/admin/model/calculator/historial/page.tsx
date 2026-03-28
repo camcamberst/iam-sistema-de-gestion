@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X, AlertTriangle, CheckCircle, Info, Plus, Trash2 } from 'lucide-react';
 import AppleDropdown from '@/components/ui/AppleDropdown';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
 
 interface Alert {
   id: string;
@@ -413,7 +415,14 @@ export default function CalculatorHistorialPage() {
     } catch (e: any) { alert(e.message); } finally { setSaving(false); }
   };
 
-  if (loading) return <div className="flex justify-center items-center min-h-screen"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>;
+  if (loading) return (
+    <div className="aim-page-bg flex justify-center items-center">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+        <p className="text-gray-600 dark:text-gray-300">Cargando historial...</p>
+      </div>
+    </div>
+  );
 
   return (
     <>
@@ -432,43 +441,29 @@ export default function CalculatorHistorialPage() {
         </div>
       )}
 
-      {/* Header estándar */}
-      <div className="mb-8 sm:mb-12">
-        <div className="relative">
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-          <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 md:gap-3">
-              <div className="flex items-center gap-3 md:gap-4 min-w-0 flex-1">
-                <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-                  <History className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
-                    Mi Historial
-                  </h1>
-                  <p className="hidden sm:block text-xs sm:text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    Historial de períodos archivados
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-                <div className="flex-shrink-0">
-                  <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
-                  <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
-                </div>
-                <div className="flex-shrink-0">
-                  <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Mes</label>
-                  <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm" />
-                </div>
-                <div className="flex-shrink-0">
-                  <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Período</label>
-                  <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
-                </div>
-              </div>
+      {/* Header — Migrado a PageHeader */}
+      <PageHeader
+        title="Mi Historial"
+        subtitle="Historial de períodos archivados"
+        glow="model"
+        icon={<History className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
+        actions={
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+            <div className="flex-shrink-0">
+              <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
+              <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
+            </div>
+            <div className="flex-shrink-0">
+              <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Mes</label>
+              <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm" />
+            </div>
+            <div className="flex-shrink-0">
+              <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Período</label>
+              <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
             </div>
           </div>
-        </div>
-      </div>
+        }
+      />
 
       {error && <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg mb-4 text-center border border-red-100 dark:border-red-800">{error}</div>}
       
