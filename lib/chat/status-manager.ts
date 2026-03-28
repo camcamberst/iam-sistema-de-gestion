@@ -83,8 +83,8 @@ export async function cleanupInactiveUsers(): Promise<void> {
     // Usar cliente del servidor con SERVICE_ROLE_KEY
     const supabase = getSupabaseClient();
     
-    // Verificar usuarios que no han enviado heartbeat en más de 2 minutos
-    const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000).toISOString();
+    // Verificar usuarios que no han enviado heartbeat en más de 5 minutos (heartbeat ahora es cada 2-3 min)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
     
     // Primero obtener el conteo de usuarios que serán actualizados
     // Verificamos tanto updated_at como last_seen para mayor precisión
@@ -92,14 +92,14 @@ export async function cleanupInactiveUsers(): Promise<void> {
       .from('chat_user_status')
       .select('*', { count: 'exact', head: true })
       .eq('is_online', true)
-      .or(`updated_at.lt.${twoMinutesAgo},last_seen.lt.${twoMinutesAgo}`);
+      .or(`updated_at.lt.${fiveMinutesAgo},last_seen.lt.${fiveMinutesAgo}`);
 
     // Luego actualizar los usuarios que no han enviado heartbeat recientemente
     const { error } = await supabase
       .from('chat_user_status')
       .update({ is_online: false })
       .eq('is_online', true)
-      .or(`updated_at.lt.${twoMinutesAgo},last_seen.lt.${twoMinutesAgo}`);
+      .or(`updated_at.lt.${fiveMinutesAgo},last_seen.lt.${fiveMinutesAgo}`);
 
     if (error) {
       console.error('❌ [CHAT-STATUS] Error limpiando usuarios inactivos:', error);

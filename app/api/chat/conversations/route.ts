@@ -53,73 +53,90 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Error obteniendo conversaciones' }, { status: 500 });
     }
 
-    // Obtener último mensaje de cada conversación y calcular unread_count usando chat_message_reads
-    const conversationsWithLastMessage = await Promise.all(
-      conversations.map(async (conv) => {
-        const { data: lastMessage } = await supabase
-          .from('chat_messages')
-          .select('id, content, created_at, sender_id, is_broadcast, no_reply, metadata')
-          .eq('conversation_id', conv.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single();
+    // ⚡ OPTIMIZADO: Batch queries en vez de N+1
+    // Antes: 3 queries POR conversación (3N total)
+    // Ahora: 3 queries TOTAL para todas las conversaciones
+    const conversationIds = conversations.map((c: any) => c.id);
 
-        // Calcular mensajes no leídos usando chat_message_reads
-        // Contar mensajes del otro participante que NO están en chat_message_reads para este usuario
-        const otherParticipantId = conv.participant_1_id === user.id 
-          ? conv.participant_2_id 
-          : conv.participant_1_id;
+    // BATCH 1: Últimos mensajes de TODAS las conversaciones (1 query)
+    const { data: recentMessages } = await supabase
+      .from('chat_messages')
+      .select('id, content, created_at, sender_id, conversation_id, is_broadcast, no_reply, metadata')
+      .in('conversation_id', conversationIds)
+      .order('created_at', { ascending: false })
+      .limit(conversationIds.length * 3);
 
-        // Obtener todos los mensajes del otro participante en esta conversación
-        const { data: messagesFromOther } = await supabase
-          .from('chat_messages')
-          .select('id')
-          .eq('conversation_id', conv.id)
-          .eq('sender_id', otherParticipantId);
+    // Deduplicar: quedarse con el mensaje más reciente por conversación
+    const lastMessageMap = new Map();
+    for (const msg of (recentMessages || [])) {
+      if (!lastMessageMap.has(msg.conversation_id)) {
+        lastMessageMap.set(msg.conversation_id, msg);
+      }
+    }
 
-        let unread_count = 0;
-        if (messagesFromOther && messagesFromOther.length > 0) {
-          const messageIds = messagesFromOther.map(m => m.id);
-          
-          // Obtener mensajes que SÍ fueron leídos por este usuario
-          const { data: readMessages } = await supabase
-            .from('chat_message_reads')
-            .select('message_id')
-            .eq('user_id', user.id)
-            .in('message_id', messageIds);
+    // BATCH 2: Mensajes de otros usuarios en TODAS las conversaciones (1 query)
+    const { data: allOtherMessages } = await supabase
+      .from('chat_messages')
+      .select('id, conversation_id')
+      .in('conversation_id', conversationIds)
+      .neq('sender_id', user.id);
 
-          const readMessageIds = new Set(readMessages?.map(r => r.message_id) || []);
-          
-          // Contar mensajes que NO fueron leídos
-          unread_count = messageIds.filter(id => !readMessageIds.has(id)).length;
+    // BATCH 3: Lecturas del usuario actual (1 query)
+    const allOtherMsgIds = (allOtherMessages || []).map(m => m.id);
+    let readMessageIdSet = new Set<string>();
+    if (allOtherMsgIds.length > 0) {
+      // Chunks de 500 para evitar límites del IN clause
+      const chunkSize = 500;
+      for (let i = 0; i < allOtherMsgIds.length; i += chunkSize) {
+        const chunk = allOtherMsgIds.slice(i, i + chunkSize);
+        const { data: readRecords } = await supabase
+          .from('chat_message_reads')
+          .select('message_id')
+          .eq('user_id', user.id)
+          .in('message_id', chunk);
+        for (const r of (readRecords || [])) {
+          readMessageIdSet.add(r.message_id);
         }
+      }
+    }
 
-        // Determinar el otro participante
-        const otherParticipant = conv.participant_1_id === user.id 
-          ? conv.participant_2 
-          : conv.participant_1;
+    // Calcular unread counts por conversación en JS
+    const unreadCountMap = new Map<string, number>();
+    for (const msg of (allOtherMessages || [])) {
+      if (!readMessageIdSet.has(msg.id)) {
+        unreadCountMap.set(msg.conversation_id, (unreadCountMap.get(msg.conversation_id) || 0) + 1);
+      }
+    }
 
-        const convWith = {
-          ...conv,
-          other_participant: otherParticipant,
-          last_message: lastMessage,
-          unread_count
-        } as any;
+    // Construir resultado final (puro JS, sin queries adicionales)
+    const conversationsWithLastMessage = conversations.map((conv: any) => {
+      const otherParticipant = conv.participant_1_id === user.id 
+        ? conv.participant_2 
+        : conv.participant_1;
 
-        // Excluir conversaciones de solo difusión (no_reply) generadas por Botty para receptores
-        if (
-          convWith.last_message &&
-          (convWith.last_message as any).is_broadcast &&
-          (convWith.last_message as any).no_reply &&
-          (convWith.last_message as any).sender_id === AIM_BOTTY_ID &&
-          !((convWith.last_message as any).metadata && (convWith.last_message as any).metadata.summary === true)
-        ) {
-          return null;
-        }
+      const lastMessage = lastMessageMap.get(conv.id) || null;
+      const unread_count = unreadCountMap.get(conv.id) || 0;
 
-        return convWith;
-      })
-    );
+      const convWith = {
+        ...conv,
+        other_participant: otherParticipant,
+        last_message: lastMessage,
+        unread_count
+      } as any;
+
+      // Excluir conversaciones de solo difusión (no_reply) generadas por Botty para receptores
+      if (
+        convWith.last_message &&
+        (convWith.last_message as any).is_broadcast &&
+        (convWith.last_message as any).no_reply &&
+        (convWith.last_message as any).sender_id === AIM_BOTTY_ID &&
+        !((convWith.last_message as any).metadata && (convWith.last_message as any).metadata.summary === true)
+      ) {
+        return null;
+      }
+
+      return convWith;
+    });
 
     const filtered = conversationsWithLastMessage.filter(Boolean);
 

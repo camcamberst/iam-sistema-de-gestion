@@ -139,8 +139,8 @@ export default function IndividualChatWindow({
     // Polling inicial
     pollMessages();
 
-    // Polling cada 2 segundos para tiempo real
-    const interval = setInterval(pollMessages, 2000);
+    // Polling cada 15s (antes 2s) — reducido para ahorrar API calls, realtime maneja lo urgente
+    const interval = setInterval(pollMessages, 15000);
 
     return () => clearInterval(interval);
   }, [conversationId, session]);

@@ -47,11 +47,48 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
   try {
     console.log('🔐 [AUTH] Iniciando login moderno:', { email: credentials.email });
 
-    // 1. Autenticar con Supabase Auth
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: credentials.email,
-      password: credentials.password,
-    });
+    // Helper: signIn con timeout para evitar que se cuelgue si Supabase está throttled
+    const signInWithTimeout = (timeoutMs: number) => {
+      return Promise.race([
+        supabase.auth.signInWithPassword({
+          email: credentials.email,
+          password: credentials.password,
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('TIMEOUT')), timeoutMs)
+        )
+      ]);
+    };
+
+    // Intento 1: timeout de 10 segundos
+    let authData: any;
+    let authError: any;
+    try {
+      const result = await signInWithTimeout(10000);
+      authData = result.data;
+      authError = result.error;
+    } catch (e: any) {
+      if (e.message === 'TIMEOUT') {
+        console.warn('⏱️ [AUTH] Timeout en primer intento, reintentando...');
+        // Intento 2: un reintento con 10s más
+        try {
+          const result = await signInWithTimeout(10000);
+          authData = result.data;
+          authError = result.error;
+        } catch (e2: any) {
+          if (e2.message === 'TIMEOUT') {
+            console.error('⏱️ [AUTH] Timeout en segundo intento');
+            return {
+              success: false,
+              error: 'Servicio temporalmente no disponible. Intenta de nuevo en unos minutos.'
+            };
+          }
+          throw e2;
+        }
+      } else {
+        throw e;
+      }
+    }
 
     if (authError) {
       console.error('❌ [AUTH] Error de autenticación:', authError.message);

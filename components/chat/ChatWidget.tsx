@@ -363,8 +363,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Enviar heartbeat inicial
     sendHeartbeat();
 
-    // Configurar heartbeat cada 30 segundos
-    heartbeatIntervalRef.current = setInterval(sendHeartbeat, 30000);
+    // Configurar heartbeat cada 2 minutos (antes 30s) — reducido para ahorrar API calls
+    heartbeatIntervalRef.current = setInterval(sendHeartbeat, 120000);
 
     // Detectar cierre de navegador/pestaña
     const handleBeforeUnload = async () => {
@@ -382,13 +382,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         if (heartbeatIntervalRef.current) {
           clearInterval(heartbeatIntervalRef.current);
         }
-        heartbeatIntervalRef.current = setInterval(sendHeartbeat, 60000); // 1 minuto
+        heartbeatIntervalRef.current = setInterval(sendHeartbeat, 180000); // 3 min (antes 1 min)
       } else {
         // Usuario volvió a la pestaña, heartbeat normal
         if (heartbeatIntervalRef.current) {
           clearInterval(heartbeatIntervalRef.current);
         }
-        heartbeatIntervalRef.current = setInterval(sendHeartbeat, 30000); // 30 segundos
+        heartbeatIntervalRef.current = setInterval(sendHeartbeat, 120000); // 2 min (antes 30s)
         sendHeartbeat(); // Enviar inmediatamente
         
         // 🔔 NUEVO: Restaurar título original cuando el usuario vuelve a la pestaña
@@ -1187,16 +1187,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     }
   }, [conversations, session, isOpen, mainView]);
 
-  // Actualizar lista de usuarios cada 15 segundos como respaldo (tiempo real es principal)
+  // Actualizar lista de usuarios cada 60 segundos como respaldo (tiempo real es principal)
   // Esto ayuda a detectar usuarios que cerraron sesión más rápidamente
   useEffect(() => {
     if (!session) return;
 
-    // Actualizar lista de usuarios cada 15 segundos como respaldo
+    // Actualizar lista de usuarios cada 60 segundos como respaldo
     const usersUpdateInterval = setInterval(() => {
-      console.log('🔄 [ChatWidget] Polling de respaldo: actualizando lista de usuarios...');
       loadAvailableUsers();
-    }, 15000);
+    }, 60000); // 60s
 
     // Cleanup
     return () => {
@@ -1204,7 +1203,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, [session]);
 
-  // Polling de mensajes como respaldo al realtime (cada 3 segundos)
+  // Polling de mensajes como respaldo al realtime (cada 15 segundos)
   useEffect(() => {
     if (!session || !selectedConversation) return;
 
@@ -1248,12 +1247,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     };
   }, []);
 
-  // Polling de conversaciones como respaldo al realtime (cada 5 segundos)
+  // Polling de conversaciones como respaldo al realtime (cada 20 segundos)
   // 🔔 MEJORADO: Ahora también detecta mensajes nuevos y dispara notificaciones
   useEffect(() => {
     if (!session) return;
-
-    console.log('🔄 [ChatWidget] Iniciando polling inteligente de conversaciones...');
     
     const conversationsPollingInterval = setInterval(async () => {
       try {
@@ -1335,7 +1332,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       } catch (error) {
         console.error('Error en polling:', error);
       }
-    }, 4000); // Polling cada 4 segundos (más frecuente para ser útil como respaldo)
+    }, 20000); // 20s (antes 4s) — reducido para ahorrar API calls
 
     return () => clearInterval(conversationsPollingInterval);
   }, [session, userId]);
