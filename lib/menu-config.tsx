@@ -24,7 +24,7 @@ export interface MenuItem {
   subItems: SubMenuItem[];
 }
 
-export type UserRole = 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff';
+export type UserRole = 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff' | 'gestor' | 'fotografia';
 
 // =====================================================
 // 🎨 Iconos SVG reutilizables para el menú
@@ -101,6 +101,39 @@ const icons = {
 // =====================================================
 
 export function buildMenuItems(userRole: UserRole): MenuItem[] {
+  // --- GESTOR ---
+  if (userRole === 'gestor') {
+    return [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        href: '/gestor/dashboard',
+        subItems: []
+      },
+      {
+        id: 'gestion-agencia',
+        label: 'Gestión Agencia',
+        href: '#',
+        subItems: [
+          { label: 'Stats', href: '/gestor/gestion-agencia/stats', icon: icons.chart, description: 'Registrar ingresos exactos de modelos por período' },
+          { label: 'Rates Históricas', href: '/gestor/gestion-agencia/rates-historicas', icon: icons.money, description: 'Configurar rates históricas para recalcular períodos pasados' }
+        ]
+      }
+    ];
+  }
+
+  // --- FOTOGRAFIA ---
+  if (userRole === 'fotografia') {
+    return [
+      {
+        id: 'dashboard',
+        label: 'Dashboard',
+        href: '/fotografia/dashboard',
+        subItems: []
+      }
+    ];
+  }
+
   const baseItems: MenuItem[] = [
     {
       id: 'calculator',
@@ -236,4 +269,12 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
   }
 
   return baseItems;
+}
+
+// =====================================================
+// 🔧 FUNCIÓN HELPER PARA OBTENER MENÚ POR ROL (Backward Compatibility)
+// =====================================================
+
+export function getMenuForRole(role: string): MenuItem[] {
+  return buildMenuItems(role as UserRole);
 }
