@@ -80,7 +80,7 @@ export async function modernLogin(credentials: LoginCredentials): Promise<AuthRe
             console.error('⏱️ [AUTH] Timeout en segundo intento');
             return {
               success: false,
-              error: 'Servicio temporalmente no disponible. Intenta de nuevo en unos minutos.'
+              error: 'Estamos realizando mantenimiento y actualización del sistema. Intenta de nuevo en unos minutos.'
             };
           }
           throw e2;
