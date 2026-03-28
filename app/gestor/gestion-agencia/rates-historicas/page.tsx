@@ -2,6 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
 
 interface Group {
   id: string;
@@ -285,23 +287,27 @@ export default function GestorHistoricalRatesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-2 border-gray-600 border-t-gray-400 rounded-full"></div>
+      <div className="min-h-screen aim-page-bg flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-t-indigo-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
+          Cargando rates históricas...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Configurar Rates Históricas
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400">
-            Configura rates históricas para recalcular períodos pasados. Estas rates SOLO afectan a períodos históricos.
-          </p>
-        </div>
+    <div className="min-h-screen aim-page-bg">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16 sm:pt-24 lg:pt-32">
+        <PageHeader 
+          title="Configurar Rates Históricas"
+          subtitle="Configura rates históricas para recalcular períodos pasados. Estas rates SOLO afectan a períodos históricos."
+          icon={
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          }
+        />
 
         {message && (
           <div className={`mb-4 p-4 rounded-lg ${
@@ -314,7 +320,7 @@ export default function GestorHistoricalRatesPage() {
         )}
 
         {/* Filtros */}
-        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
+        <GlassCard className="p-6 mb-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -361,12 +367,12 @@ export default function GestorHistoricalRatesPage() {
               </select>
             </div>
           </div>
-        </div>
+        </GlassCard>
 
         {selectedGroup && (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Período 1 (1-15) */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Período 1 (1-15)
@@ -435,10 +441,10 @@ export default function GestorHistoricalRatesPage() {
                   </button>
                 </div>
               </div>
-            </div>
+            </GlassCard>
 
             {/* Período 2 (16-31) */}
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
+            <GlassCard className="p-6">
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">
                   Período 2 (16-31)
@@ -507,7 +513,7 @@ export default function GestorHistoricalRatesPage() {
                   </button>
                 </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
         )}
 

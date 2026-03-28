@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { calculateProfits, calculatePeriodTotals, type HistoricalRates, type ModelConfig } from "@/lib/gestor/stats-calculations";
+import PageHeader from "@/components/ui/PageHeader";
+import GlassCard from "@/components/ui/GlassCard";
 
 // Porcentajes estandarizados por grupos (lógica de negocio)
 const getStandardPercentageByGroup = (groupName: string): number => {
@@ -838,33 +840,27 @@ export default function GestorStatsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin w-8 h-8 border-2 border-gray-600 border-t-gray-400 rounded-full"></div>
+      <div className="min-h-screen aim-page-bg flex flex-col items-center justify-center">
+        <div className="w-12 h-12 border-4 border-t-indigo-500 border-r-transparent border-b-blue-500 border-l-transparent rounded-full animate-spin"></div>
+        <p className="mt-4 text-gray-500 dark:text-gray-400 text-sm font-medium tracking-wide">
+          Cargando stats y registros...
+        </p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                    Stats - Registro de Ingresos
-                  </h1>
-                  <p className="mt-1 text-sm text-gray-600 dark:text-gray-300">
-                    Registra los ingresos exactos de cada modelo al finalizar el período
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen aim-page-bg">
+      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16 sm:pt-24 lg:pt-32">
+        <PageHeader 
+          title="Stats - Registro de Ingresos"
+          subtitle="Registra los ingresos exactos de cada modelo al finalizar el período"
+          icon={
+            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          }
+        />
 
         {/* Configuración de Rates Históricas */}
         {selectedGroup && (
@@ -1082,7 +1078,7 @@ export default function GestorStatsPage() {
         )}
 
         {/* Filtros */}
-        <div className="mb-6 bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-4">
+        <GlassCard className="p-4 mb-6">
           <div className="flex flex-wrap items-center gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
@@ -1154,7 +1150,7 @@ export default function GestorStatsPage() {
               </button>
             </div>
           </div>
-        </div>
+        </GlassCard>
 
         {/* Tabla Consolidada */}
         {!selectedGroup ? (
@@ -1179,7 +1175,7 @@ export default function GestorStatsPage() {
             </p>
           </div>
         ) : (
-        <div className="bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 overflow-hidden">
+        <GlassCard className="overflow-hidden p-0">
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead className="bg-gradient-to-r from-gray-50 to-blue-50 dark:from-gray-700 dark:to-gray-600 border-b-2 border-gray-300 dark:border-gray-500">
@@ -1364,7 +1360,7 @@ export default function GestorStatsPage() {
               </tbody>
             </table>
           </div>
-        </div>
+        </GlassCard>
         )}
 
         {/* Información adicional */}
