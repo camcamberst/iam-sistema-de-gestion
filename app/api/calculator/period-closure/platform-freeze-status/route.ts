@@ -146,6 +146,7 @@ export async function GET(request: NextRequest) {
     // 🔒 VERIFICACIÓN AUTOMÁTICA ESCALABLE:
     // El early freeze y DX Live freeze SOLO deben activarse el ÚLTIMO día del período (15 o fin de mes).
     const isDayBeforeClosure = isEarlyFreezeRelevantDay();
+    const isClosure = isClosureDay();
     // Ya NO ejecutamos bloqueos en "isClosureDay" (1 o 16) porque esos son los días del NUEVO período.
     
     // La verificación de período cerrado ya se hizo arriba
