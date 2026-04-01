@@ -5,7 +5,8 @@ import {
   getColombiaDateTime,
   isClosureDay, 
   EARLY_FREEZE_PLATFORMS,
-  getEuropeanCentralMidnightInColombia
+  getEuropeanCentralMidnightInColombia,
+  isEarlyFreezeRelevantDay
 } from '@/utils/period-closure-dates';
 import { getFrozenPlatformsForModel } from '@/lib/calculator/period-closure-helpers';
 
@@ -103,6 +104,34 @@ export async function GET(request: NextRequest) {
         console.log(`✅ [PLATFORM-FREEZE-STATUS] Días 16-30: período nuevo (P2) en curso. Inputs habilitados para registro.`);
       }
     }
+
+    // 🔒 CRÍTICO: Si estamos en día 1, verificar si el período anterior (16-31) del mes pasado fue cerrado
+    // Si ya se cerró la quincena anterior, estamos formalmente en P1 y NO debemos congelar DX Live ni las demás
+    if (currentDay === 1 && !periodAlreadyClosed) {
+      // Calcular mes anterior
+      let prevMonth = parseInt(currentMonth) - 1;
+      let prevYear = parseInt(currentYear);
+      if (prevMonth === 0) {
+        prevMonth = 12;
+        prevYear -= 1;
+      }
+      const prevMonthStr = String(prevMonth).padStart(2, '0');
+      const previousPeriodDate = `${prevYear}-${prevMonthStr}-16`;
+
+      const { data: previousClosureStatus } = await supabase
+        .from('calculator_period_closure_status')
+        .select('status, period_date')
+        .eq('period_type', '16-31')
+        .eq('period_date', previousPeriodDate)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      
+      if (previousClosureStatus?.status && closedStatuses.includes(previousClosureStatus.status)) {
+        periodAlreadyClosed = true; // Tratar como cerrado para evitar early freeze en período nuevo
+        console.log(`✅ [PLATFORM-FREEZE-STATUS] Período anterior (16-31, date: ${previousClosureStatus.period_date}) está cerrado o en proceso (status: ${previousClosureStatus.status}). Estamos en período nuevo (1-15). No aplicar early freeze.`);
+      }
+    }
     
     // Obtener plataformas congeladas para este modelo desde BD usando el período ACTUAL
     // SOLO si el período NO ha sido cerrado
@@ -115,23 +144,15 @@ export async function GET(request: NextRequest) {
     const allFrozenPlatforms = new Set(frozenPlatformsFromDB.map(p => p.toLowerCase()));
 
     // 🔒 VERIFICACIÓN AUTOMÁTICA ESCALABLE:
-    // El early freeze debe activarse cuando:
-    // 1. Es día de cierre (1 o 16) Y ya pasó medianoche Europa Central, O
-    // 2. Es día previo al cierre (31 o 15) Y ya pasó medianoche Europa Central
-    // IMPORTANTE: Solo si el período NO ha sido cerrado aún
-    // Esto NO depende de que el cron se haya ejecutado - es automático basado en hora/fecha
-    const isClosure = isClosureDay();
-    const colombiaDate = getColombiaDate();
-    const day = parseInt(colombiaDate.split('-')[2]);
-    
-    // Verificar si es día previo al cierre (31 o 15)
-    const isDayBeforeClosure = day === 31 || day === 15;
+    // El early freeze y DX Live freeze SOLO deben activarse el ÚLTIMO día del período (15 o fin de mes).
+    const isDayBeforeClosure = isEarlyFreezeRelevantDay();
+    // Ya NO ejecutamos bloqueos en "isClosureDay" (1 o 16) porque esos son los días del NUEVO período.
     
     // La verificación de período cerrado ya se hizo arriba
     if (periodAlreadyClosed) {
       console.log(`✅ [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) ya fue cerrado. No aplicar early freeze.`);
     } else {
-      console.log(`📅 [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) aún no ha sido cerrado. Early freeze puede aplicarse.`);
+      console.log(`📅 [PLATFORM-FREEZE-STATUS] Período ${currentPeriodType} (${currentPeriodDate}) aún no ha sido cerrado. Early freeze puede aplicarse si el día corresponde.`);
     }
     
     // 🧹 LIMPIEZA AGRESIVA: Eliminar TODOS los registros de períodos ya cerrados
@@ -210,12 +231,12 @@ export async function GET(request: NextRequest) {
       frozenFromDB: frozenPlatformsFromDB.length
     });
     
-    // 🔒 CRÍTICO: Verificar early freeze SOLO si:
-    // 1. Es día de cierre O día previo al cierre
+    // 🔒 CRÍTICO: Verificar congelaciones SOLO si:
+    // 1. Es explícitamente el día previo al cierre (15 o último día del mes)
     // 2. Y el período NO ha sido cerrado aún
     // 3. Y NO estamos en un período nuevo (después del cierre)
     // 4. Y NO se está forzando el descongelamiento
-    if ((isClosure || isDayBeforeClosure) && !periodAlreadyClosed && !forceUnfreeze) {
+    if (isDayBeforeClosure && !periodAlreadyClosed && !forceUnfreeze) {
       const now = new Date();
       const europeMidnight = getEuropeanCentralMidnightInColombia(now);
       const colombiaTimeStr = getColombiaDateTime();
@@ -274,7 +295,7 @@ export async function GET(request: NextRequest) {
         }
       }
 
-      // 🔒 DX LIVE: Congelación especial a las 10:00 AM Colombia (en días de cierre de período)
+      // 🔒 DX LIVE: Congelación especial a las 10:00 AM Colombia (en el último día del período)
       // DX Live sigue la misma lógica de cierre de período pero a las 10:00 AM Colombia
       const dxLiveFreezeHour = 10; // 10:00 AM Colombia
       const dxLiveFreezeMinutes = dxLiveFreezeHour * 60;
