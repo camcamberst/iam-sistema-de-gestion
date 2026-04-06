@@ -9,6 +9,7 @@ import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import GlassCard from '@/components/ui/GlassCard';
 import PageHeader from '@/components/ui/PageHeader';
+import ModelAuroraBackground from '@/components/ui/ModelAuroraBackground';
 
 interface User {
   id: string;
@@ -37,6 +38,14 @@ export default function SolicitarAnticipoPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+
+  // States para Navegación de Tabs
+  const [activeTab, setActiveTab] = useState<'nueva' | 'historial'>('nueva');
+  
+  // States para el Historial
+  const [historialAnticipos, setHistorialAnticipos] = useState<any[]>([]);
+  const [loadingHistorial, setLoadingHistorial] = useState(false);
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
   
   // Datos del anticipo
   const [anticipoData, setAnticipoData] = useState<AnticipoData>({
@@ -91,6 +100,51 @@ export default function SolicitarAnticipoPage() {
     setRestrictionInfo(restriction);
     console.log('🔍 [SOLICITAR ANTICIPO] Restricción temporal:', restriction);
   }, []);
+
+  // Cargar historial si la tab está activa
+  useEffect(() => {
+    if (activeTab === 'historial' && user?.id) {
+      loadHistorial(user.id);
+    }
+  }, [activeTab, user?.id]);
+
+  const loadHistorial = async (userId: string) => {
+    try {
+      setLoadingHistorial(true);
+      const response = await fetch(`/api/anticipos?modelId=${userId}`);
+      const data = await response.json();
+      if (data.success) {
+        setHistorialAnticipos(data.data || []);
+      }
+    } catch (e) {
+      console.error('Error fetching historial:', e);
+    } finally {
+      setLoadingHistorial(false);
+    }
+  };
+
+  const cancelAnticipo = async (id: string) => {
+    if (!window.confirm('¿Estás seguro de cancelar tu solicitud de anticipo?')) return;
+    try {
+      setCancellingId(id);
+      const { error } = await supabase
+        .from('anticipos')
+        .update({ estado: 'declinado', comentarios_admin: 'Cancelado por el modelo' })
+        .eq('id', id)
+        .eq('estado', 'pendiente');
+      
+      if (!error && user?.id) {
+        loadHistorial(user.id);
+        loadProductivityData(user.id); // Reload amounts
+      } else {
+        alert('Hubo un error al cancelar al anticipo. Verifica que aún esté en estado pendiente.');
+      }
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const loadUser = async () => {
     try {
@@ -408,10 +462,11 @@ export default function SolicitarAnticipoPage() {
   // Mostrar pantalla de restricción si no está permitido solicitar anticipo
   if (restrictionInfo && !restrictionInfo.allowed) {
     return (
-      <div className="aim-page-bg flex items-center justify-center">
-        <div className="max-w-md mx-auto text-center p-6">
+      <div className="min-h-screen relative w-full overflow-hidden flex items-center justify-center">
+        <ModelAuroraBackground />
+        <div className="relative z-10 max-w-md mx-auto text-center p-6 bg-white/10 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl">
           <div className="mb-4">
-            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/60 rounded-full flex items-center justify-center mx-auto mb-4 border border-yellow-200 dark:border-yellow-700">
               <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -422,7 +477,7 @@ export default function SolicitarAnticipoPage() {
             <p className="text-gray-600 dark:text-gray-300 mb-4">
               {restrictionInfo.reason}
             </p>
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
+            <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
               <p className="text-sm text-blue-800 dark:text-blue-300">
                 <strong>Próxima fecha disponible:</strong><br />
                 {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
@@ -436,7 +491,7 @@ export default function SolicitarAnticipoPage() {
           </div>
           <button
             onClick={() => router.back()}
-            className="px-4 py-2 bg-gray-600 dark:bg-gray-700 text-white rounded-lg hover:bg-gray-700 dark:hover:bg-gray-600"
+            className="px-6 py-2.5 bg-gray-800 dark:bg-gray-700 text-white font-medium rounded-full hover:bg-gray-900 dark:hover:bg-gray-600 transition-colors"
           >
             Regresar
           </button>
@@ -447,10 +502,11 @@ export default function SolicitarAnticipoPage() {
 
   if (loading) {
     return (
-      <div className="aim-page-bg flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 dark:border-gray-300 mx-auto mb-4"></div>
-          <p className="text-gray-600 dark:text-gray-300">Cargando...</p>
+      <div className="min-h-screen relative w-full overflow-hidden flex items-center justify-center">
+        <ModelAuroraBackground />
+        <div className="relative z-10 text-center bg-white/20 dark:bg-gray-900/40 p-6 rounded-2xl backdrop-blur-md">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-800 dark:text-gray-200 font-medium">Cargando...</p>
         </div>
       </div>
     );
@@ -458,18 +514,20 @@ export default function SolicitarAnticipoPage() {
 
   if (!user) {
     return (
-      <div className="aim-page-bg flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-semibold text-gray-900 dark:text-gray-100 mb-4">Acceso Denegado</h1>
-          <p className="text-gray-600 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
+      <div className="min-h-screen relative w-full overflow-hidden flex items-center justify-center">
+        <ModelAuroraBackground />
+        <div className="relative z-10 text-center bg-white/20 dark:bg-gray-900/40 p-8 rounded-2xl backdrop-blur-md border border-white/20">
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Acceso Denegado</h1>
+          <p className="text-gray-700 dark:text-gray-300">No tienes permisos para acceder a esta página.</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="aim-page-bg">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+    <div className="min-h-screen relative w-full overflow-hidden">
+      <ModelAuroraBackground />
+      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
       <style jsx>{`
         /* Dropdown compacto con scrollbar */
         .bank-select {
@@ -491,31 +549,44 @@ export default function SolicitarAnticipoPage() {
           background: #94a3b8;
         }
       `}</style>
-        {/* Header — Migrado a PageHeader */}
         <PageHeader
-          title="Solicitar Anticipo"
-          subtitle="Solicita un anticipo de hasta el 90% de tu productividad"
+          title="Mis Anticipos"
           glow="model"
-          icon={
-            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
-            </svg>
-          }
-        >
-          {/* Indicador de política activa integrado */}
-          <div className="p-3 sm:p-4 bg-blue-50/80 dark:bg-blue-900/20 backdrop-blur-sm border border-blue-200/50 dark:border-blue-700/50 rounded-lg">
-            <div className="flex items-start sm:items-center">
-              <svg className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 dark:text-blue-400 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-              </svg>
-              <div>
-                <p className="text-xs sm:text-sm font-medium text-blue-800 dark:text-blue-300">Política de fechas activa</p>
-                <p className="text-[10px] sm:text-xs text-blue-700 dark:text-blue-400 mt-0.5">No disponible del fin de mes al 5 y del 15 al 20</p>
-              </div>
-            </div>
-          </div>
-        </PageHeader>
+          icon={<span className="font-bold text-white text-xl sm:text-2xl pt-1">$</span>}
+        />
 
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
+          <div className="flex p-1 bg-gray-200/60 dark:bg-gray-800/80 backdrop-blur-md rounded-full shadow-inner border border-white/20 dark:border-white/5 w-fit">
+            <button
+              onClick={() => setActiveTab('nueva')}
+              className={`px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
+                activeTab === 'nueva' 
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Nueva Solicitud
+            </button>
+            <button
+              onClick={() => setActiveTab('historial')}
+              className={`px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
+                activeTab === 'historial' 
+                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
+                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
+              }`}
+            >
+              Mi Historial
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 px-4 py-2 bg-transparent">
+            <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" /></svg>
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Servicio no disponible en cierres de periodos y hasta después de días de pago</p>
+          </div>
+        </div>
+
+        {activeTab === 'nueva' && (
+          <div className="animate-fade-in-up">
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
         <GlassCard glow="model" padding="none" className="rounded-2xl p-3 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300">
           <div className="flex items-center justify-between mb-3 sm:mb-4">
@@ -736,6 +807,7 @@ export default function SolicitarAnticipoPage() {
                       placeholder="Selecciona un banco"
                       maxHeight="max-h-32"
                       className="text-sm"
+                      variant="input"
                     />
                   </div>
                 </div>
@@ -772,6 +844,7 @@ export default function SolicitarAnticipoPage() {
                       onChange={(value) => handleInputChange('tipo_cuenta', value)}
                       placeholder="Selecciona tipo de cuenta"
                       className="text-sm"
+                      variant="input"
                     />
                   </div>
 
@@ -808,19 +881,19 @@ export default function SolicitarAnticipoPage() {
             )}
 
             {/* Botones */}
-            <div className="flex justify-center pt-6 sm:pt-8 border-t border-gray-200 dark:border-gray-700">
-              <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full sm:w-auto">
+            <div className="flex justify-center pt-6 sm:pt-8 mt-4 border-t border-gray-200 dark:border-gray-800">
+              <div className="inline-flex p-1 bg-gray-200/50 dark:bg-gray-800/80 backdrop-blur-md rounded-full shadow-inner border border-white/20 dark:border-white/5 w-full sm:w-auto">
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-2.5 text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-600 border-2 border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 active:scale-95 transition-all duration-200 touch-manipulation"
+                  className="w-full sm:w-auto px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 rounded-full hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm transition-all"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || productivityData.anticipoDisponible <= 0 || !isFormValid()}
-                  className="w-full sm:w-auto px-5 sm:px-6 py-3 sm:py-2.5 text-sm sm:text-base font-medium text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-lg hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed active:scale-95 transition-all duration-200 shadow-md touch-manipulation"
+                  className="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all ml-1"
                 >
                   {submitting ? 'Enviando...' : 'Enviar Solicitud'}
                 </button>
@@ -828,6 +901,74 @@ export default function SolicitarAnticipoPage() {
             </div>
           </form>
         </GlassCard>
+        </div>
+        )}
+
+        {/* TAB HISTORIAL */}
+        {activeTab === 'historial' && (
+          <div className="animate-fade-in-up mt-4">
+            <GlassCard glow="model" padding="none" className="rounded-2xl p-4 sm:p-6 min-h-[400px]">
+              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Historial de Anticipos</h2>
+              
+              {loadingHistorial ? (
+                <div className="flex justify-center items-center h-40">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : historialAnticipos.length === 0 ? (
+                <div className="text-center py-12 text-gray-500 dark:text-gray-400">
+                  <svg className="w-12 h-12 mx-auto text-gray-400 dark:text-gray-500 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                  <p>No tienes solicitudes de anticipos registradas.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {historialAnticipos.map((anticipo) => (
+                    <div key={anticipo.id} className="bg-white dark:bg-gray-800/80 rounded-xl p-4 sm:p-5 border border-gray-100 dark:border-gray-700 shadow-sm transition-all hover:shadow-md">
+                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-3 mb-2">
+                            <span className="text-lg font-bold text-gray-900 dark:text-white">
+                              ${anticipo.monto_solicitado.toLocaleString('es-CO')}
+                            </span>
+                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
+                              anticipo.estado === 'pendiente' ? 'bg-yellow-100/80 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-300' :
+                              anticipo.estado === 'aprobado' ? 'bg-blue-100/80 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300' :
+                              anticipo.estado === 'confirmado' || anticipo.estado === 'realizado' ? 'bg-green-100/80 text-green-800 dark:bg-green-900/30 dark:text-green-300' :
+                              'bg-red-100/80 text-red-800 dark:bg-red-900/30 dark:text-red-300'
+                            }`}>
+                              {anticipo.estado.charAt(0).toUpperCase() + anticipo.estado.slice(1)}
+                            </span>
+                          </div>
+                          
+                          <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                            <p><span className="font-semibold text-gray-700 dark:text-gray-300">Medio:</span> {anticipo.medio_pago.toUpperCase()}</p>
+                            <p><span className="font-semibold text-gray-700 dark:text-gray-300">Fecha:</span> {new Date(anticipo.created_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                            {anticipo.comentarios_admin && (
+                              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400 italic bg-gray-50 dark:bg-gray-800 p-2 rounded">
+                                Nota Admin: "{anticipo.comentarios_admin}"
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {anticipo.estado === 'pendiente' && (
+                          <div className="flex-shrink-0">
+                            <button
+                              onClick={() => cancelAnticipo(anticipo.id)}
+                              disabled={cancellingId === anticipo.id}
+                              className="px-4 py-2 text-sm font-semibold text-red-600 bg-red-50/50 border border-red-200/50 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-900/10 dark:text-red-400 dark:hover:bg-red-900/40 rounded-lg transition-colors focus:outline-none w-full sm:w-auto"
+                            >
+                              {cancellingId === anticipo.id ? 'Cancelando...' : 'Cancelar Solicitud'}
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </GlassCard>
+          </div>
+        )}
       </div>
     </div>
   );

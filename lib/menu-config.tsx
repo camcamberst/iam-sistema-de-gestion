@@ -137,10 +137,13 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
   const baseItems: MenuItem[] = [
     {
       id: 'calculator',
-      label: userRole === 'modelo' ? 'Mi Calculadora' : 'Gestión Calculadora',
+      label: userRole === 'modelo' ? 'Mis Ingresos' : 'Gestión Calculadora',
       href: userRole === 'modelo' ? '/admin/model/calculator' : '#',
       subItems: userRole === 'modelo'
-        ? [{ label: 'Ingresar Valores', href: '/admin/model/calculator' }]
+        ? [
+            { label: 'Calculadora', href: '/admin/model/calculator' },
+            { label: 'Mi Historial', href: '/admin/model/calculator/historial' }
+          ]
         : []
     }
   ];
@@ -149,17 +152,16 @@ export function buildMenuItems(userRole: UserRole): MenuItem[] {
   if (userRole === 'modelo') {
     baseItems.push({
       id: 'finanzas',
-      label: 'Mis Finanzas',
+      label: 'Mis Servicios',
       href: '/admin/model/anticipos/solicitar',
       subItems: [
-        { label: 'Solicitar Anticipo', href: '/admin/model/anticipos/solicitar' },
-        { label: 'Mis Solicitudes', href: '/admin/model/anticipos/solicitudes' },
+        { label: 'Mis Anticipos', href: '/admin/model/anticipos/solicitar' },
         { label: 'Mi Ahorro', href: '/admin/model/finanzas/ahorro' }
       ]
     });
     baseItems.push({
       id: 'portafolio',
-      label: 'Mi Portafolio',
+      label: 'Mis Plataformas',
       href: '/admin/model/portafolio',
       subItems: []
     });
