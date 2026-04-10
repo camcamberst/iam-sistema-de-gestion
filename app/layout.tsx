@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import ThemeTransition from "@/components/ThemeTransition";
@@ -21,7 +21,6 @@ export const metadata: Metadata = {
       { url: '/favicon.png', type: 'image/png', sizes: '192x192' },
       { url: '/favicon.png', type: 'image/png', sizes: '64x64' },
       { url: '/favicon.png', type: 'image/png', sizes: '32x32' },
-      { url: '/favicon.ico', type: 'image/x-icon', sizes: 'any' }
     ],
     apple: [
       { url: '/favicon.png', type: 'image/png', sizes: '180x180' }
