@@ -138,10 +138,18 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const netoDisponible = facturado - anticiposTotal - cuotasPendientes - comprasContado - cuotaPrimeraAprobacion;
+  // ── Tope Máximo del 90% (Alineado con Anticipos) ──────────────────────────
+  const topeMaximo = Math.round(facturado * 0.9);
+  const totalDeducciones = anticiposTotal + cuotasPendientes + comprasContado + cuotaPrimeraAprobacion;
+  const netoDisponible = Math.max(0, topeMaximo - totalDeducciones);
 
   // ── Detalle legible para la modelo (ej. "Cuota 1/4 Sexshop (Producto X): $15.000") ─
   const descuentos_detalle: Array<{ concepto: string; monto: number }> = [];
+
+  const retencion = facturado - topeMaximo;
+  if (retencion > 0) {
+    descuentos_detalle.push({ concepto: `Retención de seguridad (10%): $${retencion.toLocaleString('es-CO', { maximumFractionDigits: 0 })}`, monto: retencion });
+  }
 
   if (anticiposTotal > 0) {
     descuentos_detalle.push({ concepto: `Anticipo: $${anticiposTotal.toLocaleString('es-CO', { maximumFractionDigits: 0 })}`, monto: anticiposTotal });

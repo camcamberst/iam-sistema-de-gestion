@@ -1,4 +1,4 @@
-// File: C:\Users\camca\OneDrive\Documentos\GitHub\iam-sistema-de-gestion\app\api\announcements\route.ts
+// File: C:\Users\camca\OneDrive\Documentos\navegador\iam-gestion\app\api\announcements\route.ts
 import * as entry from '../../../../../app/api/announcements/route.js'
 import type { NextRequest } from 'next/server.js'
 

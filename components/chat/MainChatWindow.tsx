@@ -138,7 +138,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
         
         if (match) {
           const [_, modelId, modelName, modelEmail] = match;
-          console.log('🚀 [CHAT-LAUNCHER] Ejecutando acción Boost Page:', { modelId, modelName });
+          (function(){})()
           
           // Marcar mensaje como procesado en memoria y localStorage
           processedMessageIdsRef.current.add(lastMessage.id);
@@ -390,7 +390,7 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
       // Usar esto también para asegurar que funcione
       container.scrollTop = container.scrollHeight;
     } catch (error) {
-      console.error('Error en scrollToBottom:', error);
+      (function(){})()
       // Último recurso: intentar scroll directo
       if (messagesContainerRef.current) {
         messagesContainerRef.current.scrollTop = messagesContainerRef.current.scrollHeight;
@@ -1235,11 +1235,11 @@ const MainChatWindow: React.FC<MainChatWindowProps> = ({
                 <button
                   onClick={(e) => {
                     e.stopPropagation();
-                    console.log('🔴 [MainChatWindow] Click en Eliminar confirmado. ID:', showDeleteConfirm);
+                    (function(){})()
                     if (deleteConversation && showDeleteConfirm) {
                       deleteConversation(showDeleteConfirm);
                     } else {
-                      console.error('❌ [MainChatWindow] Función deleteConversation no disponible o ID inválido');
+                      (function(){})()
                     }
                   }}
                   className="flex-1 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white text-xs"

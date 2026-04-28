@@ -241,7 +241,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
 
   if (loading) {
     return (
-      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
+      <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-white/[0.10] p-6">
         <div className="flex items-center space-x-2 mb-4">
           <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -259,7 +259,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
 
   if (error) {
     return (
-      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
+      <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-white/[0.10] p-6">
         <div className="flex items-center space-x-2 mb-4">
           <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center">
             <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -272,7 +272,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
           <div className="text-sm text-red-600 mb-2">{error}</div>
           <button
             onClick={() => loadBillingData()}
-            className="text-xs text-blue-600 hover:text-blue-800 font-medium"
+            className="p-2 min-h-[36px] text-xs text-blue-600 hover:text-blue-800 font-medium"
           >
             Reintentar
           </button>
@@ -282,7 +282,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
   }
 
   return (
-    <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-green-900/10 dark:ring-0.5 dark:ring-green-500/15 border border-white/20 dark:border-gray-600/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
+    <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_4px_20px_rgba(0,0,0,0.4)] dark:ring-1 dark:ring-green-500/10 border border-white/20 dark:border-white/[0.10] p-3 sm:p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-white/[0.12] hover:scale-[1.02] transition-all duration-300">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
@@ -297,7 +297,7 @@ export default function BillingSummaryCompact({ userRole, userId, userGroups = [
         </div>
         <Link 
           href="/admin/sedes/dashboard" 
-          className="text-xs text-blue-600 dark:text-white hover:text-blue-800 dark:hover:text-gray-200 font-medium"
+          className="p-2 -m-2 inline-flex items-center text-xs text-blue-600 dark:text-white hover:text-blue-800 dark:hover:text-gray-200 font-medium"
         >
           Ver completo →
         </Link>

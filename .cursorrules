@@ -1,0 +1,16 @@
+---
+# Reglas del Proyecto — IAM Sistema de Gestión
+## Contexto
+Este proyecto se desarrolla en equipo entre Cursor y Antigravity (Gemini).
+Ambos operan sobre los mismos archivos en c:\Users\camca\OneDrive\Documentos\navegador\iam-gestion\
+- Cursor: ediciones rápidas, autocomplete, cambios inline
+- Antigravity: features complejas, debugging, cambios multi-archivo
+
+## Coordinación
+- Trabajar en ramas Git, no directamente en main/production
+- No eliminar archivos ni funciones sin confirmación del usuario
+- Si ves cambios que no hiciste tú, es porque Antigravity los hizo — no los reviertas
+
+## Stack
+- Next.js (App Router), TypeScript, Supabase, TailwindCSS
+---

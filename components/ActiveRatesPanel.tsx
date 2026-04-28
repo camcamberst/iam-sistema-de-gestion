@@ -108,7 +108,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
 
   if (compact) {
     return (
-      <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300 cursor-pointer">
+      <div className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_4px_20px_rgba(0,0,0,0.4)] dark:ring-1 dark:ring-blue-500/10 border border-white/20 dark:border-white/[0.10] p-3 sm:p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-white/[0.12] hover:scale-[1.02] transition-all duration-300 cursor-pointer">
         {showTitle && (
           <div className="flex items-center space-x-2 mb-3">
             <div className="w-6 h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center">
@@ -153,7 +153,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
   }
 
   return (
-    <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+    <div className="bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl p-3 sm:p-4 border border-white/20 dark:border-white/[0.10] shadow-md dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_4px_20px_rgba(0,0,0,0.4)] dark:ring-1 dark:ring-blue-500/10">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center space-x-2">
           <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -166,7 +166,7 @@ export default function ActiveRatesPanel({ compact = false, showTitle = true, re
         </div>
         <button 
           onClick={loadActiveRates}
-          className="px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-lg hover:bg-blue-100/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
+          className="px-3 py-1.5 min-h-[36px] flex items-center justify-center text-xs font-medium text-blue-600 bg-blue-50/80 backdrop-blur-sm border border-blue-200/50 rounded-lg hover:bg-blue-100/80 focus:ring-2 focus:ring-blue-500/20 transition-all duration-200"
           disabled={loading}
         >
           {loading ? 'Actualizando...' : 'Actualizar'}

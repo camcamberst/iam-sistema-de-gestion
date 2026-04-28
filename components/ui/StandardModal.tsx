@@ -15,6 +15,9 @@ interface StandardModalProps {
   className?: string; // clases adicionales del contenedor
   showCloseButton?: boolean;
   closeOnBackdrop?: boolean;
+  bgClass?: string;
+  borderClass?: string;
+  overflowClass?: string;
 }
 
 export default function StandardModal({
@@ -23,12 +26,15 @@ export default function StandardModal({
   children,
   title,
   maxWidthClass = 'max-w-lg',
-  paddingClass = 'p-7',
+  paddingClass = 'p-4 sm:p-7',
   headerMarginClass = 'mb-5',
   formSpaceYClass = 'space-y-5',
   className = '',
   showCloseButton = true,
-  closeOnBackdrop = true
+  closeOnBackdrop = true,
+  bgClass = 'bg-white/90 dark:bg-gray-800/90 backdrop-blur-xl',
+  borderClass = 'border border-white/80 dark:border-white/10',
+  overflowClass = 'overflow-y-auto'
 }: StandardModalProps) {
   const [mounted, setMounted] = useState(false);
 
@@ -72,7 +78,7 @@ export default function StandardModal({
       onClick={() => { if (closeOnBackdrop) onClose(); }}
       aria-modal="true"
       role="dialog"
-      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+      className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[99999] p-4 sm:p-6"
       style={{ 
         position: 'fixed',
         top: 0,
@@ -83,7 +89,7 @@ export default function StandardModal({
       }}
     >
       <div
-        className={`${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] overflow-y-auto bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-2xl shadow-xl ${className}`}
+        className={`${paddingClass} w-full ${maxWidthClass} max-h-[calc(100vh-2rem)] ${overflowClass} ${bgClass} ${borderClass} rounded-2xl shadow-2xl ${className}`}
         onClick={(e) => e.stopPropagation()}
         style={{ 
           position: 'relative',

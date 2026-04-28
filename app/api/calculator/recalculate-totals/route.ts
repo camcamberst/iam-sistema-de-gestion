@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { getColombiaDate } from '@/utils/calculator-dates';
 
-
 export const dynamic = 'force-dynamic';
 
 const supabase = createClient(
@@ -10,7 +9,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY as string
 );
 
-// POST: Recalcular todos los totales usando la nueva lógica simple
+// POST: Recalcular todos los totales
 export async function POST(request: NextRequest) {
   try {
     console.log('🔄 [RECALCULATE-TOTALS] Iniciando recálculo de totales...');
@@ -30,7 +29,22 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: 'No hay configuraciones para recalcular' });
     }
 
-    console.log(`🔍 [RECALCULATE-TOTALS] Encontradas ${configs.length} configuraciones`);
+    // 1.5 Obtener todas las configuraciones por plataforma activas
+    const { data: platformConfigs, error: platformConfigsError } = await supabase
+      .from('calculator_config_platforms')
+      .select('model_id, platform_id, percentage_override');
+
+    const overridesByModel: Record<string, Record<string, number>> = {};
+    if (platformConfigs) {
+      platformConfigs.forEach((pc: any) => {
+        if (!overridesByModel[pc.model_id]) overridesByModel[pc.model_id] = {};
+        if (pc.percentage_override) {
+          overridesByModel[pc.model_id][pc.platform_id] = pc.percentage_override;
+        }
+      });
+    }
+
+    console.log('🔍 [RECALCULATE-TOTALS] Encontradas ' + configs.length + ' configuraciones');
 
     // 2. Obtener tasas actuales
     const { data: ratesData, error: ratesError } = await supabase
@@ -57,8 +71,6 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    console.log('🔍 [RECALCULATE-TOTALS] Tasas:', rates);
-
     // 3. Obtener todas las plataformas
     const { data: platforms, error: platformsError } = await supabase
       .from('calculator_platforms')
@@ -69,8 +81,6 @@ export async function POST(request: NextRequest) {
       console.error('❌ [RECALCULATE-TOTALS] Error al obtener plataformas:', platformsError);
       return NextResponse.json({ success: false, error: 'Error al obtener plataformas' }, { status: 500 });
     }
-
-    const platformMap = new Map(platforms?.map(p => [p.id, p]) || []);
 
     // 4. Obtener valores recientes de todos los modelos
     const today = getColombiaDate();
@@ -96,10 +106,8 @@ export async function POST(request: NextRequest) {
       const modelId = config.model_id;
       const modelPercentage = config.percentage_override || config.group_percentage || 80;
 
-      console.log(`🔍 [RECALCULATE-TOTALS] Procesando modelo ${modelId} con porcentaje ${modelPercentage}%`);
-
       // Obtener valores de este modelo
-      const modelValues = allValues?.filter(v => v.model_id === modelId) || [];
+      const modelValues = allValues?.filter((v: any) => v.model_id === modelId) || [];
       
       // Obtener solo el valor más reciente por plataforma
       const platformMap = new Map<string, any>();
@@ -109,11 +117,14 @@ export async function POST(request: NextRequest) {
         }
       });
 
-      // Calcular USD Bruto usando la nueva lógica simple
+      // Calcular USD Bruto usando la nueva lógica y USD Modelo con overrides
       let totalUsdBruto = 0;
+      let totalUsdModelo = 0;
       
+      const modelOverrides = overridesByModel[modelId] || {};
+
       for (const [platformId, value] of Array.from(platformMap.entries())) {
-        const platform = platforms?.find(p => p.id === platformId);
+        const platform = platforms?.find((p: any) => p.id === platformId);
         if (!platform || !value.value) continue;
 
         let usdBruto = 0;
@@ -122,6 +133,8 @@ export async function POST(request: NextRequest) {
             usdBruto = (Number(value.value) * rates.eur_usd) * 0.84;
           } else if (platform.id === 'mondo') {
             usdBruto = (Number(value.value) * rates.eur_usd) * 0.78;
+          } else if (['modelka', 'xmodels', '777', 'vx', 'livecreator', 'mow'].includes(platform.id)) {
+            usdBruto = Number(value.value) * rates.eur_usd;
           } else {
             usdBruto = Number(value.value) * rates.eur_usd;
           }
@@ -142,7 +155,7 @@ export async function POST(request: NextRequest) {
             usdBruto = Number(value.value) * 0.5;
           } else if (platform.id === 'superfoon') {
             usdBruto = Number(value.value);
-          } else if (platform.id === 'mdh' || platform.id === 'livejasmin' || platform.id === 'imlive' || platform.id === 'hegre' || platform.id === 'dirtyfans' || platform.id === 'camcontacts') {
+          } else if (['mdh', 'livejasmin', 'imlive', 'hegre', 'dirtyfans', 'camcontacts'].includes(platform.id)) {
             usdBruto = Number(value.value);
           } else {
             usdBruto = Number(value.value);
@@ -150,10 +163,16 @@ export async function POST(request: NextRequest) {
         }
 
         totalUsdBruto += usdBruto;
+
+        const platformPct = modelOverrides[platform.id] || modelPercentage;
+        
+        if (platform.id === 'superfoon') {
+          totalUsdModelo += usdBruto; // 100% directo
+        } else {
+          totalUsdModelo += usdBruto * (platformPct / 100);
+        }
       }
 
-      // 🔧 NUEVA LÓGICA SIMPLE: USD Modelo = USD Bruto × Porcentaje de Reparto
-      const totalUsdModelo = totalUsdBruto * (modelPercentage / 100);
       const totalCopModelo = totalUsdModelo * rates.usd_cop;
 
       recalculatedTotals.push({
@@ -164,8 +183,6 @@ export async function POST(request: NextRequest) {
         total_cop_modelo: Math.round(totalCopModelo),
         updated_at: new Date().toISOString()
       });
-
-      console.log(`✅ [RECALCULATE-TOTALS] Modelo ${modelId}: USD Bruto=${totalUsdBruto.toFixed(2)}, USD Modelo=${totalUsdModelo.toFixed(2)}, Porcentaje=${modelPercentage}%`);
     }
 
     // 6. Actualizar calculator_totals con los nuevos cálculos
@@ -180,15 +197,11 @@ export async function POST(request: NextRequest) {
         console.error('❌ [RECALCULATE-TOTALS] Error al actualizar totales:', updateError);
         return NextResponse.json({ success: false, error: 'Error al actualizar totales' }, { status: 500 });
       }
-
-      console.log(`✅ [RECALCULATE-TOTALS] Actualizados ${recalculatedTotals.length} totales`);
     }
 
     return NextResponse.json({
       success: true,
-      message: `Recalculados ${recalculatedTotals.length} totales con la nueva lógica simple`,
-      recalculated: recalculatedTotals.length,
-      rates
+      message: 'Recalculados ' + recalculatedTotals.length + ' totales'
     });
 
   } catch (error: any) {

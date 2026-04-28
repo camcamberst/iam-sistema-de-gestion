@@ -150,6 +150,32 @@ export async function POST(request: NextRequest) {
       }, { status: 400 });
     }
 
+    // Verificar si hay una meta de ahorro activa que bloquee el retiro
+    const { data: activeGoal } = await supabase
+      .from('savings_goals')
+      .select('*')
+      .eq('model_id', modelId)
+      .eq('estado', 'activa')
+      .not('fecha_limite', 'is', null)
+      .limit(1)
+      .single();
+
+    if (activeGoal) {
+      const goalDate = new Date(activeGoal.fecha_limite);
+      goalDate.setHours(23, 59, 59, 999); // Todo el día
+      const today = new Date();
+      
+      const isPastDeadline = today >= goalDate;
+      const isGoalReached = balance.saldo_actual >= parseFloat(activeGoal.monto_meta);
+      
+      if (!isPastDeadline && !isGoalReached) {
+        return NextResponse.json({
+          success: false,
+          error: `Retiro bloqueado: Tienes la meta "${activeGoal.nombre_meta}" hasta ${activeGoal.fecha_limite}. Alcanza el objetivo (${parseFloat(activeGoal.monto_meta).toLocaleString('es-CO')}) o espera al vencimiento del plazo para retirar.`
+        }, { status: 403 });
+      }
+    }
+
     // Calcular tiempo de procesamiento
     const processing = calculateProcessingTime(monto, balance.saldo_actual);
     const porcentajeRetiro = processing.porcentaje;

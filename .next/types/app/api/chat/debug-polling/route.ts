@@ -1,4 +1,4 @@
-// File: C:\Users\camca\OneDrive\Documentos\GitHub\iam-sistema-de-gestion\app\api\chat\debug-polling\route.ts
+// File: C:\Users\camca\OneDrive\Documentos\navegador\iam-gestion\app\api\chat\debug-polling\route.ts
 import * as entry from '../../../../../../app/api/chat/debug-polling/route.js'
 import type { NextRequest } from 'next/server.js'
 

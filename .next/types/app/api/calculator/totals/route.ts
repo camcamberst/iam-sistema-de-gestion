@@ -1,4 +1,4 @@
-// File: C:\Users\camca\OneDrive\Documentos\GitHub\iam-sistema-de-gestion\app\api\calculator\totals\route.ts
+// File: C:\Users\camca\OneDrive\Documentos\navegador\iam-gestion\app\api\calculator\totals\route.ts
 import * as entry from '../../../../../../app/api/calculator/totals/route.js'
 import type { NextRequest } from 'next/server.js'
 

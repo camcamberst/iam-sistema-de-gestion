@@ -4,7 +4,7 @@
 // ID especial para AIM Botty (debe ser un UUID válido o un identificador especial)
 // Nota: Este debe ser un usuario real en la base de datos o usar un ID especial
 export const AIM_BOTTY_ID = 'f91c0968-b587-46cf-9036-05a4ec795c7f';
-export const AIM_BOTTY_NAME = 'AIM Botty';
+export const AIM_BOTTY_NAME = 'Botty';
 export const AIM_BOTTY_EMAIL = 'aim-botty@agencia-innova.com';
 
 // Tipos de mensajes que puede enviar el bot

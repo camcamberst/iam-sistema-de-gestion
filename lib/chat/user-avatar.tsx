@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { AIM_BOTTY_ID, AIM_BOTTY_EMAIL } from './aim-botty';
+import { BottyAvatar, BottyEmotion } from '@/components/ui/BottyAvatar';
 
 
 /**
@@ -90,9 +91,11 @@ export function renderElegantAvatar(
     email?: string;
     role?: string;
     name?: string;
+    avatar_url?: string;
   },
   size: 'small' | 'medium' = 'medium',
-  isOffline: boolean = false
+  isOffline: boolean = false,
+  bottyEmotion: BottyEmotion = 'idle'
 ): React.ReactElement {
   const isBotty = user?.id === AIM_BOTTY_ID || user?.email === AIM_BOTTY_EMAIL;
   const role = user?.role || 'modelo';
@@ -104,11 +107,31 @@ export function renderElegantAvatar(
   const borderClass = isBotty ? 'rounded-xl border border-purple-400/30' : 'rounded-full';
   const shadowClass = size === 'medium' ? 'shadow-md' : 'shadow-sm';
 
-  // Para Botty, usar emoji especial
+  // Para Botty, usar el componente interactivo animable
   if (isBotty) {
     return (
-      <div className={`${sizeClass} ${gradient} ${borderClass} flex items-center justify-center ${shadowClass} flex-shrink-0`}>
-        <span className="text-xs leading-none">🤖</span>
+      <BottyAvatar 
+        size={size === 'small' ? 24 : 32} 
+        emotion={bottyEmotion} 
+        className={shadowClass}
+      />
+    );
+  }
+
+  // Si el usuario tiene una foto real configurada o es modelo (usa favicon por defecto)
+  if (user?.avatar_url || role === 'modelo') {
+    const imgSrc = user?.avatar_url || '/favicon.png';
+    return (
+      <div 
+        className={`${sizeClass} ${borderClass} ${shadowClass} flex-shrink-0 relative overflow-hidden bg-gray-100 dark:bg-gray-800 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)] hover:scale-[2.2] hover:z-[999] hover:shadow-2xl cursor-zoom-in`}
+      >
+        <img 
+          src={imgSrc} 
+          alt={user?.name || "User Avatar"} 
+          className="absolute inset-0 w-full h-full object-cover object-center"
+        />
+        {/* Usamos un div absolute inset-0 para que borderRadius funcione bien sobre la imagen */}
+        <div className={`absolute inset-0 ${borderClass} shadow-inner pointer-events-none`}></div>
       </div>
     );
   }

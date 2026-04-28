@@ -9,7 +9,7 @@ import React from 'react';
 
 interface InfoCardProps {
   value: string | number;
-  label: string;
+  label: React.ReactNode;
   color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'yellow';
   onClick?: () => void;
   clickable?: boolean;
@@ -19,46 +19,46 @@ interface InfoCardProps {
 
 const colorVariants = {
   blue: {
-    gradient: 'bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-50/90 dark:to-blue-100/95',
-    border: 'border-blue-200 dark:border-blue-300/60',
-    text: 'text-blue-700 dark:text-blue-600',
-    badge: 'text-blue-600 bg-blue-200 dark:text-blue-700 dark:bg-blue-200/80',
-    shadow: 'hover:shadow-blue-200 dark:hover:shadow-blue-300/40'
+    gradient: 'bg-white/40 dark:bg-white/[0.03]',
+    border: 'border-white/50 dark:border-white/[0.08] max-sm:border-none',
+    text: 'text-blue-400 dark:text-[#5caaf5] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(92,170,245,0.7)]',
+    badge: 'text-blue-400 bg-blue-50 dark:text-[#5caaf5] dark:bg-blue-500/10 max-sm:dark:bg-blue-500/15',
+    shadow: 'hover:shadow-blue-200 dark:hover:shadow-blue-900/30 dark:hover:border-blue-400/30'
   },
   green: {
-    gradient: 'bg-gradient-to-br from-green-50 to-green-100 dark:from-green-50/90 dark:to-green-100/95',
-    border: 'border-green-200 dark:border-green-300/60',
-    text: 'text-green-700 dark:text-green-600',
-    badge: 'text-green-600 bg-green-200 dark:text-green-700 dark:bg-green-200/80',
-    shadow: 'hover:shadow-green-200 dark:hover:shadow-green-300/40'
+    gradient: 'bg-white/40 dark:bg-white/[0.03]',
+    border: 'border-white/50 dark:border-white/[0.08] max-sm:border-none',
+    text: 'text-emerald-600 dark:text-[#2dd4bf] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(45,212,191,0.7)]',
+    badge: 'text-emerald-600 bg-emerald-50 dark:text-[#2dd4bf] dark:bg-emerald-500/10 max-sm:dark:bg-emerald-500/15',
+    shadow: 'hover:shadow-green-200 dark:hover:shadow-emerald-900/30 dark:hover:border-emerald-400/30'
   },
   purple: {
-    gradient: 'bg-gradient-to-br from-purple-50 to-purple-100 dark:from-purple-50/90 dark:to-purple-100/95',
-    border: 'border-purple-200 dark:border-purple-300/60',
-    text: 'text-purple-700 dark:text-purple-600',
-    badge: 'text-purple-600 bg-purple-200 dark:text-purple-700 dark:bg-purple-200/80',
-    shadow: 'hover:shadow-purple-200 dark:hover:shadow-purple-300/40'
+    gradient: 'bg-white/40 dark:bg-white/[0.03]',
+    border: 'border-white/50 dark:border-white/[0.08] max-sm:border-none',
+    text: 'text-purple-400 dark:text-[#c488fc] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(196,136,252,0.7)]',
+    badge: 'text-purple-400 bg-purple-50 dark:text-[#c488fc] dark:bg-purple-500/10 max-sm:dark:bg-purple-500/15',
+    shadow: 'hover:shadow-purple-200 dark:hover:shadow-purple-900/30 dark:hover:border-purple-400/30'
   },
   orange: {
-    gradient: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-50/90 dark:to-orange-100/95',
-    border: 'border-orange-200 dark:border-orange-300/60',
-    text: 'text-orange-700 dark:text-orange-600',
-    badge: 'text-orange-600 bg-orange-200 dark:text-orange-700 dark:bg-orange-200/80',
-    shadow: 'hover:shadow-orange-200 dark:hover:shadow-orange-300/40'
+    gradient: 'bg-gradient-to-br from-orange-50 to-orange-100 dark:bg-white/[0.03] dark:from-transparent dark:to-transparent max-sm:dark:bg-black/20 backdrop-blur-md',
+    border: 'border-orange-200 dark:border-white/[0.03] max-sm:border-none',
+    text: 'text-orange-400 dark:text-orange-400',
+    badge: 'text-orange-400 bg-orange-50 dark:text-[#8f95a3] dark:bg-white/[0.04] max-sm:dark:bg-white/[0.06] max-sm:dark:text-[#a1a8b5]',
+    shadow: 'hover:shadow-orange-200 dark:hover:shadow-black/20 dark:hover:border-white/10'
   },
   red: {
-    gradient: 'bg-gradient-to-br from-red-50 to-red-100 dark:from-red-50/90 dark:to-red-100/95',
-    border: 'border-red-200 dark:border-red-300/60',
-    text: 'text-red-700 dark:text-red-600',
-    badge: 'text-red-600 bg-red-200 dark:text-red-700 dark:bg-red-200/80',
-    shadow: 'hover:shadow-red-200 dark:hover:shadow-red-300/40'
+    gradient: 'bg-gradient-to-br from-red-50 to-red-100 dark:bg-white/[0.03] dark:from-transparent dark:to-transparent max-sm:dark:bg-black/20 backdrop-blur-md',
+    border: 'border-red-200 dark:border-white/[0.03] max-sm:border-none',
+    text: 'text-red-400 dark:text-red-400',
+    badge: 'text-red-400 bg-red-50 dark:text-[#8f95a3] dark:bg-white/[0.04] max-sm:dark:bg-white/[0.06] max-sm:dark:text-[#a1a8b5]',
+    shadow: 'hover:shadow-red-200 dark:hover:shadow-black/20 dark:hover:border-white/10'
   },
   yellow: {
-    gradient: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:from-yellow-50/90 dark:to-yellow-100/95',
-    border: 'border-yellow-200 dark:border-yellow-300/60',
-    text: 'text-yellow-700 dark:text-yellow-600',
-    badge: 'text-yellow-600 bg-yellow-200 dark:text-yellow-700 dark:bg-yellow-200/80',
-    shadow: 'hover:shadow-yellow-200 dark:hover:shadow-yellow-300/40'
+    gradient: 'bg-gradient-to-br from-yellow-50 to-yellow-100 dark:bg-white/[0.03] dark:from-transparent dark:to-transparent max-sm:dark:bg-black/20 backdrop-blur-md',
+    border: 'border-yellow-200 dark:border-white/[0.03] max-sm:border-none',
+    text: 'text-yellow-400 dark:text-yellow-400',
+    badge: 'text-yellow-400 bg-yellow-50 dark:text-[#8f95a3] dark:bg-white/[0.04] max-sm:dark:bg-white/[0.06] max-sm:dark:text-[#a1a8b5]',
+    shadow: 'hover:shadow-yellow-200 dark:hover:shadow-black/20 dark:hover:border-white/10'
   }
 };
 
@@ -72,9 +72,9 @@ export default function InfoCard({
   size = 'md'
 }: InfoCardProps) {
   const colors = colorVariants[color];
-  const paddingClass = size === 'sm' ? 'p-2 sm:p-4' : (size === 'lg' ? 'p-6' : 'p-5');
-  const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-base sm:text-lg' : 'text-xl');
-  const labelTextClass = size === 'sm' ? 'text-[10px] sm:text-[11px]' : 'text-xs';
+  const paddingClass = size === 'sm' ? 'px-2 py-2 sm:px-3 sm:py-2.5 md:px-4 md:py-3' : (size === 'lg' ? 'px-6 py-5 sm:px-8 sm:py-6' : 'px-4 py-3 sm:px-6 sm:py-4');
+  const valueTextClass = size === 'lg' ? 'text-2xl' : (size === 'sm' ? 'text-[15px] sm:text-[16px] max-sm:mb-1' : 'text-xl max-sm:mb-2');
+  const labelTextClass = size === 'sm' ? 'text-[9px] sm:text-[10px] tracking-tight sm:tracking-wide' : 'text-xs tracking-wide';
   
   const formatValue = (val: string | number): string => {
     if (typeof val === 'number') {
@@ -90,18 +90,19 @@ export default function InfoCard({
   return (
     <div 
       className={`
-        text-center ${paddingClass} ${colors.gradient} rounded-xl border ${colors.border} 
-        hover:shadow-lg ${colors.shadow} dark:shadow-lg dark:ring-0.5 dark:ring-opacity-20 transition-all duration-200 transform hover:scale-105
+        w-full flex-1 w-full box-border
+        text-center ${paddingClass} ${colors.gradient} rounded-xl sm:rounded-2xl border ${colors.border} 
+        hover:shadow-lg ${colors.shadow} transition-all duration-200 transform hover:scale-105
         ${clickable || onClick ? 'cursor-pointer' : ''}
         ${className}
       `}
       onClick={onClick}
       title={clickable ? 'Hacer clic para interactuar' : undefined}
     >
-      <div className={`${valueTextClass} font-bold ${colors.text} mb-1`}>
+      <div className={`${valueTextClass} font-bold ${colors.text} mb-1 sm:mb-[0.35rem]`}>
         {formatValue(value)}
       </div>
-      <div className={`${labelTextClass} font-medium ${colors.badge} px-2 py-1 rounded-full inline-block`}>
+      <div className={`${labelTextClass} font-medium ${colors.badge} px-2 sm:px-3 py-1 sm:py-1 rounded-lg sm:rounded-xl w-full flex items-center justify-center leading-tight min-h-[20px] sm:min-h-[24px] whitespace-nowrap`}>
         {label}
       </div>
     </div>
@@ -116,11 +117,12 @@ export default function InfoCard({
 interface InfoCardGridProps {
   cards: Array<{
     value: string | number;
-    label: string;
+    label: React.ReactNode;
     color?: 'blue' | 'green' | 'purple' | 'orange' | 'red' | 'yellow';
     onClick?: () => void;
     clickable?: boolean;
     size?: 'sm' | 'md' | 'lg';
+    className?: string;
   }>;
   columns?: 1 | 2 | 3 | 4;
   className?: string;
@@ -134,23 +136,29 @@ export function InfoCardGrid({
   const gridCols = {
     1: 'grid-cols-1',
     2: 'grid-cols-2 md:grid-cols-2',
-    3: 'grid-cols-2 md:grid-cols-3',
+    3: 'grid-cols-3',
     4: 'grid-cols-2 md:grid-cols-2 lg:grid-cols-4'
   };
 
   return (
     <div className={`grid ${gridCols[columns]} gap-2 sm:gap-4 ${className}`}>
-      {cards.map((card, index) => (
-        <InfoCard
-          key={index}
-          value={card.value}
-          label={card.label}
-          color={card.color}
-          onClick={card.onClick}
-          clickable={card.clickable}
-          size={card.size}
-        />
-      ))}
+      {cards.map((card, index) => {
+        const combinedClass = `${card.className || ''}`.trim();
+
+        return (
+          <InfoCard
+            key={index}
+            value={card.value}
+            label={card.label}
+            color={card.color}
+            onClick={card.onClick}
+            clickable={card.clickable}
+            size={card.size}
+            className={combinedClass || undefined}
+          />
+        );
+      })}
     </div>
   );
 }
+

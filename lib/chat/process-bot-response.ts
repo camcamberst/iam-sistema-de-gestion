@@ -160,6 +160,17 @@ export async function processBotResponse(
       )
     );
 
+    // Detectar si la IA solicitó un escalamiento humano
+    const escalateMatch = botResponseRaw.match(/<<ESCALATE:\s*(.+?)>>/i);
+    if (escalateMatch) {
+      const reason = escalateMatch[1];
+      console.log(`⚠️ [BOTTY-DIRECT] Detectado intento de escalamiento: ${reason}`);
+      // Ejecutar en background (sin bloquear la respuesta)
+      handleEscalation(userId, userContext.name, reason, supabase).catch(err => 
+        console.error('Error en escalamiento asíncrono:', err)
+      );
+    }
+
     // Crear mensaje del bot (Respuesta IA estándar)
     const { error: messageError } = await supabase
       .from('chat_messages')
@@ -343,17 +354,14 @@ INSTRUCCIONES:
 4. ${isFirstBotMessage ? 'SOLO en este primer mensaje puedes saludar brevemente (ej: "¡Hola!").' : 'NO saludes, NUNCA. Responde directamente al mensaje sin saludos.'}
 5. Si pregunta sobre plataformas, da tips breves y prácticos (1-2 oraciones máximo)
 6. Para soporte técnico, soluciones rápidas y directas
-7. Si no puedes resolver algo, menciona brevemente que puedes escalarlo
-8. Consejería emocional: sé empático pero breve
-9. Usa emojis con moderación (1-2 máximo por respuesta)
-10. NUNCA escribas párrafos largos, siempre respuestas cortas y al punto, EXCEPTO cuando preguntan específicamente sobre el sistema - en ese caso puedes explicar en detalle
-11. Mantén el tono cercano, amigable y positivo
-${!isFirstBotMessage ? '12. IMPORTANTE: NO uses saludos como "¡Hola!", "Hola!", "¡Buen día!", etc. Responde directamente.' : ''}
-13. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema (funcionalidades, cómo funciona algo, arquitectura, módulos, flujos de trabajo, APIs, estructura de datos, permisos, etc.), usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa y precisa.
-14. Para preguntas sobre el sistema, puedes ser más detallado y técnico si es necesario, pero mantén un tono conversacional.
-15. Si preguntan "¿cómo funciona X?" o "¿qué es Y?", explica el flujo completo usando el conocimiento del sistema.
-16. ${resourcesContext ? 'IMPORTANTE: Si hay RECURSOS ÚTILES disponibles arriba y el usuario pregunta sobre algo relacionado, menciónalos y sugiere que los visite. Puedes mencionar el título y la URL del recurso relevante. Si hay múltiples recursos relevantes, puedes mencionar varios.' : ''}
-17. ${resourcesContext ? 'Cuando menciones un recurso, sé específico: "Te recomiendo revisar este artículo: [Título] - [URL]" o "Para más información sobre esto, puedes consultar: [Título] ([URL])"' : ''}
+7. Consejería emocional: sé empático pero breve
+8. Usa emojis con moderación (1-2 máximo por respuesta)
+9. NUNCA escribas párrafos largos, siempre respuestas cortas y al punto, EXCEPTO cuando preguntan específicamente sobre el sistema.
+10. Mantén el tono cercano, amigable y positivo, respetando siempre tu personalidad.
+${!isFirstBotMessage ? '11. IMPORTANTE: NO uses saludos como "¡Hola!", "Hola!", "¡Buen día!", etc. Responde directamente.' : ''}
+12. IMPORTANTE: Si el usuario pregunta sobre CUALQUIER aspecto del sistema, usa el CONOCIMIENTO DEL SISTEMA proporcionado arriba para dar una respuesta completa.
+13. ${resourcesContext ? 'RECURSOS IMPORTANTES: Si hay RECURSOS ÚTILES disponibles arriba y la consulta está relacionada, NUNCA uses Markdown normal para el enlace. DEBES usar EXACTAMENTE este formato: \`<<RESOURCE:id|title|url>>\` (ej: \`<<RESOURCE:clx|Guía de Luces|https://...>>\`).' : ''}
+14. ESCALAMIENTO INTELIGENTE: Si definitivamente no puedes resolver el problema, o el usuario pide explícitamente hablar con un humano, administrador o soporte, DEBES incluir al final de tu respuesta el tag \`<<ESCALATE:Breve resumen del problema>>\`. Por ejemplo: \`<<ESCALATE:Usuario reporta problemas para acceder a su cuenta de Chaturbate>>\`.
 
 RESPUESTA:
 `;
@@ -361,19 +369,13 @@ RESPUESTA:
     console.log('🤖 [BOTTY-GEN] Generando contenido con Gemini...');
     console.log('🤖 [BOTTY-GEN] Prompt length:', prompt.length);
 
-    // Lista de modelos para intentar (más recientes primero - Gemini 3.0 2025)
-    // Modelos actualizados a las versiones más recientes disponibles
+    // Modelos estables y rápidos (Gemini 2.5 y 3.0 Flash)
     const modelNames = [
-      'gemini-3.0-pro',                // Gemini 3.0 Pro - Más reciente (Nov 2025)
-      'gemini-3-pro-preview',           // Gemini 3.0 Pro Preview
-      'gemini-3.0-flash',               // Gemini 3.0 Flash - Más rápido
-      'gemini-3-flash-preview',         // Gemini 3.0 Flash Preview
-      'gemini-2.5-flash',               // Gemini 2.5 Flash - Fallback estable
-      'gemini-2.5-pro',                 // Gemini 2.5 Pro - Fallback estable
-      'gemini-2.5-flash-lite',         // Gemini 2.5 Flash-Lite - Optimizado
-      'gemini-1.5-flash',               // Fallback: versión estable anterior
-      'gemini-1.5-pro',                 // Fallback: versión estable anterior
-      'gemini-pro'                      // Legacy fallback
+      'gemini-2.5-flash',               // Rápido, ideal para chat
+      'gemini-2.0-flash',               // Fallback
+      'gemini-flash-latest',            // Alias dinámico
+      'gemini-pro-latest',              // Fallback Pro
+      'gemini-3-flash-preview'          // Experimental
     ];
     
     let lastError: any = null;
@@ -405,16 +407,7 @@ RESPUESTA:
           statusText: modelError?.statusText
         });
         lastError = modelError;
-        
-        // Si es error 404 o "not found", intentar siguiente modelo
-        if (modelError?.message?.includes('404') || 
-            modelError?.message?.includes('not found') ||
-            modelError?.status === 404) {
-          console.log(`⚠️ [BOTTY-GEN] ${modelName} no disponible, intentando siguiente modelo...`);
-          continue; // Intentar siguiente modelo
-        }
-        
-        // Si es error de API key o autenticación, no intentar otros modelos
+        // Si es error de API key o autenticación, es el único caso donde no intentamos más
         if (modelError?.message?.includes('API key') || 
             modelError?.message?.includes('authentication') ||
             modelError?.message?.includes('PERMISSION_DENIED')) {
@@ -422,19 +415,10 @@ RESPUESTA:
           throw modelError;
         }
         
-        // Si es otro tipo de error (rate limit, etc), intentar siguiente modelo
-        if (modelError?.status === 429 || modelError?.message?.includes('rate limit')) {
-          console.log(`⚠️ [BOTTY-GEN] Rate limit en ${modelName}, intentando siguiente modelo...`);
-          continue;
-        }
-        
-        // Para otros errores, solo continuar si es un error de modelo
-        if (modelError?.message?.includes('model') || modelError?.message?.includes('Model')) {
-          continue;
-        }
-        
-        // Si no es error de modelo, lanzar el error
-        throw modelError;
+        // Para CUALQUIER otro error (404, bad request, rate limit, parse error), 
+        // continuamos intentando con el siguiente modelo en la lista
+        console.log(`⚠️ [BOTTY-GEN] Fallo con ${modelName}, intentando siguiente modelo...`);
+        continue;
       }
     }
     
@@ -492,3 +476,118 @@ RESPUESTA:
   }
 }
 
+// Función auxiliar para manejar el escalamiento a un administrador
+async function handleEscalation(userId: string, userName: string, reason: string, supabase: any) {
+  try {
+    console.log(`🚀 [BOTTY-ESCALATE] Buscando administrador para el usuario ${userId}...`);
+    
+    // 1. Encontrar a qué grupos pertenece el usuario
+    const { data: userGroups } = await supabase
+      .from('user_groups')
+      .select('group_id')
+      .eq('user_id', userId);
+      
+    if (!userGroups || userGroups.length === 0) {
+      console.log('⚠️ [BOTTY-ESCALATE] El usuario no pertenece a ningún grupo. No se puede escalar a un admin específico.');
+      return;
+    }
+    
+    const groupIds = userGroups.map((ug: any) => ug.group_id);
+    
+    // 2. Encontrar al administrador de esos grupos
+    // Primero, obtener los usuarios que son administradores ('admin')
+    const { data: admins } = await supabase
+      .from('users')
+      .select('id')
+      .eq('role', 'admin');
+      
+    if (!admins || admins.length === 0) {
+      console.log('⚠️ [BOTTY-ESCALATE] No hay administradores en el sistema.');
+      return;
+    }
+    
+    const adminIds = admins.map((a: any) => a.id);
+    
+    // Luego, buscar cuál de esos administradores está en los mismos grupos que la modelo
+    const { data: adminGroups } = await supabase
+      .from('user_groups')
+      .select('user_id')
+      .in('user_id', adminIds)
+      .in('group_id', groupIds)
+      .limit(1);
+      
+    let targetAdminId = null;
+    
+    if (adminGroups && adminGroups.length > 0) {
+      targetAdminId = adminGroups[0].user_id;
+      console.log(`✅ [BOTTY-ESCALATE] Encontrado administrador directo: ${targetAdminId}`);
+    } else {
+      // Fallback: Si no hay un admin directo en el grupo, escalar a un superadmin
+      console.log('⚠️ [BOTTY-ESCALATE] No se encontró un admin en el mismo grupo. Buscando super_admin...');
+      const { data: superAdmins } = await supabase
+        .from('users')
+        .select('id')
+        .eq('role', 'super_admin')
+        .limit(1);
+        
+      if (superAdmins && superAdmins.length > 0) {
+        targetAdminId = superAdmins[0].id;
+        console.log(`✅ [BOTTY-ESCALATE] Encontrado super_admin de respaldo: ${targetAdminId}`);
+      }
+    }
+    
+    if (!targetAdminId) {
+      console.error('❌ [BOTTY-ESCALATE] No se pudo encontrar ningún administrador al cual escalar.');
+      return;
+    }
+    
+    // 3. Obtener o crear conversación entre Botty y el Administrador
+    let conversationId = null;
+    
+    // Buscar conversación existente
+    const { data: existingConvs } = await supabase
+      .from('chat_conversations')
+      .select('id')
+      .or(`and(participant_1_id.eq.${AIM_BOTTY_ID},participant_2_id.eq.${targetAdminId}),and(participant_1_id.eq.${targetAdminId},participant_2_id.eq.${AIM_BOTTY_ID})`)
+      .limit(1);
+      
+    if (existingConvs && existingConvs.length > 0) {
+      conversationId = existingConvs[0].id;
+    } else {
+      // Crear nueva conversación
+      const { data: newConv } = await supabase
+        .from('chat_conversations')
+        .insert({
+          participant_1_id: AIM_BOTTY_ID,
+          participant_2_id: targetAdminId,
+          is_active: true
+        })
+        .select('id')
+        .single();
+        
+      if (newConv) {
+        conversationId = newConv.id;
+      }
+    }
+    
+    if (!conversationId) {
+      console.error('❌ [BOTTY-ESCALATE] No se pudo obtener/crear conversación con el administrador.');
+      return;
+    }
+    
+    // 4. Enviar mensaje del bot al administrador
+    const escalateMessage = `⚠️ **ESCALAMIENTO DE SOPORTE**\n\nLa modelo **${userName}** ha solicitado ayuda y requiere intervención humana.\n\n**Problema reportado:**\n${reason}\n\nPor favor, contáctate con ella a la brevedad posible.`;
+    
+    await supabase.from('chat_messages').insert({
+      conversation_id: conversationId,
+      sender_id: AIM_BOTTY_ID,
+      content: escalateMessage,
+      message_type: 'system_notification'
+    });
+    
+    console.log('✅ [BOTTY-ESCALATE] Mensaje de escalamiento enviado al administrador.');
+    
+  } catch (error) {
+    console.error('❌ [BOTTY-ESCALATE] Error en el proceso de escalamiento:', error);
+  }
+}

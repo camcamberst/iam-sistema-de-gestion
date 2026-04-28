@@ -31,10 +31,10 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    // Obtener información del usuario actual (incluyendo affiliate_studio_id)
+    // Obtener información del usuario actual (incluyendo affiliate_studio_id y aurora_pin)
     const { data: currentUser, error: userError } = await supabase
       .from('users')
-      .select('id, role, affiliate_studio_id')
+      .select('id, role, affiliate_studio_id, aurora_pin')
       .eq('id', user.id)
       .single();
 
@@ -54,7 +54,8 @@ export async function GET(request: NextRequest) {
           email,
           role,
           is_active,
-          last_login
+          last_login,
+          avatar_url
         `)
         .neq('id', user.id)
         .eq('is_active', true)
@@ -84,7 +85,8 @@ export async function GET(request: NextRequest) {
           email,
           role,
           is_active,
-          last_login
+          last_login,
+          avatar_url
         `)
         .eq('role', 'super_admin')
         .eq('is_active', true)
@@ -99,7 +101,8 @@ export async function GET(request: NextRequest) {
           email,
           role,
           is_active,
-          last_login
+          last_login,
+          avatar_url
         `)
         .in('role', ['admin', 'super_admin'])
         .eq('is_active', true)
@@ -112,7 +115,7 @@ export async function GET(request: NextRequest) {
           .from('user_groups')
           .select(`
             user_id,
-            users!inner(id, name, email, role, is_active, last_login)
+            users!inner(id, name, email, role, is_active, last_login, avatar_url)
           `)
           .in('group_id', groupIds)
           .neq('user_id', user.id);
@@ -151,7 +154,8 @@ export async function GET(request: NextRequest) {
             email,
             role,
             is_active,
-            last_login
+            last_login,
+            avatar_url
           `)
           .eq('affiliate_studio_id', currentUser.affiliate_studio_id)
           .eq('is_active', true)
@@ -179,7 +183,7 @@ export async function GET(request: NextRequest) {
           .from('user_groups')
           .select(`
             user_id,
-            users!inner(id, name, email, role, is_active, last_login)
+            users!inner(id, name, email, role, is_active, last_login, avatar_url)
           `)
           .in('group_id', groupIds)
           .eq('users.role', 'admin')
@@ -201,7 +205,8 @@ export async function GET(request: NextRequest) {
             email,
             role,
             is_active,
-            last_login
+            last_login,
+            avatar_url
           `)
           .eq('affiliate_studio_id', currentUser.affiliate_studio_id)
           .eq('role', 'superadmin_aff')
@@ -215,6 +220,43 @@ export async function GET(request: NextRequest) {
 
       availableUsers = Array.from(allUsersMap.values());
     }
+
+    // --- INTEGRACIÓN AURORA PIN ---
+    // Cargar también los usuarios que el usuario actual haya agregado por PIN o que lo hayan agregado (y estén aceptados)
+    const { data: pinContacts } = await supabase
+      .from('chat_contacts')
+      .select('user_id, contact_id')
+      .or(`user_id.eq.${user.id},contact_id.eq.${user.id}`)
+      .eq('status', 'accepted');
+
+    const pinContactUserIds = pinContacts?.map((c: any) => c.user_id === user.id ? c.contact_id : c.user_id) || [];
+
+    if (pinContactUserIds.length > 0) {
+      // Filtrar los que ya están en availableUsers
+      const existingUserIds = new Set(availableUsers.map((u: any) => u.id));
+      const newContactIds = pinContactUserIds.filter(id => !existingUserIds.has(id));
+
+      if (newContactIds.length > 0) {
+        const { data: newContactUsers } = await supabase
+          .from('users')
+          .select(`
+            id,
+            name,
+            email,
+            role,
+            is_active,
+            last_login,
+            avatar_url
+          `)
+          .in('id', newContactIds)
+          .eq('is_active', true);
+
+        if (newContactUsers) {
+          availableUsers = [...availableUsers, ...newContactUsers];
+        }
+      }
+    }
+    // --- FIN INTEGRACIÓN AURORA PIN ---
 
     // Obtener estados en línea de los usuarios
     const userIds = availableUsers.map((u: any) => u.id);
@@ -242,22 +284,11 @@ export async function GET(request: NextRequest) {
           console.log(`🔴 [CHAT-USERS] Usuario ${user.id} marcado como offline por inactividad (>2 min)`);
           isOnline = false;
           
-          // Actualizar en la base de datos (intento no bloqueante)
-          (async () => {
-            try {
-              const { error: updateError } = await supabase
-                .from('chat_user_status')
-                .update({ is_online: false })
-                .eq('user_id', user.id);
-              if (updateError) {
-                console.error(`❌ [CHAT-USERS] Error actualizando usuario ${user.id} a offline:`, updateError);
-              } else {
-                console.log(`✅ [CHAT-USERS] Usuario ${user.id} actualizado a offline por inactividad`);
-              }
-            } catch (error) {
-              console.error(`❌ [CHAT-USERS] Error inesperado al actualizar usuario ${user.id} a offline:`, error);
-            }
-          })();
+          // 🔧 FIX: Se elimina la actualización a la base de datos (UPDATE) desde esta ruta GET.
+          // Actualizar la tabla 'chat_user_status' desde aquí disparaba un evento 'postgres_changes' en tiempo real
+          // que era escuchado por todos los clientes, los cuales a su vez llamaban nuevamente a este endpoint GET,
+          // creando un ciclo infinito (N-Squared API storm) que consumía casi el 100% de CPU de Supabase.
+          // El estado "offline" ahora solo se deduce para esta respuesta, sin persistir el cambio forzosamente.
         }
       }
       
@@ -282,14 +313,30 @@ export async function GET(request: NextRequest) {
       status_message: '¡Hola! Soy tu asistente virtual 🤖'
     };
 
+    // --- INTEGRACIÓN PRIVACIDAD (MUTE/BLOCK) ---
+    const { data: mutes } = await supabase.from('chat_mutes').select('muted_id').eq('muter_id', user.id);
+    const { data: blocks } = await supabase.from('chat_blocks').select('blocked_id').eq('blocker_id', user.id);
+    const { data: blockedBy } = await supabase.from('chat_blocks').select('blocker_id').eq('blocked_id', user.id);
+
+    const mutedUserIds = mutes?.map((m: any) => m.muted_id) || [];
+    const blockedUserIds = blocks?.map((b: any) => b.blocked_id) || [];
+    const blockedByUserIds = new Set(blockedBy?.map((b: any) => b.blocker_id) || []);
+
     // Asegurar que AIM Botty sea siempre el primer contacto
-    // También evitamos duplicados por si viene en usersWithStatus (no debería)
-    const filteredUsers = usersWithStatus.filter((u: any) => u.id !== AIM_BOTTY_ID && u.email !== AIM_BOTTY_EMAIL);
+    // Evitamos duplicados, y filtramos a los usuarios que nos han bloqueado (no podemos verlos)
+    const filteredUsers = usersWithStatus.filter((u: any) => 
+      u.id !== AIM_BOTTY_ID && 
+      u.email !== AIM_BOTTY_EMAIL &&
+      !blockedByUserIds.has(u.id)
+    );
     const orderedUsers = [aimBotty, ...filteredUsers];
 
     return NextResponse.json({ 
       success: true, 
-      users: orderedUsers
+      users: orderedUsers,
+      currentUserPin: currentUser.aurora_pin,
+      mutedUsers: mutedUserIds,
+      blockedUsers: blockedUserIds
     });
 
   } catch (error) {

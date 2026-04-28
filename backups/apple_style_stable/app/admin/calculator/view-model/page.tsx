@@ -1,0 +1,1594 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { createClient } from "@supabase/supabase-js";
+import AppleDropdown from '@/components/ui/AppleDropdown';
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: 'super_admin' | 'admin' | 'modelo' | 'superadmin_aff';
+  groups: string[];
+  organization_id: string;
+  is_active: boolean;
+  last_login: string;
+}
+
+interface Model {
+  id: string;
+  name: string;
+  email: string;
+  groups: Array<{
+    id: string;
+    name: string;
+  }>;
+  hasConfig?: boolean;
+  currentConfig?: {
+    id: string;
+    active: boolean;
+    enabled_platforms: string[];
+    percentage_override: number | null;
+    min_quota_override: number | null;
+    group_percentage: number | null;
+    group_min_quota: number | null;
+  };
+  calculatorData?: any; // Datos de la calculadora cargados desde la API
+}
+
+export default function AdminViewModelPage() {
+  const [user, setUser] = useState<User | null>(null);
+  const [models, setModels] = useState<Model[]>([]);
+  const [allModels, setAllModels] = useState<Model[]>([]);
+  const [selectedModel, setSelectedModel] = useState<Model | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editValues, setEditValues] = useState<Record<string, string>>({});
+  const [hasChanges, setHasChanges] = useState(false);
+  const [syncingTotals, setSyncingTotals] = useState(false);
+  const [calculatedTotals, setCalculatedTotals] = useState<any>(null);
+  // 🔧 NUEVO: Estado para input flotante de P1
+  const [editingP1Platform, setEditingP1Platform] = useState<string | null>(null);
+  const [p1InputValue, setP1InputValue] = useState<string>('');
+  // const [p1InputPosition, setP1InputPosition] = useState<{ top: number; left: number } | null>(null); // Eliminado
+  const [p1Values, setP1Values] = useState<Record<string, number>>({});
+  
+  // 🔧 PARITY: Estados para control de periodo y congelamiento
+  const [isPeriod2, setIsPeriod2] = useState<boolean>(false);
+  const [frozenPlatforms, setFrozenPlatforms] = useState<string[]>([]);
+
+  // Estados para filtros
+  const [availableGroups, setAvailableGroups] = useState<Array<{id: string, name: string}>>([]);
+  const [selectedGroup, setSelectedGroup] = useState<string>('all');
+  const [nameFilter, setNameFilter] = useState<string>('');
+  const [selectedModelId, setSelectedModelId] = useState<string>('');
+  
+  const router = useRouter();
+  
+  const supabase = require('@/lib/supabase').supabase;
+
+  // 🔧 NUEVO: Recalcular totales en tiempo real cuando cambian los valores
+  useEffect(() => {
+    if (!selectedModel || !selectedModel.calculatorData) return;
+
+    const platforms = selectedModel.calculatorData.platforms;
+    const rates = selectedModel.calculatorData.rates;
+    if (!platforms || !rates) return;
+
+    let totalUsdBruto = 0;
+    let totalUsdModelo = 0;
+
+    platforms.forEach((platform: any) => {
+      // Obtener valor actual (editado o guardado)
+      const editValue = editValues[platform.id];
+      const savedValue = selectedModel.calculatorData.values?.find((v: any) => 
+        v.platform_id === platform.id || v.platform === platform.name
+      )?.value || 0;
+      
+      const currentValue = editValue !== undefined ? parseFloat(editValue) || 0 : savedValue;
+
+      // Calcular USD bruto con la misma lógica de la tabla
+      let usdBruto = 0;
+      if (platform.currency === 'EUR') {
+        if (platform.id === 'big7') {
+          usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.84;
+        } else if (platform.id === 'mondo') {
+          usdBruto = (currentValue * (rates.eur_usd || 1.01)) * 0.78;
+        } else if (platform.id === 'superfoon') {
+          usdBruto = currentValue * (rates.eur_usd || 1.01);
+        } else {
+          usdBruto = currentValue * (rates.eur_usd || 1.01);
+        }
+      } else if (platform.currency === 'GBP') {
+        if (platform.id === 'aw') {
+          usdBruto = (currentValue * (rates.gbp_usd || 1.20)) * 0.677;
+        } else {
+          usdBruto = currentValue * (rates.gbp_usd || 1.20);
+        }
+      } else if (platform.currency === 'USD') {
+        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+          usdBruto = currentValue * 0.75;
+        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+          usdBruto = currentValue * 0.05;
+        } else if (platform.id === 'dxlive') {
+          usdBruto = currentValue * 0.60;
+        } else if (platform.id === 'secretfriends') {
+          usdBruto = currentValue * 0.5;
+        } else {
+          usdBruto = currentValue;
+        }
+      }
+
+      totalUsdBruto += usdBruto;
+      
+      // Aplicar porcentaje de reparto
+      const usdModeloFinal = (platform.id === 'superfoon') 
+        ? usdBruto 
+        : (usdBruto * platform.percentage) / 100;
+      
+      totalUsdModelo += usdModeloFinal;
+    });
+
+    const totalCopModelo = totalUsdModelo * (rates.usd_cop || 3900);
+    const objetivoBasico = 470; // Hardcoded para paridad
+    const porcentajeAlcanzado = (totalUsdModelo / objetivoBasico) * 100;
+
+    // 🔧 NORMALIZACIÓN DE FECHA PARA TOTALES (Día 1 o 16)
+    // Replicamos la lógica del backend para asegurar que caiga en el mismo bucket
+    const rawPeriodDate = selectedModel.calculatorData.periodDate || new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+    const dateParts = rawPeriodDate.split('-');
+    const year = parseInt(dateParts[0]);
+    const month = parseInt(dateParts[1]);
+    const day = parseInt(dateParts[2]);
+    const normalizedDay = day <= 15 ? '01' : '16';
+    const normalizedPeriodDate = `${year}-${String(month).padStart(2, '0')}-${normalizedDay}`;
+
+    setCalculatedTotals({
+      usdBruto: totalUsdBruto,
+      usdModelo: totalUsdModelo,
+      copModelo: totalCopModelo,
+      objetivoBasico,
+      porcentajeAlcanzado,
+      normalizedPeriodDate // Guardamos la fecha normalizada para el POST
+    });
+
+  }, [editValues, selectedModel]);
+
+  // 🔧 NUEVO: Cerrar input flotante al hacer click fuera
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (editingP1Platform) {
+        const target = e.target as HTMLElement;
+        if (!target.closest('.absolute.z-50')) {
+          setEditingP1Platform(null);
+        }
+      }
+    };
+    if (editingP1Platform) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [editingP1Platform]);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        setLoading(true);
+        console.log('🔍 [VIEW-MODEL] Iniciando carga de usuario y modelos...');
+        
+        // Load current user
+        const { data: auth } = await supabase.auth.getUser();
+        const uid = auth?.user?.id;
+        console.log('🔍 [VIEW-MODEL] Usuario autenticado:', uid);
+        
+        if (!uid) {
+          console.error('❌ [VIEW-MODEL] No hay usuario autenticado');
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+        
+        const { data: userRow, error: userError } = await supabase
+          .from('users')
+          .select('id,name,email,role')
+          .eq('id', uid)
+          .single();
+        
+        console.log('🔍 [VIEW-MODEL] Datos de usuario:', { userRow, userError });
+        
+        let groups: string[] = [];
+        if (userRow && userRow.role !== 'super_admin') {
+          const { data: ug } = await supabase
+            .from('user_groups')
+            .select('groups(name)')
+            .eq('user_id', uid);
+          groups = (ug || []).map((r: any) => r.groups?.name).filter(Boolean);
+          console.log('🔍 [VIEW-MODEL] Grupos del usuario:', groups);
+        }
+        
+        const userData = {
+          id: userRow?.id || uid,
+          name: userRow?.name || auth.user?.email?.split('@')[0] || 'Usuario',
+          email: userRow?.email || auth.user?.email || '',
+          role: (userRow?.role as any) || 'modelo',
+          groups,
+          organization_id: '',
+          is_active: true,
+          last_login: new Date().toISOString()
+        };
+        
+        console.log('🔍 [VIEW-MODEL] Usuario configurado:', userData);
+        setUser(userData);
+
+        // Cargar grupos primero (con filtro de afiliado)
+        await loadGroups(userData);
+        
+        // Load models according to hierarchy
+        console.log('🔍 [VIEW-MODEL] Cargando modelos con adminId:', uid);
+        await loadModels(uid);
+        
+      } catch (err: any) {
+        console.error('❌ [VIEW-MODEL] Error loading user:', err);
+        setError(err.message || 'Error al cargar usuario');
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  }, []);
+
+  // 🔧 UX FIX: Restaurar modelo seleccionada solo si hay modelId en URL (navegación/refresh)
+  useEffect(() => {
+    if (allModels.length > 0 && !selectedModel && user) {
+      const modelIdFromUrl = new URLSearchParams(window.location.search).get('modelId');
+      
+      // Solo restaurar si hay modelId en la URL (indica navegación o refresh durante gestión)
+      if (modelIdFromUrl) {
+        console.log('🔍 [UX-FIX] Restaurando modelo desde URL:', modelIdFromUrl);
+        const model = allModels.find(m => m.id === modelIdFromUrl);
+        if (model) {
+          console.log('✅ [UX-FIX] Modelo encontrado, restaurando:', model.name);
+          handleModelSelect(model, false); // false = no actualizar URL/storage
+        } else {
+          console.warn('⚠️ [UX-FIX] Modelo no encontrado, limpiando URL');
+          const url = new URL(window.location.href);
+          url.searchParams.delete('modelId');
+          window.history.replaceState({}, '', url.pathname + url.search);
+        }
+      } else {
+        // Si no hay modelId en URL, limpiar localStorage para entrada directa
+        console.log('🔍 [UX-FIX] Entrada directa detectada, limpiando localStorage');
+        localStorage.removeItem('admin-selected-model-id');
+      }
+    }
+  }, [allModels, selectedModel, user]);
+
+  const loadGroups = async (userData?: User | null) => {
+    try {
+      console.log('🔍 [LOAD-GROUPS] Cargando grupos desde API...');
+      
+      // Obtener token de autenticación
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      
+      if (!token) {
+        console.error('❌ [LOAD-GROUPS] No hay token de autenticación');
+        return;
+      }
+      
+      // Cargar grupos desde /api/groups que ya aplica el filtro de afiliado
+      const response = await fetch('/api/groups', {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        console.error('❌ [LOAD-GROUPS] Error en response:', response.status);
+        return;
+      }
+      
+      const data = await response.json();
+      console.log('🔍 [LOAD-GROUPS] Response data:', data);
+      
+      if (data.success && data.groups) {
+        const filteredGroups = data.groups
+          .map((g: any) => ({ id: g.id, name: g.name }));
+        
+        console.log('✅ [LOAD-GROUPS] Grupos cargados y filtrados:', filteredGroups.length);
+        console.log('🔍 [LOAD-GROUPS] Grupos:', filteredGroups.map((g: any) => g.name));
+        
+        // Usar userData pasado como parámetro o el estado user
+        const currentUser = userData || user;
+        
+        // Si es admin (no super_admin), filtrar por sus grupos asignados
+        if (currentUser && currentUser.role === 'admin' && currentUser.groups.length > 0) {
+          const adminGroups = filteredGroups.filter((group: any) => 
+            currentUser.groups.includes(group.name)
+          );
+          console.log('🔍 [LOAD-GROUPS] Grupos filtrados para admin:', adminGroups.length);
+          setAvailableGroups(adminGroups);
+        } else {
+          setAvailableGroups(filteredGroups);
+        }
+      } else {
+        console.error('❌ [LOAD-GROUPS] Error en response:', data.error);
+      }
+    } catch (err: any) {
+      console.error('❌ [LOAD-GROUPS] Error en catch:', err);
+    }
+  };
+
+  const loadModels = async (adminId: string) => {
+    try {
+      console.log('🔍 [LOAD-MODELS] Iniciando carga con adminId:', adminId);
+      const url = `/api/calculator/models?adminId=${adminId}`;
+      console.log('🔍 [LOAD-MODELS] URL:', url);
+      
+      const response = await fetch(url);
+      console.log('🔍 [LOAD-MODELS] Response status:', response.status);
+      
+      const data = await response.json();
+      console.log('🔍 [LOAD-MODELS] Response data:', data);
+      
+      if (data.success) {
+        const modelsData = data.models || [];
+        console.log('✅ [LOAD-MODELS] Modelos recibidos:', modelsData.length);
+        console.log('🔍 [LOAD-MODELS] Primer modelo:', modelsData[0]);
+        
+        setAllModels(modelsData);
+        setModels(modelsData);
+        
+        // Los grupos ahora se cargan desde /api/groups con filtro de afiliado
+        // No extraer grupos de los modelos para evitar mezclar Innova con afiliados
+        console.log('✅ [LOAD-MODELS] Modelos cargados. Grupos se cargan por separado desde /api/groups');
+      } else {
+        console.error('❌ [LOAD-MODELS] Error en response:', data.error);
+        setError(data.error || 'Error al cargar modelos');
+      }
+    } catch (err: any) {
+      console.error('❌ [LOAD-MODELS] Error en catch:', err);
+      setError(err.message || 'Error al cargar modelos');
+    }
+  };
+
+  const loadCalculatedTotals = async (modelId: string) => {
+    try {
+      console.log('🔍 [ADMIN-TOTALS] Loading calculated totals for model:', modelId);
+      const response = await fetch(`/api/calculator/admin-totals?modelId=${modelId}&adminId=${user?.id}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('✅ [ADMIN-TOTALS] Totals loaded:', data.totals);
+        setCalculatedTotals(data.totals);
+      } else {
+        console.error('❌ [ADMIN-TOTALS] Error loading totals:', data.error);
+        setCalculatedTotals(null);
+      }
+    } catch (err: any) {
+      console.error('❌ [ADMIN-TOTALS] Error loading totals:', err);
+      setCalculatedTotals(null);
+    }
+  };
+
+  const syncTotals = async () => {
+    try {
+      if (!selectedModel) return;
+
+      setSyncingTotals(true);
+      
+      // Recargar totales calculados desde el servidor
+      await loadCalculatedTotals(selectedModel.id);
+      
+      console.log('✅ [ADMIN-VIEW] Totales sincronizados desde el servidor');
+    } catch (e) {
+      console.error('❌ [ADMIN-VIEW] Error en syncTotals:', e);
+    } finally {
+      setSyncingTotals(false);
+    }
+  };
+
+  const handleModelSelect = async (model: Model, persistSelection: boolean = true) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // 🔧 UX FIX: Persistir selección en URL y localStorage
+      if (persistSelection) {
+        // Actualizar URL sin causar re-render
+        const url = new URL(window.location.href);
+        url.searchParams.set('modelId', model.id);
+        window.history.replaceState({}, '', url.pathname + url.search);
+        
+        // Guardar en localStorage como respaldo
+        localStorage.setItem('admin-selected-model-id', model.id);
+        console.log('💾 [UX-FIX] Selección persistida:', model.name);
+      }
+      
+      // Cargar datos de la calculadora del modelo
+      const response = await fetch(`/api/calculator/admin-view?modelId=${model.id}&adminId=${user?.id}`);
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log('🔍 [ADMIN-VIEW] Calculator data received:', data);
+        console.log('🔍 [ADMIN-VIEW] Platforms:', data.platforms);
+        console.log('🔍 [ADMIN-VIEW] Values:', data.values);
+        console.log('🔍 [ADMIN-VIEW] Values count:', data.values?.length || 0);
+        console.log('🔍 [ADMIN-VIEW] Period date:', data.periodDate);
+        
+        setSelectedModel({
+          ...model,
+          calculatorData: data
+        });
+
+        // 🔧 PARITY: Calcular isPeriod2 de forma segura
+        if (data.periodDate) {
+          const parts = data.periodDate.split('-');
+          const day = parseInt(parts[2], 10);
+          setIsPeriod2(day >= 16);
+          console.log('🔍 [ADMIN-VIEW] Period check:', { periodDate: data.periodDate, day, isP2: day >= 16 });
+        }
+
+        // 🔧 PARITY: Setear frozen platforms
+        if (data.frozenPlatforms) {
+          setFrozenPlatforms(data.frozenPlatforms);
+          console.log('🧊 [ADMIN-VIEW] Frozen platforms:', data.frozenPlatforms);
+        } else {
+          setFrozenPlatforms([]);
+        }
+
+        // Cargar totales calculados desde el servidor
+        await loadCalculatedTotals(model.id);
+      } else {
+        setError(data.error || 'Error al cargar datos de la calculadora');
+      }
+    } catch (err: any) {
+      console.error('Error loading calculator data:', err);
+      setError(err.message || 'Error al cargar datos de la calculadora');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBackToModels = () => {
+    setSelectedModel(null);
+    setSelectedModelId('');
+    setEditValues({});
+    setHasChanges(false);
+    setIsPeriod2(false); // Reset
+    setFrozenPlatforms([]); // Reset
+    
+    // 🔧 UX FIX: Limpiar URL y localStorage al volver a la lista
+    localStorage.removeItem('admin-selected-model-id');
+    const url = new URL(window.location.href);
+    url.searchParams.delete('modelId');
+    window.history.replaceState({}, '', url.pathname + url.search);
+    console.log('🧹 [UX-FIX] Selección limpiada');
+  };
+
+  // Función para filtrar por grupo
+  const handleGroupFilter = (groupId: string) => {
+    setSelectedGroup(groupId);
+    applyFilters(groupId, nameFilter);
+  };
+
+  // Función para filtrar por nombre
+  const handleNameFilter = (name: string) => {
+    setNameFilter(name);
+    applyFilters(selectedGroup, name);
+  };
+
+  // Aplicar ambos filtros
+  const applyFilters = (groupId: string, name: string) => {
+    let filteredModels = allModels;
+
+    // Filtrar por grupo
+    if (groupId !== 'all') {
+      filteredModels = filteredModels.filter(model =>
+        model.groups.some(group => group.id === groupId)
+      );
+    }
+
+    // Filtrar por nombre
+    if (name.trim()) {
+      const searchTerm = name.toLowerCase().trim();
+      filteredModels = filteredModels.filter(model =>
+        model.name.toLowerCase().includes(searchTerm) ||
+        model.email.toLowerCase().includes(searchTerm) ||
+        model.email.split('@')[0].toLowerCase().includes(searchTerm)
+      );
+    }
+
+    setModels(filteredModels);
+    
+    // Reset selected model if it's not in the filtered results
+    if (selectedModelId && !filteredModels.find(m => m.id === selectedModelId)) {
+      setSelectedModelId('');
+    }
+  };
+
+  // Función para seleccionar modelo desde dropdown
+  const handleModelDropdownSelect = (modelId: string) => {
+    setSelectedModelId(modelId);
+    if (modelId) {
+      const model = models.find(m => m.id === modelId);
+      if (model) {
+        handleModelSelect(model);
+      }
+    }
+  };
+
+  const handleValueChange = (platformId: string, value: string) => {
+    console.log('🔍 [VALUE-CHANGE] Platform:', platformId, 'Value:', value);
+    setEditValues(prev => {
+      const newValues = {
+      ...prev,
+      [platformId]: value
+      };
+      console.log('🔍 [VALUE-CHANGE] Updated editValues:', newValues);
+      return newValues;
+    });
+    setHasChanges(true);
+  };
+
+  // 🔧 AUTOSAVE: Guardar automáticamente después de 40 segundos de inactividad
+  useEffect(() => {
+    if (!selectedModel || !user || !hasChanges || saving) return;
+
+    console.log('🔄 [ADMIN-AUTOSAVE] Iniciando timer de autosave...');
+    
+    const controller = new AbortController();
+    const t = setTimeout(async () => {
+      try {
+        console.log('🔄 [ADMIN-AUTOSAVE] Ejecutando autosave después de 40 segundos de inactividad...');
+        
+        // Convertir valores de string a number
+        const valuesToSave: Record<string, number> = {};
+        Object.entries(editValues).forEach(([platformId, value]) => {
+          const numericValue = Number.parseFloat(value) || 0;
+          valuesToSave[platformId] = numericValue;
+        });
+
+        const response = await fetch('/api/calculator/model-values-v2', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            modelId: selectedModel.id,
+            values: valuesToSave,
+            periodDate: selectedModel.calculatorData.periodDate
+          }),
+          signal: controller.signal
+        });
+
+        const data = await response.json();
+        
+        if (data.success) {
+          console.log('✅ [ADMIN-AUTOSAVE] Autosave completado exitosamente');
+
+          // 🔧 NUEVO: También actualizar totales en autosave
+          if (calculatedTotals) {
+            console.log('🔄 [ADMIN-AUTOSAVE] Actualizando totales también con fecha normalizada:', calculatedTotals.normalizedPeriodDate);
+            await fetch('/api/calculator/totals', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                modelId: selectedModel.id,
+                periodDate: calculatedTotals.normalizedPeriodDate,
+                totalUsdBruto: calculatedTotals.usdBruto,
+                totalUsdModelo: calculatedTotals.usdModelo,
+                totalCopModelo: calculatedTotals.copModelo
+              }),
+              signal: controller.signal
+            });
+          }
+
+          setHasChanges(false);
+          
+          // Notificación elegante
+          const notification = document.createElement('div');
+          notification.className = 'fixed top-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+          notification.innerHTML = 'Guardado automático completado';
+          document.body.appendChild(notification);
+          
+          setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+          setTimeout(() => {
+            notification.style.transform = 'translateX(100%)';
+            setTimeout(() => document.body.removeChild(notification), 300);
+          }, 2000);
+        } else {
+          console.warn('⚠️ [ADMIN-AUTOSAVE] Error en autosave:', data.error);
+        }
+      } catch (e) {
+        console.warn('⚠️ [ADMIN-AUTOSAVE] Excepción en autosave:', e);
+      }
+    }, 40000); // 40 segundos = 40,000ms
+
+    return () => {
+      clearTimeout(t);
+      controller.abort();
+    };
+  }, [editValues, selectedModel, user, hasChanges, saving]);
+
+  const handleSave = async () => {
+    if (!selectedModel || !user) return;
+
+    console.log('🔍 [ADMIN-SAVE] Starting save process');
+    console.log('🔍 [ADMIN-SAVE] Current editValues:', editValues);
+    console.log('🔍 [ADMIN-SAVE] Has changes:', hasChanges);
+
+    try {
+      setSaving(true);
+      setError(null);
+
+      // Convertir valores de string a number
+      const valuesToSave: Record<string, number> = {};
+      Object.entries(editValues).forEach(([platformId, value]) => {
+        const numericValue = Number.parseFloat(value) || 0;
+        // 🔧 FIX: Guardar todos los valores, incluyendo 0
+          valuesToSave[platformId] = numericValue;
+      });
+
+      console.log('🔍 [ADMIN-EDIT] Saving values:', valuesToSave);
+
+      const response = await fetch('/api/calculator/model-values-v2', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          modelId: selectedModel.id,
+          values: valuesToSave,
+          periodDate: selectedModel.calculatorData.periodDate
+        }),
+      });
+
+      const data = await response.json();
+      console.log('🔍 [ADMIN-EDIT] Save result:', data);
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al guardar');
+      }
+
+      console.log('✅ [ADMIN-EDIT] Values saved successfully');
+      
+      // 2. Actualizar calculator_totals si hay resultado calculado
+      // Esto es crítico para que los dashboards muestren los datos actualizados
+      if (calculatedTotals) {
+        console.log('💾 [ADMIN-EDIT] Updating calculator_totals with normalized date:', {
+          date: calculatedTotals.normalizedPeriodDate,
+          totalUsdBruto: calculatedTotals.usdBruto,
+          totalUsdModelo: calculatedTotals.usdModelo,
+          totalCopModelo: calculatedTotals.copModelo
+        });
+
+        await fetch('/api/calculator/totals', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            modelId: selectedModel.id,
+            periodDate: calculatedTotals.normalizedPeriodDate,
+            totalUsdBruto: calculatedTotals.usdBruto,
+            totalUsdModelo: calculatedTotals.usdModelo,
+            totalCopModelo: calculatedTotals.copModelo
+          })
+        });
+        console.log('✅ [ADMIN-EDIT] Totals updated successfully');
+      }
+
+      // 🔧 FIX: Limpiar estado de edición ANTES de recargar
+      setEditValues({});
+      setHasChanges(false);
+      
+      // Recargar datos de la calculadora
+      await handleModelSelect(selectedModel);
+      
+      // Notificación elegante estilo Apple
+      const notification = document.createElement('div');
+      notification.className = 'fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg transform translate-x-full transition-transform duration-300 z-50';
+      notification.innerHTML = 'Valores guardados correctamente';
+      document.body.appendChild(notification);
+      
+      // Animar entrada
+      setTimeout(() => {
+        notification.style.transform = 'translateX(0)';
+      }, 100);
+      
+      // Remover después de 3 segundos
+      setTimeout(() => {
+        notification.style.transform = 'translateX(100%)';
+        setTimeout(() => {
+          document.body.removeChild(notification);
+        }, 300);
+      }, 3000);
+
+    } catch (err: any) {
+      console.error('❌ [ADMIN-EDIT] Save error:', err);
+      setError(err.message || 'Error al guardar valores');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
+        <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+            </div>
+            <p className="text-red-600 dark:text-red-400 mb-4 text-sm">{error}</p>
+          <button 
+            onClick={() => window.location.reload()}
+              className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+          >
+            Reintentar
+          </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!user || (user.role !== 'admin' && user.role !== 'super_admin' && user.role !== 'superadmin_aff')) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
+        <div className="text-center">
+            <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+              </svg>
+            </div>
+            <p className="text-red-600 dark:text-red-400 mb-4 text-sm">No tienes permisos para acceder a esta función</p>
+          <button 
+            onClick={() => router.push('/admin/dashboard')}
+              className="px-3 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-300 text-sm shadow-md hover:shadow-lg transform hover:scale-105"
+          >
+            Volver al Dashboard
+          </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Si hay un modelo seleccionado, mostrar su calculadora
+  if (selectedModel) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+        <div className="max-w-4xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6 pt-16">
+          {/* Header */}
+          <div className="mb-4 sm:mb-6">
+            <div className="flex items-center justify-between mb-3 sm:mb-4">
+              <button
+                onClick={handleBackToModels}
+                className="flex items-center space-x-1.5 sm:space-x-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors active:scale-95 touch-manipulation"
+              >
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+                <span className="font-medium text-sm sm:text-base">Volver</span>
+              </button>
+            </div>
+            
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <div className="flex-1 min-w-0">
+              <h1 className="text-base sm:text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent mb-1 whitespace-nowrap overflow-hidden text-ellipsis">
+                Calculadora de {selectedModel.name}
+              </h1>
+              <p className="text-gray-500 dark:text-gray-400 text-xs sm:text-sm truncate">
+                {selectedModel.email} • {selectedModel.groups.map(g => g.name).join(', ')}
+              </p>
+            </div>
+
+            {/* Footer actions */}
+              <div className="flex justify-end gap-2 flex-shrink-0">
+                {/* Ver Historial - Estándar visual */}
+                <button
+                  onClick={() => router.push(`/admin/model/calculator/historial?modelId=${selectedModel.id}`)}
+                  className="px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium bg-gradient-to-r from-purple-500 to-purple-600 text-white rounded-lg hover:from-purple-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 transition-all duration-300 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 active:scale-95 touch-manipulation"
+                >
+                  Historial
+                </button>
+                {/* Guardar - Estándar visual; quitar 'Sincronizar Totales' */}
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !hasChanges}
+                  className={`px-2.5 sm:px-3 py-1.5 sm:py-2 text-xs font-medium rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-all duration-300 shadow-md transform hover:-translate-y-0.5 whitespace-nowrap active:scale-95 touch-manipulation ${
+                    hasChanges && !saving
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:from-blue-700 hover:to-indigo-700 hover:shadow-lg'
+                      : 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  }`}
+                >
+                  {saving ? 'Guardando...' : 'Guardar'}
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Datos de la calculadora */}
+          {selectedModel.calculatorData ? (
+            <div className="space-y-3 sm:space-y-4">
+              {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
+              <div className="bg-white dark:bg-gray-700/80 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-1.5 sm:mr-2"></div>
+                  Tasas Actualizadas
+                </h2>
+                <div className="max-sm:bg-black/[0.04] max-sm:dark:bg-white/[0.04] max-sm:backdrop-blur-xl max-sm:ring-1 max-sm:ring-black/[0.05] max-sm:dark:ring-white/[0.1] max-sm:rounded-[1.25rem] max-sm:p-2.5 max-sm:shadow-sm mb-3 sm:mb-4">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                      <div className="text-base sm:text-xl font-bold text-blue-700 mb-0.5 sm:mb-1">
+                        ${selectedModel.calculatorData.rates?.usd_cop || 3900}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD→COP</div>
+                    </div>
+                    <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                      <div className="text-base sm:text-xl font-bold text-green-700 mb-0.5 sm:mb-1">
+                        {selectedModel.calculatorData.rates?.eur_usd || 1.01}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">EUR→USD</div>
+                    </div>
+                    <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                      <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
+                        {selectedModel.calculatorData.rates?.gbp_usd || 1.20}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">GBP→USD</div>
+                    </div>
+                  </div>
+                </div>
+                <p className="max-sm:hidden text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
+                  Configuradas por tu administrador
+                </p>
+              </div>
+
+
+              {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
+              <div className="bg-white dark:bg-gray-700/80 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-6 mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 flex items-center">
+                  <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></div>
+                  Calculadora de Ingresos
+                </h2>
+                
+                {!selectedModel.calculatorData.isConfigured || !selectedModel.calculatorData.platforms || selectedModel.calculatorData.platforms.length === 0 ? (
+                  <div className="text-center py-6 sm:py-8">
+                    <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3 sm:mb-4"></div>
+                    <h4 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No hay plataformas habilitadas</h4>
+                    <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-3 sm:mb-4">
+                      Esta modelo no tiene configuración de calculadora o plataformas habilitadas.
+                    </p>
+                    <p className="text-xs sm:text-sm text-gray-400 dark:text-gray-500">
+                      Contacta al administrador para que configure las plataformas.
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                  {/* Vista de Cards para Móvil */}
+                  <div className="md:hidden space-y-3">
+                    {selectedModel.calculatorData.platforms.map((platform: any) => {
+                      const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                        v.platform_id === platform.id || v.platform === platform.name
+                      )?.value || 0;
+                      const rates = selectedModel.calculatorData.rates;
+                      
+                      let usdBruto = 0;
+                      if (platform.currency === 'EUR') {
+                        if (platform.id === 'big7') {
+                          usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                        } else if (platform.id === 'mondo') {
+                          usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                        } else if (platform.id === 'superfoon') {
+                          usdBruto = currentValue * (rates?.eur_usd || 1.01);
+                        } else {
+                          usdBruto = currentValue * (rates?.eur_usd || 1.01);
+                        }
+                      } else if (platform.currency === 'GBP') {
+                        if (platform.id === 'aw') {
+                          usdBruto = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                        } else {
+                          usdBruto = currentValue * (rates?.gbp_usd || 1.20);
+                        }
+                      } else if (platform.currency === 'USD') {
+                        if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                          usdBruto = currentValue * 0.75;
+                        } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                          usdBruto = currentValue * 0.05;
+                        } else if (platform.id === 'dxlive') {
+                          usdBruto = currentValue * 0.60;
+                        } else if (platform.id === 'secretfriends') {
+                          usdBruto = currentValue * 0.5;
+                        } else {
+                          usdBruto = currentValue;
+                        }
+                      }
+                      
+                      const usdModeloFinal = (platform.id === 'superfoon') 
+                        ? usdBruto
+                        : (usdBruto * platform.percentage) / 100;
+                      const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
+                      const isFrozen = frozenPlatforms.includes(platform.id);
+                      const p1Value = p1Values[platform.id] || 0;
+
+                      return (
+                        <div key={platform.id} className={`p-3 bg-gray-50 dark:bg-gray-600/50 rounded-lg border ${isFrozen ? 'border-gray-200 dark:border-gray-500' : 'border-gray-200 dark:border-gray-600'}`}>
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex-1">
+                              <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{platform.name}</h3>
+                              <p className="text-xs text-gray-500 dark:text-gray-400">Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}</p>
+                            </div>
+                            {isFrozen && (
+                              <span className="text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 px-1.5 py-0.5 rounded">
+                                🔒 Cerrado
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div>
+                              <label className="text-[10px] text-gray-500 dark:text-gray-400 mb-1 block">Valor</label>
+                              <div className="flex items-center gap-2">
+                                <input
+                                  type="text"
+                                  inputMode="decimal"
+                                  disabled={isFrozen}
+                                  value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.currentTarget.blur();
+                                      handleSave();
+                                    }
+                                  }}
+                                  onChange={(e) => {
+                                    if (isFrozen) return;
+                                    const raw = e.target.value;
+                                    const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                    const normalized = cleaned.replace(',', '.');
+                                    const parts = normalized.split('.');
+                                    const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                    handleValueChange(platform.id, safeNormalized);
+                                  }}
+                                  className={`flex-1 px-2 py-1.5 max-sm:min-h-[44px] sm:h-9 text-base sm:text-sm font-medium rounded-lg border transition-all ${
+                                    isFrozen
+                                      ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 cursor-not-allowed'
+                                      : 'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                  }`}
+                                  placeholder={isFrozen ? "Locked" : "0.00"}
+                                />
+                                <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 px-2 py-1 rounded-md">
+                                  {platform.currency || 'USD'}
+                                </span>
+                              </div>
+                            </div>
+                            
+                            <div className="grid grid-cols-3 gap-2 text-xs">
+                              <div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Bruto</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${usdBruto.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Modelo</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${usdModeloFinal.toFixed(2)}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">COP Modelo</p>
+                                <p className="font-medium text-gray-700 dark:text-gray-300">${(copModelo || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</p>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Vista de Tabla para Desktop */}
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full">
+                      <thead>
+                        <tr className="border-b border-gray-200 dark:border-gray-600">
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">PLATAFORMAS</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">VALORES</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">USD BRUTO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">USD MODELO</th>
+                          <th className="text-left py-2 px-3 font-medium text-gray-700 dark:text-white text-sm">COP MODELO</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {selectedModel.calculatorData.platforms.map((platform: any) => {
+                          // Obtener valor actual de esta plataforma - buscar por platform_id o por platform name
+                          const currentValue = selectedModel.calculatorData.values?.find((v: any) => 
+                            v.platform_id === platform.id || v.platform === platform.name
+                          )?.value || 0;
+                          console.log('🔍 [ADMIN-VIEW] Platform:', platform.name, 'ID:', platform.id, 'Value:', currentValue);
+                          
+                          // Obtener tasas para los cálculos
+                          const rates = selectedModel.calculatorData.rates;
+                          
+                          // Calcular USD bruto con fórmulas específicas por plataforma
+                          let usdBruto = 0;
+                          if (platform.currency === 'EUR') {
+                            if (platform.id === 'big7') {
+                              usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.84;
+                            } else if (platform.id === 'mondo') {
+                              usdBruto = (currentValue * (rates?.eur_usd || 1.01)) * 0.78;
+                            } else if (platform.id === 'superfoon') {
+                              usdBruto = currentValue * (rates?.eur_usd || 1.01); // EUR a USD directo
+                            } else {
+                              usdBruto = currentValue * (rates?.eur_usd || 1.01);
+                            }
+                          } else if (platform.currency === 'GBP') {
+                            if (platform.id === 'aw') {
+                              usdBruto = (currentValue * (rates?.gbp_usd || 1.20)) * 0.677;
+                            } else {
+                              usdBruto = currentValue * (rates?.gbp_usd || 1.20);
+                            }
+                          } else if (platform.currency === 'USD') {
+                            if (platform.id === 'cmd' || platform.id === 'camlust' || platform.id === 'skypvt') {
+                              usdBruto = currentValue * 0.75;
+                            } else if (platform.id === 'chaturbate' || platform.id === 'myfreecams' || platform.id === 'stripchat') {
+                              usdBruto = currentValue * 0.05;
+                            } else if (platform.id === 'dxlive') {
+                              usdBruto = currentValue * 0.60;
+                            } else if (platform.id === 'secretfriends') {
+                              usdBruto = currentValue * 0.5;
+                            } else {
+                              usdBruto = currentValue;
+                            }
+                          }
+                          
+                          // Aplicar porcentaje de reparto del modelo al USD bruto
+                          // SUPERFOON: Aplicar 100% para la modelo (especial)
+                          const usdModeloFinal = (platform.id === 'superfoon') 
+                            ? usdBruto  // 100% directo, sin porcentaje
+                            : (usdBruto * platform.percentage) / 100;
+                          const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
+                          
+                          // 🔧 PARITY: Determinar si está congelada
+                          const isFrozen = frozenPlatforms.includes(platform.id);
+                          const p1Value = p1Values[platform.id] || 0; // Se llenará si se implementa carga de P1
+
+                          return (
+                            <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-600/50 transition-colors duration-200 group ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
+                              <td className="py-3 px-3 relative">
+                                <div 
+                                  className={`font-medium text-sm text-left transition-colors flex items-center gap-2 group ${
+                                    isFrozen 
+                                      ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
+                                      : !isPeriod2
+                                        ? 'text-gray-900 dark:text-gray-100 cursor-default' // No clickable pero visible
+                                        : 'text-gray-900 dark:text-gray-100 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer'
+                                  }`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    if (isFrozen || !isPeriod2) return;
+                                    // 🔧 FIX: Posicionar relativo al elemento padre (td relative), no coordenadas fijas
+                                    setEditingP1Platform(platform.id);
+                                    setP1InputValue(String(p1Values[platform.id] || ''));
+                                  }}
+                                  title={
+                                    isFrozen 
+                                      ? "Plataforma cerrada por horario europeo" 
+                                      : !isPeriod2 
+                                        ? "Solo disponible en el segundo periodo (16-Fin de mes)" 
+                                        : "Click para ingresar valor de P1"
+                                  }
+                                >
+                                  <span className={`${!isFrozen && isPeriod2 && 'underline decoration-dotted decoration-gray-400 underline-offset-2 hover:decoration-blue-500'}`}>
+                                    {platform.name}
+                                  </span>
+                                  {!isFrozen && isPeriod2 && (
+                                    <span className="opacity-0 group-hover:opacity-100 text-xs text-blue-500 transition-all duration-200 transform translate-x-[-4px] group-hover:translate-x-0">
+                                      ✎
+                                    </span>
+                                  )}
+                                  {isFrozen && (
+                                    <span 
+                                      className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300"
+                                    >
+                                      🔒 Cerrado
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400">
+                                  Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                                </div>
+                                
+
+                                {/* 🔧 NUEVO: Input flotante para P1 - Posición absoluta relativa a la celda, diseño compacto */}
+                                {editingP1Platform === platform.id && !isFrozen && isPeriod2 && (
+                                  <div
+                                    className="absolute z-50 bg-white dark:bg-gray-800 border border-blue-400 dark:border-blue-500 rounded-lg shadow-lg p-2"
+                                    style={{
+                                      top: '100%', // Justo debajo del contenido de la celda
+                                      left: '12px', // Alineado con el padding de la celda (px-3 = 12px)
+                                      marginTop: '4px' // Pequeño espacio
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      <span className="text-[10px] font-medium text-gray-600 dark:text-gray-400 whitespace-nowrap">P1:</span>
+                                      <input
+                                        type="text"
+                                        inputMode="decimal"
+                                        value={p1InputValue}
+                                        onChange={(e) => {
+                                          const rawValue = e.target.value;
+                                          const unifiedValue = rawValue.replace(',', '.');
+                                          setP1InputValue(unifiedValue);
+                                        }}
+                                        onKeyDown={(e) => {
+                                          if (e.key === 'Enter') {
+                                            const value = Number.parseFloat(p1InputValue) || 0;
+                                            setP1Values(prev => ({ ...prev, [platform.id]: value }));
+                                            setEditingP1Platform(null);
+                                          } else if (e.key === 'Escape') {
+                                            setEditingP1Platform(null);
+                                          }
+                                        }}
+                                        autoFocus
+                                        className="w-16 px-1.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        placeholder="0.00"
+                                      />
+                                      <button
+                                        onClick={() => {
+                                          const value = Number.parseFloat(p1InputValue) || 0;
+                                          setP1Values(prev => ({ ...prev, [platform.id]: value }));
+                                          setEditingP1Platform(null);
+                                        }}
+                                        className="px-2 py-1 bg-blue-500 text-white rounded text-[10px] font-medium hover:bg-blue-600 transition-colors"
+                                        title="Guardar"
+                                      >
+                                        ✓
+                                      </button>
+                                      <button
+                                        onClick={() => {
+                                          setEditingP1Platform(null);
+                                        }}
+                                        className="px-2 py-1 bg-gray-200 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded text-[10px] font-medium hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors"
+                                        title="Cancelar"
+                                      >
+                                        ✕
+                                      </button>
+                                    </div>
+                                  </div>
+                                )}
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="relative group">
+                                  <div className="flex items-center space-x-2">
+                                    <input
+                                      type="text"
+                                      inputMode="decimal"
+                                      disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
+                                      value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          e.currentTarget.blur();
+                                          handleSave();
+                                        }
+                                      }}
+                                      onChange={(e) => {
+                                        if (isFrozen) return; // Doble check
+                                        const raw = e.target.value;
+                                        const cleaned = raw.replace(/[^0-9.,]/g, '');
+                                        const normalized = cleaned.replace(',', '.');
+                                        const parts = normalized.split('.');
+                                        const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
+                                        handleValueChange(platform.id, safeNormalized);
+                                      }}
+                                      className={`w-24 px-3 py-2 max-sm:min-h-[44px] text-base sm:text-sm font-medium transition-all duration-200 rounded-lg ${
+                                        isFrozen
+                                          ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 cursor-not-allowed'
+                                          : 'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100'
+                                      }`}
+                                      placeholder={isFrozen ? "Locked" : "0.00"}
+                                      title={isFrozen ? "Plataforma cerrada por horario europeo" : "Ingresa el valor generado"}
+                                    />
+                                    <span className="text-xs font-medium text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-600 px-2 py-1 rounded-md">
+                                      {platform.currency || 'USD'}
+                                    </span>
+                                  </div>
+                                  {/* Indicador de cambio */}
+                                  {editValues[platform.id] !== undefined && editValues[platform.id] !== currentValue.toFixed(2) && (
+                                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+                                  )}
+                                </div>
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                                  ${usdBruto.toFixed(2)} USD
+                                </div>
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                                  ${usdModeloFinal.toFixed(2)} USD
+                                </div>
+                              </td>
+                              <td className="py-3 px-3">
+                                <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
+                                  ${(copModelo || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                                </div>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                  </>
+                )}
+              </div>
+
+              {/* Totales y Alertas - USANDO TOTALES DEL SERVIDOR */}
+              {selectedModel.calculatorData.platforms && selectedModel.calculatorData.platforms.length > 0 && (
+                <div className="bg-white dark:bg-gray-700/80 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-600/20 p-3 sm:p-4 mb-3 sm:mb-4 hover:shadow-md transition-all duration-300 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+                  <h3 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
+                    <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></div>
+                    Totales y Alertas
+                  </h3>
+                  
+                  {calculatedTotals ? (
+                    <>
+                      {/* Totales principales - DESDE SERVIDOR */}
+                      <div className="grid grid-cols-3 gap-2 sm:gap-3 mb-3 sm:mb-4">
+                        <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-base sm:text-xl font-bold text-blue-700 mb-0.5 sm:mb-1">
+                            ${calculatedTotals.usdBruto.toFixed(2)}
+                          </div>
+                          <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD Bruto</div>
+                        </div>
+                        <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-base sm:text-xl font-bold text-green-700 mb-0.5 sm:mb-1">
+                            ${calculatedTotals.usdModelo.toFixed(2)}
+                          </div>
+                          <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD Modelo</div>
+                        </div>
+                        <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                          <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
+                            ${(calculatedTotals?.copModelo || 0).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                          </div>
+                          <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">COP Modelo</div>
+                        </div>
+                      </div>
+                      
+                      {/* Barra de Objetivo Básico - Estándar del proyecto (idéntica a Mi Historial) */}
+                      <div className="mb-6">
+                        {(() => {
+                          const pct = Math.max(0, Math.min(100, calculatedTotals.porcentajeAlcanzado || 0));
+                          // Paleta alineada con las cards: Azul (USD Bruto) → Verde (USD Modelo) → Púrpura (COP Modelo)
+                          const BLUE = { r: 59, g: 130, b: 246 };     // #3B82F6
+                          const GREEN = { r: 16, g: 185, b: 129 };    // #10B981
+                          const PURPLE = { r: 168, g: 85, b: 247 };   // #A855F7
+                          const mix = (a: any, b: any, t: number) => ({ r: Math.round(a.r + (b.r - a.r) * t), g: Math.round(a.g + (b.g - a.g) * t), b: Math.round(a.b + (b.b - a.b) * t) });
+                          const rgbToHex = (c: any) => `#${[c.r,c.g,c.b].map((x)=>x.toString(16).padStart(2,'0')).join('')}`;
+                          const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
+                          const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
+                          const t = pct / 100;
+                          // 0–50% azul→verde, 50–100% verde→púrpura (consistente con las cards)
+                          const base = t <= 0.5
+                            ? mix(BLUE, GREEN, t / 0.5)
+                            : mix(GREEN, PURPLE, (t - 0.5) / 0.5);
+                          // Matizar (menos saturación, más suave)
+                          const muted = tint(base, 0.35);
+                          const progressStart = rgbToHex(tint(muted, 0.10));
+                          const progressEnd = rgbToHex(shade(muted, 0.05));
+                          return (
+                            <div className="bg-gradient-to-br from-gray-50/80 to-gray-100/80 dark:from-gray-700/50 dark:to-gray-800/50 backdrop-blur-sm rounded-lg sm:rounded-xl p-2.5 sm:p-4 border border-gray-200/50 dark:border-gray-600/30 shadow-sm">
+                              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                                <div className="flex items-center gap-1.5 sm:gap-2">
+                                  <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.0))}, ${rgbToHex(shade(base, 0.2))})` }}>
+                                    <svg className="w-3 h-3 sm:w-4 sm:h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                    </svg>
+                                  </div>
+                                  <div>
+                                    <div className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">Objetivo Básico {calculatedTotals.estaPorDebajo ? 'en Progreso' : 'Alcanzado'}</div>
+                                    <div className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Meta: ${calculatedTotals.cuotaMinima} USD</div>
+                                  </div>
+                                </div>
+                                <div className="text-[10px] sm:text-xs font-bold px-2 sm:px-3 py-0.5 sm:py-1 rounded-lg text-white shadow-sm" style={{ background: `linear-gradient(135deg, ${rgbToHex(shade(muted, 0.05))}, ${rgbToHex(shade(muted, 0.12))})`, border: `1px solid ${rgbToHex(shade(muted, 0.25))}` }}>
+                                  {pct.toFixed(1)}%
+                                </div>
+                              </div>
+                              <div className="w-full bg-gray-200/80 dark:bg-gray-700/80 rounded-full h-3 sm:h-4 overflow-hidden shadow-inner mb-1.5 sm:mb-2">
+                                <div className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden" style={{ width: `${pct}%`, background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}>
+                                  <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+                                </div>
+                              </div>
+                              <div className="grid grid-cols-2 gap-2 sm:gap-3 pt-1.5 sm:pt-2 border-t border-gray-200/50 dark:border-gray-600/30">
+                                <div>
+                                  <div className="text-[9px] sm:text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-0.5 sm:mb-1">Alcanzado</div>
+                                  <div
+                                    className="inline-block px-2 sm:px-2.5 py-0.5 sm:py-1 rounded-md text-[10px] sm:text-xs font-bold text-white shadow-sm"
+                                    style={{
+                                      background: `linear-gradient(135deg, ${rgbToHex(shade(base, 0.15))}, ${rgbToHex(shade(base, 0.30))})`,
+                                      border: `1px solid ${rgbToHex(shade(base, 0.45))}`
+                                    }}
+                                  >
+                                    ${Math.max(0, calculatedTotals.usdModelo).toFixed(2)} USD
+                                  </div>
+                                </div>
+                                <div className="text-right">
+                                  <div className="text-[10px] text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Faltante</div>
+                                  <div className={`text-sm font-semibold text-gray-600 dark:text-gray-300`}>
+                                    ${Math.max(0, calculatedTotals.cuotaMinima - calculatedTotals.usdModelo).toFixed(2)} USD
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+
+                      {/* 90% de anticipo - DESDE SERVIDOR */}
+                      {calculatedTotals?.anticipoDisponible !== undefined && (
+                        <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
+                          <div className="text-sm text-gray-600 dark:text-gray-300">
+                            <strong>90% de anticipo disponible:</strong> ${calculatedTotals.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="text-center py-4">
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                      <p className="text-sm text-gray-500 dark:text-gray-400">Calculando totales...</p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 sm:p-8 animate-pulse w-full">
+              <div className="flex items-center gap-4 mb-8">
+                 <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full"></div>
+                 <div className="flex-1">
+                   <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-1/3 mb-2"></div>
+                   <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/4"></div>
+                 </div>
+              </div>
+              
+              {/* Tasas Skeleton */}
+              <div className="h-28 bg-gray-200 dark:bg-gray-600 rounded-xl w-full mb-6"></div>
+              
+              {/* Calculator Table Skeleton */}
+              <div className="h-64 bg-gray-200 dark:bg-gray-600 rounded-xl w-full"></div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Mostrar lista de modelos con panel de filtros
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+      <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
+        {/* Header */}
+        <div className="mb-8 sm:mb-12">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
+            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+              <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
+                <div className="flex items-center space-x-3 min-w-0 flex-1">
+                  <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
+                    <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                    </svg>
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <h1 className="text-base sm:text-lg md:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent leading-tight whitespace-nowrap overflow-hidden text-ellipsis">
+                      Ver Calculadora de Modelo
+                    </h1>
+                    <p className="mt-1 text-xs sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Selecciona un modelo para ver y editar su calculadora</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Panel izquierdo: Filtros */}
+          <div className="lg:col-span-1">
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 space-y-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15 z-[99999]">
+            {/* Filtro por Grupo */}
+            {availableGroups.length > 0 && (
+              <div>
+                <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Filtrar por Grupo</h2>
+                <AppleDropdown
+                  options={[
+                    { value: 'all', label: 'Todos los grupos' },
+                    ...availableGroups.map(group => ({
+                      value: group.id,
+                      label: group.name
+                    }))
+                  ]}
+                  value={selectedGroup}
+                  onChange={handleGroupFilter}
+                  placeholder="Selecciona un grupo"
+                  className="text-sm"
+                />
+              </div>
+            )}
+            
+            {/* Filtro por Nombre */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Buscar por Nombre</h2>
+              <div className="relative">
+                <input
+                  type="text"
+                  value={nameFilter}
+                  onChange={(e) => handleNameFilter(e.target.value)}
+                  placeholder="Buscar modelo..."
+                  className="w-full px-3 py-2 text-sm bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100 pr-10 text-gray-900 dark:text-gray-100"
+                />
+                {nameFilter && (
+                  <button
+                    onClick={() => handleNameFilter('')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-400 transition-colors"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                )}
+                </div>
+              {nameFilter && (
+                <div className="mt-2 text-xs text-blue-600 dark:text-blue-400">
+                  🔍 Filtrando por: "{nameFilter}" - {models.length} resultado{models.length !== 1 ? 's' : ''}
+                </div>
+              )}
+              </div>
+              
+            {/* Selección de Modelo */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-3">Seleccionar Modelo</h2>
+              <AppleDropdown
+                options={[
+                  { value: '', label: models.length === 0 ? 'No hay modelos disponibles' : 'Selecciona un modelo' },
+                  ...models.map(model => ({
+                    value: model.id,
+                    label: model.email.split('@')[0],
+                    badge: model.currentConfig?.active ? 'Configurada' : 'Sin configurar',
+                    badgeColor: model.currentConfig?.active ? 'green' as const : 'gray' as const
+                  }))
+                ]}
+                value={selectedModelId}
+                onChange={handleModelDropdownSelect}
+                placeholder={
+                  models.length === 0 
+                    ? (nameFilter ? `No hay modelos que contengan "${nameFilter}"` : 'No hay modelos disponibles')
+                    : `${models.length} modelo${models.length !== 1 ? 's' : ''} disponible${models.length !== 1 ? 's' : ''}`
+                }
+                autoOpen={nameFilter.length > 0 && models.length > 0}
+                className="text-sm"
+              />
+
+              {/* Información del modelo seleccionado */}
+              {selectedModelId && models.find(m => m.id === selectedModelId) && (
+                <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
+                  {(() => {
+                    const model = models.find(m => m.id === selectedModelId);
+                    return model ? (
+                      <>
+                        <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">{model.email.split('@')[0]}</p>
+                        <p className="text-xs text-gray-600 dark:text-gray-400 mb-2">{model.email}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {model.groups.map((group) => (
+                            <span
+                              key={group.id}
+                              className="inline-block px-2 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-800 dark:text-blue-200 text-xs rounded-full"
+                            >
+                              {group.name}
+                            </span>
+                          ))}
+                        </div>
+                      </>
+                    ) : null;
+                  })()}
+                </div>
+              )}
+
+              {/* Estado cuando no hay modelos */}
+              {models.length === 0 && (
+                <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-600/80 rounded-lg text-center">
+                  <div className="text-gray-400 mb-2 text-2xl">👥</div>
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                    {nameFilter || selectedGroup !== 'all' 
+                      ? 'No se encontraron modelos con los filtros aplicados' 
+                      : 'No hay modelos disponibles'
+                    }
+                  </p>
+                  {(nameFilter || selectedGroup !== 'all') && (
+                    <button
+                      onClick={() => {
+                        setNameFilter('');
+                        setSelectedGroup('all');
+                        setSelectedModelId('');
+                        setModels(allModels);
+                      }}
+                      className="px-3 py-1.5 text-xs font-medium bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg hover:from-blue-600 hover:to-indigo-700 transition-all duration-200 shadow-md"
+                    >
+                      Limpiar filtros
+                    </button>
+                  )}
+                </div>
+              )}
+              </div>
+              
+            {/* Información de resultados */}
+            <div className="p-3 bg-gray-50 dark:bg-gray-600/80 rounded-lg">
+              <p className="text-xs text-gray-600 dark:text-gray-400">
+                Mostrando {models.length} de {allModels.length} modelos
+              </p>
+              {selectedGroup !== 'all' && (
+                <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                  Filtrado por: {availableGroups.find(g => g.id === selectedGroup)?.name}
+                </p>
+              )}
+              {nameFilter && (
+                <p className="text-xs text-green-600 dark:text-green-400 mt-1">
+                  Búsqueda: "{nameFilter}"
+                </p>
+              )}
+              </div>
+            </div>
+        </div>
+
+        {/* Panel derecho: Información adicional o vacío */}
+        <div className="hidden lg:block lg:col-span-2">
+          <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4">Información</h2>
+            
+            {selectedModelId && models.find(m => m.id === selectedModelId) ? (
+              <div className="text-center py-8">
+                <div className="text-green-500 mb-4 text-4xl">✅</div>
+                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  Modelo seleccionado
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">
+                  {models.find(m => m.id === selectedModelId)?.email.split('@')[0]} está listo para ver su calculadora
+                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400">
+                  La calculadora se abrirá automáticamente
+                </p>
+              </div>
+            ) : (
+          <div className="text-center py-12">
+                <div className="text-gray-400 mb-4 text-4xl">👈</div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+                  Selecciona un modelo
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400">
+                  Usa los filtros de la izquierda para encontrar y seleccionar un modelo
+            </p>
+          </div>
+        )}
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  );
+}

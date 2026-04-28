@@ -29,7 +29,7 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
       const now = new Date();
       
       const formatTime = (tz: string) => {
-        return new Intl.DateTimeFormat('es-CO', {
+        return new Intl.DateTimeFormat('en-US', {
           timeZone: tz,
           hour: 'numeric',
           minute: '2-digit',
@@ -132,13 +132,13 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
         const displayValue = typeof facturadoDisplayUsd === 'number' ? facturadoDisplayUsd : facturadoPeriodoUsd;
         const formatUsd = (n: number) => n.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
         newMessages.push({ 
-          text: `Facturado este periodo: $${formatUsd(displayValue)} USD`, 
+          text: `Facturado: US$ ${formatUsd(displayValue)}`, 
           urgent: false, 
           closed: false 
         });
         if (remaining > 0) {
           newMessages.push({ 
-            text: `Objetivo promedio por día: $${formatUsd(dailyAvg)} USD, para lograrlo`, 
+            text: `Meta diaria: US$ ${formatUsd(dailyAvg)}`, 
             urgent: true, 
             closed: false 
           });
@@ -164,48 +164,62 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
 
   const currentMessage = messages[tickerIndex];
 
-  return (
-    <div className={`w-full max-w-full mx-auto mb-6 px-2 ${className}`}>
-      <div className="relative">
-        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/15 via-indigo-500/10 to-violet-500/15 rounded-2xl blur-xl" />
-        <div className="relative overflow-hidden bg-gradient-to-r from-white/90 to-white/75 dark:from-gray-800/90 dark:to-gray-800/75 backdrop-blur-xl rounded-xl border border-white/40 dark:border-gray-600/50 shadow-lg shadow-blue-500/5 dark:shadow-black/20 py-1.5 px-6 flex flex-row items-center justify-between gap-6 ring-1 ring-inset ring-white/50 dark:ring-gray-500/20 h-11">
-          {/* Relojes */}
-          <div className="flex items-center gap-5 sm:gap-8 border-r border-gray-200/80 dark:border-gray-600/50 pr-6 h-full">
-            <ClockItem label="EUR" time={times.europe} flagCode="eu" color="blue" />
-            <ClockItem label="UK" time={times.uk} flagCode="gb" color="purple" />
-            <ClockItem label="JPN" time={times.japan} flagCode="jp" color="red" />
-            <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-gradient-to-r from-emerald-50/90 to-teal-50/90 dark:from-gray-700/60 dark:to-gray-700/60 rounded-lg border border-emerald-200/60 dark:border-gray-600/50">
-              <img src="https://flagcdn.com/w20/co.png" alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" width={20} height={14} />
-              <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">COL</span>
-              <span className="text-xs font-mono font-medium text-gray-800 dark:text-gray-200">{times.colombia}</span>
-            </div>
-          </div>
+  const trackContent = (
+    <>
+      {/* Relojes */}
+      <div className="flex items-center gap-3 sm:gap-4 border-r border-gray-200/80 dark:border-white/10 pr-3 sm:pr-4 h-full flex-shrink-0">
+        <ClockItem label="EUR" time={times.europe} flagCode="eu" color="blue" />
+        <ClockItem label="UK" time={times.uk} flagCode="gb" color="purple" />
+        <ClockItem label="JPN" time={times.japan} flagCode="jp" color="gray" />
+        <div className="hidden lg:flex items-center gap-1.5 px-2 py-1 bg-white/60 dark:bg-white/[0.03] rounded-lg border border-gray-200 dark:border-white/10">
+          <img src="https://flagcdn.com/w20/co.png" alt="" className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0" width={20} height={14} />
+          <span className="text-[10px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide">COL</span>
+          <span className="text-[13px] font-bold tabular-nums tracking-tight text-gray-800 dark:text-gray-200">{times.colombia}</span>
+        </div>
+      </div>
 
-          {/* Ticker: mismo espacio, mensajes rotativos */}
-          <div className="flex-1 flex items-center overflow-hidden h-full relative min-w-0">
-            {currentMessage && (
-              <div 
-                key={tickerIndex}
-                className="flex items-center gap-3 animate-fade-in-smooth whitespace-nowrap min-w-0"
-              >
-                <span className={`flex h-1.5 w-1.5 rounded-full flex-shrink-0 ${
-                  currentMessage.closed
-                    ? 'bg-purple-500 dark:bg-purple-400'
-                    : currentMessage.urgent 
-                    ? 'bg-amber-500 dark:bg-amber-400 animate-pulse-fast' 
-                    : 'bg-emerald-500 dark:bg-emerald-400 animate-pulse-slow'
-                }`} />
-                <p className={`text-xs sm:text-sm font-medium tracking-wide truncate ${
-                  currentMessage.closed
-                    ? 'text-purple-600 dark:text-purple-400'
-                    : currentMessage.urgent 
-                    ? 'text-amber-600 dark:text-amber-400 animate-blink' 
-                    : 'text-gray-700 dark:text-gray-200'
-                }`}>
-                  {currentMessage.text}
-                </p>
-              </div>
-            )}
+      {/* Ticker: mismo espacio, mensajes rotativos */}
+      <div className="flex-1 flex items-center overflow-hidden sm:overflow-visible h-full relative min-w-0 flex-shrink-0 ml-4 sm:ml-0">
+        {currentMessage && (
+          <div 
+            key={tickerIndex}
+            className="flex items-center gap-3 animate-fade-in-smooth whitespace-nowrap min-w-0 pointer-events-none"
+          >
+            <span className={`flex h-[5px] w-[5px] rounded-full flex-shrink-0 shadow-sm ${
+              currentMessage.closed
+                ? 'bg-purple-500 dark:bg-[#c488fc] shadow-[0_0_8px_rgba(196,136,252,0.6)]'
+                : currentMessage.urgent 
+                ? 'bg-teal-500 dark:bg-[#2dd4bf] shadow-[0_0_8px_rgba(45,212,191,0.6)] animate-pulse-fast' 
+                : 'bg-emerald-500 dark:bg-[#34d399] shadow-[0_0_8px_rgba(52,211,153,0.5)] animate-pulse-slow'
+            }`} />
+            <p className={`text-[11px] sm:text-[12px] font-bold tracking-wide whitespace-nowrap ${
+              currentMessage.closed
+                ? 'text-purple-400 dark:text-[#c488fc] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(196,136,252,0.4)]'
+                : currentMessage.urgent 
+                ? 'text-[rgba(74,188,150,0.9)] dark:text-[#2dd4bf] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(45,212,191,0.4)]' 
+                : 'text-[rgba(74,188,150,0.9)] dark:text-[#34d399] drop-shadow-none dark:drop-shadow-[0_0_8px_rgba(52,211,153,0.4)]'
+            }`}>
+              {currentMessage.text}
+            </p>
+          </div>
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className={`w-full max-w-full mx-auto mb-6 px-2 sm:px-0 ${className}`}>
+      <div className="relative mx-0 w-full">
+        <div className="relative overflow-hidden bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl rounded-full border border-white/40 dark:border-white/[0.08] shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_2px_12px_rgba(0,0,0,0.3)] py-1.5 h-11 mobile-marquee-viewport px-0 sm:px-6">
+          <div className="mobile-marquee-wrapper flex items-center h-full w-full sm:w-auto">
+            {/* Primera copia (siempre visible) */}
+            <div className="mobile-marquee-track flex items-center sm:justify-between w-max sm:w-full h-full sm:gap-3 px-6 sm:px-0 flex-shrink-0">
+              {trackContent}
+            </div>
+            {/* Segunda copia para bucle contínuo sin pausas (solo móvil) */}
+            <div className="mobile-marquee-track flex sm:hidden items-center w-max h-full px-6 flex-shrink-0" aria-hidden="true">
+              {trackContent}
+            </div>
           </div>
         </div>
       </div>
@@ -218,6 +232,29 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
         }
         .animate-fade-in-smooth {
           animation: fadeInSmooth 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        @keyframes marquee-seamless {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+
+        @media (max-width: 639px) { 
+          .mobile-marquee-viewport {
+            width: 100%;
+            display: flex;
+            align-items: center;
+          }
+          .mobile-marquee-wrapper {
+            display: flex;
+            width: max-content;
+            animation: marquee-seamless 20s linear infinite;
+            will-change: transform;
+          }
+          .mobile-marquee-track {
+            flex-shrink: 0;
+            display: flex;
+          }
         }
         
         @keyframes blink {
@@ -248,17 +285,17 @@ export default function DynamicTimeIsland({ className = '', objetivoUsd, factura
   );
 }
 
-function ClockItem({ label, time, flagCode, color }: { label: string; time: string; flagCode: string; color: 'blue' | 'purple' | 'red' }) {
+function ClockItem({ label, time, flagCode, color }: { label: string; time: string; flagCode: string; color: 'blue' | 'purple' | 'red' | 'gray' }) {
   const colorMap = {
     blue: 'from-blue-500 to-blue-600 dark:from-blue-400 dark:to-blue-500',
     purple: 'from-purple-500 to-purple-600 dark:from-purple-400 dark:to-purple-500',
-    red: 'from-red-500 to-red-600 dark:from-red-400 dark:to-red-500'
+    red: 'from-rose-400 to-rose-500 dark:from-rose-300 dark:to-rose-400',
+    gray: 'from-gray-600 to-gray-700 dark:from-gray-300 dark:to-gray-500'
   };
 
-  const parts = time.split('\u00A0');
-  const mainTime = parts[0] || time.split(' ')[0];
-  let ampm = parts[1] || time.split(' ')[1] || '';
-  ampm = ampm.charAt(0).toUpperCase();
+  const parts = time.split(' ');
+  const mainTime = parts[0] || time;
+  const ampm = parts[1] || '';
 
   return (
     <div className="flex items-center gap-2">
@@ -266,16 +303,16 @@ function ClockItem({ label, time, flagCode, color }: { label: string; time: stri
       <img
         src={`https://flagcdn.com/w20/${flagCode}.png`}
         alt=""
-        className="w-5 h-3.5 object-cover rounded-sm flex-shrink-0"
-        width={20}
-        height={14}
+        className="w-4 h-3 object-cover rounded-[2px] flex-shrink-0 opacity-90"
+        width={16}
+        height={12}
       />
-      <span className="text-[10px] font-semibold text-gray-800 dark:text-white uppercase tracking-wide">{label}</span>
-      <div className="flex items-center gap-1">
-        <span className={`text-sm font-mono font-semibold bg-gradient-to-br ${colorMap[color]} bg-clip-text text-transparent`}>
+      <span className="text-[9px] font-bold text-gray-500 dark:text-gray-400 uppercase tracking-widest">{label}</span>
+      <div className="flex items-baseline gap-1">
+        <span className={`text-[12px] sm:text-[13px] font-bold tabular-nums tracking-tight text-transparent bg-clip-text bg-gradient-to-r ${colorMap[color]}`}>
           {mainTime}
         </span>
-        <span className="text-[9px] font-semibold text-gray-500 dark:text-white/60">
+        <span className="text-[8px] font-bold text-gray-400 dark:text-gray-500">
           {ampm}
         </span>
       </div>

@@ -65,6 +65,8 @@ export async function GET(request: NextRequest) {
         created_at,
         sender_id,
         reply_to_message_id,
+        is_deleted_for_all,
+        metadata,
         sender:sender_id(id, name, email, role),
         reply_to_message:reply_to_message_id(
           id,
@@ -73,21 +75,51 @@ export async function GET(request: NextRequest) {
         )
       `)
       .eq('conversation_id', conversationId)
-      .order('created_at', { ascending: false })
-      .range(offset, offset + limit - 1);
+      .eq('is_deleted_for_all', false)
+      .order('created_at', { ascending: false });
 
     if (error) {
       console.error('Error obteniendo mensajes:', error);
       return NextResponse.json({ error: 'Error obteniendo mensajes' }, { status: 500 });
     }
 
-    // Determinar el otro participante
+    // Obtener fecha de vaciado de chat
+    const { data: cleared } = await supabase
+      .from('chat_cleared_history')
+      .select('cleared_at')
+      .eq('conversation_id', conversationId)
+      .eq('user_id', user.id)
+      .single();
+
+    // Obtener mensajes ocultos (eliminados para mí)
+    const { data: hidden } = await supabase
+      .from('chat_hidden_messages')
+      .select('message_id')
+      .eq('user_id', user.id);
+
+    const hiddenIds = new Set(hidden?.map(h => h.message_id) || []);
+    const clearedAt = cleared ? new Date(cleared.cleared_at) : new Date(0);
+
+    // Filtrar localmente (ya que range/offset es difícil de combinar con filtros complejos en Supabase)
+    const validMessages = messages.filter((m: any) => {
+      const msgDate = new Date(m.created_at);
+      return msgDate > clearedAt && !hiddenIds.has(m.id);
+    });
+
+    const paginatedMessages = validMessages.slice(offset, offset + limit);
+
+    if (error) {
+      console.error('Error obteniendo mensajes:', error);
+      return NextResponse.json({ error: 'Error obteniendo mensajes' }, { status: 500 });
+    }
+
+    // Determinar participantes para lecturas
     const otherParticipantId = conversation.participant_1_id === user.id 
       ? conversation.participant_2_id 
       : conversation.participant_1_id;
 
     // Obtener qué mensajes fueron leídos por ambos participantes
-    const messageIds = messages.map((m: any) => m.id);
+    const messageIds = paginatedMessages.map((m: any) => m.id);
     
     // Lecturas del otro participante (para mostrar "visto" en mensajes que yo envié)
     const { data: readByOther } = await supabase
@@ -107,7 +139,7 @@ export async function GET(request: NextRequest) {
     const readByMeSet = new Set(readByMe?.map((r: any) => r.message_id) || []);
 
     // Enriquecer mensajes con flags de lectura
-    const messagesWithReadStatus = messages.map((msg: any) => {
+    const messagesWithReadStatus = paginatedMessages.map((msg: any) => {
       const isMyMessage = msg.sender_id === user.id;
       
       return {
@@ -126,7 +158,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ 
       success: true, 
       messages: messagesWithReadStatus.reverse(), // Ordenar cronológicamente
-      has_more: messages.length === limit
+      has_more: validMessages.length > offset + limit
     });
 
   } catch (error) {
@@ -159,7 +191,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { conversation_id, content, message_type = 'text', reply_to_message_id } = body;
+    const { conversation_id, content, message_type = 'text', reply_to_message_id, is_forwarded = false, metadata = null } = body;
 
     if (!conversation_id || !content?.trim()) {
       return NextResponse.json({ 
@@ -182,8 +214,28 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Conversación inactiva' }, { status: 400 });
     }
 
-    if (conversation.participant_1_id !== user.id && conversation.participant_2_id !== user.id) {
+    let isParticipant = conversation.participant_1_id === user.id || conversation.participant_2_id === user.id;
+
+    if (!isParticipant) {
+      const { data: groupCheck } = await supabase.from('chat_group_participants').select('id').eq('conversation_id', conversation_id).eq('user_id', user.id).single();
+      if (groupCheck) isParticipant = true;
+    }
+
+    if (!isParticipant) {
       return NextResponse.json({ error: 'No tienes acceso a esta conversación' }, { status: 403 });
+    }
+
+    const receiverId = conversation.participant_1_id === user.id ? conversation.participant_2_id : conversation.participant_1_id;
+
+    // Verificar bloqueos
+    const { data: block } = await supabase
+      .from('chat_blocks')
+      .select('id')
+      .or(`and(blocker_id.eq.${receiverId},blocked_id.eq.${user.id}),and(blocker_id.eq.${user.id},blocked_id.eq.${receiverId})`)
+      .limit(1);
+
+    if (block && block.length > 0) {
+      return NextResponse.json({ error: 'No puedes enviar mensajes a este contacto.' }, { status: 403 });
     }
 
     // Bloqueo: si el último mensaje fue una difusión no respondible enviada por Botty,
@@ -216,7 +268,8 @@ export async function POST(request: NextRequest) {
         sender_id: user.id,
         content: content.trim(),
         message_type: message_type,
-        reply_to_message_id: reply_to_message_id || null
+        reply_to_message_id: reply_to_message_id || null,
+        metadata: metadata || (is_forwarded ? { is_forwarded: true } : null)
       })
       .select(`
         id,

@@ -52,68 +52,75 @@ export default function PortfolioDropdown({ isActive, isOpen, onToggle, onClose 
       {/* Botón del dropdown */}
       <button
         onClick={handleToggle}
-        className={`px-4 py-2 text-sm font-medium transition-all duration-300 cursor-pointer whitespace-nowrap rounded-lg hover:bg-white/60 dark:hover:bg-gray-800/60 hover:backdrop-blur-sm hover:shadow-sm flex items-center space-x-2 ${
-          isActive 
-            ? 'text-gray-900 dark:text-gray-100 bg-white/50 dark:bg-gray-800/50 shadow-sm' 
-            : 'text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100'
+        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[14px] sm:text-[15px] transition-all duration-200 cursor-pointer whitespace-nowrap rounded-full flex items-center space-x-1.5 group active:scale-[0.97] ${
+          isActive || isOpen
+            ? 'font-bold text-gray-900 dark:text-white bg-black/5 dark:bg-white/15 shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-black/10 dark:border-white/20 backdrop-blur-md' 
+            : 'font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-transparent'
         }`}
       >
-        <span>Mi Portafolio</span>
+        <span>Mis Plataformas</span>
         <ChevronDown 
-          className={`w-4 h-4 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 lg:w-4 lg:h-4 transition-transform duration-300 ${
             isOpen ? 'rotate-180' : ''
-          }`} 
+          } ${
+            isActive || isOpen ? 'text-gray-900 dark:text-white' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+          }`}
         />
       </button>
 
       {/* Dropdown Menu */}
       {isOpen && (
-        <div className="absolute top-full left-0 mt-2 w-72 sm:w-80 bg-white dark:bg-gray-100 border border-gray-200 dark:border-gray-300 rounded-xl shadow-xl dark:shadow-lg z-[9999999] animate-in slide-in-from-top-2 duration-200">
-          <div className="p-3">
-            <div className="mb-2">
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-800 uppercase tracking-wide mb-2">
-                Mi Portafolio
+        <div className="absolute top-full left-0 mt-2 w-72 sm:w-80 z-[9999999] animate-in slide-in-from-top-2 duration-200">
+          {/* Glass Layer - Aislada para evitar bugs de WebKit/Blink */}
+          <div className="absolute inset-0 bg-white dark:bg-gray-900 bg-opacity-40 dark:bg-opacity-40 backdrop-filter backdrop-blur-xl border border-white/40 dark:border-white/10 rounded-2xl shadow-[0_8px_30px_rgb(0,0,0,0.12)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.4)] -z-10"></div>
+          
+          <div className="relative z-10 p-2 sm:p-3">
+            <div className="mb-2 px-2 pt-1">
+              <h3 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">
+                Mis Plataformas
               </h3>
             </div>
             
-            {menuItems.map((item) => {
-              const isCurrentPage = pathname === item.href || 
-                (item.href.includes('?tab=analytics') && pathname === '/model/portafolio');
-              
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => close()}
-                  className={`block px-4 py-3 text-sm transition-all duration-200 rounded-lg group ${
-                    isCurrentPage
-                      ? 'bg-blue-50 dark:bg-blue-50 text-blue-900 dark:text-blue-600 font-medium shadow-sm border border-blue-200 dark:border-blue-200'
-                      : 'text-gray-900 dark:text-gray-800 hover:bg-gray-50 dark:hover:bg-gray-50 hover:text-gray-900 dark:hover:text-gray-900 hover:shadow-sm'
-                  }`}
-                >
-                  <div className="flex items-center space-x-3">
-                    <div className={`flex-shrink-0 ${
-                      isCurrentPage ? 'text-blue-600 dark:text-blue-500' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-600'
-                    }`}>
-                      {item.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-medium">{item.label}</div>
-                      <div className={`text-xs ${
-                        isCurrentPage ? 'text-blue-600 dark:text-blue-500' : 'text-gray-500 dark:text-gray-600'
+            <div className="space-y-1">
+              {menuItems.map((item) => {
+                const isCurrentPage = pathname === item.href || 
+                  (item.href.includes('?tab=analytics') && pathname === '/model/portafolio');
+                
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => close()}
+                    className={`block px-3 py-2.5 sm:px-4 sm:py-3 text-sm transition-all duration-200 rounded-xl group touch-manipulation active:scale-[0.98] ${
+                      isCurrentPage
+                        ? 'bg-black/5 dark:bg-white/10 text-gray-900 dark:text-white font-medium shadow-sm border border-black/5 dark:border-white/5'
+                        : 'text-gray-700 dark:text-gray-300 hover:bg-black/5 dark:hover:bg-white/5 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    <div className="flex items-center space-x-3">
+                      <div className={`flex-shrink-0 transition-colors duration-200 ${
+                        isCurrentPage ? 'text-gray-900 dark:text-white' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
                       }`}>
-                        {item.description}
+                        {item.icon}
                       </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-medium tracking-tight">{item.label}</div>
+                        <div className={`text-xs mt-0.5 leading-snug ${
+                          isCurrentPage ? 'text-gray-600 dark:text-gray-300' : 'text-gray-500 dark:text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+                        }`}>
+                          {item.description}
+                        </div>
+                      </div>
+                      {isCurrentPage && (
+                        <div className="flex-shrink-0">
+                          <Eye className="w-4 h-4 text-gray-900 dark:text-white" />
+                        </div>
+                      )}
                     </div>
-                    {isCurrentPage && (
-                      <div className="flex-shrink-0">
-                        <Eye className="w-4 h-4 text-blue-600 dark:text-blue-500" />
-                      </div>
-                    )}
-                  </div>
-                </Link>
-              );
-            })}
+                  </Link>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}

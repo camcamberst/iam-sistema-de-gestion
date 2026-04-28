@@ -11,6 +11,7 @@ import ClientOnly from '@/components/ClientOnly';
 const ChatWidget = dynamic(() => import('@/components/chat/ChatWidget'), { ssr: false });
 import ThemeToggle from '@/components/ThemeToggle';
 import { getMenuForRole } from '@/lib/menu-config';
+import AvatarCropperModal from '@/components/ui/AvatarCropperModal';
 
 export default function FotografiaLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -23,12 +24,88 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
     email: string;
     role: 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia' | string;
     groups: string[];
+    avatar_url?: string;
   } | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [avatarFileToCrop, setAvatarFileToCrop] = useState<File | null>(null);
   const [menuTimeout, setMenuTimeout] = useState<NodeJS.Timeout | null>(null);
   const userPanelRef = useRef<HTMLDivElement>(null);
   const [isClient, setIsClient] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [expandedMobileItems, setExpandedMobileItems] = useState<Set<string>>(new Set());
+
+  const handleAvatarUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !userInfo) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      alert('La imagen original no debe pesar más de 5MB.');
+      return;
+    }
+
+    setAvatarFileToCrop(file);
+    if (event.target) event.target.value = '';
+  };
+
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    if (!userInfo) return;
+    try {
+      setIsUploadingAvatar(true);
+      
+      // Intentar borrar la imagen anterior de supabase storage para no saturar
+      if (userInfo.avatar_url) {
+        try {
+          const urlParts = userInfo.avatar_url.split('/');
+          const oldFilename = urlParts[urlParts.length - 1];
+          if (oldFilename) {
+            await supabase.storage.from('avatars').remove([oldFilename]);
+            console.log('Imagen anterior eliminada exitosamente');
+          }
+        } catch (delError) {
+          console.error('No se pudo borrar imagen anterior:', delError);
+        }
+      }
+
+      const fileName = `${userInfo.id}-${Date.now()}.jpg`;
+      
+      const { error: uploadError } = await supabase.storage
+        .from('avatars')
+        .upload(fileName, croppedBlob, { upsert: true, contentType: 'image/jpeg' });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(fileName);
+
+      const avatarUrl = publicUrlData.publicUrl;
+
+      const { error: updateError } = await supabase
+        .from('users')
+        .update({ avatar_url: avatarUrl })
+        .eq('id', userInfo.id);
+
+      if (updateError) throw updateError;
+
+      setUserInfo(prev => prev ? { ...prev, avatar_url: avatarUrl } : null);
+      setAvatarFileToCrop(null);
+      
+      try {
+        const stored = localStorage.getItem('user');
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          parsed.avatar_url = avatarUrl;
+          localStorage.setItem('user', JSON.stringify(parsed));
+        }
+      } catch (e) {}
+
+    } catch (error: any) {
+      console.error('Error al procesar/subir avatar:', error);
+      alert('Hubo un error al procesar tu foto.');
+    } finally {
+      setIsUploadingAvatar(false);
+    }
+  };
 
   const loadUser = async () => {
     try {
@@ -41,7 +118,7 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
       }
       const { data: userRow } = await supabase
         .from('users')
-        .select('id,name,email,role')
+        .select('id,name,email,role,avatar_url')
         .eq('id', uid)
         .single();
       let groups: string[] = [];
@@ -58,6 +135,7 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
         email: userRow?.email || auth.user?.email || '',
         role: (userRow?.role as any) || 'fotografia',
         groups,
+        avatar_url: userRow?.avatar_url || null,
       });
     } finally {
       setLoadingUser(false);
@@ -97,7 +175,8 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
               name: parsed.name || parsed.email?.split('@')[0] || 'Usuario',
               email: parsed.email || '',
               role: parsed.role,
-              groups: parsed.groups || []
+              groups: parsed.groups || [],
+              avatar_url: parsed.avatar_url || null
             });
           }
         }
@@ -166,20 +245,56 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
   const isParentActive = (item: any) => item.subItems?.some((subItem: any) => pathname === subItem.href);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:bg-[#000000f7] dark:bg-none">
       {/* Apple Style 2 Header */}
       <header className="bg-white dark:bg-gray-900 backdrop-blur-md border border-white/20 dark:border-gray-700/30 sticky top-0 z-[99999] shadow-lg dark:shadow-lg dark:shadow-purple-900/15 dark:ring-0.5 dark:ring-purple-400/20">
         <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-6 lg:px-8">
           <div className="flex items-center justify-between h-14 md:h-16">
             {/* Logo */}
             <div className="flex items-center flex-1 min-w-0 pr-1 sm:pr-0">
-              <Link href="/fotografia/dashboard" className="flex items-center space-x-1 sm:space-x-1.5 md:space-x-3 group">
-                <div className="w-6 h-6 sm:w-7 md:w-9 sm:h-7 md:h-9 bg-gradient-to-br from-gray-900 to-black dark:from-gray-100 dark:to-gray-300 rounded-md sm:rounded-lg md:rounded-xl flex items-center justify-center shadow-md border border-white/20 dark:border-gray-700/30 group-hover:shadow-lg transition-all duration-300 flex-shrink-0">
-                  <span className="text-white dark:text-gray-900 font-bold text-[9px] sm:text-[10px] md:text-sm tracking-wider">AIM</span>
+              <Link href="/fotografia/dashboard" className="flex items-center group">
+                {/* Logo Block (IMPOSING) Bimodal */}
+                <div className="flex-none w-7 h-7 sm:w-8 md:w-9 sm:h-8 md:h-9 bg-gradient-to-br from-gray-700 to-gray-800 dark:bg-gradient-to-b dark:from-[#ffffff] dark:to-[#e2e8f0] rounded-[8.5px] md:rounded-[10.5px] border border-gray-600/50 dark:border-[#ffffff] flex items-center justify-center shadow-lg dark:shadow-[0_0_8px_rgba(255,255,255,0.15),0_10px_20px_-5px_rgba(0,0,0,0.5),inset_0_2px_4px_rgba(255,255,255,1),inset_0_-4px_8px_rgba(148,163,184,0.2)] dark:ring-1 dark:ring-slate-900/5 group-hover:scale-105 transition-all duration-300 z-10 box-border">
+                  <span className="text-white dark:text-[#0a0f1a] font-black text-[9.5px] sm:text-[11px] md:text-[12px] tracking-wider [text-shadow:0_0_8px_rgba(255,255,255,0.6)] dark:[text-shadow:none] dark:drop-shadow-[0_1px_1px_rgba(255,255,255,0.8)]">AIM</span>
                 </div>
-                <div className="flex flex-col min-w-0 hidden sm:flex">
-                  <span className="text-xs sm:text-sm md:text-lg font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent truncate leading-tight">Sistema de Gestión</span>
-                  <span className="hidden md:block text-xs text-gray-600 dark:text-gray-300 font-medium tracking-wide">Panel Fotografía</span>
+                
+                <div className={`flex items-center transition-all duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] overflow-visible max-w-[200px] md:max-w-xs opacity-100 translate-x-0`}>
+                  {/* Vertical Divider (Login clonado y escalado) */}
+                  <div className="w-[4px] md:w-[5px] h-[16px] md:h-[22px] bg-gray-600 dark:bg-gradient-to-b dark:from-[#ffffff] dark:via-[#f8fafc] dark:to-[#cbd5e1] rounded-full dark:shadow-[0_0_6px_rgba(255,255,255,0.2),0_8px_16px_-4px_rgba(0,0,0,0.8),inset_0_1px_2px_rgba(255,255,255,1),inset_0_-2px_4px_rgba(148,163,184,0.5)] border border-transparent dark:border-0 dark:ring-1 dark:ring-slate-900/10 ml-1 sm:ml-1.5 mr-0.5 sm:mr-1"></div>
+                  
+                  {/* Target Name (Aurora + Lucero Bimodal) */}
+                  <div className="relative inline-flex items-center pr-4 sm:pr-6">
+                    {/* Background Glow Text (Solo Oscuro) */}
+                    <span className="absolute flex items-center text-[16px] sm:text-[19px] md:text-[22px] leading-none font-black tracking-tight select-none pointer-events-none hidden dark:flex" aria-hidden="true">
+                      <span className="relative inline-block">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-indigo-500 to-fuchsia-400 blur-[6px]">Aurora</span>
+                        <span className="absolute top-[0px] -right-[6px] sm:top-[0px] sm:-right-[8px] w-[8px] h-[8px] sm:w-[10px] sm:h-[10px] blur-[5px] opacity-60">
+                          <svg className="w-full h-full text-fuchsia-400 animate-lucero" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
+                          </svg>
+                        </span>
+                      </span>
+                    </span>
+
+                    {/* Foreground Tangible Text */}
+                    <span className="relative flex items-center text-[16px] sm:text-[19px] md:text-[22px] leading-none font-black tracking-tight whitespace-nowrap">
+                      <span className="relative inline-block drop-shadow-none dark:drop-shadow-[0_0_4px_rgba(255,255,255,0.15)] filter-none dark:[filter:drop-shadow(0_4px_6px_rgba(0,0,0,0.5))]">
+                        <span className="text-gray-900 bg-none dark:text-transparent dark:bg-clip-text dark:bg-gradient-to-b dark:from-[#ffffff] dark:via-[#f1f5f9] dark:to-[#cbd5e1]">Aurora</span>
+                        <span className="absolute top-[0px] -right-[6px] sm:top-[0px] sm:-right-[8px] w-[8px] h-[8px] sm:w-[10px] sm:h-[10px]">
+                          <svg className="w-full h-full animate-lucero text-indigo-500 dark:text-transparent" viewBox="0 0 24 24" fill="url(#header-aurora-gradient-star)">
+                            <defs>
+                              <linearGradient id="header-aurora-gradient-star" x1="0%" y1="0%" x2="100%" y2="100%">
+                                <stop offset="0%" stopColor="#38bdf8" />
+                                <stop offset="50%" stopColor="#6366f1" />
+                                <stop offset="100%" stopColor="#d946ef" />
+                              </linearGradient>
+                            </defs>
+                            <path d="M12 0C12 6.627 17.373 12 24 12C17.373 12 12 17.373 12 24C12 17.373 6.627 12 0 12C6.627 12 12 6.627 12 0Z" />
+                          </svg>
+                        </span>
+                      </span>
+                    </span>
+                  </div>
                 </div>
               </Link>
             </div>
@@ -260,10 +375,14 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
                   }}
                   className="flex items-center justify-center text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-1 sm:p-1.5 md:px-3 md:py-2 rounded-lg border border-white/20 dark:border-gray-700/30 hover:bg-white/60 dark:hover:bg-gray-800/60 hover:shadow-sm transition-all duration-200 backdrop-blur-sm"
                 >
-                  <div className="w-5 h-5 sm:w-6 md:w-7 sm:h-6 md:h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm">
-                    <svg className="w-2.5 h-2.5 sm:w-3 md:w-4 sm:h-3 md:h-4" viewBox="0 0 20 20" fill="currentColor">
-                      <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" />
-                    </svg>
+                  <div className="w-5 h-5 sm:w-6 md:w-7 sm:h-6 md:h-7 rounded-full bg-gradient-to-br from-gray-800 to-gray-900 text-white flex items-center justify-center shadow-sm overflow-hidden relative">
+                    {userInfo?.avatar_url ? (
+                      <img src={userInfo.avatar_url} alt="" className="absolute inset-0 w-full h-full object-cover object-center" />
+                    ) : (
+                      <svg className="w-2.5 h-2.5 sm:w-3 md:w-4 sm:h-3 md:h-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M10 10a4 4 0 100-8 4 4 0 000 8zm-7 8a7 7 0 1114 0H3z" />
+                      </svg>
+                    )}
                   </div>
                   <span className="hidden md:block text-sm font-medium ml-2">Cuenta</span>
                   <svg className="hidden md:block w-4 h-4 text-gray-400 dark:text-gray-500 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -271,63 +390,95 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
                   </svg>
                 </button>
                 {showUserPanel && (
-                  <div className="absolute right-0 mt-3 w-64 sm:w-72 bg-white/95 dark:bg-gray-800/95 backdrop-blur-md border border-white/30 dark:border-gray-700/30 rounded-lg shadow-xl p-3 sm:p-4 z-50 animate-in slide-in-from-top-2 duration-200">
+                  <div className="absolute right-0 mt-3 w-72 sm:w-80 bg-white/80 dark:bg-[#0a0f1a]/80 backdrop-blur-2xl border border-black/5 dark:border-white/10 rounded-2xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] p-3 z-[9999999] animate-in slide-in-from-top-2 duration-300">
                     {loadingUser ? (
                       <div className="text-center py-4">
-                        <div className="animate-spin w-4 h-4 border-2 border-gray-600 border-t-gray-400 rounded-full mx-auto mb-2"></div>
-                        <div className="text-xs text-gray-600 dark:text-gray-300">Cargando…</div>
+                        <div className="animate-spin w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full mx-auto mb-2"></div>
+                        <div className="text-xs font-medium text-gray-500 dark:text-gray-400">Autenticando…</div>
                       </div>
                     ) : userInfo ? (
                       <div className="space-y-3">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-10 h-10 rounded-md bg-gray-700 text-white flex items-center justify-center shadow-sm">
-                            <span className="text-sm font-semibold">{userInfo.name.charAt(0).toUpperCase()}</span>
+                        {/* Header Glassmórfico */}
+                        <div className="flex items-center space-x-3 p-2 rounded-xl bg-gradient-to-br from-gray-100/50 to-white/30 dark:from-gray-800/50 dark:to-gray-900/30 border border-black/5 dark:border-white/5">
+                          <div className="relative group w-10 h-10 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center shadow-lg shadow-indigo-500/20 overflow-hidden bg-gradient-to-tr from-indigo-500 to-purple-500 text-white flex-shrink-0">
+                            {userInfo.avatar_url ? (
+                               <img src={userInfo.avatar_url} alt={userInfo.name} className="absolute inset-0 w-full h-full object-cover object-center" />
+                            ) : (
+                               <span className="text-base sm:text-lg font-bold drop-shadow-sm">{userInfo.name.charAt(0).toUpperCase()}</span>
+                            )}
+                            
+                            {/* Hover Overlay for Upload */}
+                            <label className="absolute inset-0 bg-black/50 flex flex-col justify-center items-center opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity z-10">
+                              {isUploadingAvatar ? (
+                                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                              ) : (
+                                <svg className="w-4 h-4 sm:w-5 sm:h-5 text-white/90" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                                </svg>
+                              )}
+                              <input 
+                                type="file" 
+                                accept="image/jpeg,image/png,image/gif,image/webp" 
+                                className="hidden"
+                                disabled={isUploadingAvatar}
+                                onChange={handleAvatarUpload}
+                              />
+                            </label>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">{userInfo.name}</div>
-                            <div className="text-xs text-gray-600 dark:text-gray-300 truncate">
-                              {String(userInfo.role).replace('_',' ').charAt(0).toUpperCase() + String(userInfo.role).replace('_',' ').slice(1)} · {userInfo.email}
+                          <div className="flex-1 min-w-0 pr-1">
+                            <div className="text-sm sm:text-[15px] leading-tight font-semibold text-gray-900 dark:text-white truncate">{userInfo.name}</div>
+                            <div className="text-[10px] font-medium text-indigo-600 dark:text-indigo-400 truncate mb-0.5">
+                              {String(userInfo.role).replace('_',' ').toUpperCase()}
+                            </div>
+                            <div className="text-[10px] text-gray-500 dark:text-gray-400 truncate leading-none">
+                              {userInfo.email}
                             </div>
                           </div>
                         </div>
                         
-                        <div className="space-y-2">
+                        {/* Metadatos */}
+                        <div className="px-1 space-y-2.5">
                           {userInfo.role !== 'super_admin' && userInfo.groups?.length > 0 && (
                             <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400 font-medium">Grupos</span>
+                              <span className="text-gray-500 dark:text-gray-400 font-medium">Grupos</span>
                               <div className="flex flex-wrap gap-1 justify-end">
-                                {userInfo.groups.map((group, index) => (
-                                  <span key={index} className="px-2 py-1 bg-gray-800 text-white rounded-md text-xs font-medium">
+                                {userInfo.groups.map((group: string, index: number) => (
+                                  <span key={index} className="px-2 py-0.5 bg-indigo-50 dark:bg-indigo-500/10 text-indigo-700 dark:text-indigo-300 rounded-md text-[10px] font-semibold tracking-wide border border-indigo-100 dark:border-indigo-500/20">
                                     {group}
                                   </span>
                                 ))}
                               </div>
                             </div>
                           )}
-                          <div className="space-y-1">
-                            <div className="flex items-center justify-between text-xs">
-                              <span className="text-gray-400 font-medium">ID</span>
-                              <button
-                                onClick={() => navigator.clipboard.writeText(userInfo.id)}
-                                className="text-gray-200 font-mono text-xs hover:text-gray-400 transition-colors duration-200 cursor-pointer"
-                                title="Hacer clic para copiar"
-                              >
-                                {userInfo.id}
-                              </button>
-                            </div>
+                          <div className="flex items-center justify-between text-xs">
+                            <span className="text-gray-500 dark:text-gray-400 font-medium">ID de Sesión</span>
+                            <button
+                              onClick={() => navigator.clipboard.writeText(userInfo.id)}
+                              className="group flex items-center space-x-1.5 px-2 py-1 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                              title="Copiar ID completo"
+                            >
+                              <span className="text-gray-600 dark:text-gray-300 font-mono text-[10px] opacity-70 group-hover:opacity-100 transition-opacity">
+                                {userInfo.id.substring(0, 13)}...
+                              </span>
+                              <svg className="w-3.5 h-3.5 text-gray-400 group-hover:text-indigo-500 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                              </svg>
+                            </button>
                           </div>
                         </div>
 
-                        <div className="pt-3 border-t border-gray-700">
+                        {/* Botón Logout Apple Style */}
+                        <div className="pt-1.5">
                           <button
                             onClick={async () => {
                               await modernLogout();
                               setUserInfo(null);
                               location.href = '/';
                             }}
-                            className="w-full px-3 py-2 text-xs rounded-md bg-gray-800 hover:bg-gray-700 border border-gray-600 text-gray-200 hover:text-gray-100 transition-all duration-200 font-medium flex items-center justify-center space-x-1.5"
+                            className="w-full px-4 py-2 rounded-xl bg-red-50/50 hover:bg-red-50 dark:bg-red-500/10 dark:hover:bg-red-500/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-500/20 transition-all duration-300 font-semibold text-xs flex items-center justify-center space-x-2 group"
                           >
-                            <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <svg className="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
                             </svg>
                             <span>Cerrar sesión</span>
@@ -335,11 +486,13 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-4">
-                        <svg className="w-6 h-6 text-gray-400 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                        </svg>
-                        <div className="text-xs text-gray-600">No autenticado</div>
+                      <div className="text-center py-5">
+                        <div className="w-10 h-10 bg-gray-100 dark:bg-gray-800 rounded-full flex items-center justify-center mx-auto mb-2.5">
+                          <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                        </div>
+                        <div className="text-xs font-medium text-gray-600 dark:text-gray-300">Sesión Expirada</div>
                       </div>
                     )}
                   </div>
@@ -510,13 +663,19 @@ export default function FotografiaLayout({ children }: { children: ReactNode }) 
       </main>
 
       {/* ChatWidget para fotografia */}
-      {userInfo && userInfo.role === 'fotografia' && (
-        <ClientOnly>
+      {!loadingUser && userInfo && isClient && (
+        <>
           <ChatWidget userId={userInfo.id} userRole={userInfo.role} />
-        </ClientOnly>
+          {avatarFileToCrop && (
+            <AvatarCropperModal
+              imageFile={avatarFileToCrop}
+              onClose={() => setAvatarFileToCrop(null)}
+              onCropComplete={handleCropComplete}
+              isProcessing={isUploadingAvatar}
+            />
+          )}
+        </>
       )}
     </div>
   );
 }
-
-

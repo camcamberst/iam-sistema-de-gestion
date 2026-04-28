@@ -58,17 +58,19 @@ export default function AnticiposDropdown({ isActive, isOpen, onToggle, onClose 
       {/* Botón del dropdown */}
       <button
         onClick={handleToggle}
-        className={`px-4 py-2 text-sm transition-all duration-300 cursor-pointer whitespace-nowrap rounded-xl flex items-center space-x-2 ${
-          isActive 
-            ? 'font-semibold text-gray-900 dark:text-white bg-white/90 dark:bg-gray-800/80 shadow-[0_2px_10px_rgba(0,0,0,0.05)] dark:shadow-[0_2px_10px_rgba(0,0,0,0.2)] border border-black/5 dark:border-white/5 backdrop-blur-md' 
-            : 'font-medium text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-100/50 dark:hover:bg-gray-800/50'
+        className={`px-3 py-1.5 sm:px-4 sm:py-2 text-[14px] sm:text-[15px] transition-all duration-200 cursor-pointer whitespace-nowrap rounded-full flex items-center space-x-1.5 group active:scale-[0.97] ${
+          isActive || isOpen
+            ? 'font-bold text-gray-900 dark:text-white bg-black/5 dark:bg-white/15 shadow-[0_0_15px_rgba(0,0,0,0.1)] dark:shadow-[0_0_15px_rgba(255,255,255,0.2)] border border-black/10 dark:border-white/20 backdrop-blur-md' 
+            : 'font-semibold text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/10 hover:shadow-[0_0_10px_rgba(0,0,0,0.05)] dark:hover:shadow-[0_0_10px_rgba(255,255,255,0.1)] border border-transparent'
         }`}
       >
         <span>Mis Servicios</span>
         <ChevronDown 
-          className={`w-4 h-4 transition-transform duration-200 ${
+          className={`w-3.5 h-3.5 lg:w-4 lg:h-4 transition-transform duration-300 ${
             isOpen ? 'rotate-180' : ''
-          }`} 
+          } ${
+            isActive || isOpen ? 'text-gray-900 dark:text-white' : 'text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300'
+          }`}
         />
       </button>
 

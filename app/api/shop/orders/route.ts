@@ -24,7 +24,7 @@ export async function GET(req: NextRequest) {
       users!model_id(id, email),
       shop_order_items(
         id, quantity, unit_price, original_price, discount_applied,
-        shop_products(id, name, images),
+        shop_products(id, name, description, images),
         shop_product_variants(id, name)
       ),
       shop_financing(id, installments, amount_per_installment, status)

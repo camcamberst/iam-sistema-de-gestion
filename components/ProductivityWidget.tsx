@@ -163,7 +163,7 @@ export default function ProductivityWidget({ userId, userRole }: Props) {
 
   return (
     <div
-      className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-lg dark:shadow-emerald-900/10 dark:ring-0.5 dark:ring-emerald-500/15 border border-white/20 dark:border-gray-600/20 p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 transition-all duration-300"
+      className="relative bg-white/70 dark:bg-white/[0.08] backdrop-blur-sm rounded-xl shadow-md dark:shadow-[0_1px_0_0_rgba(255,255,255,0.05)_inset,0_4px_20px_rgba(0,0,0,0.4)] dark:ring-0.5 dark:ring-emerald-500/15 border border-white/20 dark:border-white/[0.10] p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-white/[0.12] transition-all duration-300"
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
     >

@@ -87,7 +87,8 @@ async function getNetoDisponible(modelId: string): Promise<number> {
     }
   }
 
-  return facturado - anticiposTotal - installmentsTotal;
+  const topeMaximo = Math.round(facturado * 0.9);
+  return Math.max(0, topeMaximo - anticiposTotal - installmentsTotal);
 }
 
 // Verifica si la modelo tiene financiaciones multi-quincena activas con cuotas pendientes
@@ -282,7 +283,7 @@ export async function POST(req: NextRequest) {
   // Validación de fondos para 1q
   if (payment_mode === '1q') {
     const neto = await getNetoDisponible(shopUser.id);
-    if (neto < total * 0.9) {
+    if (neto < total) {
       return NextResponse.json({
         error: `Fondos insuficientes. Tu neto disponible es $${neto.toLocaleString('es-CO')} y el pedido es $${total.toLocaleString('es-CO')}.`
       }, { status: 400 });
@@ -298,7 +299,50 @@ export async function POST(req: NextRequest) {
   // Determinar estado inicial
   const orderStatus = payment_mode === '1q' ? 'aprobado' : 'reservado';
 
-  // Crear orden — sellada con el scope del negocio de la modelo
+  // --- 1. RESERVA ATÓMICA DE INVENTARIO ---
+  const successfullyReserved = [];
+  let inventoryFailed = false;
+
+  for (const item of orderItems) {
+    if (!item.source_location_type) continue;
+    
+    const { data: rpcData, error: rpcError } = await supabase.rpc('atomic_reserve_inventory', {
+      p_product_id: item.product_id,
+      p_variant_id: item.variant_id || null,
+      p_location_type: item.source_location_type,
+      p_location_id: item.source_location_id || null,
+      p_quantity: item.quantity,
+      p_payment_mode: payment_mode
+    });
+
+    if (rpcError || !rpcData?.success) {
+      inventoryFailed = true;
+      break; // Abortamos la reserva
+    } else {
+      successfullyReserved.push(item);
+    }
+  }
+
+  // --- 2. ROLLBACK EN CASO DE FALLO ---
+  if (inventoryFailed) {
+    // Determine which item failed
+    const failedItem = orderItems[successfullyReserved.length];
+    
+    // Si falló a mitad de camino, liberamos lo que sí alcanzamos a reservar
+    for (const item of successfullyReserved) {
+      await supabase.rpc('atomic_release_inventory', {
+        p_product_id: item.product_id,
+        p_variant_id: item.variant_id || null,
+        p_location_type: item.source_location_type,
+        p_location_id: item.source_location_id || null,
+        p_quantity: item.quantity,
+        p_payment_mode: payment_mode
+      });
+    }
+    return NextResponse.json({ error: 'INVENTORY_SHORTAGE', failed_product_id: failedItem?.product_id }, { status: 409 });
+  }
+
+  // --- 3. CREACIÓN DE ORDEN (solo ocurre si TODO el inventario se reservó) ---
   const { data: order, error: orderError } = await supabase
     .from('shop_orders')
     .insert({
@@ -310,39 +354,26 @@ export async function POST(req: NextRequest) {
       payment_mode,
       notes,
       reservation_expires_at: reservationExpiresAt,
-      affiliate_studio_id: modelScope    // ← separa por negocio
+      affiliate_studio_id: modelScope
     })
     .select()
     .single();
 
-  if (orderError) return NextResponse.json({ error: orderError.message }, { status: 500 });
+  if (orderError) {
+    // Si la DB falla al crear la orden, liberamos inventario como medida de emergencia
+    for (const item of successfullyReserved) {
+      await supabase.rpc('atomic_release_inventory', {
+        p_product_id: item.product_id, p_variant_id: item.variant_id || null,
+        p_location_type: item.source_location_type, p_location_id: item.source_location_id || null,
+        p_quantity: item.quantity, p_payment_mode: payment_mode
+      });
+    }
+    return NextResponse.json({ error: orderError.message }, { status: 500 });
+  }
 
   // Crear líneas del pedido
   const itemRows = orderItems.map(i => ({ ...i, order_id: order.id }));
   await supabase.from('shop_order_items').insert(itemRows);
-
-  // Reservar/descontar stock
-  for (const item of orderItems) {
-    if (!item.source_location_type) continue;
-    const { data: inv } = await supabase
-      .from('shop_inventory')
-      .select('id, quantity, reserved')
-      .eq('product_id', item.product_id)
-      .eq('location_type', item.source_location_type)
-      .eq('location_id', item.source_location_id || null)
-      .is('variant_id', item.variant_id || null)
-      .single();
-
-    if (inv) {
-      if (payment_mode === '1q') {
-        // Descontar directamente
-        await supabase.from('shop_inventory').update({ quantity: inv.quantity - item.quantity }).eq('id', inv.id);
-      } else {
-        // Reservar (cantidad reservada aumenta)
-        await supabase.from('shop_inventory').update({ reserved: inv.reserved + item.quantity }).eq('id', inv.id);
-      }
-    }
-  }
 
   // Crear financiación
   const { data: financing } = await supabase

@@ -19,6 +19,7 @@ interface AppleDropdownProps {
   disabled?: boolean;
   maxHeight?: string;
   autoOpen?: boolean;
+  variant?: 'glass' | 'input';
 }
 
 const badgeColors = {
@@ -37,7 +38,8 @@ export default function AppleDropdown({
   className = '',
   disabled = false,
   maxHeight = 'max-h-60',
-  autoOpen = false
+  autoOpen = false,
+  variant = 'glass'
 }: AppleDropdownProps) {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -100,12 +102,16 @@ export default function AppleDropdown({
     setIsOpen(false);
   };
 
+  const buttonBaseClass = "w-full text-left flex items-center justify-between transition-all duration-300";
+  const glassClass = "px-3 py-1.5 text-sm rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-gray-100 hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-indigo-500/30 focus:border-indigo-500/40 shadow-[0_4px_12px_rgba(0,0,0,0.02)]";
+  const inputClass = "px-3 py-3 h-auto text-sm font-semibold rounded-xl bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 shadow-[0_4px_12px_rgba(0,0,0,0.02)] transition-all";
+  
   return (
     <div className={`relative ${className}`} ref={dropdownRef}>
       <button
         type="button"
-        className={`w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 cursor-pointer flex items-center justify-between hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 ${
-          disabled ? 'opacity-50 cursor-not-allowed' : ''
+        className={`${buttonBaseClass} ${variant === 'input' ? inputClass : glassClass} ${
+          disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'
         }`}
         onClick={() => !disabled && setIsOpen(!isOpen)}
         disabled={disabled}
@@ -113,7 +119,7 @@ export default function AppleDropdown({
         aria-expanded={isOpen}
       >
         <div className="flex items-center justify-between w-full">
-          <span className={selectedOption ? 'text-gray-900 dark:text-gray-100' : 'text-gray-500 dark:text-gray-400'}>
+          <span className={selectedOption ? (variant === 'input' ? 'text-gray-900 dark:text-gray-100 font-medium' : 'text-gray-900 dark:text-white font-semibold') : (variant === 'input' ? 'text-gray-500' : 'text-gray-500 dark:text-gray-400 font-medium')}>
             {selectedOption ? selectedOption.label : placeholder}
           </span>
           <div className="flex items-center space-x-2">
@@ -125,7 +131,7 @@ export default function AppleDropdown({
               </span>
             )}
             <svg 
-              className={`w-5 h-5 text-gray-400 transition-transform duration-200 ${
+              className={`w-4 h-4 text-gray-500 dark:text-gray-400 transition-transform duration-300 ${
                 isOpen ? 'rotate-180' : ''
               }`}
               fill="none" 
@@ -139,24 +145,26 @@ export default function AppleDropdown({
       </button>
       
       {isOpen && (
-        <div className={`absolute z-[99998] w-full mt-1 bg-white dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg shadow-lg dark:shadow-lg dark:shadow-cyan-900/10 dark:ring-0.5 dark:ring-cyan-500/15 ${maxHeight} overflow-auto apple-scroll`}>
+        <div className={`absolute z-[99998] min-w-full w-max max-w-[90vw] mt-1.5 bg-white/95 dark:bg-[#0a0a0c]/95 backdrop-blur-3xl border border-black/5 dark:border-white/[0.08] rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.08)] dark:shadow-[0_8px_32px_rgba(0,0,0,0.4)] ${maxHeight} overflow-y-auto overflow-x-hidden apple-scroll`}>
           {options.length === 0 ? (
-            <div className="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+            <div className="px-4 py-3 text-sm text-gray-500">
               No hay opciones disponibles
             </div>
           ) : (
             options.map((option, index) => (
               <div key={option.value}>
                 {index > 0 && (
-                  <div className="w-full h-px bg-gray-100 dark:bg-gray-600/50 dark:shadow-sm dark:shadow-blue-900/10"></div>
+                  <div className="w-full h-px bg-black/[0.04] dark:bg-white/[0.06]"></div>
                 )}
                 <div
-                  className={`px-4 py-3 text-sm cursor-pointer transition-colors duration-150 flex items-center justify-between ${
+                  className={`px-3 py-2 text-sm cursor-pointer transition-all duration-200 flex items-center justify-between rounded-lg mx-0.5 my-0.5 ${
                     option.disabled 
-                      ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed' 
-                      : 'hover:bg-gray-50 dark:hover:bg-gray-700 text-gray-900 dark:text-gray-100'
+                      ? 'text-gray-400 dark:text-gray-600 cursor-not-allowed' 
+                      : 'hover:bg-black/[0.04] dark:hover:bg-white/[0.08] text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white'
                   } ${
-                    option.value === value ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-900 dark:text-blue-100' : ''
+                    option.value === value 
+                      ? 'bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-violet-500/10 dark:from-blue-500/20 dark:via-indigo-500/20 dark:to-violet-500/20 text-indigo-700 dark:text-white font-bold border border-indigo-500/20' 
+                      : ''
                   }`}
                   onClick={() => !option.disabled && handleSelect(option.value)}
                 >

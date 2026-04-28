@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import ModelCalculatorNew from '../../../../components/ModelCalculatorNew';
-import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
 import { getColombiaDate } from '@/utils/calculator-dates';
 import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import AIDashboard from '@/components/AIDashboard';
@@ -13,6 +13,9 @@ import PageHeader from '@/components/ui/PageHeader';
 import AnnouncementBoardWidget from '@/components/AnnouncementBoardWidget';
 import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
 import VoiceCodeReader from '@/components/VoiceCodeReader';
+import GalenaPlayerWidget from '@/components/GalenaPlayerWidget';
+import ObjectiveBorealCard from '@/components/ui/ObjectiveBorealCard';
+import ModelAuroraBackground from '@/components/ui/ModelAuroraBackground';
 
 interface User {
   id: string;
@@ -40,9 +43,7 @@ export default function ModelDashboard() {
   const [productivityData, setProductivityData] = useState<ProductivityData | null>(null);
   const [productivityLoading, setProductivityLoading] = useState(false);
   const [periodGoal, setPeriodGoal] = useState<{ goalUsd: number; periodBilledUsd: number } | null>(null);
-  const [objectiveBarFlip, setObjectiveBarFlip] = useState(0);
   const router = useRouter();
-  const supabase = require('@/lib/supabase').supabase;
 
   useEffect(() => {
     const load = async () => {
@@ -123,11 +124,7 @@ export default function ModelDashboard() {
     }
   }, [loading, productivityLoading, user]);
 
-  // Rotar mensaje de la barra "Objetivo Básico" cada 7 s (progreso ↔ promedio diario)
-  useEffect(() => {
-    const t = setInterval(() => setObjectiveBarFlip((f) => f + 1), 7000);
-    return () => clearInterval(t);
-  }, []);
+
 
   const refreshPeriodGoal = async (userId: string) => {
     try {
@@ -325,8 +322,9 @@ export default function ModelDashboard() {
 
   if (loading) {
     return (
-      <div className="aim-page-bg flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen relative w-full overflow-hidden flex items-center justify-center">
+        <ModelAuroraBackground />
+        <div className="text-center relative z-10">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-300">Cargando dashboard...</p>
         </div>
@@ -339,8 +337,9 @@ export default function ModelDashboard() {
   }
 
   return (
-    <div className="aim-page-bg">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+    <div className="min-h-screen relative w-full overflow-hidden">
+      <ModelAuroraBackground />
+      <div className="max-w-screen-2xl mx-auto max-sm:px-0 px-4 sm:px-6 lg:px-20 xl:px-32 py-8 pt-6 sm:pt-8 relative z-10">
         <PageHeader
           title="Mi Dashboard"
           subtitle={user ? `Bienvenida, ${user.name} · Rol: ${String(user.role).replace('_',' ')}${user.groups.length > 0 ? ` · Grupos: ${user.groups.join(', ')}` : ''}` : undefined}
@@ -352,218 +351,94 @@ export default function ModelDashboard() {
           }
         />
 
-        {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
-        <DynamicTimeIsland
-          className="!max-w-none !px-0"
-          objetivoUsd={user?.role === 'modelo' ? periodGoal?.goalUsd : undefined}
-          facturadoPeriodoUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsd : undefined}
-        />
 
-        {/* Corcho Informativo + Resumen de Productividad — 2 columnas en desktop */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6 lg:items-stretch">
 
-          {/* Columna 1: Corcho Informativo */}
-          <AnnouncementBoardWidget userId={user.id} userGroups={user.groups} />
+        {/* Corcho Informativo + Resumen de Productividad — Ajustado para Móvil y Desktop */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-3 mb-3 sm:mb-3 max-sm:mt-0 sm:mt-3 lg:items-stretch max-sm:px-2">
 
-          {/* Columna 2: Resumen de productividad + Lector de Código Vx */}
+          {/* Productividad (Orden Móvil: 1, Orden Desktop: Col 2 Fila 1) */}
           {user.role === 'modelo' && (
-          <div className="flex flex-col gap-4 sm:gap-6 h-full">
-        <GlassCard padding="sm" className="rounded-xl">
-          <div className="flex items-center space-x-2 mb-2.5 sm:mb-4">
-            <div className="w-5 h-5 sm:w-6 sm:h-6 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-md flex items-center justify-center flex-shrink-0">
-              <svg className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
+            <div className="order-1 lg:order-2 flex flex-col gap-1.5 sm:gap-2">
+              {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+              <div className="flex items-center space-x-1 sm:space-x-1.5 px-1">
+                <div className="flex items-center justify-center text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]">
+                  <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                  </svg>
+                </div>
+                <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-[0_0_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">Productividad</h2>
+              </div>
+            
+              {productivityLoading ? (
+                <div className="text-center py-2 sm:py-3">
+                  <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-b-2 border-blue-600 mx-auto mb-2"></div>
+                  <p className="text-[11px] sm:text-xs text-gray-600 dark:text-gray-300">Cargando datos...</p>
+                </div>
+              ) : (
+                <>
+                  {/* LA CAJA MINIMALISTA CON SOLO LAS 3 TARJETAS */}
+                  <div className="glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:dark:border-white/8 max-sm:p-1.5 sm:p-2 mb-1.5 sm:mb-2 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)]">
+                    <InfoCardGrid
+                      cards={[
+                        {
+                          value: productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—',
+                          label: "Hoy",
+                          color: "blue",
+                          size: "sm"
+                        },
+                        {
+                          value: productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—',
+                          label: "USD",
+                          color: "green",
+                          size: "sm"
+                        },
+                        {
+                          value: productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—',
+                          label: "Mis Ganancias",
+                          color: "purple",
+                          size: "sm"
+                        }
+                      ]}
+                      columns={3}
+                    />
+                  </div>
+
+                  <div className="-mt-1 sm:-mt-1 relative z-10">
+                    {productivityData && (
+                      <ObjectiveBorealCard
+                        totalUsdBruto={productivityData.usdBruto}
+                        cuotaMinima={productivityData.goalUsd}
+                        periodGoal={periodGoal}
+                      />
+                    )}
+                  </div>
+                </>
+              )}
             </div>
-            <h2 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white">Resumen de Productividad</h2>
-          </div>
-          
-          {productivityLoading ? (
-            <div className="text-center py-3 sm:py-4">
-              <div className="animate-spin rounded-full h-5 w-5 sm:h-6 sm:w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
-              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">Cargando datos de productividad...</p>
-            </div>
-          ) : (
-            <>
-              {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-2.5 sm:mb-4">
-                <InfoCard
-                  value={productivityData ? `$${productivityData.todayEarnings.toFixed(2)}` : '—'}
-                  label="Ganancias Hoy"
-                  color="blue"
-                  size="sm"
-                />
-                <InfoCard
-                  value={productivityData ? `$${productivityData.usdModelo.toFixed(2)}` : '—'}
-                  label="USD Modelo"
-                  color="green"
-                  size="sm"
-                />
-                {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
-                <InfoCard
-                  value={productivityData ? `$${Math.round(productivityData.copModelo).toLocaleString('es-CO')}` : '—'}
-                  label="COP Modelo"
-                  color="purple"
-                  size="sm"
-                  className="col-span-2 md:col-span-1"
-                />
-              </div>
-
-              {/* Barra de alcance de meta - Copia exacta de Mi Calculadora */}
-              <div className="mt-2.5 sm:mt-4">
-                {(() => {
-                  if (!productivityData) return null;
-                  
-                  const totalUsdBruto = productivityData.usdBruto;
-                  const cuotaMinima = productivityData.goalUsd;
-                  const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
-                  const estaPorDebajo = totalUsdBruto < cuotaMinima;
-                  
-                  // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
-                  const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
-                  
-                  // Paleta: Rojo -> Púrpura -> Esmeralda (sin amarillos)
-                  const RED = { r: 229, g: 57, b: 53 };     // #E53935
-                  const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
-                  const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
-
-                  const mix = (a: any, b: any, t: number) => ({
-                    r: Math.round(a.r + (b.r - a.r) * t),
-                    g: Math.round(a.g + (b.g - a.g) * t),
-                    b: Math.round(a.b + (b.b - a.b) * t)
-                  });
-
-                  const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
-                  const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
-                  const rgbToHex = (color: any) => 
-                    `#${color.r.toString(16).padStart(2, '0')}${color.g.toString(16).padStart(2, '0')}${color.b.toString(16).padStart(2, '0')}`;
-
-                  const t = progressPct / 100;
-                  // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
-                  const base = t <= 0.6
-                    ? mix(RED, PURPLE, t / 0.6)
-                    : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
-
-                  const progressStart = rgbToHex(shade(base, 0.05));
-                  const progressEnd = rgbToHex(shade(base, 0.15));
-                  const cardBgStart = rgbToHex(tint(base, 0.92));
-                  const cardBgEnd = rgbToHex(tint(base, 0.88));
-                  const cardBorder = rgbToHex(tint(base, 0.7));
-                  const iconStart = rgbToHex(shade(base, 0.0));
-                  const iconEnd = rgbToHex(shade(base, 0.2));
-                  const headingColor = rgbToHex(shade(base, 0.55));
-                  const subTextColor = rgbToHex(shade(base, 0.45));
-
-                  return (
-                    <div
-                      className="relative overflow-hidden rounded-2xl border transition-all duration-300 min-h-[112px] sm:min-h-[124px]"
-                      style={{
-                        background: `linear-gradient(135deg, ${cardBgStart}, ${cardBgEnd})`,
-                        borderColor: cardBorder,
-                        boxShadow: `0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)`
-                      }}
-                    >
-                      {/* Efecto de brillo animado */}
-                      <div
-                        className="absolute inset-0 opacity-10 animate-pulse"
-                        style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
-                      ></div>
-
-                      <div className="relative p-2.5 sm:p-4">
-                        <div className="flex items-center space-x-2 sm:space-x-3">
-                          {/* Icono animado */}
-                          <div className={`relative flex-shrink-0 ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
-                            <div
-                              className="w-4 h-4 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-md"
-                              style={{
-                                background: `linear-gradient(135deg, ${iconStart}, ${iconEnd})`
-                              }}
-                            >
-                              <span className="text-white text-[9px] sm:text-xs">✓</span>
-                            </div>
-                          </div>
-                          
-                          {/* Contenido compacto */}
-                          <div className="flex-1 min-w-0">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
-                              <div className="font-bold text-[10px] sm:text-xs leading-tight" style={{ color: headingColor }}>
-                                {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
-                              </div>
-                              {(() => {
-                                const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                                const remainingPct = Math.max(0, 100 - roundedProgress);
-                                const colDate = getColombiaDate();
-                                const [y, m, d] = colDate.split('-').map(Number);
-                                const lastDay = new Date(y, m, 0).getDate();
-                                const nextClosure = d <= 15 ? 15 : lastDay;
-                                const daysLeft = Math.max(0, nextClosure - d);
-                                const remaining = periodGoal ? Math.max(0, periodGoal.goalUsd - periodGoal.periodBilledUsd) : 0;
-                                const dailyAvg = daysLeft > 0 ? remaining / daysLeft : 0;
-                                const showPromedio = estaPorDebajo && dailyAvg > 0 && (objectiveBarFlip % 2 === 1);
-                                return (
-                                  <div
-                                    className={`text-[9px] sm:text-xs leading-tight transition-all duration-300 ${
-                                      showPromedio
-                                        ? 'font-semibold pl-1.5 border-l-2 border-emerald-600'
-                                        : 'font-medium'
-                                    }`}
-                                    style={showPromedio ? { color: '#0d0d0d' } : { color: subTextColor }}
-                                  >
-                                    {estaPorDebajo
-                                      ? showPromedio
-                                        ? `Para alcanzar tu objetivo necesitas facturar $${Math.round(dailyAvg).toLocaleString('es-CO')} en promedio`
-                                        : `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
-                                      : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
-                                  </div>
-                                );
-                              })()}
-                            </div>
-                            
-                            {/* Mensaje de progreso por hito (alto fijo para evitar saltos de layout) */}
-                            <div className="mt-1 sm:mt-1.5 min-h-[22px] sm:min-h-[26px] flex items-center">
-                              {(() => {
-                                const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                                return <ProgressMilestone progress={roundedProgress} />;
-                              })()}
-                            </div>
-                            
-                            {/* Barra de progreso compacta */}
-                            <div className="mt-1.5 sm:mt-2">
-                              <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-1.5 overflow-hidden">
-                                <div 
-                                  className={`h-full transition-all duration-1000 ease-out`}
-                                  style={{ 
-                                    width: `${Math.min(porcentajeAlcanzado, 100)}%`,
-                                    background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
-                                  }}
-                                ></div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })()}
-              </div>
-
-              <div className="mt-2 sm:mt-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-300">
-                Para actualizar tus valores usa el menú <a href="/admin/model/calculator" className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 underline font-medium">Mi Calculadora</a>.
-              </div>
-            </>
           )}
-        </GlassCard>
-            <div className="flex-1">
+
+          {/* Corcho Informativo (Orden Móvil: 2, Orden Desktop: Col 1 ocupando todo el alto) */}
+          <div className={`order-2 lg:order-1 ${user.role === 'modelo' ? 'lg:row-span-2' : ''}`}>
+            <AnnouncementBoardWidget userId={user.id} userGroups={user.groups} />
+          </div>
+
+          {/* Reloj Vx (Orden Móvil: 3, Orden Desktop: Col 2 Fila 2 debajo de productividad) */}
+          {user.role === 'modelo' && (
+            <div className="order-3 lg:order-3 h-full">
               <VoiceCodeReader className="h-full" />
             </div>
-          </div>
           )}
 
-        </div>{/* fin grid 2 columnas */}
+        </div>{/* fin grid */}
 
-        {/* AI Dashboard */}
-        <div className="mt-6">
+        {/* AI Dashboard (Oculto en móvil) */}
+        <div className="mt-6 hidden md:block">
           <AIDashboard userId={user.id} userRole={user.role} />
+        </div>
+
+        {/* Galena Player Widget Inyectado Automáticamente */}
+        <div className="mt-6">
+          <GalenaPlayerWidget />
         </div>
 
       </div>

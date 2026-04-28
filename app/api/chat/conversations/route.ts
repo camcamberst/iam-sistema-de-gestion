@@ -30,7 +30,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Token inválido' }, { status: 401 });
     }
 
-    // Obtener conversaciones del usuario
+    // 1. Encontrar en qué grupos estoy
+    const { data: myGroups } = await supabase
+      .from('chat_group_participants')
+      .select('conversation_id')
+      .eq('user_id', user.id);
+      
+    const groupIds = myGroups?.map(g => g.conversation_id) || [];
+    const groupFilter = groupIds.length > 0 ? `,id.in.(${groupIds.join(',')})` : '';
+
+    // Obtener conversaciones del usuario (directas o grupos)
     const { data: conversations, error } = await supabase
       .from('chat_conversations')
       .select(`
@@ -41,10 +50,10 @@ export async function GET(request: NextRequest) {
         last_message_at,
         is_active,
         conversation_type,
-        participant_1:participant_1_id(id, name, email, role),
-        participant_2:participant_2_id(id, name, email, role)
+        participant_1:participant_1_id(id, name, email, role, avatar_url),
+        participant_2:participant_2_id(id, name, email, role, avatar_url)
       `)
-      .or(`participant_1_id.eq.${user.id},participant_2_id.eq.${user.id}`)
+      .or(`participant_1_id.eq.${user.id},participant_2_id.eq.${user.id}${groupFilter}`)
       .eq('is_active', true)
       .order('last_message_at', { ascending: false });
 
@@ -108,11 +117,33 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Construir resultado final (puro JS, sin queries adicionales)
+    // BATCH 4: Obtener participantes extra para grupos
+    const { data: extraParticipants } = await supabase
+      .from('chat_group_participants')
+      .select('conversation_id, user:user_id(id, name, email, role, avatar_url)')
+      .in('conversation_id', conversationIds);
+
+    // Mapear participantes extra por conversación
+    const groupParticipantsMap = new Map();
+    for (const ep of (extraParticipants || [])) {
+      if (!groupParticipantsMap.has(ep.conversation_id)) {
+        groupParticipantsMap.set(ep.conversation_id, []);
+      }
+      groupParticipantsMap.get(ep.conversation_id).push(ep.user);
+    }
+
+    // Construir resultado final
     const conversationsWithLastMessage = conversations.map((conv: any) => {
-      const otherParticipant = conv.participant_1_id === user.id 
-        ? conv.participant_2 
-        : conv.participant_1;
+      // Extra_participants array
+      const extras = groupParticipantsMap.get(conv.id) || [];
+      
+      let otherParticipant;
+      if (extras.length > 0) {
+        // En frontend usaremos otros para construir el nombre del grupo
+        otherParticipant = conv.participant_1_id === user.id ? conv.participant_2 : conv.participant_1;
+      } else {
+        otherParticipant = conv.participant_1_id === user.id ? conv.participant_2 : conv.participant_1;
+      }
 
       const lastMessage = lastMessageMap.get(conv.id) || null;
       const unread_count = unreadCountMap.get(conv.id) || 0;
@@ -120,6 +151,7 @@ export async function GET(request: NextRequest) {
       const convWith = {
         ...conv,
         other_participant: otherParticipant,
+        extra_participants: extras,
         last_message: lastMessage,
         unread_count
       } as any;
@@ -224,8 +256,8 @@ export async function POST(request: NextRequest) {
         participant_2_id,
         created_at,
         conversation_type,
-        participant_1:participant_1_id(id, name, email, role),
-        participant_2:participant_2_id(id, name, email, role)
+        participant_1:participant_1_id(id, name, email, role, avatar_url),
+        participant_2:participant_2_id(id, name, email, role, avatar_url)
       `)
       .single();
 
@@ -271,6 +303,18 @@ async function validateConversationPermission(
 
   // ⛳ Override: Siempre permitir conversaciones con AIM Botty
   if (receiver.id === AIM_BOTTY_ID) {
+    return { allowed: true };
+  }
+
+  // --- NUEVO: Validar si son contactos de Aurora PIN ---
+  const { data: contact } = await supabase
+    .from('chat_contacts')
+    .select('status')
+    .or(`and(user_id.eq.${senderId},contact_id.eq.${receiverId}),and(user_id.eq.${receiverId},contact_id.eq.${senderId})`)
+    .eq('status', 'accepted')
+    .single();
+
+  if (contact) {
     return { allowed: true };
   }
 

@@ -60,9 +60,7 @@ export const canRequestAnticipo = (): AnticipoRestriction => {
       nextAvailable.setDate(21);
     }
     
-    const reason = isInFirstRestriction 
-      ? `No se pueden solicitar anticipos del ${lastDayOfCurrentMonth} al 5 de cada mes`
-      : 'No se pueden solicitar anticipos del 15 al 20 de cada mes';
+    const reason = 'Servicio no disponible en cierres de periodo, puedes regresar después de pagos';
     
     console.log('🚫 [ANTICIPO-RESTRICTIONS] Solicitud bloqueada:', {
       reason,

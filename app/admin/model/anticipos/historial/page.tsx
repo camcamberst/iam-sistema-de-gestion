@@ -324,7 +324,7 @@ export default function MiHistorialPage() {
 
   return (
     <div className="aim-page-bg">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+      <div className="max-w-screen-2xl mx-auto max-sm:px-0 px-4 sm:px-6 lg:px-8 py-8 pt-6 sm:pt-8">
         {/* Header — Migrado a PageHeader */}
         <PageHeader
           title="Mi Historial"
@@ -368,28 +368,29 @@ export default function MiHistorialPage() {
         {/* Resumen */}
         <div className="relative z-0 mb-4 sm:mb-6">
           {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
-            <InfoCard
-              value={`$${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-              label="Total Realizado"
-              color="green"
-              size="sm"
-            />
-            <InfoCard
-              value={anticipos.length.toString()}
-              label="Anticipos Pagados"
-              color="blue"
-              size="sm"
-            />
-            {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
-            <InfoCard
-              value={anticipos.length > 0 ? (totalRealizado / anticipos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0'}
-              label="Promedio por Anticipo"
-              color="purple"
-              size="sm"
-              className="col-span-2 md:col-span-1"
-            />
-          </div>
+          <InfoCardGrid
+            columns={3}
+            cards={[
+              {
+                value: `$${totalRealizado.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                label: "Total Realizado",
+                color: "green",
+                size: "sm"
+              },
+              {
+                value: anticipos.length.toString(),
+                label: "Anticipos Pagados",
+                color: "blue",
+                size: "sm"
+              },
+              {
+                value: anticipos.length > 0 ? (totalRealizado / anticipos.length).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) : '0',
+                label: "Promedio por Anticipo",
+                color: "purple",
+                size: "sm"
+              }
+            ]}
+          />
         </div>
 
         {/* Lista de Anticipos por Período (Realizados y Confirmados) */}

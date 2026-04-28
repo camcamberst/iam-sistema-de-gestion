@@ -7,6 +7,7 @@ import { History, ArrowLeft, Calendar, DollarSign, Edit2, Save, X, AlertTriangle
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import PageHeader from '@/components/ui/PageHeader';
 import GlassCard from '@/components/ui/GlassCard';
+import ObjectiveBorealCard from '@/components/ui/ObjectiveBorealCard';
 
 interface Alert {
   id: string;
@@ -62,6 +63,7 @@ interface Period {
   esta_por_debajo?: boolean;
   is_synthetic?: boolean; // 🔧 NUEVO: Indica si es período reconstruido desde totales
   synthetic_note?: string; // 🔧 NUEVO: Nota explicativa
+  pending_savings?: any[]; // 🔧 NUEVO: Solicitudes de ahorro pendientes asociadas a este periodo
 }
 
 interface User {
@@ -95,6 +97,9 @@ export default function CalculatorHistorialPage() {
   const [newDeduction, setNewDeduction] = useState<{concept: string, amount: string}>({concept: '', amount: ''});
   const [deductionType, setDeductionType] = useState<'deduction' | 'bonus'>('deduction'); // 🔧 NUEVO
   
+  // 🌟 ESTADO DE CARRUSEL MÓVIL
+  const [mobileCarouselSide, setMobileCarouselSide] = useState<'cop' | 'usd'>('cop');
+
   const [saving, setSaving] = useState(false);
 
   const router = useRouter();
@@ -116,9 +121,19 @@ export default function CalculatorHistorialPage() {
       });
       const data = await response.json();
 
+      const savingsRes = await fetch(`/api/model/savings?modelId=${targetModelId}`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const savingsData = await savingsRes.json();
+      const allSavings = savingsData.success ? (savingsData.savings || []) : [];
+
       if (data.success) {
-        setAllPeriods(data.periods || []);
-        setPeriods(data.periods || []);
+        const enrichedPeriods = (data.periods || []).map((p: Period) => {
+          p.pending_savings = allSavings.filter(s => s.period_date === p.period_date && s.period_type === p.period_type && s.estado === 'pendiente');
+          return p;
+        });
+        setAllPeriods(enrichedPeriods);
+        setPeriods(enrichedPeriods);
       }
     } catch (e) {
       console.error("Error reloading data", e);
@@ -165,9 +180,18 @@ export default function CalculatorHistorialPage() {
         });
         const data = await response.json();
 
+        const savingsRes = await fetch(`/api/model/savings?modelId=${targetId}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const savingsData = await savingsRes.json();
+        const allSavings = savingsData.success ? (savingsData.savings || []) : [];
+
         if (!data.success) { setError(data.error); return; }
 
-        const loadedPeriods = data.periods || [];
+        const loadedPeriods = (data.periods || []).map((p: Period) => {
+          p.pending_savings = allSavings.filter(s => s.period_date === p.period_date && s.period_type === p.period_type && s.estado === 'pendiente');
+          return p;
+        });
         
         // 🔧 FILTRAR P1 ENERO 2026 (solo consolidados, genera confusión)
         const filteredPeriods = loadedPeriods.filter((p: Period) => {
@@ -180,6 +204,17 @@ export default function CalculatorHistorialPage() {
         
         setAllPeriods(filteredPeriods);
         setPeriods(filteredPeriods);
+
+        // Auto-seleccionar el período más reciente si no hay nada seleccionado
+        if (filteredPeriods.length > 0) {
+          const mostRecent = filteredPeriods[0];
+          if (mostRecent.period_date) {
+            const [y, m] = mostRecent.period_date.split('-');
+            setSelectedYear(y);
+            setSelectedMonth(parseInt(m).toString());
+            setSelectedPeriodType(mostRecent.period_type);
+          }
+        }
 
         const uniqueYears = new Set<number>();
         loadedPeriods.forEach((p: Period) => {
@@ -210,6 +245,9 @@ export default function CalculatorHistorialPage() {
     initLoad();
   }, []);
 
+  // ALINEACIÓN PERFECTA MÓVIL: Usar ancho fijo en lugar de script DOM
+  // syncCopWidths removido para evitar reflows y mejorar el rendimiento
+
   // ⚠️ IMPORTANTE: `new Date('YYYY-MM-DD')` se interpreta como UTC y en Colombia
   // puede correrse al día/mes anterior (ej. 2026-03-01 -> 29 febrero local).
   // Para evitar que Marzo P1 se muestre como Febrero P1, parseamos YYYY-MM-DD
@@ -233,7 +271,7 @@ export default function CalculatorHistorialPage() {
     const d = new Date(dateStr);
     return `${d.toLocaleDateString('es-CO')} (${d.toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit', hour12:false})})`;
   };
-  const formatCurrency = (v: number, c: string = 'USD') => new Intl.NumberFormat('es-CO', { style: 'currency', currency: c, minimumFractionDigits: 2 }).format(v);
+  const formatCurrency = (v: number, c: string = 'USD') => new Intl.NumberFormat('es-CO', { style: 'currency', currency: c, minimumFractionDigits: c === 'COP' ? 0 : 2, maximumFractionDigits: c === 'COP' ? 0 : 2 }).format(v);
 
   // Recalcular USD modelo y COP desde VALOR (misma lógica que el backend) para vista previa al editar
   const computeUsdCopFromValue = (
@@ -415,17 +453,100 @@ export default function CalculatorHistorialPage() {
     } catch (e: any) { alert(e.message); } finally { setSaving(false); }
   };
 
+  // 🔧 NUEVAS FUNCIONES PARA SOLICITUDES DE AHORRO
+  const handleApproveSaving = async (savingId: string, periodKey: string) => {
+    try {
+      setSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('No autorizado');
+
+      const response = await fetch(`/api/model/savings/${savingId}/approve`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const updateMutator = (prev: Period[]) => prev.map(p => {
+          if (`${p.period_date}-${p.period_type}` === periodKey) {
+            const savingMatch = p.pending_savings?.find((s: any) => s.id === savingId);
+            if (savingMatch) {
+              const amount = parseFloat(savingMatch.monto_ahorrado);
+              const newDeductions = [...(p.deducciones || []), {
+                id: 'temp-' + Date.now(),
+                concept: 'Ahorro Período',
+                amount: amount,
+                created_at: new Date().toISOString()
+              }];
+              return {
+                ...p,
+                pending_savings: p.pending_savings?.filter((s:any) => s.id !== savingId),
+                deducciones: newDeductions,
+                total_deducciones: (p.total_deducciones || 0) + amount,
+              }
+            }
+          }
+          return p;
+        });
+        setPeriods(updateMutator);
+        setAllPeriods(updateMutator);
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (e: any) {
+      alert('Error de red aprobando ahorro: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleRejectSaving = async (savingId: string, periodKey: string) => {
+    try {
+      setSaving(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      if (!token) throw new Error('No autorizado');
+
+      const response = await fetch(`/api/model/savings/${savingId}/reject`, {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const data = await response.json();
+      
+      if (data.success) {
+        const updateMutator = (prev: Period[]) => prev.map(p => {
+          if (`${p.period_date}-${p.period_type}` === periodKey) {
+            return {
+              ...p,
+              pending_savings: p.pending_savings?.filter((s:any) => s.id !== savingId),
+            };
+          }
+          return p;
+        });
+        setPeriods(updateMutator);
+        setAllPeriods(updateMutator);
+      } else {
+        alert('Error: ' + data.error);
+      }
+    } catch (e: any) {
+      alert('Error de red rechazando ahorro: ' + e.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   if (loading) return (
-    <div className="aim-page-bg flex justify-center items-center">
+    <div className="min-h-screen flex items-center justify-center pt-16">
       <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
-        <p className="text-gray-600 dark:text-gray-300">Cargando historial...</p>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando historial...</p>
       </div>
     </div>
   );
 
   return (
-    <>
+    <div className="max-w-7xl mx-auto max-sm:px-0 px-4 sm:px-6 lg:px-20 xl:px-32 py-8 pt-6 sm:pt-8 relative z-10">
       {showBackButton && (
         <div className="mb-4 sm:mb-6">
           <div className="flex gap-2 pt-1">
@@ -447,23 +568,14 @@ export default function CalculatorHistorialPage() {
         subtitle="Historial de períodos archivados"
         glow="model"
         icon={<History className="w-5 h-5 sm:w-6 sm:h-6 text-white" />}
-        actions={
-          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
-            <div className="flex-shrink-0">
-              <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Año</label>
-              <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
-            </div>
-            <div className="flex-shrink-0">
-              <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Mes</label>
-              <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[100px] sm:min-w-[120px] text-xs sm:text-sm" />
-            </div>
-            <div className="flex-shrink-0">
-              <label className="block text-[10px] sm:text-xs font-medium mb-1 text-gray-700 dark:text-gray-300">Período</label>
-              <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[80px] sm:min-w-[100px] text-xs sm:text-sm" />
-            </div>
-          </div>
-        }
       />
+
+      {/* Controles de Filtado (Año, Mes, Período) - Centrados debajo del header */}
+      <div className="flex justify-center items-center gap-3 sm:gap-5 flex-wrap mt-10 sm:mt-10 md:mt-12 mb-8">
+        <AppleDropdown options={availableYears} value={selectedYear} onChange={setSelectedYear} placeholder="Año" className="min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm font-semibold shadow-sm" />
+        <AppleDropdown options={availableMonths} value={selectedMonth} onChange={setSelectedMonth} placeholder="Mes" className="min-w-[110px] sm:min-w-[130px] text-xs sm:text-sm font-semibold shadow-sm" />
+        <AppleDropdown options={[{value:'1-15',label:'P1'},{value:'16-31',label:'P2'}]} value={selectedPeriodType} onChange={setSelectedPeriodType} placeholder="Período" className="min-w-[90px] sm:min-w-[110px] text-xs sm:text-sm font-semibold shadow-sm" />
+      </div>
 
       {error && <div className="p-4 bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 rounded-lg mb-4 text-center border border-red-100 dark:border-red-800">{error}</div>}
       
@@ -480,24 +592,25 @@ export default function CalculatorHistorialPage() {
           {filteredPeriods.map((period) => {
             const periodKey = `${period.period_date}-${period.period_type}`;
             return (
-            <div key={periodKey} className="bg-white dark:bg-gray-800 rounded-xl sm:rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-3 sm:p-6">
-              <div className="flex flex-col sm:flex-row sm:justify-between mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-gray-200 dark:border-gray-700 gap-3 sm:gap-0">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-blue-500 rounded-lg flex items-center justify-center flex-shrink-0"><Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-white" /></div>
-                  <div className="min-w-0 flex-1">
-                    <h3 className="text-sm sm:text-base font-semibold text-gray-900 dark:text-white truncate">{formatPeriodMonth(period.period_date, period.period_type)}</h3>
-                    <p className="text-[10px] sm:text-xs text-gray-500">{formatArchivedDate(period.archived_at)}</p>
+            <div key={periodKey} className="mb-10 relative">
+              {/* Encabezado del Período (Fuera de la caja) */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-end mb-4 px-1 sm:px-2 gap-5 sm:gap-0">
+                <div className="flex flex-col justify-center min-w-0 flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] truncate">
+                    <Calendar className="w-5 h-5 text-blue-500 dark:text-blue-400 mr-2.5 shrink-0" />
+                    {formatPeriodMonth(period.period_date, period.period_type)}
+                  </h3>
                     {period.is_synthetic && (
                       <p className="text-[10px] sm:text-xs text-amber-600 dark:text-amber-400 mt-1 flex items-center gap-1">
                         <AlertTriangle className="w-3 h-3" />
-                        <span className="truncate">{period.synthetic_note || 'Período reconstruido desde totales (sin desglose por plataforma)'}</span>
+                        <span className="truncate">{period.synthetic_note || 'Período reconstruido desde totales'}</span>
                       </p>
                     )}
-                  </div>
                 </div>
-                <div className="ml-0 sm:ml-4">
-                  <div className="flex items-center justify-start sm:justify-end gap-1.5 sm:gap-2 mb-1.5 sm:mb-2">
-                    <div className="text-[10px] sm:text-xs font-semibold uppercase text-gray-600 dark:text-gray-400">RATES</div>
+
+                <div className="flex flex-row sm:flex-col items-center sm:items-end gap-2 sm:gap-0 ml-0 sm:ml-4 w-full sm:w-auto mt-1 sm:mt-0">
+                  <div className="flex items-center justify-start sm:justify-end gap-1.5 sm:gap-2 mb-0 sm:mb-2 shrink-0">
+                    <div className="text-[10px] sm:text-[11px] font-bold uppercase text-gray-500 dark:text-gray-400 tracking-widest mt-0.5 sm:mt-0">RATES</div>
                     {isAdmin && editingRates !== periodKey && (
                       <button onClick={() => startEditRates(period)} className="text-[10px] sm:text-xs text-blue-600 flex items-center gap-1 active:scale-95 touch-manipulation"><Edit2 className="w-3 h-3" />Editar</button>
                     )}
@@ -511,14 +624,17 @@ export default function CalculatorHistorialPage() {
                       <button onClick={cancelEdit} className="text-red-600 active:scale-95 touch-manipulation"><X className="w-3.5 h-3.5 sm:w-4 sm:h-4"/></button>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap gap-1 sm:gap-2 text-[10px] sm:text-xs">
-                      <span className="bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">EUR→USD: {period.rates?.eur_usd?.toFixed(4)}</span>
-                      <span className="bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">GBP→USD: {period.rates?.gbp_usd?.toFixed(4)}</span>
-                      <span className="bg-blue-50 dark:bg-blue-900/30 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800">USD→COP: {period.rates?.usd_cop?.toFixed(0)}</span>
+                    <div className="flex flex-wrap justify-start sm:justify-end gap-1 sm:gap-2 text-[10px] sm:text-xs">
+                      <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[9.5px] sm:text-[10.5px] font-bold text-blue-600 dark:text-[#5caaf5] tracking-wide drop-shadow-sm dark:drop-shadow-none">GBP→USD: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.gbp_usd?.toFixed(4)}</span></span>
+                      <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[9.5px] sm:text-[10.5px] font-bold text-[rgba(74,188,150,0.9)] dark:text-[#2dd4bf] tracking-wide drop-shadow-sm dark:drop-shadow-none">EUR→USD: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.eur_usd?.toFixed(4)}</span></span>
+                      <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[9.5px] sm:text-[10.5px] font-bold text-purple-600 dark:text-[#c488fc] tracking-wide drop-shadow-sm dark:drop-shadow-none">USD→COP: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.usd_cop?.toFixed(0)}</span></span>
                     </div>
                   )}
                 </div>
               </div>
+
+              {/* Contenedor Principal (GlassCard) */}
+              <GlassCard className="p-4 sm:p-6 mb-0">
 
               <div className="mb-4">
                 {period.is_synthetic ? (
@@ -533,106 +649,127 @@ export default function CalculatorHistorialPage() {
                   </div>
                 ) : (
                   <>
-                  {/* Vista de Cards para Móvil */}
-                  <div className="md:hidden space-y-2">
-                    {period.platforms.filter(p=>p.value>0).map(p => (
-                      <div key={p.platform_id} className="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg border border-gray-200 dark:border-gray-600">
-                        <div className="flex items-center justify-between mb-2">
-                          <div className="flex-1">
-                            <h4 className="text-sm font-semibold text-gray-900 dark:text-gray-100">{p.platform_name}</h4>
-                            <p className="text-[10px] text-gray-500 dark:text-gray-400">Reparto: {p.platform_percentage}%</p>
+                  {/* Layout Unificado (Desktop & Mobile) idéntico a Calculadora */}
+                  <div className="space-y-2 mt-4 sm:mt-6">
+                    {period.platforms.filter(p=>p.value>0).map(p => {
+                      const isTokens = ['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes((p.platform_id || '').toLowerCase() || p.platform_name.toLowerCase());
+                      const displayCurrency = isTokens ? 'TKN' : (p.platform_currency || 'USD');
+                      const displayValue = isTokens ? Math.round(p.value).toString() : `$ ${formatNumberOnly(p.value)}`;
+                      const computedRates = computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80);
+                      const displayUsdModelo = editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? computedRates.usdModelo : (p.value_usd_modelo||0);
+                      const displayCopModelo = editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? computedRates.copModelo : (p.value_cop_modelo||0);
+
+                      return (
+                    <div key={p.platform_id} className="relative bg-black/[0.04] dark:bg-[#0a0a0c]/60 backdrop-blur-2xl border border-white/30 dark:border-white/[0.06] rounded-[0.85rem] p-2.5 sm:p-3 shadow-sm shadow-black/5 dark:shadow-none transition-all hover:bg-black/[0.06] dark:hover:bg-[#0a0a0c]/80">
+                      <div className="flex items-end justify-between gap-2 sm:gap-4 w-full">
+                        
+                        {/* Izquierda: Nombre e insignias */}
+                        <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0">
+                          {/* 1. Porcentaje (SOLO ESCRITORIO) */}
+                          <div className="hidden sm:flex text-[8.5px] uppercase font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.02] px-1.5 py-[2px] rounded tracking-wider items-center justify-center shrink-0">
+                            {p.platform_id === 'superfoon' ? '100%' : `${p.platform_percentage}%`}
                           </div>
-                          {isAdmin && (
-                            <div className="flex-shrink-0 ml-2">
+                          
+                          {/* 2. Divisa (Unificado para Móvil y Escritorio) */}
+                          <span className={`flex text-[8.5px] uppercase font-bold px-1.5 py-[2px] rounded items-center justify-center shrink-0 ${
+                            p.platform_currency === 'EUR' ? 'bg-emerald-100/60 dark:bg-[#2dd4bf]/15 text-emerald-700 dark:text-[#2dd4bf]' :
+                            p.platform_currency === 'GBP' ? 'bg-blue-100/60 dark:bg-[#5caaf5]/15 text-blue-700 dark:text-[#5caaf5]' :
+                            'bg-purple-100/60 dark:bg-[#c488fc]/15 text-purple-700 dark:text-[#c488fc]'
+                          }`}>
+                            {displayCurrency}
+                          </span>
+
+                          <span className="font-bold text-[13.5px] sm:text-[14px] text-gray-800 dark:text-gray-300 uppercase tracking-wide truncate">
+                            {p.platform_name}
+                          </span>
+                        </div>
+
+                        {/* Derecha: Input y Resultados */}
+                        <div className="flex items-end justify-end gap-3 sm:gap-[40px] shrink-0">
+                          {/* 1. Valor Original Edit/Read */}
+                          <div className="flex items-end sm:translate-y-[2px]">
+                            <div className="flex flex-col items-start justify-end min-w-[66px] sm:min-w-[70px] pr-2 border-r border-gray-200 dark:border-white/10">
+                              <span className="hidden sm:block whitespace-nowrap text-[8px] sm:text-[9.5px] font-bold opacity-0 mb-[1px] sm:mb-[2px] select-none" aria-hidden="true">-</span>
                               {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                                <div className="flex gap-1">
-                                  <button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600 active:scale-95 touch-manipulation"><Save className="w-4 h-4"/></button>
-                                  <button onClick={cancelEdit} className="text-red-600 active:scale-95 touch-manipulation"><X className="w-4 h-4"/></button>
-                                </div>
+                                  <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-[66px] h-[26px] sm:h-[28px] bg-white dark:bg-gray-800 border border-black/[0.1] dark:border-white/20 rounded-md px-1.5 text-[12px] sm:text-[13px] font-bold text-gray-900 dark:text-gray-100 text-left sm:mb-0 tabular-nums" />
                               ) : (
-                                <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-600 hover:text-blue-500 active:scale-95 touch-manipulation"><Edit2 className="w-4 h-4"/></button>
+                                  <div className="flex items-center justify-start gap-[3px] text-[13px] sm:text-[13px] font-semibold tracking-tight text-gray-900 dark:text-gray-100 sm:mb-0 tabular-nums">
+                                    <span className={isTokens ? "opacity-0 select-none" : "font-normal"}>$</span>
+                                    <span>{isTokens ? Math.round(p.value).toString() : formatNumberOnly(p.value)}</span>
+                                  </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 2. Resultados (USD Mod y COP Mod agrupados) */}
+                          <div 
+                            className="flex items-end cursor-pointer sm:cursor-default"
+                            onClick={() => {
+                              if (window.innerWidth < 640) {
+                                setMobileCarouselSide(prev => prev === 'cop' ? 'usd' : 'cop');
+                              }
+                            }}
+                          >
+                            {/* --- VISTA DESKTOP --- */}
+                            <div className="hidden sm:flex items-end">
+                              {/* USD Mod */}
+                              <div className="flex flex-col items-start w-[100px] flex-shrink-0 pr-3 border-r border-gray-200 dark:border-white/10">
+                                <span className="whitespace-nowrap text-[9.5px] uppercase font-bold text-emerald-600 dark:text-[#2dd4bf] opacity-80 tracking-widest mb-[2px]">USD MOD</span>
+                                <div className="flex items-center justify-start gap-[3px] text-[13px] tracking-tight text-emerald-600 dark:text-[#2dd4bf] font-semibold tabular-nums">
+                                  <span className="font-normal">$</span>
+                                  <span>{formatNumberOnly(displayUsdModelo)}</span>
+                                </div>
+                              </div>
+                              {/* COP Mod */}
+                              <div className="flex flex-col items-start w-[100px] flex-shrink-0 pl-3">
+                                <span className="block whitespace-nowrap text-[9.5px] uppercase font-bold text-purple-600 dark:text-[#c488fc] opacity-80 tracking-widest mb-[2px]">GANANCIAS</span>
+                                <div className="flex items-center justify-start gap-[3px] text-[13px] tracking-tight text-purple-700 dark:text-[#c488fc] font-semibold tabular-nums">
+                                  <span className="font-normal">$</span>
+                                  <span>{displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* --- VISTA MÓVIL (CARRUSEL) --- */}
+                            <div className="sm:hidden relative overflow-hidden min-w-[74px] w-[74px] h-[34px] flex-shrink-0">
+                              <div className={`absolute top-0 left-0 w-full flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${mobileCarouselSide === 'usd' ? '-translate-y-1/2' : 'translate-y-0'}`}>
+                                {/* Slide 1: COP Mod */}
+                                <div className="h-[34px] flex flex-col items-start justify-end">
+                                  <span className="block whitespace-nowrap text-[8px] uppercase font-bold text-purple-600 dark:text-[#c488fc] opacity-80 tracking-widest mb-[1px]">GANANCIAS</span>
+                                  <div className="flex items-center justify-start gap-[3px] text-[12.5px] tracking-tight text-purple-700 dark:text-[#c488fc] font-semibold tabular-nums">
+                                    <span className="font-normal">$</span>
+                                    <span>{displayCopModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                  </div>
+                                </div>
+                                {/* Slide 2: USD Mod */}
+                                <div className="h-[34px] flex flex-col items-start justify-end">
+                                  <span className="block whitespace-nowrap text-[8px] uppercase font-bold text-emerald-600 dark:text-[#2dd4bf] opacity-80 tracking-widest mb-[1px]">USD MOD</span>
+                                  <div className="flex items-center justify-start gap-[3px] text-[12.5px] tracking-tight text-emerald-600 dark:text-[#2dd4bf] font-semibold tabular-nums">
+                                    <span className="font-normal">$</span>
+                                    <span>{formatNumberOnly(displayUsdModelo)}</span>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {isAdmin && (
+                            <div className="flex items-center gap-2 pl-2">
+                              {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
+                                <>
+                                  <button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600 hover:scale-110 transition-transform"><Save className="w-4 h-4"/></button>
+                                  <button onClick={cancelEdit} className="text-red-500 hover:scale-110 transition-transform"><X className="w-4 h-4"/></button>
+                                </>
+                              ) : (
+                                <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-500 opacity-60 hover:opacity-100 transition-opacity"><Edit2 className="w-4 h-4"/></button>
                               )}
                             </div>
                           )}
-                        </div>
-                        <div className="space-y-1.5">
-                          <div>
-                            <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">Valor</p>
-                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                              <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-full px-2 py-1.5 text-sm border rounded-lg text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800" />
-                            ) : (
-                              <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                                {formatNumberOnly(p.value)} <span className="text-xs text-gray-500 dark:text-gray-400">{p.platform_currency}</span>
-                              </p>
-                            )}
-                          </div>
-                          <div className="grid grid-cols-2 gap-2 text-xs">
-                            <div>
-                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">USD Modelo</p>
-                              <p className="font-medium text-gray-700 dark:text-gray-300">
-                                {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
-                                  ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).usdModelo, 'USD')
-                                  : formatCurrency(p.value_usd_modelo||0, 'USD')}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-[10px] text-gray-500 dark:text-gray-400 mb-0.5">COP Modelo</p>
-                              <p className="font-medium text-gray-700 dark:text-gray-300">
-                                {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
-                                  ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).copModelo, 'COP')
-                                  : formatCurrency(p.value_cop_modelo||0, 'COP')}
-                              </p>
-                            </div>
-                          </div>
                         </div>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Vista de Tabla para Desktop */}
-                  <div className="hidden md:block overflow-x-auto">
-                    <table className="w-full text-sm text-gray-900 dark:text-gray-100">
-                      <thead className="bg-gray-50 dark:bg-gray-700/50 text-xs uppercase text-gray-500 dark:text-gray-400">
-                        <tr>
-                          <th className="px-3 py-2 text-left">Plataforma</th>
-                          <th className="px-3 py-2 text-left">Valor</th>
-                          <th className="px-3 py-2 text-left">USD</th>
-                          <th className="px-3 py-2 text-left">COP</th>
-                          {isAdmin && <th></th>}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {period.platforms.filter(p=>p.value>0).map(p => (
-                        <tr key={p.platform_id} className="border-b border-gray-100 dark:border-gray-700/50 hover:bg-gray-50 dark:hover:bg-gray-700/20 transition-colors">
-                          <td className="px-3 py-2 font-medium">{p.platform_name} <span className="text-xs text-gray-400 dark:text-gray-500 block">{p.platform_percentage}%</span></td>
-                          <td className="px-3 py-2 font-medium">
-                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                              <input type="number" value={editValue} onChange={e=>setEditValue(e.target.value)} className="w-20 border rounded px-1 text-xs text-gray-900" />
-                            ) : formatNumberOnly(p.value)} <span className="text-gray-500 dark:text-gray-400 text-xs">{p.platform_currency}</span>
-                          </td>
-                          <td className="px-3 py-2">
-                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
-                              ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).usdModelo, 'USD')
-                              : formatCurrency(p.value_usd_modelo||0, 'USD')}
-                          </td>
-                          <td className="px-3 py-2">
-                            {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id
-                              ? formatCurrency(computeUsdCopFromValue(Number(editValue) || 0, p.platform_id, p.platform_currency, period.rates || {}, p.platform_percentage ?? 80).copModelo, 'COP')
-                              : formatCurrency(p.value_cop_modelo||0, 'COP')}
-                          </td>
-                          {isAdmin && (
-                            <td className="px-3 py-2">
-                              {editingPlatform?.periodKey === periodKey && editingPlatform?.platformId === p.platform_id ? (
-                                <div className="flex gap-1"><button onClick={()=>savePlatformValue(periodKey, p.platform_id)} className="text-green-600"><Save className="w-3 h-3"/></button><button onClick={cancelEdit} className="text-red-600"><X className="w-3 h-3"/></button></div>
-                              ) : (
-                                <button onClick={()=>startEditPlatform(periodKey, p.platform_id, p.value)} className="text-blue-600 hover:text-blue-500"><Edit2 className="w-3 h-3"/></button>
-                              )}
-                            </td>
-                          )}
-                        </tr>
-                        ))}
-                      </tbody>
-                    </table>
+                    </div>
+                      );
+                    })}
                   </div>
                   </>
                 )}
@@ -663,10 +800,12 @@ export default function CalculatorHistorialPage() {
                   </div>
 
                   <div className="bg-blue-50 dark:bg-blue-900/40 p-2.5 sm:p-3 rounded-lg sm:rounded-xl border border-blue-100 dark:border-blue-800/50">
-                    <div className="flex justify-between items-center mb-0.5 sm:mb-1">
-                      <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">COP Generado</span>
-                      <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(displayTotalCopModelo, 'COP')}</span>
-                    </div>
+                    {((period.total_anticipos || 0) > 0 || (period.deducciones && period.deducciones.length > 0) || (isAdmin && addingDeductionFor === periodKey)) && (
+                      <div className="flex justify-between items-center mb-0.5 sm:mb-1">
+                        <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Sin Deducciones</span>
+                        <span className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-300">{formatCurrency(displayTotalCopModelo, 'COP')}</span>
+                      </div>
+                    )}
 
                     {(period.total_anticipos || 0) > 0 && (
                       <div className="flex justify-between items-center mb-1">
@@ -762,33 +901,85 @@ export default function CalculatorHistorialPage() {
                       </div>
                     )}
 
-                    <div className="flex justify-between items-center pt-1 border-t border-blue-200/50 dark:border-blue-800/30">
-                      <span className="text-xs font-bold text-gray-900 dark:text-white uppercase tracking-wide">Neto a Pagar</span>
-                      <span className="text-lg font-bold text-blue-600 dark:text-blue-400">
+                    <div className="flex justify-between items-center pt-3 mt-1 border-t border-white/[0.08]">
+                      <span className="text-sm sm:text-base font-bold text-blue-900 dark:text-white uppercase tracking-wider">En tu sobre</span>
+                      <span className="text-2xl sm:text-3xl font-black bg-gradient-to-r from-blue-400 via-indigo-400 to-violet-400 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(129,140,248,0.5)]">
                         {formatCurrency(displayNetoPagar, 'COP')}
                       </span>
                     </div>
                   </div>
+
+                  {/* Solicitudes de Ahorro Pendientes (Admin y Modelo ven el card, pero solo Admin acciona) */}
+                  {period.pending_savings && period.pending_savings.length > 0 && (
+                    <div className="bg-gradient-to-r from-indigo-500/10 via-purple-500/5 to-fuchsia-500/10 p-4 rounded-xl border border-indigo-400/20 backdrop-blur-md mt-3 shadow-[0_0_15px_rgba(168,85,247,0.1)]">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="w-2 h-2 rounded-full bg-fuchsia-400 animate-pulse"></div>
+                        <span className="text-xs sm:text-sm font-bold text-fuchsia-400 uppercase tracking-widest">SOLICITUD DE AHORRO</span>
+                      </div>
+                      
+                      {period.pending_savings.map((saving: any) => (
+                        <div key={saving.id} className="bg-black/20 dark:bg-black/30 rounded-lg p-3 sm:p-4 border border-white/5 flex flex-col sm:flex-row justify-between items-center gap-3">
+                          <div className="flex flex-col">
+                            <span className="text-sm font-semibold text-gray-200">Monto Ahorro Solicitado:</span>
+                            <span className="text-lg font-black bg-gradient-to-r from-cyan-400 to-fuchsia-400 bg-clip-text text-transparent">
+                              {formatCurrency(parseFloat(saving.monto_ahorrado), 'COP')}
+                            </span>
+                            <span className="text-xs text-gray-400 mt-1">({parseFloat(saving.porcentaje_ahorrado).toFixed(2)}% del Neto A Pagar)</span>
+                          </div>
+                          
+                          {isAdmin ? (
+                            <div className="flex gap-2 w-full sm:w-auto">
+                              <button 
+                                onClick={() => handleRejectSaving(saving.id, periodKey)}
+                                disabled={saving}
+                                className="flex-1 sm:flex-none px-4 py-2 text-xs font-semibold rounded-lg bg-gray-800/80 hover:bg-gray-700 text-gray-300 border border-gray-600 transition-colors"
+                              >
+                                Declinar
+                              </button>
+                              <button 
+                                onClick={() => handleApproveSaving(saving.id, periodKey)}
+                                disabled={saving}
+                                className="relative overflow-hidden flex-1 sm:flex-none px-6 py-2 text-xs font-bold rounded-lg text-white group bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 shadow-lg shadow-fuchsia-500/20 active:scale-95 transition-all duration-300"
+                              >
+                                <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
+                                  background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
+                                  backgroundSize: '200% 100%',
+                                  animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
+                                }}></div>
+                                <span className="relative z-10">Aprobar Ahorro</span>
+                              </button>
+                            </div>
+                          ) : (
+                            <div className="bg-yellow-500/10 border border-yellow-500/20 px-3 py-1.5 rounded-lg">
+                              <span className="text-xs font-semibold text-yellow-400 animate-pulse">Pendiente de Aprobación</span>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 
-                <div className="bg-gray-50 dark:bg-gray-700/50 p-3 rounded-xl mb-4">
-                   <div className="flex justify-between items-center mb-2">
-                     <span className="text-sm font-medium text-gray-900 dark:text-white">Objetivo ({formatCurrency(period.cuota_minima||0, 'USD')})</span>
-                     <span className="text-sm font-bold text-gray-900 dark:text-white">{period.porcentaje_alcanzado}%</span>
-                   </div>
-                   <div className="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
-                     <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: `${Math.min(period.porcentaje_alcanzado||0, 100)}%` }}></div>
-                   </div>
+                {/* Componente ObjectiveBorealCard (Esencia de Mi Calculadora) */}
+                <div className="mt-4">
+                  <ObjectiveBorealCard 
+                    totalUsdBruto={period.total_usd_bruto || 0}
+                    cuotaMinima={period.cuota_minima || 0}
+                    periodGoal={null} 
+                    netoDisponibleCop={displayNetoPagar}
+                    isHistorical={true}
+                  />
                 </div>
                 </>
                   );
                 })()}
               </div>
+            </GlassCard>
             </div>
             );
           })}
         </div>
       )}
-    </>
+    </div>
   );
 }

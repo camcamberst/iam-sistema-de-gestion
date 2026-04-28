@@ -9,7 +9,8 @@ import ProgressMilestone from '@/components/ui/ProgressMilestone';
 import DynamicTimeIsland from '@/components/ui/DynamicTimeIsland';
 import PageHeader from '@/components/ui/PageHeader';
 import GlassCard from '@/components/ui/GlassCard';
-
+import ObjectiveBorealCard from '@/components/ui/ObjectiveBorealCard';
+import ModelAuroraBackground from '@/components/ui/ModelAuroraBackground';
 interface User {
   id: string;
   email: string;
@@ -79,6 +80,105 @@ export default function ModelCalculatorPage() {
   // Neto disponible del período (después de anticipos y compras sexshop) para indicador en calculadora
   const [netoDisponible, setNetoDisponible] = useState<{ neto_disponible: number; facturado: number; anticipos: number; cuotas_pendientes: number; compras_contado?: number; cuotas_primera_aprobacion?: number; descuentos_detalle?: Array<{ concepto: string; monto: number }> } | null>(null);
 
+  // 🌟 ESTADO DE CARRUSEL MÓVIL
+  const [mobileCarouselSide, setMobileCarouselSide] = useState<'cop' | 'usd'>('cop');
+
+  // 🌟 ESTADOS DE GAMIFICACIÓN
+  interface GamificationEvent {
+    platformId: string;
+    level: number;
+    message: string;
+    active: boolean;
+    timestamp: number;
+  }
+  const [objectiveGamiState, setObjectiveGamiState] = useState<{ active: boolean; level: number } | null>(null);
+  const [accumulatedGamiState, setAccumulatedGamiState] = useState<{ active: boolean; value: number } | null>(null);
+  const [gamiEvent, setGamiEvent] = useState<GamificationEvent | null>(null);
+  const [sessionFocusSnapshot, setSessionFocusSnapshot] = useState<Record<string, number>>({});
+
+  // 🌟 HELPER DE GAMIFICACIÓN "MASTER PROMPT"
+  const triggerGamification = (platformId: string, currentVal: number) => {
+    const oldVal = sessionFocusSnapshot[platformId] || 0;
+    const delta = currentVal - oldVal;
+    if (delta <= 0) return;
+
+    // Evaluar si impactar la Barra de Objetivo
+    const goalUsd = periodGoal ? periodGoal.goalUsd : 0;
+    const cuotaMinima = goalUsd > 0 ? goalUsd : 100;
+    
+    // Función extractora de conversión para Gamificación
+    const getUsdFormulaForPlatform = (p: any, val: number) => {
+      let usd = 0;
+      if (p.currency === 'EUR') {
+        if (p.id === 'big7') usd = (val * (rates?.eur_usd || 1.01)) * 0.84;
+        else if (p.id === 'mondo') usd = (val * (rates?.eur_usd || 1.01)) * 0.78;
+        else usd = val * (rates?.eur_usd || 1.01);
+      } else if (p.currency === 'GBP') {
+        if (p.id === 'aw') usd = (val * (rates?.gbp_usd || 1.20)) * 0.677;
+        else usd = val * (rates?.gbp_usd || 1.20);
+      } else if (p.currency === 'USD') {
+        if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') usd = val * 0.75;
+        else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') usd = val * 0.05;
+        else if (p.id === 'dxlive') usd = val * 0.60;
+        else if (p.id === 'secretfriends') usd = val * 0.5;
+        else usd = val;
+      }
+      return usd;
+    };
+
+    const currentTotalUsdBruto = platforms.reduce((acc, p) => {
+      if (!p.enabled) return acc;
+      return acc + getUsdFormulaForPlatform(p, p.id === platformId ? currentVal : p.value);
+    }, 0);
+    
+    const prevTotalUsdBruto = platforms.reduce((acc, p) => {
+      if (!p.enabled) return acc;
+      return acc + getUsdFormulaForPlatform(p, p.id === platformId ? oldVal : p.value);
+    }, 0);
+
+    if (currentTotalUsdBruto >= cuotaMinima && prevTotalUsdBruto < cuotaMinima) {
+      setObjectiveGamiState({ active: true, level: 2 });
+      setTimeout(() => setObjectiveGamiState(null), 4000);
+    }
+    
+    // Evaluar Hitos de Valores Acumulados Globales
+    const milestones = [500, 280, 250, 220, 200, 180, 150, 120, 100, 80, 50];
+    const crossedMilestone = milestones.find(m => currentTotalUsdBruto >= m && prevTotalUsdBruto < m);
+    if (crossedMilestone) {
+      setAccumulatedGamiState({ active: true, value: crossedMilestone });
+      setTimeout(() => setAccumulatedGamiState(null), 3000);
+    }
+
+    // Evaluar Delta Inmediato (Valores Ingresados)
+    let levelInput = 0;
+    if (currentVal >= 100) levelInput = 8;
+    else if (currentVal >= 70) levelInput = 7;
+    else if (currentVal >= 60) levelInput = 6;
+    else if (currentVal >= 50) levelInput = 5;
+    else if (currentVal >= 40) levelInput = 4;
+    else if (currentVal >= 30) levelInput = 3;
+    else if (currentVal >= 20) levelInput = 2;
+    else if (currentVal >= 10) levelInput = 1;
+
+    if (levelInput > 0) {
+      let message = '';
+      if (levelInput === 8) message = '✪ LEGENDARY ✪';
+      else if (levelInput === 7) message = '✵ UNREAL ✵';
+      else if (levelInput === 6) message = '✴ AMAZING ✴';
+      else if (levelInput === 5) message = '✧ WONDERFUL ✧';
+      else if (levelInput === 4) message = '✧ SUPERB ✧';
+      else if (levelInput === 3) message = '• EXCELLENT •';
+      else if (levelInput === 2) message = 'GOOD';
+      else if (levelInput === 1) message = 'NOT BAD';
+
+      const timestamp = Date.now();
+      setGamiEvent({ platformId, level: levelInput, message, active: true, timestamp });
+      setTimeout(() => {
+        setGamiEvent(prev => prev?.timestamp === timestamp ? null : prev);
+      }, 2500); // 2.5 segundos de duración exacta
+    }
+  };
+
   // COP Modelo en vivo (misma fórmula que la card morada) para que el neto mostrado coincida con la card cuando no hay descuentos
   const liveCopModelo = useMemo(() => {
     const usdModelo = platforms.reduce((sum, p) => {
@@ -117,7 +217,6 @@ export default function ModelCalculatorPage() {
   // 🔧 CRÍTICO: Asegurar que periodDate se inicialice correctamente al montar
   useEffect(() => {
     const start = getColombiaPeriodStartDate();
-    console.log('🔍 [CALCULATOR] Initializing periodDate (Frontend):', start);
     setPeriodDate(start);
   }, []);
 
@@ -144,6 +243,21 @@ export default function ModelCalculatorPage() {
     })();
     return () => { cancelled = true; };
   }, [user?.id, user?.role]);
+
+  // ALINEACIÓN PERFECTA: Usar un ancho fijo robusto para la columna de ganancias en lugar de scripts del DOM
+  // syncAllWidths ha sido removido para evitar glitch visuales y problemas al refrescar
+
+  // ── SYNC INPUTS via React state: calcular ancho compartido para todos los inputs ──
+  const mobileInputW = useMemo(() => {
+    let maxLen = 4; // "0.00" baseline
+    for (const p of platforms) {
+      if (!p.enabled) continue;
+      const val = inputValues[p.id] || '';
+      if (val.length > maxLen) maxLen = val.length;
+    }
+    // ~7.5px por carácter a 12px bold + 14px padding
+    return Math.max(48, Math.ceil(maxLen * 7.5) + 14);
+  }, [platforms, inputValues]);
 
   // 🔧 NUEVO: Cargar offset de ganancias hoy desde localStorage
   useEffect(() => {
@@ -220,8 +334,8 @@ export default function ModelCalculatorPage() {
     const newInputValues: Record<string, string> = {};
     platforms.forEach(p => {
       if (p.enabled) {
-        // 🔧 FIX: Mostrar todos los valores reales, incluyendo 0
-        newInputValues[p.id] = (p.value !== undefined && p.value !== null) ? String(p.value) : '';
+        // 🔧 FIX: Ocultar el valor 0 de la base de datos tratándolo como vacío para mostrar el placeholder
+        newInputValues[p.id] = (p.value !== undefined && p.value !== null && p.value !== 0) ? String(p.value) : '';
       }
     });
     setInputValues(prev => ({ ...prev, ...newInputValues }));
@@ -395,11 +509,7 @@ export default function ModelCalculatorPage() {
     }
   }, [platforms.map(p => p.value).join(','), rates, yesterdayValues]);
 
-  // 🔍 DEBUG: Verificar configuración
-  console.log('🔍 [CALCULATOR] System configuration:', {
-    ENABLE_AUTOSAVE,
-    SYSTEM_VERSION: 'V2_ONLY'
-  });
+  // Configuración de sistema V2
 
   useEffect(() => {
     const load = async () => {
@@ -914,8 +1024,7 @@ export default function ModelCalculatorPage() {
         console.log('✅ [CALCULATOR] Totals saved successfully');
       }
 
-      // Marcar que se han guardado nuevos valores
-      alert('Valores guardados correctamente');
+      // Operación de guardado ejecutada en modo silencioso (sin alertas molestas ni toasts redundantes)
       
       // CRÍTICO: NO actualizar automáticamente - los valores ya están en el estado
       console.log('✅ [CALCULATOR] Valores guardados exitosamente - no se necesita recarga');
@@ -986,7 +1095,7 @@ export default function ModelCalculatorPage() {
 
   if (loading) {
     return (
-      <div className="aim-page-bg flex items-center justify-center pt-16">
+      <div className="min-h-screen flex items-center justify-center pt-16">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
           <p className="mt-4 text-gray-600 dark:text-gray-300">Cargando calculadora...</p>
@@ -1000,8 +1109,8 @@ export default function ModelCalculatorPage() {
 
   if (!allowed) {
     return (
-      <div className="aim-page-bg flex items-center justify-center pt-16">
-        <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-gray-600/20 p-8 max-w-md dark:shadow-lg dark:shadow-red-900/15 dark:ring-0.5 dark:ring-red-400/20">
+      <div className="min-h-screen flex items-center justify-center pt-16">
+        <div className="relative bg-white/80 dark:bg-white/[0.06] backdrop-blur-sm rounded-xl shadow-lg border border-white/20 dark:border-white/[0.08] p-8 max-w-md dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] dark:ring-0.5 dark:ring-red-400/20">
           <div className="text-center">
             <div className="w-12 h-12 bg-gradient-to-br from-red-500 to-red-600 rounded-lg flex items-center justify-center mx-auto mb-4">
               <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1019,8 +1128,42 @@ export default function ModelCalculatorPage() {
   
 
   return (
-    <div className="aim-page-bg min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+    <div className="min-h-screen relative w-full overflow-hidden">
+      <ModelAuroraBackground />
+
+      {/* OVERLAY DE VALORES ACUMULADOS */}
+      {accumulatedGamiState?.active && (
+        <div className="fixed inset-0 z-[9900] pointer-events-none flex items-center justify-center overflow-hidden">
+          <style>{`
+            @keyframes accumulated-rise { 0% { transform: translateY(40px) scale(0.9); opacity: 0; filter: blur(10px); } 15% { transform: translateY(0px) scale(1.1); opacity: 1; filter: blur(0px); } 20% { transform: scale(1); } 80% { transform: translateY(-5px) scale(1); opacity: 1; filter: blur(0px); } 100% { transform: translateY(-20px) scale(0.95); opacity: 0; filter: blur(4px); } }
+          `}</style>
+          <div className="absolute inset-0 bg-black/40 mix-blend-overlay" style={{ animation: 'screen-flash 3s ease-out forwards' }}></div>
+          <div className="flex flex-col items-center justify-center drop-shadow-[0_0_30px_rgba(250,204,21,0.5)]" style={{ animation: 'accumulated-rise 3s cubic-bezier(0.16,1,0.3,1) forwards' }}>
+            <span className="text-[12px] sm:text-[14px] font-bold tracking-[0.3em] text-yellow-300 uppercase opacity-90 drop-shadow-md mb-1">¡Hito Superado!</span>
+            <div className="text-[42px] sm:text-[60px] font-black text-white leading-none tracking-tighter" style={{ textShadow: '0 0 20px #facc15, 0 0 40px #f59e0b, 0 0 80px rgba(250,204,21,0.5)' }}>
+              ${accumulatedGamiState.value} <span className="text-[20px] sm:text-[28px] tracking-normal font-bold opacity-80 mix-blend-overlay">USD</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* GLOBAL VICTORY EXPLOSION */}
+      {objectiveGamiState?.level === 2 && (
+        <div className="fixed inset-0 z-[9999] pointer-events-none flex items-center justify-center overflow-hidden">
+          <style>{`
+            @keyframes global-victory-flash { 0% { opacity: 0; background: #fff; } 10% { opacity: 1; background: #fdf4ff; } 100% { opacity: 0; background: transparent; } }
+            @keyframes global-victory-rays { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 50% { opacity: 0.8; } 100% { transform: scale(3) rotate(180deg); opacity: 0; } }
+            @keyframes global-victory-sweep { 0% { transform: translateY(100vh); opacity: 0; } 20% { opacity: 1; } 100% { transform: translateY(-100vh); opacity: 0; } }
+          `}</style>
+          <div className="absolute inset-0 mix-blend-screen" style={{ animation: 'global-victory-flash 3.5s cubic-bezier(0.16,1,0.3,1) forwards' }}></div>
+          <div className="absolute inset-0 flex justify-center items-center">
+             <div className="w-[150vw] h-[150vw] sm:w-[100vw] sm:h-[100vw] rounded-full border-[4px] border-fuchsia-400/60" style={{ animation: 'global-victory-rays 4s cubic-bezier(0.16,1,0.3,1) forwards' }}></div>
+             <div className="absolute w-[200vw] h-[200vw] border-[2px] border-cyan-400/40 border-dashed rounded-full" style={{ animation: 'global-victory-rays 4s cubic-bezier(0.16,1,0.3,1) reverse forwards 0.2s' }}></div>
+          </div>
+          <div className="absolute inset-0 w-full bg-gradient-to-t from-transparent via-fuchsia-500/40 to-transparent h-[40vh]" style={{ animation: 'global-victory-sweep 2.5s ease-out forwards' }}></div>
+        </div>
+      )}
+      <div className="max-w-screen-2xl mx-auto max-sm:px-0 px-4 sm:px-6 lg:px-20 xl:px-32 py-8 pt-6 sm:pt-8 relative z-10">
         {/* Header — Migrado a PageHeader */}
         <PageHeader
           title="Mi Calculadora"
@@ -1033,45 +1176,55 @@ export default function ModelCalculatorPage() {
           }
         />
 
-        {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
-        <DynamicTimeIsland
-          className="!max-w-none !px-0"
-          objetivoUsd={user?.role === 'modelo' ? periodGoal?.goalUsd : undefined}
-          facturadoPeriodoUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsd : undefined}
-          facturadoDisplayUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsdModelo : undefined}
-        />
 
-        {/* Tasas actualizadas - ESTILO APPLE REFINADO */}
-        <GlassCard padding="sm" className="mb-4">
-          <h2 className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100 mb-2 sm:mb-3 flex items-center">
-            <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
-            Tasas Actualizadas
-          </h2>
-          {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3">
-            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-lg sm:text-xl font-bold text-blue-700 mb-1">
-                ${rates?.usd_cop || 3900}
+
+        {/* Tasas actualizadas - REGLA CARDS AESTHETIC */}
+        <div className="flex flex-col gap-1.5 sm:gap-2 mb-4">
+          <div className="flex items-center justify-between px-1">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-1 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+              <div className="w-2 h-2 bg-blue-500 rounded-full mr-2 translate-y-[1.5px]"></div>
+              Tasas Actualizadas
+            </h3>
+          </div>
+          <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden">
+            <div className="relative z-10 flex flex-col flex-1">
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <InfoCard
+                  value={`${rates?.gbp_usd || 1.20}`}
+                  label="GBP→USD"
+                  color="blue"
+                  size="sm"
+                  clickable={false}
+                  className=""
+                />
+                <InfoCard
+                  value={`${rates?.eur_usd || 1.01}`}
+                  label="EUR→USD"
+                  color="green"
+                  size="sm"
+                  clickable={false}
+                />
+                <InfoCard
+                  value={`$${rates?.usd_cop || 3900}`}
+                  label="USD→COP"
+                  color="purple"
+                  size="sm"
+                  clickable={false}
+                />
               </div>
-              <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-2 py-1 rounded-full">USD→COP</div>
-            </div>
-            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-              <div className="text-lg sm:text-xl font-bold text-green-700 mb-1">
-                {rates?.eur_usd || 1.01}
-              </div>
-              <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-2 py-1 rounded-full">EUR→USD</div>
-            </div>
-            <div className="text-center p-3 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105 col-span-2 sm:col-span-1">
-              <div className="text-lg sm:text-xl font-bold text-purple-700 mb-1">
-                {rates?.gbp_usd || 1.20}
-              </div>
-              <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-2 py-1 rounded-full">GBP→USD</div>
             </div>
           </div>
-          <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
-            Configuradas por tu administrador
-          </p>
-        </GlassCard>
+        </div>
+
+        {/* Barra de Isla Dinámica - Tiempos del Mundo y Cierre */}
+        <div className="mb-4">
+          <DynamicTimeIsland
+            className="!max-w-none !px-0"
+            objetivoUsd={user?.role === 'modelo' ? periodGoal?.goalUsd : undefined}
+            facturadoPeriodoUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsd : undefined}
+            facturadoDisplayUsd={user?.role === 'modelo' ? periodGoal?.periodBilledUsdModelo : undefined}
+          />
+        </div>
 
         {/* Error Message */}
         {error && (
@@ -1101,11 +1254,14 @@ export default function ModelCalculatorPage() {
         )}
 
         {/* Tabla de Calculadora - ESTILO APPLE REFINADO */}
-        <GlassCard padding="md" className="mb-4">
-          <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-4 flex items-center">
-            <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
-            Calculadora de Ingresos
-          </h2>
+        <div className="flex flex-col gap-1.5 sm:gap-2 mb-4">
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-1 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 translate-y-[1.5px]"></div>
+              Calculadora de Ingresos
+            </h2>
+          </div>
+        <GlassCard padding="md" auroraEffect={false} className="!bg-black/[0.08] dark:!bg-white/[0.06] !backdrop-blur-3xl !border-white/40 dark:!border-white/[0.08] !shadow-sm !shadow-black/5">
           
           {(() => {
             console.log('🔍 [RENDER] platforms.length:', platforms.length);
@@ -1129,8 +1285,8 @@ export default function ModelCalculatorPage() {
             </div>
           ) : (
             <>
-              {/* Vista de Cards para Móvil */}
-              <div className="md:hidden space-y-3">
+              {/* Vista de Cards Unificada (Móvil y Escritorio) */}
+              <div className="space-y-3">
                 {platforms.filter(p => p.enabled).map(platform => {
                   // Calcular dólares y COP para esta plataforma usando fórmulas específicas
                   const usdBruto = platform.value;
@@ -1180,75 +1336,298 @@ export default function ModelCalculatorPage() {
                   }
                   const copModelo = usdModeloFinal * (rates?.usd_cop || 3900);
 
+                  const gamiLevel = gamiEvent?.platformId === platform.id && gamiEvent.active ? gamiEvent.level : 0;
+                  const gamiActive = gamiLevel > 0;
+                  
+                  let gamiBorderClass = isFrozen ? 'border-red-200 dark:border-red-900/30' : 'border-gray-200 dark:border-white/[0.03]';
+                  let gamiDropShadow = 'drop-shadow-[0_0_8px_rgba(255,255,255,0.7)]';
+                  let gamiTextShadow = 'none';
+                  let gamiScaleClass = '';
+                  let gamiAnimationClass = 'animate-[shake-gentle_0.5s_ease-in-out]';
+                  let gamiConfettiColor = 'bg-cyan-400';
+                  let gamiConfettiColor2 = 'bg-fuchsia-400';
+
+                  if (gamiLevel >= 11) {
+                    gamiBorderClass = 'border-rose-500 shadow-[0_0_100px_rgba(244,63,94,1)] z-50';
+                    gamiDropShadow = 'drop-shadow-[0_0_40px_rgba(244,63,94,1)]';
+                    gamiTextShadow = '0 0 25px #f43f5e, 0 0 50px #ffffff';
+                    gamiScaleClass = 'scale-[1.15]';
+                    gamiConfettiColor = 'bg-rose-500'; gamiConfettiColor2 = 'bg-pink-400';
+                  } else if (gamiLevel >= 9) {
+                    gamiBorderClass = 'border-yellow-400 shadow-[0_0_80px_rgba(250,204,21,0.8)] z-50';
+                    gamiDropShadow = 'drop-shadow-[0_0_30px_rgba(250,204,21,1)]';
+                    gamiTextShadow = '0 0 20px #facc15, 0 0 40px #ffffff';
+                    gamiScaleClass = 'scale-[1.08]';
+                    gamiConfettiColor = 'bg-yellow-400'; gamiConfettiColor2 = 'bg-orange-500';
+                  } else if (gamiLevel >= 7) {
+                    gamiBorderClass = 'border-cyan-300 shadow-[0_0_70px_rgba(103,232,249,0.8)] z-50';
+                    gamiDropShadow = 'drop-shadow-[0_0_25px_rgba(103,232,249,1)]';
+                    gamiTextShadow = '0 0 15px #67e8f9, 0 0 30px #ffffff';
+                    gamiScaleClass = 'scale-[1.07]';
+                    gamiConfettiColor = 'bg-white'; gamiConfettiColor2 = 'bg-cyan-300';
+                  } else if (gamiLevel >= 6) {
+                    gamiBorderClass = 'border-emerald-400 shadow-[0_0_60px_rgba(52,211,153,0.8)] z-40';
+                    gamiDropShadow = 'drop-shadow-[0_0_25px_rgba(52,211,153,1)]';
+                    gamiTextShadow = '0 0 15px #34d399, 0 0 30px #ffffff';
+                    gamiScaleClass = 'scale-[1.06]';
+                    gamiConfettiColor = 'bg-emerald-400'; gamiConfettiColor2 = 'bg-teal-300';
+                  } else if (gamiLevel >= 5) {
+                    gamiBorderClass = 'border-indigo-400 shadow-[0_0_50px_rgba(129,140,248,0.7)] z-40';
+                    gamiDropShadow = 'drop-shadow-[0_0_20px_rgba(129,140,248,1)]';
+                    gamiTextShadow = '0 0 15px #818cf8, 0 0 30px #ffffff';
+                    gamiScaleClass = 'scale-[1.05]';
+                    gamiConfettiColor = 'bg-indigo-400'; gamiConfettiColor2 = 'bg-violet-500';
+                  } else if (gamiLevel >= 4) {
+                    gamiBorderClass = 'border-purple-500 shadow-[0_0_40px_rgba(160,32,240,0.6)] z-40';
+                    gamiDropShadow = 'drop-shadow-[0_0_20px_rgba(255,255,255,1)]';
+                    gamiTextShadow = '0 0 15px #a020f0, 0 0 30px #ffffff';
+                    gamiScaleClass = 'scale-[1.04]';
+                  } else if (gamiLevel >= 3) {
+                    gamiBorderClass = 'border-fuchsia-400 shadow-[0_0_30px_rgba(232,121,249,0.5)] z-30';
+                    gamiDropShadow = 'drop-shadow-[0_0_15px_rgba(232,121,249,0.9)]';
+                    gamiTextShadow = '0 0 10px #e879f9';
+                    gamiScaleClass = 'scale-[1.03]';
+                  } else if (gamiLevel >= 2) {
+                    gamiBorderClass = 'border-cyan-400/80 shadow-[0_0_15px_rgba(34,211,238,0.3)] z-20';
+                    gamiDropShadow = 'drop-shadow-[0_0_10px_rgba(34,211,238,0.9)]';
+                    gamiScaleClass = 'scale-[1.01]';
+                  } else if (gamiLevel >= 1) {
+                    gamiBorderClass = 'border-white/40 shadow-[0_0_15px_rgba(255,255,255,0.3)] z-10';
+                  }
+
+                  // 🔥 OVERRIDE GLOBAL: Si el jugador ha roto el objetivo máximo, todas las cartas vibran
+                  let globalSweep = false;
+                  if (objectiveGamiState?.level === 2) {
+                    gamiBorderClass = 'border-fuchsia-400/80 shadow-[0_0_30px_rgba(232,121,249,0.4)] z-30';
+                    gamiScaleClass = 'scale-[1.02]';
+                    globalSweep = true;
+                  }
+
                   return (
-                    <div key={platform.id} className={`bg-gray-50 dark:bg-gray-800/50 rounded-xl p-4 border ${isFrozen ? 'border-red-200 dark:border-red-900/30' : 'border-gray-200 dark:border-gray-600/50'}`}>
-                      {/* Header de la card */}
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold text-sm text-gray-900 dark:text-gray-100">
+                    <div key={platform.id} className={`relative bg-black/[0.04] dark:bg-[#0a0a0c]/60 backdrop-blur-2xl border border-white/30 dark:border-white/[0.06] rounded-[0.85rem] p-2.5 sm:p-3 shadow-sm shadow-black/5 dark:shadow-none transition-all duration-700 ease-out overflow-hidden ${gamiBorderClass} ${gamiScaleClass} ${gamiLevel >= 3 || globalSweep ? gamiAnimationClass : ''}`}>
+                      
+                      {/* Aurora Global de Objetivo Logrado */}
+                      {globalSweep && (
+                        <div className="absolute inset-0 z-0 mix-blend-screen opacity-50 pointer-events-none" style={{
+                          background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.6), rgba(232,121,249,0.7), transparent)',
+                          backgroundSize: '200% 100%',
+                          animation: 'objective-aurora-sweep 2s ease-in-out infinite alternate'
+                        }}></div>
+                      )}
+                      
+                      {/* Overlay Gamificación Exacta */}
+                      {gamiActive && (
+                        <div className="absolute inset-0 pointer-events-none flex items-center justify-center z-50">
+                           <style>{`
+                             @keyframes shake-gentle { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-3px) rotate(-1deg); } 75% { transform: translateX(3px) rotate(1deg); } }
+                             @keyframes aurora-flow { 0% { background-position: -200% 50%; opacity: 0; } 50% { opacity: 1; } 100% { background-position: 200% 50%; opacity: 0; } }
+                             @keyframes confetti-burst { 0% { transform: translateY(10px) scale(0.5); opacity: 0; } 20% { transform: translateY(-20px) scale(1.2); opacity: 1; } 80% { opacity: 1; } 100% { transform: translateY(30px) scale(1); opacity: 0; } }
+                             @keyframes screen-flash { 0% { background: rgba(255,255,255,0); } 10% { background: rgba(255,255,255,0.3); } 100% { background: rgba(255,255,255,0); } }
+                             @keyframes text-emerge { 0% { transform: scale(0.8); opacity: 0; filter: blur(4px); } 30% { transform: scale(1.1); opacity: 1; filter: blur(0); } 100% { transform: scale(1); opacity: 1; } }
+                             
+                             /* Escalation effects */
+                             @keyframes sweep-light { 0% { transform: translateX(-150%) skewX(-15deg); opacity: 0; } 50% { opacity: 0.5; } 100% { transform: translateX(150%) skewX(-15deg); opacity: 0; } }
+                             @keyframes elegant-rise { 0% { transform: translateY(10px); opacity: 0; } 20% { opacity: 0.8; } 100% { transform: translateY(-30px); opacity: 0; } }
+                             @keyframes starburst-pop { 0% { transform: scale(0) rotate(0deg); opacity: 0; } 30% { transform: scale(1.2) rotate(45deg); opacity: 0.9; } 100% { transform: scale(1.5) rotate(90deg); opacity: 0; } }
+                           `}</style>
+
+                           {/* Flash de Pantalla Nivel 4+ */}
+                           {gamiLevel >= 4 && (
+                             <div className="fixed inset-0 pointer-events-none z-[9999]" style={{ animation: 'screen-flash 1s ease-out forwards' }}></div>
+                           )}
+
+                           {/* Orbes Ascendentes Minimalistas Nivel 3+ */}
+                           {gamiLevel >= 3 && (
+                             <div className="absolute inset-0 flex items-center justify-around overflow-hidden px-4 pointer-events-none">
+                                <div className={`w-1.5 h-1.5 rounded-full ${gamiConfettiColor} blur-[1px]`} style={{ animation: 'elegant-rise 2s ease-out forwards' }}></div>
+                                <div className={`w-1 h-1 rounded-full ${gamiConfettiColor2} shadow-[0_0_8px_currentColor]`} style={{ animation: 'elegant-rise 1.5s ease-out forwards 0.2s' }}></div>
+                                <div className={`w-2 h-2 rounded-full ${gamiConfettiColor} blur-[1.5px]`} style={{ animation: 'elegant-rise 2.2s ease-out forwards 0.1s' }}></div>
+                             </div>
+                           )}
+
+                           {/* Barrido de Luz Nivel 5+ */}
+                           {gamiLevel >= 5 && (
+                             <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                                <div className="w-[150%] h-full bg-gradient-to-r from-transparent via-white to-transparent mix-blend-overlay" style={{ animation: 'sweep-light 1.2s cubic-bezier(0.22,1,0.36,1) forwards' }}></div>
+                             </div>
+                           )}
+
+                           {/* Explosión Geométrica Elegante Nivel 7+ */}
+                           {gamiLevel >= 7 && (
+                             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                                <div className="w-16 h-16 border border-[rgba(255,255,255,0.7)] mix-blend-overlay rounded-sm" style={{ animation: 'starburst-pop 0.8s cubic-bezier(0.16,1,0.3,1) forwards' }}></div>
+                                <div className="w-20 h-20 border border-[rgba(255,255,255,0.4)] mix-blend-overlay rounded-full" style={{ animation: 'starburst-pop 1.2s cubic-bezier(0.16,1,0.3,1) forwards 0.1s' }}></div>
+                             </div>
+                           )}
+
+                           {/* Flujo Aurora (Niveles 2+) */}
+                           {gamiLevel >= 2 && (
+                             <div className="absolute inset-0 mix-blend-screen opacity-70" 
+                                  style={{ 
+                                    background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.5), rgba(160,32,240,0.6), transparent)', 
+                                    backgroundSize: '200% 100%',
+                                    animation: 'aurora-flow 2.5s ease-in-out forwards' 
+                                  }}>
+                             </div>
+                           )}
+                           
+                           {/* Texto Animado */}
+                           <div className={`font-black uppercase tracking-widest text-center leading-none z-50 px-1 text-white ${gamiDropShadow} ${
+                             gamiLevel >= 4 ? 'text-lg sm:text-2xl' : 
+                             gamiLevel === 3 ? 'text-base sm:text-xl' :
+                             gamiLevel === 2 ? 'text-sm sm:text-lg' : 'text-[10px] sm:text-sm'
+                           }`} style={{ 
+                             animation: 'text-emerge 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards',
+                             textShadow: gamiTextShadow 
+                           }}>
+                             {gamiEvent?.message}
+                           </div>
+                        </div>
+                      )}
+
+                      <div className={`relative z-10 transition-opacity duration-300 ${gamiActive ? 'opacity-0 sm:opacity-40' : 'opacity-100'}`}>
+                        {/* Layout unificado: ¡Una sola línea para Móvil y Desktop! */}
+                        <div className="flex items-end justify-between gap-2 sm:gap-4 w-full">
+                          
+                          {/* Izquierda: Nombre (Móvil) | Porcentaje, Divisa, Nombre (Desktop) */}
+                          <div className="flex items-center gap-1.5 sm:gap-2 flex-1 min-w-0 pb-[1px]">
+                            {/* 1. Porcentaje (SOLO ESCRITORIO) */}
+                            <div className="hidden sm:flex w-[32px] text-[8.5px] uppercase font-bold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.02] py-[2px] rounded tracking-wider items-center justify-center shrink-0 whitespace-nowrap">
+                              {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                            </div>
+                            
+                            {/* 2. Divisa (Unificado para Móvil y Escritorio) */}
+                            <span className={`flex text-[8.5px] uppercase font-bold px-1.5 py-[2px] rounded items-center justify-center shrink-0 ${
+                              (() => {
+                                const curr = ['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) ? 'TKN' : (platform.currency || 'USD');
+                                if (curr === 'EUR') return 'bg-emerald-100/60 dark:bg-[#2dd4bf]/15 text-emerald-700 dark:text-[#2dd4bf]';
+                                if (curr === 'GBP') return 'bg-blue-100/60 dark:bg-[#5caaf5]/15 text-blue-700 dark:text-[#5caaf5]';
+                                return 'bg-purple-100/60 dark:bg-[#c488fc]/15 text-purple-700 dark:text-[#c488fc]';
+                              })()
+                            }`}>
+                              {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
+                                ? 'TKN' 
+                                : (platform.currency || 'USD')}
+                            </span>
+
+                            {/* 3. Nombre de la Plataforma (Visible en ambos, se trunca en móvil si falta espacio) */}
+                            <span className="font-bold text-[13.5px] sm:text-[14px] text-gray-800 dark:text-gray-300 uppercase tracking-wide drop-shadow-none dark:drop-shadow-none truncate">
                               {platform.name}
                             </span>
+                            
                             {isFrozen && (
-                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300">
-                                🔒 Cerrado
+                              <span className="inline-flex items-center px-1 py-[1px] rounded text-[8px] font-medium bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300 align-middle shrink-0">
+                                🔒
                               </span>
                             )}
                           </div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400">
-                            Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
-                          </div>
-                        </div>
-                      </div>
 
-                      {/* Input de valor principal */}
-                      <div className="mb-3">
-                        <label className="block text-xs font-medium text-gray-700 dark:text-gray-300 mb-2">
-                          Valor
-                        </label>
-                        <div className="flex items-center gap-2">
-                          <input
-                            type="text"
-                            inputMode="decimal"
-                            disabled={isFrozen}
-                            value={inputValues[platform.id] ?? ''}
-                            onChange={(e) => {
-                              if (isFrozen) return;
-                              const rawValue = e.target.value;
-                              const unifiedValue = rawValue.replace(',', '.');
-                              
-                              setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
-                              const numeric = Number.parseFloat(unifiedValue);
-                              const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                              setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
-                            }}
-                            className={`flex-1 h-12 px-3 text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
-                              isFrozen
-                                ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
-                                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
-                            }`}
-                            placeholder={isFrozen ? "Locked" : "0.00"}
-                          />
-                          <span className="text-sm font-medium text-gray-600 dark:text-gray-300 bg-gray-100 dark:bg-gray-700 px-3 py-2 rounded-lg border border-gray-200 dark:border-gray-600 whitespace-nowrap">
-                            {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
-                              ? 'TKN' 
-                              : (platform.currency || 'USD')}
-                          </span>
-                        </div>
-                      </div>
+                          {/* Derecha: Input y Resultados */}
+                          <div className="flex items-end justify-end gap-3 sm:gap-[40px] shrink-0">
+                            {/* Input */}
+                            <div className="flex items-center pb-[1px] sm:pb-0 sm:translate-y-[2px]">
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                disabled={isFrozen}
+                                value={inputValues[platform.id] ?? ''}
+                                onChange={(e) => {
+                                  if (isFrozen) return;
+                                  
+                                  // Filtrar estrictamente solo números, comas y puntos
+                                  const rawValue = e.target.value.replace(/[^0-9,.]/g, '');
+                                  const unifiedValue = rawValue.replace(',', '.');
+                                  
+                                  setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                  const numeric = Number.parseFloat(unifiedValue);
+                                  const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                  setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
+                                }}
+                                onFocus={() => {
+                                  setSessionFocusSnapshot(prev => ({ 
+                                    ...prev, 
+                                    [platform.id]: platforms.find(p => p.id === platform.id)?.value || 0 
+                                  }));
+                                }}
+                                onBlur={() => {
+                                  let currentValStr = inputValues[platform.id];
+                                  if (!currentValStr) return;
+                                  
+                                  const currentVal = Number.parseFloat(currentValStr.replace(',', '.')) || 0;
+                                  triggerGamification(platform.id, currentVal);
 
-                      {/* Resultados */}
-                      <div className="grid grid-cols-2 gap-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                        <div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">USD Modelo</div>
-                          <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                            ${usdModeloFinal.toFixed(2)}
-                          </div>
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500 dark:text-gray-400 mb-1">COP Modelo</div>
-                          <div className="text-base font-semibold text-gray-900 dark:text-gray-100">
-                            ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                  if (currentVal === 0) {
+                                    setInputValues(prev => ({ ...prev, [platform.id]: '' }));
+                                  } else {
+                                    // Asegurar 2 dígitos (o 0 si es Token) visualmente al perder foco
+                                    const isToken = ['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase());
+                                    const formattedVal = currentVal.toFixed(isToken ? 0 : 2);
+                                    setInputValues(prev => ({ ...prev, [platform.id]: formattedVal }));
+                                  }
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    e.currentTarget.blur();
+                                    saveValues();
+                                  }
+                                }}
+                                className={`h-[26px] sm:h-[28px] sm:!w-[60px] bg-black/[0.03] hover:bg-black/[0.05] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 rounded-md px-1.5 text-[12px] sm:text-[13px] font-bold text-right sm:text-left touch-manipulation focus:ring-1 focus:ring-black/10 dark:focus:ring-white/20 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black/10 dark:focus:border-white/20 text-gray-900 dark:text-gray-300 shadow-inner dark:shadow-none ${isFrozen ? 'cursor-not-allowed text-opacity-50 blur-[0.5px]' : ''}`}
+                                style={{ width: `${mobileInputW}px` }}
+                                placeholder="0,00"
+                              />
+                            </div>
+
+                            {/* Resultados */}
+                            <div 
+                              className="flex items-end cursor-pointer sm:cursor-default"
+                              onClick={() => {
+                                if (window.innerWidth < 640) {
+                                  setMobileCarouselSide(prev => prev === 'cop' ? 'usd' : 'cop');
+                                }
+                              }}
+                            >
+                              {/* --- VISTA DESKTOP --- */}
+                              <div className="hidden sm:flex items-end">
+                                {/* USD Mod */}
+                                <div className="flex flex-col items-start w-[100px] flex-shrink-0 pr-3 border-r border-gray-200 dark:border-white/10">
+                                  <span className="whitespace-nowrap text-[9.5px] uppercase font-bold text-emerald-600 dark:text-[#2dd4bf] opacity-80 tracking-widest mb-[2px]">USD MOD</span>
+                                  <div className="flex items-center justify-start gap-[3px] text-[13px] tracking-tight text-emerald-600 dark:text-[#2dd4bf] font-semibold tabular-nums">
+                                    <span className="font-normal">$</span>
+                                    <span>{usdModeloFinal.toFixed(2)}</span>
+                                  </div>
+                                </div>
+                                {/* COP Mod */}
+                                <div className="flex flex-col items-start w-[100px] flex-shrink-0 pl-3">
+                                  <span className="block whitespace-nowrap text-[9.5px] uppercase font-bold text-purple-600 dark:text-[#c488fc] opacity-80 tracking-widest mb-[2px]">GANANCIAS</span>
+                                  <div className="flex items-center justify-start gap-[3px] text-[13px] tracking-tight text-purple-700 dark:text-[#c488fc] font-semibold tabular-nums">
+                                    <span className="font-normal">$</span>
+                                    <span>{copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* --- VISTA MÓVIL (CARRUSEL) --- */}
+                              <div className="sm:hidden relative overflow-hidden min-w-[74px] w-[74px] h-[34px] flex-shrink-0 translate-y-[2px]">
+                                <div className={`absolute top-0 left-0 w-full flex flex-col transition-transform duration-500 ease-[cubic-bezier(0.34,1.56,0.64,1)] ${mobileCarouselSide === 'usd' ? '-translate-y-1/2' : 'translate-y-0'}`}>
+                                  {/* Slide 1: COP Mod */}
+                                  <div className="h-[34px] flex flex-col items-start justify-end pb-0.5">
+                                    <span className="block whitespace-nowrap text-[8px] uppercase font-bold text-purple-600 dark:text-[#c488fc] opacity-80 tracking-widest mb-[1px]">GANANCIAS</span>
+                                    <div className="flex items-center justify-start gap-[3px] text-[12.5px] tracking-tight text-purple-700 dark:text-[#c488fc] font-semibold tabular-nums">
+                                      <span className="font-normal">$</span>
+                                      <span>{copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</span>
+                                    </div>
+                                  </div>
+                                  {/* Slide 2: USD Mod */}
+                                  <div className="h-[34px] flex flex-col items-start justify-end pb-0.5">
+                                    <span className="block whitespace-nowrap text-[8px] uppercase font-bold text-emerald-600 dark:text-[#2dd4bf] opacity-80 tracking-widest mb-[1px]">USD MOD</span>
+                                    <div className="flex items-center justify-start gap-[3px] text-[12.5px] tracking-tight text-emerald-600 dark:text-[#2dd4bf] font-semibold tabular-nums">
+                                      <span className="font-normal">$</span>
+                                      <span>{usdModeloFinal.toFixed(2)}</span>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
                           </div>
                         </div>
                       </div>
@@ -1257,18 +1636,18 @@ export default function ModelCalculatorPage() {
                 })}
               </div>
 
-              {/* Vista de Tabla para Escritorio */}
-              <div className="hidden md:block overflow-x-auto">
-              <table className="w-full">
+              {/* Vista de Tabla para Escritorio (Oculta temporalmente para prueba) */}
+              <div className="hidden overflow-x-auto">
+              <table className="w-full border-separate border-spacing-0">
                 <thead>
-                  <tr className="border-b border-gray-200/50 dark:border-gray-600/50 bg-gray-50/50 dark:bg-gray-600/50 backdrop-blur-sm">
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">PLATAFORMAS</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">VALORES</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">DÓLARES</th>
-                    <th className="text-left py-3 px-3 font-medium text-gray-700 dark:text-white text-xs uppercase tracking-wide">COP MODELO</th>
+                  <tr className="bg-gray-50/50 dark:bg-white/[0.03] shadow-sm backdrop-blur-md">
+                    <th className="text-left py-2 px-3 font-semibold text-gray-800 dark:text-gray-300 text-[11px] uppercase tracking-wider rounded-l-full border-y border-l border-gray-200/50 dark:border-white/10">PLATAFORMAS</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-800 dark:text-gray-300 text-[11px] uppercase tracking-wider border-y border-gray-200/50 dark:border-white/10">VALORES</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-800 dark:text-gray-300 text-[11px] uppercase tracking-wider border-y border-gray-200/50 dark:border-white/10">DÓLARES</th>
+                    <th className="text-left py-2 px-3 font-semibold text-gray-800 dark:text-gray-300 text-[11px] uppercase tracking-wider rounded-r-full border-y border-r border-gray-200/50 dark:border-white/10">MIS GANANCIAS</th>
                   </tr>
                 </thead>
-                <tbody>
+                <tbody className="before:content-[''] before:block before:h-2">
                   {platforms.filter(p => p.enabled).map(platform => {
                     // Calcular dólares y COP para esta plataforma usando fórmulas específicas
                     const usdBruto = platform.value;
@@ -1331,64 +1710,72 @@ export default function ModelCalculatorPage() {
                     const copModelo = usdModeloFinal * (rates?.usd_cop || 3900); // Usar tasa real
                     
                     return (
-                      <tr key={platform.id} className={`border-b border-gray-100 dark:border-gray-600 ${isFrozen ? 'bg-gray-50/50 dark:bg-gray-800/50' : ''}`}>
-                        <td className="py-3 px-3">
-                          <div className="flex flex-col items-start gap-1">
-                            <div className="flex items-center gap-2 w-full">
-                              <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
-                                {platform.name}
+                      <tr key={platform.id} className={`hover:bg-gray-50/10 dark:hover:bg-white/[0.01] transition-colors ${isFrozen ? 'bg-gray-50/50 dark:bg-black/20' : 'bg-transparent'}`}>
+                        <td className="py-2 px-3 border-b border-gray-200/20 dark:border-white/[0.04]">
+                          <div className="flex items-center gap-1.5 w-full">
+                            <span className="text-[9px] font-semibold text-gray-500 dark:text-gray-400 bg-gray-100 dark:bg-white/[0.05] border border-gray-200 dark:border-white/5 px-1.5 py-[2px] rounded whitespace-nowrap">
+                              {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
+                            </span>
+                            <span className="font-medium text-[13px] tracking-wide uppercase text-gray-900 dark:text-gray-300">
+                              {platform.name}
+                            </span>
+                            {isFrozen && (
+                              <span className="inline-flex items-center px-1.5 py-[2px] rounded text-[9px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap ml-1">
+                                🔒 Cerrado
                               </span>
-                              {isFrozen && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-300 whitespace-nowrap">
-                                  🔒 Cerrado
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-xs text-gray-500 dark:text-gray-400">
-                              Reparto: {platform.id === 'superfoon' ? '100%' : `${platform.percentage}%`}
-                            </div>
+                            )}
                           </div>
                         </td>
-                        <td className="py-3 px-3">
+                        <td className="py-2 px-3 border-b border-gray-200/20 dark:border-white/[0.04]">
                           <div className="flex items-center space-x-2">
-                            <input
-                              type="text"
-                              inputMode="decimal"
-                              disabled={isFrozen}
-                              value={inputValues[platform.id] ?? ''}
-                              onChange={(e) => {
-                                if (isFrozen) return;
-                                const rawValue = e.target.value;
-                                const unifiedValue = rawValue.replace(',', '.');
-                                
-                                setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
-                                const numeric = Number.parseFloat(unifiedValue);
-                                const numericValue = Number.isFinite(numeric) ? numeric : 0;
-                                setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
-                              }}
-                              className={`w-20 sm:w-24 h-9 sm:h-10 px-2 sm:px-3 py-1.5 sm:py-2 text-sm sm:text-base border-2 rounded-lg transition-all duration-200 touch-manipulation ${
-                                isFrozen
-                                  ? 'bg-gray-100 dark:bg-gray-700 cursor-not-allowed border-gray-200 dark:border-gray-600 text-gray-500'
-                                  : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-600 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50'
-                              }`}
-                              placeholder={isFrozen ? "Locked" : "0.00"}
-                              title={isFrozen ? "Cerrado por horario europeo" : "Ingresa el valor generado en este periodo"}
-                            />
-                            <span className="text-gray-600 dark:text-gray-300 text-xs sm:text-sm font-medium bg-gray-100 dark:bg-gray-700 px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg border border-gray-200 dark:border-gray-600 whitespace-nowrap">
+                            <span className="px-1.5 py-[2px] min-w-[28px] text-center rounded bg-gray-200/50 dark:bg-white/[0.05] border border-gray-300/50 dark:border-white/5 text-gray-600 dark:text-gray-400 text-[9px] font-semibold tracking-wide uppercase shrink-0">
                               {['chaturbate', 'myfreecams', 'stripchat', 'dxlive'].includes(platform.id.toLowerCase()) 
                                 ? 'TKN' 
                                 : (platform.currency || 'USD')}
                             </span>
+                            <div className="flex flex-col relative w-20">
+                              <input
+                                type="text"
+                                inputMode="decimal"
+                                disabled={isFrozen}
+                                value={inputValues[platform.id] ?? ''}
+                                onChange={(e) => {
+                                  if (isFrozen) return;
+                                  const rawValue = e.target.value;
+                                  const unifiedValue = rawValue.replace(',', '.');
+                                  
+                                  setInputValues(prev => ({ ...prev, [platform.id]: unifiedValue }));
+                                  const numeric = Number.parseFloat(unifiedValue);
+                                  const numericValue = Number.isFinite(numeric) ? numeric : 0;
+                                  setPlatforms(prev => prev.map(p => p.id === platform.id ? { ...p, value: numericValue } : p));
+                                }}
+                                className={`w-full bg-black/[0.03] hover:bg-black/[0.05] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 rounded px-2 py-0.5 text-[13px] font-medium touch-manipulation focus:ring-1 focus:ring-black/10 dark:focus:ring-white/20 focus:outline-none focus:bg-white dark:focus:bg-white/[0.06] focus:border-black/10 dark:focus:border-white/20 transition-all shadow-inner ${
+                                  isFrozen ? 'cursor-not-allowed text-gray-500' : 'text-gray-900 dark:text-gray-300'
+                                }`}
+                                placeholder={isFrozen ? "Locked" : "0,00"}
+                                title={isFrozen ? "Cerrado por horario europeo" : "Ingresa el valor generado"}
+                              />
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3">
-                          <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                            ${usdModelo.toFixed(2)} USD
+                        <td className="py-2 px-3 border-b border-gray-200/20 dark:border-white/[0.04]">
+                          <div className="flex items-center space-x-2">
+                            <span className="px-1.5 py-[2px] rounded flex items-center justify-center bg-transparent border border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 text-[9px] font-semibold tracking-wide uppercase shrink-0">
+                              USD
+                            </span>
+                            <div className="text-gray-700 dark:text-gray-400 font-medium text-[13px]">
+                              ${usdModelo.toFixed(2)}
+                            </div>
                           </div>
                         </td>
-                        <td className="py-3 px-3">
-                          <div className="text-gray-600 dark:text-gray-300 font-medium text-sm">
-                            ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
+                        <td className="py-2 px-3 border-b border-gray-200/20 dark:border-white/[0.04]">
+                          <div className="flex items-center space-x-2">
+                            <span className="px-1.5 py-[2px] rounded flex items-center justify-center bg-transparent border border-gray-300 dark:border-white/10 text-gray-500 dark:text-gray-400 text-[9px] font-semibold tracking-wide uppercase shrink-0">
+                              COP
+                            </span>
+                            <div className="text-gray-700 dark:text-gray-400 font-medium text-[13px]">
+                              ${copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                            </div>
                           </div>
                         </td>
                       </tr>
@@ -1400,32 +1787,50 @@ export default function ModelCalculatorPage() {
             </>
           )}
         </GlassCard>
+        </div>
 
-        {/* Totales y Alertas - ESTILO APPLE REFINADO */}
-        <GlassCard padding="md">
-          <div className="flex items-center justify-between mb-2.5 sm:mb-4">
-            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <div className="w-2 h-2 bg-green-500 rounded-full mr-2"></div>
+        {/* Zona Táctil de Guardado (Mobile-First Thumb Action) */}
+        <div className="w-full sm:w-auto flex justify-center sm:justify-end mb-3 sm:mb-4 mt-2 sm:mt-1 px-1 sm:px-0">
+          <button
+            onClick={saveValues}
+            disabled={saving || platforms.filter(p => p.enabled).length === 0}
+            className={`w-full sm:w-auto relative overflow-hidden min-h-[44px] sm:min-h-0 px-6 py-2.5 sm:px-6 sm:py-2 text-[13px] sm:text-[11px] font-extrabold rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center group ${
+              !saving && platforms.filter(p => p.enabled).length > 0
+                ? 'bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none backdrop-blur-md shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)]'
+                : 'bg-gray-300 dark:bg-black/40 text-gray-500 dark:text-gray-500 cursor-not-allowed border-none'
+            }`}
+          >
+            {!saving && platforms.filter(p => p.enabled).length > 0 && (
+              <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
+                background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
+                backgroundSize: '200% 100%',
+                animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
+              }}></div>
+            )}
+            <span className="relative z-10 flex items-center tracking-widest uppercase">
+              {saving ? 'GUARDANDO...' : (
+                <>
+                  GUARDAR
+                </>
+              )}
+            </span>
+          </button>
+        </div>
+
+        {/* Totales y Alertas - REGLA CARDS AESTHETIC */}
+        <div className="flex flex-col gap-1.5 sm:gap-2 h-full mb-1 sm:mb-2">
+          <div className="flex items-center justify-start px-1">
+            <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 flex items-center mb-1 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+              <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse translate-y-[1.5px]"></div>
               Totales y Alertas
             </h3>
-            <button
-              onClick={saveValues}
-              disabled={saving || platforms.filter(p => p.enabled).length === 0}
-              className={`px-3 sm:px-5 py-2 sm:py-3 text-xs sm:text-base font-medium rounded-lg transition-all duration-200 transform active:scale-95 whitespace-nowrap touch-manipulation ${
-                !saving && platforms.filter(p => p.enabled).length > 0
-                  ? 'bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md hover:shadow-lg active:shadow-md'
-                  : 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {saving ? 'Guardando...' : 'Guardar'}
-            </button>
           </div>
-          
-          {/* Totales principales - Móvil: 2 columnas, Escritorio: 3 columnas */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4 mb-2.5 sm:mb-4">
+
+          <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden">
+            <div className="relative z-10 grid grid-cols-3 gap-2 sm:gap-3">
             <InfoCard
               value={`$${Math.max(0, todayEarnings - earningsOffset).toFixed(2)}`}
-              label="Ganancias Hoy ↺"
+              label="Hoy ↺"
               color="blue"
               size="sm"
               onClick={handleResetTodayEarnings}
@@ -1472,7 +1877,7 @@ export default function ModelCalculatorPage() {
                 }
                   return sum + (usdModelo * p.percentage / 100);
               }, 0).toFixed(2)}`}
-              label="USD Modelo"
+              label="USD"
               color="green"
               size="sm"
             />
@@ -1520,264 +1925,122 @@ export default function ModelCalculatorPage() {
                 }
                 return sum + (usdModelo * p.percentage / 100);
               }, 0)) * (rates?.usd_cop || 3900)).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-              label="COP Modelo"
+              label="Mis Ganancias"
               color="purple"
               size="sm"
-              className="col-span-2 md:col-span-1"
+              className=""
             />
           </div>
+        </div>
+        </div>
 
-          {/* Indicador: neto = COP Modelo (en vivo) menos descuentos; así coincide con la card cuando no hay descuentos */}
-          {netoDisponible != null && (
-            <div className="mb-4 sm:mb-6 p-3 sm:p-4 rounded-xl border bg-amber-50 dark:bg-amber-900/20 border-amber-200 dark:border-amber-800">
-              <p className="text-xs sm:text-sm text-amber-800 dark:text-amber-200 font-medium">
-                💳 Tu neto disponible este período: <span className="font-bold text-amber-900 dark:text-amber-100">${Math.max(0, liveCopModelo - ((netoDisponible.anticipos ?? 0) + (netoDisponible.cuotas_pendientes ?? 0) + (netoDisponible.compras_contado ?? 0) + (netoDisponible.cuotas_primera_aprobacion ?? 0))).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP</span>
-              </p>
-              {netoDisponible.descuentos_detalle && netoDisponible.descuentos_detalle.length > 0 && (
-                <p className="text-xs text-amber-700 dark:text-amber-300 mt-1">
-                  {netoDisponible.descuentos_detalle.map(d => d.concepto).join(' · ')}
-                </p>
-              )}
-            </div>
-          )}
-          
-          {/* 90% de anticipo - estilo sutil */}
-          <div className="mb-4 sm:mb-6 p-3 sm:p-4 bg-gray-50 dark:bg-gray-600/80 rounded-xl border border-gray-200 dark:border-gray-500/50">
-            <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300">
-              <strong>90% de anticipo disponible:</strong> ${(platforms.reduce((sum, p) => {
-                // Calcular USD modelo usando fórmulas específicas + porcentaje
-                let usdModelo = 0;
-                if (p.currency === 'EUR') {
-                  if (p.id === 'big7') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                  } else if (p.id === 'mondo') {
-                    usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
-                  } else if (p.id === 'superfoon') {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01); // EUR a USD directo
-                  } else {
-                    usdModelo = p.value * (rates?.eur_usd || 1.01);
-                  }
-                } else if (p.currency === 'GBP') {
-                  if (p.id === 'aw') {
-                    usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                  } else {
-                    usdModelo = p.value * (rates?.gbp_usd || 1.20);
-                  }
-                } else if (p.currency === 'USD') {
-                  if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                    usdModelo = p.value * 0.75;
-                  } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                    usdModelo = p.value * 0.05;
-                  } else if (p.id === 'dxlive') {
-                    usdModelo = p.value * 0.60;
-                  } else if (p.id === 'secretfriends') {
-                    usdModelo = p.value * 0.5;
-                  } else {
-                    usdModelo = p.value;
-                  }
-                }
-                
-                // SUPERFOON: Aplicar 100% para la modelo (especial)
-                if (p.id === 'superfoon') {
-                  return sum + usdModelo; // 100% directo, sin porcentaje
-                }
-                
-                return sum + (usdModelo * p.percentage / 100);
-              }, 0) * (rates?.usd_cop || 3900) * 0.9).toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })} COP
-            </div>
-          </div>
-          
-          {/* Alerta de cuota mínima - barra refinada */}
+          {/* Reactor Boreal (Objetivos y Métricas Dinámicas) */}
           {(() => {
             const totalUsdBruto = platforms.reduce((sum, p) => {
-              // Calcular USD bruto usando fórmulas específicas (sin porcentaje de reparto)
               let usdBruto = 0;
               if (p.currency === 'EUR') {
-                if (p.id === 'big7') {
-                  usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
-                } else if (p.id === 'mondo') {
-                  usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
-                } else {
-                  usdBruto = p.value * (rates?.eur_usd || 1.01);
-                }
+                if (p.id === 'big7') usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                else if (p.id === 'mondo') usdBruto = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                else usdBruto = p.value * (rates?.eur_usd || 1.01);
               } else if (p.currency === 'GBP') {
-                if (p.id === 'aw') {
-                  usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
-                } else {
-                  usdBruto = p.value * (rates?.gbp_usd || 1.20);
-                }
+                if (p.id === 'aw') usdBruto = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                else usdBruto = p.value * (rates?.gbp_usd || 1.20);
               } else if (p.currency === 'USD') {
-                if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') {
-                  usdBruto = p.value * 0.75;
-                } else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') {
-                  usdBruto = p.value * 0.05;
-                } else if (p.id === 'dxlive') {
-                  usdBruto = p.value * 0.60;
-                } else if (p.id === 'secretfriends') {
-                  usdBruto = p.value * 0.5;
-                } else if (p.id === 'superfoon') {
-                  usdBruto = p.value;
-                } else if (p.id === 'mdh' || p.id === 'livejasmin' || p.id === 'imlive' || p.id === 'hegre' || p.id === 'dirtyfans' || p.id === 'camcontacts') {
-                  usdBruto = p.value;
-                } else {
-                  usdBruto = p.value;
-                }
+                if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') usdBruto = p.value * 0.75;
+                else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') usdBruto = p.value * 0.05;
+                else if (p.id === 'dxlive') usdBruto = p.value * 0.60;
+                else if (p.id === 'secretfriends') usdBruto = p.value * 0.5;
+                else usdBruto = p.value;
               }
               return sum + usdBruto;
             }, 0);
-            const cuotaMinima = platforms[0]?.minQuota || 470;
-            const porcentajeAlcanzado = (totalUsdBruto / cuotaMinima) * 100;
-            const estaPorDebajo = totalUsdBruto < cuotaMinima;
-            // Color dinámico de progreso: 0% rojo (h=0) → 100% verde (h=120)
-            const progressPct = Math.max(0, Math.min(100, porcentajeAlcanzado));
-            // Paleta: Rojo -> Púrpura -> Esmeralda (sin amarillos)
-            const RED = { r: 229, g: 57, b: 53 };     // #E53935
-            const PURPLE = { r: 142, g: 36, b: 170 }; // #8E24AA
-            const EMERALD = { r: 46, g: 125, b: 50 };  // #2E7D32
-
-            const mix = (a: any, b: any, t: number) => ({
-              r: Math.round(a.r + (b.r - a.r) * t),
-              g: Math.round(a.g + (b.g - a.g) * t),
-              b: Math.round(a.b + (b.b - a.b) * t)
-            });
-            const rgbToHex = (c: any) => `#${[c.r, c.g, c.b].map(x => x.toString(16).padStart(2, '0')).join('')}`;
-            const tint = (c: any, t: number) => mix(c, { r: 255, g: 255, b: 255 }, t);
-            const shade = (c: any, t: number) => mix(c, { r: 0, g: 0, b: 0 }, t);
-
-            const t = progressPct / 100;
-            // 0–60% rojo→púrpura, 60–100% púrpura→esmeralda
-            const base = t <= 0.6
-              ? mix(RED, PURPLE, t / 0.6)
-              : mix(PURPLE, EMERALD, (t - 0.6) / 0.4);
-
-            const progressStart = rgbToHex(shade(base, 0.05));
-            const progressEnd = rgbToHex(shade(base, 0.15));
-            // Estilos dinámicos para fondo del contenedor e icono
-            const cardBgStart = rgbToHex(tint(base, 0.92));
-            const cardBgEnd = rgbToHex(tint(base, 0.88));
-            const cardBorder = rgbToHex(tint(base, 0.7));
-            const iconStart = rgbToHex(shade(base, 0.0));
-            const iconEnd = rgbToHex(shade(base, 0.2));
-            const headingColor = rgbToHex(shade(base, 0.55));
-            const subTextColor = rgbToHex(shade(base, 0.45));
             
-            const milestone = progressPct >= 100 ? 100 : progressPct >= 75 ? 75 : progressPct >= 50 ? 50 : progressPct >= 25 ? 25 : 0;
-            console.log('[OBJETIVO:TA] render card', { porcentajeAlcanzado: Math.ceil(porcentajeAlcanzado) });
-            return (
-              <div
-                className={`relative overflow-hidden rounded-2xl border transition-all duration-300 in-view`}
-                style={{
-                  background: `linear-gradient(90deg, ${cardBgStart}, ${cardBgEnd})`,
-                  borderColor: cardBorder
-                }}
-                id="objective-basic-card"
-                data-milestone={milestone}
-              >
-                {/* Efecto de brillo animado */}
-                <div
-                  className="absolute inset-0 opacity-10 animate-pulse"
-                  style={{ background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})` }}
-                ></div>
+            const cuotaMinima = platforms[0]?.minQuota || 470;
+            
+            const anticipoMaxCalculado = platforms.reduce((sum, p) => {
+              let usdModelo = 0;
+              if (p.currency === 'EUR') {
+                if (p.id === 'big7') usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.84;
+                else if (p.id === 'mondo') usdModelo = (p.value * (rates?.eur_usd || 1.01)) * 0.78;
+                else usdModelo = p.value * (rates?.eur_usd || 1.01);
+              } else if (p.currency === 'GBP') {
+                if (p.id === 'aw') usdModelo = (p.value * (rates?.gbp_usd || 1.20)) * 0.677;
+                else usdModelo = p.value * (rates?.gbp_usd || 1.20);
+              } else if (p.currency === 'USD') {
+                if (p.id === 'cmd' || p.id === 'camlust' || p.id === 'skypvt') usdModelo = p.value * 0.75;
+                else if (p.id === 'chaturbate' || p.id === 'myfreecams' || p.id === 'stripchat') usdModelo = p.value * 0.05;
+                else if (p.id === 'dxlive') usdModelo = p.value * 0.60;
+                else if (p.id === 'secretfriends') usdModelo = p.value * 0.5;
+                else usdModelo = p.value;
+              }
+              if (String(p.id || '').toLowerCase() === 'superfoon') return sum + usdModelo;
+              return sum + (usdModelo * p.percentage / 100);
+            }, 0) * (rates?.usd_cop || 3900) * 0.9;
 
-                {/* Animaciones de hito (nuevo set, más contundente) */}
-                <div className="milestones-overlay pointer-events-none absolute inset-0 overflow-hidden">
-                  {/* 25% */}
-                  <div className="arrow-25" />
-                  <div className="mini-check-25" />
-                  <div className="bonus-count-25" />
-                  <div className="streak-25" />
-                  <div className="banner-25" />
-                  {/* 50% */}
-                  <div className="arrows-50" />
-                  <div className="underline-50" />
-                  <div className="split-50" />
-                  {/* 75% */}
-                  <div className="aura-75" />
-                  <div className="badge-75" />
-                  <div className="surge-75" />
-                  <div className="toast-75" />
-                  {/* 100% */}
-                  <div className="crown-100" />
-                  <div className="filllock-100" />
-                  <div className="confetti-100" />
-                  <div className="stamp-100" />
-                  <div className="cta-100" />
-                </div>
-                
-                <div className="relative p-2.5 sm:p-4">
-                  <div className="flex items-center space-x-2 sm:space-x-3">
-                    {/* Icono animado */}
-                    <div className={`relative flex-shrink-0 milestone-icon ${estaPorDebajo ? 'animate-bounce' : 'animate-pulse'}`}>
-                      <div
-                        className={`w-5 h-5 sm:w-8 sm:h-8 rounded-full flex items-center justify-center shadow-md`}
-                        style={{
-                          background: `linear-gradient(90deg, ${iconStart}, ${iconEnd})`,
-                          boxShadow: `0 4px 10px ${iconStart}33`
-                        }}
-                      >
-                        <span className="text-white text-[10px] sm:text-sm">✓</span>
-                      </div>
-                    </div>
-                    
-                    {/* Contenido compacto */}
-                    <div className="flex-1">
-                      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-0.5 sm:gap-0">
-                        <div className={`font-bold text-[11px] sm:text-sm milestone-title`} style={{ color: headingColor }}>
-                          {estaPorDebajo ? 'Objetivo Básico en Progreso' : 'Objetivo Básico Alcanzado'}
-                        </div>
-                        {(() => {
-                          const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                          const remainingPct = Math.max(0, 100 - roundedProgress);
-                          const colDate = getColombiaDate();
-                          const [y, m, d] = colDate.split('-').map(Number);
-                          const lastDay = new Date(y, m, 0).getDate();
-                          const nextClosure = d <= 15 ? 15 : lastDay;
-                          const daysLeft = Math.max(0, nextClosure - d);
-                          const remaining = periodGoal ? Math.max(0, periodGoal.goalUsd - periodGoal.periodBilledUsd) : 0;
-                          const dailyAvg = daysLeft > 0 ? remaining / daysLeft : 0;
-                          const showPromedio = estaPorDebajo && dailyAvg > 0 && (objectiveBarFlip % 2 === 1);
-                          return (
-                            <div
-                              className={`text-[9px] sm:text-xs leading-tight transition-all duration-300 ${
-                                showPromedio
-                                  ? 'font-semibold pl-1.5 border-l-2 border-emerald-600'
-                                  : 'font-medium'
-                              }`}
-                              style={showPromedio ? { color: '#0d0d0d' } : { color: subTextColor }}
-                            >
-                              {estaPorDebajo
-                                ? showPromedio
-                                  ? `Para alcanzar tu objetivo necesitas facturar $${Math.round(dailyAvg).toLocaleString('es-CO')} en promedio`
-                                  : `Faltan $${Math.ceil(cuotaMinima - totalUsdBruto)} USD (${remainingPct}% restante)`
-                                : `Excelente +${Math.max(0, roundedProgress - 100)}%`}
-                            </div>
-                          );
-                        })()}
-                      </div>
-                      
-                      {/* Mensaje de progreso por hito */}
-                      {(() => {
-                        const roundedProgress = Math.max(0, Math.min(100, Math.round(porcentajeAlcanzado)));
-                        return <ProgressMilestone progress={roundedProgress} />;
-                      })()}
-                      {/* Barra de progreso compacta */}
-                      <div className="mt-1.5 sm:mt-2">
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
-                          <div 
-                            className={`h-full transition-all duration-1000 ease-out progress-inner`}
-                            style={{ 
-                              width: `${Math.min(porcentajeAlcanzado, 100)}%`,
-                              background: `linear-gradient(90deg, ${progressStart}, ${progressEnd})`
-                            }}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
+            const netoCalculado = Math.max(0, liveCopModelo - ((netoDisponible?.anticipos ?? 0) + (netoDisponible?.cuotas_pendientes ?? 0) + (netoDisponible?.compras_contado ?? 0) + (netoDisponible?.cuotas_primera_aprobacion ?? 0)));
+
+            const colDate = getColombiaDate();
+            const [y, m, d] = colDate.split('-').map(Number);
+            const lastDay = new Date(y, m, 0).getDate();
+            const nextClosure = d <= 15 ? 15 : lastDay;
+            const daysLeft = Math.max(0, nextClosure - d);
+            const remaining = periodGoal ? Math.max(0, periodGoal.goalUsd - periodGoal.periodBilledUsd) : 0;
+            const dailyAvg = daysLeft > 0 ? remaining / daysLeft : 0;
+
+            return (
+              <div className={`mt-1 sm:mt-1.5 mb-8 relative transition-all duration-700 ease-out z-10 ${
+                objectiveGamiState?.level === 2 
+                  ? 'scale-[1.03] shadow-[0_0_50px_rgba(232,121,249,0.6)] rounded-2xl' 
+                  : objectiveGamiState?.level === 1 
+                  ? 'scale-[1.01] shadow-[0_0_20px_rgba(34,211,238,0.4)] rounded-2xl' 
+                  : ''
+              }`}>
+                {objectiveGamiState && (
+                  <style>{`
+                    @keyframes objective-aurora-sweep {
+                      0% { background-position: -200% 50%; opacity: 0; }
+                      20% { opacity: 1; }
+                      80% { opacity: 1; }
+                      100% { background-position: 200% 50%; opacity: 0; }
+                    }
+                    @keyframes screen-flash-obj {
+                      0% { background: rgba(255,255,255,0); }
+                      10% { background: rgba(255,255,255,0.4); }
+                      100% { background: rgba(255,255,255,0); }
+                    }
+                  `}</style>
+                )}
+                {/* Impacto Meta Cruzada (Aurora Extrema) */}
+                {objectiveGamiState?.level === 2 && (
+                  <div className="absolute inset-0 pointer-events-none z-50 rounded-2xl overflow-hidden mix-blend-screen" style={{ animation: 'screen-flash-obj 2s ease-out forwards' }}>
+                    <div className="absolute inset-0 w-full h-full opacity-90" style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.8), rgba(232,121,249,0.9), transparent)',
+                      backgroundSize: '200% 100%',
+                      animation: 'objective-aurora-sweep 2s ease-in-out forwards'
+                    }}></div>
                   </div>
-                </div>
+                )}
+                {/* Impacto Progreso (Aurora Neón) */}
+                {objectiveGamiState?.level === 1 && (
+                  <div className="absolute inset-0 pointer-events-none z-50 rounded-2xl overflow-hidden mix-blend-screen opacity-90">
+                    <div className="absolute inset-0 w-full h-full" style={{
+                      background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.7), rgba(160,32,240,0.7), transparent)',
+                      backgroundSize: '200% 100%',
+                      animation: 'objective-aurora-sweep 1.5s ease-in-out forwards'
+                    }}></div>
+                  </div>
+                )}
+                <ObjectiveBorealCard 
+                  totalUsdBruto={totalUsdBruto} 
+                  cuotaMinima={cuotaMinima}
+                  periodGoal={periodGoal || null}
+                  netoDisponibleCop={netoCalculado}
+                  anticipoMaxCop={anticipoMaxCalculado}
+                />
               </div>
             );
           })()}
+
         {/* Estilos de animación para hitos del objetivo */}
         <style jsx>{`
         .milestones-overlay { z-index: 10; pointer-events: none; }
@@ -2021,7 +2284,6 @@ export default function ModelCalculatorPage() {
           100% { transform: translateY(8px); opacity: 0; } 
         }
         `}</style>
-        </GlassCard>
       </div>
     </div>
   );

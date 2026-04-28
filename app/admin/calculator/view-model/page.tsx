@@ -834,27 +834,29 @@ export default function AdminViewModelPage() {
                   <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-blue-500 rounded-full mr-1.5 sm:mr-2"></div>
                   Tasas Actualizadas
                 </h2>
-                <div className="grid grid-cols-3 gap-2 sm:gap-3">
-                  <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    <div className="text-base sm:text-xl font-bold text-blue-700 mb-0.5 sm:mb-1">
-                      ${selectedModel.calculatorData.rates?.usd_cop || 3900}
+                <div className="max-sm:bg-black/[0.04] max-sm:dark:bg-white/[0.04] max-sm:backdrop-blur-xl max-sm:ring-1 max-sm:ring-black/[0.05] max-sm:dark:ring-white/[0.1] max-sm:rounded-[1.25rem] max-sm:p-2.5 max-sm:shadow-sm mb-3 sm:mb-4">
+                  <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                    <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-blue-50 to-blue-100 rounded-lg sm:rounded-xl border border-blue-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                      <div className="text-base sm:text-xl font-bold text-blue-700 mb-0.5 sm:mb-1">
+                        ${selectedModel.calculatorData.rates?.usd_cop || 3900}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD→COP</div>
                     </div>
-                    <div className="text-[10px] sm:text-xs font-medium text-blue-600 bg-blue-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">USD→COP</div>
-                  </div>
-                  <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    <div className="text-base sm:text-xl font-bold text-green-700 mb-0.5 sm:mb-1">
-                      {selectedModel.calculatorData.rates?.eur_usd || 1.01}
+                    <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-green-50 to-green-100 rounded-lg sm:rounded-xl border border-green-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                      <div className="text-base sm:text-xl font-bold text-green-700 mb-0.5 sm:mb-1">
+                        {selectedModel.calculatorData.rates?.eur_usd || 1.01}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">EUR→USD</div>
                     </div>
-                    <div className="text-[10px] sm:text-xs font-medium text-green-600 bg-green-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">EUR→USD</div>
-                  </div>
-                  <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
-                    <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
-                      {selectedModel.calculatorData.rates?.gbp_usd || 1.20}
+                    <div className="text-center p-2 sm:p-4 bg-gradient-to-br from-purple-50 to-purple-100 rounded-lg sm:rounded-xl border border-purple-200 hover:shadow-lg transition-all duration-200 transform hover:scale-105">
+                      <div className="text-base sm:text-xl font-bold text-purple-700 mb-0.5 sm:mb-1">
+                        {selectedModel.calculatorData.rates?.gbp_usd || 1.20}
+                      </div>
+                      <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">GBP→USD</div>
                     </div>
-                    <div className="text-[10px] sm:text-xs font-medium text-purple-600 bg-purple-200 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full">GBP→USD</div>
                   </div>
                 </div>
-                <p className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
+                <p className="max-sm:hidden text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3 text-center font-medium">
                   Configuradas por tu administrador
                 </p>
               </div>
@@ -949,6 +951,13 @@ export default function AdminViewModelPage() {
                                   inputMode="decimal"
                                   disabled={isFrozen}
                                   value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                      e.preventDefault();
+                                      e.currentTarget.blur();
+                                      handleSave();
+                                    }
+                                  }}
                                   onChange={(e) => {
                                     if (isFrozen) return;
                                     const raw = e.target.value;
@@ -958,10 +967,10 @@ export default function AdminViewModelPage() {
                                     const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
                                     handleValueChange(platform.id, safeNormalized);
                                   }}
-                                  className={`flex-1 px-2 py-1.5 text-sm font-medium rounded-lg border transition-all ${
+                                  className={`flex-1 px-2 py-1.5 max-sm:min-h-[44px] sm:h-9 text-base sm:text-sm font-medium rounded-lg border transition-all shadow-inner dark:shadow-none ${
                                     isFrozen
                                       ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 cursor-not-allowed'
-                                      : 'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
+                                      : 'text-gray-900 dark:text-gray-100 bg-black/[0.03] hover:bg-black/[0.05] focus:bg-white dark:bg-gray-800 border-black/[0.04] dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500'
                                   }`}
                                   placeholder={isFrozen ? "Locked" : "0.00"}
                                 />
@@ -1136,7 +1145,7 @@ export default function AdminViewModelPage() {
                                           }
                                         }}
                                         autoFocus
-                                        className="w-16 px-1.5 py-1 text-xs border border-gray-300 dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100"
+                                        className="w-16 px-1.5 py-1 text-xs border border-black/[0.04] dark:border-gray-600 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500 bg-black/[0.03] hover:bg-black/[0.05] focus:bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 shadow-inner dark:shadow-none transition-all"
                                         placeholder="0.00"
                                       />
                                       <button
@@ -1171,6 +1180,13 @@ export default function AdminViewModelPage() {
                                       inputMode="decimal"
                                       disabled={isFrozen} // 🧊 BLOQUEAR SI ESTÁ CONGELADO
                                       value={editValues[platform.id] !== undefined ? editValues[platform.id] : currentValue.toFixed(2)}
+                                      onKeyDown={(e) => {
+                                        if (e.key === 'Enter') {
+                                          e.preventDefault();
+                                          e.currentTarget.blur();
+                                          handleSave();
+                                        }
+                                      }}
                                       onChange={(e) => {
                                         if (isFrozen) return; // Doble check
                                         const raw = e.target.value;
@@ -1180,10 +1196,10 @@ export default function AdminViewModelPage() {
                                         const safeNormalized = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : normalized;
                                         handleValueChange(platform.id, safeNormalized);
                                       }}
-                                      className={`w-24 px-3 py-2 text-sm font-medium transition-all duration-200 rounded-lg ${
+                                      className={`w-24 px-3 py-2 max-sm:min-h-[44px] text-base sm:text-sm font-medium transition-all duration-200 rounded-lg shadow-inner dark:shadow-none ${
                                         isFrozen
                                           ? 'bg-gray-100 dark:bg-gray-700 border-gray-200 dark:border-gray-600 text-gray-500 cursor-not-allowed'
-                                          : 'text-gray-900 dark:text-gray-100 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 hover:border-gray-300 dark:hover:border-gray-500 focus:shadow-lg focus:shadow-blue-100'
+                                          : 'text-gray-900 dark:text-gray-100 bg-black/[0.03] hover:bg-black/[0.05] focus:bg-white dark:bg-gray-800 border border-black/[0.04] dark:border-gray-600 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:shadow-lg focus:shadow-blue-100'
                                       }`}
                                       placeholder={isFrozen ? "Locked" : "0.00"}
                                       title={isFrozen ? "Plataforma cerrada por horario europeo" : "Ingresa el valor generado"}
@@ -1343,17 +1359,20 @@ export default function AdminViewModelPage() {
               )}
             </div>
           ) : (
-            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
-                  <div className="text-center py-12">
-                <div className="text-gray-400 mb-4"></div>
-                <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
-                  Calculadora de {selectedModel.name}
-                </h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-4">
-                  Cargando datos de la calculadora...
-                </p>
-                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div>
+            <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-6 sm:p-8 animate-pulse w-full">
+              <div className="flex items-center gap-4 mb-8">
+                 <div className="w-12 h-12 bg-gray-200 dark:bg-gray-600 rounded-full"></div>
+                 <div className="flex-1">
+                   <div className="h-6 bg-gray-200 dark:bg-gray-600 rounded w-1/3 mb-2"></div>
+                   <div className="h-4 bg-gray-200 dark:bg-gray-600 rounded w-1/4"></div>
+                 </div>
               </div>
+              
+              {/* Tasas Skeleton */}
+              <div className="h-28 bg-gray-200 dark:bg-gray-600 rounded-xl w-full mb-6"></div>
+              
+              {/* Calculator Table Skeleton */}
+              <div className="h-64 bg-gray-200 dark:bg-gray-600 rounded-xl w-full"></div>
             </div>
           )}
         </div>
@@ -1364,7 +1383,7 @@ export default function AdminViewModelPage() {
   // Mostrar lista de modelos con panel de filtros
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+      <div className="max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16">
         {/* Header */}
         <div className="mb-8 sm:mb-12">
           <div className="relative">

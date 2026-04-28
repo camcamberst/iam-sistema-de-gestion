@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { getColombiaDate, getColombiaPeriodStartDate, normalizeToPeriodStartDate } from '@/utils/calculator-dates';
+import { getColombiaDate, getColombiaPeriodStartDate, normalizeToPeriodStartDate, getPeriodDetails } from '@/utils/calculator-dates';
 import { isPlatformFrozen, getFrozenPlatformsForModel } from '@/lib/calculator/period-closure-helpers';
 
 export const dynamic = 'force-dynamic';
@@ -50,18 +50,8 @@ export async function GET(request: NextRequest) {
     console.log('🔍 [MODEL-VALUES-V2] Loading values (Enhanced Auto-Repair):', { modelId, periodDate });
     
     // Calcular rango del periodo completo
-    const isP2 = parseInt(periodDate.split('-')[2]) >= 16;
     const periodStart = periodDate; // Start date is the normalized date (1 or 16)
-    const periodEndObj = new Date(periodDate);
-    if (isP2) {
-      // Fin de mes
-      periodEndObj.setMonth(periodEndObj.getMonth() + 1);
-      periodEndObj.setDate(0);
-    } else {
-      // Día 15
-      periodEndObj.setDate(15);
-    }
-    const periodEnd = periodEndObj.toISOString().split('T')[0];
+    const { endDate: periodEnd } = getPeriodDetails(periodStart);
 
     // 🔧 ESTRATEGIA ROBUSTA: Obtener TODOS los valores dentro del rango del periodo
     // Esto incluye el bucket principal (ej: día 16) Y cualquier valor "húerfano" guardado en días intermedios (ej: día 28)
@@ -224,11 +214,7 @@ export async function POST(request: NextRequest) {
 
     // Auto-sync calculator_totals para que billing-summary y billetera tengan datos frescos
     try {
-      const isP2 = parseInt(effectiveDate.split('-')[2]) >= 16;
-      const periodEndObj = new Date(effectiveDate);
-      if (isP2) { periodEndObj.setMonth(periodEndObj.getMonth() + 1); periodEndObj.setDate(0); }
-      else { periodEndObj.setDate(15); }
-      const periodEnd = periodEndObj.toISOString().split('T')[0];
+      const { endDate: periodEnd } = getPeriodDetails(effectiveDate);
 
       const { data: allVals } = await supabase
         .from('model_values')
@@ -261,7 +247,20 @@ export async function POST(request: NextRequest) {
           .from('calculator_config').select('percentage_override, group_percentage')
           .eq('model_id', modelId).eq('active', true).maybeSingle();
 
+        const { data: platformOverrides } = await supabase
+          .from('calculator_config_platforms').select('platform_id, percentage_override')
+          .eq('model_id', modelId);
+
+        const pctOverrides: Record<string, number> = {};
+        (platformOverrides || []).forEach((po: any) => {
+          if (po.percentage_override) pctOverrides[po.platform_id] = po.percentage_override;
+        });
+
+        const basePct = cfg?.percentage_override || cfg?.group_percentage || 70;
+
         let totalBruto = 0;
+        let totalModelo = 0;
+        
         latestByPlatform.forEach((mv, pid) => {
           if (!mv.value || mv.value <= 0) return;
           const cur = currMap[pid] || 'USD';
@@ -269,6 +268,7 @@ export async function POST(request: NextRequest) {
           if (cur === 'EUR') {
             if (pid === 'big7') ub = (mv.value * r.eur_usd) * 0.84;
             else if (pid === 'mondo') ub = (mv.value * r.eur_usd) * 0.78;
+            else if (['modelka', 'xmodels', '777', 'vx', 'livecreator', 'mow'].includes(pid)) ub = mv.value * r.eur_usd;
             else ub = mv.value * r.eur_usd;
           } else if (cur === 'GBP') {
             if (pid === 'aw') ub = (mv.value * r.gbp_usd) * 0.677;
@@ -278,13 +278,21 @@ export async function POST(request: NextRequest) {
             else if (['chaturbate', 'myfreecams', 'stripchat'].includes(pid)) ub = mv.value * 0.05;
             else if (pid === 'dxlive') ub = mv.value * 0.60;
             else if (pid === 'secretfriends') ub = mv.value * 0.5;
+            else if (pid === 'superfoon') ub = mv.value;
+            else if (['mdh', 'livejasmin', 'imlive', 'hegre', 'dirtyfans', 'camcontacts'].includes(pid)) ub = mv.value;
             else ub = mv.value;
           }
           totalBruto += ub;
+          
+          const platformPct = pctOverrides[pid] || basePct;
+          
+          if (pid === 'superfoon') {
+            totalModelo += ub; // 100% directo
+          } else {
+            totalModelo += ub * (platformPct / 100);
+          }
         });
 
-        const pct = cfg?.percentage_override || cfg?.group_percentage || 70;
-        const totalModelo = totalBruto * (pct / 100);
         const totalCop = totalModelo * r.usd_cop;
 
         await supabase.from('calculator_totals').upsert({

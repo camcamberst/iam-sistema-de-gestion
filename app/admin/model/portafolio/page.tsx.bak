@@ -1,0 +1,955 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from "@supabase/supabase-js";
+import { supabase } from '@/lib/supabase';
+import PortfolioAnalytics from '@/components/PortfolioAnalytics';
+import { 
+  Building2, 
+  CheckCircle, 
+  Clock, 
+  TrendingUp, 
+  DollarSign, 
+  BarChart3,
+  AlertCircle,
+  Eye,
+  EyeOff,
+  Calendar,
+  Target,
+  Activity,
+  ExternalLink,
+  Lock,
+  Copy,
+  User
+} from 'lucide-react';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
+
+interface Platform {
+  id: string;
+  platform_id: string;
+  status: string;
+  requested_at: string | null;
+  delivered_at: string | null;
+  confirmed_at: string | null;
+  deactivated_at: string | null;
+  notes: string | null;
+  is_initial_config: boolean;
+  calculator_sync: boolean;
+  calculator_activated_at: string | null;
+  created_at: string;
+  updated_at: string;
+  calculator_platforms: {
+    id: string;
+    name: string;
+    currency: string;
+    login_url: string | null;
+  };
+  stats: {
+    totalDays: number;
+    connectionPercentage: number;
+    avgUsdModelo: number;
+    totalUsdModelo: number;
+    lastActivity: string | null;
+    trend: string; // Tendencia: ↑, ↓, =
+  };
+}
+
+interface PortfolioData {
+  platforms: Platform[];
+  summary: {
+    totalPlatforms: number;
+    activePlatforms: number;
+    pendingConfirmation: number;
+    totalUsdModelo: number;
+    totalCopModelo: number;
+    avgUsdPerPlatform: number;
+  };
+  lastUpdated: string;
+}
+
+interface Credentials {
+  login_username: string | null;
+  login_password: string | null;
+  login_url: string | null;
+  hasCredentials: boolean;
+}
+
+interface Credentials3CX {
+  app_3cx_username: string | null;
+  app_3cx_password: string | null;
+  hasCredentials: boolean;
+}
+
+export default function MiPortafolio() {
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [portfolioData, setPortfolioData] = useState<PortfolioData | null>(null);
+  const [confirmingPlatform, setConfirmingPlatform] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState<'platforms' | 'analytics'>('platforms');
+  const [selectedPlatform, setSelectedPlatform] = useState<Platform | null>(null);
+  const [credentials, setCredentials] = useState<Credentials | null>(null);
+  const [loadingCredentials, setLoadingCredentials] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
+  const [platformTab, setPlatformTab] = useState<'details' | 'metrics'>('details');
+  const [credentials3CX, setCredentials3CX] = useState<Credentials3CX>({
+    app_3cx_username: '',
+    app_3cx_password: '',
+    hasCredentials: false
+  });
+  const [loading3CX, setLoading3CX] = useState(false);
+  const [showPassword3CX, setShowPassword3CX] = useState(false);
+
+  // Cargar usuario autenticado
+  useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (authUser) {
+          setUser(authUser);
+        } else {
+          setError('Usuario no autenticado');
+        }
+      } catch (err) {
+        setError('Error al cargar usuario');
+      }
+    };
+    loadUser();
+  }, []);
+
+  // Cargar datos del portafolio
+  useEffect(() => {
+    if (user?.id) {
+      loadPortfolioData();
+    }
+  }, [user?.id]);
+
+  // Cargar credenciales cuando se selecciona una plataforma
+  useEffect(() => {
+    if (selectedPlatform && user?.id) {
+      loadCredentials(selectedPlatform.platform_id);
+      setPlatformTab('details'); // Resetear a pestaña de detalles al cambiar de plataforma
+      
+      // Cargar credenciales de 3CX si es Superfoon
+      const isSuperfoon = 
+        selectedPlatform.calculator_platforms.id?.toLowerCase() === 'superfoon' ||
+        selectedPlatform.calculator_platforms.name?.toLowerCase().includes('superfoon');
+      
+      if (isSuperfoon) {
+        loadCredentials3CX(selectedPlatform.platform_id);
+      } else {
+        setCredentials3CX({
+          app_3cx_username: '',
+          app_3cx_password: '',
+          hasCredentials: false
+        });
+      }
+    } else {
+      setCredentials(null);
+      setShowPassword(false);
+      setCredentials3CX({
+        app_3cx_username: '',
+        app_3cx_password: '',
+        hasCredentials: false
+      });
+    }
+  }, [selectedPlatform, user?.id]);
+
+  // 🔧 Asegurar que la página inicie en la parte superior (0%)
+  useEffect(() => {
+    // Scroll to top cuando se carga la página
+    window.scrollTo(0, 0);
+  }, []);
+
+  const loadPortfolioData = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/modelo-portafolio?modelId=${user?.id}`);
+      const result = await response.json();
+
+      if (result.success) {
+        setPortfolioData(result.data);
+        // No seleccionar ninguna plataforma por defecto
+        setSelectedPlatform(null);
+      } else {
+        setError(result.error || 'Error al cargar el portafolio');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al cargar el portafolio');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmPlatform = async (platformId: string) => {
+    try {
+      setConfirmingPlatform(platformId);
+      const response = await fetch('/api/modelo-portafolio/confirm', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          platformId,
+          modelId: user?.id
+        })
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        // Recargar datos
+        loadPortfolioData();
+      } else {
+        setError(result.error || 'Error al confirmar plataforma');
+      }
+    } catch (err: any) {
+      setError(err.message || 'Error al confirmar plataforma');
+    } finally {
+      setConfirmingPlatform(null);
+    }
+  };
+
+  const loadCredentials = async (platformId: string) => {
+    if (!user?.id || !platformId) return;
+
+    try {
+      setLoadingCredentials(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        console.error('No se pudo obtener token de autenticación');
+        return;
+      }
+
+      const response = await fetch(
+        `/api/modelo-plataformas/credentials?platform_id=${platformId}&model_id=${user.id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success) {
+          // Asegurar que hasCredentials se establece correctamente
+          setCredentials({
+            ...result.data,
+            hasCredentials: result.hasCredentials !== undefined ? result.hasCredentials : !!(result.data?.login_username && result.data?.login_password)
+          });
+        } else {
+          // Si no hay credenciales, usar el login_url de la plataforma
+          setCredentials({
+            login_username: null,
+            login_password: null,
+            login_url: result.data?.login_url || selectedPlatform?.calculator_platforms?.login_url || null,
+            hasCredentials: false
+          });
+        }
+      } else {
+        console.error('Error cargando credenciales:', await response.text());
+        // Si hay error, al menos mostrar el login_url de la plataforma si existe
+        setCredentials({
+          login_username: null,
+          login_password: null,
+          login_url: selectedPlatform?.calculator_platforms?.login_url || null,
+          hasCredentials: false
+        });
+      }
+    } catch (err: any) {
+      console.error('Error cargando credenciales:', err);
+      setCredentials(null);
+    } finally {
+      setLoadingCredentials(false);
+    }
+  };
+
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      // Opcional: mostrar notificación de éxito
+      alert('Copiado al portapapeles');
+    }).catch(err => {
+      console.error('Error copiando al portapapeles:', err);
+    });
+  };
+
+  const loadCredentials3CX = async (platformId: string) => {
+    if (!user?.id || !platformId) return;
+
+    try {
+      setLoading3CX(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+
+      if (!token) {
+        console.error('No se pudo obtener token de autenticación');
+        return;
+      }
+
+      const response = await fetch(
+        `/api/modelo-plataformas/credentials-3cx?platform_id=${platformId}&model_id=${user.id}`,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data) {
+          setCredentials3CX({
+            app_3cx_username: result.data.app_3cx_username || '',
+            app_3cx_password: result.data.app_3cx_password || '',
+            hasCredentials: !!(result.data.app_3cx_username && result.data.app_3cx_password)
+          });
+        } else {
+          setCredentials3CX({
+            app_3cx_username: '',
+            app_3cx_password: '',
+            hasCredentials: false
+          });
+        }
+      } else {
+        setCredentials3CX({
+          app_3cx_username: '',
+          app_3cx_password: '',
+          hasCredentials: false
+        });
+      }
+    } catch (err: any) {
+      console.error('Error cargando credenciales 3CX:', err);
+      setCredentials3CX({
+        app_3cx_username: '',
+        app_3cx_password: '',
+        hasCredentials: false
+      });
+    } finally {
+      setLoading3CX(false);
+    }
+  };
+
+
+  // Función para obtener estilos de etiquetas (igual que Portafolio Modelo)
+  const getTagClasses = (status: string) => {
+    switch (status) {
+      case 'disponible':
+        return 'bg-slate-500/10 dark:bg-slate-400/10 text-slate-700 dark:text-slate-300 border border-slate-500/20 hover:bg-slate-500/20';
+      case 'solicitada':
+        return 'bg-blue-500/10 dark:bg-blue-400/10 text-blue-700 dark:text-blue-300 border border-blue-500/20 hover:bg-blue-500/20';
+      case 'pendiente':
+        return 'bg-yellow-500/10 dark:bg-yellow-400/10 text-yellow-700 dark:text-yellow-300 border border-yellow-500/20 hover:bg-yellow-500/20';
+      case 'entregada':
+        return 'bg-green-500/10 dark:bg-green-400/10 text-green-700 dark:text-green-300 border border-green-500/20 hover:bg-green-500/20';
+      case 'confirmada':
+        return 'bg-emerald-500/10 dark:bg-emerald-400/10 text-emerald-700 dark:text-emerald-300 border border-emerald-500/20 hover:bg-emerald-500/20';
+      case 'desactivada':
+        return 'bg-gray-800/10 dark:bg-gray-500/10 text-gray-800 dark:text-gray-300 border border-gray-800/20 dark:border-gray-500/20 hover:opacity-90';
+      case 'inviable':
+        return 'bg-red-500/10 dark:bg-red-400/10 text-red-700 dark:text-red-300 border border-red-500/20 hover:bg-red-500/20';
+      default:
+        return 'bg-gray-500/10 dark:bg-gray-400/10 text-gray-700 dark:text-gray-300 border border-gray-500/20';
+    }
+  };
+
+  // Función para manejar click en etiqueta de plataforma (toggle expandir/contraer)
+  const handlePlatformClick = (platform: Platform) => {
+    // Si la plataforma ya está seleccionada, la deseleccionamos (contraer)
+    if (selectedPlatform?.id === platform.id) {
+      setSelectedPlatform(null);
+    } else {
+      // Si no está seleccionada, la seleccionamos (expandir)
+      setSelectedPlatform(platform);
+    }
+  };
+
+  const getStatusIcon = (status: string) => {
+    switch (status) {
+      case 'confirmada':
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+      case 'entregada':
+        return <Clock className="w-5 h-5 text-yellow-500" />;
+      case 'desactivada':
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
+      default:
+        // Tratar estados no reconocidos como confirmados (por configuración inicial)
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
+    }
+  };
+
+  const getStatusText = (status: string) => {
+    switch (status) {
+      case 'confirmada':
+        return 'Confirmada';
+      case 'entregada':
+        return 'Pendiente de confirmación';
+      case 'desactivada':
+        return 'Desactivada';
+      default:
+        // Tratar estados no definidos como confirmados
+        return 'Confirmada';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'confirmada':
+        return 'bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400';
+      case 'entregada':
+        return 'bg-yellow-500/10 border border-yellow-500/20 text-yellow-700 dark:text-yellow-400';
+      case 'desactivada':
+        return 'bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400';
+      default:
+        return 'bg-green-500/10 border border-green-500/20 text-green-700 dark:text-green-400';
+    }
+  };
+
+  // Detectar si la plataforma seleccionada es Superfoon (por id o nombre)
+  const isSelectedPlatformSuperfoon =
+    !!selectedPlatform &&
+    (
+      selectedPlatform.calculator_platforms.id?.toLowerCase() === 'superfoon' ||
+      selectedPlatform.calculator_platforms.name?.toLowerCase().includes('superfoon')
+    );
+
+        {/* Tabs - Apple Style 2 */}
+        <div className="flex p-1 sm:p-1.5 mb-6 sm:mb-8 mx-4 sm:mx-0 bg-black/[0.03] dark:bg-white/[0.02] backdrop-blur-xl border border-black/[0.04] dark:border-white/10 rounded-[0.85rem] w-fit mx-auto sm:mx-0">
+          <button
+            onClick={() => setActiveTab('platforms')}
+            className={`px-5 py-2 rounded-[0.65rem] text-sm font-semibold transition-all duration-300 ${
+              activeTab === 'platforms'
+                ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            Mis Plataformas
+          </button>
+          <button
+            onClick={() => setActiveTab('analytics')}
+            className={`px-5 py-2 rounded-[0.65rem] text-sm font-semibold transition-all duration-300 ${
+              activeTab === 'analytics'
+                ? 'bg-white dark:bg-white/10 text-gray-900 dark:text-white shadow-sm ring-1 ring-black/5 dark:ring-white/10'
+                : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200'
+            }`}
+          >
+            Análisis y Estadísticas
+          </button>
+        </div>
+
+        {loading && (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 dark:border-blue-400"></div>
+          </div>
+        )}
+        
+        {!loading && activeTab === 'platforms' && (
+          <>
+            {/* Etiquetas de Plataformas */}
+            <div className="max-sm:bg-transparent max-sm:border-none max-sm:shadow-none max-sm:p-0 sm:bg-white/[0.03] sm:dark:bg-white/[0.02] sm:backdrop-blur-xl sm:border sm:border-white/[0.06] sm:shadow-lg sm:shadow-black/10 sm:p-5 sm:rounded-2xl max-sm:mx-2">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">Mis Plataformas</h2>
+                <div className="flex items-center space-x-2">
+                  <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-gray-500 dark:text-gray-400" />
+                  <span className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    {portfolioData?.platforms.length || 0} plataformas
+                  </span>
+                </div>
+              </div>
+
+              {portfolioData?.platforms.length === 0 ? (
+                <div className="text-center py-12">
+                  <Building2 className="w-16 h-16 text-gray-300 dark:text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">No tienes plataformas asignadas</h3>
+                  <p className="text-gray-500 dark:text-gray-400">Contacta a tu administrador para asignar plataformas a tu portafolio.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Etiquetas de plataformas */}
+                  <div className="flex flex-wrap gap-2 sm:gap-2 mb-4 sm:mb-6">
+                    {portfolioData?.platforms.map((platform) => (
+                      <button
+                        key={platform.id}
+                        type="button"
+                        className={`px-3 sm:px-2.5 py-2 sm:py-1 rounded-full text-xs sm:text-[11px] leading-4 sm:leading-5 font-medium transition-all duration-200 inline-flex items-center justify-center min-h-[40px] sm:min-h-0 active:scale-95 touch-manipulation shadow-sm sm:shadow-none ${getTagClasses(platform.status)} ${
+                          selectedPlatform?.id === platform.id 
+                            ? 'ring-2 ring-blue-500 ring-offset-2 sm:ring-offset-2 ring-offset-1 scale-105 sm:scale-100' 
+                            : 'hover:scale-105 sm:hover:scale-100'
+                        }`}
+                        onClick={() => handlePlatformClick(platform)}
+                      >
+                        <span className="truncate max-w-[140px] sm:max-w-none">{platform.calculator_platforms.name}</span>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Ventana de Visualización con transición */}
+                  <div className={`overflow-visible transition-all duration-500 ease-out transform ${
+                    selectedPlatform 
+                      ? 'opacity-100 translate-y-0 scale-100 mt-6' 
+                      : 'max-h-0 opacity-0 translate-y-0 scale-95 overflow-hidden'
+                  }`}>
+                    {selectedPlatform && (
+                      <div className="border border-black/[0.04] dark:border-white/10 rounded-[0.85rem] p-5 sm:p-6 bg-white/50 dark:bg-[#1A1C1E]/60 backdrop-blur-2xl shadow-lg dark:shadow-[0_8px_30px_rgba(0,0,0,0.5)] transition-all duration-300">
+                        {/* Botón cerrar solo en móvil */}
+                        <div className="flex justify-end mb-3 sm:hidden">
+                          <button
+                            onClick={() => setSelectedPlatform(null)}
+                            className="p-2 rounded-full bg-black/5 dark:bg-white/5 text-gray-600 dark:text-gray-300 hover:bg-black/10 dark:hover:bg-white/10 active:scale-95 transition-all touch-manipulation"
+                            aria-label="Cerrar"
+                          >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                          </button>
+                        </div>
+                        {/* Header con información principal */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-0 mb-6">
+                          <div className="flex items-center space-x-3 min-w-0 flex-1">
+                            <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-black/[0.03] dark:bg-white/[0.04] rounded-lg">
+                              {getStatusIcon(selectedPlatform.status)}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 truncate">
+                                {selectedPlatform.calculator_platforms.name}
+                              </h3>
+                              <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate mt-0.5 tracking-tight">
+                                {selectedPlatform.calculator_platforms.id} • {selectedPlatform.calculator_platforms.currency}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-3 sm:flex-shrink-0">
+                            <span className={`px-3 py-1 rounded-full text-xs font-semibold text-center ${getStatusColor(selectedPlatform.status)}`}>
+                              {getStatusText(selectedPlatform.status)}
+                            </span>
+                            {selectedPlatform.status === 'entregada' && (
+                              <button
+                                onClick={() => confirmPlatform(selectedPlatform.platform_id)}
+                                disabled={confirmingPlatform === selectedPlatform.platform_id}
+                                className="w-full sm:w-auto px-5 py-2.5 bg-green-500 text-white rounded-[0.65rem] hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed transition-all duration-200 flex items-center justify-center space-x-2 text-sm font-semibold shadow-sm active:scale-95 touch-manipulation"
+                              >
+                                {confirmingPlatform === selectedPlatform.platform_id ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                                    <span>Confirmando...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-4 h-4" />
+                                    <span>Confirmar Recepción</span>
+                                  </>
+                                )}
+                              </button>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Pestañas internas del modal */}
+                        <div className="mb-5 sm:mb-6 border-b border-black/[0.04] dark:border-white/10">
+                          <div className="flex gap-4 sm:space-x-4">
+                            <button
+                              onClick={() => setPlatformTab('details')}
+                              className={`pb-3 text-sm font-semibold transition-all duration-200 active:scale-95 touch-manipulation relative ${
+                                platformTab === 'details'
+                                  ? 'text-gray-900 dark:text-white'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                              }`}
+                            >
+                              Detalles
+                              {platformTab === 'details' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white rounded-t-full"></div>
+                              )}
+                            </button>
+                            <button
+                              onClick={() => setPlatformTab('metrics')}
+                              className={`pb-3 text-sm font-semibold transition-all duration-200 active:scale-95 touch-manipulation relative ${
+                                platformTab === 'metrics'
+                                  ? 'text-gray-900 dark:text-white'
+                                  : 'text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
+                              }`}
+                            >
+                              Métricas
+                              {platformTab === 'metrics' && (
+                                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-gray-900 dark:bg-white rounded-t-full"></div>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Contenido de pestaña: Detalles */}
+                        {platformTab === 'details' && (
+                          <div className="space-y-5 sm:space-y-4">
+                            {/* Credenciales de acceso */}
+                            {(selectedPlatform.status === 'entregada' || selectedPlatform.status === 'confirmada') && (
+                              <div className="space-y-4">
+                                {loadingCredentials ? (
+                                  <div className="flex items-center justify-center py-8">
+                                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-500"></div>
+                                  </div>
+                                ) : credentials?.hasCredentials ? (
+                                  <div className="bg-black/[0.02] dark:bg-white/[0.02] rounded-[0.65rem] p-5 space-y-4 border border-black/[0.04] dark:border-white/10">
+                                    <div className="flex items-center space-x-2 mb-2">
+                                      <Lock className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                                      <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Credenciales de Acceso</h4>
+                                    </div>
+                                    
+                                    {/* Usuario */}
+                                    {credentials.login_username && (
+                                      <div className="space-y-1.5">
+                                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center space-x-1.5">
+                                          <User className="w-3 h-3" />
+                                          <span>Usuario</span>
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type="text"
+                                            value={credentials.login_username}
+                                            readOnly
+                                            className="flex-1 px-3 py-2.5 h-10 sm:h-auto bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 rounded-lg text-sm font-semibold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-white/20 touch-manipulation"
+                                          />
+                                          <button
+                                            onClick={() => copyToClipboard(credentials.login_username!)}
+                                            className="w-10 h-10 flex items-center justify-center bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.08] active:scale-95 transition-all touch-manipulation"
+                                            title="Copiar usuario"
+                                          >
+                                            <Copy className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Contraseña */}
+                                    {credentials.login_password && (
+                                      <div className="space-y-1.5 pt-1">
+                                        <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center space-x-1.5">
+                                          <Lock className="w-3 h-3" />
+                                          <span>Contraseña</span>
+                                        </label>
+                                        <div className="flex items-center space-x-2">
+                                          <input
+                                            type={showPassword ? 'text' : 'password'}
+                                            value={credentials.login_password}
+                                            readOnly
+                                            className="flex-1 px-3 py-2.5 h-10 sm:h-auto bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 rounded-lg text-sm font-semibold text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-1 focus:ring-white/20 font-mono tracking-wider touch-manipulation"
+                                          />
+                                          <button
+                                            onClick={() => setShowPassword(!showPassword)}
+                                            className="w-10 h-10 flex items-center justify-center bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.08] active:scale-95 transition-all touch-manipulation"
+                                            title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                          >
+                                            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                          </button>
+                                          <button
+                                            onClick={() => copyToClipboard(credentials.login_password!)}
+                                            className="w-10 h-10 flex items-center justify-center bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 text-gray-600 dark:text-gray-300 rounded-lg hover:bg-black/[0.05] dark:hover:bg-white/[0.08] active:scale-95 transition-all touch-manipulation"
+                                            title="Copiar contraseña"
+                                          >
+                                            <Copy className="w-4 h-4" />
+                                          </button>
+                                        </div>
+                                      </div>
+                                    )}
+
+                                    {/* Enlace de login - Siempre visible al final */}
+                                    {(credentials.login_url || selectedPlatform.calculator_platforms.login_url) && (
+                                      <div className="pt-4 mt-2 border-t border-black/[0.04] dark:border-white/10">
+                                        <a
+                                          href={credentials.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-5 py-2.5 h-12 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white rounded-[0.65rem] active:scale-95 transition-all duration-200 shadow-sm text-sm font-semibold touch-manipulation"
+                                        >
+                                          <ExternalLink className="w-4 h-4" />
+                                          <span>Abrir plataforma</span>
+                                        </a>
+                                      </div>
+                                    )}
+                                  </div>
+                                ) : (
+                                  <div className="space-y-3">
+                                    {/* Mensaje de advertencia si no hay credenciales */}
+                                    <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                      <div className="flex items-center space-x-2">
+                                        <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                        <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                                          Las credenciales aún no han sido configuradas por el administrador.
+                                        </p>
+                                      </div>
+                                    </div>
+                                    
+                                    {/* Enlace de login (siempre mostrar si existe, incluso sin credenciales) */}
+                                    {(credentials?.login_url || selectedPlatform.calculator_platforms.login_url) && (
+                                      <div className="pt-2">
+                                        <a
+                                          href={credentials?.login_url || selectedPlatform.calculator_platforms.login_url || '#'}
+                                          target="_blank"
+                                          rel="noopener noreferrer"
+                                          className="w-full inline-flex items-center justify-center space-x-2 px-4 py-2.5 h-12 bg-black/[0.03] dark:bg-white/[0.04] border border-black/[0.04] dark:border-white/10 text-gray-700 dark:text-gray-300 rounded-[0.65rem] hover:bg-black/[0.05] dark:hover:bg-white/[0.08] active:scale-95 transition-all duration-200 shadow-sm text-sm font-medium touch-manipulation"
+                                        >
+                                          <ExternalLink className="w-4 h-4" />
+                                          <span>Abrir plataforma</span>
+                                        </a>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 mt-2 text-center font-medium">
+                                          Haz clic para acceder a la plataforma
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Enlace especial solo para Superfoon */}
+                                {isSelectedPlatformSuperfoon && (
+                                  <div className="pt-4 mt-4 border-t border-dashed border-black/[0.1] dark:border-white/[0.1]">
+                                    <div className="flex items-center space-x-2 mb-4">
+                                      <div className="relative">
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-ping absolute"></div>
+                                        <div className="w-2 h-2 bg-blue-500 rounded-full relative"></div>
+                                      </div>
+                                      <p className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                                        📞 App de llamadas 3CX
+                                      </p>
+                                    </div>
+
+                                    <div className="backdrop-blur-xl bg-black/[0.02] dark:bg-white/[0.02] rounded-[0.85rem] p-5 space-y-4 border border-black/[0.04] dark:border-white/[0.06] mb-4">
+                                      <div className="flex items-center space-x-2 mb-2">
+                                        <Lock className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                                        <h4 className="text-sm font-bold text-gray-900 dark:text-gray-100">Credenciales App 3CX</h4>
+                                      </div>
+
+                                      {loading3CX ? (
+                                        <div className="flex items-center justify-center py-4">
+                                          <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-purple-500"></div>
+                                        </div>
+                                      ) : credentials3CX.hasCredentials ? (
+                                        <>
+                                          <div className="space-y-1.5">
+                                            <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center space-x-1.5">
+                                              <User className="w-3 h-3" />
+                                              <span>Usuario 3CX</span>
+                                            </label>
+                                            <div className="flex items-center space-x-2">
+                                              <input
+                                                type="text"
+                                                value={credentials3CX.app_3cx_username || ''}
+                                                readOnly
+                                                className="flex-1 px-3 py-2.5 h-10 bg-black/[0.04] dark:bg-white/[0.04] border-none rounded-[0.65rem] text-sm font-semibold text-gray-900 dark:text-gray-100 focus:outline-none touch-manipulation"
+                                              />
+                                              <button
+                                                onClick={() => copyToClipboard(credentials3CX.app_3cx_username || '')}
+                                                className="w-10 h-10 flex items-center justify-center bg-black/[0.04] dark:bg-white/[0.04] text-gray-600 dark:text-gray-300 rounded-[0.65rem] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] active:scale-95 transition-all touch-manipulation"
+                                                title="Copiar usuario"
+                                              >
+                                                <Copy className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                          </div>
+
+                                          <div className="space-y-1.5 pt-1">
+                                            <label className="text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-widest flex items-center space-x-1.5">
+                                              <Lock className="w-3 h-3" />
+                                              <span>Contraseña 3CX</span>
+                                            </label>
+                                            <div className="flex items-center space-x-2">
+                                              <input
+                                                type={showPassword3CX ? 'text' : 'password'}
+                                                value={credentials3CX.app_3cx_password || ''}
+                                                readOnly
+                                                className="flex-1 px-3 py-2.5 h-10 bg-black/[0.04] dark:bg-white/[0.04] border-none rounded-[0.65rem] text-sm font-semibold text-gray-900 dark:text-gray-100 focus:outline-none font-mono tracking-wider touch-manipulation"
+                                              />
+                                              <button
+                                                onClick={() => setShowPassword3CX(!showPassword3CX)}
+                                                className="w-10 h-10 flex items-center justify-center bg-black/[0.04] dark:bg-white/[0.04] text-gray-600 dark:text-gray-300 rounded-[0.65rem] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] active:scale-95 transition-all touch-manipulation"
+                                                title={showPassword3CX ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                                              >
+                                                {showPassword3CX ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                              </button>
+                                              <button
+                                                onClick={() => copyToClipboard(credentials3CX.app_3cx_password || '')}
+                                                className="w-10 h-10 flex items-center justify-center bg-black/[0.04] dark:bg-white/[0.04] text-gray-600 dark:text-gray-300 rounded-[0.65rem] hover:bg-black/[0.08] dark:hover:bg-white/[0.08] active:scale-95 transition-all touch-manipulation"
+                                                title="Copiar contraseña"
+                                              >
+                                                <Copy className="w-4 h-4" />
+                                              </button>
+                                            </div>
+                                          </div>
+                                        </>
+                                      ) : (
+                                        <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                                          <div className="flex items-center space-x-2">
+                                            <AlertCircle className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
+                                            <p className="text-sm text-yellow-800 dark:text-yellow-300">
+                                              Las credenciales de 3CX aún no han sido configuradas por el administrador.
+                                            </p>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Botón "Abrir app" */}
+                                    <a
+                                      href="https://superfoon.synergy4.com/#/login"
+                                      target="_blank"
+                                      rel="noopener noreferrer"
+                                      className="w-full inline-flex items-center justify-center space-x-2 px-5 sm:px-4 py-3.5 sm:py-2.5 h-14 sm:h-auto bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl sm:rounded-lg hover:from-blue-600 hover:to-indigo-700 active:scale-95 transition-all duration-200 shadow-lg hover:shadow-xl text-base sm:text-sm font-semibold sm:font-medium mb-4 sm:mb-3 touch-manipulation"
+                                    >
+                                      <ExternalLink className="w-5 h-5 sm:w-4 sm:h-4" />
+                                      <span>Abrir app</span>
+                                    </a>
+                                    
+                                    {/* URL como texto secundario */}
+                                    <p className="text-xs sm:text-xs text-gray-600 dark:text-gray-400 text-center font-medium break-all px-2">
+                                      https://superfoon.synergy4.com/#/login
+                                    </p>
+                                    <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-500 mt-2 sm:mt-1 text-center">
+                                      ⚡ Acceso directo a la aplicación de llamadas
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Contenido de pestaña: Métricas */}
+                        {platformTab === 'metrics' && (
+                          <div className="bg-gray-50 dark:bg-gray-600/80 rounded-lg p-3 sm:p-4">
+                            <h4 className="text-xs sm:text-sm font-semibold text-gray-700 dark:text-gray-200 mb-3">Estadísticas de Rendimiento</h4>
+                            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Conexión</p>
+                                <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">{selectedPlatform.stats.connectionPercentage}%</p>
+                              </div>
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Promedio Quincenal</p>
+                                <div className="flex items-center justify-center space-x-1">
+                                  <p className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">
+                                    ${selectedPlatform.stats.avgUsdModelo.toFixed(2)} USD
+                                  </p>
+                                  <span className={`text-xs sm:text-sm font-medium ${
+                                    selectedPlatform.stats.trend === '↑' ? 'text-green-500 dark:text-green-400' :
+                                    selectedPlatform.stats.trend === '↓' ? 'text-red-500 dark:text-red-400' :
+                                    'text-gray-400 dark:text-gray-500'
+                                  }`}>
+                                    {selectedPlatform.stats.trend}
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Total (30 días)</p>
+                                <p className="text-base sm:text-lg font-bold text-blue-600 dark:text-blue-400">
+                                  ${selectedPlatform.stats.totalUsdModelo.toFixed(2)} USD
+                                </p>
+                              </div>
+                              <div className="text-center p-2 sm:p-0 bg-white/50 dark:bg-gray-700/50 rounded-lg sm:bg-transparent">
+                                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mb-1">Última Actividad</p>
+                                <p className="text-xs sm:text-sm font-semibold text-gray-900 dark:text-gray-100">
+                                  {selectedPlatform.stats.lastActivity ? 
+                                    new Date(selectedPlatform.stats.lastActivity).toLocaleDateString('es-ES') : 
+                                    'N/A'
+                                  }
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Información de estado y fechas */}
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0 pt-4 sm:pt-0 mt-4 sm:mt-0 border-t-2 sm:border-t-0 border-gray-200 dark:border-gray-600">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:space-x-6">
+                            {selectedPlatform.delivered_at && (
+                              <div className="flex items-center space-x-2">
+                                <Calendar className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
+                                <div>
+                                  <p className="text-xs sm:text-xs text-gray-400 dark:text-gray-500 font-medium">Entregada</p>
+                                  <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400">
+                                    {new Date(selectedPlatform.delivered_at).toLocaleDateString('es-ES')}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                            {selectedPlatform.confirmed_at && (
+                              <div className="flex items-center space-x-2">
+                                <CheckCircle className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
+                                <div>
+                                  <p className="text-xs sm:text-xs text-gray-400 dark:text-gray-500 font-medium">Confirmada</p>
+                                  <p className="text-xs sm:text-xs text-gray-500 dark:text-gray-400">
+                                    {new Date(selectedPlatform.confirmed_at).toLocaleDateString('es-ES')}
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Target className="w-4 h-4 sm:w-3 sm:h-3 text-gray-400 dark:text-gray-500" />
+                            <span className="text-xs sm:text-xs text-gray-500 dark:text-gray-400 font-medium">Plataforma activa</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </>
+              )}
+            </div>
+          </>
+        )}
+
+        {activeTab === 'analytics' && (
+          <div className="space-y-6 max-sm:mx-2">
+            {/* Resumen - Tarjetas Estadísticas */}
+            {portfolioData && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-6">
+                <GlassCard padding="md" className="hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Total Plataformas</p>
+                      <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{portfolioData.summary.totalPlatforms}</p>
+                    </div>
+                    <Building2 className="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                  </div>
+                </GlassCard>
+
+                <GlassCard padding="md" className="hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Activas</p>
+                      <p className="text-xl sm:text-2xl font-bold text-green-600 dark:text-green-400">{portfolioData.summary.activePlatforms}</p>
+                    </div>
+                    <CheckCircle className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  </div>
+                </GlassCard>
+
+                <GlassCard padding="md" className="hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Pendientes</p>
+                      <p className="text-xl sm:text-2xl font-bold text-yellow-600 dark:text-yellow-400">{portfolioData.summary.pendingConfirmation}</p>
+                    </div>
+                    <Clock className="w-6 h-6 sm:w-8 sm:h-8 text-yellow-600 dark:text-yellow-400 flex-shrink-0" />
+                  </div>
+                </GlassCard>
+
+                <GlassCard padding="md" className="col-span-2 md:col-span-1 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-0">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-300">Ganancias (30 días)</p>
+                      <p className="text-lg sm:text-2xl font-bold text-green-600 dark:text-green-400 truncate">
+                        ${portfolioData.summary.totalCopModelo.toLocaleString('es-CO')} COP
+                      </p>
+                    </div>
+                    <DollarSign className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 flex-shrink-0" />
+                  </div>
+                </GlassCard>
+              </div>
+            )}
+
+            {/* Análisis Detallado */}
+            <GlassCard padding="lg">
+              <PortfolioAnalytics modelId={user?.id} />
+            </GlassCard>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}

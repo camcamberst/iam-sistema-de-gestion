@@ -1,0 +1,296 @@
+/**
+ * Operaciones sobre un pedido individual:
+ *   - GET: detalle completo
+ *   - PUT: cambiar estado (aprobado, rechazado, en_preparacion, entregado, cancelado)
+ */
+
+/**
+ * Operaciones sobre un pedido individual:
+ *   - GET: detalle completo
+ *   - PUT: cambiar estado (aprobado, rechazado, en_preparacion, entregado, cancelado)
+ */
+
+import { NextRequest, NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
+import { getShopUser, canManageShopResource } from '@/lib/shop/auth';
+import { getColombiaDate, getPeriodDetails } from '@/utils/calculator-dates';
+
+export const dynamic = 'force-dynamic';
+
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
+
+export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await getShopUser(req);
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+
+  const { data, error } = await supabase
+    .from('shop_orders')
+    .select(`
+      *,
+      users!model_id(id, email),
+      shop_order_items(
+        *,
+        shop_products(id, name, images, base_price),
+        shop_product_variants(id, name)
+      ),
+      shop_financing(
+        *,
+        shop_financing_installments(*)
+      )
+    `)
+    .eq('id', params.id)
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 404 });
+
+  // Verificar que el usuario puede ver este pedido
+  const order = data;
+  const isAdmin = ['admin', 'super_admin', 'superadmin_aff'].includes(user.role);
+  const isOwner = user.role === 'modelo' && order.model_id === user.id;
+
+  if (!isOwner && !canManageShopResource(user, order.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 403 });
+  }
+
+  return NextResponse.json(data);
+}
+
+export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const user = await getShopUser(req);
+  if (!user) return NextResponse.json({ error: 'No autorizado' }, { status: 401 });
+
+  const body = await req.json();
+  const { status } = body;
+
+  // Obtener pedido actual
+  const { data: order } = await supabase
+    .from('shop_orders')
+    .select(`
+      *,
+      shop_order_items(product_id, variant_id, quantity, source_location_type, source_location_id),
+      shop_financing(id, installments, amount_per_installment, status, total_amount)
+    `)
+    .eq('id', params.id)
+    .single();
+
+  if (!order) return NextResponse.json({ error: 'Pedido no encontrado' }, { status: 404 });
+
+  const isAdmin = ['admin', 'super_admin', 'superadmin_aff'].includes(user.role);
+  const isModel = user.role === 'modelo' && order.model_id === user.id;
+
+  // Verificar que el admin pertenece al mismo negocio que el pedido
+  if (isAdmin && !canManageShopResource(user, order.affiliate_studio_id ?? null)) {
+    return NextResponse.json({ error: 'No tienes permiso para gestionar este pedido' }, { status: 403 });
+  }
+
+  if (!isAdmin && !isModel) {
+    return NextResponse.json({ error: 'No autorizado para modificar este pedido' }, { status: 403 });
+  }
+
+  const updates: Record<string, unknown> = { status };
+
+  // === APROBACIÓN (admin/superadmin) ===
+  if (status === 'aprobado' && isAdmin) {
+    if (order.status !== 'reservado') {
+      return NextResponse.json({ error: 'Solo se pueden aprobar pedidos reservados' }, { status: 400 });
+    }
+    updates.approved_by = user.id;
+    updates.approved_at  = new Date().toISOString();
+    updates.status = 'en_preparacion';
+
+    // Convertir reserva en descontado real
+    for (const item of order.shop_order_items) {
+      if (!item.source_location_type) continue;
+      const { data: inv } = await supabase
+        .from('shop_inventory')
+        .select('id, quantity, reserved')
+        .eq('product_id', item.product_id)
+        .eq('location_type', item.source_location_type)
+        .eq('location_id', item.source_location_id || null)
+        .is('variant_id', item.variant_id || null)
+        .single();
+
+      if (inv) {
+        await supabase.from('shop_inventory').update({
+          quantity: inv.quantity - item.quantity,
+          reserved: Math.max(0, inv.reserved - item.quantity)
+        }).eq('id', inv.id);
+      }
+    }
+
+    // Actualizar financiación a aprobada + crear cuotas
+    const fin = Array.isArray(order.shop_financing) ? order.shop_financing[0] : order.shop_financing;
+    if (fin?.id) {
+      await supabase
+        .from('shop_financing')
+        .update({ status: 'aprobado', approved_by: user.id, approved_at: new Date().toISOString() })
+        .eq('id', fin.id);
+
+      // Crear cuotas distribuidas en quincenas consecutivas:
+      //  - Primera cuota: quincena ACTUAL (por fecha de Colombia)
+      //  - Siguientes cuotas: siguientes quincenas consecutivas
+      const periodIds: (string | null)[] = [];
+
+      // Empezar desde hoy (quincena actual)
+      let baseDate = getColombiaDate();
+
+      for (let i = 0; i < fin.installments; i++) {
+        const { startDate, endDate, name: periodName } = getPeriodDetails(baseDate);
+
+        // Buscar o crear período quincenal por fechas exactas
+        let { data: period } = await supabase
+          .from('periods')
+          .select('id')
+          .eq('start_date', startDate)
+          .eq('end_date', endDate)
+          .maybeSingle();
+
+        let periodId = period?.id as string | undefined;
+
+        if (!periodId) {
+          const { data: newPeriod, error: createError } = await supabase
+            .from('periods')
+            .insert({
+              name: periodName,
+              start_date: startDate,
+              end_date: endDate,
+              is_active: true
+            })
+            .select('id')
+            .single();
+
+          if (!createError && newPeriod) {
+            periodId = newPeriod.id;
+          }
+        }
+
+        periodIds.push(periodId ?? null);
+
+        // Avanzar a la siguiente quincena (día siguiente al endDate)
+        const end = new Date(endDate);
+        end.setDate(end.getDate() + 1);
+        baseDate = end.toISOString().slice(0, 10);
+      }
+
+      const installmentRows = [];
+      for (let i = 0; i < fin.installments; i++) {
+        installmentRows.push({
+          financing_id: fin.id,
+          installment_no: i + 1,
+          period_id: periodIds[i],
+          amount: fin.amount_per_installment,
+          status: 'pendiente'
+        });
+      }
+      await supabase.from('shop_financing_installments').insert(installmentRows);
+    }
+
+    // Notificar modelo
+    const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
+    const { data: modelUser } = await supabase.from('users').select('id, email').eq('id', order.model_id).single();
+    if (modelUser) {
+      const msg = `✅ **Financiación aprobada — Sexshop**\n\nTu pedido ha sido aprobado y ya está en preparación. El cobro se realizará en ${order.payment_mode === '2q' ? '2' : order.payment_mode === '3q' ? '3' : '4'} quincenas.\n\nPedido ID: \`${order.id}\``;
+      await sendBotNotification(modelUser.id, 'custom_message' as never, msg);
+    }
+  }
+
+  // === RECHAZO (admin/superadmin) ===
+  else if (status === 'rechazado' && isAdmin) {
+    if (order.status !== 'reservado') {
+      return NextResponse.json({ error: 'Solo se pueden rechazar pedidos reservados' }, { status: 400 });
+    }
+    updates.rejected_by = user.id;
+    updates.rejected_at = new Date().toISOString();
+
+    // Liberar reserva
+    await reintegrarStock(order.shop_order_items, 'reserved');
+    await supabase.from('shop_financing').update({ status: 'rechazado', rejected_by: user.id, rejected_at: new Date().toISOString() }).eq('order_id', order.id);
+
+    // Notificar modelo
+    const { sendBotNotification } = await import('@/lib/chat/bot-notifications');
+    const { data: modelUser } = await supabase.from('users').select('id, email').eq('id', order.model_id).single();
+    if (modelUser) {
+      const msg = `❌ **Financiación no aprobada — Sexshop**\n\nTu solicitud de financiación fue rechazada por el administrador. El stock ha sido liberado.\n\nPedido ID: \`${order.id}\``;
+      await sendBotNotification(modelUser.id, 'custom_message' as never, msg);
+    }
+  }
+
+  // === ENTREGA (admin o modelo) ===
+  else if (status === 'entregado') {
+    if (order.status !== 'en_preparacion') {
+      return NextResponse.json({ error: 'Solo se pueden entregar pedidos en preparación' }, { status: 400 });
+    }
+    updates.delivered_at = new Date().toISOString();
+    updates.delivered_by = user.id;
+  }
+
+  // === CANCELACIÓN (modelo, solo si en_preparacion) ===
+  else if (status === 'cancelado') {
+    const allowedStatuses = isAdmin ? ['pendiente','reservado','en_preparacion'] : ['en_preparacion'];
+    if (!allowedStatuses.includes(order.status)) {
+      return NextResponse.json({ error: 'No se puede cancelar este pedido en su estado actual' }, { status: 400 });
+    }
+    updates.cancelled_at = new Date().toISOString();
+    updates.cancelled_by = user.id;
+
+    if (order.status === 'reservado') {
+      await reintegrarStock(order.shop_order_items, 'reserved');
+    } else if (order.status === 'en_preparacion') {
+      await reintegrarStock(order.shop_order_items, 'quantity');
+    }
+
+    // Cancelar financiación y marcar todas las cuotas como reintegradas (para que la billetera las deje de descontar)
+    const fin = Array.isArray(order.shop_financing) ? order.shop_financing[0] : order.shop_financing;
+    if (fin?.id) {
+      const { error: errFin } = await supabase.from('shop_financing').update({ status: 'cancelado' }).eq('id', fin.id);
+      if (errFin) console.error('[shop] Error al cancelar financiación:', errFin);
+      const { error: errInst } = await supabase
+        .from('shop_financing_installments')
+        .update({ status: 'reintegrada' })
+        .eq('financing_id', fin.id);
+      if (errInst) console.error('[shop] Error al marcar cuotas reintegradas:', errInst);
+    }
+  }
+
+  else {
+    return NextResponse.json({ error: `Transición de estado no permitida: ${status}` }, { status: 400 });
+  }
+
+  const { data: updated, error } = await supabase
+    .from('shop_orders')
+    .update(updates)
+    .eq('id', params.id)
+    .select()
+    .single();
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json(updated);
+}
+
+async function reintegrarStock(
+  items: Array<{ product_id: string; variant_id: string | null; quantity: number; source_location_type: string | null; source_location_id: string | null }>,
+  field: 'quantity' | 'reserved'
+) {
+  for (const item of items) {
+    if (!item.source_location_type) continue;
+    const { data: inv } = await supabase
+      .from('shop_inventory')
+      .select('id, quantity, reserved')
+      .eq('product_id', item.product_id)
+      .eq('location_type', item.source_location_type)
+      .eq('location_id', item.source_location_id || null)
+      .is('variant_id', item.variant_id || null)
+      .single();
+
+    if (inv) {
+      if (field === 'quantity') {
+        await supabase.from('shop_inventory').update({ quantity: inv.quantity + item.quantity }).eq('id', inv.id);
+      } else {
+        await supabase.from('shop_inventory').update({ reserved: Math.max(0, inv.reserved - item.quantity) }).eq('id', inv.id);
+      }
+    }
+  }
+}

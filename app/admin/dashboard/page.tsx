@@ -12,6 +12,7 @@ import BillingSummaryCompact from "../../../components/BillingSummaryCompact";
 import AnnouncementBoardWidget from "../../../components/AnnouncementBoardWidget";
 import ProductivityWidget from "../../../components/ProductivityWidget";
 import DynamicTimeIsland from "../../../components/ui/DynamicTimeIsland";
+import ModelAuroraBackground from "../../../components/ui/ModelAuroraBackground";
 
 type Role = 'super_admin' | 'admin' | 'modelo' | string;
 
@@ -181,14 +182,21 @@ export default function AdminDashboard() {
     loadProductivity();
   }, [user]);
 
+  // Determinar clases de fondo dinámicamente según el rol
+  const isModelo = user?.role === 'modelo';
+  const bgClass = isModelo 
+    ? "min-h-screen relative w-full overflow-hidden bg-[#fbf9fa] dark:bg-[#060205]" 
+    : "min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900";
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+    <div className={bgClass}>
+      {isModelo && <ModelAuroraBackground />}
+      <div className={`max-w-screen-2xl mx-auto px-0 sm:px-4 md:px-6 lg:px-8 py-8 pt-16 ${isModelo ? 'relative z-10' : ''}`}>
         {/* Header */}
         <div className="mb-8 sm:mb-12">
           <div className="relative">
             <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-indigo-600/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
+            <div className="relative bg-white/80 dark:bg-white/[0.10] backdrop-blur-sm rounded-xl p-4 sm:p-6 border border-white/20 dark:border-white/[0.12] shadow-lg dark:shadow-[0_1px_0_0_rgba(255,255,255,0.06)_inset,0_8px_32px_rgba(0,0,0,0.5)] dark:ring-0.5 dark:ring-blue-400/20">
               <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 md:gap-3">
                 <div className="flex items-center space-x-3 min-w-0 flex-1">
                   <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">

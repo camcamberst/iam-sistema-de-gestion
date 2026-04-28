@@ -1,0 +1,396 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* =====================================================
+   🎨 AIM DESIGN TOKENS — Variables CSS Centralizadas
+   =====================================================
+   Fuente única de verdad para colores, sombras y efectos.
+   Cambiar un valor aquí lo cambia en todo el sistema.
+   ===================================================== */
+
+:root {
+  /* Colores primarios */
+  --aim-blue: #3b82f6;
+  --aim-indigo: #4f46e5;
+  --aim-gray-dark: #374151;
+  --aim-slate-dark: #1e293b;
+
+  /* Superficies (glass) */
+  --aim-surface: rgba(255, 255, 255, 0.7);
+  --aim-surface-header: rgba(255, 255, 255, 0.8);
+  --aim-surface-dropdown: rgba(255, 255, 255, 0.95);
+  --aim-border: rgba(255, 255, 255, 0.2);
+
+  /* Fondos de página */
+  --aim-bg-from: #f8fafc;    /* slate-50 */
+  --aim-bg-via: #eff6ff;     /* blue-50 */
+  --aim-bg-to: #eef2ff;      /* indigo-50 */
+
+  /* Sombras por rol */
+  --aim-glow-model: rgba(30, 58, 138, 0.15);      /* blue-900 */
+  --aim-ring-model: rgba(96, 165, 250, 0.2);       /* blue-400 */
+  --aim-glow-admin: rgba(20, 83, 45, 0.15);        /* green-900 */
+  --aim-ring-admin: rgba(74, 222, 128, 0.2);       /* green-400 */
+  --aim-glow-superadmin: rgba(88, 28, 135, 0.15);  /* purple-900 */
+  --aim-ring-superadmin: rgba(192, 132, 252, 0.2); /* purple-400 */
+}
+
+.dark {
+  --aim-surface: rgba(55, 65, 81, 0.7);
+  --aim-surface-header: rgba(31, 41, 55, 0.8);
+  --aim-surface-dropdown: rgba(55, 65, 81, 0.95);
+  --aim-border: rgba(75, 85, 99, 0.2);
+
+  --aim-bg-from: #030712;    /* gray-950 */
+  --aim-bg-via: #1f2937;     /* gray-800 */
+  --aim-bg-to: #030712;      /* gray-950 */
+}
+
+/* Clase apple-input con dark mode */
+@layer components {
+  .apple-input {
+    @apply w-full px-3 py-2 text-sm text-left border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 focus:outline-none;
+  }
+
+  /* 🪟 Glass Card — Contenedor principal de contenido */
+  .glass-card {
+    @apply bg-white/70 dark:bg-gray-900/60 backdrop-blur-2xl rounded-xl
+           border border-white/50 dark:border-white/10
+           shadow-xl shadow-indigo-900/5 dark:shadow-black/20;
+  }
+
+  /* 🪟 Glass Header — Header de página con mayor opacidad */
+  .glass-header {
+    @apply bg-white/80 dark:bg-gray-900/80 backdrop-blur-2xl rounded-xl
+           border border-white/50 dark:border-white/10
+           shadow-xl shadow-indigo-900/5 dark:shadow-black/20;
+  }
+
+  /* 🎨 Gradiente primario (azul→índigo) */
+  .gradient-primary {
+    @apply bg-gradient-to-br from-blue-500 to-indigo-600;
+  }
+
+  /* 🎨 Gradiente del fondo de página */
+  .aim-page-bg {
+    @apply min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50
+           dark:from-gray-900 dark:via-gray-800 dark:to-gray-900;
+  }
+
+  /* 🎨 Texto con gradiente (títulos principales) */
+  .aim-title-gradient {
+    @apply font-bold bg-gradient-to-r from-gray-900 to-gray-700
+           dark:from-gray-100 dark:to-gray-300
+           bg-clip-text text-transparent;
+  }
+
+  /* ✨ Glow por rol (panel modelo — azul) */
+  .glow-model {
+    @apply dark:shadow-lg dark:shadow-blue-900/15
+           dark:ring-1 dark:ring-blue-400/20;
+  }
+
+  /* ✨ Glow por rol (panel admin — verde) */
+  .glow-admin {
+    @apply dark:shadow-lg dark:shadow-green-900/15
+           dark:ring-1 dark:ring-green-400/20;
+  }
+
+  /* ✨ Glow por rol (panel super admin — púrpura) */
+  .glow-superadmin {
+    @apply dark:shadow-lg dark:shadow-purple-900/15
+           dark:ring-1 dark:ring-purple-400/20;
+  }
+
+  /* 🔘 Botón primario estándar */
+  .btn-aim-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 text-white
+           py-2 px-3 rounded-lg font-medium text-sm
+           hover:from-blue-700 hover:to-indigo-700
+           transition-all duration-300
+           focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
+           shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+
+  /* 🔘 Botón secundario (gris) */
+  .btn-aim-secondary {
+    @apply bg-gradient-to-r from-gray-700 to-slate-800 text-white
+           py-2 px-3 rounded-lg font-medium text-sm
+           hover:from-gray-800 hover:to-slate-900
+           transition-all duration-300
+           focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2
+           shadow-md hover:shadow-lg transform hover:-translate-y-0.5;
+  }
+}
+
+/* Animaciones personalizadas para el dashboard */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.6s ease-out;
+}
+
+.animate-fade-in-delay {
+  animation: fadeIn 0.6s ease-out 0.2s both;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.6s ease-out;
+}
+
+/* Transiciones de tema */
+@keyframes themeTransition {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(0.98);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes themeGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px 10px rgba(59, 130, 246, 0.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.theme-transition {
+  animation: themeTransition 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-glow {
+  animation: themeGlow 0.8s ease-out;
+}
+
+/* Transiciones suaves para todos los elementos */
+* {
+  transition: background-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.6s cubic-bezier(0.4, 0, 0.2, 1),
+              box-shadow 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efecto de ripple para el botón de tema */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  animation: ripple 0.6s ease-out;
+}
+
+/* Gradiente radial para efectos de transición */
+.bg-gradient-radial {
+  background: radial-gradient(circle, var(--tw-gradient-stops));
+}
+
+/* Scrollbar estilo Apple - Sutil y elegante */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.3) transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.3);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.5);
+}
+
+/* Scrollbar para modo oscuro */
+.dark .custom-scrollbar {
+  scrollbar-color: rgba(156, 163, 175, 0.25) transparent;
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(156, 163, 175, 0.25);
+}
+
+.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(156, 163, 175, 0.4);
+}
+
+/* Scrollbar interior estilo Apple minimal (AppleStyle 2) para dropdowns */
+.apple-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(148, 163, 184, 0.25) transparent;
+}
+
+.apple-scroll::-webkit-scrollbar {
+  width: 4px;
+}
+
+.apple-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.apple-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.45),
+    rgba(148, 163, 184, 0.25)
+  );
+  border-radius: 999px;
+}
+
+.apple-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.6),
+    rgba(148, 163, 184, 0.35)
+  );
+}
+
+.dark .apple-scroll {
+  scrollbar-color: rgba(148, 163, 184, 0.22) transparent;
+}
+
+.dark .apple-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.35),
+    rgba(148, 163, 184, 0.2)
+  );
+}
+
+.dark .apple-scroll::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    to bottom,
+    rgba(148, 163, 184, 0.5),
+    rgba(148, 163, 184, 0.3)
+  );
+}
+
+/* 🌈 ANIMACIÓN DE GRADIENTE DINÁMICO (Apple Style Versátil) */
+@keyframes gradient-x {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-x {
+  background-size: 200% 200%;
+  animation: gradient-x 3s ease infinite;
+}
+
+/* 🌈 Animaciones Aurora Boreal Fluidas */
+@keyframes float1 {
+  0% { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+  33% { transform: translate(15%, -15%) scale(1.15) rotate(10deg); }
+  66% { transform: translate(-15%, 15%) scale(0.9) rotate(-5deg); }
+  100% { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+}
+
+@keyframes float2 {
+  0% { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+  33% { transform: translate(-20%, 15%) scale(0.85) rotate(-10deg); }
+  66% { transform: translate(15%, -20%) scale(1.1) rotate(5deg); }
+  100% { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+}
+
+@keyframes float3 {
+  0% { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+  33% { transform: translate(25%, 25%) scale(1.15) rotate(15deg); }
+  66% { transform: translate(-20%, -20%) scale(0.85) rotate(-15deg); }
+  100% { transform: translate(0%, 0%) scale(1) rotate(0deg); }
+}
+
+.anim-float-1 { animation: float1 18s infinite ease-in-out alternate; }
+.anim-float-2 { animation: float2 22s infinite ease-in-out alternate; }
+.anim-float-3 { animation: float3 25s infinite ease-in-out alternate; }
+
+/* ✨ Animación Estrella "Lucero" (Aurora Premium) */
+@keyframes lucero-glow {
+  0% { 
+    transform: scale(0.95); 
+    opacity: 0.85; 
+    filter: drop-shadow(0 0 2px rgba(217, 70, 239, 0.3)); 
+  }
+  50% { 
+    transform: scale(1.15); 
+    opacity: 1; 
+    filter: drop-shadow(0 0 8px rgba(217, 70, 239, 0.8)) drop-shadow(0 0 12px rgba(56, 189, 248, 0.6)); 
+  }
+  100% { 
+    transform: scale(0.95); 
+    opacity: 0.85; 
+    filter: drop-shadow(0 0 2px rgba(217, 70, 239, 0.3)); 
+  }
+}
+
+.animate-lucero {
+  animation: lucero-glow 3s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  transform-origin: center center;
+}

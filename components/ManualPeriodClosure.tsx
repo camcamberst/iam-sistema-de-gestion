@@ -1,13 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabase';
 import { isClosureDay, getPeriodToClose, getNewPeriodAfterClosure } from '@/utils/period-closure-dates';
-
-const supabaseAuth = typeof window !== 'undefined' ? createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-) : null;
 
 interface ManualPeriodClosureProps {
   userId: string;
@@ -207,7 +202,7 @@ export default function ManualPeriodClosure({ userId, userRole, groupId }: Manua
     setError(null);
     setAvisoResult(null);
     try {
-      const { data: { session } } = await supabaseAuth?.auth.getSession() ?? { data: { session: null } };
+      const { data: { session } } = await supabase.auth.getSession() ?? { data: { session: null } };
       if (!session?.access_token) throw new Error('Sesión no disponible');
       const res = await fetch('/api/chat/notify-calculadora-restored', {
         method: 'POST',

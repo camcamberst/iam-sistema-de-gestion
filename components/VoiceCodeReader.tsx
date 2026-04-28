@@ -1,12 +1,8 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseClient = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
+import { supabase } from '@/lib/supabase';
+import PillTabs from '@/components/ui/PillTabs';
 
 type Lang = 'en' | 'de';
 
@@ -116,7 +112,7 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
 
   const reportLeakToAdmins = useCallback(async (suspiciousCode: string) => {
     try {
-      const { data: { session } } = await supabaseClient.auth.getSession();
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session?.access_token) return;
       await fetch('/api/security/vx-leak-alert', {
         method: 'POST',
@@ -193,64 +189,84 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
   }
 
   return (
-    <div className={`bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-600/20 p-4 flex flex-col ${className}`}>
+    <div className={`flex flex-col gap-1.5 sm:gap-2 h-full ${className}`}>
 
-      {/* Header */}
-      <div className="flex items-center space-x-2 mb-4">
-        <div className="w-7 h-7 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center shadow-md flex-shrink-0">
-          <svg className="w-3.5 h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
-          </svg>
-        </div>
-        <div>
-          <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Lector de Código Vx</h3>
-          <p className="text-xs text-gray-500 dark:text-gray-300">Ingresa el código y la voz lo dictará</p>
+      {/* TÍTULO MINIMALISTA POR FUERA DE LA CAJA */}
+      <div className="flex items-center justify-between px-1">
+        <div className="flex items-center space-x-1 sm:space-x-1.5 min-w-0">
+          <div className="flex items-center justify-center text-violet-500 drop-shadow-[0_0_8px_rgba(139,92,246,0.6)]">
+            <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5}
+                d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+            </svg>
+          </div>
+          <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-[0_0_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+            Lector de Código Vx
+          </h2>
         </div>
       </div>
 
+      <div className="flex-1 glass-card bg-black/[0.08] dark:bg-white/[0.08] backdrop-blur-3xl rounded-[1.25rem] sm:rounded-2xl border border-white/40 dark:border-white/[0.08] max-sm:dark:border-white/8 shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] p-3 sm:p-4 flex flex-col">
       {/* Selector de idioma */}
-      <div className="flex gap-2 mb-4">
-        {(['en', 'de'] as Lang[]).map(l => (
-          <button
-            key={l}
-            onClick={() => { setLang(l); stop(); }}
-            className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-xs font-semibold border transition-all duration-200 ${
-              lang === l
-                ? 'bg-violet-500 border-violet-500 text-white shadow-sm'
-                : 'bg-gray-50 dark:bg-gray-600/40 border-gray-200 dark:border-gray-600 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600/60'
-            }`}
-          >
-            <span className="text-base">{l === 'en' ? '🇬🇧' : '🇩🇪'}</span>
-            {l === 'en' ? 'English' : 'Deutsch'}
-          </button>
-        ))}
+      <div className="mb-2 sm:mb-2">
+        <PillTabs
+          tabs={[
+            { id: 'en', label: 'English' },
+            { id: 'de', label: 'Alemán' },
+          ]}
+          activeTab={lang}
+          onTabChange={(l) => { setLang(l as Lang); stop(); }}
+          fullWidth
+        />
       </div>
 
       {/* Input del código */}
-      <div className="mb-4">
+      <div className="mb-2 sm:mb-3">
         <label className="block text-xs font-medium text-gray-700 dark:text-gray-200 mb-1.5 flex items-center justify-between">
           <span>Código a dictar</span>
           <span className="text-gray-400 dark:text-gray-500 font-normal">{code.length}/{MAX_DIGITS}</span>
         </label>
-        <input
-          type="text"
-          inputMode="numeric"
-          value={code}
-          onChange={e => handleCodeChange(e.target.value)}
-          placeholder="Ej: 48271"
-          maxLength={MAX_DIGITS}
-          className={`w-full px-3 py-2.5 rounded-lg border bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 text-lg font-mono tracking-[0.3em] text-center focus:outline-none focus:ring-2 placeholder:tracking-normal placeholder:text-sm placeholder:font-sans transition-colors ${
-            leakAlert
-              ? 'border-red-400 dark:border-red-500 focus:ring-red-400'
-              : 'border-gray-200 dark:border-gray-600 focus:ring-violet-400 dark:focus:ring-violet-500'
-          }`}
-        />
+        <div className="relative w-full">
+          <input
+            type="text"
+            inputMode="numeric"
+            value={code}
+            onChange={e => handleCodeChange(e.target.value)}
+            placeholder="Ej: 48271"
+            maxLength={MAX_DIGITS}
+            className={`w-full pl-4 pr-12 py-3 rounded-2xl border bg-white/60 dark:bg-white/[0.04] text-gray-900 dark:text-gray-100 text-lg font-semibold tracking-wider text-center focus:outline-none focus:ring-2 shadow-[inset_0_2px_10px_rgba(0,0,0,0.03)] dark:shadow-[inset_0_2px_10px_rgba(0,0,0,0.2)] placeholder:font-normal placeholder:tracking-normal placeholder:text-sm transition-all duration-300 ${
+              leakAlert
+                ? 'border-red-400 dark:border-red-500 focus:ring-red-400'
+                : 'border-gray-200 dark:border-white/10 focus:ring-violet-400 dark:focus:ring-violet-500/50'
+            }`}
+          />
+          
+          <button
+            onClick={speaking ? stop : speak}
+            disabled={!digits.length || !voicesReady}
+            className={`absolute right-1.5 top-1/2 -translate-y-1/2 w-9 h-9 sm:w-10 sm:h-10 rounded-[10px] sm:rounded-xl flex items-center justify-center transition-all duration-300 shadow-sm disabled:opacity-40 disabled:cursor-not-allowed ${
+              speaking 
+                ? 'bg-red-500 hover:bg-red-600 text-white shadow-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.4)]' 
+                : 'bg-violet-500 hover:bg-violet-600 dark:bg-violet-600 dark:hover:bg-violet-500 text-white shadow-[0_0_10px_rgba(139,92,246,0.3)]'
+            }`}
+            title={speaking ? "Detener" : `Dictar en ${lang === 'en' ? 'Inglés' : 'Alemán'}`}
+          >
+            {speaking ? (
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                <rect x="6" y="6" width="12" height="12" rx="2" />
+              </svg>
+            ) : (
+              <svg className="w-4 h-4 translate-x-[1px]" fill="currentColor" viewBox="0 0 24 24">
+                <path d="M8 5v14l11-7z" />
+              </svg>
+            )}
+          </button>
+        </div>
       </div>
 
       {/* Alerta de posible filtración */}
       {leakAlert && (
-        <div className="mb-4 rounded-lg border border-red-300 dark:border-red-500/60 bg-red-50 dark:bg-red-900/25 px-3 py-2.5 flex items-start gap-2">
+        <div className="mb-3 sm:mb-4 rounded-lg border border-red-300 dark:border-red-500/60 bg-red-50 dark:bg-red-900/25 px-2.5 py-1.5 sm:px-3 sm:py-2.5 flex items-start gap-1.5 sm:gap-2">
           <svg className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
               d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
@@ -263,16 +279,16 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
 
       {/* Visualizador de dígitos */}
       {digits.length > 0 && (
-        <div className="flex justify-center gap-2 mb-4 flex-wrap">
+        <div className="flex justify-center gap-1.5 sm:gap-2 mb-2 sm:mb-3 flex-wrap">
           {digits.map((d, i) => (
             <div
               key={i}
-              className={`w-9 h-10 flex items-center justify-center rounded-lg border-2 text-lg font-bold font-mono transition-all duration-200 ${
+              className={`w-7 h-8 sm:w-9 sm:h-10 flex items-center justify-center rounded-lg border-2 text-sm sm:text-lg font-bold font-mono transition-all duration-200 ${
                 currentDigit === i
                   ? 'border-violet-500 bg-violet-500 text-white scale-110 shadow-lg shadow-violet-200 dark:shadow-violet-900/40'
                   : currentDigit !== null && i < currentDigit
                   ? 'border-green-400 bg-green-50 dark:bg-green-900/20 text-green-600 dark:text-green-400'
-                  : 'border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-700/40 text-gray-700 dark:text-gray-200'
+                  : 'border-gray-200 dark:border-white/10 bg-white/50 dark:bg-white/[0.03] text-gray-700 dark:text-gray-300'
               }`}
             >
               {d}
@@ -281,33 +297,6 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
         </div>
       )}
 
-      {/* Botón principal */}
-      <button
-        onClick={speaking ? stop : speak}
-        disabled={!digits.length || !voicesReady}
-        className={`w-full py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center justify-center gap-2 shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed ${
-          speaking
-            ? 'bg-red-500 hover:bg-red-600 text-white'
-            : 'bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white shadow-violet-200 dark:shadow-violet-900/40'
-        }`}
-      >
-        {speaking ? (
-          <>
-            <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-              <rect x="6" y="6" width="12" height="12" rx="2" />
-            </svg>
-            Detener
-          </>
-        ) : (
-          <>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-                d="M15.536 8.464a5 5 0 010 7.072M12 9.5v5m0-9l3 3m-3-3L9 8.5M5.464 8.464a9 9 0 000 12.728" />
-            </svg>
-            {voicesReady ? `Dictar en ${lang === 'en' ? 'inglés' : 'alemán'}` : 'Cargando voces...'}
-          </>
-        )}
-      </button>
 
       {/* Indicador de palabra actual */}
       {speaking && currentDigit !== null && digits[currentDigit] !== undefined && (
@@ -318,6 +307,7 @@ export default function VoiceCodeReader({ className = '' }: VoiceCodeReaderProps
           </span>
         </div>
       )}
+      </div>
     </div>
   );
 }

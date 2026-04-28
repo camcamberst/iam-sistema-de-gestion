@@ -1,4 +1,4 @@
-// File: C:\Users\camca\OneDrive\Documentos\GitHub\iam-sistema-de-gestion\app\admin\model\anticipos\solicitar\page.tsx
+// File: C:\Users\camca\OneDrive\Documentos\navegador\iam-gestion\app\admin\model\anticipos\solicitar\page.tsx
 import * as entry from '../../../../../../../app/admin/model/anticipos/solicitar/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

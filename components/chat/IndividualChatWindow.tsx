@@ -75,14 +75,7 @@ export default function IndividualChatWindow({
       const minX = 20;
       const adjustedX = Math.max(minX, finalX);
 
-      console.log('🪟 [IndividualChatWindow] Posición flotante (DERECHA A IZQUIERDA):', {
-        windowIndex,
-        finalX,
-        adjustedX,
-        finalY,
-        mainChatLeftEdge,
-        calculation: `${mainChatLeftEdge} - ${marginFloat} + (${windowIndex} * (${windowWidth} + ${marginFloat}))`
-      });
+      (function(){})()
 
       return { x: adjustedX, y: finalY };
     }
@@ -106,7 +99,7 @@ export default function IndividualChatWindow({
         const timeDiff = now.getTime() - messageTime.getTime();
         
         if (timeDiff < 5000) { // 5 segundos
-          console.log('🔔 [IndividualChat] Mensaje nuevo detectado');
+          (function(){})()
           // Sin sonido - solo logging
         }
       }
@@ -132,7 +125,7 @@ export default function IndividualChatWindow({
           }
         }
       } catch (error) {
-        console.error('❌ [IndividualChat] Error en polling:', error);
+        (function(){})()
       }
     };
 
@@ -213,7 +206,7 @@ export default function IndividualChatWindow({
     // Esto asegura que no se muestren mensajes de la conversación anterior
     if (prevConversationIdRef.current !== null && 
         prevConversationIdRef.current !== conversationId) {
-      console.log('🔄 [IndividualChat] Limpiando mensajes previos al cambiar de conversación');
+      (function(){})()
       setMessages([]);
       setNewMessage('');
     }
@@ -229,14 +222,11 @@ export default function IndividualChatWindow({
       
       if (data.success) {
         const newMessages = data.messages || [];
-        console.log('📨 [IndividualChat] Mensajes cargados:', { 
-          conversationId,
-          count: newMessages.length 
-        });
+        (function(){})()
         setMessages(newMessages);
       }
     } catch (error) {
-      console.error('Error cargando mensajes:', error);
+      (function(){})()
     } finally {
       setIsLoading(false);
     }
@@ -244,24 +234,15 @@ export default function IndividualChatWindow({
 
   // Enviar mensaje
   const sendMessage = async () => {
-    console.log('📤 [IndividualChat] Intentando enviar mensaje:', {
-      newMessage: newMessage.trim(),
-      conversationId,
-      hasSession: !!session,
-      sessionToken: session?.access_token ? 'Presente' : 'Ausente'
-    });
+    (function(){})()
     
     if (!newMessage.trim() || !conversationId || !session) {
-      console.log('❌ [IndividualChat] Validación fallida:', {
-        hasMessage: !!newMessage.trim(),
-        hasConversationId: !!conversationId,
-        hasSession: !!session
-      });
+      (function(){})()
       return;
     }
     
     try {
-      console.log('🚀 [IndividualChat] Enviando mensaje a API...');
+      (function(){})()
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
         headers: {
@@ -275,12 +256,12 @@ export default function IndividualChatWindow({
         })
       });
       
-      console.log('📡 [IndividualChat] Respuesta de API:', response.status, response.statusText);
+      (function(){})()
       const data = await response.json();
-      console.log('📋 [IndividualChat] Datos de respuesta:', data);
+      (function(){})()
       
       if (data.success) {
-        console.log('✅ [IndividualChat] Mensaje enviado exitosamente');
+        (function(){})()
         
         // Marcar mensaje como enviado inicialmente
         if (data.message?.id) {
@@ -302,19 +283,19 @@ export default function IndividualChatWindow({
         setReplyTo(null); // Limpiar reply después de enviar
         await loadMessages(); // Recargar mensajes
       } else {
-        console.log('❌ [IndividualChat] Error en respuesta:', data.error);
+        (function(){})()
       }
     } catch (error) {
-      console.error('❌ [IndividualChat] Error enviando mensaje:', error);
+      (function(){})()
     }
   };
 
   // Manejar tecla Enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    console.log('⌨️ [IndividualChat] Tecla presionada:', e.key);
+    (function(){})()
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      console.log('🚀 [IndividualChat] Enter presionado, enviando mensaje...');
+      (function(){})()
       sendMessage();
     }
   };
@@ -334,10 +315,7 @@ export default function IndividualChatWindow({
     if (prevConversationIdRef.current !== null && 
         prevConversationIdRef.current !== conversationId && 
         conversationId) {
-      console.log('🔄 [IndividualChat] Cambio de conversación detectado:', {
-        from: prevConversationIdRef.current,
-        to: conversationId
-      });
+      (function(){})()
       setMessages([]); // Limpiar mensajes inmediatamente
       setNewMessage(''); // Limpiar input de mensaje
       setMessageReadStatus({}); // Limpiar estados de lectura
@@ -365,7 +343,7 @@ export default function IndividualChatWindow({
           filter: `conversation_id=eq.${conversationId}`
         },
         async (payload) => {
-          console.log('📨 [IndividualChat] Nuevo mensaje recibido:', payload);
+          (function(){})()
           await loadMessages();
         }
       )
@@ -646,7 +624,7 @@ export default function IndividualChatWindow({
           />
           <button
             onClick={() => {
-              console.log('🖱️ [IndividualChat] Botón enviar clickeado');
+              (function(){})()
               sendMessage();
             }}
             disabled={!newMessage.trim()}

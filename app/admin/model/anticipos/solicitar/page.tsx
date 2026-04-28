@@ -9,6 +9,7 @@ import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard, { InfoCardGrid } from '@/components/ui/InfoCard';
 import GlassCard from '@/components/ui/GlassCard';
 import PageHeader from '@/components/ui/PageHeader';
+import PillTabs from '@/components/ui/PillTabs';
 import ModelAuroraBackground from '@/components/ui/ModelAuroraBackground';
 
 interface User {
@@ -462,38 +463,43 @@ export default function SolicitarAnticipoPage() {
   // Mostrar pantalla de restricción si no está permitido solicitar anticipo
   if (restrictionInfo && !restrictionInfo.allowed) {
     return (
-      <div className="min-h-screen relative w-full overflow-hidden flex items-center justify-center">
+      <div className="min-h-[100dvh] relative w-full overflow-hidden flex flex-col items-center justify-start pt-[20vh] sm:pt-[25vh]">
         <ModelAuroraBackground />
-        <div className="relative z-10 max-w-md mx-auto text-center p-6 bg-white/10 dark:bg-gray-900/40 backdrop-blur-md rounded-2xl border border-white/20 shadow-xl">
-          <div className="mb-4">
-            <div className="w-16 h-16 bg-yellow-100 dark:bg-yellow-900/60 rounded-full flex items-center justify-center mx-auto mb-4 border border-yellow-200 dark:border-yellow-700">
-              <svg className="w-8 h-8 text-yellow-600 dark:text-yellow-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </div>
-            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">
+        <div className="relative z-10 w-[calc(100%-2.5rem)] max-w-[320px] sm:max-w-md mx-auto text-center p-5 sm:p-7 bg-white/10 dark:bg-gray-900/40 backdrop-blur-md rounded-[1.5rem] sm:rounded-2xl border border-white/20 shadow-xl">
+          <div className="mb-4 sm:mb-5">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4 tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)] flex items-center justify-center">
+              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-amber-500 dark:bg-amber-400 rounded-full mr-2 sm:mr-2.5 shadow-[0_0_5px_rgba(245,158,11,0.6)]"></span>
               Solicitud No Disponible
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-4">
+            <p className="text-[13.5px] sm:text-base text-gray-600 dark:text-gray-300 mb-4 sm:mb-5 leading-snug">
               {restrictionInfo.reason}
             </p>
-            <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-lg p-4">
-              <p className="text-sm text-blue-800 dark:text-blue-300">
-                <strong>Próxima fecha disponible:</strong><br />
-                {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric'
-                })}
+            <div className="bg-blue-50/80 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-700/50 rounded-[12px] p-3 sm:p-4">
+              <p className="text-[12.5px] sm:text-sm text-blue-800 dark:text-blue-300">
+                <strong className="block mb-0.5">Próxima fecha disponible:</strong>
+                <span className="capitalize">
+                  {restrictionInfo.nextAvailable?.toLocaleDateString('es-CO', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
               </p>
             </div>
           </div>
           <button
-            onClick={() => router.back()}
-            className="px-6 py-2.5 bg-gray-800 dark:bg-gray-700 text-white font-medium rounded-full hover:bg-gray-900 dark:hover:bg-gray-600 transition-colors"
+            onClick={() => router.push('/admin/model/dashboard')}
+            className="w-full sm:w-auto mx-auto relative overflow-hidden min-h-[44px] sm:min-h-0 px-8 py-2.5 sm:px-8 sm:py-2.5 text-[13px] sm:text-[14px] font-extrabold rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center group bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none backdrop-blur-md shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)]"
           >
-            Regresar
+            <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
+              background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
+              backgroundSize: '200% 100%',
+              animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
+            }}></div>
+            <span className="relative z-10 flex items-center tracking-widest uppercase">
+              REGRESAR
+            </span>
           </button>
         </div>
       </div>
@@ -527,7 +533,7 @@ export default function SolicitarAnticipoPage() {
   return (
     <div className="min-h-screen relative w-full overflow-hidden">
       <ModelAuroraBackground />
-      <div className="relative z-10 max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-20 xl:px-32 py-8 pt-6 sm:pt-8">
       <style jsx>{`
         /* Dropdown compacto con scrollbar */
         .bank-select {
@@ -551,105 +557,109 @@ export default function SolicitarAnticipoPage() {
       `}</style>
         <PageHeader
           title="Mis Anticipos"
+          subtitle="Servicio no disponible en cierres de periodos y hasta después de días de pago"
           glow="model"
           icon={<span className="font-bold text-white text-xl sm:text-2xl pt-1">$</span>}
+          actionClassName="max-sm:hidden"
+          actions={
+            <PillTabs
+              variant="guardar"
+              tabs={[
+                { id: 'nueva', label: 'Nueva Solicitud' },
+                { id: 'historial', label: 'Mi Historial' }
+              ]}
+              activeTab={activeTab}
+              onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
+            />
+          }
         />
 
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 relative z-10">
-          <div className="flex p-1 bg-gray-200/60 dark:bg-gray-800/80 backdrop-blur-md rounded-full shadow-inner border border-white/20 dark:border-white/5 w-fit">
-            <button
-              onClick={() => setActiveTab('nueva')}
-              className={`px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
-                activeTab === 'nueva' 
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              Nueva Solicitud
-            </button>
-            <button
-              onClick={() => setActiveTab('historial')}
-              className={`px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
-                activeTab === 'historial' 
-                  ? 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm' 
-                  : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200'
-              }`}
-            >
-              Mi Historial
-            </button>
-          </div>
-
-          <div className="flex items-center gap-2 px-4 py-2 bg-transparent">
-            <svg className="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" /></svg>
-            <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Servicio no disponible en cierres de periodos y hasta después de días de pago</p>
-          </div>
+        {/* Controles de Pestañas (Exclusivo en MÓVIL, centrado y debajo del header) */}
+        <div className="w-full sm:hidden flex justify-center px-0 mb-6">
+          <PillTabs
+            variant="guardar"
+            tabs={[
+              { id: 'nueva', label: 'Nueva Solicitud' },
+              { id: 'historial', label: 'Mi Historial' }
+            ]}
+            activeTab={activeTab}
+            onTabChange={(tab) => setActiveTab(tab as typeof activeTab)}
+          />
         </div>
 
         {activeTab === 'nueva' && (
           <div className="animate-fade-in-up">
         {/* Resumen de Productividad - ESTILO APPLE REFINADO */}
-        <GlassCard glow="model" padding="none" className="rounded-2xl p-3 sm:p-6 mb-4 sm:mb-6 hover:shadow-md transition-all duration-300">
-          <div className="flex items-center justify-between mb-3 sm:mb-4">
-            <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-gray-100 flex items-center">
-              <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1.5 sm:mr-2"></span>
-              Resumen de Productividad
-            </h2>
+        <div className="flex items-center space-x-1 sm:space-x-1.5 px-1 mb-2 mt-2">
+          <div className="flex items-center justify-center text-emerald-500 drop-shadow-[0_0_8px_rgba(16,185,129,0.6)]">
+            <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+            </svg>
           </div>
-          
-          {/* Móvil: 2 columnas, Escritorio: 3 columnas */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 sm:gap-4">
-            <InfoCard
-              value={loadingProductivity 
-                ? '...' 
-                : `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-              label="COP Modelo"
-              color="blue"
-              size="sm"
-            />
-            <InfoCard
-              value={loadingProductivity
-                ? '...'
-                : `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-              label="Anticipo Disponible"
-              color="green"
-              onClick={!loadingProductivity ? handleAnticipoDisponibleClick : undefined}
-              clickable={!loadingProductivity}
-              size="sm"
-            />
-            {/* En móvil, la tercera card ocupa 2 columnas para mantener balance */}
-            <InfoCard
-              value={loadingProductivity
-                ? '...'
-                : `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`}
-              label="Ya Pagados"
-              color="orange"
-              size="sm"
-              className="col-span-2 md:col-span-1"
+          <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-[0_0_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+            <span className="hidden sm:inline">Resumen de&nbsp;</span>Productividad
+          </h2>
+        </div>
+        <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] max-sm:p-1.5 sm:p-2.5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden mb-4 sm:mb-6 hover:shadow-md transition-all duration-300">
+          <div className="relative z-10 flex flex-col flex-1">
+            <InfoCardGrid
+              columns={3}
+              cards={[
+                {
+                  value: loadingProductivity ? '...' : `$${productivityData.copModelo.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                  label: "COP Modelo",
+                  color: "blue",
+                  size: "sm"
+                },
+                {
+                  value: loadingProductivity ? '...' : `$${productivityData.anticipoDisponible.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                  label: "Disponible",
+                  color: "green",
+                  onClick: !loadingProductivity ? handleAnticipoDisponibleClick : undefined,
+                  clickable: !loadingProductivity,
+                  size: "sm"
+                },
+                {
+                  value: loadingProductivity ? '...' : `$${productivityData.anticiposPagados.toLocaleString('es-CO', { minimumFractionDigits: 0, maximumFractionDigits: 0 })}`,
+                  label: "Realizados",
+                  color: "purple",
+                  size: "sm"
+                }
+              ]}
             />
           </div>
+        </div>
           
-          {productivityData.copModelo === 0 && !loadingProductivity && (
-            <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-lg">
-              <div className="flex items-start">
-                <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
-                </svg>
-                <div className="text-sm">
-                  <p className="font-medium text-yellow-800 dark:text-yellow-300">
-                    No se encontraron valores registrados
-                  </p>
-                  <p className="text-yellow-700 dark:text-yellow-400 mt-1">
-                    Asegúrate de haber ingresado y <strong>guardado</strong> tus ganancias en <button onClick={() => router.push('/admin/model/calculator')} className="underline hover:text-yellow-900 dark:hover:text-yellow-200">Mi Calculadora</button> para este periodo.
-                  </p>
-                </div>
+        {productivityData.copModelo === 0 && !loadingProductivity && (
+          <div className="mb-4 sm:mb-6 p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700/50 rounded-[1.25rem] sm:rounded-2xl">
+            <div className="flex items-start">
+              <svg className="w-5 h-5 text-yellow-600 dark:text-yellow-400 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M12 2a10 10 0 100 20 10 10 0 000-20z" />
+              </svg>
+              <div className="text-sm">
+                <p className="font-medium text-yellow-800 dark:text-yellow-300">
+                  No se encontraron valores registrados
+                </p>
+                <p className="text-yellow-700 dark:text-yellow-400 mt-1">
+                  Asegúrate de haber ingresado y <strong>guardado</strong> tus ganancias en <button onClick={() => router.push('/admin/model/calculator')} className="underline hover:text-yellow-900 dark:hover:text-yellow-200">Mi Calculadora</button> para este periodo.
+                </p>
               </div>
             </div>
-          )}
-        </GlassCard>
+          </div>
+        )}
 
         {/* Formulario */}
-        <GlassCard glow="model" padding="none" className="rounded-2xl p-4 sm:p-6">
-          <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Datos del Anticipo</h2>
+        <div className="flex items-center space-x-1 sm:space-x-1.5 px-1 mb-2 mt-6 sm:mt-8">
+          <div className="flex items-center justify-center text-blue-500 drop-shadow-[0_0_8px_rgba(59,130,246,0.6)]">
+            <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+          </div>
+          <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-[0_0_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+            Datos del Anticipo
+          </h2>
+        </div>
+        <div className="flex-1 relative glass-card bg-black/[0.08] dark:bg-white/[0.06] backdrop-blur-3xl border border-white/40 dark:border-white/[0.08] p-4 sm:p-5 rounded-[1.25rem] sm:rounded-2xl shadow-sm shadow-black/5 dark:shadow-[0_1px_0_0_rgba(255,255,255,0.02)_inset,0_4px_20px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden mb-4 sm:mb-6 hover:shadow-md transition-all duration-300">
           
           {success && (
             <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-lg">
@@ -675,12 +685,12 @@ export default function SolicitarAnticipoPage() {
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-8">
+          <form onSubmit={handleSubmit} className="space-y-6 sm:space-y-7">
             {/* Monto Solicitado y Medio de Pago - Layout Horizontal */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6">
               {/* Monto Solicitado */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-[12px] font-semibold text-gray-700 dark:text-gray-300 mb-2 tracking-wide uppercase">
                   Monto Solicitado (COP)
                 </label>
                 <div className="relative">
@@ -690,42 +700,42 @@ export default function SolicitarAnticipoPage() {
                     onChange={(e) => handleMontoChange(e.target.value)}
                     onBlur={handleMontoBlur}
                     placeholder=""
-                    className={`apple-input w-full pr-20 h-12 sm:h-10 text-base sm:text-sm ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500 focus:ring-red-500' : ''} touch-manipulation`}
-                    style={{ paddingLeft: '2rem' }}
+                    className={`w-full pr-16 h-10 text-[14px] font-medium bg-white/60 dark:bg-black/20 border border-black/10 dark:border-white/10 rounded-xl text-gray-900 dark:text-white focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all ${montoError && anticipoData.monto_solicitado > 0 ? 'border-red-500/50 focus:ring-red-500/50' : ''}`}
+                    style={{ paddingLeft: '1.75rem' }}
                   />
-                  <div className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium select-none pointer-events-none">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 font-medium text-[14px] select-none pointer-events-none">
                     $
                   </div>
-                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-sm font-medium text-blue-600">
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[11px] font-semibold text-blue-700 dark:text-blue-300 bg-blue-100/60 dark:bg-blue-900/40 px-1.5 py-0.5 rounded border border-blue-200/50 dark:border-blue-700/50">
                     {calculatePercentage().toFixed(1)}%
                   </div>
                 </div>
                 {montoError && anticipoData.monto_solicitado > 0 && (
-                  <p className="text-red-500 text-xs mt-1">{montoError}</p>
+                  <p className="text-red-500 text-[11px] mt-1.5">{montoError}</p>
                 )}
-                <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  Máximo disponible: ${roundDownToNearestTenThousand(productivityData.anticipoDisponible).toLocaleString('es-CO')} COP (múltiplos de 10.000)
+                <p className="text-[11px] text-gray-500 dark:text-gray-400 mt-1.5">
+                  Máximo: ${roundDownToNearestTenThousand(productivityData.anticipoDisponible).toLocaleString('es-CO')} COP (múltiplos de 10.000)
                 </p>
               </div>
 
               {/* Medio de Pago */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-3">
+                <label className="block text-[12px] font-semibold text-gray-700 dark:text-gray-300 mb-2 tracking-wide uppercase">
                   Medio de Pago
                 </label>
-                <div className="space-y-2 sm:space-y-3">
+                <div className="space-y-2">
                   {['nequi', 'daviplata', 'cuenta_bancaria'].map((medio) => (
-                    <label key={medio} className="flex items-center p-3 sm:p-4 rounded-lg border-2 border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 active:bg-gray-100 dark:active:bg-gray-600 cursor-pointer transition-colors touch-manipulation min-h-[48px]">
+                    <label key={medio} className="flex items-center px-3 py-2.5 rounded-xl border border-black/5 dark:border-white/5 bg-white/40 dark:bg-black/20 hover:bg-white/60 dark:hover:bg-black/30 active:scale-[0.99] cursor-pointer transition-all touch-manipulation min-h-[40px]">
                       <input
                         type="radio"
                         name="medio_pago"
                         value={medio}
                         checked={anticipoData.medio_pago === medio}
                         onChange={(e) => handleInputChange('medio_pago', e.target.value)}
-                        className="mr-3 sm:mr-4 w-5 h-5 sm:w-4 sm:h-4 text-blue-600 focus:ring-blue-500"
+                        className="mr-3 w-4 h-4 text-blue-500 border-gray-300 dark:border-gray-600 focus:ring-blue-500/50 bg-white dark:bg-gray-800"
                       />
-                      <span className="text-sm sm:text-base font-medium text-gray-700 dark:text-gray-200">
-                        {medio === 'cuenta_bancaria' ? 'CUENTA BANCARIA' : medio.toUpperCase()}
+                      <span className="text-[13px] font-medium text-gray-800 dark:text-gray-200">
+                        {medio === 'cuenta_bancaria' ? 'Cuenta Bancaria' : medio.toUpperCase()}
                       </span>
                     </label>
                   ))}
@@ -735,11 +745,12 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos NEQUI/DAVIPLATA */}
             {(anticipoData.medio_pago === 'nequi' || anticipoData.medio_pago === 'daviplata') && (
-              <div className="bg-blue-50 dark:bg-blue-50/90 rounded-xl p-4 sm:p-6 border border-blue-200 dark:border-blue-200/50 shadow-sm">
-                <h3 className="text-base sm:text-lg font-semibold text-blue-900 dark:text-blue-600 mb-4">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
+              <div className="bg-blue-50/50 dark:bg-[#1E293B]/60 rounded-xl p-4 sm:p-5 border border-blue-200/60 dark:border-blue-500/20 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-blue-500/70 dark:bg-blue-400/50 rounded-l-xl"></div>
+                <h3 className="text-[14px] font-semibold text-blue-800 dark:text-blue-300 mb-3">Datos de {anticipoData.medio_pago.toUpperCase()}</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Nombre del Beneficiario
                     </label>
                     <input
@@ -747,25 +758,25 @@ export default function SolicitarAnticipoPage() {
                       value={anticipoData.nombre_beneficiario || ''}
                       onChange={(e) => handleInputChange('nombre_beneficiario', e.target.value)}
                       placeholder="Nombre completo"
-                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
+                      className="w-full px-3 py-2 h-10 text-[13px] text-left border border-black/10 dark:border-white/10 rounded-lg bg-white/70 dark:bg-black/30 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all"
                       required
                     />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Número de {anticipoData.medio_pago.toUpperCase()}
                     </label>
                     <input
                       type="tel"
                       value={anticipoData.numero_telefono || ''}
                       onChange={(e) => handleTelefonoChange(e.target.value)}
-                      placeholder="Número de teléfono (10 dígitos)"
-                      className={`w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation ${telefonoError ? 'border-red-500 focus:ring-red-500' : ''}`}
+                      placeholder="Teléfono (10 dígitos)"
+                      className={`w-full px-3 py-2 h-10 text-[13px] text-left border border-black/10 dark:border-white/10 rounded-lg bg-white/70 dark:bg-black/30 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all ${telefonoError ? 'border-red-500/50 focus:ring-red-500/50' : ''}`}
                       maxLength={10}
                       required
                     />
                     {telefonoError && (
-                      <p className="text-red-500 text-xs mt-1">{telefonoError}</p>
+                      <p className="text-red-500 text-[11px] mt-1">{telefonoError}</p>
                     )}
                   </div>
                 </div>
@@ -774,27 +785,28 @@ export default function SolicitarAnticipoPage() {
 
             {/* Datos Cuenta Bancaria */}
             {anticipoData.medio_pago === 'cuenta_bancaria' && (
-              <div className="bg-green-50 dark:bg-green-50/90 rounded-xl p-4 sm:p-6 border border-green-200 dark:border-green-200/50 shadow-sm">
-                <h3 className="text-base sm:text-lg font-semibold text-green-900 dark:text-green-600 mb-4 sm:mb-6">Datos de CUENTA BANCARIA</h3>
+              <div className="bg-emerald-50/50 dark:bg-[#064E3B]/30 rounded-xl p-4 sm:p-5 border border-emerald-200/60 dark:border-emerald-500/20 shadow-sm relative overflow-hidden">
+                <div className="absolute top-0 left-0 w-1 h-full bg-emerald-500/70 dark:bg-emerald-400/50 rounded-l-xl"></div>
+                <h3 className="text-[14px] font-semibold text-emerald-800 dark:text-emerald-400 mb-3">Datos de Cuenta Bancaria</h3>
                 
                 {/* Primera fila: Nombre del Titular y Banco */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-4 sm:mb-5">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Nombre del Titular
                     </label>
                     <input
                       type="text"
                       value={anticipoData.nombre_titular || ''}
                       onChange={(e) => handleInputChange('nombre_titular', e.target.value)}
-                      placeholder="Nombre completo del titular"
-                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
+                      placeholder="Nombre completo"
+                      className="w-full px-3 py-2 h-10 text-[13px] text-left border border-black/10 dark:border-white/10 rounded-lg bg-white/70 dark:bg-black/30 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                       required
                     />
                   </div>
                   
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Banco
                     </label>
                     <AppleDropdown
@@ -804,9 +816,9 @@ export default function SolicitarAnticipoPage() {
                       }))}
                       value={anticipoData.banco || ''}
                       onChange={(value) => handleInputChange('banco', value)}
-                      placeholder="Selecciona un banco"
-                      maxHeight="max-h-32"
-                      className="text-sm"
+                      placeholder="Selecciona banco"
+                      maxHeight="max-h-40"
+                      className="text-[13px] !h-10 border-black/10 dark:border-white/10 bg-white/70 dark:bg-black/30"
                       variant="input"
                     />
                   </div>
@@ -814,25 +826,25 @@ export default function SolicitarAnticipoPage() {
 
                 {/* Banco Otros */}
                 {anticipoData.banco === 'Otros' && (
-                  <div className="mb-4 sm:mb-6">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-2 sm:mb-3">
+                  <div className="mb-4 sm:mb-5">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Nombre del Banco
                     </label>
                     <input
                       type="text"
                       value={anticipoData.banco_otro || ''}
                       onChange={(e) => handleInputChange('banco_otro', e.target.value)}
-                      placeholder="Escribe el nombre del banco"
-                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
+                      placeholder="Especifica el banco"
+                      className="w-full px-3 py-2 h-10 text-[13px] text-left border border-black/10 dark:border-white/10 rounded-lg bg-white/70 dark:bg-black/30 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                       required
                     />
                   </div>
                 )}
 
                 {/* Segunda fila: Tipo de Cuenta y Número de Cuenta */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-2">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Tipo de Cuenta
                     </label>
                     <AppleDropdown
@@ -842,22 +854,22 @@ export default function SolicitarAnticipoPage() {
                       }))}
                       value={anticipoData.tipo_cuenta || ''}
                       onChange={(value) => handleInputChange('tipo_cuenta', value)}
-                      placeholder="Selecciona tipo de cuenta"
-                      className="text-sm"
+                      placeholder="Ahorros o Corriente"
+                      className="text-[13px] !h-10 border-black/10 dark:border-white/10 bg-white/70 dark:bg-black/30"
                       variant="input"
                     />
                   </div>
-
+                  
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                    <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                       Número de Cuenta
                     </label>
                     <input
                       type="text"
                       value={anticipoData.numero_cuenta || ''}
-                      onChange={(e) => handleInputChange('numero_cuenta', e.target.value)}
-                      placeholder="Número de cuenta"
-                      className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
+                      onChange={(e) => handleInputChange('numero_cuenta', e.target.value.replace(/\\D/g, ''))}
+                      placeholder="Sólo números"
+                      className="w-full px-3 py-2 h-10 text-[13px] text-left border border-black/10 dark:border-white/10 rounded-lg bg-white/70 dark:bg-black/30 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                       required
                     />
                   </div>
@@ -865,7 +877,7 @@ export default function SolicitarAnticipoPage() {
 
                 {/* Tercera fila: Documento del Titular */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-800 mb-3">
+                  <label className="block text-[12px] font-medium text-gray-600 dark:text-gray-400 mb-1.5">
                     Documento del Titular
                   </label>
                   <input
@@ -873,7 +885,7 @@ export default function SolicitarAnticipoPage() {
                     value={anticipoData.documento_titular || ''}
                     onChange={(e) => handleInputChange('documento_titular', e.target.value)}
                     placeholder="Cédula o documento de identidad"
-                    className="w-full px-3 sm:px-3 py-3 sm:py-2 h-12 sm:h-10 text-base sm:text-sm text-left border-2 border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 hover:border-gray-400 dark:hover:border-gray-500 focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500/50 transition-all duration-200 touch-manipulation"
+                    className="w-full px-3 py-2 h-10 text-[13px] text-left border border-black/10 dark:border-white/10 rounded-lg bg-white/70 dark:bg-black/30 text-gray-900 dark:text-gray-100 placeholder-gray-400 dark:placeholder-gray-500 focus:ring-1 focus:ring-emerald-500/50 focus:border-emerald-500/50 transition-all"
                     required
                   />
                 </div>
@@ -882,33 +894,42 @@ export default function SolicitarAnticipoPage() {
 
             {/* Botones */}
             <div className="flex justify-center pt-6 sm:pt-8 mt-4 border-t border-gray-200 dark:border-gray-800">
-              <div className="inline-flex p-1 bg-gray-200/50 dark:bg-gray-800/80 backdrop-blur-md rounded-full shadow-inner border border-white/20 dark:border-white/5 w-full sm:w-auto">
+              <div className="max-sm:w-full max-sm:flex sm:w-fit sm:inline-flex flex-row items-center justify-center p-1 bg-black/[0.04] dark:bg-white/[0.04] backdrop-blur-xl rounded-full border border-black/[0.05] dark:border-white/[0.05]">
                 <button
                   type="button"
                   onClick={() => router.back()}
-                  className="w-full sm:w-auto px-6 py-2.5 text-sm font-semibold text-gray-700 dark:text-gray-300 rounded-full hover:bg-white dark:hover:bg-gray-700 hover:shadow-sm transition-all"
+                  className="relative max-sm:flex-1 max-sm:px-4 max-sm:py-1.5 sm:px-6 sm:py-1.5 text-xs sm:text-[13px] font-medium rounded-full transition-all duration-300 ease-out active:scale-[0.97] touch-manipulation whitespace-nowrap flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-white hover:font-bold hover:bg-gradient-to-r hover:from-cyan-600 hover:to-fuchsia-600 hover:shadow-md hover:shadow-cyan-500/30 dark:hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] border border-transparent"
                 >
                   Cancelar
                 </button>
                 <button
                   type="submit"
                   disabled={submitting || productivityData.anticipoDisponible <= 0 || !isFormValid()}
-                  className="w-full sm:w-auto px-8 py-2.5 text-sm font-semibold text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full hover:from-blue-600 hover:to-indigo-700 disabled:opacity-50 shadow-[0_0_15px_rgba(59,130,246,0.5)] transition-all ml-1"
+                  className="relative max-sm:flex-1 max-sm:px-4 max-sm:py-1.5 sm:px-6 sm:py-1.5 text-xs sm:text-[13px] font-medium rounded-full transition-all duration-300 ease-out active:scale-[0.97] touch-manipulation whitespace-nowrap flex items-center justify-center text-gray-600 dark:text-gray-400 hover:text-white hover:font-bold hover:bg-gradient-to-r hover:from-cyan-600 hover:to-fuchsia-600 hover:shadow-md hover:shadow-cyan-500/30 dark:hover:shadow-[0_0_15px_rgba(34,211,238,0.5)] border border-transparent disabled:opacity-50 disabled:pointer-events-none"
                 >
-                  {submitting ? 'Enviando...' : 'Enviar Solicitud'}
+                  {submitting ? 'Enviando...' : <><span className="hidden sm:inline">Enviar Solicitud</span><span className="sm:hidden">Enviar</span></>}
                 </button>
               </div>
             </div>
           </form>
-        </GlassCard>
+        </div>
         </div>
         )}
 
         {/* TAB HISTORIAL */}
         {activeTab === 'historial' && (
           <div className="animate-fade-in-up mt-4">
+            <div className="flex items-center space-x-1 sm:space-x-1.5 px-1 mb-2">
+              <div className="flex items-center justify-center text-purple-500 drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">
+                <svg className="w-4 h-4 sm:w-[1.125rem] sm:h-[1.125rem]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-[0_0_8px_rgba(0,0,0,0.15)] dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
+                Historial de Anticipos
+              </h2>
+            </div>
             <GlassCard glow="model" padding="none" className="rounded-2xl p-4 sm:p-6 min-h-[400px]">
-              <h2 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4 sm:mb-6">Historial de Anticipos</h2>
               
               {loadingHistorial ? (
                 <div className="flex justify-center items-center h-40">

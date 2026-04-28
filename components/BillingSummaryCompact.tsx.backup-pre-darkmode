@@ -1,0 +1,398 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useBillingPolling } from '@/hooks/useBillingPolling';
+import { getColombiaDate } from '@/utils/calculator-dates';
+
+interface BillingSummaryCompactProps {
+  userRole: 'admin' | 'super_admin' | 'superadmin_aff';
+  userId: string;
+  userGroups?: string[];
+}
+
+interface BillingData {
+  modelId: string;
+  email: string;
+  name: string;
+  organizationId: string;
+  groupId: string;
+  groupName: string;
+  usdBruto: number;
+  usdModelo: number;
+  usdSede: number;
+  copModelo: number;
+  copSede: number;
+}
+
+interface Summary {
+  totalModels: number;
+  totalUsdBruto: number;
+  totalUsdModelo: number;
+  totalUsdSede: number;
+  totalCopModelo: number;
+  totalCopSede: number;
+}
+
+interface GroupData {
+  groupId: string;
+  groupName: string;
+  totalModels: number;
+  totalUsdBruto: number;
+  totalUsdModelo: number;
+  totalUsdSede: number;
+}
+
+interface SedeData {
+  sedeId: string;
+  sedeName: string;
+  totalModels: number;
+  groups: GroupData[];
+  totalUsdBruto: number;
+  totalUsdModelo: number;
+  totalUsdSede: number;
+  totalCopModelo?: number;
+  totalCopSede?: number;
+  isAffiliate?: boolean;
+  affiliate_studio_id?: string;
+}
+
+export default function BillingSummaryCompact({ userRole, userId, userGroups = [] }: BillingSummaryCompactProps) {
+  const [summary, setSummary] = useState<Summary | null>(null);
+  const [groupedData, setGroupedData] = useState<SedeData[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPeriod, setSelectedPeriod] = useState<string>('current');
+  const [affiliateStudioName, setAffiliateStudioName] = useState<string | null>(null);
+
+  const formatCurrency = (amount: number, currency: string = 'USD') => {
+    if (currency === 'COP') {
+      return new Intl.NumberFormat('es-CO', {
+        minimumFractionDigits: 0,
+        maximumFractionDigits: 0,
+      }).format(amount);
+    }
+    return new Intl.NumberFormat('en-US', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(amount);
+  };
+
+  const loadBillingData = async (silent = false) => {
+    try {
+      // Solo mostrar loading si no es una actualización silenciosa
+      if (!silent) {
+        setLoading(true);
+      }
+      setError(null);
+
+      // Calcular fecha basada en período seleccionado (usar hora Colombia)
+      const today = getColombiaDate();
+      let targetDate = today;
+      if (selectedPeriod === 'period-1') {
+        // Período 1: día 15 del mes actual (usar fecha Colombia)
+        const [year, month] = today.split('-');
+        targetDate = `${year}-${month}-15`;
+      } else if (selectedPeriod === 'period-2') {
+        // Período 2: último día del mes actual (usar fecha Colombia)
+        const [year, month] = today.split('-');
+        const dateObj = new Date(parseInt(year), parseInt(month) - 1, 1); // Mes es 0-based
+        const lastDay = new Date(dateObj.getFullYear(), dateObj.getMonth() + 1, 0).getDate();
+        targetDate = `${year}-${month}-${String(lastDay).padStart(2, '0')}`;
+      }
+
+      const params = new URLSearchParams({
+        adminId: userId,
+        userRole,
+        periodDate: targetDate,
+      });
+
+      const response = await fetch(`/api/admin/billing-summary?${params}`);
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Error al cargar los datos');
+      }
+
+      // Capturar nombre del estudio afiliado si está disponible
+      if (data.affiliateStudioName) {
+        setAffiliateStudioName(data.affiliateStudioName);
+      }
+
+      // Si la API retorna groupedData (para super_admin), usarlo directamente
+      if (data.groupedData && Array.isArray(data.groupedData) && data.groupedData.length > 0) {
+        // Usar datos agrupados de la API (ya incluye separación de afiliados)
+        const summaryData: Summary = data.summary || {
+          totalModels: data.groupedData.reduce((sum: number, sede: SedeData) => sum + sede.totalModels, 0),
+          totalUsdBruto: data.groupedData.reduce((sum: number, sede: SedeData) => sum + sede.totalUsdBruto, 0),
+          totalUsdModelo: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalUsdModelo || 0), 0),
+          totalUsdSede: data.groupedData.reduce((sum: number, sede: SedeData) => sum + sede.totalUsdSede, 0),
+          totalCopModelo: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalCopModelo || 0), 0),
+          totalCopSede: data.groupedData.reduce((sum: number, sede: SedeData) => sum + (sede.totalCopSede || 0), 0),
+        };
+        
+        setSummary(summaryData);
+        setGroupedData(data.groupedData);
+      } else {
+        // Fallback: procesar datos individuales (para admin o superadmin_aff)
+        let billingData: BillingData[] = data.data || [];
+        
+        // Si es admin, filtrar solo por sus grupos
+        if (userRole === 'admin' && userGroups.length > 0) {
+          billingData = billingData.filter(model => 
+            userGroups.includes(model.groupName)
+          );
+        }
+        
+        // Calcular resumen
+        const summaryData: Summary = {
+          totalModels: billingData.length,
+          totalUsdBruto: billingData.reduce((sum, model) => sum + model.usdBruto, 0),
+          totalUsdModelo: billingData.reduce((sum, model) => sum + model.usdModelo, 0),
+          totalUsdSede: billingData.reduce((sum, model) => sum + model.usdSede, 0),
+          totalCopModelo: billingData.reduce((sum, model) => sum + model.copModelo, 0),
+          totalCopSede: billingData.reduce((sum, model) => sum + model.copSede, 0),
+        };
+
+        // Procesar datos agrupados por sede y grupo
+        const sedeMap = new Map<string, SedeData>();
+        
+        billingData.forEach(model => {
+          const sedeId = model.organizationId || 'unknown';
+          const groupId = model.groupId || 'unknown';
+          
+          // Inicializar sede si no existe
+          if (!sedeMap.has(sedeId)) {
+            // Para superadmin_aff, usar el nombre del estudio afiliado
+            const sedeName = userRole === 'superadmin_aff' && data.affiliateStudioName 
+              ? data.affiliateStudioName 
+              : 'Agencia Innova';
+            
+            sedeMap.set(sedeId, {
+              sedeId,
+              sedeName,
+              totalModels: 0,
+              groups: [],
+              totalUsdBruto: 0,
+              totalUsdModelo: 0,
+              totalUsdSede: 0,
+            });
+          }
+          
+          const sede = sedeMap.get(sedeId)!;
+          sede.totalModels++;
+          sede.totalUsdBruto += model.usdBruto;
+          sede.totalUsdModelo += model.usdModelo;
+          sede.totalUsdSede += model.usdSede;
+          
+          // Buscar o crear grupo
+          let group = sede.groups.find(g => g.groupId === groupId);
+          if (!group) {
+            group = {
+              groupId,
+              groupName: model.groupName || 'Grupo Desconocido',
+              totalModels: 0,
+              totalUsdBruto: 0,
+              totalUsdModelo: 0,
+              totalUsdSede: 0,
+            };
+            sede.groups.push(group);
+          }
+          
+          group.totalModels++;
+          group.totalUsdBruto += model.usdBruto;
+          group.totalUsdModelo += model.usdModelo;
+          group.totalUsdSede += model.usdSede;
+        });
+
+        setSummary(summaryData);
+        setGroupedData(Array.from(sedeMap.values()));
+      }
+    } catch (error: any) {
+      console.error('Error loading billing data:', error);
+      setError(error.message || 'Error al cargar los datos');
+    } finally {
+      // Solo ocultar loading si no es una actualización silenciosa
+      if (!silent) {
+        setLoading(false);
+      }
+    }
+  };
+
+  // 🔄 ACTUALIZACIÓN AUTOMÁTICA: Usar polling estable cada 15 segundos para mejor sincronización
+  const { isPolling, isSilentUpdating } = useBillingPolling(
+    loadBillingData,
+    [userId, userRole, userGroups],
+    {
+      refreshInterval: 15000, // 15 segundos (reducido de 30s para mejor sincronización)
+      enabled: true,
+      silentUpdate: true, // Actualizaciones silenciosas sin parpadeos
+      onRefresh: () => {
+        console.log('🔄 [BILLING-SUMMARY-COMPACT] Datos actualizados automáticamente');
+      }
+    }
+  );
+
+  useEffect(() => {
+    if (userId && userRole) {
+      loadBillingData();
+    }
+  }, [userId, userRole, userGroups, selectedPeriod]);
+
+  if (loading) {
+    return (
+      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
+        </div>
+        <div className="flex items-center justify-center py-8">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-green-500"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="relative bg-white/70 dark:bg-gray-800/70 backdrop-blur-sm rounded-xl shadow-md border border-white/20 dark:border-gray-700/20 p-6">
+        <div className="flex items-center space-x-2 mb-4">
+          <div className="w-6 h-6 bg-gradient-to-br from-red-500 to-red-600 rounded-md flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
+        </div>
+        <div className="text-center py-4">
+          <div className="text-sm text-red-600 mb-2">{error}</div>
+          <button
+            onClick={() => loadBillingData()}
+            className="p-2 min-h-[36px] text-xs text-blue-600 hover:text-blue-800 font-medium"
+          >
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl shadow-md dark:shadow-[0_4px_12px_rgba(34,197,94,0.06)] dark:ring-1 dark:ring-green-500/10 border border-white/20 dark:border-gray-600/20 p-3 sm:p-4 hover:shadow-xl hover:bg-white/95 dark:hover:bg-gray-600/80 hover:scale-[1.02] transition-all duration-300">
+      <div className="flex items-center justify-between mb-3">
+        <div className="flex items-center space-x-2">
+          <div className="w-6 h-6 bg-gradient-to-br from-green-500 to-emerald-600 rounded-md flex items-center justify-center">
+            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1" />
+            </svg>
+          </div>
+          <div>
+            <h3 className="text-sm font-semibold text-gray-900 dark:text-gray-100">Resumen de Facturación</h3>
+            <p className="text-xs text-gray-500 dark:text-gray-300">Período actual</p>
+          </div>
+        </div>
+        <Link 
+          href="/admin/sedes/dashboard" 
+          className="p-2 -m-2 inline-flex items-center text-xs text-blue-600 dark:text-white hover:text-blue-800 dark:hover:text-gray-200 font-medium"
+        >
+          Ver completo →
+        </Link>
+      </div>
+
+      {summary && (
+        <div className="space-y-3">
+          {/* Resumen compacto */}
+          <div className="grid grid-cols-3 gap-2">
+            <div className="text-center p-2 rounded-lg bg-blue-50/80">
+              <div className="text-sm font-bold text-blue-600">${formatCurrency(summary.totalUsdBruto)}</div>
+              <div className="text-xs text-blue-700">USD Bruto</div>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-green-50/80">
+              <div className="text-sm font-bold text-green-600">${formatCurrency(summary.totalUsdModelo)}</div>
+              <div className="text-xs text-green-700">USD Modelos</div>
+            </div>
+            <div className="text-center p-2 rounded-lg bg-purple-50/80">
+              <div className="text-sm font-bold text-purple-600">${formatCurrency(summary.totalUsdSede)}</div>
+              <div className="text-xs text-purple-700">
+                {userRole === 'superadmin_aff' && affiliateStudioName 
+                  ? `USD ${affiliateStudioName}` 
+                  : 'USD Agencia'}
+              </div>
+            </div>
+          </div>
+
+          {/* Listado de sedes y grupos con scrollbar */}
+          {groupedData.length > 0 && (
+            <div className="border-t border-gray-200/50 pt-3">
+              <div className="text-xs font-medium text-gray-900 dark:text-white mb-2">
+                {summary.totalModels} modelos • {userRole === 'super_admin' ? 'Todas las sedes' : 'Tu sede'}
+              </div>
+              <div className="max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                <div className="space-y-2 pr-2">
+                  {groupedData.map((sede) => (
+                    <div key={sede.sedeId} className="bg-white dark:bg-white rounded-lg border border-gray-200/40 dark:border-gray-600/40 p-2">
+                      {/* Header de Sede */}
+                      <div className="flex items-center space-x-2 mb-1">
+                        <div className={`w-4 h-4 rounded flex items-center justify-center ${
+                          sede.isAffiliate 
+                            ? 'bg-gradient-to-br from-purple-500/10 to-pink-500/10' 
+                            : 'bg-gradient-to-br from-blue-500/10 to-indigo-500/10'
+                        }`}>
+                          <svg className={`w-2.5 h-2.5 ${
+                            sede.isAffiliate ? 'text-purple-600' : 'text-blue-600'
+                          }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                          </svg>
+                        </div>
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-1.5">
+                            <div className="text-xs font-semibold text-gray-900 dark:text-gray-900">{sede.sedeName}</div>
+                            {sede.isAffiliate && (
+                              <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300">
+                                Afiliado
+                              </span>
+                            )}
+                          </div>
+                          <div className="text-xs text-gray-900 dark:text-gray-900">{sede.totalModels} modelos • {sede.groups.length} grupos</div>
+                        </div>
+                      </div>
+
+                      {/* Grupos de la Sede */}
+                      {sede.groups.length > 0 && (
+                        <div className="ml-6 space-y-1">
+                          {sede.groups.map((group) => (
+                            <div key={group.groupId} className="flex items-center justify-between p-1.5 bg-gray-50/60 rounded">
+                              <div className="flex items-center space-x-1.5">
+                                <div className="w-3 h-3 bg-gradient-to-br from-gray-400/20 to-gray-500/20 rounded flex items-center justify-center">
+                                  <svg className="w-1.5 h-1.5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                                  </svg>
+                                </div>
+                                <div>
+                                  <div className="text-xs font-medium text-gray-900 dark:text-gray-900">{group.groupName}</div>
+                                  <div className="text-xs text-gray-900 dark:text-gray-900">{group.totalModels} modelos</div>
+                                </div>
+                              </div>
+                              <div className="flex flex-col items-end min-w-[70px]">
+                                <div className="text-xs font-semibold text-blue-600 dark:text-blue-600 leading-tight">${formatCurrency(group.totalUsdBruto)}</div>
+                                <div className="text-xs text-gray-500 dark:text-gray-400 leading-tight mt-0.5">USD Bruto</div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

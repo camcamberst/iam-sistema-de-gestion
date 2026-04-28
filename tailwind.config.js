@@ -34,6 +34,10 @@ module.exports = {
       animation: {
         'heartbeat': 'heartbeat 1.5s ease-in-out infinite',
         'fadeIn': 'fadeIn 0.2s ease-out',
+        'chat-pop': 'chatPop 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards',
+        'chat-pop-out': 'chatPopOut 0.3s cubic-bezier(0.4, 0, 1, 1) forwards',
+        'chat-backdrop': 'chatBackdrop 0.4s ease-out forwards',
+        'chat-backdrop-out': 'chatBackdropOut 0.3s ease-in forwards',
       },
       keyframes: {
         heartbeat: {
@@ -71,6 +75,34 @@ module.exports = {
             opacity: '1',
             transform: 'translateY(0)'
           }
+        },
+        chatPop: {
+          '0%': { 
+            opacity: '0',
+            transform: 'scale(0.95) translateY(10px)'
+          },
+          '100%': { 
+            opacity: '1',
+            transform: 'scale(1) translateY(0)'
+          }
+        },
+        chatPopOut: {
+          '0%': { 
+            opacity: '1',
+            transform: 'scale(1) translateY(0)'
+          },
+          '100%': { 
+            opacity: '0',
+            transform: 'scale(0.95) translateY(10px)'
+          }
+        },
+        chatBackdrop: {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' }
+        },
+        chatBackdropOut: {
+          '0%': { opacity: '1' },
+          '100%': { opacity: '0' }
         }
       }
     },

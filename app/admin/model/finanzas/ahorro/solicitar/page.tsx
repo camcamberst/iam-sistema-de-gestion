@@ -5,6 +5,9 @@ import { useRouter } from "next/navigation";
 import { isWithinSavingsWindow } from '@/lib/savings/savings-window';
 import AppleDropdown from '@/components/ui/AppleDropdown';
 import InfoCard from '@/components/ui/InfoCard';
+import PageHeader from '@/components/ui/PageHeader';
+import GlassCard from '@/components/ui/GlassCard';
+import ModelAuroraBackground from '@/components/ui/ModelAuroraBackground';
 
 interface User {
   id: string;
@@ -313,9 +316,10 @@ export default function SolicitarAhorroPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+      <div className="min-h-screen relative w-full overflow-hidden flex items-center justify-center">
+        <ModelAuroraBackground />
+        <div className="relative z-10 text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 dark:text-gray-400">Cargando...</p>
         </div>
       </div>
@@ -323,31 +327,20 @@ export default function SolicitarAhorroPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pt-16">
+    <div className="min-h-screen relative w-full overflow-hidden">
+      <ModelAuroraBackground />
+      <div className="max-w-6xl mx-auto max-sm:px-0 sm:px-6 lg:px-8 pb-4 sm:pb-2 pt-6 sm:pt-2 relative z-10">
         {/* Header */}
-        <div className="mb-12">
-          <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/10 via-indigo-500/10 to-purple-500/10 rounded-xl blur-xl"></div>
-            <div className="relative bg-white/80 dark:bg-gray-700/80 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-lg dark:shadow-lg dark:shadow-blue-900/15 dark:ring-0.5 dark:ring-blue-400/20">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-md">
-                  <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-gray-100 dark:to-gray-300 bg-clip-text text-transparent">
-                    Solicitar Ahorro
-                  </h1>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
-                    Solicita ahorrar parte de tu facturación de un período cerrado
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+        <PageHeader
+          title="Solicitar Ahorro"
+          glow="model"
+          icon={
+            <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+          }
+        />
+
 
         {error && (
           <div className="mb-6 bg-red-50 border border-red-200 rounded-xl p-4">
@@ -377,17 +370,18 @@ export default function SolicitarAhorroPage() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 relative">
           {/* Formulario */}
-          <div className="lg:col-span-2">
-            <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+          <div className="lg:col-span-2 relative z-[60]">
+            <GlassCard padding="none" className="p-4 sm:p-6 !overflow-visible">
               <form onSubmit={handleSubmit} className="space-y-6">
                 {/* Seleccionar Período */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2 drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
                     Período Cerrado *
                   </label>
                   <AppleDropdown
+                    variant="input"
                     options={periods.map(p => ({
                       value: `${p.period_date}-${p.period_type}`,
                       label: `${new Date(p.period_date).toLocaleDateString('es-CO', { year: 'numeric', month: 'long', day: 'numeric' })} (${p.period_type === '1-15' ? 'P1' : 'P2'})`
@@ -407,10 +401,10 @@ export default function SolicitarAhorroPage() {
 
                 {/* Información de ventana de tiempo */}
                 {selectedPeriod && windowInfo && (
-                  <div className={`p-4 rounded-lg border ${
+                  <div className={`p-4 rounded-xl border ${
                     windowInfo.isWithin
-                      ? 'bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800'
-                      : 'bg-yellow-50 border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800'
+                      ? 'bg-blue-500/10 dark:bg-blue-500/15 border-blue-500/20 dark:border-blue-500/30'
+                      : 'bg-yellow-500/10 dark:bg-yellow-500/15 border-yellow-500/20 dark:border-yellow-500/30'
                   }`}>
                     <div className="flex items-start space-x-3">
                       {windowInfo.isWithin ? (
@@ -453,7 +447,7 @@ export default function SolicitarAhorroPage() {
 
                 {/* Solicitud existente */}
                 {existingSavings && (
-                  <div className="p-4 bg-yellow-50 border border-yellow-200 dark:bg-yellow-900/20 dark:border-yellow-800 rounded-lg">
+                  <div className="p-4 bg-yellow-500/10 dark:bg-yellow-500/15 border border-yellow-500/20 dark:border-yellow-500/30 rounded-xl">
                     <p className="text-sm text-yellow-700 dark:text-yellow-300 font-medium">
                       Ya tienes una solicitud {existingSavings.estado === 'pendiente' ? 'pendiente' : existingSavings.estado} para este período.
                     </p>
@@ -472,17 +466,17 @@ export default function SolicitarAhorroPage() {
                       <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                         Tipo de Solicitud *
                       </label>
-                      <div className="flex gap-3">
+                      <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-xl border border-black/5 dark:border-white/10">
                         <button
                           type="button"
                           onClick={() => {
                             setTipoSolicitud('monto');
                             setPorcentajeAhorrado('');
                           }}
-                          className={`flex-1 px-4 py-2 rounded-lg border transition-all ${
+                          className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                             tipoSolicitud === 'monto'
-                              ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300'
-                              : 'bg-white border-gray-300 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'
+                              ? 'bg-white dark:bg-white/10 shadow-sm border border-black/5 dark:border-white/10'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transparent'
                           }`}
                         >
                           Monto en COP
@@ -493,10 +487,10 @@ export default function SolicitarAhorroPage() {
                             setTipoSolicitud('porcentaje');
                             setMontoAhorrado('');
                           }}
-                          className={`flex-1 px-4 py-2 rounded-lg border transition-all ${
+                          className={`flex-1 px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                             tipoSolicitud === 'porcentaje'
-                              ? 'bg-blue-50 border-blue-500 text-blue-700 dark:bg-blue-900/30 dark:border-blue-500 dark:text-blue-300'
-                              : 'bg-white border-gray-300 text-gray-700 dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300'
+                              ? 'bg-white dark:bg-white/10 shadow-sm border border-black/5 dark:border-white/10'
+                              : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-black/5 dark:hover:bg-white/5 transparent'
                           }`}
                         >
                           Porcentaje
@@ -515,7 +509,7 @@ export default function SolicitarAhorroPage() {
                           value={montoAhorrado}
                           onChange={(e) => handleMontoChange(e.target.value)}
                           placeholder="Ej: 1000000"
-                          className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                          className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
                           required
                         />
                         {montoAhorrado && netoPagar && (
@@ -537,7 +531,7 @@ export default function SolicitarAhorroPage() {
                           value={porcentajeAhorrado}
                           onChange={(e) => handlePorcentajeChange(e.target.value)}
                           placeholder="Ej: 50"
-                          className="w-full border border-gray-200 dark:border-gray-600 rounded-xl px-4 py-2.5 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm transition-all duration-200"
+                          className="w-full bg-black/[0.04] dark:bg-white/[0.06] backdrop-blur-xl border border-black/[0.06] dark:border-white/[0.08] text-gray-900 dark:text-white text-sm font-semibold rounded-xl hover:bg-black/[0.06] dark:hover:bg-white/[0.08] hover:border-black/10 dark:hover:border-white/[0.15] focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 block p-3 transition-all duration-300 shadow-[0_4px_12px_rgba(0,0,0,0.02)]"
                           required
                         />
                         {porcentajeAhorrado && netoPagar && (
@@ -551,23 +545,29 @@ export default function SolicitarAhorroPage() {
                       </div>
                     )}
 
-                    {/* Botón de envío */}
                     <button
                       type="submit"
                       disabled={submitting || !windowInfo.isWithin || loadingNeto}
-                      className="w-full px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md hover:shadow-lg transform hover:-translate-y-0.5 font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="w-full relative overflow-hidden min-h-[44px] sm:min-h-0 px-6 py-3 sm:py-3.5 text-[13px] sm:text-[14px] font-extrabold rounded-full transition-all duration-300 transform active:scale-95 whitespace-nowrap touch-manipulation flex items-center justify-center group bg-gradient-to-r from-cyan-600 to-fuchsia-600 hover:from-cyan-500 hover:to-fuchsia-500 text-white border-none backdrop-blur-md shadow-md shadow-cyan-500/30 dark:shadow-[0_0_15px_rgba(34,211,238,0.5)] hover:shadow-lg hover:shadow-fuchsia-500/40 dark:hover:shadow-[0_0_20px_rgba(232,121,249,0.7)] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100"
                     >
-                      {submitting ? 'Enviando...' : existingSavings?.estado === 'pendiente' ? 'Actualizar Solicitud' : 'Solicitar Ahorro'}
+                      <div className="absolute inset-0 z-0 mix-blend-screen opacity-0 group-hover:opacity-100 transition-opacity duration-300" style={{
+                        background: 'linear-gradient(90deg, transparent, rgba(34,211,238,0.4), rgba(232,121,249,0.5), transparent)',
+                        backgroundSize: '200% 100%',
+                        animation: 'aurora-flow 1.5s ease-in-out infinite alternate'
+                      }}></div>
+                      <span className="relative z-10 flex items-center tracking-widest uppercase gap-2">
+                        {submitting ? 'ENVIANDO...' : existingSavings?.estado === 'pendiente' ? 'ACTUALIZAR SOLICITUD' : 'SOLICITAR AHORRO'}
+                      </span>
                     </button>
                   </>
                 )}
               </form>
-            </div>
+            </GlassCard>
           </div>
 
           {/* Información lateral */}
           <div className="space-y-6">
-            <div className="bg-white/70 dark:bg-gray-700/70 backdrop-blur-sm rounded-xl p-6 border border-white/20 dark:border-gray-600/20 shadow-md dark:shadow-lg dark:shadow-blue-900/10 dark:ring-0.5 dark:ring-blue-500/15">
+            <GlassCard padding="none" className="p-6">
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">
                 Información Importante
               </h3>
@@ -597,8 +597,21 @@ export default function SolicitarAhorroPage() {
                   </p>
                 </div>
               </div>
-            </div>
+            </GlassCard>
           </div>
+        </div>
+        <div className="mt-8 flex justify-center w-full relative z-20">
+          <button
+            onClick={() => router.push('/admin/model/finanzas/ahorro')}
+            className="flex items-center gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white transition-colors duration-300 group"
+          >
+            <svg className="w-4 h-4 transform group-hover:-translate-x-1 transition-transform duration-300 z-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            <span className="relative">Volver a Ahorros
+              <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-gray-400 dark:bg-white transition-all duration-300 group-hover:w-full"></span>
+            </span>
+          </button>
         </div>
       </div>
     </div>
