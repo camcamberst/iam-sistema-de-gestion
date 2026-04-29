@@ -43,7 +43,7 @@ export async function POST(request: NextRequest) {
     const targetUser = usersInfo.find((u: any) => u.id === targetId);
 
     // Validación crítica: Modelos no pueden afectar a Admins/Superadmins
-    if (currentUser.role === 'modelo' && (targetUser.role === 'admin' || targetUser.role === 'super_admin' || targetUser.role === 'superadmin_aff')) {
+    if (currentUser?.role === 'modelo' && (targetUser?.role === 'admin' || targetUser?.role === 'super_admin' || targetUser?.role === 'superadmin_aff')) {
       return NextResponse.json({ error: 'No tienes permisos para realizar esta acción sobre este usuario' }, { status: 403 });
     }
 
