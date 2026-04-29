@@ -186,7 +186,7 @@ export default function AnnouncementManager({ userId, userRole, userGroups }: An
             </svg>
           </div>
           <div className="min-w-0 flex-1">
-            <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">What's News?</h2>
+            <h2 className="text-sm sm:text-lg font-semibold text-gray-900 dark:text-white">What&apos;s News?</h2>
             <p className="text-[10px] sm:text-sm text-gray-600 dark:text-gray-300 hidden sm:block">Gestiona publicaciones e información para modelos</p>
           </div>
         </div>

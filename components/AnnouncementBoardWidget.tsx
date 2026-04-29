@@ -367,7 +367,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
           </div>
           <div className="relative flex items-center">
             <h2 className="text-[14px] sm:text-[15px] font-bold text-gray-900 dark:text-white tracking-tight drop-shadow-sm dark:drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]">
-              What's News?
+              What&apos;s News?
             </h2>
             {/* Badge sutil - Punto rojo pequeño con animación suave */}
             {hasNewAnnouncements && (

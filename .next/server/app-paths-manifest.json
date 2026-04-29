@@ -1,16 +1,8 @@
 {
   "/not-found": "app/not-found.js",
-  "/api/rates-v2/route": "app/api/rates-v2/route.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
-  "/api/calculator/period-goal-summary/route": "app/api/calculator/period-goal-summary/route.js",
-  "/api/chat/conversations/route": "app/api/chat/conversations/route.js",
-  "/api/calculator/config-v2/route": "app/api/calculator/config-v2/route.js",
-  "/api/calculator/model-values-v2/route": "app/api/calculator/model-values-v2/route.js",
-  "/api/chat/users/route": "app/api/chat/users/route.js",
-  "/api/announcements/route": "app/api/announcements/route.js",
-  "/api/ai-dashboard/route": "app/api/ai-dashboard/route.js",
   "/admin/model/portafolio/page": "app/admin/model/portafolio/page.js",
-  "/admin/model/anticipos/solicitar/page": "app/admin/model/anticipos/solicitar/page.js",
   "/admin/model/dashboard/page": "app/admin/model/dashboard/page.js",
-  "/admin/model/calculator/page": "app/admin/model/calculator/page.js"
+  "/admin/model/calculator/page": "app/admin/model/calculator/page.js",
+  "/admin/model/anticipos/solicitar/page": "app/admin/model/anticipos/solicitar/page.js"
 }

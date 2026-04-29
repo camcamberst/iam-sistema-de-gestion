@@ -1,6 +1,27 @@
 {
   "sortedMiddleware": [],
   "middleware": {},
-  "functions": {},
+  "functions": {
+    "/api/autoupload/dashboard/route": {
+      "files": [
+        "server/middleware-build-manifest.js",
+        "server/middleware-react-loadable-manifest.js",
+        "server/next-font-manifest.js",
+        "prerender-manifest.js",
+        "server/edge-runtime-webpack.js",
+        "server/app/api/autoupload/dashboard/route.js"
+      ],
+      "name": "app/api/autoupload/dashboard/route",
+      "page": "/api/autoupload/dashboard/route",
+      "matchers": [
+        {
+          "regexp": "^/api/autoupload/dashboard$",
+          "originalSource": "/api/autoupload/dashboard"
+        }
+      ],
+      "wasm": [],
+      "assets": []
+    }
+  },
   "version": 2
 }
