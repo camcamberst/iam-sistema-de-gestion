@@ -81,7 +81,7 @@ export async function POST(
       // Notificar a la modelo que fue rechazada (solicitud del usuario)
       await sendBotNotification(
         modelId,
-        'savings_request_rejected',
+        'savings_rejected',
         `Hola, tu solicitud de ahorro por $${parseFloat(String(saving.monto_ahorrado)).toLocaleString('es-CO')} COP ha sido declinada o rechazada por administración.`
       );
 
@@ -120,7 +120,7 @@ export async function POST(
       // Notificar a la modelo que su ahorro fue aprobado
       await sendBotNotification(
         modelId,
-        'savings_request_approved',
+        'savings_approved',
         `¡Felicidades! Tu solicitud de ahorro por $${parseFloat(String(saving.monto_ahorrado)).toLocaleString('es-CO')} COP ha sido probada y descontada de tu quincena satisfactoriamente.`
       );
 

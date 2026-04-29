@@ -146,7 +146,7 @@ export default function GestorStatsPage() {
         return;
       }
 
-      const userIds = userGroupsData.map(ug => ug.user_id);
+      const userIds = userGroupsData.map((ug: any) => ug.user_id);
       console.log('👥 [GESTOR STATS] IDs de usuarios encontrados:', userIds.length);
       console.log('👥 [GESTOR STATS] IDs específicos:', userIds);
 
