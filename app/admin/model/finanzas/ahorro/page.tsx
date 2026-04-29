@@ -54,6 +54,7 @@ interface Goal {
   estado: 'activa' | 'completada' | 'cancelada';
   is_completed?: boolean;
   faltante: number;
+  proyeccion?: any;
 }
 
 export default function MiAhorroPage() {
