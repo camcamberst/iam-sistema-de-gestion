@@ -193,9 +193,7 @@ export function GalenaProvider({ children }: { children: ReactNode }) {
           
         setStations(validStations);
         
-        if (!currentStation && validStations.length > 0) {
-          setCurrentStation(validStations[0]);
-        }
+        // No autoseleccionar estación inicial para evitar que la píldora inferior se muestre prematuramente
       } catch (err: any) {
         console.error('🎵 [GALENA] Error:', err);
         setErrorMsg('Interferencia detectada. Reintentando sintonizar...');
@@ -215,7 +213,15 @@ export function GalenaProvider({ children }: { children: ReactNode }) {
 
   const togglePlay = () => {
     triggerInit(); // Si por casualidad la isla lanza play, inicializa!
-    if (!audioRef.current || !currentStation) return;
+    if (!audioRef.current) return;
+    
+    if (!currentStation) {
+      const activeList = activeCategory.id === 'favorites' ? favorites : stations;
+      if (activeList.length > 0) {
+        playStation(activeList[0]);
+      }
+      return;
+    }
     
     if (audioRef.current.src !== currentStation.url_resolved) {
       audioRef.current.src = currentStation.url_resolved;
@@ -251,7 +257,11 @@ export function GalenaProvider({ children }: { children: ReactNode }) {
 
   const playNext = () => {
     const activeList = activeCategory.id === 'favorites' ? favorites : stations;
-    if (!currentStation || activeList.length === 0) return;
+    if (activeList.length === 0) return;
+    if (!currentStation) {
+      playStation(activeList[0]);
+      return;
+    }
     const currentIndex = activeList.findIndex(s => s.stationuuid === currentStation.stationuuid);
     if (currentIndex >= 0 && currentIndex < activeList.length - 1) {
       playStation(activeList[currentIndex + 1]);
@@ -262,7 +272,11 @@ export function GalenaProvider({ children }: { children: ReactNode }) {
 
   const playPrev = () => {
     const activeList = activeCategory.id === 'favorites' ? favorites : stations;
-    if (!currentStation || activeList.length === 0) return;
+    if (activeList.length === 0) return;
+    if (!currentStation) {
+      playStation(activeList[activeList.length - 1]);
+      return;
+    }
     const currentIndex = activeList.findIndex(s => s.stationuuid === currentStation.stationuuid);
     if (currentIndex > 0) {
       playStation(activeList[currentIndex - 1]);
