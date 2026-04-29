@@ -1,7 +1,7 @@
 {
   "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/admin/model/anticipos/solicitar/page": "app/admin/model/anticipos/solicitar/page.js",
   "/admin/model/dashboard/page": "app/admin/model/dashboard/page.js",
   "/admin/model/calculator/page": "app/admin/model/calculator/page.js",
-  "/admin/model/portafolio/page": "app/admin/model/portafolio/page.js",
-  "/admin/model/anticipos/solicitar/page": "app/admin/model/anticipos/solicitar/page.js"
+  "/admin/model/portafolio/page": "app/admin/model/portafolio/page.js"
 }

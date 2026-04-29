@@ -99,6 +99,7 @@ export default function CalculatorHistorialPage() {
   
   // 🌟 ESTADO DE CARRUSEL MÓVIL
   const [mobileCarouselSide, setMobileCarouselSide] = useState<'cop' | 'usd'>('cop');
+  const [ratesCarouselIndexes, setRatesCarouselIndexes] = useState<Record<string, number>>({});
 
   const [saving, setSaving] = useState(false);
 
@@ -624,11 +625,41 @@ export default function CalculatorHistorialPage() {
                       <button onClick={cancelEdit} className="text-red-600 active:scale-95 touch-manipulation"><X className="w-3.5 h-3.5 sm:w-4 sm:h-4"/></button>
                     </div>
                   ) : (
-                    <div className="flex flex-wrap justify-start sm:justify-end gap-1 sm:gap-2 text-[10px] sm:text-xs">
-                      <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[9.5px] sm:text-[10.5px] font-bold text-blue-600 dark:text-[#5caaf5] tracking-wide drop-shadow-sm dark:drop-shadow-none">GBP→USD: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.gbp_usd?.toFixed(4)}</span></span>
-                      <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[9.5px] sm:text-[10.5px] font-bold text-[rgba(74,188,150,0.9)] dark:text-[#2dd4bf] tracking-wide drop-shadow-sm dark:drop-shadow-none">EUR→USD: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.eur_usd?.toFixed(4)}</span></span>
-                      <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[9.5px] sm:text-[10.5px] font-bold text-purple-600 dark:text-[#c488fc] tracking-wide drop-shadow-sm dark:drop-shadow-none">USD→COP: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.usd_cop?.toFixed(0)}</span></span>
-                    </div>
+                    <>
+                      {/* VISTA DESKTOP: Todas las tasas visibles */}
+                      <div className="hidden sm:flex flex-wrap justify-end gap-2 text-xs">
+                        <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[10.5px] font-bold text-blue-600 dark:text-[#5caaf5] tracking-wide">GBP→USD: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.gbp_usd?.toFixed(4)}</span></span>
+                        <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[10.5px] font-bold text-[rgba(74,188,150,0.9)] dark:text-[#2dd4bf] tracking-wide">EUR→USD: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.eur_usd?.toFixed(4)}</span></span>
+                        <span className="px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[10.5px] font-bold text-purple-600 dark:text-[#c488fc] tracking-wide">USD→COP: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{period.rates?.usd_cop?.toFixed(0)}</span></span>
+                      </div>
+
+                      {/* VISTA MÓVIL (CARRUSEL INFINITO) */}
+                      <div 
+                        className="sm:hidden relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all ml-2"
+                        style={{ height: '22px', width: '120px' }}
+                        onClick={(e) => {
+                          const currentIndex = ratesCarouselIndexes[periodKey] || 0;
+                          setRatesCarouselIndexes(prev => ({ ...prev, [periodKey]: currentIndex + 1 }));
+                        }}
+                      >
+                        <div 
+                          className="absolute bottom-0 w-full flex flex-col-reverse transition-transform duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+                          style={{ transform: `translateY(${(ratesCarouselIndexes[periodKey] || 0) * 22}px)` }}
+                        >
+                          {Array(20).fill([
+                            { label: 'GBP→USD', value: period.rates?.gbp_usd?.toFixed(4), colorClass: 'text-blue-600 dark:text-[#5caaf5]' },
+                            { label: 'EUR→USD', value: period.rates?.eur_usd?.toFixed(4), colorClass: 'text-[rgba(74,188,150,0.9)] dark:text-[#2dd4bf]' },
+                            { label: 'USD→COP', value: period.rates?.usd_cop?.toFixed(0), colorClass: 'text-purple-600 dark:text-[#c488fc]' }
+                          ]).flat().map((rate, rawIdx) => (
+                            <div key={rawIdx} className="flex-shrink-0 flex items-center" style={{ height: '22px' }}>
+                              <span className={`w-full px-2 py-0.5 rounded-md bg-black/[0.03] dark:bg-white/[0.03] border border-black/[0.05] dark:border-white/[0.05] text-[10.5px] font-bold ${rate.colorClass} tracking-wide drop-shadow-sm dark:drop-shadow-none truncate`}>
+                                {rate.label}: <span className="font-bold text-gray-800 dark:text-gray-100 ml-0.5">{rate.value}</span>
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
                   )}
                 </div>
               </div>
