@@ -75,7 +75,7 @@ export default function IndividualChatWindow({
       const minX = 20;
       const adjustedX = Math.max(minX, finalX);
 
-      (function(){})()
+      /* log removed */
 
       return { x: adjustedX, y: finalY };
     }
@@ -99,7 +99,7 @@ export default function IndividualChatWindow({
         const timeDiff = now.getTime() - messageTime.getTime();
         
         if (timeDiff < 5000) { // 5 segundos
-          (function(){})()
+          /* log removed */
           // Sin sonido - solo logging
         }
       }
@@ -125,7 +125,7 @@ export default function IndividualChatWindow({
           }
         }
       } catch (error) {
-        (function(){})()
+        /* log removed */
       }
     };
 
@@ -206,7 +206,7 @@ export default function IndividualChatWindow({
     // Esto asegura que no se muestren mensajes de la conversación anterior
     if (prevConversationIdRef.current !== null && 
         prevConversationIdRef.current !== conversationId) {
-      (function(){})()
+      /* log removed */
       setMessages([]);
       setNewMessage('');
     }
@@ -222,11 +222,11 @@ export default function IndividualChatWindow({
       
       if (data.success) {
         const newMessages = data.messages || [];
-        (function(){})()
+        /* log removed */
         setMessages(newMessages);
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     } finally {
       setIsLoading(false);
     }
@@ -234,15 +234,15 @@ export default function IndividualChatWindow({
 
   // Enviar mensaje
   const sendMessage = async () => {
-    (function(){})()
+    /* log removed */
     
     if (!newMessage.trim() || !conversationId || !session) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
     try {
-      (function(){})()
+      /* log removed */
       const response = await fetch('/api/chat/messages', {
         method: 'POST',
         headers: {
@@ -256,12 +256,12 @@ export default function IndividualChatWindow({
         })
       });
       
-      (function(){})()
+      /* log removed */
       const data = await response.json();
-      (function(){})()
+      /* log removed */
       
       if (data.success) {
-        (function(){})()
+        /* log removed */
         
         // Marcar mensaje como enviado inicialmente
         if (data.message?.id) {
@@ -283,19 +283,19 @@ export default function IndividualChatWindow({
         setReplyTo(null); // Limpiar reply después de enviar
         await loadMessages(); // Recargar mensajes
       } else {
-        (function(){})()
+        /* log removed */
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
   };
 
   // Manejar tecla Enter
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    (function(){})()
+    /* log removed */
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
-      (function(){})()
+      /* log removed */
       sendMessage();
     }
   };
@@ -315,7 +315,7 @@ export default function IndividualChatWindow({
     if (prevConversationIdRef.current !== null && 
         prevConversationIdRef.current !== conversationId && 
         conversationId) {
-      (function(){})()
+      /* log removed */
       setMessages([]); // Limpiar mensajes inmediatamente
       setNewMessage(''); // Limpiar input de mensaje
       setMessageReadStatus({}); // Limpiar estados de lectura
@@ -342,8 +342,8 @@ export default function IndividualChatWindow({
           table: 'chat_messages',
           filter: `conversation_id=eq.${conversationId}`
         },
-        async (payload) => {
-          (function(){})()
+        async (payload: any) => {
+          /* log removed */
           await loadMessages();
         }
       )
@@ -624,7 +624,7 @@ export default function IndividualChatWindow({
           />
           <button
             onClick={() => {
-              (function(){})()
+              /* log removed */
               sendMessage();
             }}
             disabled={!newMessage.trim()}

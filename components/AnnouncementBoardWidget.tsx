@@ -87,7 +87,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
           schema: 'public',
           table: 'announcements'
         },
-        (payload) => {
+        (payload: any) => {
           console.log('📢 [ANNOUNCEMENTS-WIDGET] Cambio detectado en tiempo real:', payload);
           
           // Solo recargar si el anuncio está publicado o se acaba de publicar
@@ -106,7 +106,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
           }
         }
       )
-      .subscribe((status) => {
+      .subscribe((status: any) => {
         console.log('📡 [ANNOUNCEMENTS-WIDGET] Estado de suscripción:', status);
       });
 
@@ -174,7 +174,7 @@ export default function AnnouncementBoardWidget({ userId, userGroups, userRole =
         console.error('❌ [ANNOUNCEMENTS-WIDGET] Error obteniendo grupos:', groupsError);
       }
 
-      const userGroupIds = userGroupsData?.map(ug => ug.group_id) || [];
+      const userGroupIds = userGroupsData?.map((ug: any) => ug.group_id) || [];
       const userGroupsParam = userGroupIds.length > 0 ? userGroupIds.join(',') : '';
       
       console.log('🔍 [ANNOUNCEMENTS-WIDGET] Cargando anuncios para:', {

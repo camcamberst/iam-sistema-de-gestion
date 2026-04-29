@@ -67,7 +67,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // 🔧 NUEVO: Inicializar audio en la primera interacción del usuario
   useEffect(() => {
     const handleInteraction = () => {
-      (function(){})()
+      /* log removed */
       initAudio();
       // Remover listeners una vez inicializado
       window.removeEventListener('click', handleInteraction);
@@ -103,7 +103,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       // Guardar título original de la pestaña (solo si no está ya guardado)
       if (!originalTitleRef.current) {
         originalTitleRef.current = document.title || 'AIM Sistema';
-        (function(){})()
+        /* log removed */
       }
       
       // Cargar lastUnreadCount desde localStorage
@@ -119,7 +119,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           const parsed = JSON.parse(savedProcessedMessages);
           processedMessageIdsRef.current = new Set(parsed);
         } catch (error) {
-          (function(){})()
+          /* log removed */
           processedMessageIdsRef.current = new Set();
         }
       }
@@ -159,7 +159,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     // Si ya se está marcando esta conversación, evitar duplicados
     if (markingAsReadRef.current.has(conversationId)) {
-      // (function(){})()
+      // /* log removed */
       return;
     }
 
@@ -180,7 +180,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     const executeMark = async () => {
       markingAsReadRef.current.add(conversationId);
-      // (function(){})()
+      // /* log removed */
 
       try {
         const response = await fetch('/api/chat/messages/read', {
@@ -197,7 +197,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
         const data = await response.json();
         if (data.success) {
-          // (function(){})()
+          // /* log removed */
           
           // Actualizar estado local inmediatamente
           zeroUnreadForConversation(conversationId);
@@ -215,10 +215,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         } else {
           // Si el servidor devuelve error pero no es 500, probablemente sea un error lógico
           // No reintentar agresivamente
-          (function(){})()
+          /* log removed */
         }
       } catch (error) {
-        (function(){})()
+        /* log removed */
       } finally {
         markingAsReadRef.current.delete(conversationId);
       }
@@ -265,7 +265,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Debug: Log cuando cambien las ventanas abiertas
   useEffect(() => {
-    (function(){})()
+    /* log removed */
   }, [openChatWindows]);
 
   // Función helper para obtener el nombre de visualización
@@ -293,7 +293,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       const { data: { session: currentSession }, error: sessionError } = await supabase.auth.getSession();
       
       if (sessionError || !currentSession) {
-        (function(){})()
+        /* log removed */
         return null;
       }
 
@@ -305,11 +305,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         // Si el token expira en menos de 60 segundos, refrescarlo
         if (expiresIn < 60) {
-          (function(){})()
+          /* log removed */
           const { data: { session: refreshedSession }, error: refreshError } = await supabase.auth.refreshSession();
           
           if (refreshError || !refreshedSession) {
-            (function(){})()
+            /* log removed */
             return null;
           }
           
@@ -326,7 +326,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       return currentSession.access_token;
     } catch (error) {
-      (function(){})()
+      /* log removed */
       return null;
     }
   };
@@ -356,7 +356,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       try {
         await updateUserHeartbeat(userId);
       } catch (error) {
-        (function(){})()
+        /* log removed */
       }
     };
 
@@ -371,7 +371,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       try {
         await setUserOffline(userId);
       } catch (error) {
-        (function(){})()
+        /* log removed */
       }
     };
 
@@ -398,7 +398,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
         unreadCountForTitleRef.current = 0;
         document.title = originalTitleRef.current;
-        (function(){})()
+        /* log removed */
       }
     };
 
@@ -416,7 +416,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Marcar como offline al desmontar el componente
       setUserOffline(userId).catch(error => {
-        (function(){})()
+        /* log removed */
       });
     };
   }, [userId]);
@@ -424,25 +424,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Detectar pérdida de conexión a internet
   useEffect(() => {
     const handleOnline = async () => {
-      (function(){})()
+      /* log removed */
       if (userId) {
         try {
           await updateUserStatus(true);
-          (function(){})()
+          /* log removed */
         } catch (error) {
-          (function(){})()
+          /* log removed */
         }
       }
     };
 
     const handleOffline = async () => {
-      (function(){})()
+      /* log removed */
       if (userId) {
         try {
           await updateUserStatus(false);
-          (function(){})()
+          /* log removed */
         } catch (error) {
-          (function(){})()
+          /* log removed */
         }
       }
     };
@@ -462,7 +462,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Cargar conversaciones
   const loadConversations = async () => {
     if (!session || !session.access_token) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
@@ -475,7 +475,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Si recibimos 401, la sesión expiró - no procesar
       if (response.status === 401) {
-        (function(){})()
+        /* log removed */
         return;
       }
       
@@ -508,7 +508,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         if (!isOpen) {
           // Si es la primera carga, NO mostrar notificaciones, solo actualizar el estado base
           if (isFirstLoadRef.current) {
-            (function(){})()
+            /* log removed */
             // Marcar todos los mensajes actuales como "procesados" para no notificarlos después
             normalized.forEach((conv: any) => {
               if (conv.last_message) {
@@ -525,7 +525,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 
                 // 🔧 CRÍTICO: Verificar si este mensaje ya fue procesado antes (evita toasts al recargar)
                 if (processedMessageIdsRef.current.has(messageId)) {
-                  // (function(){})()
+                  // /* log removed */
                   return;
                 }
                 
@@ -568,7 +568,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
   };
 
@@ -588,7 +588,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         setAvailableUsers(data.users);
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
   };
 
@@ -599,7 +599,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // 🔧 LIMPIAR MENSAJES INMEDIATAMENTE si cambió la conversación
     // Esto asegura que no se muestren mensajes de la conversación anterior
     if (selectedConversation !== conversationId) {
-      (function(){})()
+      /* log removed */
       setMessages([]);
       setNewMessage('');
     }
@@ -615,7 +615,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       if (data.success) {
         // Actualizar mensajes directamente (ya se limpiaron si era necesario)
         const newMessages = data.messages || [];
-        (function(){})()
+        /* log removed */
         
         setMessages(newMessages);
         
@@ -646,11 +646,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Actualizar estado local inmediatamente para evitar mostrar "no leído" durante la recarga
         zeroUnreadForConversation(conversationId);
       } else {
-        (function(){})()
+        /* log removed */
         
         // Si la conversación no existe (fue eliminada), preparar para nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
-          (function(){})()
+          /* log removed */
           await handleConversationDeleted(conversationId);
           return; // No hacer diagnóstico si la conversación no existe
         }
@@ -659,7 +659,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         await diagnosePollingIssue(conversationId);
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
       // Intentar diagnóstico si hay error
       await diagnosePollingIssue(conversationId);
     }
@@ -669,7 +669,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const handleConversationDeleted = async (deletedConversationId: string) => {
     if (!session) return;
     
-    (function(){})()
+    /* log removed */
     
     try {
       // Recargar conversaciones para obtener lista actualizada
@@ -677,7 +677,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Si la conversación eliminada era una conversación real (no temporal)
       if (!deletedConversationId.startsWith('temp_')) {
-        (function(){})()
+        /* log removed */
         
         // Buscar el último mensaje para identificar al otro participante
         // Esto nos ayudará a preparar automáticamente una nueva conversación
@@ -689,7 +689,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           const otherUser = availableUsers.find(u => u.id === otherUserId);
           
           if (otherUser) {
-            (function(){})()
+            /* log removed */
             
             // Preparar automáticamente una nueva conversación con el mismo usuario
             setTempChatUser(otherUser);
@@ -712,7 +712,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         }
         
         // Si no pudimos identificar al usuario, mostrar mensaje genérico
-        (function(){})()
+        /* log removed */
         setMessages([]);
         setTempChatUser(null);
         
@@ -731,7 +731,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
       } else {
         // Si era una conversación temporal, simplemente limpiar
-        (function(){})()
+        /* log removed */
         setMessages([]);
         setTempChatUser(null);
         // NO cerrar el chat - mantener abierto y mostrar lista de usuarios
@@ -739,7 +739,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       }
       
     } catch (error) {
-      (function(){})()
+      /* log removed */
       // En caso de error, limpiar todo pero mantener el chat abierto
       setMessages([]);
       setTempChatUser(null);
@@ -751,12 +751,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   // Función de diagnóstico para problemas de polling
   const diagnosePollingIssue = async (conversationId: string) => {
     try {
-      (function(){})()
+      /* log removed */
       
       // Obtener token válido (refrescando si es necesario)
       const token = await getValidToken();
       if (!token) {
-        (function(){})()
+        /* log removed */
         return;
       }
       
@@ -768,12 +768,12 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        (function(){})()
+        /* log removed */
       } else {
-        (function(){})()
+        /* log removed */
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
   };
 
@@ -781,7 +781,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   const sendMessage = async () => {
     if (!newMessage.trim() || !selectedConversation || !session) return;
     
-    (function(){})()
+    /* log removed */
     
     setIsLoading(true);
     try {
@@ -789,16 +789,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       // Si es una conversación temporal, crear la conversación real primero
       if (selectedConversation.startsWith('temp_')) {
-        (function(){})()
+        /* log removed */
         const userId = selectedConversation.replace('temp_', '');
         const newConversationId = await createConversation(userId);
         if (newConversationId) {
           conversationId = newConversationId;
           setSelectedConversation(newConversationId);
           setTempChatUser(null); // Limpiar usuario temporal
-          (function(){})()
+          /* log removed */
         } else {
-          (function(){})()
+          /* log removed */
           return;
         }
       }
@@ -817,32 +817,32 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       });
       
       const data = await response.json();
-      (function(){})()
+      /* log removed */
       
       if (data.success) {
-        (function(){})()
+        /* log removed */
         setNewMessage('');
         setReplyTo(null); // Limpiar reply después de enviar
         
         // Como fallback, si la suscripción no funciona, recargar mensajes
         setTimeout(async () => {
-          (function(){})()
+          /* log removed */
           await loadMessages(conversationId);
         }, 1000);
         
         // Actualizar conversaciones para mostrar último mensaje
         await loadConversations();
       } else {
-        (function(){})()
+        /* log removed */
         
         // Si la conversación no existe (fue eliminada), preparar para nueva conversación
         if (data.error && (data.error.includes('no encontrada') || data.error.includes('no existe'))) {
-          (function(){})()
+          /* log removed */
           await handleConversationDeleted(conversationId);
         }
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     } finally {
       setIsLoading(false);
     }
@@ -850,16 +850,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
   // Abrir chat con usuario en ventana individual
   const openChatWithUser = async (userId: string) => {
-    (function(){})()
-    (function(){})()
-    (function(){})()
+    /* log removed */
+    /* log removed */
+    /* log removed */
     
     if (!session) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
-    (function(){})()
+    /* log removed */
     
     // Buscar si ya existe una conversación con este usuario
     const existingConversation = conversations.find(conv => 
@@ -867,22 +867,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     );
     
     const user = availableUsers.find(u => u.id === userId);
-    (function(){})()
+    /* log removed */
     
     if (!user) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
     // Si la ventana principal (AIM Assistant) está abierta, integrar la conversación allí
     if (isOpen) {
       if (existingConversation) {
-        (function(){})()
+        /* log removed */
         setSelectedConversation(existingConversation.id);
         setMainView('chat');
         await loadMessages(existingConversation.id);
       } else {
-        (function(){})()
+        /* log removed */
         try {
           const response = await fetch('/api/chat/conversations', {
             method: 'POST',
@@ -899,10 +899,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             await loadMessages(data.conversation.id);
             await loadConversations();
           } else {
-            (function(){})()
+            /* log removed */
           }
         } catch (error) {
-          (function(){})()
+          /* log removed */
         }
       }
       return; // No abrir ventana individual
@@ -911,25 +911,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Verificar si ya hay una ventana abierta para este usuario (modo flotante)
     const existingWindow = openChatWindows.find(window => window.otherUser.id === userId);
     if (existingWindow) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
     if (existingConversation) {
       // Si ya existe conversación, abrir ventana individual
-      (function(){})()
+      /* log removed */
       const newWindow = {
         id: `window_${existingConversation.id}`,
         conversationId: existingConversation.id,
         otherUser: user
       };
       setOpenChatWindows(prev => {
-        (function(){})()
+        /* log removed */
         return [...prev, newWindow];
       });
     } else {
       // Si no existe, crear nueva conversación y abrir ventana
-      (function(){})()
+      /* log removed */
       
       try {
         const response = await fetch('/api/chat/conversations', {
@@ -944,7 +944,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         });
         
         const data = await response.json();
-        (function(){})()
+        /* log removed */
         
         if (data.success) {
           const newWindow = {
@@ -953,17 +953,17 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
             otherUser: user
           };
           setOpenChatWindows(prev => {
-            (function(){})()
+            /* log removed */
             return [...prev, newWindow];
           });
           
           // Recargar conversaciones para incluir la nueva
           await loadConversations();
         } else {
-          (function(){})()
+          /* log removed */
         }
       } catch (error) {
-        (function(){})()
+        /* log removed */
       }
     }
   };
@@ -994,22 +994,22 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         return data.conversation.id; // Retornar el ID de la conversación
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
     return null;
   };
 
   // Eliminar conversación
   const deleteConversation = async (conversationId: string) => {
-    (function(){})()
+    /* log removed */
     
     if (!session) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
     try {
-      (function(){})()
+      /* log removed */
       const response = await fetch(`/api/chat/conversations?conversation_id=${conversationId}`, {
         method: 'DELETE',
         headers: {
@@ -1019,7 +1019,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
       
       const data = await response.json();
       if (data.success) {
-        (function(){})()
+        /* log removed */
         
         // Recargar conversaciones para actualizar la lista
         await loadConversations();
@@ -1029,15 +1029,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           setSelectedConversation(null);
           setMessages([]);
           setTempChatUser(null); // Limpiar usuario temporal también
-          (function(){})()
+          /* log removed */
         }
         
         setShowDeleteConfirm(null);
       } else {
-        (function(){})()
+        /* log removed */
       }
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
   };
 
@@ -1057,7 +1057,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         })
       });
     } catch (error) {
-      (function(){})()
+      /* log removed */
     }
   };
 
@@ -1082,13 +1082,13 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // 🔧 NUEVO: No mostrar toast si la conversación no tiene mensajes no leídos
     // Esto evita mostrar toasts de mensajes que ya fueron leídos al recargar la página
     if (conversation.unread_count === 0 || !conversation.unread_count) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
     // 🔧 NUEVO: Verificar si el mensaje ya fue procesado (doble verificación)
     if (processedMessageIdsRef.current.has(message.id)) {
-      (function(){})()
+      /* log removed */
       return;
     }
     
@@ -1142,14 +1142,14 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     // Optimizador: Detectar cuando el usuario regresa a la pestaña
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible' && session) {
-        (function(){})()
+        /* log removed */
         loadAvailableUsers();
         loadConversations();
         if (selectedConversation) {
           loadMessages(selectedConversation);
         }
       } else {
-        (function(){})()
+        /* log removed */
       }
     };
     
@@ -1193,7 +1193,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Si la conversación que estaba abierta tiene mensajes no leídos, marcarla como leída
         const conv = conversations.find(c => c.id === lastOpenConversation);
         if (conv && (conv.unread_count ?? 0) > 0) {
-          (function(){})()
+          /* log removed */
           markConversationAsRead(lastOpenConversation, true);
           // 🔧 NUEVO: Marcar como leída localmente para preservar el estado
           locallyMarkedAsReadRef.current.add(lastOpenConversation);
@@ -1225,11 +1225,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     if (!session || !selectedConversation) return;
 
-    (function(){})()
+    /* log removed */
     
     const messagesPollingInterval = setInterval(async () => {
       if (typeof document !== 'undefined' && document.visibilityState !== 'visible') return; // Pausado Inteligente
-      (function(){})()
+      /* log removed */
       await loadMessages(selectedConversation);
       // El marcado como leído se maneja automáticamente en loadMessages
       // No necesitamos marcado adicional aquí para evitar duplicados
@@ -1237,7 +1237,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
 
     // Cleanup
     return () => {
-      (function(){})()
+      /* log removed */
       clearInterval(messagesPollingInterval);
     };
   }, [session, selectedConversation]);
@@ -1277,7 +1277,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         // Obtener token válido (refrescando si es necesario)
         const token = await getValidToken();
         if (!token) {
-          (function(){})()
+          /* log removed */
           clearInterval(conversationsPollingInterval);
           return;
         }
@@ -1288,7 +1288,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         
         // Si recibimos 401, la sesión expiró - detener polling
         if (response.status === 401) {
-          (function(){})()
+          /* log removed */
           clearInterval(conversationsPollingInterval);
           return;
         }
@@ -1312,11 +1312,11 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               // Si el mensaje es de otro y no lo hemos visto
               if (lastMsg && lastMsg.sender_id !== userId) {
-                (function(){})()
+                /* log removed */
                 
                 // Disparar lógica de notificación si no se ha procesado
                 if (!processedMessageIdsRef.current.has(lastMsg.id)) {
-                  (function(){})()
+                  /* log removed */
                   
                   // Marcar como procesado para evitar duplicados con realtime
                   processedMessageIdsRef.current.add(lastMsg.id);
@@ -1350,7 +1350,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
         });
         
       } catch (error) {
-        (function(){})()
+        /* log removed */
       }
     }, 20000); // 20s (antes 4s) — reducido para ahorrar API calls
 
@@ -1365,7 +1365,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
     if (prevConversationRef.current !== null && 
         prevConversationRef.current !== selectedConversation && 
         selectedConversation !== null) {
-      (function(){})()
+      /* log removed */
       setMessages([]); // Limpiar mensajes inmediatamente
       setNewMessage(''); // Limpiar input de mensaje
       setTempChatUser(null); // Limpiar usuario temporal si existe
@@ -1415,7 +1415,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     if (!session || !userId) return;
 
-    (function(){})()
+    /* log removed */
 
     const channel = supabase
       .channel('chat-messages-realtime')
@@ -1426,10 +1426,10 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           schema: 'public',
           table: 'chat_messages'
         },
-        async (payload) => {
+        async (payload: any) => {
           const newMessage = payload.new as any;
-          (function(){})()
-          (function(){})()
+          /* log removed */
+          /* log removed */
           
           // Verificar si el mensaje es para el usuario actual
           // Hacer una consulta directa para verificar si el usuario es participante de la conversación
@@ -1441,27 +1441,27 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               .single();
             
             if (error || !conversation) {
-              (function(){})()
+              /* log removed */
               return;
             }
             
             const isParticipant = conversation.participant_1_id === userId || conversation.participant_2_id === userId;
-            (function(){})()
+            /* log removed */
             
             if (isParticipant) {
-              (function(){})()
+              /* log removed */
               
               // 🔔 CRÍTICO: Verificar si el mensaje es de otro usuario
               if (newMessage.sender_id !== userId) {
-                (function(){})()
+                /* log removed */
                 
                 // 🔔 NUEVO: Notificar en la pestaña si el usuario está en otra pestaña
                 // IMPORTANTE: Verificar ANTES de abrir el chat para no interferir
                 const isTabHidden = document.hidden;
-                (function(){})()
+                /* log removed */
                 
                 if (isTabHidden) {
-                  (function(){})()
+                  /* log removed */
                   
                   // Asegurar que tenemos el título original
                   if (!originalTitleRef.current) {
@@ -1501,9 +1501,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                         tag: `chat-${newMessage.conversation_id}`,
                         requireInteraction: false
                       });
-                      (function(){})()
+                      /* log removed */
                     } catch (err) {
-                      (function(){})()
+                      /* log removed */
                     }
                   } else if ('Notification' in window && Notification.permission === 'default') {
                     // Solicitar permiso la primera vez
@@ -1515,9 +1515,9 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                             icon: '/favicon.ico',
                             tag: `chat-${newMessage.conversation_id}`
                           });
-                          (function(){})()
+                          /* log removed */
                         } catch (err) {
-                          (function(){})()
+                          /* log removed */
                         }
                       }
                     });
@@ -1527,34 +1527,34 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                   if ('vibrate' in navigator) {
                     try {
                       navigator.vibrate([200, 100, 200]);
-                      (function(){})()
+                      /* log removed */
                     } catch (err) {
-                      (function(){})()
+                      /* log removed */
                     }
                   }
                 } else {
-                  (function(){})()
+                  /* log removed */
                 }
                 
                 // 🔔 CRÍTICO: Abrir chat automáticamente DESPUÉS de verificar notificaciones
                 // Esto debe hacerse después para no interferir con la detección de visibilidad
                 
                 // Intentar reproducir sonido INMEDIATAMENTE
-                (function(){})()
+                /* log removed */
                 try {
                   playNotificationSound(0.8); // Volumen alto
-                  (function(){})()
+                  /* log removed */
                 } catch (err) {
-                  (function(){})()
+                  /* log removed */
                 }
                 
                 // Usar función de estado para obtener el valor más reciente y abrir el chat
                 setIsOpen(currentIsOpen => {
-                  (function(){})()
+                  /* log removed */
                   
                   // Si el chat está cerrado, abrirlo automáticamente
                   if (!currentIsOpen) {
-                    (function(){})()
+                    /* log removed */
                     // Actualizar otros estados después de abrir el chat
                     setTimeout(() => {
                       setMainView('chat');
@@ -1563,20 +1563,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                     }, 100);
                     return true; // Abrir el chat
                   } else {
-                    (function(){})()
+                    /* log removed */
                   }
                   
                   // Si el chat ya está abierto, cambiar a la conversación del mensaje nuevo
                   setSelectedConversation(currentSelected => {
                     if (currentSelected !== newMessage.conversation_id) {
-                      (function(){})()
+                      /* log removed */
                       setMainView('chat');
                       setTimeout(() => {
                         loadConversations();
                       }, 100);
                       return newMessage.conversation_id;
                     } else {
-                      (function(){})()
+                      /* log removed */
                     }
                     return currentSelected;
                   });
@@ -1587,7 +1587,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 // Reproducir sonido (con throttling)
                 const now = Date.now();
                 if (now - lastSoundTimeRef.current > 2000) {
-                  (function(){})()
+                  /* log removed */
                   playNotificationSound(0.6);
                   lastSoundTimeRef.current = now;
                 }
@@ -1595,15 +1595,15 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               
               // Si es la conversación activa, agregar el mensaje directamente
               if (selectedConversation === newMessage.conversation_id) {
-                (function(){})()
+                /* log removed */
                 setMessages(prev => {
                   // Verificar que el mensaje no esté ya en la lista
                   const messageExists = prev.some(msg => msg.id === newMessage.id);
                   if (messageExists) {
-                    (function(){})()
+                    /* log removed */
                     return prev;
                   }
-                  (function(){})()
+                  /* log removed */
                   return [...prev, newMessage];
                 });
                 // Si estamos viendo esta conversación (incluyendo Botty), marcar como leído inmediatamente
@@ -1617,7 +1617,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 zeroUnreadForConversation(newMessage.conversation_id);
               } else {
                 // Si NO estamos viendo esta conversación, actualizar lista
-                (function(){})()
+                /* log removed */
                 loadConversations();
               }
               
@@ -1626,7 +1626,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
               if (newMessage.sender_id === AIM_BOTTY_ID && 
                   newMessage.id !== autoOpenedBottyRef.current &&
                   newMessage.sender_id !== userId) {
-                (function(){})()
+                /* log removed */
                 autoOpenedBottyRef.current = newMessage.id;
                 
                 // Verificar si ya hay una ventana abierta para AIM Botty
@@ -1636,20 +1636,20 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
                 
                 // Solo abrir automáticamente si el chat principal está abierto y no existe ventana
                 if (!bottyWindowExists && isOpen) {
-                  (function(){})()
+                  /* log removed */
                   // Abrir ventana de AIM Botty automáticamente (solo una vez por mensaje)
                   setTimeout(() => {
                     openChatWithUser(AIM_BOTTY_ID);
                   }, 500); // Pequeño delay para mejor UX, no invasivo
                 } else if (bottyWindowExists) {
-                  (function(){})()
+                  /* log removed */
                 }
               }
             } else {
-              (function(){})()
+              /* log removed */
             }
           } catch (error) {
-            (function(){})()
+            /* log removed */
           }
         }
       )
@@ -1660,25 +1660,25 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           schema: 'public',
           table: 'chat_conversations'
         },
-        (payload) => {
+        (payload: any) => {
           const updatedConversation = payload.new as any;
-          (function(){})()
+          /* log removed */
           
           // Verificar si la conversación actualizada pertenece al usuario
           const isRelevantConversation = conversations.some(conv => conv.id === updatedConversation.id);
           
           if (isRelevantConversation) {
-            (function(){})()
+            /* log removed */
             loadConversations();
           }
         }
       )
-      .subscribe((status) => {
-        (function(){})()
+      .subscribe((status: any) => {
+        /* log removed */
       });
 
     return () => {
-      (function(){})()
+      /* log removed */
       supabase.removeChannel(channel);
       
       // Limpiar todos los timeouts de marcado como leído
@@ -1692,7 +1692,7 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
   useEffect(() => {
     if (!session) return;
 
-    (function(){})()
+    /* log removed */
 
     const userStatusChannel = supabase
       .channel('chat-user-status-realtime')
@@ -1703,8 +1703,8 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           schema: 'public',
           table: 'chat_user_status'
         },
-        async (payload) => {
-          (function(){})()
+        async (payload: any) => {
+          /* log removed */
           
           // Recargar lista de usuarios para reflejar cambios inmediatamente
           // Esto detecta cuando un usuario se marca como offline
@@ -1713,16 +1713,16 @@ export default function ChatWidget({ userId, userRole }: ChatWidgetProps) {
           // Log adicional para debugging
           if (payload.new) {
             const newStatus = payload.new as any;
-            (function(){})()
+            /* log removed */
           }
         }
       )
-      .subscribe((status) => {
-        (function(){})()
+      .subscribe((status: any) => {
+        /* log removed */
       });
 
     return () => {
-      (function(){})()
+      /* log removed */
       supabase.removeChannel(userStatusChannel);
     };
   }, [session]);

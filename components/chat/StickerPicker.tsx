@@ -32,8 +32,8 @@ export const StickerPicker: React.FC<StickerPickerProps> = ({ onSelectSticker, t
 
       if (data) {
         const urls = data
-          .filter(file => file.name !== '.emptyFolderPlaceholder')
-          .map(file => {
+          .filter((file: any) => file.name !== '.emptyFolderPlaceholder')
+          .map((file: any) => {
             const { data: { publicUrl } } = supabase.storage.from(BUCKET_NAME).getPublicUrl(file.name);
             return publicUrl;
           });

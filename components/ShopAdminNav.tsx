@@ -59,10 +59,10 @@ export default function ShopAdminNav() {
   const [userRole, setUserRole] = useState<string>("");
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }: any) => {
       if (!session) return;
       supabase.from("users").select("role").eq("id", session.user.id).single()
-        .then(({ data }) => setUserRole(data?.role || ""));
+        .then(({ data }: any) => setUserRole(data?.role || ""));
     });
   }, []);
 

@@ -170,7 +170,7 @@ export async function getAuditLogs(filter: AuditFilter = {}): Promise<AuditLog[]
       return [];
     }
 
-    return (data || []).map(log => ({
+    return (data || []).map((log: any) => ({
       ...log,
       timestamp: new Date(log.timestamp)
     }));

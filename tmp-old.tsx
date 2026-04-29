@@ -1,9 +1,9 @@
-ï»¿import React from 'react';
+import React from 'react';
 
 // =====================================================
-// Â­Æ’Ã¬Ã„ CONFIGURACIâ”œÃ´N DE MENâ”œÃœS POR ROL
+// ­ƒìÄ CONFIGURACI+ôN DE MEN+ÜS POR ROL
 // =====================================================
-// Sistema centralizado para gestionar menâ”œâ•‘s segâ”œâ•‘n roles
+// Sistema centralizado para gestionar men+¦s seg+¦n roles
 // Permite agregar nuevos roles sin modificar layouts
 // =====================================================
 
@@ -24,7 +24,7 @@ export interface MenuItem {
 export type Role = 'super_admin' | 'admin' | 'modelo' | 'gestor' | 'fotografia';
 
 // =====================================================
-// Â­Æ’Ã´Ã¯ CONFIGURACIâ”œÃ´N DE MENâ”œÃœS POR ROL
+// ­ƒôï CONFIGURACI+ôN DE MEN+ÜS POR ROL
 // =====================================================
 
 const modeloMenu: MenuItem[] = [
@@ -57,7 +57,7 @@ const modeloMenu: MenuItem[] = [
 const adminMenu: MenuItem[] = [
   {
     id: 'users',
-    label: 'Gestiâ”œâ”‚n Usuarios',
+    label: 'Gesti+¦n Usuarios',
     href: '#',
     subItems: [
       { 
@@ -84,7 +84,7 @@ const adminMenu: MenuItem[] = [
   },
   {
     id: 'calculator',
-    label: 'Gestiâ”œâ”‚n Calculadora',
+    label: 'Gesti+¦n Calculadora',
     href: '#',
     subItems: [
       { 
@@ -95,7 +95,7 @@ const adminMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
           </svg>
         ),
-        description: 'Configura las tasas de conversiâ”œâ”‚n'
+        description: 'Configura las tasas de conversi+¦n'
       },
       { 
         label: 'Crear Plataforma', 
@@ -116,7 +116,7 @@ const adminMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         ),
-        description: 'Configura parâ”œÃ­metros del sistema'
+        description: 'Configura par+ímetros del sistema'
       },
       { 
         label: 'Ver Calculadora Modelo', 
@@ -138,17 +138,17 @@ const adminMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 7v5l3 3" />
           </svg>
         ),
-        description: 'Historial de facturaciâ”œâ”‚n por modelo'
+        description: 'Historial de facturaci+¦n por modelo'
       }
     ]
   },
   {
     id: 'finanzas',
-    label: 'Gestiâ”œâ”‚n Finanzas',
+    label: 'Gesti+¦n Finanzas',
     href: '#',
     subItems: [
       { 
-        label: 'Gestiâ”œâ”‚n Anticipos', 
+        label: 'Gesti+¦n Anticipos', 
         href: '/admin/anticipos/pending',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -158,7 +158,7 @@ const adminMenu: MenuItem[] = [
         description: 'Solicitudes y historial de anticipos'
       },
       { 
-        label: 'Gestiâ”œâ”‚n Ahorros', 
+        label: 'Gesti+¦n Ahorros', 
         href: '/admin/finanzas/ahorros',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -168,7 +168,7 @@ const adminMenu: MenuItem[] = [
         description: 'Gestiona solicitudes de ahorro'
       },
       { 
-        label: 'Gestiâ”œâ”‚n Retiros', 
+        label: 'Gesti+¦n Retiros', 
         href: '/admin/finanzas/retiros',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -178,14 +178,14 @@ const adminMenu: MenuItem[] = [
         description: 'Gestiona solicitudes de retiro de ahorros'
       },
       { 
-        label: 'Estadâ”œÂ¡sticas', 
+        label: 'Estad+¡sticas', 
         href: '/admin/finanzas/estadisticas',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         ),
-        description: 'Estadâ”œÂ¡sticas y reportes del sistema de ahorros'
+        description: 'Estad+¡sticas y reportes del sistema de ahorros'
       }
     ]
   },
@@ -195,14 +195,14 @@ const adminMenu: MenuItem[] = [
     href: '#',
     subItems: [
       {
-        label: 'Categorâ”œÂ¡as',
+        label: 'Categor+¡as',
         href: '/admin/shop/categories',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
         ),
-        description: 'Categorâ”œÂ¡as de productos (solo super admin)'
+        description: 'Categor+¡as de productos (solo super admin)'
       },
       {
         label: 'Productos',
@@ -212,7 +212,7 @@ const adminMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
           </svg>
         ),
-        description: 'Catâ”œÃ­logo de productos y referencias'
+        description: 'Cat+ílogo de productos y referencias'
       },
       {
         label: 'Inventario',
@@ -232,7 +232,7 @@ const adminMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
         ),
-        description: 'Gestiâ”œâ”‚n de pedidos y financiaciones'
+        description: 'Gesti+¦n de pedidos y financiaciones'
       },
       {
         label: 'Promociones',
@@ -245,20 +245,20 @@ const adminMenu: MenuItem[] = [
         description: 'Descuentos y promociones activas'
       },
       {
-        label: 'Categorâ”œÂ¡as',
+        label: 'Categor+¡as',
         href: '/admin/shop/categories',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
           </svg>
         ),
-        description: 'Gestiâ”œâ”‚n de categorâ”œÂ¡as (solo super admin)'
+        description: 'Gesti+¦n de categor+¡as (solo super admin)'
       }
     ]
   },
   {
     id: 'sedes',
-    label: 'Gestiâ”œâ”‚n Sedes',
+    label: 'Gesti+¦n Sedes',
     href: '#',
     subItems: [
       { 
@@ -296,16 +296,16 @@ const adminMenu: MenuItem[] = [
 ];
 
 const superAdminMenu: MenuItem[] = [
-  // Super Admin tiene acceso a todo lo de admin, mâ”œÃ­s opciones adicionales si las hay
+  // Super Admin tiene acceso a todo lo de admin, m+ís opciones adicionales si las hay
   ...adminMenu
-  // Aquâ”œÂ¡ puedes agregar opciones exclusivas de super admin si las necesitas
+  // Aqu+¡ puedes agregar opciones exclusivas de super admin si las necesitas
 ];
 
 // =====================================================
-// Â­Æ’Ã„Â» MENâ”œÃœS PARA NUEVOS ROLES
+// ­ƒÄ» MEN+ÜS PARA NUEVOS ROLES
 // =====================================================
-// TODO: Definir los menâ”œâ•‘s especâ”œÂ¡ficos para gestor y fotografia
-// Por ahora, dejamos plantillas vacâ”œÂ¡as que puedes completar
+// TODO: Definir los men+¦s espec+¡ficos para gestor y fotografia
+// Por ahora, dejamos plantillas vac+¡as que puedes completar
 
 const gestorMenu: MenuItem[] = [
   {
@@ -316,7 +316,7 @@ const gestorMenu: MenuItem[] = [
   },
   {
     id: 'gestion-agencia',
-    label: 'Gestiâ”œâ”‚n Agencia',
+    label: 'Gesti+¦n Agencia',
     href: '#',
     subItems: [
       { 
@@ -327,17 +327,17 @@ const gestorMenu: MenuItem[] = [
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
           </svg>
         ),
-        description: 'Registrar ingresos exactos de modelos por perâ”œÂ¡odo'
+        description: 'Registrar ingresos exactos de modelos por per+¡odo'
       },
       { 
-        label: 'Rates Histâ”œâ”‚ricas', 
+        label: 'Rates Hist+¦ricas', 
         href: '/gestor/gestion-agencia/rates-historicas',
         icon: (
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         ),
-        description: 'Configurar rates histâ”œâ”‚ricas para recalcular perâ”œÂ¡odos pasados'
+        description: 'Configurar rates hist+¦ricas para recalcular per+¡odos pasados'
       }
     ]
   }
@@ -350,11 +350,11 @@ const fotografiaMenu: MenuItem[] = [
     href: '/fotografia/dashboard',
     subItems: []
   }
-  // TODO: Agregar mâ”œÃ­s opciones de menâ”œâ•‘ segâ”œâ•‘n las funcionalidades especâ”œÂ¡ficas
+  // TODO: Agregar m+ís opciones de men+¦ seg+¦n las funcionalidades espec+¡ficas
 ];
 
 // =====================================================
-// Â­Æ’Ã´Ã¨ MAPA DE MENâ”œÃœS POR ROL
+// ­ƒôè MAPA DE MEN+ÜS POR ROL
 // =====================================================
 
 export const MENU_CONFIG: Record<Role, MenuItem[]> = {
@@ -366,23 +366,23 @@ export const MENU_CONFIG: Record<Role, MenuItem[]> = {
 };
 
 // =====================================================
-// Â­Æ’Ã¶Âº FUNCIâ”œÃ´N HELPER PARA OBTENER MENâ”œÃœ POR ROL
+// ­ƒöº FUNCI+ôN HELPER PARA OBTENER MEN+Ü POR ROL
 // =====================================================
 
 export function getMenuForRole(role: string): MenuItem[] {
-  // Validar que el rol existe en la configuraciâ”œâ”‚n
+  // Validar que el rol existe en la configuraci+¦n
   const validRole = role as Role;
   if (MENU_CONFIG[validRole]) {
     return MENU_CONFIG[validRole];
   }
   
-  // Fallback: si el rol no existe, retornar menâ”œâ•‘ de modelo (mâ”œÃ­s restrictivo)
-  console.warn(`Ã”ÃœÃ¡Â´Â©Ã… [MENU-CONFIG] Rol "${role}" no encontrado, usando menâ”œâ•‘ de modelo por defecto`);
+  // Fallback: si el rol no existe, retornar men+¦ de modelo (m+ís restrictivo)
+  console.warn(`ÔÜá´©Å [MENU-CONFIG] Rol "${role}" no encontrado, usando men+¦ de modelo por defecto`);
   return MENU_CONFIG['modelo'];
 }
 
 // =====================================================
-// Ã”Â£Ã  VALIDACIâ”œÃ´N DE ROLES
+// Ô£à VALIDACI+ôN DE ROLES
 // =====================================================
 
 export function isValidRole(role: string): role is Role {

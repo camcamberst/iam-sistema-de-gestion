@@ -71,7 +71,7 @@ export default function GalenaBottomPlayer() {
   // Detenemos el render si estamos en el dashboard (esa regla sí es absoluta)
   if (isDashboard) return null;
 
-  const isFav = favorites.some(s => s.stationuuid === currentStation.stationuuid);
+  const isFav = favorites.some(s => s.stationuuid === currentStation?.stationuuid);
 
   return (
     <>
