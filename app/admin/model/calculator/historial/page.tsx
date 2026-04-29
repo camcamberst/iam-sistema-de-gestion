@@ -129,7 +129,7 @@ export default function CalculatorHistorialPage() {
 
       if (data.success) {
         const enrichedPeriods = (data.periods || []).map((p: Period) => {
-          p.pending_savings = allSavings.filter(s => s.period_date === p.period_date && s.period_type === p.period_type && s.estado === 'pendiente');
+          p.pending_savings = allSavings.filter((s: any) => s.period_date === p.period_date && s.period_type === p.period_type && s.estado === 'pendiente');
           return p;
         });
         setAllPeriods(enrichedPeriods);
@@ -189,7 +189,7 @@ export default function CalculatorHistorialPage() {
         if (!data.success) { setError(data.error); return; }
 
         const loadedPeriods = (data.periods || []).map((p: Period) => {
-          p.pending_savings = allSavings.filter(s => s.period_date === p.period_date && s.period_type === p.period_type && s.estado === 'pendiente');
+          p.pending_savings = allSavings.filter((s: any) => s.period_date === p.period_date && s.period_type === p.period_type && s.estado === 'pendiente');
           return p;
         });
         
